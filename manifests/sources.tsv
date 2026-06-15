@@ -1,0 +1,215 @@
+tier	category	id	path	url	recurse	default_count	notes
+required	os-vfs	linux	sources/os/linux/linux	https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git	no	yes	VFS page-cache block layer and in-kernel local/network filesystems.
+important	os-vfs	linux-stable	sources/os/linux/linux-stable	https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git	no	no	Stable backport context for filesystem fixes.
+required	os-vfs	freebsd-src	sources/os/bsd/freebsd-src	https://git.FreeBSD.org/src.git	no	yes	FreeBSD VFS UFS ZFS FUSE and filesystem tools.
+required	os-vfs	openbsd-src	sources/os/bsd/openbsd-src	https://github.com/openbsd/src.git	no	yes	OpenBSD VFS FFS UFS FUSE and security-oriented FS paths.
+required	os-vfs	netbsd-src	sources/os/bsd/netbsd-src	https://github.com/NetBSD/src.git	no	yes	NetBSD VFS PUFFS refuse rump and historical ZFS port.
+required	os-vfs	dragonflybsd	sources/os/bsd/dragonflybsd	https://github.com/DragonFlyBSD/DragonFlyBSD.git	no	yes	HAMMER HAMMER2 vnode and BSD VFS contrast.
+required	os-vfs	illumos-gate	sources/os/illumos/illumos-gate	https://github.com/illumos/illumos-gate.git	no	yes	Solaris VFS vnode ZFS NFS UFS tmpfs lineage.
+important	os-vfs	plan9	sources/os/plan9/plan9	https://github.com/plan9foundation/plan9.git	no	yes	Namespace 9P fossil venti and lib9p source model.
+important	os-vfs	9front	sources/os/plan9/9front	https://github.com/9front/9front.git	no	yes	Actively maintained Plan 9 derivative and 9P/fossil contrast.
+required	windows-public	reactos	sources/windows/reactos	https://github.com/reactos/reactos.git	no	yes	Public NT-like FS and IO manager implementation.
+important	windows-public	windows-driver-samples	sources/windows/windows-driver-samples	https://github.com/microsoft/Windows-driver-samples.git	no	yes	Public filesystem and minifilter samples only.
+required	windows-public	winfsp	sources/windows/winfsp	https://github.com/winfsp/winfsp.git	no	yes	Windows user-mode filesystem framework and FUSE bridge.
+required	windows-public	dokany	sources/windows/dokany	https://github.com/dokan-dev/dokany.git	no	yes	Windows FUSE-like filesystem driver and library.
+required	windows-public	winbtrfs	sources/windows/winbtrfs	https://github.com/maharmstone/btrfs.git	no	yes	Public Windows Btrfs driver implementation.
+important	teaching	xv6-riscv	sources/teaching/xv6-riscv	https://github.com/mit-pdos/xv6-riscv.git	no	yes	Minimal inode log buffer-cache and file syscall implementation.
+important	teaching	xv6-public	sources/teaching/xv6-public	https://github.com/mit-pdos/xv6-public.git	no	yes	Historical xv6 x86 filesystem implementation.
+important	teaching	minix	sources/teaching/minix	https://github.com/Stichting-MINIX-Research-Foundation/minix.git	no	yes	Microkernel VFS servers filesystem servers and storage drivers.
+important	teaching	os161	sources/teaching/os161	https://github.com/ops-class/os161.git	no	yes	Teaching VFS structure closer to production OSes than xv6.
+adjacent	teaching	pintos	sources/teaching/pintos	https://github.com/fghanei/pintos.git	no	no	Teaching file system project baseline; exclude student solution forks.
+required	local-fs	e2fsprogs	sources/local-fs/e2fsprogs	https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git	no	yes	ext2 ext3 ext4 mkfs fsck debugfs libraries.
+required	local-fs	xfsprogs	sources/local-fs/xfsprogs	https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git	no	yes	XFS userspace repair mkfs grow quota and libraries.
+important	local-fs	xfsdump	sources/local-fs/xfsdump	https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git	no	yes	XFS dump restore and incremental backup source.
+required	local-fs	btrfs-progs	sources/local-fs/btrfs-progs	https://github.com/kdave/btrfs-progs.git	no	yes	Btrfs mkfs check send receive inspect and libbtrfsutil.
+important	local-fs	btrfs-linux	sources/local-fs/btrfs-linux	https://github.com/btrfs/linux.git	no	yes	Btrfs development kernel tree for in-flight fs/btrfs work.
+important	local-fs	kdave-linux	sources/local-fs/kdave-linux	https://git.kernel.org/pub/scm/linux/kernel/git/kdave/linux.git	no	no	Btrfs maintainer integration tree; can stay deferred if LOC is high.
+required	local-fs	f2fs-tools	sources/local-fs/f2fs-tools	https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git	no	yes	F2FS mkfs fsck dump resize and sparse mobile-flash tooling.
+required	local-fs	erofs-utils	sources/local-fs/erofs-utils	https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git	no	yes	EROFS mkfs fsck dump and compressed read-only image tooling.
+required	local-fs	dosfstools	sources/local-fs/dosfstools	https://github.com/dosfstools/dosfstools.git	no	yes	FAT mkfs fsck userspace.
+required	local-fs	exfatprogs	sources/local-fs/exfatprogs	https://github.com/exfatprogs/exfatprogs.git	no	yes	exFAT mkfs fsck dump tune label tooling.
+required	local-fs	ntfs-3g	sources/local-fs/ntfs-3g	https://github.com/tuxera/ntfs-3g.git	no	yes	NTFS userspace driver and ntfsprogs source.
+important	local-fs	udftools	sources/local-fs/udftools	https://github.com/pali/udftools.git	no	yes	UDF filesystem userspace tools.
+important	local-fs	jfsutils	sources/local-fs/jfsutils	https://github.com/SudoMaker/jfsutils.git	no	yes	JFS fsck mkfs logdump and utilities; public Git mirror, canonical source should be rechecked.
+adjacent	local-fs	reiserfsprogs	sources/local-fs/reiserfsprogs	https://git.kernel.org/pub/scm/linux/kernel/git/jeffm/reiserfsprogs.git	no	no	Historical tree filesystem userspace.
+important	local-fs	squashfs-tools	sources/local-fs/squashfs-tools	https://github.com/plougher/squashfs-tools.git	no	yes	SquashFS image creation extraction and compression paths.
+adjacent	local-fs	apfs-fuse	sources/local-fs/apfs-fuse	https://github.com/sgan81/apfs-fuse.git	no	no	Public APFS reverse-engineered FUSE reader.
+adjacent	local-fs	linux-apfs-rw	sources/local-fs/linux-apfs-rw	https://github.com/linux-apfs/linux-apfs-rw.git	no	no	Public Linux APFS read/write implementation.
+required	cow-pools	openzfs	sources/cow-pools/openzfs	https://github.com/openzfs/zfs.git	no	yes	ZFS core pool checksum COW snapshot and platform glue.
+required	cow-pools	bcachefs	sources/cow-pools/bcachefs	https://github.com/koverstreet/bcachefs.git	no	yes	bcachefs filesystem kernel source mirror.
+required	cow-pools	bcachefs-tools	sources/cow-pools/bcachefs-tools	https://github.com/koverstreet/bcachefs-tools.git	no	yes	bcachefs mkfs fsck mount and tooling.
+required	cow-pools	nilfs-utils	sources/cow-pools/nilfs-utils	https://github.com/nilfs-dev/nilfs-utils.git	no	yes	NILFS continuous snapshot userspace tools.
+important	cow-pools	nilfs2-kmod10	sources/cow-pools/nilfs2-kmod10	https://github.com/nilfs-dev/nilfs2-kmod10.git	no	no	Standalone NILFS2 module for enterprise kernel contrast.
+required	block-storage	bcache-tools	sources/block-storage/bcache-tools	https://git.kernel.org/pub/scm/linux/kernel/git/colyli/bcache-tools.git	no	yes	bcache userspace formatting registration and inspection.
+important	block-storage	util-linux	sources/block-storage/util-linux	https://github.com/util-linux/util-linux.git	no	yes	mount umount findmnt libmount libblkid losetup fsck wrapper and block utilities.
+important	block-storage	mdadm	sources/block-storage/mdadm	https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git	no	yes	Linux software RAID management source.
+important	block-storage	parted	sources/block-storage/parted	https://git.savannah.gnu.org/git/parted.git	no	yes	GPT MBR partitioning and disk layout tools.
+important	block-storage	linux-dm	sources/block-storage/linux-dm	https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git	no	no	device-mapper maintainer kernel tree for dm targets.
+required	block-storage	lvm2	sources/block-storage/lvm2	https://gitlab.com/lvmteam/lvm2.git	no	yes	LVM libdevmapper dmsetup thin/cache metadata integration.
+required	block-storage	thin-provisioning-tools	sources/block-storage/thin-provisioning-tools	https://github.com/device-mapper-utils/thin-provisioning-tools.git	no	yes	dm-thin dm-cache dm-era metadata tools.
+required	block-storage	cryptsetup	sources/block-storage/cryptsetup	https://gitlab.com/cryptsetup/cryptsetup.git	no	yes	LUKS dm-crypt verity integrity userspace.
+important	block-storage	vdo	sources/block-storage/vdo	https://github.com/dm-vdo/vdo.git	no	yes	VDO userspace format and stats tools.
+important	block-storage	kvdo	sources/block-storage/kvdo	https://github.com/dm-vdo/kvdo.git	no	no	Historical/out-of-tree VDO kernel source.
+important	block-storage	stratisd	sources/block-storage/stratisd	https://github.com/stratis-storage/stratisd.git	no	yes	Stratis storage daemon over dm and XFS.
+important	block-storage	stratis-cli	sources/block-storage/stratis-cli	https://github.com/stratis-storage/stratis-cli.git	no	yes	Stratis CLI and D-Bus flow.
+adjacent	block-storage	devicemapper-rs	sources/block-storage/devicemapper-rs	https://github.com/stratis-storage/devicemapper-rs.git	no	no	Rust device-mapper bindings used by Stratis.
+adjacent	block-storage	libcryptsetup-rs	sources/block-storage/libcryptsetup-rs	https://github.com/stratis-storage/libcryptsetup-rs.git	no	no	Rust libcryptsetup bindings used by Stratis.
+adjacent	block-storage	libblkid-rs	sources/block-storage/libblkid-rs	https://github.com/stratis-storage/libblkid-rs.git	no	no	Rust libblkid bindings used by Stratis.
+required	user-network-fs	libfuse	sources/user-network-fs/libfuse	https://github.com/libfuse/libfuse.git	no	yes	FUSE protocol library examples and mount utilities.
+required	user-network-fs	sshfs	sources/user-network-fs/sshfs	https://github.com/libfuse/sshfs.git	no	yes	FUSE filesystem over SFTP.
+important	user-network-fs	go-fuse	sources/user-network-fs/go-fuse	https://github.com/hanwen/go-fuse.git	no	yes	Go FUSE implementation and examples.
+important	user-network-fs	bazil-fuse	sources/user-network-fs/bazil-fuse	https://github.com/bazil/fuse.git	no	yes	Go FUSE implementation used by several userfs projects.
+important	user-network-fs	pyfuse3	sources/user-network-fs/pyfuse3	https://github.com/libfuse/pyfuse3.git	no	yes	Python FUSE binding and examples.
+important	user-network-fs	fusepy	sources/user-network-fs/fusepy	https://github.com/fusepy/fusepy.git	no	no	Small Python FUSE binding for API contrast.
+important	user-network-fs	s3fs-fuse	sources/user-network-fs/s3fs-fuse	https://github.com/s3fs-fuse/s3fs-fuse.git	no	yes	S3 object-store filesystem via FUSE.
+important	user-network-fs	gcsfuse	sources/user-network-fs/gcsfuse	https://github.com/GoogleCloudPlatform/gcsfuse.git	no	yes	Google Cloud Storage FUSE implementation.
+important	user-network-fs	blobfuse2	sources/user-network-fs/blobfuse2	https://github.com/Azure/azure-storage-fuse.git	no	yes	Azure Storage FUSE implementation.
+important	user-network-fs	mergerfs	sources/user-network-fs/mergerfs	https://github.com/trapexit/mergerfs.git	no	yes	Policy-heavy FUSE union filesystem.
+required	user-network-fs	nfs-utils	sources/user-network-fs/nfs-utils	https://github.com/linux-nfs/nfs-utils.git	no	yes	Linux NFS mountd statd idmapd and client/server utilities.
+required	user-network-fs	nfs-ganesha	sources/user-network-fs/nfs-ganesha	https://github.com/nfs-ganesha/nfs-ganesha.git	no	yes	User-space NFS server and FSAL architecture.
+important	user-network-fs	libnfs	sources/user-network-fs/libnfs	https://github.com/sahlberg/libnfs.git	no	yes	User-space NFS client library.
+adjacent	user-network-fs	go-nfs	sources/user-network-fs/go-nfs	https://github.com/willscott/go-nfs.git	no	no	Small Go NFS server/library for protocol reading.
+required	user-network-fs	samba	sources/user-network-fs/samba	https://github.com/samba-team/samba.git	no	yes	SMB/CIFS server client VFS modules and protocol stack.
+required	user-network-fs	cifs-utils	sources/user-network-fs/cifs-utils	https://git.samba.org/cifs-utils.git	no	yes	Linux CIFS mount tools.
+important	user-network-fs	ksmbd-tools	sources/user-network-fs/ksmbd-tools	https://github.com/cifsd-team/ksmbd-tools.git	no	yes	Userspace tools for in-kernel SMB server.
+important	user-network-fs	libsmb2	sources/user-network-fs/libsmb2	https://github.com/sahlberg/libsmb2.git	no	yes	Compact SMB2/3 client library.
+important	user-network-fs	impacket	sources/user-network-fs/impacket	https://github.com/fortra/impacket.git	no	yes	Python SMB/RPC protocol implementation useful for packet-level study.
+adjacent	user-network-fs	smbj	sources/user-network-fs/smbj	https://github.com/hierynomus/smbj.git	no	no	Java SMB2/3 client implementation.
+adjacent	user-network-fs	smblibrary	sources/user-network-fs/smblibrary	https://github.com/TalAloni/SMBLibrary.git	no	no	C# SMB client/server implementation.
+important	user-network-fs	davfs2	sources/user-network-fs/davfs2	https://github.com/alisarctl/davfs2.git	no	yes	WebDAV filesystem mount implementation.
+adjacent	user-network-fs	rclone	sources/user-network-fs/rclone	https://github.com/rclone/rclone.git	no	no	Cloud storage FUSE/mount semantics and sync engine.
+required	distributed-fs	ceph	sources/distributed-fs/ceph	https://github.com/ceph/ceph.git	yes	yes	CephFS MDS clients RADOS OSD MON and RGW context.
+important	distributed-fs	ceph-client	sources/distributed-fs/ceph-client	https://github.com/ceph/ceph-client.git	no	no	Ceph kernel client standalone mirror.
+required	distributed-fs	glusterfs	sources/distributed-fs/glusterfs	https://github.com/gluster/glusterfs.git	no	yes	GlusterFS translators RPC daemons and FUSE/native clients.
+required	distributed-fs	lustre-release	sources/distributed-fs/lustre-release	https://github.com/lustre/lustre-release.git	no	yes	Lustre client server LNet ptlrpc MDT OST LLite source.
+required	distributed-fs	beegfs	sources/distributed-fs/beegfs	https://github.com/ThinkParQ/beegfs.git	no	yes	BeeGFS C/C++ metadata storage client module fsck.
+important	distributed-fs	beegfs-rust	sources/distributed-fs/beegfs-rust	https://github.com/ThinkParQ/beegfs-rust.git	no	yes	BeeGFS newer Rust management components.
+important	distributed-fs	beegfs-go	sources/distributed-fs/beegfs-go	https://github.com/ThinkParQ/beegfs-go.git	no	yes	BeeGFS Go CLI and management libraries.
+important	distributed-fs	beegfs-protobuf	sources/distributed-fs/beegfs-protobuf	https://github.com/ThinkParQ/protobuf.git	no	no	BeeGFS protocol definitions.
+required	distributed-fs	moosefs	sources/distributed-fs/moosefs	https://github.com/moosefs/moosefs.git	no	yes	MooseFS master chunkserver client implementation.
+important	distributed-fs	lizardfs	sources/distributed-fs/lizardfs	https://github.com/lizardfs/lizardfs.git	no	yes	MooseFS-family distributed filesystem fork.
+important	distributed-fs	orangefs	sources/distributed-fs/orangefs	https://github.com/waltligon/orangefs.git	no	yes	OrangeFS/PVFS parallel filesystem source.
+required	distributed-fs	hadoop	sources/distributed-fs/hadoop	https://gitbox.apache.org/repos/asf/hadoop.git	no	yes	HDFS and shared Hadoop storage/client code.
+required	distributed-fs	alluxio	sources/distributed-fs/alluxio	https://github.com/Alluxio/alluxio.git	no	yes	Virtual distributed filesystem and cache layer.
+required	distributed-fs	juicefs	sources/distributed-fs/juicefs	https://github.com/juicedata/juicefs.git	no	yes	POSIX filesystem over metadata DB and object storage.
+required	distributed-fs	seaweedfs	sources/distributed-fs/seaweedfs	https://github.com/seaweedfs/seaweedfs.git	no	yes	Filer volume server S3 gateway and filesystem mount.
+important	distributed-fs	openafs	sources/distributed-fs/openafs	https://github.com/openafs/openafs.git	no	yes	AFS distributed filesystem implementation.
+important	distributed-fs	coda	sources/distributed-fs/coda	https://github.com/cmusatyalab/coda.git	no	yes	Coda disconnected operation distributed filesystem.
+important	distributed-fs	xrootd	sources/distributed-fs/xrootd	https://github.com/xrootd/xrootd.git	no	yes	XRootD storage federation and file access.
+important	distributed-fs	eos	sources/distributed-fs/eos	https://gitlab.cern.ch/dss/eos.git	no	yes	CERN EOS distributed disk storage and namespace.
+adjacent	distributed-fs	tahoe-lafs	sources/distributed-fs/tahoe-lafs	https://github.com/tahoe-lafs/tahoe-lafs.git	no	no	Capability-secure distributed filesystem.
+adjacent	distributed-fs	ipfs-kubo	sources/distributed-fs/ipfs-kubo	https://github.com/ipfs/kubo.git	no	no	Content-addressed distributed file graph; not POSIX.
+required	object-store	minio	sources/object-store/minio	https://github.com/minio/minio.git	no	yes	S3-compatible object storage source; track maintenance caveat.
+important	object-store	minio-mc	sources/object-store/minio-mc	https://github.com/minio/mc.git	no	yes	S3/minio file-style client and mirror/diff/admin flows.
+required	object-store	openstack-swift	sources/object-store/openstack-swift	https://opendev.org/openstack/swift.git	no	yes	OpenStack Swift distributed object storage canonical source.
+required	object-store	apache-ozone	sources/object-store/apache-ozone	https://github.com/apache/ozone.git	no	yes	Hadoop object store and Ozone Manager/DataNode code.
+required	object-store	daos	sources/object-store/daos	https://github.com/daos-stack/daos.git	yes	yes	HPC distributed object store and VOS engine.
+important	object-store	garage	sources/object-store/garage	https://git.deuxfleurs.fr/Deuxfleurs/garage.git	no	yes	Geo-distributed S3-compatible object store.
+important	object-store	rustfs	sources/object-store/rustfs	https://github.com/rustfs/rustfs.git	no	yes	Rust S3-compatible object storage implementation.
+important	control-plane	rook	sources/control-plane/rook	https://github.com/rook/rook.git	no	yes	CephFS/RBD Kubernetes operator and orchestration source.
+important	control-plane	longhorn	sources/control-plane/longhorn	https://github.com/longhorn/longhorn.git	no	yes	Kubernetes distributed block storage source for FS-on-distributed-block study.
+important	control-plane	ceph-csi	sources/control-plane/ceph-csi	https://github.com/ceph/ceph-csi.git	no	yes	CephFS/RBD CSI provisioning mount snapshot source.
+important	control-plane	beegfs-csi-driver	sources/control-plane/beegfs-csi-driver	https://github.com/ThinkParQ/beegfs-csi-driver.git	no	yes	BeeGFS CSI driver source.
+important	control-plane	juicefs-csi-driver	sources/control-plane/juicefs-csi-driver	https://github.com/juicedata/juicefs-csi-driver.git	no	yes	JuiceFS CSI driver source.
+important	control-plane	csi-spec	sources/control-plane/csi-spec	https://github.com/container-storage-interface/spec.git	no	no	CSI protobuf/interface source for direct storage drivers.
+important	control-plane	mayastor	sources/control-plane/mayastor	https://github.com/openebs/mayastor.git	no	no	SPDK-backed Kubernetes storage engine and CSI data-path source.
+important	control-plane	csi-driver-nfs	sources/control-plane/csi-driver-nfs	https://github.com/kubernetes-csi/csi-driver-nfs.git	no	no	NFS CSI driver source.
+important	control-plane	csi-driver-smb	sources/control-plane/csi-driver-smb	https://github.com/kubernetes-csi/csi-driver-smb.git	no	no	SMB CSI driver source.
+important	control-plane	csi-driver-iscsi	sources/control-plane/csi-driver-iscsi	https://github.com/kubernetes-csi/csi-driver-iscsi.git	no	no	iSCSI CSI driver source for block-backed filesystem study.
+important	control-plane	longhorn-engine	sources/control-plane/longhorn-engine	https://github.com/longhorn/longhorn-engine.git	no	no	Longhorn replicated block engine source.
+adjacent	control-plane	csi-driver-host-path	sources/control-plane/csi-driver-host-path	https://github.com/kubernetes-csi/csi-driver-host-path.git	no	no	Reference CSI hostpath driver.
+adjacent	control-plane	external-snapshotter	sources/control-plane/external-snapshotter	https://github.com/kubernetes-csi/external-snapshotter.git	no	no	CSI snapshot sidecar source.
+adjacent	control-plane	csi-lib-utils	sources/control-plane/csi-lib-utils	https://github.com/kubernetes-csi/csi-lib-utils.git	no	no	CSI shared utility source.
+required	cloud-native	fuse-overlayfs	sources/cloud-native/fuse-overlayfs	https://github.com/containers/fuse-overlayfs.git	no	yes	FUSE implementation of overlay semantics.
+important	cloud-native	overlayfs-tools	sources/cloud-native/overlayfs-tools	https://github.com/kmxz/overlayfs-tools.git	no	yes	OverlayFS inspection and debugging tools.
+important	cloud-native	fuse-overlayfs-snapshotter	sources/cloud-native/fuse-overlayfs-snapshotter	https://github.com/containerd/fuse-overlayfs-snapshotter.git	no	yes	containerd snapshotter integration for fuse-overlayfs.
+required	cloud-native	containers-storage	sources/cloud-native/containers-storage	https://github.com/containers/storage.git	no	yes	Container storage graph drivers and layer metadata.
+required	cloud-native	containerd	sources/cloud-native/containerd	https://github.com/containerd/containerd.git	no	yes	Snapshotter interfaces and overlay/native storage paths.
+important	cloud-native	stargz-snapshotter	sources/cloud-native/stargz-snapshotter	https://github.com/containerd/stargz-snapshotter.git	no	yes	Lazy-pull eStargz filesystem/snapshotter.
+important	cloud-native	nydus	sources/cloud-native/nydus	https://github.com/dragonflyoss/nydus.git	no	yes	Lazy image filesystem and RAFS implementation.
+important	cloud-native	nydus-snapshotter	sources/cloud-native/nydus-snapshotter	https://github.com/containerd/nydus-snapshotter.git	no	yes	containerd snapshotter integration for Nydus.
+important	cloud-native	soci-snapshotter	sources/cloud-native/soci-snapshotter	https://github.com/awslabs/soci-snapshotter.git	no	yes	Seekable OCI snapshotter source.
+important	cloud-native	composefs	sources/cloud-native/composefs	https://github.com/composefs/composefs.git	no	yes	Composable content-addressed filesystem images.
+important	cloud-native	composefs-rs	sources/cloud-native/composefs-rs	https://github.com/composefs/composefs-rs.git	no	yes	Rust composefs tooling and library source.
+adjacent	cloud-native	moby	sources/cloud-native/moby	https://github.com/moby/moby.git	no	no	Docker graphdriver and overlay2 integration source.
+adjacent	cloud-native	buildkit	sources/cloud-native/buildkit	https://github.com/moby/buildkit.git	no	no	Build cache snapshot and content store source.
+adjacent	cloud-native	cri-o	sources/cloud-native/cri-o	https://github.com/cri-o/cri-o.git	no	no	CRI-O rootfs and container storage integration source.
+adjacent	cloud-native	overlaybd	sources/cloud-native/overlaybd	https://github.com/containerd/overlaybd.git	no	no	Block-based remote image snapshotter source.
+required	cloud-native	ostree	sources/cloud-native/ostree	https://github.com/ostreedev/ostree.git	no	yes	Content-addressed filesystem tree deployment.
+required	virtualization	qemu	sources/virtualization/qemu	https://gitlab.com/qemu-project/qemu.git	no	yes	Block layer qcow2 NBD virtiofs historical source.
+important	virtualization	virtiofsd	sources/virtualization/virtiofsd	https://gitlab.com/virtio-fs/virtiofsd.git	no	yes	Standalone virtiofs daemon if upstream remains available.
+required	virtualization	spdk	sources/virtualization/spdk	https://github.com/spdk/spdk.git	yes	yes	User-space NVMe/blobstore/block storage stack.
+important	virtualization	nbd	sources/virtualization/nbd	https://github.com/NetworkBlockDevice/nbd.git	no	yes	NBD client/server source.
+important	virtualization	nbdkit	sources/virtualization/nbdkit	https://gitlab.com/nbdkit/nbdkit.git	no	yes	NBD server plugins and filters.
+important	virtualization	libnbd	sources/virtualization/libnbd	https://gitlab.com/nbdkit/libnbd.git	no	yes	NBD client library and tooling.
+important	virtualization	open-iscsi	sources/virtualization/open-iscsi	https://github.com/open-iscsi/open-iscsi.git	no	no	iSCSI block-storage path adjacent to remote FS.
+important	virtualization	libguestfs	sources/virtualization/libguestfs	https://github.com/libguestfs/libguestfs.git	no	yes	Guest filesystem image inspection and modification source.
+important	virtualization	guestfs-tools	sources/virtualization/guestfs-tools	https://github.com/libguestfs/guestfs-tools.git	no	yes	Guest filesystem image tools.
+important	virtualization	libblockdev	sources/virtualization/libblockdev	https://github.com/storaged-project/libblockdev.git	no	yes	Block-device operation library.
+important	virtualization	nvme-cli	sources/virtualization/nvme-cli	https://github.com/linux-nvme/nvme-cli.git	no	yes	NVMe admin and test tooling.
+required	test-tools	xfstests	sources/test-tools/xfstests	https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git	no	yes	Filesystem regression tests fsstress fsx and generic FS coverage.
+important	test-tools	xfstests-bld	sources/test-tools/xfstests-bld	https://github.com/tytso/xfstests-bld.git	no	no	xfstests automation and VM flows.
+required	test-tools	blktests	sources/test-tools/blktests	https://github.com/osandov/blktests.git	no	yes	Block layer and NVMe regression tests.
+required	test-tools	fio	sources/test-tools/fio	https://github.com/axboe/fio.git	no	yes	Filesystem and block I/O workload generator source.
+required	test-tools	ltp	sources/test-tools/ltp	https://github.com/linux-test-project/ltp.git	no	yes	Linux syscall/fs stress and conformance tests.
+important	test-tools	pjdfstest	sources/test-tools/pjdfstest	https://github.com/pjd/pjdfstest.git	no	yes	POSIX filesystem behavior tests.
+important	test-tools	crashmonkey	sources/test-tools/crashmonkey	https://github.com/utsaslab/crashmonkey.git	no	no	Crash-consistency testing source.
+important	test-tools	filebench	sources/test-tools/filebench	https://github.com/filebench/filebench.git	no	no	Filesystem workload benchmark source.
+important	test-tools	fs-mark	sources/test-tools/fs-mark	https://github.com/josefbacik/fs_mark.git	no	no	Metadata benchmark source.
+important	test-tools	ior	sources/test-tools/ior	https://github.com/hpc/ior.git	no	no	HPC parallel I/O benchmark source.
+important	test-tools	unionmount-testsuite	sources/test-tools/unionmount-testsuite	https://github.com/amir73il/unionmount-testsuite.git	no	no	Overlay/union mount behavior tests.
+important	test-tools	pynfs	sources/test-tools/pynfs	https://github.com/linux-nfs/pynfs.git	no	no	NFSv4 protocol tests.
+important	test-tools	cthon04	sources/test-tools/cthon04	https://github.com/phdeniel/cthon04.git	no	no	Legacy NFS interoperability tests.
+important	test-tools	kdevops	sources/test-tools/kdevops	https://github.com/linux-kdevops/kdevops.git	no	no	Kernel and filesystem test automation source.
+important	test-tools	liburing	sources/test-tools/liburing	https://github.com/axboe/liburing.git	no	no	io_uring library and tests.
+important	local-fs	mtd-utils	sources/local-fs/mtd-utils	https://git.kernel.org/pub/scm/linux/kernel/git/rw/mtd-utils.git	no	yes	MTD UBI UBIFS JFFS2 userspace tools.
+important	test-tools	strace	sources/test-tools/strace	https://github.com/strace/strace.git	no	no	Syscall tracing source useful for VFS behavior observation.
+important	test-tools	lcov	sources/test-tools/lcov	https://github.com/linux-test-project/lcov.git	no	no	Coverage tooling source.
+important	test-tools	stress-ng	sources/test-tools/stress-ng	https://github.com/ColinIanKing/stress-ng.git	no	no	Stress workload source with filesystem stressors.
+important	test-tools	iozone	sources/test-tools/iozone	https://github.com/pantheon-systems/iozone.git	no	no	Filesystem benchmark source; public Git mirror.
+required	security-integrity	fscrypt	sources/security-integrity/fscrypt	https://github.com/google/fscrypt.git	no	yes	Linux filesystem encryption userspace.
+required	security-integrity	fsverity-utils	sources/security-integrity/fsverity-utils	https://git.kernel.org/pub/scm/fs/fsverity/fsverity-utils.git	no	yes	fs-verity userspace signing and measurement tools.
+important	security-integrity	ecryptfs-utils	sources/security-integrity/ecryptfs-utils	https://github.com/dustinkirkland/ecryptfs-utils.git	no	yes	eCryptfs userspace utilities.
+important	security-integrity	gocryptfs	sources/security-integrity/gocryptfs	https://github.com/rfjakob/gocryptfs.git	no	yes	Encrypted FUSE filesystem.
+important	security-integrity	cryfs	sources/security-integrity/cryfs	https://github.com/cryfs/cryfs.git	no	yes	Encrypted cloud-oriented FUSE filesystem.
+important	security-integrity	encfs	sources/security-integrity/encfs	https://github.com/vgough/encfs.git	no	yes	Historical encrypted FUSE filesystem.
+important	security-integrity	ima-evm-utils	sources/security-integrity/ima-evm-utils	https://github.com/linux-integrity/ima-evm-utils.git	no	yes	Linux IMA/EVM file integrity userspace.
+important	security-integrity	acl	sources/security-integrity/acl	https://git.savannah.nongnu.org/git/acl.git	no	yes	POSIX ACL userspace library and tools.
+important	security-integrity	attr	sources/security-integrity/attr	https://git.savannah.nongnu.org/git/attr.git	no	yes	Extended attributes library and tools.
+important	security-integrity	libcap	sources/security-integrity/libcap	https://git.kernel.org/pub/scm/libs/libcap/libcap.git	no	yes	Linux file capabilities and capability utilities.
+important	security-integrity	keyutils	sources/security-integrity/keyutils	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git	no	yes	Linux key retention service userspace.
+important	security-integrity	selinux	sources/security-integrity/selinux	https://github.com/SELinuxProject/selinux.git	no	yes	SELinux labels policy loading and file context source.
+important	security-integrity	audit-userspace	sources/security-integrity/audit-userspace	https://github.com/linux-audit/audit-userspace.git	no	yes	Audit userspace for file access and security event semantics.
+required	sync-backup	rsync	sources/sync-backup/rsync	https://github.com/RsyncProject/rsync.git	no	yes	File-tree delta transfer and metadata preservation.
+required	sync-backup	syncthing	sources/sync-backup/syncthing	https://github.com/syncthing/syncthing.git	no	yes	Distributed file synchronization semantics.
+important	sync-backup	restic	sources/sync-backup/restic	https://github.com/restic/restic.git	no	yes	Content-addressed backup repository source.
+important	sync-backup	borg	sources/sync-backup/borg	https://github.com/borgbackup/borg.git	no	yes	Deduplicating encrypted backup filesystem-like repository.
+important	sync-backup	kopia	sources/sync-backup/kopia	https://github.com/kopia/kopia.git	no	yes	Content-addressed backup and snapshot source.
+important	sync-backup	git-annex	sources/sync-backup/git-annex	https://git.joeyh.name/git/git-annex.git	no	yes	File tree indirection and distributed content management.
+important	sync-backup	casync	sources/sync-backup/casync	https://github.com/systemd/casync.git	no	no	Content-addressed synchronization source.
+important	sync-backup	unison	sources/sync-backup/unison	https://github.com/bcpierce00/unison.git	no	yes	Bidirectional file tree reconciliation source.
+important	sync-backup	git-lfs	sources/sync-backup/git-lfs	https://github.com/git-lfs/git-lfs.git	no	yes	Git large-file pointer and content transfer semantics.
+important	sync-backup	git-crypt	sources/sync-backup/git-crypt	https://github.com/AGWA/git-crypt.git	no	no	Transparent Git file encryption source.
+adjacent	sync-backup	bup	sources/sync-backup/bup	https://github.com/bup/bup.git	no	no	Git-pack based backup source.
+adjacent	compression	zstd	sources/compression/zstd	https://github.com/facebook/zstd.git	no	no	Compression engine used by filesystems and backup tools.
+adjacent	compression	xz	sources/compression/xz	https://github.com/tukaani-project/xz.git	no	no	XZ/LZMA compression source.
+adjacent	compression	lz4	sources/compression/lz4	https://github.com/lz4/lz4.git	no	no	LZ4 compression source.
+adjacent	compression	zlib	sources/compression/zlib	https://github.com/madler/zlib.git	no	no	zlib compression source.
+adjacent	test-tools	syzkaller	sources/test-tools/syzkaller	https://github.com/google/syzkaller.git	no	no	Kernel fuzzing source with filesystem bug-finding value.
+adjacent	storage-engines	rocksdb	sources/storage-engines/rocksdb	https://github.com/facebook/rocksdb.git	no	no	LSM storage engine used for metadata and object-store comparisons.
+adjacent	storage-engines	leveldb	sources/storage-engines/leveldb	https://github.com/google/leveldb.git	no	no	Minimal LSM design reference.
+adjacent	storage-engines	pebble	sources/storage-engines/pebble	https://github.com/cockroachdb/pebble.git	no	no	Go LSM engine and manifest/WAL implementation.
+adjacent	storage-engines	badger	sources/storage-engines/badger	https://github.com/dgraph-io/badger.git	no	no	LSM/value-log source.
+adjacent	storage-engines	wiredtiger	sources/storage-engines/wiredtiger	https://github.com/wiredtiger/wiredtiger.git	no	no	B-tree/log/checkpoint storage engine.
+adjacent	storage-engines	sqlite	sources/storage-engines/sqlite	https://github.com/sqlite/sqlite.git	no	no	Pager VFS WAL and btree source mirror.
+adjacent	storage-engines	lmdb	sources/storage-engines/lmdb	https://github.com/LMDB/lmdb.git	no	no	Mmap B+tree storage engine source.
+adjacent	storage-engines	foundationdb	sources/storage-engines/foundationdb	https://github.com/apple/foundationdb.git	no	no	Distributed storage engine and transaction log source.
+adjacent	storage-engines	tikv	sources/storage-engines/tikv	https://github.com/tikv/tikv.git	no	no	Distributed Raft/LSM storage engine.
+adjacent	storage-engines	raft-engine	sources/storage-engines/raft-engine	https://github.com/tikv/raft-engine.git	no	no	TiKV standalone raft log engine with file-pipe log storage.
+important	os-vfs	xnu	sources/os/darwin/xnu	https://github.com/apple-oss-distributions/xnu.git	no	yes	Public Darwin/XNU VFS and filesystem source.
+important	user-network-fs	macfuse	sources/user-network-fs/macfuse	https://github.com/macfuse/macfuse.git	no	yes	Public macOS FUSE implementation.
+important	local-fs	ocfs2-tools	sources/local-fs/ocfs2-tools	https://github.com/markfasheh/ocfs2-tools.git	no	yes	OCFS2 cluster filesystem userspace tools.
+important	local-fs	gfs2-utils	sources/local-fs/gfs2-utils	https://pagure.io/gfs2-utils.git	no	yes	GFS2 cluster filesystem userspace tools.
+important	local-fs	dlm	sources/local-fs/dlm	https://pagure.io/dlm.git	no	no	Distributed lock manager userspace for cluster filesystems.
+important	user-network-fs	libtirpc	sources/user-network-fs/libtirpc	git://linux-nfs.org/~steved/libtirpc	no	no	TIRPC dependency source for NFS userspace closure.
+important	user-network-fs	rpcbind	sources/user-network-fs/rpcbind	git://linux-nfs.org/~steved/rpcbind	no	no	RPC bind service source for NFS userspace closure.

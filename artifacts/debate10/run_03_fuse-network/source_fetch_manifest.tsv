@@ -1,0 +1,39 @@
+path	category	priority	repo_url	upstream_status	loc_order	reason
+sources/00-os-kernel/linux	os-kernel-vfs	must	https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git	verified-git-ls-remote	30M+	Linux VFS plus in-kernel FUSE, NFS client/server, CIFS/SMB3, 9p, overlayfs, CephFS, ext4, XFS, btrfs.
+sources/00-os-kernel/freebsd-src	os-kernel-vfs	strong	https://git.FreeBSD.org/src.git	verified-git-ls-remote	10M-30M	Independent VFS, NFS client/server, fusefs, ZFS integration, and UNIX filesystem design reference.
+sources/00-os-kernel/illumos-gate	os-kernel-vfs	strong	https://github.com/illumos/illumos-gate.git	verified-github-api	5M-10M	OpenZFS heritage, NFS, SMB server/client, vnode/VFS implementation.
+sources/10-fuse-userspace/libfuse	fuse-core	must	https://github.com/libfuse/libfuse.git	verified-github-api	50k-100k	Canonical Linux FUSE userspace library and protocol-facing examples/tests.
+sources/10-fuse-userspace/sshfs	fuse-remote	must	https://github.com/libfuse/sshfs.git	verified-github-api	5k-20k	Canonical SSH/SFTP mounted filesystem using FUSE.
+sources/10-fuse-userspace/go-fuse	fuse-library	must	https://github.com/hanwen/go-fuse.git	verified-github-api	20k-60k	Important Go FUSE implementation with low-level/high-level APIs.
+sources/10-fuse-userspace/s3fs-fuse	fuse-object-store	must	https://github.com/s3fs-fuse/s3fs-fuse.git	verified-github-api	30k-80k	S3 object-store filesystem via FUSE; mature C++ implementation.
+sources/10-fuse-userspace/rclone	fuse-object-store	strong	https://github.com/rclone/rclone.git	verified-github-api	200k-400k	Multi-backend cloud storage with mount/VFS layer and broad remote semantics.
+sources/10-fuse-userspace/fuse-overlayfs	fuse-overlay	strong	https://github.com/containers/fuse-overlayfs.git	verified-github-api	10k-30k	Rootless/container overlay semantics implemented in userspace.
+sources/10-fuse-userspace/mergerfs	fuse-union	strong	https://github.com/trapexit/mergerfs.git	verified-github-api	80k-180k	Production union filesystem in FUSE with policy-heavy path routing.
+sources/10-fuse-userspace/gocryptfs	fuse-encryption	strong	https://github.com/rfjakob/gocryptfs.git	verified-github-api	20k-60k	FUSE encryption filesystem; useful for metadata/name transform study.
+sources/10-fuse-userspace/goofys	fuse-object-store	optional	https://github.com/kahing/goofys.git	verified-github-api	20k-60k	S3-focused Go FUSE implementation; useful contrast with s3fs/rclone.
+sources/10-fuse-userspace/gcsfuse	fuse-object-store	strong	https://github.com/GoogleCloudPlatform/gcsfuse.git	verified-github-api	100k-250k	Google Cloud Storage FUSE implementation; current provider-backed source.
+sources/10-fuse-userspace/blobfuse2	fuse-object-store	strong	https://github.com/Azure/azure-storage-fuse.git	verified-github-api	60k-180k	Azure Storage FUSE implementation; current provider-backed source.
+sources/10-fuse-userspace/curlftpfs	fuse-ftp	risk	https://sourceforge.net/p/curlftpfs/code/	verified-http-200	5k-20k	Historical FTP-over-FUSE target; upstream is SourceForge/CVS-era, needs archive validation.
+sources/10-fuse-userspace/curlftpfs-cvs-import	fuse-ftp	risk	https://github.com/vpit/curlftpfs.git	verified-git-ls-remote	5k-20k	Git import of curlftpfs CVS history; use only if SourceForge export is inconvenient.
+sources/20-network-protocols/nfs/nfs-ganesha	nfs-server	must	https://github.com/nfs-ganesha/nfs-ganesha.git	verified-github-api	200k-400k	Major userspace NFS server with FSAL abstraction, NFSv3/v4, pNFS-related code paths.
+sources/20-network-protocols/nfs/nfs-utils	nfs-tooling	must	https://github.com/linux-nfs/nfs-utils.git	verified-git-ls-remote	80k-180k	Linux NFS userland tools, mount helpers, idmapping, rpc/statd/sm-notify utilities.
+sources/20-network-protocols/nfs/libnfs	nfs-client-library	strong	https://github.com/sahlberg/libnfs.git	verified-github-api	30k-80k	Portable userspace NFS client library; compact protocol implementation.
+sources/20-network-protocols/nfs/go-nfs	nfs-library	optional	https://github.com/willscott/go-nfs.git	verified-github-api	5k-20k	Small Go NFS server/library for readable protocol-level study.
+sources/20-network-protocols/nfs/libtirpc	nfs-rpc-dependency	risk	https://git.linux-nfs.org/projects/steved/libtirpc.git	timeout-in-session	20k-80k	TIRPC dependency for NFS userland; official linux-nfs endpoint timed out locally and needs recheck.
+sources/20-network-protocols/nfs/rpcbind	nfs-rpc-dependency	risk	https://git.linux-nfs.org/projects/steved/rpcbind.git	timeout-in-session	10k-40k	RPC bind service dependency; official linux-nfs endpoint timed out locally and needs recheck.
+sources/20-network-protocols/smb/samba	smb-server-client	must	https://git.samba.org/samba.git	verified-git-ls-remote	1M-3M	Canonical open SMB/CIFS/AD implementation; server, client libs, auth, IDL, torture tests.
+sources/20-network-protocols/smb/samba-github-mirror	smb-server-client	backup	https://github.com/samba-team/samba.git	verified-github-api	1M-3M	GitHub mirror for browsing/API metadata; prefer git.samba.org for authoritative upstream.
+sources/20-network-protocols/smb/cifs-utils	smb-tooling	must	https://git.samba.org/cifs-utils.git	verified-git-ls-remote	10k-40k	Linux CIFS mount helpers and utilities paired with the kernel CIFS/SMB3 client.
+sources/20-network-protocols/smb/libsmb2	smb-client-library	strong	https://github.com/sahlberg/libsmb2.git	verified-github-api	20k-60k	Compact SMB2/3 client library useful for protocol-level reading.
+sources/20-network-protocols/smb/impacket	smb-protocol-python	strong	https://github.com/fortra/impacket.git	verified-github-api	100k-250k	Python protocol implementations including SMB/RPC; valuable for packet-level behavior.
+sources/20-network-protocols/smb/smbj	smb-client-java	optional	https://github.com/hierynomus/smbj.git	verified-github-api	30k-80k	Java SMB2/3 client implementation; alternative language design.
+sources/20-network-protocols/smb/smblibrary	smb-client-server-csharp	optional	https://github.com/TalAloni/SMBLibrary.git	verified-github-api	30k-80k	C# SMB client/server library; readable standalone SMB implementation.
+sources/20-network-protocols/smb/ksmbd-tools	smb-kernel-server-tooling	strong	https://github.com/cifsd-team/ksmbd-tools.git	verified-github-api	10k-30k	Userland tools for Linux ksmbd; pair with Linux kernel fs/smb/server.
+sources/30-distributed-fs/ceph	distributed-fs	must	https://github.com/ceph/ceph.git	verified-github-api	3M-6M	CephFS, RADOS, librados, MDS, object/block/file architecture; flagship DFS source.
+sources/30-distributed-fs/glusterfs	distributed-fs	must	https://github.com/gluster/glusterfs.git	verified-github-api	500k-1M	Translator-stack distributed filesystem; strong contrast with CephFS.
+sources/30-distributed-fs/lustre	distributed-fs	must	https://github.com/lustre/lustre-release.git	verified-github-api	800k-2M	HPC distributed filesystem; client/server kernel modules and userspace tools.
+sources/30-distributed-fs/juicefs	distributed-fs	strong	https://github.com/juicedata/juicefs.git	verified-github-api	150k-350k	Modern Go DFS with metadata-engine abstraction and FUSE mount.
+sources/30-distributed-fs/seaweedfs	distributed-fs	strong	https://github.com/seaweedfs/seaweedfs.git	verified-github-api	500k-1M	Object store plus Filer/FUSE/S3/HDFS-like interfaces; broad protocol surface.
+sources/30-distributed-fs/moosefs	distributed-fs	optional	https://github.com/moosefs/moosefs.git	verified-github-api	100k-250k	Classic master/chunkserver distributed filesystem.
+sources/30-distributed-fs/lizardfs	distributed-fs	optional	https://github.com/lizardfs/lizardfs.git	verified-github-api	100k-250k	MooseFS-derived DFS; useful for lineage comparison though less active.
+sources/30-distributed-fs/curve	distributed-storage-fs	optional	https://github.com/opencurve/curve.git	verified-github-api	500k-1.5M	Distributed storage with filesystem/block components; larger optional expansion.

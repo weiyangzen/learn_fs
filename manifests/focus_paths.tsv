@@ -1,0 +1,407 @@
+id	focus_path	why
+linux	fs	VFS and in-kernel filesystems.
+linux	mm	Page cache writeback mmap and memory-backed filesystems.
+linux	block	Block layer used below filesystems.
+linux	include/linux/fs.h	Core inode file superblock and fs operation interfaces.
+linux	include/linux/namei.h	Name lookup interface.
+linux	io_uring	Modern async file IO path.
+linux-stable	fs	Stable backport filesystem context.
+freebsd-src	sys/kern	FreeBSD VFS implementation.
+freebsd-src	sys/sys	FreeBSD vnode mount and namei headers.
+freebsd-src	sys/ufs	UFS/FFS implementation.
+freebsd-src	sys/fs	FreeBSD filesystem implementations.
+freebsd-src	sbin	FreeBSD filesystem tools.
+openbsd-src	sys/kern	OpenBSD VFS implementation.
+openbsd-src	sys/sys	OpenBSD vnode mount and namei headers.
+openbsd-src	sys/ufs	OpenBSD UFS/FFS implementation.
+openbsd-src	sys/miscfs	Misc filesystems including fuse paths.
+openbsd-src	sbin	OpenBSD fsck newfs and mount tools.
+netbsd-src	sys/kern	NetBSD VFS implementation.
+netbsd-src	sys/sys	NetBSD vnode mount and namei headers.
+netbsd-src	sys/ufs	NetBSD UFS/FFS implementation.
+netbsd-src	sys/fs	NetBSD filesystems including puffs.
+netbsd-src	lib	NetBSD libpuffs/librefuse area.
+dragonflybsd	sys/kern	DragonFly VFS implementation.
+dragonflybsd	sys/sys	DragonFly vnode headers.
+dragonflybsd	sys/vfs	DragonFly filesystems including HAMMER and HAMMER2.
+illumos-gate	usr/src/uts/common/os	illumos vnode VFS lookup implementation.
+illumos-gate	usr/src/uts/common/sys	illumos vnode and filesystem headers.
+illumos-gate	usr/src/uts/common/fs	illumos ZFS UFS NFS tmpfs pcfs lofs implementations.
+illumos-gate	usr/src/cmd/zfs	ZFS CLI source.
+illumos-gate	usr/src/cmd/zpool	Zpool CLI source.
+plan9	sys/src/9	Plan 9 kernel namespace and filesystem code.
+plan9	sys/src/lib9p	Plan 9 9P library.
+plan9	sys/src/cmd	Plan 9 filesystem commands such as fossil venti exportfs.
+9front	sys/src/9	9front kernel namespace and filesystem code.
+9front	sys/src/lib9p	9front 9P library.
+9front	sys/src/cmd	9front filesystem command source.
+reactos	drivers/filesystems	Public NT-like filesystem drivers.
+reactos	ntoskrnl/io	ReactOS IO manager paths.
+reactos	ntoskrnl/mm	ReactOS memory manager paths relevant to cache/section IO.
+reactos	sdk/lib/fslib	ReactOS filesystem support libraries.
+windows-driver-samples	filesys	Windows filesystem and minifilter sample source.
+winfsp	src/sys	WinFsp kernel driver.
+winfsp	src/dll	WinFsp user-mode DLL.
+winfsp	src/dll/fuse	WinFsp FUSE compatibility.
+dokany	sys	Dokany kernel driver.
+dokany	dokan	Dokany user-mode library.
+dokany	dokan_fuse	Dokany FUSE compatibility.
+winbtrfs	src	Windows Btrfs driver source.
+xv6-riscv	kernel	xv6 filesystem buffer log file syscall code.
+xv6-riscv	mkfs	xv6 mkfs source.
+xv6-public	.	xv6 x86 filesystem source root.
+minix	minix/servers/vfs	MINIX VFS server.
+minix	minix/fs	MINIX filesystem servers.
+minix	minix/lib/libminixfs	MINIX filesystem support library.
+minix	minix/drivers/storage	MINIX storage drivers.
+os161	kern/vfs	OS/161 VFS implementation.
+os161	kern/fs	OS/161 filesystem implementation.
+os161	kern/include	OS/161 VFS headers.
+pintos	src/filesys	Pintos teaching filesystem source.
+e2fsprogs	lib/ext2fs	ext2/ext3/ext4 format library.
+e2fsprogs	e2fsck	ext filesystem checker.
+e2fsprogs	misc	mkfs/tune/debug utilities.
+xfsprogs	libxfs	XFS shared userspace/kernel-derived code.
+xfsprogs	repair	XFS repair implementation.
+xfsprogs	mkfs	XFS mkfs implementation.
+xfsprogs	db	XFS metadata debugger.
+btrfs-progs	kernel-lib	Btrfs kernel-derived support code.
+btrfs-progs	cmds	Btrfs CLI command implementations.
+btrfs-progs	check	Btrfs check/repair source.
+btrfs-progs	mkfs	Btrfs mkfs source.
+btrfs-linux	fs/btrfs	Btrfs kernel development source.
+kdave-linux	fs/btrfs	Btrfs maintainer tree source.
+f2fs-tools	fsck	F2FS checker and repair code.
+f2fs-tools	mkfs	F2FS mkfs source.
+f2fs-tools	include	F2FS userspace interfaces.
+erofs-utils	lib	EROFS userspace library.
+erofs-utils	mkfs	EROFS mkfs source.
+erofs-utils	fsck	EROFS fsck source.
+dosfstools	src	FAT mkfs/fsck source.
+exfatprogs	fsck	exFAT checker source.
+exfatprogs	mkfs	exFAT mkfs source.
+ntfs-3g	libntfs-3g	NTFS library source.
+ntfs-3g	src	NTFS-3G FUSE driver source.
+ntfs-3g	ntfsprogs	NTFS userspace tools.
+udftools	.	UDF userspace tools.
+jfsutils	.	JFS userspace tools.
+reiserfsprogs	.	ReiserFS userspace tools.
+squashfs-tools	.	SquashFS userspace tools.
+apfs-fuse	.	APFS FUSE reader source.
+linux-apfs-rw	.	Linux APFS read/write source.
+openzfs	module/zfs	OpenZFS core filesystem implementation.
+openzfs	module/os	OpenZFS Linux/FreeBSD platform glue.
+openzfs	cmd/zfs	ZFS CLI source.
+openzfs	cmd/zpool	Zpool CLI source.
+openzfs	lib/libzfs	libzfs source.
+openzfs	lib/libzpool	libzpool source.
+bcachefs	fs/bcachefs	bcachefs kernel filesystem source.
+bcachefs-tools	.	bcachefs userspace tools.
+nilfs-utils	.	NILFS userspace tools.
+nilfs2-kmod10	.	Standalone NILFS2 module source.
+bcache-tools	.	bcache userspace tools.
+linux-dm	drivers/md	Device-mapper kernel targets.
+lvm2	libdm	libdevmapper source.
+lvm2	tools	LVM command source.
+lvm2	lib	LVM metadata and volume management source.
+thin-provisioning-tools	src	dm-thin/cache/era metadata tools.
+cryptsetup	lib	cryptsetup library source.
+cryptsetup	src	cryptsetup tools source.
+vdo	src	VDO userspace source.
+kvdo	.	kvdo kernel source.
+stratisd	src	Stratis daemon source.
+stratis-cli	src	Stratis CLI source.
+devicemapper-rs	src	Rust device-mapper bindings.
+libcryptsetup-rs	src	Rust libcryptsetup bindings.
+libblkid-rs	src	Rust libblkid bindings.
+libfuse	include	FUSE public headers.
+libfuse	lib	FUSE library implementation.
+libfuse	example	FUSE examples.
+libfuse	util	FUSE mount utilities.
+sshfs	.	SSHFS source.
+go-fuse	.	Go FUSE implementation.
+bazil-fuse	.	Go FUSE implementation.
+pyfuse3	src	Python FUSE binding.
+fusepy	.	Python FUSE binding.
+nfs-utils	.	Linux NFS userspace.
+nfs-ganesha	src	User-space NFS server.
+libnfs	lib	User-space NFS client library.
+samba	source3	Samba SMB server and VFS modules.
+samba	source4	Samba modern SMB/AD source.
+cifs-utils	.	CIFS mount tools.
+ksmbd-tools	.	KSMBD userspace tools.
+davfs2	src	WebDAV filesystem source.
+rclone	fs	Rclone filesystem abstraction.
+rclone	cmd/mount	Rclone mount implementation.
+ceph	src/mds	CephFS metadata server.
+ceph	src/client	Ceph client source.
+ceph	src/osdc	Ceph objecter/client IO source.
+ceph	src/osd	Ceph OSD source.
+ceph	src/mon	Ceph monitor source.
+ceph	src/librados	RADOS library source.
+ceph	src/rgw	RADOS Gateway object-store source.
+ceph-client	fs/ceph	Ceph kernel client source.
+glusterfs	xlators	Gluster translator architecture.
+glusterfs	libglusterfs	Gluster common library.
+glusterfs	rpc	Gluster RPC source.
+glusterfs	glusterfsd	Gluster daemon source.
+lustre-release	lustre/llite	Lustre Linux client.
+lustre-release	lustre/mdc	Lustre metadata client.
+lustre-release	lustre/mdt	Lustre metadata target.
+lustre-release	lustre/osc	Lustre object storage client.
+lustre-release	lustre/ptlrpc	Lustre RPC layer.
+lustre-release	lnet	Lustre networking layer.
+beegfs	client_module	BeeGFS kernel client module.
+beegfs	meta	BeeGFS metadata service.
+beegfs	storage	BeeGFS storage service.
+beegfs	common	BeeGFS common source.
+beegfs-rust	.	BeeGFS Rust components.
+beegfs-go	.	BeeGFS Go components.
+beegfs-protobuf	.	BeeGFS protocol definitions.
+moosefs	mfschunkserver	MooseFS chunkserver.
+moosefs	mfsmaster	MooseFS master.
+lizardfs	src	LizardFS source.
+orangefs	src	OrangeFS source.
+hadoop	hadoop-hdfs-project	HDFS source.
+hadoop	hadoop-common-project	Hadoop common filesystem APIs.
+hadoop	hadoop-tools/hadoop-aws	S3A and object-store integration.
+alluxio	core/server	Alluxio master and worker source.
+alluxio	underfs	Alluxio under filesystem adapters.
+alluxio	integration/fuse	Alluxio FUSE integration.
+juicefs	pkg/meta	JuiceFS metadata engines.
+juicefs	pkg/vfs	JuiceFS VFS layer.
+juicefs	pkg/chunk	JuiceFS chunk layer.
+juicefs	pkg/object	JuiceFS object storage adapters.
+seaweedfs	weed/filer	SeaweedFS filer source.
+seaweedfs	weed/s3api	SeaweedFS S3 API source.
+openafs	src	OpenAFS source.
+coda	coda-src	Coda source.
+xrootd	src	XRootD source.
+eos	namespace	EOS namespace source.
+eos	mgm	EOS manager source.
+tahoe-lafs	src	Tahoe-LAFS source.
+ipfs-kubo	.	Kubo source.
+minio	cmd	MinIO server source.
+minio-mc	cmd	MinIO client command source.
+openstack-swift	swift	Swift object storage source.
+apache-ozone	hadoop-ozone	Ozone source.
+apache-ozone	hadoop-hdds	Hadoop distributed data store source.
+daos	src/engine	DAOS engine source.
+daos	src/vos	DAOS VOS source.
+daos	src/pool	DAOS pool source.
+daos	src/container	DAOS container source.
+garage	src	Garage source.
+rustfs	crates	RustFS crates.
+rook	pkg	Rook operator source.
+ceph-csi	internal	Ceph CSI implementation.
+beegfs-csi-driver	pkg	BeeGFS CSI implementation.
+juicefs-csi-driver	pkg	JuiceFS CSI implementation.
+fuse-overlayfs	.	fuse-overlayfs source.
+containers-storage	drivers	Container storage graph drivers.
+containers-storage	pkg	Container storage support packages.
+containerd	snapshots	Containerd snapshotter interfaces and implementations.
+containerd	core/snapshots	Containerd snapshotter core source.
+stargz-snapshotter	.	Stargz snapshotter source.
+nydus	.	Nydus lazy image filesystem source.
+soci-snapshotter	.	SOCI snapshotter source.
+composefs	.	composefs source.
+ostree	src/libostree	OSTree content-addressed filesystem tree source.
+qemu	block	QEMU block layer.
+qemu	tools	QEMU block/image tools.
+qemu	hw/virtio	Virtio and virtiofs-adjacent device source.
+virtiofsd	.	virtiofs daemon source.
+spdk	lib	SPDK libraries.
+spdk	module	SPDK modules.
+spdk	app	SPDK applications.
+nbdkit	server	NBDKit server source.
+nbdkit	plugins	NBDKit plugins.
+nbdkit	filters	NBDKit filters.
+libnbd	lib	libnbd source.
+open-iscsi	usr	open-iscsi userspace source.
+xfstests	common	xfstests common harness.
+xfstests	tests/generic	Generic filesystem tests.
+xfstests	tests	Filesystem-specific tests.
+blktests	tests	Block tests.
+fio	.	fio source.
+ltp	testcases/kernel/fs	LTP filesystem tests.
+ltp	testcases/kernel/syscalls	LTP syscall tests relevant to VFS.
+pjdfstest	tests	POSIX filesystem behavior tests.
+stress-ng	stress-*.c	stress-ng stressors.
+iozone	src/current	iozone source.
+fscrypt	.	fscrypt userspace.
+fsverity-utils	.	fsverity userspace tools.
+ecryptfs-utils	src	eCryptfs utilities.
+gocryptfs	.	gocryptfs source.
+cryfs	src	CryFS source.
+encfs	encfs	EncFS source.
+ima-evm-utils	src	IMA/EVM userspace source.
+rsync	.	rsync source.
+syncthing	lib	Syncthing core libraries.
+syncthing	cmd	Syncthing commands.
+restic	internal	restic internal source.
+borg	src	borg source.
+kopia	repo	Kopia repository implementation.
+kopia	snapshot	Kopia snapshot implementation.
+git-annex	.	git-annex source.
+casync	src	casync source.
+bup	lib	bup library source.
+rocksdb	db	RocksDB DB core.
+rocksdb	table	RocksDB table formats.
+rocksdb	file	RocksDB file environment code.
+leveldb	db	LevelDB DB core.
+leveldb	table	LevelDB table formats.
+pebble	.	Pebble LSM source.
+badger	.	Badger LSM/value-log source.
+wiredtiger	src	WiredTiger source.
+sqlite	src	SQLite pager VFS WAL btree source.
+lmdb	libraries/liblmdb	LMDB source.
+foundationdb	fdbserver	FoundationDB server source.
+foundationdb	fdbclient	FoundationDB client source.
+tikv	components	TiKV components.
+tikv	src	TiKV source.
+rocksdb	db/blob	RocksDB blob file and value separation source.
+rocksdb	db/compaction	RocksDB compaction picker job and source.
+rocksdb	db/db_impl	RocksDB core DB implementation.
+rocksdb	memtable	RocksDB memtable implementations.
+rocksdb	env	RocksDB Env abstraction and filesystem boundary.
+rocksdb	cache	RocksDB block and persistent cache source.
+rocksdb	utilities/checkpoint	RocksDB checkpoint source.
+rocksdb	utilities/backup	RocksDB backup engine source.
+rocksdb	utilities/transactions	RocksDB transaction source.
+rocksdb	utilities/persistent_cache	RocksDB persistent cache source.
+leveldb	util	LevelDB Env cache logging and platform support.
+leveldb	helpers/memenv	LevelDB in-memory Env implementation.
+leveldb	doc/log_format.md	LevelDB WAL format reference.
+badger	table	Badger SST table implementation.
+badger	skl	Badger skiplist memtable.
+badger	y	Badger file checksum encryption and utility primitives.
+badger	fb	Badger generated table index structs needed for format reading.
+pebble	objstorage	Pebble object storage provider and remote backing.
+pebble	record	Pebble record and WAL block format.
+pebble	sstable	Pebble SSTable implementation.
+pebble	vfs	Pebble filesystem abstraction.
+pebble	wal	Pebble WAL manager.
+pebble	internal/manifest	Pebble manifest and version metadata.
+pebble	internal/compact	Pebble compaction internals.
+pebble	internal/cache	Pebble cache internals.
+pebble	valsep	Pebble value separation source.
+wiredtiger	src/block	WiredTiger block manager.
+wiredtiger	src/btree	WiredTiger B-tree implementation.
+wiredtiger	src/cache	WiredTiger cache source.
+wiredtiger	src/evict	WiredTiger eviction source.
+wiredtiger	src/checkpoint	WiredTiger checkpoint source.
+wiredtiger	src/log	WiredTiger logging source.
+wiredtiger	src/history	WiredTiger history store.
+wiredtiger	src/reconcile	WiredTiger page reconciliation source.
+wiredtiger	src/rollback_to_stable	WiredTiger rollback-to-stable source.
+wiredtiger	src/tiered	WiredTiger tiered storage source.
+wiredtiger	ext/storage_sources/dir_store	WiredTiger storage source extension example.
+sqlite	ext/misc	SQLite VFS tracing checksum and custom backing examples.
+sqlite	src/pager.c	SQLite pager crash-consistency source.
+sqlite	src/wal.c	SQLite WAL source.
+sqlite	src/pcache.c	SQLite page cache source.
+sqlite	src/os_unix.c	SQLite Unix VFS implementation.
+foundationdb	fdbserver/kvstore	FoundationDB local KV stores disk queue async VFS and VersionedBTree.
+foundationdb	fdbserver/logsystem	FoundationDB distributed log system.
+foundationdb	fdbserver/tlog	FoundationDB transaction log server.
+foundationdb	fdbserver/storageserver	FoundationDB storage server source.
+foundationdb	fdbserver/datadistributor	FoundationDB shard movement and data distribution.
+foundationdb	fdbclient/MutationLogReader.cpp	FoundationDB mutation log reader.
+foundationdb	fdbclient/StorageCheckpoint.cpp	FoundationDB storage checkpoint source.
+foundationdb	fdbclient/AsyncFileBlobStore.cpp	FoundationDB async file blob store.
+foundationdb	fdbclient/S3BlobStore.cpp	FoundationDB S3 blob store.
+foundationdb	fdbclient/GCSBlobStore.cpp	FoundationDB GCS blob store.
+tikv	components/raftstore/src	TiKV raftstore v1 replicated region storage.
+tikv	components/raftstore-v2/src	TiKV raftstore v2 replicated region storage.
+tikv	components/raft_log_engine/src	TiKV raft log engine adapter.
+tikv	components/engine_traits/src	TiKV storage engine traits.
+tikv	components/engine_rocks/src	TiKV RocksDB engine wrapper.
+tikv	components/file_system/src	TiKV filesystem wrapper and IO stats.
+tikv	components/sst_importer/src	TiKV SST import source.
+tikv	components/snap_recovery/src	TiKV snapshot recovery source.
+tikv	components/external_storage/src	TiKV external storage abstraction.
+tikv	components/cloud/src	TiKV cloud object storage abstraction.
+tikv	src/storage	TiKV MVCC storage path.
+tikv	src/server/raftkv	TiKV raftkv server integration.
+tikv	src/server/raftkv2	TiKV raftkv2 server integration.
+raft-engine	src	TiKV standalone raft log engine source.
+xfsdump	.	XFS dump restore source.
+util-linux	sys-utils	mount umount findmnt losetup and block tools.
+util-linux	libmount	libmount source.
+util-linux	libblkid	libblkid source.
+mdadm	.	mdadm source.
+parted	libparted	GNU parted library.
+parted	parted	GNU parted command source.
+s3fs-fuse	src	S3FS FUSE source.
+gcsfuse	.	GCSFuse source.
+blobfuse2	.	BlobFuse2 source.
+mergerfs	src	MergerFS source.
+go-nfs	.	Go NFS source.
+libsmb2	lib	libsmb2 source.
+impacket	impacket	Impacket protocol source.
+smbj	src	SMBJ source.
+smblibrary	SMBLibrary	SMBLibrary source.
+longhorn	app	Longhorn manager source.
+longhorn-engine	.	Longhorn engine source.
+csi-spec	spec	CSI spec source.
+csi-spec	csi.proto	CSI protobuf source.
+mayastor	io-engine	Mayastor SPDK-backed IO engine.
+mayastor	control-plane	Mayastor control plane.
+csi-driver-nfs	pkg	NFS CSI driver implementation.
+csi-driver-smb	pkg	SMB CSI driver implementation.
+csi-driver-iscsi	pkg	iSCSI CSI driver implementation.
+csi-driver-host-path	.	CSI hostpath reference driver.
+external-snapshotter	.	CSI external snapshotter source.
+csi-lib-utils	.	CSI utility source.
+overlayfs-tools	.	OverlayFS tools source.
+fuse-overlayfs-snapshotter	.	fuse-overlayfs snapshotter source.
+nydus-snapshotter	.	Nydus snapshotter source.
+composefs-rs	.	Rust composefs source.
+moby	daemon/graphdriver	Docker graphdriver source.
+moby	layer	Docker layer source.
+buildkit	cache	BuildKit cache source.
+buildkit	snapshot	BuildKit snapshot source.
+cri-o	internal	CRI-O internal rootfs/storage source.
+overlaybd	.	OverlayBD source.
+nbd	.	NBD source.
+libguestfs	daemon	libguestfs daemon source.
+libguestfs	lib	libguestfs library source.
+guestfs-tools	.	guestfs tools source.
+libblockdev	src	libblockdev source.
+nvme-cli	.	nvme-cli source.
+xfstests-bld	.	xfstests-bld source.
+crashmonkey	.	CrashMonkey source.
+filebench	.	filebench source.
+fs-mark	.	fs_mark source.
+ior	src	IOR source.
+unionmount-testsuite	.	union mount tests.
+pynfs	.	pynfs source.
+cthon04	.	cthon04 source.
+kdevops	.	kdevops source.
+liburing	src	liburing source.
+mtd-utils	.	MTD utilities source.
+strace	src	strace source.
+lcov	bin	lcov scripts.
+acl	.	ACL userspace source.
+attr	.	attr userspace source.
+libcap	.	libcap source.
+keyutils	.	keyutils source.
+selinux	libselinux	SELinux library source.
+selinux	policycoreutils	SELinux policy tools.
+audit-userspace	.	Audit userspace source.
+unison	src	Unison source.
+git-lfs	.	Git LFS source.
+git-crypt	.	git-crypt source.
+zstd	lib	zstd library source.
+xz	src	xz source.
+lz4	lib	LZ4 library source.
+zlib	.	zlib source.
+syzkaller	.	syzkaller source.
+xnu	bsd/vfs	Darwin/XNU VFS source.
+macfuse	kext	macFUSE kernel extension source.
+macfuse	lib	macFUSE library source.
+ocfs2-tools	.	OCFS2 userspace tools.
+gfs2-utils	.	GFS2 userspace tools.
+dlm	.	Distributed lock manager userspace.
+libtirpc	.	TIRPC source for NFS userspace dependency closure.
+rpcbind	.	RPC bind source for NFS userspace dependency closure.

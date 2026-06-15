@@ -1,0 +1,55 @@
+status	category	local_path	name	upstream	default_ref	head_prefix	notes
+MUST	fstests	sources/40_tests/fstests/xfstests-dev	xfstests-dev	https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git	refs/heads/master	cac9fe2b8dc3	Generic Linux file-system regression suite; includes fsstress and fsx.
+MUST	fstests	sources/40_tests/fstests/xfstests-bld	xfstests-bld	https://github.com/tytso/xfstests-bld.git	refs/heads/master	5e6fd6a39a9f	Automation and VM flows around fstests.
+MUST	block_tests	sources/40_tests/block/blktests	blktests	https://github.com/osandov/blktests.git	refs/heads/master	b19c4a723cd9	Block-layer regression suite.
+MUST	syscall_posix	sources/40_tests/syscall_posix/ltp	ltp	https://github.com/linux-test-project/ltp.git	refs/heads/master	77e47589db63	Linux Test Project, including FS/VFS/syscall coverage.
+MUST	syscall_posix	sources/40_tests/syscall_posix/pjdfstest	pjdfstest	https://github.com/pjd/pjdfstest.git	refs/heads/master	ededbeb2b449	POSIX file-system semantic tests.
+MUST	benchmark	sources/41_benchmarks/fio	fio	https://github.com/axboe/fio.git	refs/heads/master	19a6a29c6ba2	Flexible I/O workload generator.
+MUST	format_ext	sources/43_format_repair_tools/ext/e2fsprogs	e2fsprogs	https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git	refs/heads/master	43643a57fb2d	ext2/3/4 mkfs/fsck/debug libraries and tools.
+MUST	format_xfs	sources/43_format_repair_tools/xfs/xfsprogs-dev	xfsprogs-dev	https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git	refs/heads/master	80239046c0de	XFS mkfs/repair/db/io/admin tools.
+MUST	format_fat	sources/43_format_repair_tools/fat_exfat/dosfstools	dosfstools	https://github.com/dosfstools/dosfstools.git	refs/heads/master	289a48b9cb5b	FAT mkfs/fsck tools.
+MUST	format_exfat	sources/43_format_repair_tools/fat_exfat/exfatprogs	exfatprogs	https://github.com/exfatprogs/exfatprogs.git	refs/heads/master	c98f9f9c3aa6	exFAT mkfs/fsck/dump/label tools.
+MUST	format_f2fs	sources/43_format_repair_tools/f2fs/f2fs-tools	f2fs-tools	https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git	refs/heads/master	3ab67256d83a	F2FS mkfs/fsck/dump/resize tools.
+MUST	format_ntfs	sources/43_format_repair_tools/ntfs/ntfs-3g	ntfs-3g	https://github.com/tuxera/ntfs-3g.git	refs/heads/edge	d1cb9e825d05	NTFS userspace driver and tools.
+MUST	format_btrfs	sources/43_format_repair_tools/btrfs/btrfs-progs	btrfs-progs	https://github.com/kdave/btrfs-progs.git	refs/heads/devel	b5bf609c879a	Btrfs mkfs/check/send/receive/rescue tools.
+MUST	security_integrity	sources/44_security_integrity/fsverity-utils	fsverity-utils	https://git.kernel.org/pub/scm/fs/fsverity/fsverity-utils.git	refs/heads/master	36660d79c9dd	fs-verity userspace utilities.
+MUST	security_integrity	sources/44_security_integrity/fscrypt	fscrypt	https://github.com/google/fscrypt.git	refs/heads/master	9e4a9a1ff155	Linux native file-system encryption tool.
+SHOULD	fault_injection	sources/42_fault_injection/crashmonkey	crashmonkey	https://github.com/utsaslab/crashmonkey.git	refs/heads/master	27ca57f8cf27	Crash-consistency testing research tool.
+SHOULD	fuzzing	sources/40_tests/stress/syzkaller	syzkaller	https://github.com/google/syzkaller.git	refs/heads/master	4f06757f683a	Kernel syscall fuzzing infrastructure; keep source only.
+SHOULD	benchmark	sources/41_benchmarks/filebench	filebench	https://github.com/filebench/filebench.git	refs/heads/master	22620e602cbb	File-system workload benchmark.
+SHOULD	benchmark	sources/41_benchmarks/fs_mark	fs_mark	https://github.com/josefbacik/fs_mark.git	refs/heads/master	2628be58146d	Metadata benchmark.
+SHOULD	benchmark	sources/41_benchmarks/ior	ior	https://github.com/hpc/ior.git	refs/heads/main	5fcf0ba995fd	HPC parallel I/O benchmark.
+SHOULD	union_overlay	sources/40_tests/distributed_protocol/unionmount-testsuite	unionmount-testsuite	https://github.com/amir73il/unionmount-testsuite.git	refs/heads/master	f48a57d2a7db	Overlay/union mount behavior tests.
+SHOULD	nfs_tools	sources/45_mount_protocol_tools/nfs-utils	nfs-utils	https://github.com/linux-nfs/nfs-utils.git	refs/heads/master	1a6dcd74b57c	NFS userspace tools.
+SHOULD	nfs_tests	sources/40_tests/distributed_protocol/pynfs	pynfs	https://github.com/linux-nfs/pynfs.git	refs/heads/master	cd4701827a82	NFSv4 protocol tests.
+SHOULD	nfs_tests	sources/40_tests/distributed_protocol/cthon04	cthon04	https://github.com/phdeniel/cthon04.git	refs/heads/master	3857ed3cb1e2	Legacy NFS interoperability tests.
+SHOULD	smb_tests	sources/40_tests/distributed_protocol/samba	samba	https://github.com/samba-team/samba.git	refs/heads/master	f7a2882188e5	SMB/CIFS stack and smbtorture tests.
+SHOULD	smb_tools	sources/45_mount_protocol_tools/cifs-utils	cifs-utils	https://git.samba.org/cifs-utils.git	refs/heads/master	25ba696a213f	CIFS mount/admin tools.
+SHOULD	fuse	sources/45_mount_protocol_tools/libfuse	libfuse	https://github.com/libfuse/libfuse.git	refs/heads/master	dc6ce72129ed	FUSE library, tools and tests.
+SHOULD	fuse	sources/45_mount_protocol_tools/sshfs	sshfs	https://github.com/libfuse/sshfs.git	refs/heads/master	8bf7f92cd891	Representative FUSE network FS.
+SHOULD	fuse	sources/45_mount_protocol_tools/s3fs-fuse	s3fs-fuse	https://github.com/s3fs-fuse/s3fs-fuse.git	refs/heads/master	ac20a7ebcba6	Representative FUSE object-store FS.
+SHOULD	orchestration	sources/42_fault_injection/kdevops	kdevops	https://github.com/linux-kdevops/kdevops.git	refs/heads/main	a81b18438512	Kernel/FS test automation.
+SHOULD	emulation	sources/42_fault_injection/qemu	qemu	https://gitlab.com/qemu-project/qemu.git	refs/heads/master	2f28d34ea0ae	VM and block-device emulation; dedupe globally.
+SHOULD	block_tools	sources/46_image_vm_tools/nbd	nbd	https://github.com/NetworkBlockDevice/nbd.git	refs/heads/master	89ba7b537954	NBD client/server source.
+SHOULD	io_uring	sources/42_fault_injection/liburing	liburing	https://github.com/axboe/liburing.git	refs/heads/master	2750b94a77ea	io_uring library and tests.
+SHOULD	image_tools	sources/46_image_vm_tools/libguestfs	libguestfs	https://github.com/libguestfs/libguestfs.git	refs/heads/master	fb970d4d5c03	Guest image inspection/modification source.
+SHOULD	image_tools	sources/46_image_vm_tools/guestfs-tools	guestfs-tools	https://github.com/libguestfs/guestfs-tools.git	refs/heads/master	592f11c86c07	Guest image tool source.
+SHOULD	block_tools	sources/46_image_vm_tools/libblockdev	libblockdev	https://github.com/storaged-project/libblockdev.git	refs/heads/master	dcead0f140fe	Block-device operation library.
+SHOULD	block_tools	sources/46_image_vm_tools/nvme-cli	nvme-cli	https://github.com/linux-nvme/nvme-cli.git	refs/heads/master	c7ca761239a8	NVMe admin/test tooling.
+SHOULD	observation	sources/49_observability_coverage/strace	strace	https://github.com/strace/strace.git	refs/heads/master	ce6af7587ebc	Syscall tracing source.
+SHOULD	coverage	sources/49_observability_coverage/lcov	lcov	https://github.com/linux-test-project/lcov.git	refs/heads/master	2aa8bcac330a	Coverage tooling source.
+SHOULD	format_erofs	sources/43_format_repair_tools/erofs/erofs-utils	erofs-utils	https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git	refs/heads/master	d3fbccba6e40	EROFS mkfs/fsck/dump tools.
+SHOULD	format_squashfs	sources/43_format_repair_tools/squashfs/squashfs-tools	squashfs-tools	https://github.com/plougher/squashfs-tools.git	refs/heads/master	67d059d1c302	SquashFS image tools.
+SHOULD	format_flash	sources/43_format_repair_tools/ubifs_jffs2/mtd-utils	mtd-utils	https://git.kernel.org/pub/scm/linux/kernel/git/rw/mtd-utils.git	refs/heads/master	a494d30ab1ae	MTD/UBI/UBIFS/JFFS2 tools.
+SHOULD	format_misc	sources/43_format_repair_tools/partitions/util-linux	util-linux	https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git	refs/heads/master	265fd45d2510	mount/blkid/lsblk/losetup/wipefs/fsck wrappers.
+SHOULD	format_misc	sources/43_format_repair_tools/partitions/parted	parted	https://git.savannah.gnu.org/git/parted.git	refs/heads/master	4fdb58dd92ac	Partition table tools.
+SHOULD	format_xfs	sources/43_format_repair_tools/xfs/xfsdump-dev	xfsdump-dev	https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git	refs/heads/master	04051066b6c6	XFS dump/restore source.
+SHOULD	security_integrity	sources/44_security_integrity/cryptsetup	cryptsetup	https://gitlab.com/cryptsetup/cryptsetup.git	refs/heads/main	ea34c8ae8540	LUKS/dm-crypt userspace source.
+OPTIONAL	format_zfs	sources/43_format_repair_tools/zfs/zfs	zfs	https://github.com/openzfs/zfs.git	refs/heads/master	a3073e5b0d87	Large implementation plus tools/tests; coordinate globally.
+OPTIONAL	format_bcachefs	sources/43_format_repair_tools/bcachefs/bcachefs-tools	bcachefs-tools	https://github.com/koverstreet/bcachefs-tools.git	refs/heads/master	224b656140e1	bcachefs userspace tools.
+OPTIONAL	format_udf	sources/43_format_repair_tools/udf/udftools	udftools	https://github.com/pali/udftools.git	refs/heads/master	77a198f4ea01	UDF tools.
+OPTIONAL	format_nilfs	sources/43_format_repair_tools/nilfs/nilfs-utils	nilfs-utils	https://github.com/nilfs-dev/nilfs-utils.git	refs/heads/master	b4b534e6ca52	NILFS utilities.
+OPTIONAL	distributed	sources/40_tests/distributed_protocol/ceph	ceph	https://github.com/ceph/ceph.git	refs/heads/main	ca0bc48a2a27	Huge distributed storage system with CephFS tests.
+OPTIONAL	distributed	sources/40_tests/distributed_protocol/teuthology	teuthology	https://github.com/ceph/teuthology.git	refs/heads/main	c9f1c1b658d1	Ceph test orchestration.
+OPTIONAL	distributed	sources/40_tests/distributed_protocol/glusterfs	glusterfs	https://github.com/gluster/glusterfs.git	refs/heads/devel	ae1d69672fe0	Distributed FS implementation/tests; dedupe globally.
+OPTIONAL	distributed	sources/40_tests/distributed_protocol/lustre-release	lustre-release	https://github.com/lustre/lustre-release.git	refs/heads/master	0751175785ef	HPC distributed FS implementation/tests; dedupe globally.

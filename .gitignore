@@ -1,0 +1,7 @@
+.DS_Store
+sources/*
+!sources/.gitkeep
+metrics/*
+!metrics/.gitkeep
+outputs/*
+!outputs/.gitkeep
