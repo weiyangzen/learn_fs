@@ -1,0 +1,19 @@
+# File Research: sources/os/illumos/illumos-gate/usr/src/uts/common/fs/zfs/zfs_dir.c
+
+Implements ZFS directory name lookup/locking, link creation/destruction, unlinked-set cleanup, extended-attribute directory creation, and sticky-directory remove policy. It is the core glue between VFS name operations, ZAP directory objects, DNLC caching, znode link counts, and DMU transactions.
+
+Name lookup begins with `zfs_match_find()` and `zfs_dirent_lock()`. `zfs_dirent_lock()` serializes operations on a specific directory name, rejecting `.`, `..`, and `.zfs`, selecting normalized/case-sensitive/case-insensitive matching based on dataset properties and lookup flags, optionally using DNLC, and taking either narrow or wide dirlocks to avoid races in mixed-case filesystems. It returns both a held target znode and a dirlock that protects the ZAP entry until `zfs_dirent_unlock()`.
+
+`zfs_dirlook()` handles special names: empty/`.` returns the directory itself, `..` resolves via parent SA attribute with a special case for snapshots mounted under `.zfs`, and `.zfs` returns the synthetic control directory when present. Ordinary names use `zfs_dirent_lock()` with shared locking and optional case-insensitive lookup, then enable znode prefetch after successful lookup.
+
+The unlinked set is the crash-safe delete queue. `zfs_unlinked_add()` inserts zero-link znodes into the filesystem unlinked ZAP. `zfs_unlinked_drain()` dispatches asynchronous cleanup, `zfs_unlinked_drain_stop_wait()` cancels/waits on it, and `zfs_unlinked_drain_task()` walks the unlinked set, rehydrates znodes, marks them unlinked, and lets inactive processing remove them. `zfs_rmnode()` performs final deletion: purges xattr directories when needed, frees file contents, unlinks xattr directories, frees external ACL objects, removes the znode from the unlinked set, and calls `zfs_znode_delete()` in a net-free transaction.
+
+`zfs_link_create()` links a znode into a directory ZAP, increments child link count unless renaming, updates parent ID and flags on the child, updates directory size/link/timestamps, stores a dirent value that can include file type bits on newer ZPL versions, and updates DNLC. `zfs_link_destroy()` removes a directory entry, rejects mounted/non-empty targets, decrements link counts, marks last-link targets as unlinked, updates parent metadata, removes DNLC entries, and either returns the unlinked status to the caller or inserts the target into the unlinked set.
+
+`zfs_dropname()` removes a ZAP name using normalized removal when required by the dataset’s normalization/case mode. The embedded comment table documents the exact match-type matrix for case-sensitive, case-insensitive, and mixed-case filesystems with or without Unicode normalization.
+
+Extended attributes are represented as hidden xattr directories. `zfs_make_xattrdir()` checks `ACE_WRITE_NAMED_ATTRS`, builds ACL/identity state, reserves creation and FUID transaction holds, creates the xattr directory with `zfs_mknode()`, stores its object ID in the base file SA xattr attribute, and logs `TX_MKXATTR`. `zfs_get_xattrdir()` locks the xattr slot, returns an existing xattr directory, optionally creates one, and enforces read-only filesystem behavior.
+
+`zfs_dirempty()` is a hint-style check that a directory has only `.` and `..` and no in-progress dirlocks. `zfs_sticky_remove_access()` enforces sticky-directory restrictions: removal is allowed for directory owner, file owner, writable regular file, or privileged caller.
+
+Important invariants: dirlocks protect ZAP names rather than whole directories; shared dirlocks copy the name on second shared use to avoid dangling caller storage; unlinked entries are intentionally retried after remount if deletion runs out of space or is interrupted; directory size is maintained as entry count; directory link count tracks subdirectory `..` references.

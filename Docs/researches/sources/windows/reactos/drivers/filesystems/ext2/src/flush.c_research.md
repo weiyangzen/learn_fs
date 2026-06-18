@@ -1,0 +1,9 @@
+# File Research: sources/windows/reactos/drivers/filesystems/ext2/src/flush.c
+
+This file implements flush handling for file and volume objects, including cache-manager flushes, timestamp updates, VCB flushing, and forwarding flush requests to the underlying storage device.
+
+`Ext2FlushCompletionRoutine` preserves pending state and treats lower-driver `STATUS_INVALID_DEVICE_REQUEST` as success. `Ext2FlushVolume` briefly acquires/releases the VCB paging resource to synchronize with paging I/O and then calls `Ext2FlushVcb`. `Ext2FlushFile` rejects delete-pending files, updates `mtime` and `LastWriteTime` when the CCB did not already record a last-write update, saves the inode, ignores directory data flushes, and flushes cached file data through `CcFlushCache`, clearing `FCB_FILE_MODIFIED` on completion. `Ext2FlushFiles` iterates all FCBs on the VCB list for writable volumes, acquiring each FCB main resource and flushing it.
+
+`Ext2Flush` is the IRP dispatcher. It validates the target is not the filesystem control device, rejects read-only volumes as success, extracts VCB/FCB/CCB state, acquires the target object's main resource, then either flushes all files/volume state for a VCB object or flushes a single FCB and applies archive/modified flag cleanup. In finalization it releases the resource and, if appropriate, copies the current IRP stack to the next stack location, installs `Ext2FlushCompletionRoutine`, calls the underlying target device, and completes the IRP context unless the lower driver owns the IRP.
+
+The file is primarily synchronization and writeback plumbing. It relies on other subsystems for dirty metadata tracking and inode persistence, but it is the path that ensures cached file data and physical media flush requests are issued for user-visible flush operations.

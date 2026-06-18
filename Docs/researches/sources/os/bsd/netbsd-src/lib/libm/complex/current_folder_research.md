@@ -1,0 +1,86 @@
+# Folder Research: sources/os/bsd/netbsd-src/lib/libm/complex
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `76`
+- recursive_file_count: `76`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/bsd/netbsd-src/lib/libm/complex/Makefile.inc` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/Makefile.inc_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cabs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cabs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cabsf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cabsf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cabsl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cabsl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cacos.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cacos.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cacosf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cacosf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cacosh.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cacosh.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cacoshf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cacoshf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cacoshl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cacoshl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cacosl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cacosl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/carg.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/carg.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cargf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cargf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cargl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cargl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/casin.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/casin.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/casinf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/casinf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/casinh.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/casinh.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/casinhf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/casinhf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/casinhl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/casinhl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/casinl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/casinl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catan.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catan.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catanf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catanf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catanh.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catanh.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catanhf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catanhf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catanhl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catanhl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catanl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catanl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catrig.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catrig.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catrigf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catrigf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/catrigl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/catrigl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ccos.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ccos.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ccosf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ccosf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ccosh.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ccosh.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ccoshf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ccoshf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ccoshl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ccoshl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ccosl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ccosl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subr.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subr.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrf.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrf.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrl.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cephes_subrl.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cexp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cexp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cexpf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cexpf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cexpl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cexpl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cimag.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cimag.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cimagf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cimagf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cimagl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cimagl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/clog.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/clog.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/clogf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/clogf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/clogl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/clogl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/conj.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/conj.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/conjf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/conjf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/conjl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/conjl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cpow.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cpow.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cpowf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cpowf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cpowl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cpowl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cproj.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cproj.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cprojf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cprojf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/cprojl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/cprojl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/creal.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/creal.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/crealf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/crealf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/creall.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/creall.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csin.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csin.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csinf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csinf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csinh.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csinh.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csinhf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csinhf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csinhl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csinhl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csinl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csinl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csqrt.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csqrt.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csqrtf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csqrtf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/csqrtl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/csqrtl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ctan.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ctan.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ctanf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ctanf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ctanh.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ctanh.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ctanhf.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ctanhf.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ctanhl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ctanhl.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libm/complex/ctanl.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libm/complex/ctanl.c_research.md`

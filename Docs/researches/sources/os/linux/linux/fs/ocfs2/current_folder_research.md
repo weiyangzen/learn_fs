@@ -1,0 +1,88 @@
+# Folder Research: sources/os/linux/linux/fs/ocfs2
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `78`
+- recursive_file_count: `114`
+- direct_child_folder_count: `3`
+
+## Direct Files
+
+- `sources/os/linux/linux/fs/ocfs2/Kconfig` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/Kconfig_research.md`
+- `sources/os/linux/linux/fs/ocfs2/Makefile` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/Makefile_research.md`
+- `sources/os/linux/linux/fs/ocfs2/acl.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/acl.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/acl.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/acl.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/alloc.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/alloc.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/alloc.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/alloc.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/aops.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/aops.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/aops.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/aops.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/blockcheck.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/blockcheck.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/blockcheck.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/blockcheck.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/buffer_head_io.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/buffer_head_io.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/buffer_head_io.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/buffer_head_io.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/dcache.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/dcache.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/dcache.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/dcache.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/dir.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/dir.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/dir.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/dir.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/dlmglue.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/dlmglue.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/dlmglue.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/dlmglue.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/export.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/export.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/export.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/export.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/extent_map.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/extent_map.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/extent_map.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/extent_map.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/file.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/file.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/file.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/file.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/filecheck.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/filecheck.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/filecheck.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/filecheck.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/heartbeat.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/heartbeat.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/heartbeat.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/heartbeat.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/inode.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/inode.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/inode.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/inode.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ioctl.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ioctl.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ioctl.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ioctl.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/journal.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/journal.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/journal.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/journal.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/localalloc.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/localalloc.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/localalloc.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/localalloc.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/locks.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/locks.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/locks.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/locks.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/mmap.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/mmap.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/mmap.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/mmap.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/move_extents.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/move_extents.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/move_extents.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/move_extents.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/namei.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/namei.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/namei.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/namei.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs1_fs_compat.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs1_fs_compat.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs2.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs2.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs2_fs.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs2_fs.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs2_ioctl.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs2_ioctl.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs2_lockid.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs2_lockid.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs2_lockingver.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs2_lockingver.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/ocfs2_trace.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/ocfs2_trace.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/quota.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/quota.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/quota_global.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/quota_global.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/quota_local.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/quota_local.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/refcounttree.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/refcounttree.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/refcounttree.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/refcounttree.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/reservations.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/reservations.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/reservations.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/reservations.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/resize.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/resize.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/resize.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/resize.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/slot_map.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/slot_map.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/slot_map.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/slot_map.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/stack_o2cb.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/stack_o2cb.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/stack_user.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/stack_user.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/stackglue.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/stackglue.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/stackglue.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/stackglue.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/suballoc.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/suballoc.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/suballoc.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/suballoc.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/super.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/super.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/super.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/super.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/symlink.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/symlink.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/symlink.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/symlink.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/sysfile.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/sysfile.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/sysfile.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/sysfile.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/uptodate.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/uptodate.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/uptodate.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/uptodate.h_research.md`
+- `sources/os/linux/linux/fs/ocfs2/xattr.c` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/xattr.c_research.md`
+- `sources/os/linux/linux/fs/ocfs2/xattr.h` -> `Docs/researches/sources/os/linux/linux/fs/ocfs2/xattr.h_research.md`

@@ -1,0 +1,11 @@
+# File Research: sources/windows/reactos/drivers/filesystems/ext2/src/fastio.c
+
+This file implements the Windows Fast I/O dispatch support for the ReactOS Ext2Fsd driver. It provides eligibility checks, cached read/write paths, fast metadata queries, byte-range locking helpers, and cache-manager/section synchronization callbacks.
+
+`Ext2IsFastIoPossible` derives the FCB fast-I/O state from oplock state, current file locks, read-only/volume-locked state, and returns `FastIoIsPossible`, `FastIoIsQuestionable`, or `FastIoIsNotPossible`. `Ext2FastIoCheckIfPossible` validates the object, rejects device/volume/directory/deleted cases, and asks FsRtl lock helpers whether the requested read or write range is permitted. `Ext2FastIoRead` delegates to `FsRtlCopyRead`. `Ext2FastIoWrite` rejects read-only volumes, acquires the file resource, refuses writes to EOF or beyond valid data/allocation size, then delegates to `FsRtlCopyWrite`.
+
+Fast query routines mirror the IRP query implementation but avoid full IRP dispatch. `Ext2FastIoQueryBasicInfo` returns timestamps and attributes from the Mcb. `Ext2FastIoQueryStandardInfo` returns link count, delete-pending state, directory flag, allocation size, and EOF. `Ext2FastIoQueryNetworkOpenInfo` returns network-open metadata with directory size fields zeroed. These routines use `FsRtlEnterFileSystem`, structured exception handling, and shared FCB resource acquisition unless the FCB is for a page file.
+
+Locking callbacks `Ext2FastIoLock`, `Ext2FastIoUnlockSingle`, `Ext2FastIoUnlockAll`, and `Ext2FastIoUnlockAllByKey` validate the FCB, reject directories, require oplock fast-I/O eligibility, call the matching `FsRtlFast*` lock routine, and update `Fcb->Header.IsFastIoPossible`. The rest of the file implements synchronization hooks: acquire/release for create-section, modified-write, and cache flush. `Ext2PreAcquireForCreateSection` participates in FS filter section synchronization and returns whether the file is locked with readers or writers.
+
+Overall, this file is performance and synchronization glue. It does not perform block mapping directly; it relies on the cache manager and the FCB header sizes/resources established by normal file operations.

@@ -1,0 +1,11 @@
+# File Research: sources/os/plan9/9front/sys/src/cmd/sort.c
+
+`sort.c` implements the Plan 9/9front `sort` command. It parses classic and POSIX-style sort options, reads input lines through `Biobuf`, constructs byte-comparable sort keys, sorts in memory when possible, spills sorted runs to temporary files when needed, and k-way merges those temporary files to the final output.
+
+Core flow starts in `main()`: `doargs()` builds global/per-field sort specifications, input files are processed by `dofile()`, and output is handled by either `printout()` or `tempout()` plus `mergeout()`. `newline()` preserves newline-terminated records, adding a newline to unterminated final records, and immediately calls `buildkey()` so sorting compares precomputed keys rather than source lines.
+
+Field/key handling is the main logic. `skip()` locates field and character offsets, honoring whitespace fields or a user-specified tab rune. `dokey_()`, `dokey_r()`, `dokey_dfi()`, `dokey_m()`, and `dokey_gn()` encode plain, reverse, directory/fold/ignore, month, and numeric/floating-point comparisons. Numeric encoding normalizes sign, decimal point, exponent, significant digits, and reverse ordering into a lexicographic key. `makemapd()` and `makemapm()` build byte maps for case folding, directory order, ASCII filtering, whitespace ignoring, reverse sorting, month parsing, and selected Latin rune folding.
+
+Sorting uses `sort4()`, which chooses radix sort (`rsort4()`) above a small threshold and insertion/bubble cleanup (`bsort4()`) below it. Keys are sorted through pointer indirection, and `Merge` deliberately begins with a `Key *` so merge entries can be sorted with the same sorter shape as line pointers. `-u` suppresses duplicate keys during final output or merge, and `-c` checks sorted input order without producing output.
+
+Important risks and constraints: temporary file names are predictable `sort.<pid>.<n>` names under `/tmp` or `-T`; the comment notes `00/ff` key terminators can conflict with source bytes; `kcmp()` compares only the shorter key length and relies on embedded terminator conventions; memory limits are fixed through `-l` line count and dynamic line/key allocation; and `doargs()` mutates `argv` to hide processed options.

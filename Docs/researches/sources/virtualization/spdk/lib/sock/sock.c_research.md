@@ -1,0 +1,21 @@
+# File Research: sources/virtualization/spdk/lib/sock/sock.c
+
+This file is SPDK's transport-independent socket facade. It manages registered socket implementations, default implementation selection, ABI-safe option handling, POSIX address/fd helpers, connect/listen/accept/close wrappers, grouped polling, placement-ID mapping, socket implementation options, configuration JSON output, initialization, interrupt-fd integration, and tracepoint registration.
+
+Socket implementations are stored in `g_net_impls`; `g_default_impl` is selected explicitly through `spdk_sock_set_default_impl()`. `spdk_net_impl_register()` inserts implementations before initialization, and `spdk_sock_initialize()` applies ABI-safe initialize options, prevents reinitialization with different options, calls each implementation's `init()` hook, and removes implementations whose initialization fails.
+
+Options are versioned by `opts_size`. `spdk_sock_get_default_initialize_opts()` and `spdk_sock_get_default_opts()` set only fields present in the caller's structure. `sock_init_opts()` combines library defaults with caller-provided fields before connect/listen. Implementation-specific options are passed through for construction but cleared from the stored `sock->opts` to avoid retaining a dangling caller pointer.
+
+The POSIX helper layer parses numeric IPv4/IPv6 addresses, strips bracketed IPv6 literals, creates stream sockets, sets receive/send buffers, `SO_REUSEADDR`, `TCP_NODELAY`, optional `SO_PRIORITY`, `IPV6_V6ONLY`, and Linux `TCP_USER_TIMEOUT`, then supports blocking or asynchronous connect via nonblocking `connect()`, `poll(POLLOUT)`, and `SO_ERROR` checks. Source address/port binding is supported through socket options.
+
+Connect and listen choose the requested implementation or the default, validate support for async connect, create the transport socket through implementation callbacks, copy final options, set `sock->net_impl`, and initialize request queues for connected sockets. Accept inherits options and implementation from the listener. Close rejects sockets still in a group, marks the pointer closed for the caller, defers destruction if callbacks are active, aborts queued requests, and calls the implementation close hook.
+
+The read/write surface mostly dispatches to implementation hooks after closed/null checks. It includes synchronous recv/readv/writev, async writev, flush, buffer size/low-water setters, IPv4/IPv6/connected queries, interface name, NUMA ID, implementation name, and deprecated zero-copy receive buffer helpers.
+
+Socket groups contain one `spdk_sock_group_impl` per registered net implementation plus an optional fd group for interrupt mode. Group creation calls each implementation's group factory and registers implementation interrupt fds when available. Adding a socket validates callback and matching implementation group, calls the implementation add hook, links the socket, and records callback state. Polling bounds events to `MAX_EVENTS_PER_POLL`, polls each implementation group, and calls each returned socket's callback. Removal clears group/callback state after implementation removal succeeds. Group close requires all implementation socket lists to be empty, unregisters interrupt fds, closes implementation groups, destroys the fd group, and frees the group.
+
+Placement-ID mapping provides a small refcounted map from placement IDs to group implementations. Insert, lookup, release, find-free, and cleanup are protected by a mutex. Lookup can assign an unbound placement ID to a hint group, enabling consistent steering of related sockets.
+
+RPC/config support uses `spdk_sock_impl_get_opts()` and `spdk_sock_impl_set_opts()` to delegate option access to named implementations. `spdk_sock_write_config_json()` emits JSON-RPC reconstruction calls for default implementation and each implementation's configurable options.
+
+Important invariants are implementation callback contracts, option-size compatibility, socket group membership before close, callback count deferral during close, placement-ID refcounts, and interrupt fd registration symmetry. The facade does not own transport-specific socket internals; it standardizes lifecycle, grouping, and configuration around implementation hooks.

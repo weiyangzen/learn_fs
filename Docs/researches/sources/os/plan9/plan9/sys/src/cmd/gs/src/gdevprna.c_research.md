@@ -1,0 +1,13 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gdevprna.c
+
+This file implements generic asynchronous printer support for Ghostscript. It allows interpretation/writing of command lists and rasterization/printing to overlap using two device instances: a writer and a renderer.
+
+`gdev_prn_async_write_open` is the main entry for concrete async printer drivers. It allocates a fixed-size renderer memory arena, creates a locked band-list allocator shared by writer and renderer, forces banding mode to `BandingAlways`, copies the device for the renderer, opens the writer as a command-list printer, initializes async-specific writer procedures, allocates and initializes a shared page queue, configures renderer band parameters from the writer, starts the render thread through the driver's `start_render_thread` callback, waits for renderer open completion via semaphore, and installs a memory-recovery callback.
+
+The writer side overrides close, output_page, put_params, and hardware-param procedures. `gdev_prn_async_write_output_page` ends the current command-list page, queues it as full-page or copy-page work, finishes the Ghostscript page if flushed, and reopens new band files, waiting for the renderer to free memory if needed. `flush_page` queues partial or full page data without closing band files normally. `gdev_prn_async_write_put_params` distinguishes geometry/space changes, which require flushing and reallocating clist memory, from parameter changes that can be emitted into the command list with `cmd_put_params`.
+
+The renderer side is driven by `gdev_prn_async_render_thread`. It opens the renderer device, verifies clist tile-cache compatibility, marks the renderer as open, then loops on page-queue entries until a terminate action arrives. For each queued page it copies page info to the renderer clist, sets up clist parameters, and dispatches output-page work according to full, partial, or copy-page action. It closes the renderer and acknowledges termination before returning.
+
+Memory management is central. `alloc_bandlist_memory` wraps a data allocator in `gs_memory_locked_t` because band-list allocation happens on the writer thread and deallocation on the renderer thread. `alloc_render_memory` creates a fixed-limit allocator and disables normal GC assumptions for the renderer arena. `prna_mem_recover` lets the writer wait for queued pages to render when ordinary allocation fails.
+
+Filesystem relevance: indirect. It manages command-list/band-list files and page queues for asynchronous raster output, but the code is about printer scheduling and memory isolation, not filesystem implementation.

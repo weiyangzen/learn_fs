@@ -1,0 +1,7 @@
+# File Research: sources/virtualization/qemu/block/export/export.c
+
+Common block export registry and QMP plumbing. It collects available export drivers (`nbd`, optional vhost-user-blk, optional FUSE, optional VDUSE) and maintains a main-thread-only global list of active `BlockExport`s.
+
+`blk_exp_add()` validates export ID uniqueness and syntax, resolves the driver and node, rejects writable exports of read-only nodes, optionally moves the node to a single requested iothread or collects multiple iothread contexts, activates the node unless inactive exports are explicitly allowed and supported, creates a `BlockBackend` with consistent-read and optional write permission, configures write cache/writethrough behavior, allocates the driver-specific export object, calls the driver's create method, and inserts the export into the global list.
+
+Reference counting is atomic; final deletion is scheduled as a bottom half in the main AioContext, where the export is removed from the list, driver delete is called, block backend dev ops are cleared, the backend is unrefed, and a `BLOCK_EXPORT_DELETED` event is emitted. Shutdown drops user ownership, calls driver request-shutdown, and unreferences. QMP handlers add/delete/query exports, with safe deletion rejecting exports still in use unless hard mode is requested. `blk_exp_close_all_type()` requests shutdown for matching exports and waits until none remain.

@@ -1,0 +1,11 @@
+# File Research: sources/virtualization/spdk/lib/iscsi/init_grp.c
+
+Initiator-group management implementation for SPDK iSCSI access control. It creates, registers, updates, unregisters, destroys, and serializes initiator groups, where each group has a numeric tag, a list of allowed initiator names, and a list of allowed initiator netmasks. The global group registry is `g_iscsi.ig_head`, protected by `g_iscsi.mutex` for public register, unregister, add, delete, and destroy operations.
+
+The file maintains two parallel list element types: `spdk_iscsi_initiator_name` and `spdk_iscsi_initiator_netmask`. Add helpers validate maximum list sizes (`MAX_INITIATOR`, `MAX_NETMASK`), maximum string lengths, duplicate entries, allocation success, and legacy `"ALL"` tokens, which are automatically converted to `"ANY"` with warnings. Delete helpers find exact entries, remove them from their TAILQ, decrement counters, and free storage.
+
+Batch operations are transactional within their local scope. `iscsi_init_grp_add_initiators` and `iscsi_init_grp_add_netmasks` roll back already-added entries if a later entry fails. Deletion batches attempt to restore removed entries on failure; if restoration fails they clear all entries of that type to avoid a partially inconsistent list. `iscsi_init_grp_create_from_initiator_list` creates a new group, adds names and masks, registers it, and destroys it on failure.
+
+Public update APIs (`iscsi_init_grp_add_initiators_from_initiator_list`, `iscsi_init_grp_delete_initiators_from_initiator_list`) look up groups by tag under the global mutex and update both names and netmasks, rolling back the other half when needed. `iscsi_init_grp_unregister` removes a group from the global list but returns it to the caller for later destruction, matching target-node code that may need to check references.
+
+JSON support emits both live information objects and config replay objects using method `iscsi_create_initiator_group`. Important dependencies are `iscsi/init_grp.h`, `iscsi/iscsi.h`, SPDK JSON write APIs, SPDK logging, and global `g_iscsi`. Risk points include exact-string duplicate matching after `"ALL"` to `"ANY"` conversion, all-or-clear rollback behavior on rare rollback allocation failure, and the need for callers to respect reference counts or external target-node bindings before destroying an unregistered group.

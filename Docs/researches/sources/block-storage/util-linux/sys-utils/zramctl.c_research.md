@@ -1,0 +1,13 @@
+# File Research: sources/block-storage/util-linux/sys-utils/zramctl.c
+
+This file implements `zramctl(8)`, used to list, find, create/configure, and reset compressed RAM block devices. It interacts primarily with zram sysfs attributes, optionally with systemd `sd-device` to wait for udev initialization, and uses libsmartcols for status output.
+
+`struct zram` stores the device path, a flock fd, sysfs path context, cached `mm_stat` fields, optional `sd_device`, and probes for zram-control support. Device naming helpers default to `/dev/zramN`, parse the numeric suffix, resolve sysfs from the block devno, canonicalize nonabsolute names through sysfs, and test existence/used state by reading `disksize`.
+
+Dynamic device management uses `/sys/class/zram-control`. `zram_control_add()` reads `hot_add` to allocate a device and updates the object name; `zram_control_remove()` writes the numeric device id to `hot_remove`. `find_free_zram()` scans from zero, using existing unused devices or hot-adding when possible, and returns the first unused zram object.
+
+Concurrency and udev handling are explicit. `zram_wait_initialized()` waits up to three seconds for a block disk device to become initialized when systemd device APIs are available; otherwise it is a no-op. `zram_lock()` opens the device, optionally via `sd_device_open()`, and uses `flock()` to coordinate with udev or other users. Creation intentionally unlocks before writing `reset` because the kernel refuses reset while the device node is open.
+
+Status output reads modern Linux `mm_stat` first and falls back to older per-attribute files. `get_mm_stat()` returns either bytes or human-readable strings and can also return numeric values for compression-ratio calculation. `fill_table_row()` populates columns for name, disk size, data/compressed/total/limit/peak memory, algorithm selected inside brackets from `comp_algorithm`, streams, zero pages, migrated objects, compression ratio, and mountpoint via `check_mount_point()`. `status()` either reports one specified device or scans `/dev` for used `zramN` devices.
+
+`main()` parses actions and output modifiers, enforces mutually exclusive modes, initializes default columns, and dispatches to status, reset, find-only, or create. Reset validates existence, waits for initialization, takes an exclusive nonblocking lock, writes `reset`, then tries hot-remove. Create chooses a free or specified device, waits for initialization, locks/unlocks, resets it, writes optional streams, compression algorithm, algorithm parameters, then writes `disksize`; `--find --size` prints the allocated device name.

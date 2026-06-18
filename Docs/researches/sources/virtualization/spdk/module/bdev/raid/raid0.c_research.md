@@ -1,0 +1,11 @@
+# File Research: sources/virtualization/spdk/module/bdev/raid/raid0.c
+
+This file implements RAID0 striping for the SPDK RAID bdev core. It maps logical strips round-robin across base bdevs, supports DIF/DIX, forwards read/write I/O, handles flush/unmap ranges that touch multiple disks, and resizes when the smallest base data region changes.
+
+`raid0_start()` finds the minimum base data size, rounds it down to a strip-size multiple, stores that rounded size into every base slot, and sets RAID block count to rounded per-base size times the number of bases. Multi-base RAID0 advertises strip size as the optimal I/O boundary and requests splitting on that boundary, so normal read/write requests are expected to fit within one strip. Single-base RAID0 disables split-on-boundary.
+
+`raid0_submit_rw_request()` computes the logical start strip, verifies the request does not span a strip boundary when more than one base exists, maps to physical disk index and disk LBA, and submits a single read or write to the selected base. Extended I/O options propagate memory domain and metadata. Writes verify DIX reference tags against the RAID logical offset before remapping/writing; reads verify base metadata in completion and the core later remaps reference tags back for the parent. `-ENOMEM` queues for resubmission; unexpected submission failures assert and complete failed.
+
+Null-payload range operations can cross stripes. `_raid0_get_io_range()` summarizes the affected strip range, start/end disk, offsets inside first/last strips, and number of disks involved. `_raid0_split_io_range()` calculates each disk-local offset and length. `raid0_submit_null_payload_request()` loops across involved disks from start disk, submits unmap or flush for each disk-local range, tracks submitted count for wait-queue resume, and completes the parent when all child I/Os finish.
+
+`raid0_resize()` recomputes the rounded minimum data size from live base descriptors, calculates the new RAID block count, calls `spdk_bdev_notify_blockcnt_change()` when changed, and updates every base slot data size. The module registers minimum base count one, memory-domain support, DIF support, read/write and null-payload hooks, and resize support.

@@ -1,0 +1,9 @@
+# File Research: sources/virtualization/spdk/lib/iscsi/conn.h
+
+Connection and per-connection LUN interface header for the SPDK iSCSI target. It defines negotiation table sizes, address buffer limits, the PDU receive-state enum, `spdk_iscsi_lun`, and the central `spdk_iscsi_conn` structure consumed by `conn.c`, `iscsi.c`, target-node code, and RPC/JSON reporting paths.
+
+`spdk_iscsi_conn` stores the connection identity, portal/poll-group/socket/session pointers, login and connection state, timers, current receive PDU, outgoing and SNACK PDU queues, R2T/Data-In queues, CHAP state, negotiated parameter state, per-connection statistics and flow-control counters, initiator/target names and SCSI ports, session-facing sequence numbers, NOP keepalive state, target transfer tag allocation, partial text negotiation state, and LUN descriptors opened for the connection. The `SPDK_ISCSI_CONNECTION_MEMSET` macro in `conn.c` relies on the layout comment in this header: fields from `portal` onward are reset on allocation, while `id` and `is_valid` persist across pool reuse.
+
+The header also publishes the connection lifecycle API (`initialize_iscsi_conns`, `shutdown_iscsi_conns`, construct/destruct/logout/drop), socket data read helpers, PDU write/free helpers, queued Data-In abort/drive routines, task completion callbacks, and JSON export. It depends on `iscsi/iscsi.h` for core iSCSI types and constants, SPDK queue/cpuset/SCSI headers, and internal trace definitions.
+
+Risk points are mostly structural: changing fields before `portal` or altering reset expectations requires updating the reset macro; adding connection/session negotiation parameters requires updating `MAX_CONNECTION_PARAMS` or `MAX_SESSION_PARAMS`; queue ownership is split between `conn.c` and `iscsi.c`, so lifetime changes need matching task/PDU reference handling.

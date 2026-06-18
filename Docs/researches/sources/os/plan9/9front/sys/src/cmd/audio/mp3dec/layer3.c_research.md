@@ -1,0 +1,7 @@
+# File Research: sources/os/plan9/9front/sys/src/cmd/audio/mp3dec/layer3.c
+
+This is the main MPEG Layer III decoder. It parses side information, manages the bit reservoir, decodes scalefactors and Huffman data, requantizes spectral coefficients, applies joint stereo, performs reorder/alias reduction/IMDCT/overlap-add, and writes subband samples into `frame->sbsample`.
+
+The file defines Layer III side-info structures, MPEG-1 and LSF scalefactor tables, scalefactor-band widths for MPEG-1/2/2.5 sample rates, requantization lookup data from `rq_table.dat`, powers and stereo/alias/IMDCT/window constants, and many static decode helpers. `III_sideinfo` parses granule/channel metadata and validates big-values, block type, and scfsi constraints. `III_scalefactors` and `III_scalefactors_lsf` decode scalefactors. `III_huffdecode` uses `huffman.c` tables, applies linbits/sign bits, caches requantized values, and detects overrun/part length errors.
+
+`III_decode` orchestrates per-granule channel processing, stereo transforms, reordering, alias reduction, IMDCT, overlap, zero-subband handling, and frequency inversion. `mad_layer_III` allocates dynamic main-data and overlap buffers, validates side-info length, checks CRC, handles private bits, computes current/next main-data regions, decodes, marks ancillary bits, and preserves reservoir bytes for future frames. This is the highest-risk and most performance-sensitive file in the group.

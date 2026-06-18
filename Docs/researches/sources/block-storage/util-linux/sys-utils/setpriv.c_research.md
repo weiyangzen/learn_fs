@@ -1,0 +1,9 @@
+# File Research: sources/block-storage/util-linux/sys-utils/setpriv.c
+
+This file implements `setpriv(1)`, executing a program after changing Linux privilege state. It supports dumping current state, listing capabilities, no-new-privs, inheritable/ambient/bounding capabilities, real/effective UID/GID, supplementary group policies, securebits, parent-death signal, Yama ptracer allowance, SELinux exec label, AppArmor exec profile, Landlock, seccomp filter loading, and environment reset.
+
+`struct privctx` accumulates all requested changes. Capability handling uses libcap-ng for effective/permitted/inheritable/bounding sets and direct `prctl(PR_CAP_AMBIENT, ...)` for ambient capabilities. Capability strings require `+` or `-` actions and accept `all`, libcap-ng names, or numeric `cap_N`. Securebits parsing allows selected securebit toggles but refuses `+all` and direct `keep_caps` adjustment.
+
+Dump mode reports real/effective/saved IDs, supplementary groups, no-new-privs, effective/permitted/inheritable/ambient/bounding capabilities, securebits, parent-death signal, and active SELinux/AppArmor labels when their filesystems exist. Reset-env preserves terminal color variables, clears the environment, then sets `SHELL`, `HOME`, `USER`, `LOGNAME`, and `PATH` from passwd/logindefs data.
+
+Main validation enforces that GID changes must explicitly choose a supplementary-group policy, `--init-groups` requires a resolvable `--ruid`/`--reuid`, `--dump` is standalone, and `--list-caps` is standalone. The application order is significant: reset environment; set no-new-privs/LSM labels/seccomp; enable keepcaps; raise helper caps; set UIDs and reapply caps; set GIDs/groups; set securebits; apply bounding, inheritable, and ambient caps; set parent-death signal and ptracer; apply Landlock; then `execvp()`.

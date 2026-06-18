@@ -1,0 +1,21 @@
+# File Research: sources/local-fs/apfs-fuse/ApfsLib/DiskStruct.h
+
+This header is the central packed on-disk APFS schema definition for apfs-fuse. It contains little-endian physical structures, object type constants, feature/incompatibility flags, B-tree record layouts, filesystem object records, allocation metadata, crypto/keybag records, encryption rolling state, sealed volume hash structures, and Fusion Drive structures.
+
+The file uses `#pragma pack(1)` around all disk structures and builds on `ApfsTypes.h` plus `Endian.h`, so almost every multibyte field is declared through `le_*` wrapper types or aliases. It defines core APFS address/id aliases such as `le_paddr_t`, `le_oid_t`, and `le_xid_t`, then defines the common object header `obj_phys_t` with checksum, object id, transaction id, type, and subtype. This header is the structural dependency for nearly every APFS parser in the library.
+
+Major APFS container structures include `nx_superblock_t`, checkpoint mapping records, object map records, EFI jumpstart records, spaceman records, reaper records, and Fusion cache/mapping records. `nx_superblock_t` captures block size/count, feature masks, checkpoint descriptor/data ring state, spaceman/omap/reaper object IDs, volume OIDs, counters, EFI jumpstart, Fusion metadata, keylocker ranges, and newer container state. The supported feature masks are conservative: container read-only-compatible mask is zero, while supported incompatible features include version 2 and Fusion.
+
+Major APFS volume structures include `apfs_superblock_t`, volume role constants, feature and incompatibility masks, volume encryption flags, filesystem root/extent/snapshot tree references, counts, volume UUID/name, role, volume group ID, integrity metadata, and file extent tree references. It also defines object-id/type packing through `j_key_t`, `OBJ_ID_MASK`, `OBJ_TYPE_MASK`, `OBJ_TYPE_SHIFT`, and `APFS_TYPE_ID`.
+
+The file defines all main APFS catalog/journal object record formats used by directory and file lookup code: inode keys/values, directory records including hashed directory keys, directory stats, xattrs, physical extents, file extents, dstream records, sibling links/maps, snapshot metadata/names, crypto records, and file-info records. Variable-length records use flexible array members or zero-length arrays, matching the codebase’s C/C++ disk parsing style.
+
+The B-tree section defines `btree_node_phys_t`, `btree_info_t`, key/value location tables, index node values, B-tree flags, and node flags. These structures establish how the APFS B-tree reader interprets table-of-contents offsets, fixed versus variable key/value layout, root/leaf status, hashed nodes, and no-header nodes.
+
+The spaceman section models APFS allocation state: chunk info blocks, chunk address blocks, free queue keys/values, devices, allocation zones, data zones, and `spaceman_phys_t`. It includes constants for allocation-zone counts, main/tier2 devices, free queues, versioned spaceman flags, chunk count masks, and internal pool bitmap limits.
+
+The crypto/keybag section defines wrapped crypto states, keybag entries, media keybag layout, keybag tags, protection classes, wrapped key sizes, and crypto IDs. These records are consumed by key-management code to load container and volume keybags, locate wrapped KEKs/VEKs, and derive volume keys for encrypted APFS volumes.
+
+The later sections define encryption rolling state (`er_state_phys_t`, v1 state, recovery blocks, bitmap records, ER flags/phases), sealed-volume integrity metadata (`integrity_meta_phys_t`, APFS hash types/sizes, file data hash records), and Fusion write-back cache/list/mapping structures. This makes the header broader than the current read-only mount path: it describes many APFS features that may only be partially consumed elsewhere.
+
+Notable implementation constraints: the file assumes binary compatibility with APFS disk layout and uses packed structs plus flexible arrays, so consumers must bounds-check external block data before casting. Many constants document newer APFS features, but parser support may lag the declarations. Any changes here have high blast radius because the whole APFS library depends on the exact field offsets and masks.

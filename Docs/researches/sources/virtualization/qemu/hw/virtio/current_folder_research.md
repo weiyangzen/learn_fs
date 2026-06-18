@@ -1,0 +1,90 @@
+# Folder Research: sources/virtualization/qemu/hw/virtio
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `80`
+- recursive_file_count: `80`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/virtualization/qemu/hw/virtio/Kconfig` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/Kconfig_research.md`
+- `sources/virtualization/qemu/hw/virtio/cbor-helpers.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/cbor-helpers.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/iothread-vq-mapping.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/iothread-vq-mapping.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/meson.build` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/meson.build_research.md`
+- `sources/virtualization/qemu/hw/virtio/trace.h` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/trace.h_research.md`
+- `sources/virtualization/qemu/hw/virtio/vdpa-dev-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vdpa-dev-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vdpa-dev.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vdpa-dev.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-backend.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-backend.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-iova-tree.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-iova-tree.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-iova-tree.h` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-iova-tree.h_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-scsi-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-scsi-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-shadow-virtqueue.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-shadow-virtqueue.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-shadow-virtqueue.h` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-shadow-virtqueue.h_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-stub.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-stub.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-base.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-base.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-blk-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-blk-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-fs-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-fs-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-fs.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-fs.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-gpio-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-gpio-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-gpio.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-gpio.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-i2c-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-i2c-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-i2c.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-i2c.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-input-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-input-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-input.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-input.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-rng-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-rng-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-rng.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-rng.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-rtc-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-rtc-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-rtc.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-rtc.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-scmi-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-scmi-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-scmi.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-scmi.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-scsi-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-scsi-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-snd-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-snd-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-snd.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-snd.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-spi-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-spi-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-spi.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-spi.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-test-device-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-test-device-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-test-device.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-test-device.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-vsock-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-vsock-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user-vsock.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user-vsock.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-user.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-user.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-vdpa.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-vdpa.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-vsock-common.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-vsock-common.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-vsock-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-vsock-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost-vsock.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost-vsock.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/vhost.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/vhost.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-9p-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-9p-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-acpi.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-acpi.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-balloon-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-balloon-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-balloon.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-balloon.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-blk-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-blk-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-bus.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-bus.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-config-io.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-config-io.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-crypto-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-crypto-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-crypto.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-crypto.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-hmp-cmds.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-hmp-cmds.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-input-host-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-input-host-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-input-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-input-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-iommu-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-iommu-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-iommu.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-iommu.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-md-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-md-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-md-stubs.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-md-stubs.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-mem-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-mem-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-mem-pci.h` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-mem-pci.h_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-mem.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-mem.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-mmio.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-mmio.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-net-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-net-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-nsm-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-nsm-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-nsm.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-nsm.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-pmem-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-pmem-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-pmem-pci.h` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-pmem-pci.h_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-pmem.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-pmem.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-qmp.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-qmp.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-qmp.h` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-qmp.h_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-rng-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-rng-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-rng.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-rng.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-scsi-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-scsi-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-serial-pci.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-serial-pci.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio-stub.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio-stub.c_research.md`
+- `sources/virtualization/qemu/hw/virtio/virtio.c` -> `Docs/researches/sources/virtualization/qemu/hw/virtio/virtio.c_research.md`

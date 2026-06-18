@@ -1,0 +1,85 @@
+# Folder Research: sources/virtualization/open-iscsi/usr
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `75`
+- recursive_file_count: `88`
+- direct_child_folder_count: `1`
+
+## Direct Files
+
+- `sources/virtualization/open-iscsi/usr/Makefile` -> `Docs/researches/sources/virtualization/open-iscsi/usr/Makefile_research.md`
+- `sources/virtualization/open-iscsi/usr/actor.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/actor.c_research.md`
+- `sources/virtualization/open-iscsi/usr/actor.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/actor.h_research.md`
+- `sources/virtualization/open-iscsi/usr/auth.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/auth.c_research.md`
+- `sources/virtualization/open-iscsi/usr/auth.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/auth.h_research.md`
+- `sources/virtualization/open-iscsi/usr/be2iscsi.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/be2iscsi.c_research.md`
+- `sources/virtualization/open-iscsi/usr/be2iscsi.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/be2iscsi.h_research.md`
+- `sources/virtualization/open-iscsi/usr/config.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/config.h_research.md`
+- `sources/virtualization/open-iscsi/usr/cxgbi.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/cxgbi.c_research.md`
+- `sources/virtualization/open-iscsi/usr/cxgbi.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/cxgbi.h_research.md`
+- `sources/virtualization/open-iscsi/usr/discovery.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/discovery.c_research.md`
+- `sources/virtualization/open-iscsi/usr/discovery.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/discovery.h_research.md`
+- `sources/virtualization/open-iscsi/usr/discoveryd.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/discoveryd.c_research.md`
+- `sources/virtualization/open-iscsi/usr/discoveryd.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/discoveryd.h_research.md`
+- `sources/virtualization/open-iscsi/usr/ethtool-copy.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/ethtool-copy.h_research.md`
+- `sources/virtualization/open-iscsi/usr/event_poll.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/event_poll.c_research.md`
+- `sources/virtualization/open-iscsi/usr/event_poll.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/event_poll.h_research.md`
+- `sources/virtualization/open-iscsi/usr/flashnode.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/flashnode.c_research.md`
+- `sources/virtualization/open-iscsi/usr/flashnode.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/flashnode.h_research.md`
+- `sources/virtualization/open-iscsi/usr/host.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/host.c_research.md`
+- `sources/virtualization/open-iscsi/usr/host.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/host.h_research.md`
+- `sources/virtualization/open-iscsi/usr/idbm.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/idbm.c_research.md`
+- `sources/virtualization/open-iscsi/usr/idbm.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/idbm.h_research.md`
+- `sources/virtualization/open-iscsi/usr/idbm_fields.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/idbm_fields.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iface.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iface.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iface.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iface.h_research.md`
+- `sources/virtualization/open-iscsi/usr/initiator.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/initiator.c_research.md`
+- `sources/virtualization/open-iscsi/usr/initiator.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/initiator.h_research.md`
+- `sources/virtualization/open-iscsi/usr/initiator_common.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/initiator_common.c_research.md`
+- `sources/virtualization/open-iscsi/usr/io.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/io.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_err.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_err.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_ipc.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_ipc.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_net_util.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_net_util.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_netlink.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_netlink.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_settings.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_settings.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_sysfs.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_sysfs.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_sysfs.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_sysfs.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_timer.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_timer.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_timer.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_timer.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_util.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_util.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsi_util.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsi_util.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsiadm.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsiadm.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsid.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsid.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsid.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsid.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsid_req.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsid_req.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsid_req.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsid_req.h_research.md`
+- `sources/virtualization/open-iscsi/usr/iscsistart.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iscsistart.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iser.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iser.c_research.md`
+- `sources/virtualization/open-iscsi/usr/iser.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/iser.h_research.md`
+- `sources/virtualization/open-iscsi/usr/kern_err_table.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/kern_err_table.c_research.md`
+- `sources/virtualization/open-iscsi/usr/kern_err_table.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/kern_err_table.h_research.md`
+- `sources/virtualization/open-iscsi/usr/local_strings.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/local_strings.c_research.md`
+- `sources/virtualization/open-iscsi/usr/local_strings.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/local_strings.h_research.md`
+- `sources/virtualization/open-iscsi/usr/log.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/log.c_research.md`
+- `sources/virtualization/open-iscsi/usr/log.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/log.h_research.md`
+- `sources/virtualization/open-iscsi/usr/login.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/login.c_research.md`
+- `sources/virtualization/open-iscsi/usr/meson.build` -> `Docs/researches/sources/virtualization/open-iscsi/usr/meson.build_research.md`
+- `sources/virtualization/open-iscsi/usr/mgmt_ipc.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/mgmt_ipc.c_research.md`
+- `sources/virtualization/open-iscsi/usr/mgmt_ipc.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/mgmt_ipc.h_research.md`
+- `sources/virtualization/open-iscsi/usr/mntcheck.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/mntcheck.c_research.md`
+- `sources/virtualization/open-iscsi/usr/netlink.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/netlink.c_research.md`
+- `sources/virtualization/open-iscsi/usr/scsi.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/scsi.c_research.md`
+- `sources/virtualization/open-iscsi/usr/scsi.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/scsi.h_research.md`
+- `sources/virtualization/open-iscsi/usr/session_info.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/session_info.c_research.md`
+- `sources/virtualization/open-iscsi/usr/session_info.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/session_info.h_research.md`
+- `sources/virtualization/open-iscsi/usr/session_mgmt.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/session_mgmt.c_research.md`
+- `sources/virtualization/open-iscsi/usr/session_mgmt.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/session_mgmt.h_research.md`
+- `sources/virtualization/open-iscsi/usr/sysfs.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/sysfs.c_research.md`
+- `sources/virtualization/open-iscsi/usr/sysfs.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/sysfs.h_research.md`
+- `sources/virtualization/open-iscsi/usr/transport.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/transport.c_research.md`
+- `sources/virtualization/open-iscsi/usr/transport.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/transport.h_research.md`
+- `sources/virtualization/open-iscsi/usr/types.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/types.h_research.md`
+- `sources/virtualization/open-iscsi/usr/uip_mgmt_ipc.c` -> `Docs/researches/sources/virtualization/open-iscsi/usr/uip_mgmt_ipc.c_research.md`
+- `sources/virtualization/open-iscsi/usr/uip_mgmt_ipc.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/uip_mgmt_ipc.h_research.md`
+- `sources/virtualization/open-iscsi/usr/version.h` -> `Docs/researches/sources/virtualization/open-iscsi/usr/version.h_research.md`

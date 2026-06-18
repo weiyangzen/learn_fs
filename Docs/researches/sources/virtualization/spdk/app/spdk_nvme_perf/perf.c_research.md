@@ -1,0 +1,24 @@
+# File Research: sources/virtualization/spdk/app/spdk_nvme_perf/perf.c
+
+This is SPDK's standalone NVMe performance benchmark application. It drives workloads against SPDK NVMe namespaces and, when compiled with the relevant support, kernel block/file devices through Linux AIO or io_uring. The file owns the full program lifecycle: command-line parsing, environment initialization, controller discovery, namespace registration, worker assignment, I/O submission/completion, latency accounting, reporting, and cleanup.
+
+The core abstraction is `struct ns_entry` plus `struct ns_fn_table`. NVMe namespaces, AIO files, and io_uring files all expose `setup_payload`, `submit_io`, `check_io`, `verify_io`, and worker-context lifecycle functions. This lets `work_fn()` submit and poll I/O without caring whether the target is an SPDK NVMe namespace or a kernel file descriptor. Per-worker/per-namespace state lives in `struct ns_worker_ctx`, which tracks outstanding queue depth, counters, latency histogram data, backend-specific qpair/ring/AIO contexts, queued retry tasks, and drain status.
+
+For kernel devices, `register_file()` opens paths with `O_DIRECT`, sizes them with SPDK fd helpers, adjusts alignment to block size when not explicitly set, and creates an AIO or io_uring namespace entry. io_uring uses `io_uring_queue_init`, SQEs for readv/writev, batched CQE peeking, and exact-length completion checks. AIO uses `io_setup`, `io_submit`, and `io_getevents`. Both treat `-EIO` as device removal and switch the namespace context into draining mode.
+
+For SPDK NVMe, `register_controllers()` probes each parsed transport ID, `probe_cb()` applies controller options such as CMB SQ disabling, interrupts, digests, keepalive, TLS PSK, DH-HMAC-CHAP keys, source address/NQN, TOS, and queue counts, and `attach_cb()` registers controllers. `register_ns()` filters inactive or incompatible namespaces, computes request sizing, configures metadata/DIF/DIX details, records namespace geometry, optionally creates Zipf state, and inserts namespace entries. `nvme_init_ns_worker_ctx()` creates a poll group and one or more qpairs per namespace-worker pair, connects them asynchronously, and waits up to ten seconds for all qpairs to become connected.
+
+I/O generation is queue-depth driven. `submit_single_io()` chooses an offset using sequential, uniform random, or Zipf distribution, chooses read/write according to workload mix, timestamps the task, and calls the backend submit function. `task_complete()` updates queue depth, I/O counters, min/max/total latency ticks, optional software histogram, metadata verification for protected namespaces, and either frees the task during drain or immediately resubmits it to maintain depth. `work_fn()` runs the benchmark loop on each SPDK lcore, handles warmup reset, prints terminal-only periodic stats from the main core, drains outstanding I/O fairly across namespaces, and optionally dumps transport statistics.
+
+Reporting includes per-device/core IOPS, MiB/s, average/min/max latency, software latency percentiles and histograms, optional Intel SSD latency log pages, and transport-specific poll group statistics for RDMA, PCIe, and TCP. The code also has an admin-polling pthread for non-PCIe controllers, signal handlers for graceful stop, optional SPDK trace setup, and full cleanup of workers, namespaces, controllers, keyring keys, logging, environment, and mutexes.
+
+Command-line handling is extensive. Required operands are queue depth, I/O size, workload, and duration; transport defaults to local PCIe enumeration when omitted. Advanced flags cover warmup, number of I/Os or namespace percentage, queue sizes, multiple qpairs, unused qpairs, every-core fanout, interrupts, VMD, metadata protection flags, FUA, TCP digests, socket implementation and zerocopy, TLS/KTLS/PSK, DHCHAP, RDMA SRQ/TOS, hugepage/env controls, tracing, log level, and error continuation/rate-limiting.
+
+Notable implementation details and caveats:
+
+- `g_io_unit_size` defaults to a 4-byte-aligned `UINT32_MAX` mask and may split large NVMe payloads into multiple iovecs.
+- `--number-ios <N>%` is converted per namespace in `allocate_ns_worker()` using namespace size in I/O units.
+- Error-continuation mode queues failed submissions instead of recursively resubmitting, avoiding stack overflow loops.
+- The rate-limited logging macro deliberately uses a static non-thread-safe counter and warns when used across multiple workers.
+- `unregister_namespaces()` closes file descriptors based on global `g_use_uring`/AIO state even though `g_namespaces` can also contain NVMe namespace entries whose union fields are controller pointers. In this file as read, that is a point to inspect before changing teardown behavior.
+- `perf_set_sock_opts()` only handles selected socket fields; the `PERF_PSK_IDENTITY` parser branch passes `"psk_identity"`, which is not accepted by that helper in this file.

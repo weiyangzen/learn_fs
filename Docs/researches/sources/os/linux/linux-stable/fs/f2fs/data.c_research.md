@@ -1,0 +1,21 @@
+# File Research: sources/os/linux/linux-stable/fs/f2fs/data.c
+
+`data.c` is the main F2FS data I/O implementation. It wires the address-space operations for file data, direct-I/O iomap mapping, buffered write begin/end, read/readahead, writeback, swapfile activation, page-cache invalidation, and the BIO allocation/merge/submit paths used by data, node, and metadata writes.
+
+Major owned resources include the F2FS bioset, BIO entry slab, large-folio state slab, post-read context slab/mempool, and per-mount post-read workqueue. Read completion can run post-processing steps for fscrypt decryption, F2FS decompression, and fs-verity verification; compressed folios are finished at cluster granularity rather than just per BIO.
+
+The low-level I/O path resolves multi-device block addresses with `f2fs_target_device()` and `f2fs_target_device_index()`, builds BIOs with the right op flags, crypt context, write hints, and iostat context, then submits through blk-crypto. Write BIO completion handles bounce pages, compressed write completion, checkpoint-data failure policy, node footer sanity checks, fsync-node removal, page-count accounting, GC flag cleanup, and folio writeback completion.
+
+Write merging is split between normal merged write BIOs in `sbi->write_io[type][temp]` and an IPU BIO list for inplace-update writes. Mergeability checks require contiguous blocks, same target block device, compatible op flags, and compatible encryption DUN/crypt context. Zoned-device support forces submission at sequential zone boundaries and waits on pending zone BIO completion.
+
+Block mapping centers on `f2fs_map_blocks()`. It consults the read extent cache, walks dnodes, validates physical block addresses, creates blocks for pre-AIO/pre-DIO/DIO callers, tracks holes, delalloc/NEW_ADDR, multi-device DIO bdev remapping, LFS direct-write behavior, next extent/page hints, and read extent cache population. `f2fs_get_read_data_folio()`, `f2fs_find_data_folio()`, `f2fs_get_lock_data_folio()`, and `f2fs_get_new_data_folio()` are the page-cache-facing helpers used by directories, GC, and normal file I/O.
+
+Read paths cover single-page reads, readahead, compressed cluster reads, and large folios. Normal reads use `f2fs_read_single_page()` and merged BIOs; compressed reads use `f2fs_read_multi_pages()` and `decompress_io_ctx`; large folios maintain `read_pages_pending` in private folio state so a large folio is completed only after all subpage reads finish. Holes and EOF ranges are zero-filled and fs-verity is applied where relevant.
+
+Writeback uses `f2fs_write_cache_pages()`, a customized `write_cache_pages()` variant that batches dirty folios, handles compressed clusters, prioritizes WB_SYNC requests, retries checkpoint races, submits merged OPU/IPU BIOs, and updates writeback indexes. `f2fs_do_write_data_page()` chooses IPU versus OPU based on pinned/cold files, LFS mode, atomic writes, checkpoint-disabled state, compression, directory/quota policy, and filesystem flags.
+
+Buffered writes are implemented by `f2fs_write_begin()` and `f2fs_write_end()`. They handle inline-data conversion/readout, block reservation, partial-page read-before-write, atomic-write COW inode handling, compression overwrite preparation, dirtying, i_size updates, and failure truncation through `f2fs_write_failed()`.
+
+FIEMAP and bmap support include xattr fiemap, inline data/dentry fiemap delegation, compressed-cluster FIEMAP encoding, delalloc/unwritten reporting, and block lookup for compressed and uncompressed files. Swap activation requires regular writable files, rejects unsupported LFS cases, disables compression, flushes data, precaches extents, rejects holes, migrates unaligned extents into pinned aligned sections when possible, and pins the swapfile inode until deactivate.
+
+Important cross-file dependencies are `node.c` dnode/node-info routines, `segment.c` allocation/write placement, `extent_cache.c` read-extent lookups and updates, compression helpers, inline-data helpers, fscrypt/fsverity, iostat, tracepoints, and checkpoint/GC state. The primary invariants are valid block-address checks before I/O, lock ordering around folio/node/op locks, correct page-count accounting, and clean separation of checkpoint-guaranteed data from ordinary writeback.

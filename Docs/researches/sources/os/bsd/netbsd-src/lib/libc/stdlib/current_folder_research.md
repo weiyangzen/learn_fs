@@ -1,0 +1,86 @@
+# Folder Research: sources/os/bsd/netbsd-src/lib/libc/stdlib
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `76`
+- recursive_file_count: `76`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_abs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_abs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_div.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_div.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_imaxabs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_imaxabs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_labs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_labs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_ldiv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_ldiv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_llabs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Lint_llabs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/Makefile.inc` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/Makefile.inc_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/_env.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/_env.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/_rand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/_rand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/a64l.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/a64l.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/abort.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/abort.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/abs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/abs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/aligned_alloc.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/aligned_alloc.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/atexit.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/atexit.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/atof.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/atof.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/atoi.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/atoi.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/atol.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/atol.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/atoll.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/atoll.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/bsearch.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/bsearch.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/cxa_thread_atexit.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/cxa_thread_atexit.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/div.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/div.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/drand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/drand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/erand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/erand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/erand48_ieee754.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/erand48_ieee754.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/exit.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/exit.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/getenv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/getenv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/getopt_long.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/getopt_long.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/getsubopt.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/getsubopt.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/hcreate.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/hcreate.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/imaxabs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/imaxabs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/imaxdiv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/imaxdiv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/insque.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/insque.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/jemalloc.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/jemalloc.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/jrand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/jrand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/l64a.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/l64a.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/labs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/labs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/lcong48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/lcong48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/ldiv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/ldiv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/llabs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/llabs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/lldiv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/lldiv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/lrand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/lrand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/lsearch.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/lsearch.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/malloc.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/malloc.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/merge.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/merge.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/mrand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/mrand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/nrand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/nrand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/posix_openpt.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/posix_openpt.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/pty.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/pty.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/putenv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/putenv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/qabs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/qabs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/qdiv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/qdiv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/qsort.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/qsort.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/quick_exit.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/quick_exit.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/radixsort.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/radixsort.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/rand.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/rand.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/rand48.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/rand48.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/rand_r.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/rand_r.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/reallocarr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/reallocarr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/reallocarray.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/reallocarray.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/remque.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/remque.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/seed48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/seed48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/setenv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/setenv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/srand48.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/srand48.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/strfmon.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/strfmon.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/strsuftoll.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/strsuftoll.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/strtol.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/strtol.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/strtonum.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/strtonum.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/strtoq.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/strtoq.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/strtouq.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/strtouq.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/system.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/system.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/tdelete.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/tdelete.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/tfind.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/tfind.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/tsearch.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/tsearch.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/twalk.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/twalk.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/stdlib/unsetenv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/stdlib/unsetenv.c_research.md`

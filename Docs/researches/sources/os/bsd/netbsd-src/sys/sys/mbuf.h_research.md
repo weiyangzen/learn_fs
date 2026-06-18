@@ -1,0 +1,5 @@
+# File Research: sources/os/bsd/netbsd-src/sys/sys/mbuf.h
+
+Defines NetBSD’s network mbuf data model and APIs. It covers packet tags, optional mbuf ownership tracing, mbuf headers, packet headers, checksum/offload flags, external storage descriptors, canonical `struct mbuf`, data-size macros, flags/types, allocation macros, cluster/external-storage helpers, read-only/space calculations, prepend/type-change/region helpers, mbuf queues, statistics/sysctl IDs, and kernel mbuf manipulation routines.
+
+Kernel APIs include copy/dup/get/prepend/pulldown/pullup/split/defrag/apply/cat/copyback/makewritable/free/init/tag operations, packet examination/debug helpers, receive-interface access via pserialize or psref, and alignment helpers. Filesystem scope relevance is indirect through network filesystems and kernel buffer-management patterns. Risks are severe if contracts are violated: external storage refcounts, packet-header length consistency, checksum metadata semantics, writable/read-only checks, interface lifetime protection, and ABI-visible mbuf stats/owner structures.

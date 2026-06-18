@@ -1,0 +1,95 @@
+# Folder Research: sources/teaching/xv6-public
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `85`
+- recursive_file_count: `85`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/teaching/xv6-public/Makefile` -> `Docs/researches/sources/teaching/xv6-public/Makefile_research.md`
+- `sources/teaching/xv6-public/asm.h` -> `Docs/researches/sources/teaching/xv6-public/asm.h_research.md`
+- `sources/teaching/xv6-public/bio.c` -> `Docs/researches/sources/teaching/xv6-public/bio.c_research.md`
+- `sources/teaching/xv6-public/bootasm.S` -> `Docs/researches/sources/teaching/xv6-public/bootasm.S_research.md`
+- `sources/teaching/xv6-public/bootmain.c` -> `Docs/researches/sources/teaching/xv6-public/bootmain.c_research.md`
+- `sources/teaching/xv6-public/buf.h` -> `Docs/researches/sources/teaching/xv6-public/buf.h_research.md`
+- `sources/teaching/xv6-public/cat.c` -> `Docs/researches/sources/teaching/xv6-public/cat.c_research.md`
+- `sources/teaching/xv6-public/console.c` -> `Docs/researches/sources/teaching/xv6-public/console.c_research.md`
+- `sources/teaching/xv6-public/cuth` -> `Docs/researches/sources/teaching/xv6-public/cuth_research.md`
+- `sources/teaching/xv6-public/date.h` -> `Docs/researches/sources/teaching/xv6-public/date.h_research.md`
+- `sources/teaching/xv6-public/defs.h` -> `Docs/researches/sources/teaching/xv6-public/defs.h_research.md`
+- `sources/teaching/xv6-public/echo.c` -> `Docs/researches/sources/teaching/xv6-public/echo.c_research.md`
+- `sources/teaching/xv6-public/elf.h` -> `Docs/researches/sources/teaching/xv6-public/elf.h_research.md`
+- `sources/teaching/xv6-public/entry.S` -> `Docs/researches/sources/teaching/xv6-public/entry.S_research.md`
+- `sources/teaching/xv6-public/entryother.S` -> `Docs/researches/sources/teaching/xv6-public/entryother.S_research.md`
+- `sources/teaching/xv6-public/exec.c` -> `Docs/researches/sources/teaching/xv6-public/exec.c_research.md`
+- `sources/teaching/xv6-public/fcntl.h` -> `Docs/researches/sources/teaching/xv6-public/fcntl.h_research.md`
+- `sources/teaching/xv6-public/file.c` -> `Docs/researches/sources/teaching/xv6-public/file.c_research.md`
+- `sources/teaching/xv6-public/file.h` -> `Docs/researches/sources/teaching/xv6-public/file.h_research.md`
+- `sources/teaching/xv6-public/forktest.c` -> `Docs/researches/sources/teaching/xv6-public/forktest.c_research.md`
+- `sources/teaching/xv6-public/fs.c` -> `Docs/researches/sources/teaching/xv6-public/fs.c_research.md`
+- `sources/teaching/xv6-public/fs.h` -> `Docs/researches/sources/teaching/xv6-public/fs.h_research.md`
+- `sources/teaching/xv6-public/grep.c` -> `Docs/researches/sources/teaching/xv6-public/grep.c_research.md`
+- `sources/teaching/xv6-public/ide.c` -> `Docs/researches/sources/teaching/xv6-public/ide.c_research.md`
+- `sources/teaching/xv6-public/init.c` -> `Docs/researches/sources/teaching/xv6-public/init.c_research.md`
+- `sources/teaching/xv6-public/initcode.S` -> `Docs/researches/sources/teaching/xv6-public/initcode.S_research.md`
+- `sources/teaching/xv6-public/ioapic.c` -> `Docs/researches/sources/teaching/xv6-public/ioapic.c_research.md`
+- `sources/teaching/xv6-public/kalloc.c` -> `Docs/researches/sources/teaching/xv6-public/kalloc.c_research.md`
+- `sources/teaching/xv6-public/kbd.c` -> `Docs/researches/sources/teaching/xv6-public/kbd.c_research.md`
+- `sources/teaching/xv6-public/kbd.h` -> `Docs/researches/sources/teaching/xv6-public/kbd.h_research.md`
+- `sources/teaching/xv6-public/kill.c` -> `Docs/researches/sources/teaching/xv6-public/kill.c_research.md`
+- `sources/teaching/xv6-public/lapic.c` -> `Docs/researches/sources/teaching/xv6-public/lapic.c_research.md`
+- `sources/teaching/xv6-public/ln.c` -> `Docs/researches/sources/teaching/xv6-public/ln.c_research.md`
+- `sources/teaching/xv6-public/log.c` -> `Docs/researches/sources/teaching/xv6-public/log.c_research.md`
+- `sources/teaching/xv6-public/ls.c` -> `Docs/researches/sources/teaching/xv6-public/ls.c_research.md`
+- `sources/teaching/xv6-public/main.c` -> `Docs/researches/sources/teaching/xv6-public/main.c_research.md`
+- `sources/teaching/xv6-public/memide.c` -> `Docs/researches/sources/teaching/xv6-public/memide.c_research.md`
+- `sources/teaching/xv6-public/memlayout.h` -> `Docs/researches/sources/teaching/xv6-public/memlayout.h_research.md`
+- `sources/teaching/xv6-public/mkdir.c` -> `Docs/researches/sources/teaching/xv6-public/mkdir.c_research.md`
+- `sources/teaching/xv6-public/mkfs.c` -> `Docs/researches/sources/teaching/xv6-public/mkfs.c_research.md`
+- `sources/teaching/xv6-public/mmu.h` -> `Docs/researches/sources/teaching/xv6-public/mmu.h_research.md`
+- `sources/teaching/xv6-public/mp.c` -> `Docs/researches/sources/teaching/xv6-public/mp.c_research.md`
+- `sources/teaching/xv6-public/mp.h` -> `Docs/researches/sources/teaching/xv6-public/mp.h_research.md`
+- `sources/teaching/xv6-public/param.h` -> `Docs/researches/sources/teaching/xv6-public/param.h_research.md`
+- `sources/teaching/xv6-public/picirq.c` -> `Docs/researches/sources/teaching/xv6-public/picirq.c_research.md`
+- `sources/teaching/xv6-public/pipe.c` -> `Docs/researches/sources/teaching/xv6-public/pipe.c_research.md`
+- `sources/teaching/xv6-public/pr.pl` -> `Docs/researches/sources/teaching/xv6-public/pr.pl_research.md`
+- `sources/teaching/xv6-public/printf.c` -> `Docs/researches/sources/teaching/xv6-public/printf.c_research.md`
+- `sources/teaching/xv6-public/printpcs` -> `Docs/researches/sources/teaching/xv6-public/printpcs_research.md`
+- `sources/teaching/xv6-public/proc.c` -> `Docs/researches/sources/teaching/xv6-public/proc.c_research.md`
+- `sources/teaching/xv6-public/proc.h` -> `Docs/researches/sources/teaching/xv6-public/proc.h_research.md`
+- `sources/teaching/xv6-public/rm.c` -> `Docs/researches/sources/teaching/xv6-public/rm.c_research.md`
+- `sources/teaching/xv6-public/runoff` -> `Docs/researches/sources/teaching/xv6-public/runoff_research.md`
+- `sources/teaching/xv6-public/runoff1` -> `Docs/researches/sources/teaching/xv6-public/runoff1_research.md`
+- `sources/teaching/xv6-public/sh.c` -> `Docs/researches/sources/teaching/xv6-public/sh.c_research.md`
+- `sources/teaching/xv6-public/show1` -> `Docs/researches/sources/teaching/xv6-public/show1_research.md`
+- `sources/teaching/xv6-public/sign.pl` -> `Docs/researches/sources/teaching/xv6-public/sign.pl_research.md`
+- `sources/teaching/xv6-public/sleeplock.c` -> `Docs/researches/sources/teaching/xv6-public/sleeplock.c_research.md`
+- `sources/teaching/xv6-public/sleeplock.h` -> `Docs/researches/sources/teaching/xv6-public/sleeplock.h_research.md`
+- `sources/teaching/xv6-public/spinlock.c` -> `Docs/researches/sources/teaching/xv6-public/spinlock.c_research.md`
+- `sources/teaching/xv6-public/spinlock.h` -> `Docs/researches/sources/teaching/xv6-public/spinlock.h_research.md`
+- `sources/teaching/xv6-public/spinp` -> `Docs/researches/sources/teaching/xv6-public/spinp_research.md`
+- `sources/teaching/xv6-public/stat.h` -> `Docs/researches/sources/teaching/xv6-public/stat.h_research.md`
+- `sources/teaching/xv6-public/stressfs.c` -> `Docs/researches/sources/teaching/xv6-public/stressfs.c_research.md`
+- `sources/teaching/xv6-public/string.c` -> `Docs/researches/sources/teaching/xv6-public/string.c_research.md`
+- `sources/teaching/xv6-public/swtch.S` -> `Docs/researches/sources/teaching/xv6-public/swtch.S_research.md`
+- `sources/teaching/xv6-public/syscall.c` -> `Docs/researches/sources/teaching/xv6-public/syscall.c_research.md`
+- `sources/teaching/xv6-public/syscall.h` -> `Docs/researches/sources/teaching/xv6-public/syscall.h_research.md`
+- `sources/teaching/xv6-public/sysfile.c` -> `Docs/researches/sources/teaching/xv6-public/sysfile.c_research.md`
+- `sources/teaching/xv6-public/sysproc.c` -> `Docs/researches/sources/teaching/xv6-public/sysproc.c_research.md`
+- `sources/teaching/xv6-public/trap.c` -> `Docs/researches/sources/teaching/xv6-public/trap.c_research.md`
+- `sources/teaching/xv6-public/trapasm.S` -> `Docs/researches/sources/teaching/xv6-public/trapasm.S_research.md`
+- `sources/teaching/xv6-public/traps.h` -> `Docs/researches/sources/teaching/xv6-public/traps.h_research.md`
+- `sources/teaching/xv6-public/types.h` -> `Docs/researches/sources/teaching/xv6-public/types.h_research.md`
+- `sources/teaching/xv6-public/uart.c` -> `Docs/researches/sources/teaching/xv6-public/uart.c_research.md`
+- `sources/teaching/xv6-public/ulib.c` -> `Docs/researches/sources/teaching/xv6-public/ulib.c_research.md`
+- `sources/teaching/xv6-public/umalloc.c` -> `Docs/researches/sources/teaching/xv6-public/umalloc.c_research.md`
+- `sources/teaching/xv6-public/user.h` -> `Docs/researches/sources/teaching/xv6-public/user.h_research.md`
+- `sources/teaching/xv6-public/usertests.c` -> `Docs/researches/sources/teaching/xv6-public/usertests.c_research.md`
+- `sources/teaching/xv6-public/usys.S` -> `Docs/researches/sources/teaching/xv6-public/usys.S_research.md`
+- `sources/teaching/xv6-public/vectors.pl` -> `Docs/researches/sources/teaching/xv6-public/vectors.pl_research.md`
+- `sources/teaching/xv6-public/vm.c` -> `Docs/researches/sources/teaching/xv6-public/vm.c_research.md`
+- `sources/teaching/xv6-public/wc.c` -> `Docs/researches/sources/teaching/xv6-public/wc.c_research.md`
+- `sources/teaching/xv6-public/x86.h` -> `Docs/researches/sources/teaching/xv6-public/x86.h_research.md`
+- `sources/teaching/xv6-public/zombie.c` -> `Docs/researches/sources/teaching/xv6-public/zombie.c_research.md`

@@ -1,0 +1,3 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/btrfs.c
+
+Btrfs filesystem recognizer. `FsRecIsBtrfsVolume` checks only the superblock magic field against `BTRFS_MAGIC`. `FsRecBtrfsFsControl` handles mount and load requests: on `IRP_MN_MOUNT_VOLUME` it gets the target sector size, reads `BTRFS_SB_SIZE` bytes at `BTRFS_SB_OFFSET`, tests the magic, and returns `STATUS_FS_DRIVER_REQUIRED` when recognized. Device-read or geometry failures set a device-error flag, and floppy media are allowed to fall through to the real filesystem driver despite probe failure. On `IRP_MN_LOAD_FILE_SYSTEM` it calls `FsRecLoadFileSystem` for the `btrfs` service; other minor functions return `STATUS_INVALID_DEVICE_REQUEST`.

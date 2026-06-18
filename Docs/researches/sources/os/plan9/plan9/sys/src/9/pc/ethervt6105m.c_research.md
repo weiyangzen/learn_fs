@@ -1,0 +1,19 @@
+# File Research: sources/os/plan9/plan9/sys/src/9/pc/ethervt6105m.c
+
+VIA VT6105M / Rhine III-M Fast Ethernet driver, registered as `"vt6105M"`. It is closely related to `ethervt6102.c` but tailored for device ID `1106:3053`, with a larger receive ring, a reusable receive block pool, checksum flag handling, longer timeouts, and more diagnostics.
+
+The file defines the Rhine III-M register set, including extra configuration, power management, and MII interrupt registers, plus RX/TX descriptors and status/control bits. `Ctlr` tracks descriptor rings, command/interrupt state, MII/link process state, extensive counters, max TX descriptor use, timing accumulation, TX error categories, interrupt error causes, and RX checksum-success counts. `Nrd=196`, `Ntd=64`, and receive buffers include CRC plus slop.
+
+A global receive block pool is managed by `vt6105Mrbfree()` and `vt6105Mrballoc()`. Blocks are reset to a fixed tail-based receive area, checksum flags are cleared, and new blocks are allocated lazily with the custom free callback. This differs from the VT6102 driver, which allocates replacement receive blocks directly.
+
+`vt6105Mpci()` scans PCI Ethernet devices for VT6105M, reserves I/O BAR0, allocates a controller, derives descriptor alignment, sets the TX FIFO threshold to store-and-forward, calls `vt6105Mreset()`, enables bus mastering, and queues controllers. `vt6105Mpnp()` selects an inactive controller, fills `Ether`, sets `mbps` to 1000 as a buffer-size workaround, sets `maxmtu` to `ETHERMAXTU+Bslop`, and installs callbacks.
+
+Reset uses `vt6105Mdetach()` to clear WOL/power state and soft-reset the chip with `Maxus` timeout, which comments say is needed for slow Soekris 5501 resets. `vt6105Mreset()` reloads EEPROM, reads the MAC address, configures DMA/RX/TX thresholds, enables broadcast/all-multicast receive, sets multicast filters to all ones, clears TX config bits, creates MII state, probes PHYs, and starts autonegotiation if immediate `miistatus()` fails.
+
+`vt6105Mattach()` allocates aligned descriptor space with `mallocalign`, builds RX descriptors with checksum-interest bits (`Ipkt|Tcpkt|Udpkt`) and receive blocks from the pool, builds a circular TX ring, programs descriptor base registers and interrupt mask, waits up to about 3.5 seconds for link status, enables TX/RX, and starts the link process. The link process temporarily disables TX/RX while updating full-duplex state, then reenables link interrupts and sleeps.
+
+TX uses one descriptor per packet rather than the VT6102 prefix-bounce split path. `vt6105Mtransmit()` frees completed descriptors, counts abort/invalid/underflow details, restarts the descriptor address after certain TX errors, dequeues output blocks, fills descriptor address/control, uses `Tdctl` in branch fields to suppress interrupts except near ring full, wakes TX, tracks max occupancy, and accumulates cycle timing. `vt6105Minterrupt()` adds more timing accounting, counts abort/underflow/TX-unavailable interrupt causes, adjusts TX FIFO threshold upward on underflow, and calls TX/RX handlers.
+
+`vt6105Mreceive()` handles RX errors, otherwise obtains a replacement block, propagates hardware checksum results into Plan 9 block flags (`Btcpck|Budpck`, `Bipck`) when `Tuok`/`Ipok` are set, subtracts CRC length, delivers the old block, installs the replacement, and returns descriptor ownership via the previous descriptor. `vt6105Mifstat()` reports RX/TX stats, interrupt/link counters, TX occupancy/timing, register snapshots, receive pool size, checksum-success counters, and PHY registers.
+
+Promiscuous mode toggles `Prom`; multicast is coarse because all multicast is already accepted. Notable risks: comments flag cleanup work, unclear receive allocation slop, unresolved link interrupts, and descriptor structure carrying non-hardware fields that should be separated for 64-bit cleanliness.

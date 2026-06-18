@@ -1,0 +1,3 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/cdfs.c
+
+ISO-9660/CDFS recognizer. `FsRecIsCdfsVolume` reads the primary volume descriptor header at byte offset `32768`, then validates descriptor type, the `CD001` identifier, and version `1`; any failed read or field mismatch returns false after freeing the probe buffer. `FsRecCdfsFsControl` dispatches mount requests by obtaining sector size and calling that validator, returning `STATUS_FS_DRIVER_REQUIRED` when recognized. Load requests call `FsRecLoadFileSystem` for the `Cdfs` service, while unsupported minor functions return `STATUS_INVALID_DEVICE_REQUEST`.

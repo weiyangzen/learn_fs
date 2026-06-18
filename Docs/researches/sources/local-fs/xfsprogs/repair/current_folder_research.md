@@ -1,0 +1,83 @@
+# Folder Research: sources/local-fs/xfsprogs/repair
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `73`
+- recursive_file_count: `73`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/local-fs/xfsprogs/repair/Makefile` -> `Docs/researches/sources/local-fs/xfsprogs/repair/Makefile_research.md`
+- `sources/local-fs/xfsprogs/repair/agbtree.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/agbtree.c_research.md`
+- `sources/local-fs/xfsprogs/repair/agbtree.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/agbtree.h_research.md`
+- `sources/local-fs/xfsprogs/repair/agheader.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/agheader.c_research.md`
+- `sources/local-fs/xfsprogs/repair/agheader.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/agheader.h_research.md`
+- `sources/local-fs/xfsprogs/repair/attr_repair.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/attr_repair.c_research.md`
+- `sources/local-fs/xfsprogs/repair/attr_repair.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/attr_repair.h_research.md`
+- `sources/local-fs/xfsprogs/repair/avl.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/avl.c_research.md`
+- `sources/local-fs/xfsprogs/repair/avl.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/avl.h_research.md`
+- `sources/local-fs/xfsprogs/repair/bmap.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/bmap.c_research.md`
+- `sources/local-fs/xfsprogs/repair/bmap.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/bmap.h_research.md`
+- `sources/local-fs/xfsprogs/repair/bmap_repair.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/bmap_repair.c_research.md`
+- `sources/local-fs/xfsprogs/repair/bmap_repair.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/bmap_repair.h_research.md`
+- `sources/local-fs/xfsprogs/repair/btree.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/btree.c_research.md`
+- `sources/local-fs/xfsprogs/repair/btree.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/btree.h_research.md`
+- `sources/local-fs/xfsprogs/repair/bulkload.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/bulkload.c_research.md`
+- `sources/local-fs/xfsprogs/repair/bulkload.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/bulkload.h_research.md`
+- `sources/local-fs/xfsprogs/repair/da_util.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/da_util.c_research.md`
+- `sources/local-fs/xfsprogs/repair/da_util.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/da_util.h_research.md`
+- `sources/local-fs/xfsprogs/repair/dino_chunks.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/dino_chunks.c_research.md`
+- `sources/local-fs/xfsprogs/repair/dinode.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/dinode.c_research.md`
+- `sources/local-fs/xfsprogs/repair/dinode.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/dinode.h_research.md`
+- `sources/local-fs/xfsprogs/repair/dir2.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/dir2.c_research.md`
+- `sources/local-fs/xfsprogs/repair/dir2.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/dir2.h_research.md`
+- `sources/local-fs/xfsprogs/repair/err_protos.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/err_protos.h_research.md`
+- `sources/local-fs/xfsprogs/repair/globals.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/globals.c_research.md`
+- `sources/local-fs/xfsprogs/repair/globals.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/globals.h_research.md`
+- `sources/local-fs/xfsprogs/repair/incore.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/incore.c_research.md`
+- `sources/local-fs/xfsprogs/repair/incore.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/incore.h_research.md`
+- `sources/local-fs/xfsprogs/repair/incore_bmc.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/incore_bmc.c_research.md`
+- `sources/local-fs/xfsprogs/repair/incore_ext.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/incore_ext.c_research.md`
+- `sources/local-fs/xfsprogs/repair/incore_ino.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/incore_ino.c_research.md`
+- `sources/local-fs/xfsprogs/repair/init.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/init.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase1.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase1.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase2.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase2.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase3.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase3.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase4.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase4.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase5.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase5.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase6.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase6.c_research.md`
+- `sources/local-fs/xfsprogs/repair/phase7.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/phase7.c_research.md`
+- `sources/local-fs/xfsprogs/repair/pptr.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/pptr.c_research.md`
+- `sources/local-fs/xfsprogs/repair/pptr.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/pptr.h_research.md`
+- `sources/local-fs/xfsprogs/repair/prefetch.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/prefetch.c_research.md`
+- `sources/local-fs/xfsprogs/repair/prefetch.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/prefetch.h_research.md`
+- `sources/local-fs/xfsprogs/repair/progress.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/progress.c_research.md`
+- `sources/local-fs/xfsprogs/repair/progress.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/progress.h_research.md`
+- `sources/local-fs/xfsprogs/repair/protos.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/protos.h_research.md`
+- `sources/local-fs/xfsprogs/repair/quotacheck.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/quotacheck.c_research.md`
+- `sources/local-fs/xfsprogs/repair/quotacheck.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/quotacheck.h_research.md`
+- `sources/local-fs/xfsprogs/repair/rcbag.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rcbag.c_research.md`
+- `sources/local-fs/xfsprogs/repair/rcbag.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rcbag.h_research.md`
+- `sources/local-fs/xfsprogs/repair/rcbag_btree.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rcbag_btree.c_research.md`
+- `sources/local-fs/xfsprogs/repair/rcbag_btree.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rcbag_btree.h_research.md`
+- `sources/local-fs/xfsprogs/repair/rmap.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rmap.c_research.md`
+- `sources/local-fs/xfsprogs/repair/rmap.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rmap.h_research.md`
+- `sources/local-fs/xfsprogs/repair/rt.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rt.c_research.md`
+- `sources/local-fs/xfsprogs/repair/rt.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rt.h_research.md`
+- `sources/local-fs/xfsprogs/repair/rtrefcount_repair.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rtrefcount_repair.c_research.md`
+- `sources/local-fs/xfsprogs/repair/rtrmap_repair.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/rtrmap_repair.c_research.md`
+- `sources/local-fs/xfsprogs/repair/sb.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/sb.c_research.md`
+- `sources/local-fs/xfsprogs/repair/scan.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/scan.c_research.md`
+- `sources/local-fs/xfsprogs/repair/scan.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/scan.h_research.md`
+- `sources/local-fs/xfsprogs/repair/slab.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/slab.c_research.md`
+- `sources/local-fs/xfsprogs/repair/slab.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/slab.h_research.md`
+- `sources/local-fs/xfsprogs/repair/strblobs.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/strblobs.c_research.md`
+- `sources/local-fs/xfsprogs/repair/strblobs.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/strblobs.h_research.md`
+- `sources/local-fs/xfsprogs/repair/threads.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/threads.c_research.md`
+- `sources/local-fs/xfsprogs/repair/threads.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/threads.h_research.md`
+- `sources/local-fs/xfsprogs/repair/versions.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/versions.c_research.md`
+- `sources/local-fs/xfsprogs/repair/versions.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/versions.h_research.md`
+- `sources/local-fs/xfsprogs/repair/xfs_repair.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/xfs_repair.c_research.md`
+- `sources/local-fs/xfsprogs/repair/zoned.c` -> `Docs/researches/sources/local-fs/xfsprogs/repair/zoned.c_research.md`
+- `sources/local-fs/xfsprogs/repair/zoned.h` -> `Docs/researches/sources/local-fs/xfsprogs/repair/zoned.h_research.md`

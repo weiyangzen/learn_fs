@@ -1,0 +1,15 @@
+# File Research: sources/os/bsd/netbsd-src/sys/kern/uipc_socket2.c
+
+This file contains lower-level socket and sockbuf primitives used by `uipc_socket.c` and protocol implementations. It owns the socket pool cache, global socket-buffer maximums (`sb_max`, adjusted `sb_max_adj`), connection-state transition helpers, listen queue manipulation, socket allocation/free, socket-buffer accounting, mbuf record append/drop routines, lock helpers, wait helpers, and DDB socket inspection.
+
+Connection helpers (`soisconnecting`, `soisconnected`, `soisdisconnecting`, `soisdisconnected`) update `so_state`, move accepted connections from partial to complete listen queues, invoke accept filters when configured, and wake readers/writers/CVs. `sonewconn()` allocates a child socket, copies listener settings, shares the listener lock, reserves buffers, calls protocol attach, queues the child on `so_q0` or `so_q`, and handles accept-filter/listen-overflow behavior. `soqinsque()`/`soqremque()` maintain queue lengths and head/onq pointers.
+
+`soget()` initializes sockets, CVs, selectors, queues, and back-pointers from sockbufs to sockets; `soput()` destroys them and releases the held lock object. `socantsendmore`, `socantrcvmore`, and `soroverflow` mark one-sided shutdown or receive overflow and notify waiters. `sbwait()` and `sowakeup()` implement sockbuf waits, async SIGIO, selector/kqueue notification, upcalls, and lock-retry behavior if a socket lock changes while sleeping.
+
+Socket buffer reservation is handled by `sb_max_set()`, `soreserve()`, `sbreserve()`, and `sbrelease()`, integrating per-uid `RLIMIT_SBSIZE` accounting through `chgsbsize()`. `soreserve()` enforces practical low-water defaults so writable checks behave sensibly for pipes/fifos.
+
+Append paths maintain the two-dimensional sockbuf mbuf layout: records linked by `m_nextpkt`, data within records linked by `m_next`. `sbappend`, `sbappendstream`, `sbappendrecord`, `sbinsertoob`, `sbappendaddr`, `sbappendaddrchain`, and `sbappendcontrol` append data, addresses, OOB data, and ancillary control records while charging `sballoc`. `sbcompress()` drops empty mbufs, coalesces small writable mbufs into the previous mbuf, preserves `M_EOR`, and maintains `sb_mbtail`/`sb_lastrecord`. Drop paths `sbflush`, `sbdrop`, and `sbdroprecord` free charged data and repair empty-buffer pointers. `sbcreatecontrol1()`/`sbcreatecontrol()` allocate CMSG control mbufs with proper alignment and zero padding.
+
+Lock helpers (`solockretry`, `solocked`, `solocked2`, `sosetlock`, `sblock`, `sbunlock`, `sowait`, `solockreset`) encode the file's central invariant: a socket's `so_lock` may change, so waiters must verify and retry with the current lock. DDB helpers can find owner processes and print socket buffer summaries.
+
+Risks are concentrated in queue/list invariants, socket lock replacement, sockbuf accounting (`sb_cc`, `sb_mbcnt`, hiwat/mbmax), record boundary preservation, accept-filter transitions, and keeping diagnostic assumptions aligned with actual protocol behavior.

@@ -1,0 +1,9 @@
+# File Research: sources/virtualization/nbdkit/filters/map/map.c
+
+This filter remaps the visible virtual address space onto arbitrary byte ranges in the underlying plugin. It parses `map=START-END:DEST` rules and optional `map-size=SIZE`, appends an implicit low-priority identity mapping, then converts potentially overlapping command-line ranges into a complete non-overlapping `regions` table. Earlier command-line mappings get higher priority through a descending `prio` value, and debug output is controlled by `-D map.ranges=1`.
+
+The core algorithm collects all start and end+1 boundaries, splits every original range at those boundaries, sorts ranges by virtual start, removes lower-priority duplicates at identical positions, asserts there are no gaps, and appends region entries whose `u.i` points back to the selected range. `do_mapping` is the shared execution engine for reads, writes, trims, zeroes, cache requests, and extents; it walks regions, translates virtual offsets to each range's destination offset, checks against the current plugin size, and invokes an operation-specific callback.
+
+Read/write/cache/trim/zero handlers are thin wrappers around `do_mapping`. The extents handler allocates a temporary extents object for the underlying mapped range and translates returned extent offsets back into the caller-visible virtual coordinate space before adding them to the output object.
+
+Important edge cases are inclusive end offsets, `end == start` being a one-byte range, `INT64_MAX` sentinel ranges, and runtime `next->get_size` checks that reject mapped I/O beyond the backend. The code assumes region conversion succeeds before serving requests; most malformed configuration failures call `exit(EXIT_FAILURE)` during config parsing or completion, consistent with nbdkit filter startup behavior.

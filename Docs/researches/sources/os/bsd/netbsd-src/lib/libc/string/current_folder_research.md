@@ -1,0 +1,85 @@
+# Folder Research: sources/os/bsd/netbsd-src/lib/libc/string
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `75`
+- recursive_file_count: `75`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_bcmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_bcmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_bcopy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_bcopy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_bzero.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_bzero.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_ffs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_ffs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_index.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_index.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_memccpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_memccpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_memchr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_memchr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_memcmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_memcmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_memcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_memcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_memmove.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_memmove.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_memset.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_memset.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_rindex.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_rindex.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strcat.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strcat.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strchr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strchr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strcmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strcmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strlen.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strlen.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strncat.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strncat.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strncmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strncmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strncpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strncpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_strrchr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_strrchr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Lint_swab.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Lint_swab.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/Makefile.inc` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/Makefile.inc_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/__strsignal.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/__strsignal.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/bm.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/bm.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/index.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/index.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/memccpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/memccpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/mempcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/mempcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/memrchr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/memrchr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/rindex.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/rindex.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/stpcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/stpcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/stpncpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/stpncpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strcasestr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strcasestr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strcoll.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strcoll.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strdup.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strdup.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strerror.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strerror.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strerror_r.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strerror_r.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strerror_ss.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strerror_ss.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/stresep.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/stresep.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strmode.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strmode.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strndup.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strndup.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strnstr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strnstr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strsignal.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strsignal.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strtok.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strtok.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strtok_r.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strtok_r.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/strxfrm.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/strxfrm.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/swab.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/swab.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcscasecmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcscasecmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcscat.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcscat.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcschr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcschr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcscmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcscmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcscpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcscpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcscspn.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcscspn.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcscspn_bloom.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcscspn_bloom.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsdup.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsdup.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcslcat.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcslcat.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcslcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcslcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcslen.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcslen.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsncasecmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsncasecmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsncat.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsncat.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsncmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsncmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsncpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsncpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsnlen.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsnlen.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcspbrk.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcspbrk.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsrchr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsrchr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsspn.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsspn.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcsstr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcsstr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcstok.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcstok.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wcswcs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wcswcs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wmemchr.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wmemchr.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wmemcmp.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wmemcmp.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wmemcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wmemcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wmemmove.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wmemmove.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wmempcpy.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wmempcpy.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/string/wmemset.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/string/wmemset.c_research.md`

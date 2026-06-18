@@ -1,0 +1,15 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/unionfs/unionfs_vnops.c
+
+Read completely: 1931 lines.
+
+Implements vnode operations for the newer `unionfs` layer. It performs layered lookup, copy-up on write/attribute/lock paths, upper-layer namespace mutation, merged directory reads, lifecycle cleanup, and pass-through operations.
+
+`unionfs_lookup()` requires directories, rejects modifying lookups on read-only mounts, handles `..` by returning the parent unionfs vnode, searches upper then lower layers, honors whiteouts and opaque upper directories, drops lower entries whose type conflicts with upper entries, creates upper shadow directories for lower directories on writable mounts, wraps results with `unionfs_nodeget()`, and caches positive/negative lookups. `unionfs_open()` uses per-thread node status to track upper/lower opens, copies lower regular files to upper for write opens, and opens the lower directory too when an upper directory is opened for merged readdir. `unionfs_close()` decrements the matching open counts and closes any lower readdir helper open.
+
+Access and attributes are adjusted for copy policy. `unionfs_access()` checks upper directly when present; for lower-only regular files/directories it checks whether an upper shadow object would be accessible, then checks lower read access because writes will copy up. `unionfs_getattr()` returns upper attributes when present, otherwise lower attributes possibly corrected to the expected upper shadow uid/gid/mode. `unionfs_setattr()` copies lower regular files up before applying attributes to the upper vnode.
+
+Mutation operations operate on upper vnodes. Create, mknod, mkdir, symlink, remove, rmdir, and rename delegate to the upper layer after wrapping/unwrapping unionfs nodes and applying whiteout flags. Rename copies up lower regular files or creates shadow directories for lower directories before delegating. `unionfs_link()` is compiled as a `panic("XXXAD")` stub; the intended implementation is inside `#if 0`.
+
+`unionfs_readdir()` verifies the vnode was opened, reads upper entries first, then lower entries unless the upper directory is opaque, tracks progress through `uns_readdir_status`, and merges cookies when both layers are read. Read, write, readlink, ioctl, poll, fsync, pathconf, seek, mmap, bmap, strategy, kqfilter, getpages, putpages, and revoke forward to the active underlying vnode. `unionfs_advlock()` forces copy-up to upper and attempts to reopen the upper vnode if the lower was already open. `unionfs_inactive()` always requests recycling, and `unionfs_reclaim()` unlocks and removes the unionfs node.
+
+Risks and notes: hard links through `VOP_LINK` panic unconditionally in this build; `unionfs_readdir()` has a suspicious cookie merge that advances an `off_t *` pointer by byte counts rather than element counts; lock/unlock operations lock lower then upper directly, which can be fragile around copy-up and type changes; strategy panics under diagnostics if writing to a lower vnode; revoke calls `vgone()` with an uncertainty comment; and merged readdir depends on per-thread open status being present.

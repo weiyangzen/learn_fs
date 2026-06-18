@@ -1,0 +1,23 @@
+# File Research: sources/os/linux/linux-stable/fs/f2fs/inode.c
+
+`inode.c` implements F2FS inode lifecycle operations: marking dirty inodes, translating F2FS flags to VFS inode flags, reading and validating on-disk inode nodes, installing inode/file/address-space operations, updating inode nodes, writing inodes, evicting inodes, and handling failed inode creation.
+
+`f2fs_mark_inode_dirty_sync()` suppresses dirtying for new, readonly, already-dirtied, or uncommitted atomic-write inodes. `f2fs_set_inode_flags()` maps F2FS sync, append, immutable, noatime, dirsync, encryption, verity, and casefold flags onto VFS inode flags.
+
+The inode checksum helpers enable, compute, verify, and set inode checksums when the superblock feature and extra inode fields support them. The checksum includes inode number, generation, and the inode body with the checksum field zeroed.
+
+`sanity_check_inode()` validates many on-disk invariants before the inode is accepted: nonzero block count, matching inode footer ino/nid, xattr nid range, directory link count, extra-attribute feature compatibility and size, compression algorithm/cluster/level/block counts, flexible inline xattr bounds, project quota/inode checksum/crtime/compression feature dependencies, inline-data and inline-dentry legality, casefold feature availability, and device-alias requirements. Failures set fsck-needed state through callers and usually return `-EFSCORRUPTED`.
+
+`do_read_inode()` loads fields from the inode node into VFS and F2FS-private state: mode, uid/gid, links, size, blocks, timestamps, generation, directory depth, GC failures, xattr nid, flags, advice, parent ino, dir level, inline info, extra attribute size, inline xattr size, project id, crtime, compression context, and extent-cache metadata. It also recovers missing inline-data existence state, fixes cold-node marking for non-directories, initializes read and age extent trees, and updates debug stats.
+
+`f2fs_iget()` wraps `iget_locked()`, rejects external access to meta inodes already present in cache, reads normal inodes, sets VFS flags, and installs the correct operations: node/meta/compress address spaces for meta inodes, F2FS file ops and data aops for regular files, directory ops for directories, encrypted or plain symlink ops, and special inode initialization for device/FIFO/socket inodes. `f2fs_iget_retry()` retries only `-ENOMEM`.
+
+`f2fs_update_inode()` writes in-memory inode state back to the inode node page, including mode, ownership, links, block count, size except for uncommitted atomic writes, largest read extent, inline flags, timestamps, depth/GC failures, xattr nid, flags, parent ino, generation, dir level, extra attributes, project id, crtime, compression fields, and rdev encoding. Deleted inodes clear inline state, disk-time snapshots are refreshed, and inode checksums are set under check-fs builds.
+
+`f2fs_write_inode()` skips meta inodes and clean lazytime-only cases, returns errors for checkpoint failure or checkpoint-not-ready state, writes the inode page, and balances the filesystem when writeback requested progress. `f2fs_update_inode_page()` retries inode-page lookup and stops checkpointing if the inode page cannot be updated safely.
+
+`f2fs_evict_inode()` aborts atomic writes, drops COW inode links, truncates page cache, invalidates compression cache when needed, removes dirty/donate/extent state, and for unlinked normal inodes initializes quotas, removes recovery inode entries, protects against freeze, truncates data blocks, removes the inode node, handles ENOMEM retry, marks fsck-needed on inconsistent dirty failures, drops quotas and stats, clears dirty inode state, invalidates node/xattr pages, preserves roll-forward entries for still-linked append/update inodes, and returns failed free nids when necessary.
+
+`f2fs_handle_failed_inode()` cleans up an inode whose creation failed after allocation. It clears nlink, writes and syncs the inode state, unlocks the new inode, tries to add it to the orphan list before releasing `lock_op`, marks fsck-needed if orphan preservation cannot be guaranteed, finalizes or returns the nid, and drops the inode reference.
+
+Important dependencies are node-page access, extent cache initialization/destruction, inline-data helpers, compression configuration, xattr/quota/orphan handling, checkpoint state, fscrypt, fsverity, directory/namei operation tables, and debug stats. The key invariants are accepting only feature-compatible inode layouts, keeping inode dirty state consistent with checkpoint/recovery lists, never exposing meta inodes as normal files, and ensuring eviction either frees all inode-owned resources or leaves enough recovery/fsck state to repair them.

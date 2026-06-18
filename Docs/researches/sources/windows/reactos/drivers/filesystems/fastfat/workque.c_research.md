@@ -1,0 +1,5 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fastfat/workque.c
+
+FastFAT FSP work-queue support. `FatOplockComplete` is the oplock callback: successful oplock breaks resume by queueing the IRP context, while failed breaks complete the IRP with its status. `FatPrePostIrp` performs pre-pending setup for posted IRPs, including clearing stack-owned `FatIoContext`, probing and locking user buffers for read/write, directory query, EA query/set, and selected FSCTL output paths, then marking the IRP pending.
+
+`FatFsdPostRequest` asserts the originating IRP matches, runs `FatPrePostIrp`, queues the request, and returns `STATUS_PENDING`. `FatAddToWorkque` is the queueing primitive. For volume-backed requests it uses the volume device object's overflow spinlock and throttles active worker items with `FSP_PER_DEVICE_THRESHOLD`; excess requests are linked to the per-volume overflow queue. Otherwise it initializes the IRP context work item for `FatFspDispatch` and queues it to `CriticalWorkQueue`. The file is small but important for keeping nonblocking FSD paths, oplock callbacks, and cache-manager deferred writes on the same worker dispatch path.

@@ -1,0 +1,9 @@
+# File Research: sources/os/plan9/plan9/sys/src/9/pc/fns.h
+
+PC architecture function prototype header for the Plan 9 kernel. It includes `../port/portfns.h` and declares the platform-specific services used throughout the PC kernel and by the Ethernet/floppy files in this group.
+
+The prototypes cover boot/architecture setup, BIOS32 calls, CGA posting, clock interrupts, CPU identification, CPUID, cycle counters, delays, DMA setup/count/done/end, floating-point save/restore/init, control-register access, configuration lookup, halt, keyboard/mouse/serial setup, PIT and PIC operations, interrupt/trap enable/disable, port I/O (`inb`, `ins`, `inl`, `outb`, `outs`, `outl`, block string I/O variants), I/O port allocation/reservation/free, ISA config, physical/virtual address mapping, GDT/IDT/TSS operations, memory/MMU/MTRR helpers, NVRAM read/write, PCI config and matching helpers, PCMCIA helpers, process save/restore/setup, MSR access, real-mode call, screen initialization, syscall formatting, temporary page mapping, user transition, TLB flush macro, user-register macro, cache flush no-op, and endian helpers for little-endian BIOS data.
+
+It also declares function pointers for CPU-dependent primitives such as `cmpswap`, `coherence`, `cycles`, `fpsave`, `fprestore`, and `screenputs`. Macros include `PTR2UINT`, `UINT2PTR`, Plan 9 `waserror()` expansion, `KADDR`, `PADDR`, `BIOSSEG`, `L16GET`, and `L32GET`.
+
+For this group, key dependencies are PCI functions (`pcimatch`, `pcisetbme`, `pcisetpms`, config reads/writes), I/O port functions (`ioalloc`, `iofree`, `in*`, `out*`), mapping (`vmap`, `vunmap`, `PCIWADDR` via included headers), delay/microdelay sources from broader headers, PCMCIA functions (`pcmspecial`, `pcmcistuple`, `pcmspecialclose`), interrupt registration (`intrenable`), and NVRAM for floppy setup.

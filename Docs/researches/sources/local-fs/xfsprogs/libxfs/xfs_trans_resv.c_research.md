@@ -1,0 +1,21 @@
+# File Research: sources/local-fs/xfsprogs/libxfs/xfs_trans_resv.c
+
+This file computes XFS transaction log reservations and related minimum-log/atomic-write geometry. It is a central sizing model for operations that can modify inodes, btrees, directories, attributes, quotas, realtime metadata, parent pointers, and deferred intent chains.
+
+The low-level helpers compute log overhead. `xfs_buf_log_overhead` accounts for log operation and buffer log format overhead, rounded to the historical 128-byte boundary. `xfs_calc_buf_res` multiplies buffer count by data size plus overhead. `xfs_calc_inode_res` models inode log item size, including inode core, log format, op headers, and two in-memory bmap btree root headers that may exceed direct on-disk inode fork size.
+
+Allocation/free btree block counts are feature-dependent. `xfs_allocfree_block_count` accounts for bnobt/cntbt changes and adds rmapbt blocks when rmap is enabled. `xfs_refcountbt_block_count` and `xfs_rtrefcountbt_block_count` estimate refcount and realtime refcount split/update costs. `xfs_rtalloc_block_count` estimates bitmap/summary costs for realtime allocations and compares them against realtime rmap btree costs when rmap is enabled.
+
+Deferred operation finish reservations are exposed as inline functions: EFI, realtime EFI, RUI, realtime RUI, BUI, CUI, and realtime CUI. Data-device refcount updates include AGF and refcount btree buffers; realtime refcount updates include the rt refcount metadata inode and rtrefcount btree buffers. Rmap finish reservations reuse EFI-like sizing for the corresponding data or realtime device.
+
+Write and truncate reservation calculators take the maximum of the initial mapping transaction, deferred free transaction, realtime allocation/free transaction, and refcount update transaction. Special minimum-log-size modes preserve older reflink reservation behavior by folding refcount btree costs into older transaction phases rather than sizing them as separate deferred transactions. This preserves compatibility with historical minimum log calculations.
+
+Namespace reservations account for parent pointers. Parent pointer log overhead includes xattr intent formats, parent records, and max name lengths. Rename, link, remove, create, mkdir, and symlink reservations add attribute transaction reservations and intent overhead when parent pointers are enabled. The log count helpers similarly pre-reserve additional rolls needed for parent pointer set/remove operations.
+
+Inode allocation/free reservations cover inobt/finobt updates, inode chunk allocation/free behavior, v5 ordered initialization, sparse/finobt costs, unlinked list add/remove, and dquot overhead. Growdata and growrt reservations cover superblocks, AG headers, bmap btrees, bitmap/summary inodes, allocation btrees, and zeroing/freeing metadata blocks. Attribute and quota reservations cover static mount-time reservations and runtime per-block attribute expansion.
+
+`xfs_trans_resv_calc` fills `struct xfs_trans_resv` for the mount. It computes permanent reservations for write, truncate, create/tmpfile, ifree, addafork, attr invalidation/set/remove, growrt allocation, quota allocation, and namespace operations; logical/default reservations for quota limit changes, superblock sync, growdata, inode changes, fsync timestamps, writeid, runtime attrs, clearagi, growrt zero/free; and log count adjustments for BUI/CUI/RUI intent items when reflink or rmap is enabled. It then sets the default atomic-write ioend reservation to the truncate reservation.
+
+The atomic-write section computes how many blocks an out-of-place untorn write can complete with existing reservations and what log reservation/log size would be required for a requested block count. It models a worst-case intent chain involving BUI/BUD, CUI/CUD, RUI/RUD, EFI/EFD, relogging, and one finish step per transaction. Overflow checks prevent invalid computed reservations.
+
+Key dependencies are precomputed mount btree heights/record capacities from `xfs_sb_mount_common`, transaction-space macros from `xfs_trans_space.h`, log item size helpers from deferred item headers, realtime bitmap sizing, and feature predicates for rmap, reflink, realtime, realtime reflink, parent pointers, and v3 inodes.

@@ -1,0 +1,9 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/ptyfs/ptyfs_vnops.c
+
+This file implements the vnode operation vector for NetBSD `ptyfs`, a pseudo-filesystem exposing active pseudo-terminals as character-device-like entries. Its vnode table maps most mutating namespace operations (`create`, `mknod`, `remove`, `rename`, `mkdir`, `symlink`) to `genfs_eopnotsupp`, while implementing lookup, attributes, read/write, ioctl, poll, kqueue, directory enumeration, lifecycle, pathconf, and advisory locks.
+
+The file centers on `struct ptyfsnode` state from `ptyfs.h`: node type (`PTYFSroot`, `PTYFSpts`, `PTYFSptc`), pty number, permissions, ownership, flags, and synthetic timestamps. `ptyfs_lookup()` only resolves numeric child names from the root directory, using `atoi()` and `ptyfs_next_active()` to avoid returning stale ptys. It rejects DELETE/RENAME with read-only semantics and handles `"."` directly. `ptyfs_readdir()` synthesizes `.`/`..` plus active pty entries, returning cookies when requested.
+
+I/O for `PTYFSpts` and `PTYFSptc` delegates to character-device operations (`cdev_read`, `cdev_write`, `cdev_ioctl`, `cdev_poll`, `cdev_kqfilter`) and unlocks around read/write calls. Attribute handling is synthetic: `ptyfs_getattr()` fabricates `vattr` values and returns `ENOENT` if the target pty is now free; `ptyfs_setattr()` supports size checks, flags, ownership, times, birthtime, and mode changes through `kauth_authorize_vnode()` and `genfs_can_*` helpers. `ptyfs_update()` and `ptyfs_itimes()` maintain access/change/modify timestamps using status bits.
+
+Lifecycle behavior is minimal: `ptyfs_inactive()` clears active state for controller nodes, and `ptyfs_reclaim()` drops vnode private data after unlocking. The implementation is intentionally non-persistent and device-backed; its main correctness concerns are stale pty races between lookup/getattr/readdir and the live pty allocator, handled by repeated active checks.

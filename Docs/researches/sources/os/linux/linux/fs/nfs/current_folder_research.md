@@ -1,0 +1,89 @@
+# Folder Research: sources/os/linux/linux/fs/nfs
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `79`
+- recursive_file_count: `93`
+- direct_child_folder_count: `3`
+
+## Direct Files
+
+- `sources/os/linux/linux/fs/nfs/Kconfig` -> `Docs/researches/sources/os/linux/linux/fs/nfs/Kconfig_research.md`
+- `sources/os/linux/linux/fs/nfs/Makefile` -> `Docs/researches/sources/os/linux/linux/fs/nfs/Makefile_research.md`
+- `sources/os/linux/linux/fs/nfs/cache_lib.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/cache_lib.c_research.md`
+- `sources/os/linux/linux/fs/nfs/cache_lib.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/cache_lib.h_research.md`
+- `sources/os/linux/linux/fs/nfs/callback.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/callback.c_research.md`
+- `sources/os/linux/linux/fs/nfs/callback.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/callback.h_research.md`
+- `sources/os/linux/linux/fs/nfs/callback_proc.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/callback_proc.c_research.md`
+- `sources/os/linux/linux/fs/nfs/callback_xdr.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/callback_xdr.c_research.md`
+- `sources/os/linux/linux/fs/nfs/client.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/client.c_research.md`
+- `sources/os/linux/linux/fs/nfs/delegation.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/delegation.c_research.md`
+- `sources/os/linux/linux/fs/nfs/delegation.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/delegation.h_research.md`
+- `sources/os/linux/linux/fs/nfs/dir.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/dir.c_research.md`
+- `sources/os/linux/linux/fs/nfs/direct.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/direct.c_research.md`
+- `sources/os/linux/linux/fs/nfs/dns_resolve.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/dns_resolve.c_research.md`
+- `sources/os/linux/linux/fs/nfs/dns_resolve.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/dns_resolve.h_research.md`
+- `sources/os/linux/linux/fs/nfs/export.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/export.c_research.md`
+- `sources/os/linux/linux/fs/nfs/file.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/file.c_research.md`
+- `sources/os/linux/linux/fs/nfs/fs_context.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/fs_context.c_research.md`
+- `sources/os/linux/linux/fs/nfs/fscache.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/fscache.c_research.md`
+- `sources/os/linux/linux/fs/nfs/fscache.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/fscache.h_research.md`
+- `sources/os/linux/linux/fs/nfs/getroot.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/getroot.c_research.md`
+- `sources/os/linux/linux/fs/nfs/inode.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/inode.c_research.md`
+- `sources/os/linux/linux/fs/nfs/internal.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/internal.h_research.md`
+- `sources/os/linux/linux/fs/nfs/io.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/io.c_research.md`
+- `sources/os/linux/linux/fs/nfs/iostat.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/iostat.h_research.md`
+- `sources/os/linux/linux/fs/nfs/localio.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/localio.c_research.md`
+- `sources/os/linux/linux/fs/nfs/mount_clnt.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/mount_clnt.c_research.md`
+- `sources/os/linux/linux/fs/nfs/namespace.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/namespace.c_research.md`
+- `sources/os/linux/linux/fs/nfs/netns.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/netns.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs2super.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs2super.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs2xdr.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs2xdr.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs3_fs.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs3_fs.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs3acl.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs3acl.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs3client.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs3client.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs3proc.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs3proc.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs3super.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs3super.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs3xdr.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs3xdr.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs40.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs40.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs40client.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs40client.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs40proc.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs40proc.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs42.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs42.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs42proc.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs42proc.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs42xattr.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs42xattr.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs42xdr.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs42xdr.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4_fs.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4_fs.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4client.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4client.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4file.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4file.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4getroot.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4getroot.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4idmap.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4idmap.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4idmap.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4idmap.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4namespace.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4namespace.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4proc.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4proc.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4renewd.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4renewd.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4session.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4session.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4session.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4session.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4state.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4state.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4super.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4super.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4sysctl.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4sysctl.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4trace.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4trace.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4trace.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4trace.h_research.md`
+- `sources/os/linux/linux/fs/nfs/nfs4xdr.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfs4xdr.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfsroot.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfsroot.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfstrace.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfstrace.c_research.md`
+- `sources/os/linux/linux/fs/nfs/nfstrace.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/nfstrace.h_research.md`
+- `sources/os/linux/linux/fs/nfs/pagelist.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/pagelist.c_research.md`
+- `sources/os/linux/linux/fs/nfs/pnfs.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/pnfs.c_research.md`
+- `sources/os/linux/linux/fs/nfs/pnfs.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/pnfs.h_research.md`
+- `sources/os/linux/linux/fs/nfs/pnfs_dev.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/pnfs_dev.c_research.md`
+- `sources/os/linux/linux/fs/nfs/pnfs_nfs.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/pnfs_nfs.c_research.md`
+- `sources/os/linux/linux/fs/nfs/proc.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/proc.c_research.md`
+- `sources/os/linux/linux/fs/nfs/read.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/read.c_research.md`
+- `sources/os/linux/linux/fs/nfs/super.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/super.c_research.md`
+- `sources/os/linux/linux/fs/nfs/symlink.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/symlink.c_research.md`
+- `sources/os/linux/linux/fs/nfs/sysctl.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/sysctl.c_research.md`
+- `sources/os/linux/linux/fs/nfs/sysfs.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/sysfs.c_research.md`
+- `sources/os/linux/linux/fs/nfs/sysfs.h` -> `Docs/researches/sources/os/linux/linux/fs/nfs/sysfs.h_research.md`
+- `sources/os/linux/linux/fs/nfs/unlink.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/unlink.c_research.md`
+- `sources/os/linux/linux/fs/nfs/write.c` -> `Docs/researches/sources/os/linux/linux/fs/nfs/write.c_research.md`

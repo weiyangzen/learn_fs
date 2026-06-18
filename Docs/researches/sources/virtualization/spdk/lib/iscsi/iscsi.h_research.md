@@ -1,0 +1,13 @@
+# File Research: sources/virtualization/spdk/lib/iscsi/iscsi.h
+
+Core internal iSCSI target header. It defines SPDK iSCSI defaults and limits, PDU/task buffer constants, timeout defaults, login error codes, digest constants, common structs, global configuration structures, protocol phase constants, utility macros, global symbols, and cross-file function declarations used across the SPDK iSCSI library.
+
+Major limits include initiator/target name sizes, portal and connection caps, default session and connection counts, queue depth, FirstBurstLength, MaxBurstLength, NOP interval, login/logout timeouts, maximum receive segment length, and per-connection Data-Out/Data-In buffer limits. `SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH` is fixed at 64 KiB for target receive, and `SPDK_ISCSI_MAX_BURST_LENGTH` derives from that and `MAX_DATA_OUT_PER_CONNECTION`.
+
+`spdk_iscsi_pdu` is the main wire-object container. It embeds the BHS, up to two memory-pool data buffers, digest storage, payload and valid-byte counters, reference count, task association, command sequence number, write offset, DIF context, async socket request and iovec array, AHS storage, and compact sense-data storage. A static assert ensures the socket request and iovec array layout matches SPDK sock expectations.
+
+The header also defines connection/session/auth/global state structures. `spdk_iscsi_sess` tracks connection array, SCSI initiator port, TSIH/ISID, target, negotiated session parameters, command window, and text-command ITT. `spdk_iscsi_poll_group` binds a poller, NOP poller, connection list, socket group, and active-target count. `spdk_iscsi_opts` and `spdk_iscsi_globals` hold configurable defaults, authentication groups, portal/init/target lists, poll groups, mempools, and the session table.
+
+Declared functions cover subsystem init/fini, config JSON, option allocation/copy/free, discovery/auth-group management, task responses, PDU iovec construction, incoming PDU handling, session free, transfer task cleanup, digest calculation, PDU pool get/put, abort helpers, SCSI task queueing, and small inline helpers for data-buffer pool get/put and maximum immediate data sizing. `iscsi_get_max_immediate_data_size` intentionally adds digest and AHS overhead to `FirstBurstLength` for worst-case immediate receive allocation.
+
+This header is the shared contract for `iscsi.c`, `conn.c`, `task.c`, `param.c`, portal/init/target group code, subsystem code, and RPC/config code. Risk points are broad API coupling, constants that shape mempool sizing and protocol validation, and structure fields that have cross-file ownership rules rather than local encapsulation.

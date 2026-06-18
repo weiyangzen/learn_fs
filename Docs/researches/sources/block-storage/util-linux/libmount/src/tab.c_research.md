@@ -1,0 +1,13 @@
+# File Research: sources/block-storage/util-linux/libmount/src/tab.c
+
+This file implements the core `libmnt_table` container and high-level search logic over parsed filesystem entries. It covers allocation, reference management, comment storage, cache/statmount references, adding/removing/moving entries, iteration, mount tree queries, de-duplication, source/target lookup, mount-root derivation, and fstab-entry mounted checks.
+
+Table lifecycle functions are `mnt_new_table()`, `mnt_reset_table()`, `mnt_ref_table()`, `mnt_unref_table()`, and `mnt_free_table()`. Entries are `libmnt_fs` objects owned by a table through refcounts and list membership. `mnt_table_add_fs()`, `mnt_table_insert_fs()`, `mnt_table_move_fs()`, and `mnt_table_remove_fs()` maintain `fs->tab`, list links, `nents`, and inherited statmount references. Comment APIs store intro/trailing comments and enable parser comment handling.
+
+Iteration is provided by `mnt_table_next_fs()`, `first_fs()`, `last_fs()`, `find_next_fs()`, and `set_iter()`. With statmount/listmount support enabled, `mnt_table_next_fs()` can lazily fetch more mount IDs via `mnt_table_next_lsmnt()`. Mount-tree helpers include `is_mountinfo()`, `mnt_table_get_root_fs()`, `mnt_table_next_child_fs()`, and `mnt_table_over_fs()`, all relying on mountinfo ids and parent ids.
+
+Search functions intentionally mimic mount(8) behavior. `mnt_table_find_target()` tries literal target, relative-to-absolute target, canonical requested target, and canonicalized table targets when a cache is present. `mnt_table_find_srcpath()` tries literal source, canonical source, tag evaluation, and canonicalized table sources, with btrfs default-subvolume filtering. `mnt_table_find_source()` parses tags such as UUID/LABEL and dispatches to tag or source-path lookup. Additional lookups include mountpoint ancestry, target plus option, source/target pair, device number, classic mount id, and unique mount id.
+
+`mnt_table_uniq_fs()` removes duplicates according to a caller comparator while optionally preserving mount-tree parent relationships. `mnt_table_get_fs_root()` predicts the root path that mountinfo will report for a new fs, with special handling for bind mounts, nested btrfs subvolumes/default subvolumes, NFS roots, and CIFS/SMB UNC subdirectories. `__mnt_table_is_fs_mounted()` compares an fstab-style entry against a mount table by resolved source, optional device number, loop backing file, root, and target; it is designed mainly for `mount -a`.
+
+The test program parses tables, finds entries, copies fs entries, checks mounted state, finds mountpoints, and de-duplicates targets.

@@ -1,0 +1,9 @@
+# File Research: sources/os/bsd/freebsd-src/sys/sys/mtio.h
+
+This header defines the magnetic tape ioctl ABI shared by userland tools and tape drivers. It includes `<sys/ioccom.h>` and, outside the kernel, `<sys/types.h>`, then exposes operation request structures, status structures, SCSI tape error reporting, extended positioning, XML-style extended status/parameter exchange, and ioctl numbers.
+
+The core command structure is `struct mtop`, containing an operation code and count. Operation codes cover classic tape actions (`MTWEOF`, spacing files/records, rewind, offline, cache toggles) and FreeBSD extensions for block size, density, erase, EOD, compression, retension, setmarks, load, and immediate EOF writes. `struct mtget` is the legacy status structure: it includes device type, device-dependent status/error registers, residual count, FreeBSD block size/density/compression fields per mode, and current file/block numbers.
+
+The SCSI-oriented error ABI is `struct scsi_tape_errors`, wrapped in `union mterrstat` with fixed 256-byte padding. It separates last data-I/O and control-I/O sense/CDB/residual state and reserves cumulative read/write error counters. Additional structs define block limits (`mtrblim`), extended locate (`mtlocate`), extended XML status (`mtextget`), typed parameter values (`mtparamset`), and batch parameter setting (`mtsetlist`).
+
+The ioctl namespace uses magic `'m'`: `MTIOCTOP`, `MTIOCGET`, logical/hardware position reads and locates, `MTIOCERRSTAT`, EOT model get/set, block limits, extended locate/get, parameter get/set, and list set. The default userland tape device is `DEFTAPE "/dev/nsa0"`. Filesystem relevance is indirect: this is a stable device-control ABI for sequential storage devices used by backup/archive tooling, with careful fixed-size layouts for kernel/user compatibility.

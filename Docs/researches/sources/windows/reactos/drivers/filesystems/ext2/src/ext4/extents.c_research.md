@@ -1,0 +1,9 @@
+# File Research: sources/windows/reactos/drivers/filesystems/ext2/src/ext4/extents.c
+
+This file is the Ext2Fsd-facing wrapper around the lower-level ext4 extent-tree implementation in `ext4_extents.c`. It converts Windows/driver block-map, expand, and truncate requests into `ext4_ext_get_blocks`, `ext4_ext_tree_init`, and `ext4_ext_truncate` calls.
+
+`Ext2MapExtent` maps one logical block index to a physical block and run length, optionally allocating. If the inode extent root is not initialized and allocation is requested, it initializes the root with `ext4_ext_tree_init`; for non-allocating lookups on an uninitialized tree it returns a sparse mapping of block zero and a run count derived from inode/file allocation size. It chooses flags based on directory/write/read context: directories, writes, journal-initialization calls, and non-allocating lookups use `EXT4_GET_BLOCKS_IO_CONVERT_EXT`; other allocating reads use `EXT4_GET_BLOCKS_IO_CREATE_EXT` and may create unwritten extents. On successful allocation it saves the inode and returns the physical block from the temporary `buffer_head`.
+
+`Ext2DoExtentExpand` is the focused allocator for a caller-supplied block count. It initializes the tree if needed, calls `ext4_ext_get_blocks` with `*Number`, updates returned physical block/count, and saves the inode. `Ext2ExpandExtent` loops from `Start` to `End`, repeatedly expanding extents and optionally adding new runs to the Mcb extent map if the zone cache is initialized. It updates the returned `Size` to the number of blocks actually expanded and always saves the inode afterward.
+
+`Ext2TruncateExtent` computes the wanted block count from the requested size, calls `ext4_ext_truncate`, removes corresponding Mcb block extents, adjusts the requested size upward on failure, clamps `i_size`, and saves inode metadata. This wrapper is where NTSTATUS error handling and Mcb run-cache maintenance meet the ext4 extent-tree routines.

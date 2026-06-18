@@ -1,0 +1,19 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/udf/udf_allocation.c
+
+Read completely: 3211 lines.
+
+Implements UDF logical allocation, extent translation, free-space accounting, node growth/shrink, and allocation descriptor maintenance. It is the central allocator for UDF vnode data, directory FIDs, node descriptors, VAT-backed writes, space bitmap allocation, sequential media allocation, and metadata partition bookkeeping.
+
+Core translation paths include `udf_translate_vtop()`, which maps UDF virtual partition addresses to physical logical block numbers for raw, physical, VAT virtual, sparable, and metadata partitions, and `udf_translate_file_extent()`, which maps file-relative logical blocks through allocation descriptors, returning zero-fill markers for free/unallocated extents and physical sectors for allocated extents. Metadata partition translation recursively walks the metadata file’s allocation descriptors before re-entering virtual-to-physical translation.
+
+Free-space and reservation management is handled by `udf_calc_freespace()`, `udf_calc_vpart_freespace()`, `udf_reserve_space()`, `udf_do_reserve_space()`, `udf_do_unreserve_space()`, and `udf_cleanup_reservation()`. These combine logical volume integrity table counts, sequential track free counts, uncommitted block reservations, and a `UDF_DISC_SLACK` safety margin. If space is low, the code tries syncs and, for metadata partitions, attempts redistribution through metadata partition truncation hooks.
+
+Allocation backends include VAT slot search/update, sequential track advancement, ordinary partition space bitmap allocation, and metadata bitmap allocation. `udf_allocate_space()` selects the backing mechanism using `ump->vtop_alloc[]`; `udf_free_allocated_space()` returns blocks to freed/unallocated bitmaps, VAT entries, or the metadata bitmap and updates logical volume integrity free counts. Several allocation types are explicitly not implemented, including metadata sequential and relaxed sequential allocation.
+
+Allocation descriptor maintenance is extensive. `udf_get_adslot()` and `udf_append_adslot()` read and write short or long allocation descriptors across the FE/EFE and allocation extent descriptors, adding redirect descriptors and allocating AED blocks when needed. `udf_wipe_adslots()`, `udf_count_alloc_exts()`, and `udf_ads_merge()` rebuild, merge, and trim descriptor lists while keeping `l_ad`, descriptor CRC lengths, and `logblks_rec` synchronized.
+
+`udf_late_allocate_buf()` allocates physical/logical space for delayed-write buffers and calls `udf_record_allocation_in_node()` for userdata, FIDs, and metadata space bitmap buffers. `udf_record_allocation_in_node()` rewrites the node’s descriptor stream around the newly allocated mappings: it copies descriptors before the overlap, inserts allocated runs, frees replaced allocations, preserves the tail, wipes descriptors, merges adjacent compatible extents, and appends the rebuilt list.
+
+`udf_grow_node()` and `udf_shrink_node()` update file information length/object size and descriptor allocation state. Growth may keep internal allocation if it still fits, convert internal allocation to short/long allocation, append free extents, and evacuate existing inline data through vnode I/O. Shrink frees allocated extents past the new size, truncates the last kept extent, and can convert zero-length files back to internal allocation.
+
+Risk areas are high because the file mutates on-disc allocation state, in-memory reservation counters, and descriptor CRC-covered structures. There are panics for impossible allocation-accounting states, unimplemented metadata partition grow/sparsify paths, and several comments calling out incomplete recovery behavior. Descriptor rewriting depends on exact locking and offset arithmetic across short/long descriptors, redirects, partial blocks, VAT entries, and metadata partition special cases.

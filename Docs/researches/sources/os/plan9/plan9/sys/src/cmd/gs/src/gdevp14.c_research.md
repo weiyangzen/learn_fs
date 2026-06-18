@@ -1,0 +1,13 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gdevp14.c
+
+This file implements Ghostscript’s PDF 1.4 transparency compositing devices. It is not a filesystem component; it is part of the Plan 9 source tree’s bundled Ghostscript graphics stack. Its role is to provide an intermediate compositing device that can emulate the PDF 1.4 imaging model, including transparency groups, soft masks, blend modes, knockout behavior, and command-list banding support.
+
+The core data model is a stack of `pdf14_buf` buffers owned by `pdf14_ctx`. Each buffer stores pixel planes in planar form: process color components, alpha, optional shape, and optional `alpha_g`. `pdf14_buf_new`, `pdf14_ctx_new`, and corresponding free routines manage buffer allocation, row strides, plane strides, bounding boxes, and GC descriptors. The base buffer is initialized to transparent pixels; group and mask operations push additional buffers.
+
+Transparency group handling is centered on `pdf14_push_transparency_group` and `pdf14_pop_transparency_group`. A pushed group may copy a backdrop unless isolated, tracks shape/alpha/blend mode, and composites back into the saved buffer using `art_pdf_composite_*` helpers. The file explicitly forces knockout groups to isolated groups as a known correctness compromise. Transparency masks are pushed with `pdf14_push_transparency_mask`, saved in `ctx->maskbuf`, and consumed during group pop by applying the mask transfer function to the effective alpha.
+
+The direct device path defines Gray, RGB, and CMYK `pdf14_device` prototypes. `pdf14_open` allocates the compositing context; `pdf14_put_image` flattens the planar alpha buffer over a solid white/black background and emits it to the target device as an image. `pdf14_fill_rectangle`, `pdf14_mark_fill_rectangle`, and `pdf14_mark_fill_rectangle_ko_simple` are the low-level marking paths used after higher-level fills/strokes/images/text are funneled through default Ghostscript rasterization.
+
+A second major section implements PDF 1.4 compositor objects: `gs_create_pdf14trans`, `send_pdf14trans`, `c_pdf14trans_write`, and `c_pdf14trans_read`. These serialize compositor operations into Ghostscript command lists, including push/pop device, begin/end groups, begin/end masks, and parameter updates.
+
+The final section implements the clist-writing compositor device. `pdf14_clist_device` exists because banded rendering needs one compositor in front of the clist writer and another on the clist reader/output side. It tracks blend parameters, keeps the clist writer’s color model synchronized with the PDF 1.4 blending space, forwards most graphics operations, and injects `PDF14_SET_BLEND_PARAMS` operations before fills, strokes, text, and images when state changes.

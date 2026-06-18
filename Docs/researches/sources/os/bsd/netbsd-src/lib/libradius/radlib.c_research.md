@@ -1,0 +1,11 @@
+# File Research: sources/os/bsd/netbsd-src/lib/libradius/radlib.c
+
+This file implements a UDP RADIUS client library for authentication and accounting. It handles server configuration, request construction, password hiding, message/request authenticators, retry scheduling, response validation, attribute parsing, vendor-specific attributes, and Microsoft MPPE key demangling.
+
+The cryptographic helpers use OpenSSL MD5/HMAC when built with `WITH_SSL`. `insert_scrambled_password` applies the RFC password-hiding MD5 chain using the shared secret and request authenticator. `insert_request_authenticator` computes accounting request authenticators. `insert_message_authenticator` fills a zero-placeholder Message-Authenticator with HMAC-MD5 over the request. Response validation checks source address/port, packet length, response authenticator, and optional Message-Authenticator for non-accounting responses.
+
+Configuration is done by `rad_add_server` or `rad_config`. `rad_config` reads `/etc/radius.conf` by default, parses whitespace/quoted fields with comments using `split`, supports optional `auth`/`acct` service tags, host:port, secret, timeout, and max tries, and ignores entries for the other handle type. Secrets and password buffers are wiped before free/close where possible.
+
+`rad_create_request` initializes code, identifier, random authenticator, and attribute position. Attribute writers enforce call order, maximum message/attribute length, accounting restrictions, EAP Message-Authenticator requirements, and mutual exclusion between User-Password and CHAP password. The synchronous `rad_send_request` is built on nonblocking-style `rad_init_send_request` and `rad_continue_send_request`, which expose fd/timeval state to callers that want their own select loop. Servers are tried round-robin until each reaches its max tries.
+
+Response readers include `rad_get_attr`, `rad_get_vendor_attr`, and conversion helpers for address, integer, and string values. Vendor writers package vendor id, vendor type, vendor length, and payload inside a `RAD_VENDOR_SPECIFIC` attribute and mark Microsoft CHAP attributes as password-bearing. `rad_demangle` and `rad_demangle_mppe_key` reverse RADIUS/MPPE encrypted data using the request authenticator and shared secret.

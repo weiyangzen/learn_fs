@@ -1,0 +1,71 @@
+# Folder Research: sources/local-fs/erofs-utils/lib
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `61`
+- recursive_file_count: `65`
+- direct_child_folder_count: `2`
+
+## Direct Files
+
+- `sources/local-fs/erofs-utils/lib/Makefile.am` -> `Docs/researches/sources/local-fs/erofs-utils/lib/Makefile.am_research.md`
+- `sources/local-fs/erofs-utils/lib/base64.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/base64.c_research.md`
+- `sources/local-fs/erofs-utils/lib/bitops.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/bitops.c_research.md`
+- `sources/local-fs/erofs-utils/lib/blobchunk.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/blobchunk.c_research.md`
+- `sources/local-fs/erofs-utils/lib/block_list.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/block_list.c_research.md`
+- `sources/local-fs/erofs-utils/lib/cache.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/cache.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compress.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compress.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compress_hints.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compress_hints.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor.h_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor_deflate.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor_deflate.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor_libdeflate.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor_libdeflate.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor_liblzma.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor_liblzma.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor_libzstd.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor_libzstd.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor_lz4.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor_lz4.c_research.md`
+- `sources/local-fs/erofs-utils/lib/compressor_lz4hc.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/compressor_lz4hc.c_research.md`
+- `sources/local-fs/erofs-utils/lib/config.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/config.c_research.md`
+- `sources/local-fs/erofs-utils/lib/data.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/data.c_research.md`
+- `sources/local-fs/erofs-utils/lib/decompress.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/decompress.c_research.md`
+- `sources/local-fs/erofs-utils/lib/dedupe.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/dedupe.c_research.md`
+- `sources/local-fs/erofs-utils/lib/dedupe_ext.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/dedupe_ext.c_research.md`
+- `sources/local-fs/erofs-utils/lib/dir.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/dir.c_research.md`
+- `sources/local-fs/erofs-utils/lib/diskbuf.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/diskbuf.c_research.md`
+- `sources/local-fs/erofs-utils/lib/exclude.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/exclude.c_research.md`
+- `sources/local-fs/erofs-utils/lib/fragments.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/fragments.c_research.md`
+- `sources/local-fs/erofs-utils/lib/global.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/global.c_research.md`
+- `sources/local-fs/erofs-utils/lib/gzran.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/gzran.c_research.md`
+- `sources/local-fs/erofs-utils/lib/hashmap.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/hashmap.c_research.md`
+- `sources/local-fs/erofs-utils/lib/importer.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/importer.c_research.md`
+- `sources/local-fs/erofs-utils/lib/inode.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/inode.c_research.md`
+- `sources/local-fs/erofs-utils/lib/io.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/io.c_research.md`
+- `sources/local-fs/erofs-utils/lib/kite_deflate.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/kite_deflate.c_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_base64.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_base64.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_cache.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_cache.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_compress.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_compress.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_dockerconfig.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_dockerconfig.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_fragments.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_fragments.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_gzran.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_gzran.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_metabox.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_metabox.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_nbd.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_nbd.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_oci.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_oci.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_private.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_private.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_rebuild.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_rebuild.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_s3.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_s3.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_uuid.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_uuid.h_research.md`
+- `sources/local-fs/erofs-utils/lib/liberofs_xxhash.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/liberofs_xxhash.h_research.md`
+- `sources/local-fs/erofs-utils/lib/metabox.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/metabox.c_research.md`
+- `sources/local-fs/erofs-utils/lib/namei.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/namei.c_research.md`
+- `sources/local-fs/erofs-utils/lib/rebuild.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/rebuild.c_research.md`
+- `sources/local-fs/erofs-utils/lib/rolling_hash.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/rolling_hash.h_research.md`
+- `sources/local-fs/erofs-utils/lib/sha256.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/sha256.c_research.md`
+- `sources/local-fs/erofs-utils/lib/sha256.h` -> `Docs/researches/sources/local-fs/erofs-utils/lib/sha256.h_research.md`
+- `sources/local-fs/erofs-utils/lib/super.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/super.c_research.md`
+- `sources/local-fs/erofs-utils/lib/tar.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/tar.c_research.md`
+- `sources/local-fs/erofs-utils/lib/uuid.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/uuid.c_research.md`
+- `sources/local-fs/erofs-utils/lib/uuid_unparse.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/uuid_unparse.c_research.md`
+- `sources/local-fs/erofs-utils/lib/vmdk.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/vmdk.c_research.md`
+- `sources/local-fs/erofs-utils/lib/workqueue.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/workqueue.c_research.md`
+- `sources/local-fs/erofs-utils/lib/xattr.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/xattr.c_research.md`
+- `sources/local-fs/erofs-utils/lib/xxhash.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/xxhash.c_research.md`
+- `sources/local-fs/erofs-utils/lib/zmap.c` -> `Docs/researches/sources/local-fs/erofs-utils/lib/zmap.c_research.md`

@@ -1,0 +1,21 @@
+# File Research: sources/os/linux/linux-stable/fs/f2fs/gc.c
+
+`gc.c` implements F2FS garbage collection, victim selection, background GC threading, block migration, pinned-section handling, GC range execution, and online filesystem shrink support.
+
+The background GC thread sleeps adaptively, wakes for ordinary background GC, urgent modes, zoned-device pressure, and `GC_MERGE` foreground waiters. It skips readonly/frozen/busy filesystems, checks IO idleness, adjusts sleep time based on pressure, chooses sync or async GC, invokes `f2fs_gc()`, wakes foreground waiters, and periodically calls background filesystem balancing.
+
+Victim selection supports greedy, cost-benefit, age-threshold GC, SSR, and age-threshold SSR. `select_policy()` chooses dirty bitmaps, search windows, offsets, and policy based on GC type, allocation mode, large-section layout, urgent/idle GC mode, and random-segment policy. `f2fs_get_victim()` scans dirty segments or sections, skips current/in-use/pinned/invalid candidates, honors checkpoint-disabled constraints, remembers background victims, tracks last victim offsets, and records foreground victim sections.
+
+Age-threshold GC builds a temporary rb-tree of `victim_entry` objects keyed by section mtime. ATGC chooses among older candidate sections using a weighted age/free-space cost, while AT-SSR searches around an age target and prefers low checkpoint-valid block counts. The file owns the `f2fs_victim_entry` slab cache for these temporary candidates.
+
+Pinned-file handling prevents GC from freely moving pinned file blocks. Foreground GC can pin whole sections and retry later; repeated failure increments the inode’s GC failure count through `f2fs_pin_file_control()`. Foreground GC can unpin all sections and retry if no normal victim remains.
+
+Node GC validates the SIT valid map, readaheads NAT and node pages in phases, compares summary entries with NAT node info, and moves live node folios with cold status. Data GC is also phased: it readaheads NAT and node pages, validates summary version and parent-node block addresses with `is_alive()`, reads data pages or meta-inode GC cache pages, records referenced inodes in a radix/list cache, waits against regular-file GC semaphores and DIO, then migrates blocks through `move_data_page()` or `move_data_block()`.
+
+`move_data_page()` handles normal data migration by dirtying pages for background GC or synchronously writing them for foreground GC. `move_data_block()` handles meta-inode-required migration by reading the old block through `META_MAPPING`, allocating a new block, copying encrypted/raw contents, submitting a sync write, updating the dnode block address, and rolling back allocation if the update fails.
+
+`do_garbage_collect()` processes one section or a migration window, loads summary blocks, verifies summary/SIT type consistency, skips current segments, invokes node or data GC per segment, submits merged writes, tracks migrated/reclaimed segments, and records next-victim state for large sections and zoned devices. `f2fs_gc()` wraps this in the full reclaim loop, escalating to foreground GC when free sections are low, checkpointing prefree segments when useful, retrying around skipped inode locks, reclaiming until requested free sections are available, and returning `-EAGAIN` when requested GC made no section progress.
+
+The resize path uses GC to evacuate the tail of the main area before shrinking. `f2fs_resize_fs()` validates section alignment, multi-device limits, fsck/checkpoint state, free-space feasibility, locks out GC/checkpoint races, dry-runs evacuation, freezes the superblock, evacuates for real, updates superblock and in-memory metadata, commits the superblock, checkpoints, and marks `SBI_NEED_FSCK` on unrecoverable resize failure.
+
+Important dependencies are SIT/dirty/free segment maps, summary blocks, NAT/node lookup, data writeback, inode lookup, checkpointing, segment allocation, extent/page cache helpers, zoned-device geometry, and F2FS trace/stat counters. The central invariants are never migrating stale summary entries, never GCing current sections, respecting pinned files and checkpoint-disabled constraints, preserving lock ordering around `gc_lock`, `sentry_lock`, inode GC semaphores, and summary pages, and keeping resize metadata updates recoverable.

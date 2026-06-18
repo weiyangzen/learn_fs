@@ -1,0 +1,15 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/nfs/server/nfs_nfsdstate.c
+
+This is the NFS server's NFSv4 state engine. It owns clientid lifecycle, open owners, opens, byte-range lock owners, lock ranges, delegations, NFSv4.1 sessions, callback/backchannel state, lease expiry, stable-storage replay, and state cleanup. Global hash tables track clients, lock-file records keyed by file handle, and sessions; tunables control hash sizes, state limits, delegation issuance, local locking, and write-delegation policy.
+
+Major flows include `nfsrv_setclient`/`nfsrv_getclient` for SETCLIENTID/confirmation/renewal, `nfsrv_opencheck` and `nfsrv_openctrl` for open conflict checking and state creation, `nfsrv_lockctrl` for Lock/LockT/LockU/check/setattr state checks, `nfsrv_openupdate` for confirm/close/downgrade, `nfsrv_delegupdate` and delegation recall helpers, and `nfsrv_checksequence`/session helpers for NFSv4.1 sequencing and reply caching. It also implements administrative revoke, client/lock dumping for `nfssvc`, server timer expiry, old open-owner pruning, and full state teardown.
+
+The file uses two important synchronization layers: the state mutex for normal state list/hash access, and `nfsv4rootfs_lock` to block other nfsd threads while revoking expired clients or rewriting stable state. Several paths deliberately drop vnode/state locks around callbacks, stable-storage writes, local lock syscalls, or sleeps, then retry after state may have changed.
+
+Stable storage is append-log based. `nfsrv_setupstable` reads prior boot/lease/client records to decide which clients may reclaim; `nfsrv_updatestable` rewrites the file after grace; `nfsrv_writestable` appends new-state or revoke records. If the file cannot be read or written reliably, reclaim behavior is constrained and `NFSNSF_OK` is cleared.
+
+Delegation handling performs CB_NULL, CB_RECALL, and CB_GETATTR callbacks, supports NFSv4.1 CB_SEQUENCE/backchannel sessions, delays recalled-delegation timeout up to a limit, and writes revocation records before deleting expired delegation/client state. Local byte-range lock mirroring is optional and maintains a rollback list so vnode advisory locks can be undone if later NFS state checks fail.
+
+Integration points: called by NFSv4 operation handlers, server timer/maintenance paths, `nfssvc` administrative interfaces, vnode/filehandle helpers, RPC callback transport code, reply cache code, stable-storage file I/O, and NFSv4.1 session machinery. It depends heavily on structures and macros from `nfsport.h` and companion server files.
+
+Risks: this file is concurrency- and protocol-sensitive. Correctness depends on strict lock ordering, retry behavior after callbacks/sleeps, stateid sequence semantics, stable-storage durability, and list/hash membership invariants. Several comments document uncertain protocol edge cases, especially delegation conflict policy, same-client read delegation behavior, truncating recalls, and reclaim handling. Counter updates and high-water checks are sometimes approximate by design.

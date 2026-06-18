@@ -1,0 +1,13 @@
+# File Research: sources/os/illumos/illumos-gate/usr/src/uts/common/os/autoconf.c
+
+This file contains early boot and dynamic-reconfiguration DDI autoconfiguration helpers. It sets up DDI subsystems, creates the initial devinfo tree from firmware/platform data, attaches the root nexus, and attaches core pseudo devices needed by the kernel.
+
+`setup_ddi()` initializes node IDs, binds the root class, creates the devinfo tree, initializes instance assignment, callbacks, event logging, fault management, resource management, UFM, kernel sensors, driver configuration loading, layered driver interfaces, and device files. `setup_ddi_poststartup()` starts the DDI flush daemon, runs post-startup interrupt resource management, and redistributes interrupts on platforms supporting weighted distribution.
+
+`impl_create_root_class()` finds the `rootnex` major, reads the firmware manufacturer/root name, normalizes slashes to underscores, binds that name to the root nexus driver, records the platform implementation architecture, and on x86 imports optional bootpath and fstype boot properties. It warns and overrides conflicting root-name bindings because the root nexus must own the firmware root name.
+
+PROM/devinfo traversal is handled by `getlongprop_buf()`, `get_neighbors()`, `di_dfs()`, and `i_ddi_create_branch()`. These helpers read `name` properties, work around non-null-terminated OBP strings, skip nodes failing `check_status()`, add the first valid sibling/child, and recursively expand children. `create_devinfo_tree()` initializes the node cache, allocates and permanently holds `top_devinfo`, binds it to `rootnex`, walks firmware to add descendants, and on x86 calls platform PCI discovery because there is no PROM tree.
+
+`i_ddi_init_root()` initializes and attaches the root nexus by hand: it runs rootnex child initialization, holds the root driver, assigns an instance, loads driver configuration, sets attaching state, calls `devi_attach()`, initializes `global_vhci_lock`, marks root ready, expands `.conf` children, initializes power-management locks, attaches `options`, `pseudo`, `clone`, records major numbers for clone/mm/nulldriver, and attaches `scsi_vhci` for MPXIO class registration.
+
+Important dependencies are bootops/PROM property access, driver name-to-major bindings, devinfo node state, root nexus operations, pseudo nexus creation, fault-management and resource subsystems, LDI, and interrupt management. Correctness risks are early-boot ordering, permanent root devinfo holds, firmware property quirks, and binding conflicts that could prevent the root nexus from attaching.

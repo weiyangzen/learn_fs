@@ -1,0 +1,11 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/puffs/puffs_msgif.c
+
+This file implements PUFFS kernel/user message transport on top of `putter`. Its central object is `struct puffs_msgpark`, the in-kernel parked request wrapper containing the active request buffer, optional compatibility-original buffer, copy lengths, async completion callback, flags, refcount, condition variable, mutex, and queue linkage.
+
+`puffs_msgif_init()` creates the `puffs_msgpark` pool cache; `puffs_msgmem_alloc()` allocates zeroed request memory plus a park, while `puffs_msgmem_release()` drops park references. `puffs_msg_setinfo()`, `puffs_msg_setfaf()`, `puffs_msg_setdelta()`, and `puffs_msg_setcall()` configure operation metadata, fire-and-forget behavior, variable copy length, and async callback completion.
+
+The outgoing path is `puffs_msg_enqueue()`: it optionally converts to compat50 format, assigns message IDs for reply-wanted requests, records caller pid/lid, handles pending fatal signals, checks mount status, queues to `pmp_msg_touser`, wakes waiters, and notifies putter. `puffs_msg_wait()` blocks a kernel caller for a reply, masking non-critical signals and carefully handling interrupted waiters and queue removal. `puffs_msg_wait2()` additionally applies server-requested setbacks such as delayed inactive or no-reference flags to one or two nodes.
+
+The putter-facing side is `puffs_msgif_getout()` and `puffs_msgif_releaseout()`, which transfer queued requests to userland and then either move them to `pmp_msg_replywait` or complete/error/free them. Replies enter via `puffs_msgif_dispatch()` and `puffsop_msg()`, which locate the parked request by message ID, validate frame length, convert compat replies when necessary, copy reply data, run async callbacks, signal waiters, and release references.
+
+The file also handles user-to-kernel special operations. `PUFFSOP_FLUSH` and `PUFFSOP_UNMOUNT` are queued to `puffs_sop_thread()`, avoiding deadlocks when operations require locks held by the server context. `puffsop_flush()` invalidates namecache or flushes/invalidates page-cache ranges. `puffsop_expire()` supports TTL node expiry. `puffs_msgif_close()` and `puffs_userdead()` force unmount and wake or fail all outstanding waiters when the server dies.

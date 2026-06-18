@@ -1,0 +1,86 @@
+# Folder Research: sources/block-storage/mdadm
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `76`
+- recursive_file_count: `116`
+- direct_child_folder_count: `5`
+
+## Direct Files
+
+- `sources/block-storage/mdadm/Assemble.c` -> `Docs/researches/sources/block-storage/mdadm/Assemble.c_research.md`
+- `sources/block-storage/mdadm/Build.c` -> `Docs/researches/sources/block-storage/mdadm/Build.c_research.md`
+- `sources/block-storage/mdadm/Create.c` -> `Docs/researches/sources/block-storage/mdadm/Create.c_research.md`
+- `sources/block-storage/mdadm/Detail.c` -> `Docs/researches/sources/block-storage/mdadm/Detail.c_research.md`
+- `sources/block-storage/mdadm/Dump.c` -> `Docs/researches/sources/block-storage/mdadm/Dump.c_research.md`
+- `sources/block-storage/mdadm/Examine.c` -> `Docs/researches/sources/block-storage/mdadm/Examine.c_research.md`
+- `sources/block-storage/mdadm/Grow.c` -> `Docs/researches/sources/block-storage/mdadm/Grow.c_research.md`
+- `sources/block-storage/mdadm/Incremental.c` -> `Docs/researches/sources/block-storage/mdadm/Incremental.c_research.md`
+- `sources/block-storage/mdadm/Kill.c` -> `Docs/researches/sources/block-storage/mdadm/Kill.c_research.md`
+- `sources/block-storage/mdadm/Makefile` -> `Docs/researches/sources/block-storage/mdadm/Makefile_research.md`
+- `sources/block-storage/mdadm/Manage.c` -> `Docs/researches/sources/block-storage/mdadm/Manage.c_research.md`
+- `sources/block-storage/mdadm/Query.c` -> `Docs/researches/sources/block-storage/mdadm/Query.c_research.md`
+- `sources/block-storage/mdadm/ReadMe.c` -> `Docs/researches/sources/block-storage/mdadm/ReadMe.c_research.md`
+- `sources/block-storage/mdadm/bitmap.c` -> `Docs/researches/sources/block-storage/mdadm/bitmap.c_research.md`
+- `sources/block-storage/mdadm/bitmap.h` -> `Docs/researches/sources/block-storage/mdadm/bitmap.h_research.md`
+- `sources/block-storage/mdadm/config.c` -> `Docs/researches/sources/block-storage/mdadm/config.c_research.md`
+- `sources/block-storage/mdadm/coverity-gcc-hack.h` -> `Docs/researches/sources/block-storage/mdadm/coverity-gcc-hack.h_research.md`
+- `sources/block-storage/mdadm/crc32.c` -> `Docs/researches/sources/block-storage/mdadm/crc32.c_research.md`
+- `sources/block-storage/mdadm/crc32.h` -> `Docs/researches/sources/block-storage/mdadm/crc32.h_research.md`
+- `sources/block-storage/mdadm/crc32c.c` -> `Docs/researches/sources/block-storage/mdadm/crc32c.c_research.md`
+- `sources/block-storage/mdadm/dlink.c` -> `Docs/researches/sources/block-storage/mdadm/dlink.c_research.md`
+- `sources/block-storage/mdadm/dlink.h` -> `Docs/researches/sources/block-storage/mdadm/dlink.h_research.md`
+- `sources/block-storage/mdadm/drive_encryption.c` -> `Docs/researches/sources/block-storage/mdadm/drive_encryption.c_research.md`
+- `sources/block-storage/mdadm/drive_encryption.h` -> `Docs/researches/sources/block-storage/mdadm/drive_encryption.h_research.md`
+- `sources/block-storage/mdadm/lib.c` -> `Docs/researches/sources/block-storage/mdadm/lib.c_research.md`
+- `sources/block-storage/mdadm/managemon.c` -> `Docs/researches/sources/block-storage/mdadm/managemon.c_research.md`
+- `sources/block-storage/mdadm/mapfile.c` -> `Docs/researches/sources/block-storage/mdadm/mapfile.c_research.md`
+- `sources/block-storage/mdadm/maps.c` -> `Docs/researches/sources/block-storage/mdadm/maps.c_research.md`
+- `sources/block-storage/mdadm/md5.h` -> `Docs/researches/sources/block-storage/mdadm/md5.h_research.md`
+- `sources/block-storage/mdadm/md_p.h` -> `Docs/researches/sources/block-storage/mdadm/md_p.h_research.md`
+- `sources/block-storage/mdadm/md_u.h` -> `Docs/researches/sources/block-storage/mdadm/md_u.h_research.md`
+- `sources/block-storage/mdadm/mdadm.8.in` -> `Docs/researches/sources/block-storage/mdadm/mdadm.8.in_research.md`
+- `sources/block-storage/mdadm/mdadm.c` -> `Docs/researches/sources/block-storage/mdadm/mdadm.c_research.md`
+- `sources/block-storage/mdadm/mdadm.conf.5.in` -> `Docs/researches/sources/block-storage/mdadm/mdadm.conf.5.in_research.md`
+- `sources/block-storage/mdadm/mdadm.h` -> `Docs/researches/sources/block-storage/mdadm/mdadm.h_research.md`
+- `sources/block-storage/mdadm/mdadm_status.h` -> `Docs/researches/sources/block-storage/mdadm/mdadm_status.h_research.md`
+- `sources/block-storage/mdadm/mdmon.c` -> `Docs/researches/sources/block-storage/mdadm/mdmon.c_research.md`
+- `sources/block-storage/mdadm/mdmon.h` -> `Docs/researches/sources/block-storage/mdadm/mdmon.h_research.md`
+- `sources/block-storage/mdadm/mdmonitor.c` -> `Docs/researches/sources/block-storage/mdadm/mdmonitor.c_research.md`
+- `sources/block-storage/mdadm/mdopen.c` -> `Docs/researches/sources/block-storage/mdadm/mdopen.c_research.md`
+- `sources/block-storage/mdadm/mdstat.c` -> `Docs/researches/sources/block-storage/mdadm/mdstat.c_research.md`
+- `sources/block-storage/mdadm/monitor.c` -> `Docs/researches/sources/block-storage/mdadm/monitor.c_research.md`
+- `sources/block-storage/mdadm/msg.c` -> `Docs/researches/sources/block-storage/mdadm/msg.c_research.md`
+- `sources/block-storage/mdadm/msg.h` -> `Docs/researches/sources/block-storage/mdadm/msg.h_research.md`
+- `sources/block-storage/mdadm/part.h` -> `Docs/researches/sources/block-storage/mdadm/part.h_research.md`
+- `sources/block-storage/mdadm/platform-intel.c` -> `Docs/researches/sources/block-storage/mdadm/platform-intel.c_research.md`
+- `sources/block-storage/mdadm/platform-intel.h` -> `Docs/researches/sources/block-storage/mdadm/platform-intel.h_research.md`
+- `sources/block-storage/mdadm/policy.c` -> `Docs/researches/sources/block-storage/mdadm/policy.c_research.md`
+- `sources/block-storage/mdadm/probe_roms.c` -> `Docs/researches/sources/block-storage/mdadm/probe_roms.c_research.md`
+- `sources/block-storage/mdadm/probe_roms.h` -> `Docs/researches/sources/block-storage/mdadm/probe_roms.h_research.md`
+- `sources/block-storage/mdadm/pwgr.c` -> `Docs/researches/sources/block-storage/mdadm/pwgr.c_research.md`
+- `sources/block-storage/mdadm/raid5extend.c` -> `Docs/researches/sources/block-storage/mdadm/raid5extend.c_research.md`
+- `sources/block-storage/mdadm/raid6check.c` -> `Docs/researches/sources/block-storage/mdadm/raid6check.c_research.md`
+- `sources/block-storage/mdadm/restripe.c` -> `Docs/researches/sources/block-storage/mdadm/restripe.c_research.md`
+- `sources/block-storage/mdadm/sha1.c` -> `Docs/researches/sources/block-storage/mdadm/sha1.c_research.md`
+- `sources/block-storage/mdadm/sha1.h` -> `Docs/researches/sources/block-storage/mdadm/sha1.h_research.md`
+- `sources/block-storage/mdadm/super-ddf.c` -> `Docs/researches/sources/block-storage/mdadm/super-ddf.c_research.md`
+- `sources/block-storage/mdadm/super-gpt.c` -> `Docs/researches/sources/block-storage/mdadm/super-gpt.c_research.md`
+- `sources/block-storage/mdadm/super-intel.c` -> `Docs/researches/sources/block-storage/mdadm/super-intel.c_research.md`
+- `sources/block-storage/mdadm/super-mbr.c` -> `Docs/researches/sources/block-storage/mdadm/super-mbr.c_research.md`
+- `sources/block-storage/mdadm/super0.c` -> `Docs/researches/sources/block-storage/mdadm/super0.c_research.md`
+- `sources/block-storage/mdadm/super1.c` -> `Docs/researches/sources/block-storage/mdadm/super1.c_research.md`
+- `sources/block-storage/mdadm/swap_super.c` -> `Docs/researches/sources/block-storage/mdadm/swap_super.c_research.md`
+- `sources/block-storage/mdadm/sysfs.c` -> `Docs/researches/sources/block-storage/mdadm/sysfs.c_research.md`
+- `sources/block-storage/mdadm/test` -> `Docs/researches/sources/block-storage/mdadm/test_research.md`
+- `sources/block-storage/mdadm/udev-md-clustered-confirm-device.rules` -> `Docs/researches/sources/block-storage/mdadm/udev-md-clustered-confirm-device.rules_research.md`
+- `sources/block-storage/mdadm/udev-md-raid-arrays.rules` -> `Docs/researches/sources/block-storage/mdadm/udev-md-raid-arrays.rules_research.md`
+- `sources/block-storage/mdadm/udev-md-raid-assembly.rules` -> `Docs/researches/sources/block-storage/mdadm/udev-md-raid-assembly.rules_research.md`
+- `sources/block-storage/mdadm/udev-md-raid-creating.rules` -> `Docs/researches/sources/block-storage/mdadm/udev-md-raid-creating.rules_research.md`
+- `sources/block-storage/mdadm/udev-md-raid-safe-timeouts.rules` -> `Docs/researches/sources/block-storage/mdadm/udev-md-raid-safe-timeouts.rules_research.md`
+- `sources/block-storage/mdadm/udev.c` -> `Docs/researches/sources/block-storage/mdadm/udev.c_research.md`
+- `sources/block-storage/mdadm/udev.h` -> `Docs/researches/sources/block-storage/mdadm/udev.h_research.md`
+- `sources/block-storage/mdadm/util.c` -> `Docs/researches/sources/block-storage/mdadm/util.c_research.md`
+- `sources/block-storage/mdadm/uuid.c` -> `Docs/researches/sources/block-storage/mdadm/uuid.c_research.md`
+- `sources/block-storage/mdadm/xmalloc.c` -> `Docs/researches/sources/block-storage/mdadm/xmalloc.c_research.md`
+- `sources/block-storage/mdadm/xmalloc.h` -> `Docs/researches/sources/block-storage/mdadm/xmalloc.h_research.md`

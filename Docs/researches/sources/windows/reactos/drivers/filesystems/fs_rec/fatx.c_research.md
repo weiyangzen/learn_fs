@@ -1,0 +1,3 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/fatx.c
+
+FATX recognizer. The file defines a packed FATX boot-sector shape with `SysType`, volume id, sectors per cluster, FAT count, reserved field, and padding to 4096 bytes. `FsRecIsFatxVolume` checks the leading `FATX` signature and validates sectors per cluster as a power-of-two value from 1 through 128. `FsRecFatxFsControl` reads the first 512 bytes on mount, recognizes FATX with that validator, and returns `STATUS_FS_DRIVER_REQUIRED`; load requests target the `vfatfs` service. Unlike several other recognizers in this group, this file does not apply a floppy-device-error fallback after failed sector-size/read probing.

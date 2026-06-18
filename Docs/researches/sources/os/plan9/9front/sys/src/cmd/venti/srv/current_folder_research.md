@@ -1,0 +1,76 @@
+# Folder Research: sources/os/plan9/9front/sys/src/cmd/venti/srv
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `66`
+- recursive_file_count: `69`
+- direct_child_folder_count: `1`
+
+## Direct Files
+
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/arena.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/arena.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/arenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/arenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/bloom.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/bloom.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/buildbuck.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/buildbuck.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/buildindex.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/buildindex.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/checkarenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/checkarenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/checkindex.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/checkindex.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/clump.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/clump.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/clumpstats.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/clumpstats.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/cmparenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/cmparenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/config.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/config.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/conv.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/conv.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/dat.h` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/dat.h_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/dcache.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/dcache.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/disksched.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/disksched.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/dump.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/dump.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/findscore.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/findscore.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/fixarenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/fixarenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtarenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtarenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtbloom.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtbloom.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtindex.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtindex.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtisect.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/fmtisect.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/fns.h` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/fns.h_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/graph.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/graph.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/hdisk.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/hdisk.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/hproc.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/hproc.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/httpd.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/httpd.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/icache.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/icache.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/icachewrite.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/icachewrite.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/ifile.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/ifile.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/index.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/index.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/lump.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/lump.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/lumpcache.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/lumpcache.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/lumpqueue.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/lumpqueue.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/mirrorarenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/mirrorarenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/part.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/part.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/png.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/png.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/printarena.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/printarena.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/printarenapart.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/printarenapart.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/printarenas.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/printarenas.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/printindex.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/printindex.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/printmap.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/printmap.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/rdarena.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/rdarena.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/readifile.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/readifile.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/reseal.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/reseal.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/round.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/round.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/score.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/score.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/sortientry.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/sortientry.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/stats.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/stats.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/stdinc.h` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/stdinc.h_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/syncarena.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/syncarena.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/syncindex.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/syncindex.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/syncindex0.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/syncindex0.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/trace.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/trace.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/unittoull.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/unittoull.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/unwhack.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/unwhack.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/utils.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/utils.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/venti.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/venti.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/verifyarena.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/verifyarena.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/whack.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/whack.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/whack.h` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/whack.h_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/wrarena.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/wrarena.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/xml.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/xml.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/xml.h` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/xml.h_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/zblock.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/zblock.c_research.md`
+- `sources/os/plan9/9front/sys/src/cmd/venti/srv/zeropart.c` -> `Docs/researches/sources/os/plan9/9front/sys/src/cmd/venti/srv/zeropart.c_research.md`

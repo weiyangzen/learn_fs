@@ -1,0 +1,5 @@
+# File Research: sources/local-fs/xfsprogs/db/attr.c
+
+Defines field schemas and helpers for XFS extended attribute blocks. It supports legacy attr leaf/node blocks and v3 CRC attr leaf/node/remote blocks. The field arrays expose block info, leaf headers, freemap entries, leaf entries, local and remote name/value records, node entries, v3 CRC metadata, and remote attribute headers. Count/offset callbacks inspect magic numbers and entry flags to show only the applicable view: leaf vs node vs remote data, local vs remote attr values, and parent-pointer records.
+
+The file centralizes variable-length attr parsing through helpers such as `attr_leaf_entry_walk`, name/value count callbacks, nvlist offsets from `nameidx`, and size callbacks (`attr_leaf_name_size`, `attr_size`). It also provides `xfs_attr3_set_crc` and `xfs_attr3_db_buf_ops`; the special read verifier detects the actual attr buffer kind by magic and delegates to the correct libxfs verifier, while write verification rejects unknown attr buffer writes. Risks are mostly corrupted or unknown magic handling; unknown v3 buffer types are marked corrupted for reads and refused for writes.

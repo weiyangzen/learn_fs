@@ -1,0 +1,72 @@
+# Folder Research: sources/block-storage/util-linux/libblkid/src/superblocks
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `62`
+- recursive_file_count: `62`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/block-storage/util-linux/libblkid/src/superblocks/adaptec_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/adaptec_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/apfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/apfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/bcache.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/bcache.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/befs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/befs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/bfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/bfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/bitlocker.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/bitlocker.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/bluestore.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/bluestore.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/btrfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/btrfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/cramfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/cramfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/cs_fvault2.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/cs_fvault2.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ddf_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ddf_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/drbd.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/drbd.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/drbdmanage.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/drbdmanage.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/drbdproxy_datalog.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/drbdproxy_datalog.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/erofs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/erofs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/exfat.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/exfat.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/exfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/exfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ext.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ext.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/f2fs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/f2fs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/gfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/gfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/hfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/hfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/highpoint_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/highpoint_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/hpfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/hpfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/iso9660.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/iso9660.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/isw_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/isw_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/jfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/jfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/jmicron_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/jmicron_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/linux_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/linux_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/lsi_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/lsi_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/luks.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/luks.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/lvm.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/lvm.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/minix.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/minix.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/mpool.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/mpool.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/netware.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/netware.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/nilfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/nilfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ntfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ntfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/nvidia_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/nvidia_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ocfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ocfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/promise_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/promise_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/refs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/refs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/reiserfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/reiserfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/romfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/romfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/scoutfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/scoutfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/silicon_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/silicon_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/squashfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/squashfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/stratis.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/stratis.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/superblocks.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/superblocks.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/superblocks.h` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/superblocks.h_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/swap.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/swap.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/sysv.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/sysv.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ubi.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ubi.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ubifs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ubifs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/udf.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/udf.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/ufs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/ufs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/vdo.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/vdo.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/vfat.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/vfat.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/via_raid.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/via_raid.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/vmfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/vmfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/vxfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/vxfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/xfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/xfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/zfs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/zfs.c_research.md`
+- `sources/block-storage/util-linux/libblkid/src/superblocks/zonefs.c` -> `Docs/researches/sources/block-storage/util-linux/libblkid/src/superblocks/zonefs.c_research.md`

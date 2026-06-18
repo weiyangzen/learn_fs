@@ -1,0 +1,26 @@
+# File Research: sources/virtualization/qemu/block/ssh.c
+
+`ssh.c` implements QEMU's `ssh` block protocol driver on top of libssh/libssh SFTP. It registers `bdrv_ssh` as both `format_name` and `protocol_name` `"ssh"` and provides URI parsing, remote connection setup, image creation, read/write/flush/truncate, filename refresh, and cleanup.
+
+Core state is `BDRVSSHState`: a coroutine mutex serializes libssh/SFTP access; `sock`, `ssh_session`, `sftp_session`, and `sftp_file` hold the transport; `sftp_attributes attrs` caches remote file size/type; `InetSocketAddress *inet` and `char *user` are retained for error messages and `ssh_refresh_filename()`; `unsafe_flush_warning` suppresses repeated fsync capability warnings. `ssh_state_init()` zeros state, sets `sock = -1`, and initializes the mutex. `ssh_state_free()` frees user, attributes, SFTP file/session, disconnects SSH, and frees the libssh session, which owns the socket after `SSH_OPTIONS_FD`.
+
+Option handling supports both URI and structured QAPI forms. `parse_uri()` accepts only `ssh://`, requires host and path, defaults port to 22, maps user/host/port/path into QDict options, and recognizes only the `host_key_check` query parameter. `ssh_has_filename_options_conflict()` rejects explicit option keys that conflict with a filename. `ssh_process_legacy_options()` translates legacy `host`, `port`, and `host_key_check` strings into modern QAPI keys such as `server.host` and `host-key-check.mode/type/hash`. `ssh_parse_options()` absorbs legacy runtime options, runs the translator, then builds `BlockdevOptionsSsh` with a flat QAPI visitor and clears processed options.
+
+Host identity checking is explicit and central. Default mode is `known_hosts`. `check_host_key_knownhosts()` uses `ssh_session_is_known_server()` and fails on changed, missing, unknown, or wrong-type keys, including SHA256 fingerprint details when available. Hash mode goes through `check_host_key_hash()`, which obtains the server public key, computes MD5/SHA1/SHA256 as requested, and compares with `compare_fingerprint()`. Mode `none` skips validation. Authentication tries `ssh_userauth_none()` first, then `ssh_userauth_publickey_auto()` using normal identities/agent; password authentication is not implemented.
+
+`connect_to_ssh()` is the main open helper. It selects the requested or system user, takes ownership of the QAPI `server` address into `s->inet`, parses a numeric port, opens a socket with `inet_connect_saddr()`, tries `TCP_NODELAY`, creates and configures a blocking libssh session, reads `~/.ssh/config`, binds the existing socket into libssh, connects, verifies the host key, authenticates, initializes SFTP, opens the remote path with caller-supplied `ssh_flags` and optional `creat_mode`, forces the SFTP file handle into blocking mode, and reads initial attributes. On errors it unwinds every partially initialized object and closes any socket not yet owned by libssh.
+
+Create/open behavior is split between `ssh_open()`, `ssh_co_create()`, and `ssh_co_create_opts()`. `ssh_open()` maps `BDRV_O_RDWR` to `O_RDWR` or `O_RDONLY`, parses options, connects, and advertises `BDRV_REQ_ZERO_WRITE` truncation support for regular files. `ssh_co_create()` connects with `O_RDWR | O_CREAT | O_TRUNC` and uses `ssh_grow_file()` to size the file by writing one zero byte at `size - 1`. Legacy create options parse `size`, round to sector size, parse the URI, and call the QAPI create path.
+
+I/O is coroutine-based but libssh calls are serialized by `s->lock`. `ssh_read()` seeks, then iterates over QEMU iovecs, limiting SFTP read requests to 16 KiB, yielding with `co_yield()` on `SSH_AGAIN`, zero-filling short EOF reads, and returning `-EIO` on SFTP errors. `ssh_write()` similarly seeks and writes iovec slices, limiting individual writes to 128 KiB, yielding on `SSH_AGAIN`, and updating cached size when writes extend the file. `co_yield()` registers AIO read/write handlers based on `ssh_get_poll_flags()` and wakes the coroutine through `restart_coroutine()`.
+
+Flush uses OpenSSH's `fsync@openssh.com` extension. If unsupported, `ssh_flush()` warns once and returns success, which preserves compatibility but is not durable. If supported, it calls `sftp_fsync()` and yields on `SSH_AGAIN`. `ssh_co_getlength()` returns cached `attrs->size` without a libssh call. `ssh_co_truncate()` supports only growth and no preallocation; shrinking returns `-ENOTSUP`.
+
+Filename helpers regenerate exact `ssh://user@host:port/path?host_key_check=...` names only when the stored `InetSocketAddress` can be represented simply. `ssh_bdrv_dirname()` refuses to synthesize a base directory if `host_key_check` requires a query string or no exact filename is available.
+
+Important risks and invariants:
+- All SFTP operations depend on serialized access through `CoMutex`; direct libssh calls outside this discipline could corrupt shared state.
+- Cached length can become stale if another client mutates the remote file.
+- Unsupported fsync returns success after warning, so management layers must understand durability is best-effort for servers lacking the extension.
+- Only public-key/agent authentication is available.
+- Host key hash comparison parses hex manually and accepts colon separators; malformed input fails by mismatch.

@@ -1,0 +1,23 @@
+# File Research: sources/os/illumos/illumos-gate/usr/src/uts/common/fs/smbclnt/netsmb/smb_iod.c
+
+## Purpose
+Implements the SMB client IOD coordination layer: connection/reconnect state machine, transport connect setup, SMB1/SMB2 request queueing and sending, receive loop, reply matching, SMB2 credit accounting, SMB3 decryption/encryption integration, timeout handling, idle teardown, and share disconnect notifications.
+
+## Key Elements
+The IOD model uses one userland `smbiod` agent per VC. Userland drives connect, negotiate, authentication continuation, and then enters `smb_iod_vc_work`, where the kernel records the session key, initializes signing and SMB3 encryption keys, marks the VC active, and runs the receive loop. State transitions are recorded through `smb_iod_newstate` and coordinated with `vc_statechg`, `iod_idle`, and `iod_muxwait`.
+
+Request completion is centralized in `smb_iod_rqprocessed(_LH)`, which records local error/status flags, bumps the reply generation, marks the request notified, and broadcasts its condition variable. `smb_iod_invrq` wakes all outstanding requests with `ENOTCONN` and `SMBR_RESTART` after disconnect/reconnect transitions. `smb_iod_shutdown_share` wakes active requests for a forced-unmounted share with `EIO`.
+
+`smb1_iod_addrq` implements SMB1 mux-limit control using `iod_muxcnt` and `vc_maxmux`, assigns MIDs and signing sequence numbers, queues the request, fills/signs the header, and sends it. `smb2_iod_addrq` implements SMB2 credit-window control using `vc2_next_message_id` and `vc2_limit_message_id`, assigns message IDs across compounded requests, queues every compound member, and sends the compound chain. Both leave one slot/credit for internal requests where possible.
+
+`smb1_iod_sendrq` fills SMB1 headers, signs if required, duplicates the message, and sends through the transport. `smb2_iod_sendrq` determines whether encryption is required by session or share flags, fills/signs headers for top and compounded requests, updates SMB 3.1.1 preauth hashes for negotiate/session setup, builds a compound mblk chain, encrypts with `smb3_msg_encrypt` when needed, and sends it.
+
+`smb_iod_recvall` is the reader loop. It receives NetBIOS/TCP messages, logs server-not-responding after idle ticks with pending requests, sends an echo after continued silence, triggers reconnect after further silence, drops idle connections after the keepalive period if the IOD owns the last reference, and dispatches replies to SMB1 or SMB2 processors. `smb1_iod_process` validates SMB1 headers or the special SMB1-to-SMB2 negotiate response and matches replies by MID. `smb2_iod_process` decrypts SMB3 transform messages, splits compound replies, applies SMB2 credit grants immediately, handles async interim `STATUS_PENDING` responses, and matches final replies by message ID.
+
+Connection-control entry points include `nsmb_iod_connect`, which rebuilds the transport endpoint, sets socket options, binds, connects, and moves to CONNECTED; `nsmb_iod_negotiate`, which resets negotiated state and keys, performs SMB1-to-SMB2 negotiation as needed, then SMB2 negotiate when selected; `nsmb_iod_ssnsetup`, which advances AUTHCONT/AUTHOK/AUTHFAIL based on session setup status; `smb_iod_vc_idle`, which waits for reuse or last-reference destruction; `smb_iod_vc_rcfail`, which throttles failed reconnects and transitions back toward IDLE; and `smb_iod_reconnect`, which requests reconnect and waits for ACTIVE or failure.
+
+## Dependencies
+Depends on SMB transport abstraction, TCP transport options, SMB1/SMB2 request builders and parsers, SMB2 compound and signing helpers, SMB3 encryption/decryption/preauth helpers, connection/share structures, STREAMS message manipulation, illumos thread/CV/rwlock/time/zone primitives, DTrace probes, and smbfs callback hooks installed via `smb_fscb_set`.
+
+## Behavior/Risks
+This is the highest-concurrency file in the group. `iod_rqlock` protects the active request queue, SMB2 credit/message-ID state, SMB1 mux count, and SMB3 nonce serialization during send; request locks protect per-request completion state. Wait paths must never block the IOD reader thread except through the internal polling variant. Timeout behavior deliberately avoids interrupting sends/receives for operations that could leak server-side FIDs or TIDs if a successful reply is missed. SMB2 credit updates happen before request wakeup, so malformed credit grants can affect sender admission. Reconnect and idle transitions must preserve share invalidation, request wakeups, and generation increments because open handles are not durable.

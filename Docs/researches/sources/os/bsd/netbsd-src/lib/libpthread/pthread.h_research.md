@@ -1,0 +1,7 @@
+# File Research: sources/os/bsd/netbsd-src/lib/libpthread/pthread.h
+
+This is the public NetBSD pthread API header. It declares core thread lifecycle calls, attributes, mutexes, condition variables, once control, thread-specific data, cancellation, names, suspend/resume extensions, CPU-clock access, cleanup handler macros, spinlocks, rwlocks, barriers, scheduling, errno access, affinity, and NetBSD-specific inspection helpers.
+
+The header defines POSIX constants and NetBSD extension constants such as `PTHREAD_BARRIER_SERIAL_THREAD`, `PTHREAD_CANCELED`, and `PTHREAD_MAX_NAMELEN_NP`, and maps public initializer macros to the private layout constants in `pthread_types.h`. It also contains the important libc stub remapping layer used when `__LIBPTHREAD_SOURCE__` is not defined: many pthread calls become `__libc_*` symbols so libraries can use synchronization stubs without forcing a libpthread dependency. `pthread_create` is deliberately only weakly redirected under `_NETBSD_PTHREAD_CREATE_WEAK`, preserving link-time detection of programs that forgot to link libpthread.
+
+Integration points: includes `pthread_types.h`, exposes the ABI consumed by all libpthread C files, and coordinates with libc weak/strong aliases. Risks are ABI stability and macro remapping surprises, especially for code that `#undef`s pthread names or depends on process-shared support hidden behind `_PTHREAD_PSHARED`.

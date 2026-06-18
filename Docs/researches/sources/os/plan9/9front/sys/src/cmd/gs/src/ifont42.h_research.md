@@ -1,0 +1,17 @@
+# File Research: sources/os/plan9/9front/sys/src/cmd/gs/src/ifont42.h
+
+Declares Type 42 and CIDFontType 2 TrueType font build helpers.
+
+Key points:
+- `build_gs_TrueType_font` builds Type 11 or Type 42 fonts.
+- `font_string_array_param` validates/extracts string arrays while returning the parameter value even on wrong type.
+- `font_GlyphDirectory_param` returns 0 if present, 1 if absent, or an error.
+- `font_gdir_get_outline` retrieves glyph outlines from `GlyphDirectory`, returning an empty string if missing/out of range.
+- `string_array_access_proc` accesses byte ranges across arrays of strings, used for `sfnts` and `CIDMap`.
+
+Dependencies and interactions:
+- Used by TrueType-backed font construction.
+- Handles Ghostscript’s representation of TrueType `sfnts` as arrays of strings and CID maps.
+
+Research relevance:
+- Interface for interpreter-side TrueType/CID TrueType font materialization.

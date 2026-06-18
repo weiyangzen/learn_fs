@@ -1,0 +1,88 @@
+# Folder Research: sources/os/linux/linux/fs
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `78`
+- recursive_file_count: `2342`
+- direct_child_folder_count: `78`
+
+## Direct Files
+
+- `sources/os/linux/linux/fs/Kconfig` -> `Docs/researches/sources/os/linux/linux/fs/Kconfig_research.md`
+- `sources/os/linux/linux/fs/Makefile` -> `Docs/researches/sources/os/linux/linux/fs/Makefile_research.md`
+- `sources/os/linux/linux/fs/aio.c` -> `Docs/researches/sources/os/linux/linux/fs/aio.c_research.md`
+- `sources/os/linux/linux/fs/anon_inodes.c` -> `Docs/researches/sources/os/linux/linux/fs/anon_inodes.c_research.md`
+- `sources/os/linux/linux/fs/attr.c` -> `Docs/researches/sources/os/linux/linux/fs/attr.c_research.md`
+- `sources/os/linux/linux/fs/backing-file.c` -> `Docs/researches/sources/os/linux/linux/fs/backing-file.c_research.md`
+- `sources/os/linux/linux/fs/bad_inode.c` -> `Docs/researches/sources/os/linux/linux/fs/bad_inode.c_research.md`
+- `sources/os/linux/linux/fs/binfmt_elf.c` -> `Docs/researches/sources/os/linux/linux/fs/binfmt_elf.c_research.md`
+- `sources/os/linux/linux/fs/binfmt_elf_fdpic.c` -> `Docs/researches/sources/os/linux/linux/fs/binfmt_elf_fdpic.c_research.md`
+- `sources/os/linux/linux/fs/binfmt_flat.c` -> `Docs/researches/sources/os/linux/linux/fs/binfmt_flat.c_research.md`
+- `sources/os/linux/linux/fs/binfmt_misc.c` -> `Docs/researches/sources/os/linux/linux/fs/binfmt_misc.c_research.md`
+- `sources/os/linux/linux/fs/binfmt_script.c` -> `Docs/researches/sources/os/linux/linux/fs/binfmt_script.c_research.md`
+- `sources/os/linux/linux/fs/bpf_fs_kfuncs.c` -> `Docs/researches/sources/os/linux/linux/fs/bpf_fs_kfuncs.c_research.md`
+- `sources/os/linux/linux/fs/buffer.c` -> `Docs/researches/sources/os/linux/linux/fs/buffer.c_research.md`
+- `sources/os/linux/linux/fs/char_dev.c` -> `Docs/researches/sources/os/linux/linux/fs/char_dev.c_research.md`
+- `sources/os/linux/linux/fs/compat_binfmt_elf.c` -> `Docs/researches/sources/os/linux/linux/fs/compat_binfmt_elf.c_research.md`
+- `sources/os/linux/linux/fs/coredump.c` -> `Docs/researches/sources/os/linux/linux/fs/coredump.c_research.md`
+- `sources/os/linux/linux/fs/d_path.c` -> `Docs/researches/sources/os/linux/linux/fs/d_path.c_research.md`
+- `sources/os/linux/linux/fs/dax.c` -> `Docs/researches/sources/os/linux/linux/fs/dax.c_research.md`
+- `sources/os/linux/linux/fs/dcache.c` -> `Docs/researches/sources/os/linux/linux/fs/dcache.c_research.md`
+- `sources/os/linux/linux/fs/direct-io.c` -> `Docs/researches/sources/os/linux/linux/fs/direct-io.c_research.md`
+- `sources/os/linux/linux/fs/drop_caches.c` -> `Docs/researches/sources/os/linux/linux/fs/drop_caches.c_research.md`
+- `sources/os/linux/linux/fs/eventfd.c` -> `Docs/researches/sources/os/linux/linux/fs/eventfd.c_research.md`
+- `sources/os/linux/linux/fs/eventpoll.c` -> `Docs/researches/sources/os/linux/linux/fs/eventpoll.c_research.md`
+- `sources/os/linux/linux/fs/exec.c` -> `Docs/researches/sources/os/linux/linux/fs/exec.c_research.md`
+- `sources/os/linux/linux/fs/fcntl.c` -> `Docs/researches/sources/os/linux/linux/fs/fcntl.c_research.md`
+- `sources/os/linux/linux/fs/fhandle.c` -> `Docs/researches/sources/os/linux/linux/fs/fhandle.c_research.md`
+- `sources/os/linux/linux/fs/file.c` -> `Docs/researches/sources/os/linux/linux/fs/file.c_research.md`
+- `sources/os/linux/linux/fs/file_attr.c` -> `Docs/researches/sources/os/linux/linux/fs/file_attr.c_research.md`
+- `sources/os/linux/linux/fs/file_table.c` -> `Docs/researches/sources/os/linux/linux/fs/file_table.c_research.md`
+- `sources/os/linux/linux/fs/filesystems.c` -> `Docs/researches/sources/os/linux/linux/fs/filesystems.c_research.md`
+- `sources/os/linux/linux/fs/fs-writeback.c` -> `Docs/researches/sources/os/linux/linux/fs/fs-writeback.c_research.md`
+- `sources/os/linux/linux/fs/fs_context.c` -> `Docs/researches/sources/os/linux/linux/fs/fs_context.c_research.md`
+- `sources/os/linux/linux/fs/fs_dirent.c` -> `Docs/researches/sources/os/linux/linux/fs/fs_dirent.c_research.md`
+- `sources/os/linux/linux/fs/fs_parser.c` -> `Docs/researches/sources/os/linux/linux/fs/fs_parser.c_research.md`
+- `sources/os/linux/linux/fs/fs_pin.c` -> `Docs/researches/sources/os/linux/linux/fs/fs_pin.c_research.md`
+- `sources/os/linux/linux/fs/fs_struct.c` -> `Docs/researches/sources/os/linux/linux/fs/fs_struct.c_research.md`
+- `sources/os/linux/linux/fs/fserror.c` -> `Docs/researches/sources/os/linux/linux/fs/fserror.c_research.md`
+- `sources/os/linux/linux/fs/fsopen.c` -> `Docs/researches/sources/os/linux/linux/fs/fsopen.c_research.md`
+- `sources/os/linux/linux/fs/init.c` -> `Docs/researches/sources/os/linux/linux/fs/init.c_research.md`
+- `sources/os/linux/linux/fs/inode.c` -> `Docs/researches/sources/os/linux/linux/fs/inode.c_research.md`
+- `sources/os/linux/linux/fs/internal.h` -> `Docs/researches/sources/os/linux/linux/fs/internal.h_research.md`
+- `sources/os/linux/linux/fs/ioctl.c` -> `Docs/researches/sources/os/linux/linux/fs/ioctl.c_research.md`
+- `sources/os/linux/linux/fs/kernel_read_file.c` -> `Docs/researches/sources/os/linux/linux/fs/kernel_read_file.c_research.md`
+- `sources/os/linux/linux/fs/libfs.c` -> `Docs/researches/sources/os/linux/linux/fs/libfs.c_research.md`
+- `sources/os/linux/linux/fs/locks.c` -> `Docs/researches/sources/os/linux/linux/fs/locks.c_research.md`
+- `sources/os/linux/linux/fs/mbcache.c` -> `Docs/researches/sources/os/linux/linux/fs/mbcache.c_research.md`
+- `sources/os/linux/linux/fs/mnt_idmapping.c` -> `Docs/researches/sources/os/linux/linux/fs/mnt_idmapping.c_research.md`
+- `sources/os/linux/linux/fs/mount.h` -> `Docs/researches/sources/os/linux/linux/fs/mount.h_research.md`
+- `sources/os/linux/linux/fs/mpage.c` -> `Docs/researches/sources/os/linux/linux/fs/mpage.c_research.md`
+- `sources/os/linux/linux/fs/namei.c` -> `Docs/researches/sources/os/linux/linux/fs/namei.c_research.md`
+- `sources/os/linux/linux/fs/namespace.c` -> `Docs/researches/sources/os/linux/linux/fs/namespace.c_research.md`
+- `sources/os/linux/linux/fs/nsfs.c` -> `Docs/researches/sources/os/linux/linux/fs/nsfs.c_research.md`
+- `sources/os/linux/linux/fs/nullfs.c` -> `Docs/researches/sources/os/linux/linux/fs/nullfs.c_research.md`
+- `sources/os/linux/linux/fs/open.c` -> `Docs/researches/sources/os/linux/linux/fs/open.c_research.md`
+- `sources/os/linux/linux/fs/pidfs.c` -> `Docs/researches/sources/os/linux/linux/fs/pidfs.c_research.md`
+- `sources/os/linux/linux/fs/pipe.c` -> `Docs/researches/sources/os/linux/linux/fs/pipe.c_research.md`
+- `sources/os/linux/linux/fs/pnode.c` -> `Docs/researches/sources/os/linux/linux/fs/pnode.c_research.md`
+- `sources/os/linux/linux/fs/pnode.h` -> `Docs/researches/sources/os/linux/linux/fs/pnode.h_research.md`
+- `sources/os/linux/linux/fs/posix_acl.c` -> `Docs/researches/sources/os/linux/linux/fs/posix_acl.c_research.md`
+- `sources/os/linux/linux/fs/proc_namespace.c` -> `Docs/researches/sources/os/linux/linux/fs/proc_namespace.c_research.md`
+- `sources/os/linux/linux/fs/read_write.c` -> `Docs/researches/sources/os/linux/linux/fs/read_write.c_research.md`
+- `sources/os/linux/linux/fs/readdir.c` -> `Docs/researches/sources/os/linux/linux/fs/readdir.c_research.md`
+- `sources/os/linux/linux/fs/remap_range.c` -> `Docs/researches/sources/os/linux/linux/fs/remap_range.c_research.md`
+- `sources/os/linux/linux/fs/select.c` -> `Docs/researches/sources/os/linux/linux/fs/select.c_research.md`
+- `sources/os/linux/linux/fs/seq_file.c` -> `Docs/researches/sources/os/linux/linux/fs/seq_file.c_research.md`
+- `sources/os/linux/linux/fs/signalfd.c` -> `Docs/researches/sources/os/linux/linux/fs/signalfd.c_research.md`
+- `sources/os/linux/linux/fs/splice.c` -> `Docs/researches/sources/os/linux/linux/fs/splice.c_research.md`
+- `sources/os/linux/linux/fs/stack.c` -> `Docs/researches/sources/os/linux/linux/fs/stack.c_research.md`
+- `sources/os/linux/linux/fs/stat.c` -> `Docs/researches/sources/os/linux/linux/fs/stat.c_research.md`
+- `sources/os/linux/linux/fs/statfs.c` -> `Docs/researches/sources/os/linux/linux/fs/statfs.c_research.md`
+- `sources/os/linux/linux/fs/super.c` -> `Docs/researches/sources/os/linux/linux/fs/super.c_research.md`
+- `sources/os/linux/linux/fs/sync.c` -> `Docs/researches/sources/os/linux/linux/fs/sync.c_research.md`
+- `sources/os/linux/linux/fs/sysctls.c` -> `Docs/researches/sources/os/linux/linux/fs/sysctls.c_research.md`
+- `sources/os/linux/linux/fs/timerfd.c` -> `Docs/researches/sources/os/linux/linux/fs/timerfd.c_research.md`
+- `sources/os/linux/linux/fs/userfaultfd.c` -> `Docs/researches/sources/os/linux/linux/fs/userfaultfd.c_research.md`
+- `sources/os/linux/linux/fs/utimes.c` -> `Docs/researches/sources/os/linux/linux/fs/utimes.c_research.md`
+- `sources/os/linux/linux/fs/xattr.c` -> `Docs/researches/sources/os/linux/linux/fs/xattr.c_research.md`

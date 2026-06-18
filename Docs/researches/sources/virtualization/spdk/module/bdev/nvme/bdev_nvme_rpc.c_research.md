@@ -1,0 +1,21 @@
+# File Research: sources/virtualization/spdk/module/bdev/nvme/bdev_nvme_rpc.c
+
+This file is the main JSON-RPC surface for the NVMe bdev module. It decodes user parameters, applies defaults from SPDK NVMe and bdev-NVMe option structs, validates transport/path inputs, drives asynchronous bdev/controller operations, and formats controller, discovery, health, transport, path, and statistics responses.
+
+Global configuration RPCs include `bdev_nvme_set_options` and `bdev_nvme_set_hotplug`. `bdev_nvme_set_options` uses an X-macro list shared between the RPC context and `spdk_bdev_nvme_opts`, with a static assert to force audits when the option struct grows. It handles timeouts, retry/failover behavior, poll periods, queue depth, UUID generation, NVMe/path stats, accel sequence allowance, RDMA/TCP knobs, DH-HMAC-CHAP capabilities, flush support, and default multipath policy. `spdk_bdev_nvme_set_opts()` rejects changes after controllers are attached.
+
+`bdev_nvme_attach_controller` builds a `spdk_nvme_transport_id`, controller options, and bdev controller options from JSON. It validates string lengths for transport and host fields, parses trtype/adrfam, logs experimental TLS use once when PSK is provided, bounds `max_bdevs` and `num_io_queues`, and handles existing controller names as multipath/failover additions. Existing-path additions reject duplicate network paths, mismatched SUBNQN/HOSTNQN, and new PI options. Completion waits for bdev examine before returning the array of created bdev names.
+
+Controller lifecycle RPCs include get/detach/reset/enable/disable. `bdev_nvme_get_controllers` dumps one or all `nvme_bdev_ctrlr` objects. Detach accepts optional path identity fields and calls `spdk_bdev_nvme_delete()`. Reset/enable/disable route either to all controllers in an NVMe bdev controller or to a specific CNTLID via `nvme_bdev_ctrlr_op_rpc()`/`nvme_ctrlr_op_rpc()`.
+
+`bdev_nvme_apply_firmware` opens an NVMe bdev, resolves its controller, reads a firmware image into DMA memory, requires a 4-byte-size multiple, downloads it in 4 KiB chunks through admin passthrough, commits it with replace-and-enable action, then resets the controller. Cleanup closes bdev descriptors/channels and frees DMA/autogen state on all error paths.
+
+Inspection RPCs cover transport statistics, health information, I/O paths, and path I/O stats. Transport stats iterate SPDK I/O channels, dump poll-group stats per transport, and format RDMA, PCIe/VFIO-user, and TCP counters differently. Health info issues a temperature-threshold Get Features first, then reads the health log page and returns model, serial, firmware, transport address, warnings, temperatures, spare, percentage used, 128-bit counters, and error counts. I/O path listing iterates poll groups and path lists. Path iostat requires `io_path_stat` to be enabled, snapshots current paths, aggregates per-channel stats, and emits per-transport-ID bdev I/O statistics.
+
+Discovery RPCs include start/stop/get discovery info plus mDNS wrappers. `bdev_nvme_start_discovery` constructs a discovery transport ID, optional host NQN, and reconnect/fail timings, supports optional `wait_for_attach` via callback, and delegates to `bdev_nvme_start_discovery()`. mDNS start/stop/info delegate to the Avahi-backed functions in `bdev_mdns_client.c`.
+
+Error injection RPCs add or remove command error injection for admin or I/O commands. Admin injection operates on the controller admin qpair; I/O injection iterates controller channels and updates each qpair. Parameters include opcode, do-not-submit, timeout, error count, SCT, and SC.
+
+Multipath controls include preferred path selection and multipath policy changes. Preferred path updates by bdev name and CNTLID. Policy updates decode active/standby or active/active policy plus selector and round-robin minimum I/O; selector use is rejected outside active-active mode. Authentication updates are exposed through `bdev_nvme_set_keys`, which updates DH-HMAC-CHAP host/controller keys asynchronously.
+
+Important invariants are correct async lifetime of heap RPC contexts, closing bdev descriptors and channels on all firmware/stat paths, consistent transport string length checks before copying into fixed NVMe fields, option changes only before controller attach, and app/channel iteration callbacks freeing their contexts exactly once.

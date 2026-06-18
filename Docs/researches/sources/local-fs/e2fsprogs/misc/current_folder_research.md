@@ -1,0 +1,78 @@
+# Folder Research: sources/local-fs/e2fsprogs/misc
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `68`
+- recursive_file_count: `68`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/local-fs/e2fsprogs/misc/Makefile.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/Makefile.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/badblocks.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/badblocks.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/badblocks.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/badblocks.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/base_device.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/base_device.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/blkid.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/blkid.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/blkid.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/blkid.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/chattr.1.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/chattr.1.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/chattr.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/chattr.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/check_fuzzer.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/check_fuzzer.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/create_inode.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/create_inode.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/create_inode.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/create_inode.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/create_inode_libarchive.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/create_inode_libarchive.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/create_inode_libarchive.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/create_inode_libarchive.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/dumpe2fs.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/dumpe2fs.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/dumpe2fs.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/dumpe2fs.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2freefrag.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2freefrag.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2freefrag.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2freefrag.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2freefrag.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2freefrag.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2fuzz.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2fuzz.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2fuzz.sh` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2fuzz.sh_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2image.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2image.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2image.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2image.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2initrd_helper.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2initrd_helper.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2label.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2label.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2label.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2label.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2mmpstatus.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2mmpstatus.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2undo.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2undo.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e2undo.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e2undo.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e4crypt.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e4crypt.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e4crypt.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e4crypt.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/e4defrag.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e4defrag.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/e4defrag.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/e4defrag.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/ext4.5.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/ext4.5.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/filefrag.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/filefrag.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/filefrag.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/filefrag.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/findfs.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/findfs.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/findsuper.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/findsuper.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/fsck.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/fsck.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/fsck.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/fsck.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/fsck.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/fsck.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/fsmap.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/fsmap.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/fuse2fs.1.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/fuse2fs.1.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/fuse2fs.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/fuse2fs.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/ismounted.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/ismounted.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/logsave.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/logsave.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/logsave.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/logsave.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/lsattr.1.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/lsattr.1.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/lsattr.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/lsattr.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/mk_hugefiles.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mk_hugefiles.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/mke2fs-hurd.conf` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mke2fs-hurd.conf_research.md`
+- `sources/local-fs/e2fsprogs/misc/mke2fs.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mke2fs.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/mke2fs.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mke2fs.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/mke2fs.conf.5.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mke2fs.conf.5.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/mke2fs.conf.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mke2fs.conf.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/mke2fs.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mke2fs.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/mklost+found.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mklost+found.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/mklost+found.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/mklost+found.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/partinfo.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/partinfo.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/profile-to-c.awk` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/profile-to-c.awk_research.md`
+- `sources/local-fs/e2fsprogs/misc/tune2fs.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/tune2fs.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/tune2fs.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/tune2fs.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/tune2fs.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/tune2fs.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/util.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/util.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/util.h` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/util.h_research.md`
+- `sources/local-fs/e2fsprogs/misc/uuidd.8.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/uuidd.8.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/uuidd.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/uuidd.c_research.md`
+- `sources/local-fs/e2fsprogs/misc/uuidgen.1.in` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/uuidgen.1.in_research.md`
+- `sources/local-fs/e2fsprogs/misc/uuidgen.c` -> `Docs/researches/sources/local-fs/e2fsprogs/misc/uuidgen.c_research.md`

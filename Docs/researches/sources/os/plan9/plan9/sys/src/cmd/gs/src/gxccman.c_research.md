@@ -1,0 +1,7 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gxccman.c
+
+Character cache manager for Ghostscript. It allocates and initializes font-directory cache state, including font/matrix pair storage, an open-addressed cached-character hash table, and bits-cache chunks (`gx_char_cache_alloc`, `gx_char_cache_init`). It also owns purge paths for selected cached characters, whole font/matrix pairs, xfont-only entries, and font-wide invalidation.
+
+The file’s core data flow is: allocate or locate a `cached_fm_pair`, optionally attach native xfont/TrueType helper state, allocate bitmap storage for a glyph, render into memory/alpha devices, crop or oversampling-compress the bits, then link the result into the hash table. `gx_alloc_char_bits` enforces cache size limits, initializes mono or alpha-buffer memory devices, and handles xfont-only entries. `gx_add_char_bits` scans the bitmap bounding box, removes whitespace, compresses oversampled bits, adjusts offsets, shortens the backing bits-cache block, and assigns a bitmap id.
+
+Cache replacement is chunk-based. `alloc_char` adds chunks until the byte budget is reached, then cycles existing chunks and frees old cached characters as needed. `hash_remove_cached_char` preserves open-addressed lookup correctness by relocating later entries after deletion. Important dependencies are `gxfcache.h` for cached structures/macros, `gxdevmem.h` for memory devices, `gxxfont.h` for xfont integration, and TrueType helper state for Type 42/CID TrueType fonts.

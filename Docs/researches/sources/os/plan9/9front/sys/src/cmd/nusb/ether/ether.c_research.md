@@ -1,0 +1,9 @@
+# File Research: sources/os/plan9/9front/sys/src/cmd/nusb/ether/ether.c
+
+This file is the common 9P Ethernet server used by all nusb USB Ethernet chip drivers. It presents a Plan 9 Ethernet-like tree under `usbnet`, with an interface directory, `clone`, `stats`, `addr`, and per-connection directories containing `ctl`, `data`, and `type`.
+
+Connections are represented by `Conn`, while each open `data` file owns a `Dq` queue pairing pending 9P reads with queued `Block`s. `matchrq()` matches frames to waiting reads. `fsopen()` allocates connection slots through `clone`, initializes per-connection flags, and attaches queues. `fswrite()` accepts control messages for bridge mode, bypass mode, header-only tracing, promiscuous mode, multicast membership, and EtherType filtering. It also handles writes to `data` by building a packet block with headroom/trailer slack and passing it to the output path.
+
+Ingress and egress share `ethermux()`, which validates Ethernet frames, filters unicast/multicast/broadcast traffic, learns source addresses for bridge mode, applies per-connection EtherType and promiscuous filters, supports header-only trace delivery, and decides whether a packet should be consumed locally, delivered to a bypass connection, bridged, or transmitted. `etheriq()` handles USB ingress, and `etheroq()` handles user egress, including source-MAC rewriting for non-bridge connections.
+
+Endpoint discovery prefers CDC union descriptors that tie an Ethernet control interface to a data interface, then falls back to any interface with bulk IN/OUT endpoints. `threadmain()` parses debug, MAC override, and driver type arguments, opens/configures the USB device, finds endpoints, invokes the selected chip-specific init function, opens endpoint data files, starts the USB read process, and posts the 9P service.

@@ -1,0 +1,79 @@
+# Folder Research: sources/virtualization/nvme-cli/libnvme/src/nvme
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `69`
+- recursive_file_count: `69`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/accessors-fabrics.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/accessors-fabrics.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/accessors-fabrics.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/accessors-fabrics.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/accessors.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/accessors.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/accessors.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/accessors.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/base64.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/base64.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/base64.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/base64.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/cleanup-linux.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/cleanup-linux.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/cleanup.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/cleanup.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/compiler-attributes.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/compiler-attributes.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/crc32.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/crc32.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/crc32.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/crc32.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/crypto.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/crypto.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/endian.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/endian.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/fabrics.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/fabrics.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/fabrics.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/fabrics.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/filters.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/filters.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/filters.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/filters.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl-linux.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl-linux.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl-win.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl-win.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/ioctl.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/json.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/json.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/lib-types.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/lib-types.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/lib.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/lib.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/lib.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/lib.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/linux.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/linux.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/linux.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/linux.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/log.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/log.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mem-linux.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mem-linux.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mem-win.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mem-win.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mem.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mem.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mi-mctp-compat.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mi-mctp-compat.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mi-mctp.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mi-mctp.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mi-types.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mi-types.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mi.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mi.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/mi.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/mi.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nbft.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nbft.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nbft.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nbft.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/no-crypto.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/no-crypto.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/no-fabrics.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/no-fabrics.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/no-json.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/no-json.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/no-mi.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/no-mi.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/no-uring.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/no-uring.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-base.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-base.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-fabrics.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-fabrics.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-mi.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-mi.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-nvm.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-nvm.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-zns.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds-zns.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-cmds.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-base.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-base.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-fabrics.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-fabrics.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-mi.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-mi.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-nbft.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-nbft.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-nvm.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-nvm.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-zns.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types-zns.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/nvme-types.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/private-fabrics.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/private-fabrics.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/private-mi.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/private-mi.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/private.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/private.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/sysfs.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/sysfs.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/tree-fabrics.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/tree-fabrics.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/tree.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/tree.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/tree.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/tree.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/types.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/types.h_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/uring.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/uring.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/util-fabrics.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/util-fabrics.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/util.c` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/util.c_research.md`
+- `sources/virtualization/nvme-cli/libnvme/src/nvme/util.h` -> `Docs/researches/sources/virtualization/nvme-cli/libnvme/src/nvme/util.h_research.md`

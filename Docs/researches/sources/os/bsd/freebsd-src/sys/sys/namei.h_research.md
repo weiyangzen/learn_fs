@@ -1,0 +1,9 @@
+# File Research: sources/os/bsd/freebsd-src/sys/sys/namei.h
+
+This header defines FreeBSD pathname lookup state and flags. It is central to VFS name resolution: `namei()` converts a pathname plus lookup policy into result vnodes and associated metadata.
+
+`enum nameiop` distinguishes lookup, create, delete, and rename operations. `struct componentname` carries per-component lookup arguments and state: flags, credentials, operation type, lock flags, pathname buffer, current component pointer, and component length. `struct nameidata` wraps the whole lookup request and result set, including source pathname, segment type, capability rights, start/root/top directories, dirfd for `*at` calls, filecaps, result vnode/parent vnode, result flags, symlink/path traversal state, embedded component name, RBENEATH capability tracking, and sequence counters used by UFS/cache validation.
+
+Kernel-only flags are split between operational modifiers (`LOCKLEAF`, `LOCKPARENT`, `FOLLOW`, `EMPTYPATH`, `RBENEATH`, etc.), parameter descriptors (`RDONLY`, `NOCROSSMOUNT`, `AUDITVNODE*`, `OPENREAD`, `OPENWRITE`, `MAKEENTRY`, `ISLASTCN`, `ISDOTDOT`, and others), internal flags callers must not provide, result flags, and local call flags for strict relative/capability lookup handling. The `NDINIT*` macros initialize `struct nameidata` for common absolute, dirfd-relative, rights-aware, and vnode-starting cases; invariant builds poison and validate fields to catch API misuse.
+
+The header declares `namei`, `vfs_lookup`, `vfs_lookup_isroot`, `vfs_lookup_nameidata`, `vfs_relookup`, fast-path cache lookup support, pathname buffer/free helpers, and name cache statistics (`struct nchstats`). Filesystem relevance is direct and high: VFS, filesystems, capability mode, auditing, mount crossing, symlink expansion, whiteouts, and vnode locking policy all meet at this interface.

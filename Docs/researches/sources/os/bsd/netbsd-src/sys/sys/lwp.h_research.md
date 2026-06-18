@@ -1,0 +1,5 @@
+# File Research: sources/os/bsd/netbsd-src/sys/sys/lwp.h
+
+Defines the central lightweight process structure and LWP lifecycle/scheduling API. `struct lwp` contains CPU/scheduler state, run queue links, PCB/MD state, timing, priorities, affinity, sleep and synchronization state, futex robust-list pointer, PCU state, process linkage, select/poll state, signal state, private subsystem data, credentials/filedesc caches, tracing/preemption/lockdebug/accounting fields, and optional KMSAN/KCOV data.
+
+It also defines LWP status values, public/private flags, user-return work mask, PCB accessor, kernel APIs for locking, priority, refs, wait/suspend/create/exit/migrate/userret/specificdata/syscalls, `curlwp`/`curproc`, preemption disable/enable, and CPU binding. This is a core scheduler/process ABI for kernel consumers and crash tools. Risks are lock discipline for marked fields, structure layout coupling, reference draining, migration/preemption invariants, and flag semantics reused by tracing, signals, and reboot/core paths.

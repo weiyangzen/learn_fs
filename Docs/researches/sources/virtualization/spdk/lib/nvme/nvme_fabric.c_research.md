@@ -1,0 +1,13 @@
+# File Research: sources/virtualization/spdk/lib/nvme/nvme_fabric.c
+
+This file contains transport-independent NVMe-oF helpers for fabrics property access, discovery probing, discovery-controller scanning, and fabrics qpair connect.
+
+Property Set/Get helpers build `SPDK_NVME_OPC_FABRIC` commands with `SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET` or `PROPERTY_GET`, encode register offset and 4- or 8-byte size, then submit through `spdk_nvme_ctrlr_cmd_admin_raw()`. Synchronous wrappers allocate `nvme_completion_poll_status`, wait on the admin qpair, decode get responses, and return register values. Asynchronous wrappers allocate `nvme_fabric_prop_ctx`, call a register callback with the set value or decoded get value, and free the context on completion.
+
+Discovery probing converts each `spdk_nvmf_discovery_log_page_entry` into a transport ID. `nvme_fabric_discover_probe()` skips discovery referrals and unknown subtypes, checks that the transport is available, validates SUBNQN null termination, trims padded `traddr` and `trsvcid`, copies discovery priority, and calls `nvme_ctrlr_probe()` for NVMe subsystem entries.
+
+`nvme_fabric_ctrlr_scan()` distinguishes direct subsystem connects from discovery-controller scans. Non-discovery NQNs are probed directly. Discovery NQN scans construct a temporary discovery controller, drive initialization until ready, identify controller data, and either attach it directly for `spdk_nvme_connect()` style direct connect or call `nvme_fabric_ctrlr_discover()` then destruct the discovery controller. `nvme_fabric_ctrlr_discover()` reads the discovery log in 4 KiB chunks, validates record format, handles the header-entry offset for the first buffer, and probes each entry.
+
+`nvme_fabric_qpair_connect_async()` builds a Fabrics Connect command using the qpair’s reserved request. It validates queue size, allocates DMA connect data and a poll status object, fills QID, SQSIZE, KATO, host ID, host NQN, and subsystem NQN, uses CNTLID `0xFFFF` for admin queues or the controller CNTLID for I/O queues, submits the reserved request, and installs an optional timeout. `nvme_fabric_qpair_connect_poll()` polls for completion, logs transport identity on failure, copies CNTLID from admin connect responses, records authentication-required flags, and cleans up DMA status memory unless timed out. `nvme_fabric_qpair_connect()` is the synchronous loop around async plus poll.
+
+The main invariants are reserved request ownership, timeout memory ownership, and the fact that zone/fabrics authentication state is updated from the connect response before normal qpair use. Discovery parsing also treats malformed SUBNQN and unsupported transport types as skip conditions rather than fatal scan errors.

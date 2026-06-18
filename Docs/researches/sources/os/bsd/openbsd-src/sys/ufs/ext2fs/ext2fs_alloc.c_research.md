@@ -1,0 +1,5 @@
+# File Research: sources/os/bsd/openbsd-src/sys/ufs/ext2fs/ext2fs_alloc.c
+
+Implements ext2 block and inode allocation/freeing. `ext2fs_alloc` checks global free space and reserved blocks, chooses a cylinder group from block preference or inode group, and delegates to `ext2fs_hashalloc`; successful allocation updates inode block count and change/update flags. `ext2fs_inode_alloc` chooses a group, allocates an inode bitmap bit, obtains the vnode with `VFS_VGET`, verifies it is unused, clears the dinode, and assigns a generation number.
+
+Allocation policy uses preferred group, quadratic rehash, then brute-force group search. `ext2fs_alloccg` reads the block bitmap, honors a preferred bit when possible, searches for a free byte/bit, marks it allocated, updates superblock/group free counts, and delayed-writes the bitmap. `ext2fs_nodealloccg` does the same for inode bitmaps and directory counts. Free paths validate ranges/double-free cases, clear bitmap bits, and update counters. Corrupt bitmaps trigger panics.

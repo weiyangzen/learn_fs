@@ -1,0 +1,17 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/nfs/server/nfs_nfsdsocket.c
+
+Provides the server-side dispatch layer between decoded kernel RPC requests and the NFS service routines in `nfs_nfsdserv.c`. Despite the filename, the file is not low-level socket I/O; it owns procedure tables, request classification, per-operation statistics, NFSv2/v3 dispatch, and the NFSv4 compound operation interpreter.
+
+The top of the file defines function-pointer dispatch tables for NFSv3-style operations split by argument shape: `nfsrv3_procs0` for current-file-handle operations, `nfsrv3_procs1` for operations returning a new file handle, and `nfsrv3_procs2` for two-file-handle operations such as rename and link. It also defines matching NFSv4 operation tables `nfsrv4_ops0`, `nfsrv4_ops1`, and `nfsrv4_ops2`, with unsupported NFSv4.1 operations routed to `nfsrvd_notsupp()`.
+
+Static classification tables mark NFSv2/v3 non-idempotent procedures for duplicate-reply caching, writer procedures for `vn_start_write()`/`vn_finished_write()` coordination, operations that return file handles, and NFSv3-to-NFSv4 statistic operation mapping. `nfsrvd_statstart()` and `nfsrvd_statend()` update `nfsstatsv1` counters, bytes, operation counts, busy time, and per-op duration under `nfsrvd_statmtx`.
+
+`nfsrvd_dorpc()` is the main non-krpc dispatcher. For NFSv2/v3 it parses the first file handle, resolves it to a vnode/export record via `nfsd_fhtovp()`, chooses shared locks for read-like operations and exclusive locks for mutating operations, sets duplicate-cache save flags for non-idempotent requests, builds the reply header, calls the appropriate procedure table entry, maps errors, and suppresses caching for transient or state-sensitive errors. For NFSv4 it delegates to `nfsrvd_compound()`.
+
+`nfsrvd_compound()` implements the NFSv4 compound state machine. It writes the reply tag, validates the minor version, iterates sub-operations, tracks the current file handle and saved file handle as vnodes plus export metadata, handles direct file-handle operations (`PUTFH`, `PUTPUBFH`, `PUTROOTFH`, `SAVEFH`, `RESTOREFH`), enforces NFSv4.1 `SEQUENCE` positioning rules, checks referrals and security flavor mismatches, controls write access with `vn_start_write()`, dispatches to the correct NFSv4 operation table, updates per-operation statistics, and releases all vnode references and the NFSv4 root reference on exit.
+
+The compound path also coordinates global NFSv4 server state. Before processing, it obtains or waits on `nfsv4rootfs_lock`, performs stable storage updates after grace-period transitions, revokes expired clients, cleans expired client structures, and throws away old open owners when flagged. It uses the global stable-state structures and client hash table declared elsewhere.
+
+Important dependencies are `nfs_nfsdserv.c` handlers, NFSv4 operation flags from `nfsv4_opflag[]`, file-handle conversion and export checks from `nfs_nfsdport.c`, duplicate-request cache fields in `nfsrv_descript`, NFSv4 root/state locks, stable restart-file management, `nfsstatsv1`, vnode/mount write coordination, and mbuf/XDR reply-building macros.
+
+The main implementation risks are dispatch-table index correctness, strict NFSv4.1 sequencing rules, current/saved file-handle vnode reference balance, cross-mount export transitions, security flavor exceptions needed for mount traversal, transient memory-pressure replies, and avoiding cached replies for errors that would break NFSv4 state replay semantics.

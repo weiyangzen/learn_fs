@@ -1,0 +1,11 @@
+# File Research: sources/os/linux/linux/fs/xfs/scrub/agheader.c
+
+This file implements online scrub checks for XFS allocation group headers: secondary superblocks, AGF, AGFL, and AGI. It is read-only validation code, with setup through `xchk_setup_agheader` and primary entry points `xchk_superblock`, `xchk_agf`, `xchk_agfl`, and `xchk_agi`.
+
+The superblock scrubber intentionally skips AG 0 because mount-time validation already accepted the primary superblock. For secondary superblocks it reads the backup, normalizes verifier-style geometry failures into corruption, and compares fields against the mounted primary superblock. Fields fixed at mkfs time are treated as corruption if mismatched, whereas fields that can legitimately drift or are not always propagated to backups are marked for preening. It handles modern feature-dependent structure size checks, including CRC, metauuid, metadir, and zoned fields, and requires all unused trailing bytes to be zero. `xchk_superblock_xref` then cross-references the superblock block against free-space, inode, rmap, shared, and CoW-staging metadata.
+
+The AGF scrub path validates AG length, allocation btree roots and levels, rmap/refcount roots when enabled, AGFL ring counters, and in-core perag counters. It cross-checks `agf_freeblks`, `agf_longest`, btree block counts, rmap block counts, and refcount block counts against live btree traversals. The AGFL path reads and rechecks the AGFL, verifies every entry is a valid AG block, confirms entry count consistency, cross-references each listed block as AG-owned metadata, and sorts entries to detect duplicates.
+
+The AGI scrub path validates AG length, inobt/finobt roots and levels, inode counters, `newino` and `dirino`, unlinked bucket head validity, padding, and in-core inode counters. `xchk_iunlink` walks in-memory unlinked lists while the AGI is held to verify bucket membership, lookup success, and inode unlinked-list state.
+
+Important invariants are that header blocks must be used filesystem metadata, not inode chunks, not shared, not CoW staging, and owned by the expected rmap owner. Cross-reference checks generally stop after primary corruption is already flagged to avoid noisy or unsafe follow-on validation.

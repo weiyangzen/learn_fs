@@ -1,0 +1,23 @@
+# Folder Research: sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `13`
+- recursive_file_count: `13`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__clone.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__clone.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__sigtramp2.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__sigtramp2.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__syscall.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__syscall.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__vfork14.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/__vfork14.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/brk.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/brk.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/cerror.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/cerror.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/fork.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/fork.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/getcontext.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/getcontext.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/pipe.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/pipe.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/ptrace.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/ptrace.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/sbrk.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/sbrk.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/shmat.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/shmat.S_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/syscall.S` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/arch/powerpc/sys/syscall.S_research.md`

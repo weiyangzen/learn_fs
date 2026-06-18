@@ -1,0 +1,11 @@
+# File Research: sources/os/bsd/openbsd-src/sbin/unwind/libunbound/services/outside_network.h
+
+`outside_network.h` declares the outbound resolver networking subsystem. `struct outside_network` owns the event base, shared UDP buffer, UDP port pools, pending UDP tree/list state, serviced-query tree, infra-cache pointer, randomness source, TLS context, dnstap environment, TCP buffer pool, TCP wait queues, and reusable TCP connection indexes/LRU list.
+
+The header documents the main internal record types. `port_if` tracks one outgoing interface, its bind address/prefix, available port array, active commpoints, and in-use count. `port_comm` wraps an outgoing UDP commpoint and tracks the bound port, interface, array index, and outstanding query count. `pending` represents a UDP query keyed by ID/address, with timeout, callback, packet copy for queued sends, and link to its `serviced_query`.
+
+TCP support is modeled with `pending_tcp`, `waiting_tcp`, and `reuse_tcp`. A `pending_tcp` is a preallocated TCP commpoint slot. A `waiting_tcp` is a single DNS query waiting for a TCP buffer, waiting to be written on a reused stream, or waiting for a reply. `reuse_tcp` describes an open reusable stream, including destination/TLS-auth key, LRU membership, ID-indexed outstanding query tree, write queue, and persistent `comm_point` more-read/more-write flags.
+
+`serviced_query` is the de-duplication and retry unit for upstream DNS queries. It stores the canonical query buffer, destination, zone/delegation name, qtype, DNSSEC/EDNS flags, TCP/TLS policy, EDNS option list, retry/status state, RTT timing, callback list, region, timer, and active pending transport object. The status enum expresses UDP/TCP with or without EDNS, EDNS fallback probes, and reduced-fragment UDP EDNS mode.
+
+The exported API covers lifecycle (`outside_network_create`, delete, quit prepare), raw UDP/TCP query submission, pending deletion, serviced-query creation/stop, memory accounting, TCP reuse helpers, waiting-list helpers, one-off UDP/TCP/HTTP commpoint creation, TCP connect/fd helpers, event callbacks, and rbtree comparators. The header exposes many internals because unit tests and adjacent resolver modules need to inspect or drive the outbound state machines.

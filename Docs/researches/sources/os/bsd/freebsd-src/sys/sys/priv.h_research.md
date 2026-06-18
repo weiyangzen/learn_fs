@@ -1,0 +1,9 @@
+# File Research: sources/os/bsd/freebsd-src/sys/sys/priv.h
+
+This header defines FreeBSD's named privilege numbers and kernel privilege-check API. The comments emphasize that numeric assignments are part of the loadable kernel module ABI and must not be renumbered casually; new privileges also need jail-policy consideration.
+
+Privileges are grouped loosely by subsystem. Early values cover base system capabilities such as accounting, resource-limit bypasses, ktrace, dump configuration, reboot, swap, message buffer, low-level I/O, drivers, and time setting. Later groups cover audit, credentials, debugging, DTrace, firmware, jail management, kernel environment, KLD load/unload, MAC policies, process controls, IPC, POSIX message queues, performance counters, scheduling, semaphores, signals, sysctl, tty, UFS, ZFS, NFS, VFS, VM, devfs, random reseed, network stacks and protocols, VM86, pipe buffer reserve, module-reserved slots, DDB, cpuctl, CAPI, OpenAFS, resource controls, memory devices, KDB, veriexec, and vmm.
+
+VFS/filesystem-specific privileges are numerous: read/write/admin/exec/lookup DAC overrides, block reserve, chflags on devices, chown, chroot/fchroot, retain sugid bits, quota bypass and management, system extended attributes, file-handle operations, generation numbers, hardlink policy bypass, mknod variants, mount/unmount and mount flags, setgid, sticky file, system flags, MAC stat override, and read-dirfd override. UFS, ZFS, and NFS also have subsystem-specific privileges.
+
+`_PRIV_LOWEST`, `_PRIV_HIGHEST`, and `PRIV_VALID()` define an approximate valid range. Kernel APIs are `priv_check()`, `priv_check_cred()`, and specialized credential checks for VFS lookup, VFS lookup without MAC, and VFS generation. This header is central to authorization decisions across VFS, storage, networking, process control, and kernel modules.

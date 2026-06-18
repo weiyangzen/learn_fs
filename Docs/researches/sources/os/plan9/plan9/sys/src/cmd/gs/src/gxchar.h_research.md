@@ -1,0 +1,5 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gxchar.h
+
+Internal text/show and cached-character interface. It forward-declares opaque cached character, cached font/matrix pair, font, text enumerator, memory device, and null device types. It defines `show_width_status`, distinguishing unset width, setcachedevice caching, setcharwidth non-cache, xfont width-only, and retry states.
+
+The central structure is `gs_show_enum_s`, which subclasses `gs_text_enum_common` and stores show-time graphics state, charpath mode, cache eligibility, clip quick-check boxes, transformed font translation, current font encoding proc, FAPI oversampling hints, cache/null devices, current width/origin, cached character under construction, and continuation procedure. The header exports the public structure descriptor macro and key routines implemented in `gxchar.c`, `gxccman.c`, and cache lookup/image modules: current character access, char bitmap allocation/free/add, cached/xfont lookup, cached character imaging, oversampling computation, width setting, text-state restore, and pdfwrite stringwidth helper.

@@ -1,0 +1,76 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gxdevcli.h
+
+Primary Ghostscript device-client interface and driver ABI definition.
+
+- Documents device memory-management rules:
+  - Devices are reference-counted.
+  - Retained devices are not freed solely by reference counting.
+  - Stack/static/embedded devices must be retained or initialized with NULL memory.
+  - Forwarding-device targets must be set with `gx_device_set_target`, not direct assignment.
+- Defines major forward declarations used by driver procs:
+  - graphics state
+  - paths
+  - clip paths
+  - image enumerators
+  - pattern instances
+- Defines drawing and geometry helper types:
+  - `gx_drawing_color`
+  - `graphics_object_type`
+  - `gs_fixed_edge`
+  - `gs_linear_color_edge`
+  - `frac31`
+- Defines `gx_device_color_info`, the expanded color model descriptor:
+  - component counts
+  - additive/subtractive polarity
+  - color-index depth
+  - gray component index
+  - max/dither levels
+  - antialiasing info
+  - separable/linear encoding metadata
+  - component shifts/bits/masks
+  - process color model name
+  - overprint support flags
+- Provides many backward-compatible color-info macros such as `dci_values`, `dci_std_color`, and `dci_black_and_white`.
+- Defines page device procs:
+  - `install`
+  - `begin_page`
+  - `end_page`
+- Defines `gx_device_common`, the core fields of every device:
+  - memory/type/finalizer/reference count
+  - open state
+  - color info and cached black/white pixels
+  - geometry, resolution, margins
+  - page counts/copy settings
+  - page procs
+  - procedure vector
+- Defines `dev_proc` and `set_dev_proc` access macros.
+- Declares the large `gx_device_procs` template covering:
+  - open/close/sync/output
+  - color mapping
+  - fills, copies, masks, RasterOps
+  - paths, trapezoids, triangles, thin lines
+  - images and typed images
+  - clipping and get-bits
+  - compositors/transparency
+  - DeviceN color support
+  - high-level patterns/colors
+  - linear-color shading fills
+  - spot equivalent colors
+- Provides image helper wrappers and deprecated image-data compatibility APIs.
+- Defines `gx_device_s`, `gx_device_forward`, and `gx_device_null`.
+- Declares device lifecycle helpers:
+  - `gx_device_init`
+  - `gs_make_null_device`
+  - `gx_device_set_target`
+  - `gx_device_retain`
+  - `gs_closedevice`
+  - `gx_device_free_local`
+- Declares device geometry helpers:
+  - raster calculation
+  - resolution/media-size changes
+  - margin setup
+- Declares forwarding/default procedure families and color-proc utilities.
+- Provides clipping macros for fill and bitmap-copy operations.
+- Defines media parameter helper structs and writers.
+
+Role in subsystem: this is the central C ABI for Ghostscript raster devices and forwarding/compositor devices. Most rendering subsystems depend on these structures and procs.

@@ -1,0 +1,86 @@
+# Folder Research: sources/os/plan9/plan9/sys/src/cmd/aquarela
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `76`
+- recursive_file_count: `76`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/addname.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/addname.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/alarm.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/alarm.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/alloc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/alloc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/aquarela.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/aquarela.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/cifscmd.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/cifscmd.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/client.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/client.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/dump.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/dump.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/findname.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/findname.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/headers.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/headers.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/message.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/message.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nb.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nb.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbdgram.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbdgram.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbdgramconv.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbdgramconv.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbdgramdump.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbdgramdump.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nblistener.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nblistener.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbname.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbname.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbns.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbns.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbnsconv.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbnsconv.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbresolve.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbresolve.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/nbss.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/nbss.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/netbios.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/netbios.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smb.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smb.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smballoc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smballoc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbbrowse.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbbrowse.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbbuffer.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbbuffer.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbclientopen.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbclientopen.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomclose.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomclose.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomcreatedir.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomcreatedir.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomdelete.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomdelete.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomdeletedir.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomdeletedir.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomdir.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomdir.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomecho.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomecho.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomfindclose2.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomfindclose2.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomflush.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomflush.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomlocking.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomlocking.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcommon.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcommon.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomopen.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomopen.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomquery.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomquery.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomread.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomread.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomrename.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomrename.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomsessionsetupandx.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomsessionsetupandx.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomsetinfo.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomsetinfo.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomtransaction.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomtransaction.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomtreeconnectandx.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomtreeconnectandx.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomtreedisconnect.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomtreedisconnect.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomwrite.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbcomwrite.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbconnect.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbconnect.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbconv.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbconv.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbdat.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbdat.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbdircache.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbdircache.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbfile.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbfile.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbfns.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbfns.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbglobals.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbglobals.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbidmap.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbidmap.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smblisten.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smblisten.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smblog.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smblog.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbnegotiate.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbnegotiate.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smboptable.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smboptable.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbpath.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbpath.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbrap2.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbrap2.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbrap2client.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbrap2client.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbrep.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbrep.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbresponse.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbresponse.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbservice.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbservice.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbsharedfile.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbsharedfile.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbstring.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbstring.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtime.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtime.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2client.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2client.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2find.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2find.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2query.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2query.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2set.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtrans2set.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtransaction.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtransaction.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtree.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/smbtree.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/testconnect.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/testconnect.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/testnbdgram.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/testnbdgram.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aquarela/testtime.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aquarela/testtime.c_research.md`

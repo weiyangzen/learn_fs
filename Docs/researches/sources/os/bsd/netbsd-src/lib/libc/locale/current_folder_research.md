@@ -1,0 +1,71 @@
+# Folder Research: sources/os/bsd/netbsd-src/lib/libc/locale
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `61`
+- recursive_file_count: `61`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/bsd/netbsd-src/lib/libc/locale/Makefile.inc` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/Makefile.inc_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/__mb_cur_max.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/__mb_cur_max.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/__wctoint.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/__wctoint.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wcstod.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wcstod.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wcstol.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wcstol.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wcstoul.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wcstoul.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wctrans.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wctrans.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wctrans_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wctrans_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wctype.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wctype.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/_wctype_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/_wctype_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/aliasname_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/aliasname_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/c16rtomb.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/c16rtomb.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/c32rtomb.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/c32rtomb.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/c32rtomb.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/c32rtomb.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/c8rtomb.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/c8rtomb.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/ctype_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/ctype_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/dummy_lc_collate.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/dummy_lc_collate.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/dummy_lc_template.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/dummy_lc_template.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/duplocale.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/duplocale.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/fix_grouping.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/fix_grouping.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/fix_grouping.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/fix_grouping.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/freelocale.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/freelocale.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/generic_lc_all.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/generic_lc_all.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/generic_lc_template_decl.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/generic_lc_template_decl.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/global_locale.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/global_locale.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/iswctype_mb.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/iswctype_mb.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/localeconv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/localeconv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/localeio.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/localeio.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc16.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc16.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc32.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc32.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc32.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc32.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc8.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/mbrtoc8.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/multibyte.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/multibyte.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/multibyte_amd1.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/multibyte_amd1.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/multibyte_c90.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/multibyte_c90.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_messages_misc.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_messages_misc.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_monetary_misc.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_monetary_misc.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_numeric_misc.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_numeric_misc.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_template.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_template.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_template_decl.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_template_decl.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_time_misc.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nb_lc_time_misc.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/newlocale.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/newlocale.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/nl_langinfo.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/nl_langinfo.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/rune.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/rune.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/runetable.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/runetable.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/runetype_file.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/runetype_file.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/runetype_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/runetype_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/setlocale.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/setlocale.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/setlocale_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/setlocale_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcscoll.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcscoll.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcsftime.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcsftime.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstod.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstod.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstof.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstof.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstoimax.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstoimax.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstol.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstol.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstold.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstold.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstoll.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstoll.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstoul.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstoul.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstoull.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstoull.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcstoumax.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcstoumax.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/locale/wcsxfrm.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/locale/wcsxfrm.c_research.md`

@@ -1,0 +1,82 @@
+# Folder Research: sources/os/plan9/plan9/sys/src/cmd/aux/antiword
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `72`
+- recursive_file_count: `72`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/antiword.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/antiword.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/asc85enc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/asc85enc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/blocklist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/blocklist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/chartrans.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/chartrans.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/datalist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/datalist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/debug.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/debug.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/depot.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/depot.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/dib2eps.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/dib2eps.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/dib2sprt.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/dib2sprt.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/doclist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/doclist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/draw.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/draw.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/draw.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/draw.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/drawfile.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/drawfile.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/drawfile.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/drawfile.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fail.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fail.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fail.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fail.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/finddata.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/finddata.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/findtext.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/findtext.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fmt_text.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fmt_text.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fontinfo.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fontinfo.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fontlist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fontlist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fonts.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fonts.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fonts_r.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fonts_r.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fonts_u.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/fonts_u.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/hdrftrlist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/hdrftrlist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/icons.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/icons.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/imgexam.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/imgexam.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/imgtrans.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/imgtrans.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/jpeg2eps.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/jpeg2eps.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/jpeg2sprt.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/jpeg2sprt.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/listlist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/listlist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/main_ros.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/main_ros.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/main_u.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/main_u.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/misc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/misc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/notes.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/notes.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/options.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/options.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/out2window.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/out2window.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/output.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/output.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/pdf.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/pdf.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/pictlist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/pictlist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/png2eps.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/png2eps.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/png2sprt.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/png2sprt.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/postscript.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/postscript.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop0.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop0.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop2.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop2.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop6.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop6.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop8.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/prop8.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/properties.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/properties.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/propmod.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/propmod.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/riscos.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/riscos.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/rowlist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/rowlist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/saveas.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/saveas.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/sectlist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/sectlist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/startup.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/startup.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/stylelist.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/stylelist.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/stylesheet.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/stylesheet.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/summary.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/summary.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/tabstop.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/tabstop.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/text.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/text.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/unix.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/unix.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/utf8.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/utf8.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/version.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/version.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/word2text.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/word2text.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordconst.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordconst.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/worddos.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/worddos.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordlib.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordlib.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordmac.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordmac.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordole.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordole.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordtypes.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordtypes.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordwin.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/wordwin.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/xmalloc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/xmalloc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/antiword/xml.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/antiword/xml.c_research.md`

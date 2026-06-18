@@ -1,0 +1,85 @@
+# Folder Research: sources/os/linux/linux/block
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `75`
+- recursive_file_count: `100`
+- direct_child_folder_count: `1`
+
+## Direct Files
+
+- `sources/os/linux/linux/block/Kconfig` -> `Docs/researches/sources/os/linux/linux/block/Kconfig_research.md`
+- `sources/os/linux/linux/block/Makefile` -> `Docs/researches/sources/os/linux/linux/block/Makefile_research.md`
+- `sources/os/linux/linux/block/badblocks.c` -> `Docs/researches/sources/os/linux/linux/block/badblocks.c_research.md`
+- `sources/os/linux/linux/block/bdev.c` -> `Docs/researches/sources/os/linux/linux/block/bdev.c_research.md`
+- `sources/os/linux/linux/block/bfq-cgroup.c` -> `Docs/researches/sources/os/linux/linux/block/bfq-cgroup.c_research.md`
+- `sources/os/linux/linux/block/bfq-iosched.c` -> `Docs/researches/sources/os/linux/linux/block/bfq-iosched.c_research.md`
+- `sources/os/linux/linux/block/bfq-iosched.h` -> `Docs/researches/sources/os/linux/linux/block/bfq-iosched.h_research.md`
+- `sources/os/linux/linux/block/bfq-wf2q.c` -> `Docs/researches/sources/os/linux/linux/block/bfq-wf2q.c_research.md`
+- `sources/os/linux/linux/block/bio-integrity-auto.c` -> `Docs/researches/sources/os/linux/linux/block/bio-integrity-auto.c_research.md`
+- `sources/os/linux/linux/block/bio-integrity-fs.c` -> `Docs/researches/sources/os/linux/linux/block/bio-integrity-fs.c_research.md`
+- `sources/os/linux/linux/block/bio-integrity.c` -> `Docs/researches/sources/os/linux/linux/block/bio-integrity.c_research.md`
+- `sources/os/linux/linux/block/bio.c` -> `Docs/researches/sources/os/linux/linux/block/bio.c_research.md`
+- `sources/os/linux/linux/block/blk-cgroup-fc-appid.c` -> `Docs/researches/sources/os/linux/linux/block/blk-cgroup-fc-appid.c_research.md`
+- `sources/os/linux/linux/block/blk-cgroup-rwstat.c` -> `Docs/researches/sources/os/linux/linux/block/blk-cgroup-rwstat.c_research.md`
+- `sources/os/linux/linux/block/blk-cgroup-rwstat.h` -> `Docs/researches/sources/os/linux/linux/block/blk-cgroup-rwstat.h_research.md`
+- `sources/os/linux/linux/block/blk-cgroup.c` -> `Docs/researches/sources/os/linux/linux/block/blk-cgroup.c_research.md`
+- `sources/os/linux/linux/block/blk-cgroup.h` -> `Docs/researches/sources/os/linux/linux/block/blk-cgroup.h_research.md`
+- `sources/os/linux/linux/block/blk-core.c` -> `Docs/researches/sources/os/linux/linux/block/blk-core.c_research.md`
+- `sources/os/linux/linux/block/blk-crypto-fallback.c` -> `Docs/researches/sources/os/linux/linux/block/blk-crypto-fallback.c_research.md`
+- `sources/os/linux/linux/block/blk-crypto-internal.h` -> `Docs/researches/sources/os/linux/linux/block/blk-crypto-internal.h_research.md`
+- `sources/os/linux/linux/block/blk-crypto-profile.c` -> `Docs/researches/sources/os/linux/linux/block/blk-crypto-profile.c_research.md`
+- `sources/os/linux/linux/block/blk-crypto-sysfs.c` -> `Docs/researches/sources/os/linux/linux/block/blk-crypto-sysfs.c_research.md`
+- `sources/os/linux/linux/block/blk-crypto.c` -> `Docs/researches/sources/os/linux/linux/block/blk-crypto.c_research.md`
+- `sources/os/linux/linux/block/blk-flush.c` -> `Docs/researches/sources/os/linux/linux/block/blk-flush.c_research.md`
+- `sources/os/linux/linux/block/blk-ia-ranges.c` -> `Docs/researches/sources/os/linux/linux/block/blk-ia-ranges.c_research.md`
+- `sources/os/linux/linux/block/blk-integrity.c` -> `Docs/researches/sources/os/linux/linux/block/blk-integrity.c_research.md`
+- `sources/os/linux/linux/block/blk-ioc.c` -> `Docs/researches/sources/os/linux/linux/block/blk-ioc.c_research.md`
+- `sources/os/linux/linux/block/blk-iocost.c` -> `Docs/researches/sources/os/linux/linux/block/blk-iocost.c_research.md`
+- `sources/os/linux/linux/block/blk-iolatency.c` -> `Docs/researches/sources/os/linux/linux/block/blk-iolatency.c_research.md`
+- `sources/os/linux/linux/block/blk-ioprio.c` -> `Docs/researches/sources/os/linux/linux/block/blk-ioprio.c_research.md`
+- `sources/os/linux/linux/block/blk-ioprio.h` -> `Docs/researches/sources/os/linux/linux/block/blk-ioprio.h_research.md`
+- `sources/os/linux/linux/block/blk-lib.c` -> `Docs/researches/sources/os/linux/linux/block/blk-lib.c_research.md`
+- `sources/os/linux/linux/block/blk-map.c` -> `Docs/researches/sources/os/linux/linux/block/blk-map.c_research.md`
+- `sources/os/linux/linux/block/blk-merge.c` -> `Docs/researches/sources/os/linux/linux/block/blk-merge.c_research.md`
+- `sources/os/linux/linux/block/blk-mq-cpumap.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-cpumap.c_research.md`
+- `sources/os/linux/linux/block/blk-mq-debugfs.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-debugfs.c_research.md`
+- `sources/os/linux/linux/block/blk-mq-debugfs.h` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-debugfs.h_research.md`
+- `sources/os/linux/linux/block/blk-mq-dma.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-dma.c_research.md`
+- `sources/os/linux/linux/block/blk-mq-sched.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-sched.c_research.md`
+- `sources/os/linux/linux/block/blk-mq-sched.h` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-sched.h_research.md`
+- `sources/os/linux/linux/block/blk-mq-sysfs.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-sysfs.c_research.md`
+- `sources/os/linux/linux/block/blk-mq-tag.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq-tag.c_research.md`
+- `sources/os/linux/linux/block/blk-mq.c` -> `Docs/researches/sources/os/linux/linux/block/blk-mq.c_research.md`
+- `sources/os/linux/linux/block/blk-mq.h` -> `Docs/researches/sources/os/linux/linux/block/blk-mq.h_research.md`
+- `sources/os/linux/linux/block/blk-pm.c` -> `Docs/researches/sources/os/linux/linux/block/blk-pm.c_research.md`
+- `sources/os/linux/linux/block/blk-pm.h` -> `Docs/researches/sources/os/linux/linux/block/blk-pm.h_research.md`
+- `sources/os/linux/linux/block/blk-rq-qos.c` -> `Docs/researches/sources/os/linux/linux/block/blk-rq-qos.c_research.md`
+- `sources/os/linux/linux/block/blk-rq-qos.h` -> `Docs/researches/sources/os/linux/linux/block/blk-rq-qos.h_research.md`
+- `sources/os/linux/linux/block/blk-settings.c` -> `Docs/researches/sources/os/linux/linux/block/blk-settings.c_research.md`
+- `sources/os/linux/linux/block/blk-stat.c` -> `Docs/researches/sources/os/linux/linux/block/blk-stat.c_research.md`
+- `sources/os/linux/linux/block/blk-stat.h` -> `Docs/researches/sources/os/linux/linux/block/blk-stat.h_research.md`
+- `sources/os/linux/linux/block/blk-sysfs.c` -> `Docs/researches/sources/os/linux/linux/block/blk-sysfs.c_research.md`
+- `sources/os/linux/linux/block/blk-throttle.c` -> `Docs/researches/sources/os/linux/linux/block/blk-throttle.c_research.md`
+- `sources/os/linux/linux/block/blk-throttle.h` -> `Docs/researches/sources/os/linux/linux/block/blk-throttle.h_research.md`
+- `sources/os/linux/linux/block/blk-timeout.c` -> `Docs/researches/sources/os/linux/linux/block/blk-timeout.c_research.md`
+- `sources/os/linux/linux/block/blk-wbt.c` -> `Docs/researches/sources/os/linux/linux/block/blk-wbt.c_research.md`
+- `sources/os/linux/linux/block/blk-wbt.h` -> `Docs/researches/sources/os/linux/linux/block/blk-wbt.h_research.md`
+- `sources/os/linux/linux/block/blk-zoned.c` -> `Docs/researches/sources/os/linux/linux/block/blk-zoned.c_research.md`
+- `sources/os/linux/linux/block/blk.h` -> `Docs/researches/sources/os/linux/linux/block/blk.h_research.md`
+- `sources/os/linux/linux/block/bsg-lib.c` -> `Docs/researches/sources/os/linux/linux/block/bsg-lib.c_research.md`
+- `sources/os/linux/linux/block/bsg.c` -> `Docs/researches/sources/os/linux/linux/block/bsg.c_research.md`
+- `sources/os/linux/linux/block/disk-events.c` -> `Docs/researches/sources/os/linux/linux/block/disk-events.c_research.md`
+- `sources/os/linux/linux/block/early-lookup.c` -> `Docs/researches/sources/os/linux/linux/block/early-lookup.c_research.md`
+- `sources/os/linux/linux/block/elevator.c` -> `Docs/researches/sources/os/linux/linux/block/elevator.c_research.md`
+- `sources/os/linux/linux/block/elevator.h` -> `Docs/researches/sources/os/linux/linux/block/elevator.h_research.md`
+- `sources/os/linux/linux/block/fops.c` -> `Docs/researches/sources/os/linux/linux/block/fops.c_research.md`
+- `sources/os/linux/linux/block/genhd.c` -> `Docs/researches/sources/os/linux/linux/block/genhd.c_research.md`
+- `sources/os/linux/linux/block/holder.c` -> `Docs/researches/sources/os/linux/linux/block/holder.c_research.md`
+- `sources/os/linux/linux/block/ioctl.c` -> `Docs/researches/sources/os/linux/linux/block/ioctl.c_research.md`
+- `sources/os/linux/linux/block/ioprio.c` -> `Docs/researches/sources/os/linux/linux/block/ioprio.c_research.md`
+- `sources/os/linux/linux/block/kyber-iosched.c` -> `Docs/researches/sources/os/linux/linux/block/kyber-iosched.c_research.md`
+- `sources/os/linux/linux/block/mq-deadline.c` -> `Docs/researches/sources/os/linux/linux/block/mq-deadline.c_research.md`
+- `sources/os/linux/linux/block/opal_proto.h` -> `Docs/researches/sources/os/linux/linux/block/opal_proto.h_research.md`
+- `sources/os/linux/linux/block/sed-opal.c` -> `Docs/researches/sources/os/linux/linux/block/sed-opal.c_research.md`
+- `sources/os/linux/linux/block/t10-pi.c` -> `Docs/researches/sources/os/linux/linux/block/t10-pi.c_research.md`

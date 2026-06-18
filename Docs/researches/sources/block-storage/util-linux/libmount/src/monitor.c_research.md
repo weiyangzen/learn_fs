@@ -1,0 +1,11 @@
+# File Research: sources/block-storage/util-linux/libmount/src/monitor.c
+
+This file implements the public `libmnt_monitor` object: allocation, reference counting, epoll fd creation, backend entry registration, event waiting, event draining, and retrieval of optional per-event filesystem details. The monitor is an epoll multiplexer over a list of `struct monitor_entry` objects defined in `monitor.h`; each entry delegates backend-specific work through `struct monitor_opers`.
+
+Core lifecycle functions are `mnt_new_monitor()`, `mnt_ref_monitor()`, `mnt_unref_monitor()`, `monitor_new_entry()`, and `free_monitor_entry()`. `mnt_unref_monitor()` closes the top-level monitor fd, disables and closes all backend fds, then frees every entry. `monitor_modify_epoll()` toggles an entry in the monitor epoll set, asks the backend for its fd via `op_get_fd`, sets `ev.data.ptr` to the entry, and drains the initial EPOLLIN/EPOLLET event used by the mountinfo backend.
+
+The main event path is `mnt_monitor_get_fd()`, `read_epoll_events()`, `mnt_monitor_wait()`, and `mnt_monitor_next_change()`. `mnt_monitor_get_fd()` lazily creates an `EPOLL_CLOEXEC` epoll instance and adds all enabled entries. `read_epoll_events()` waits for one event, calls the backend `op_process_event()`, and marks the entry active only if the backend accepts the event. `mnt_monitor_wait()` converts internal return codes to public `1` changed, `0` timeout, or negative error. `mnt_monitor_next_change()` returns pending active entries first, otherwise polls without timeout, stores the last returned entry in `mn->last`, and exposes the entry path and type.
+
+`mnt_monitor_event_cleanup()` drains pending changes when callers do not need details. `mnt_monitor_event_next_fs()` delegates to the last event backend's `op_next_fs`; this is currently meaningful for fanotify mount events, and returns `-ENOTSUP` for monitor types without filesystem-detail support.
+
+Important behavior: the top-level monitor fd is stable until `mnt_monitor_close_fd()`; enabling or disabling entries after epoll creation updates the active epoll set. A backend may return `1` from `op_process_event()` to indicate a false-positive or veiled event, causing the monitor loop to keep waiting. The test program exercises direct waiting and nesting the libmount monitor fd inside another epoll.

@@ -1,0 +1,9 @@
+# File Research: sources/os/illumos/illumos-gate/usr/src/uts/common/sys/fibre-channel/ulp/fcpvar.h
+
+Defines the private state model for the FCP SCSI-over-FC driver. It includes REPORT_LUNS limits, internal SCSI opcodes, FC-4 SCSI type, retry/offline/reset delays, invalid timeout sentinel, legacy hotplug event strings, hash sizing, state-change masks, packet private sizing, and optional stats.
+
+`fcp_port_t` is the per-local-port soft state. It tracks global linkage, internal retry packets, discovery counters/deadlines, topology, port ID, physical state, reset/offline queues, link generation counter, local WWNs, fp/fctl handle, outstanding packet queue, internal packet count, DMA/FCA attributes, SCSA `scsi_hba_tran`, devinfo, reset callbacks, NDI/MDI event handles, target hash table, MPxIO mode, throttling notification, boot WWN, config condition variable, and DMA cookie sizing.
+
+`fcp_pkt_t` bridges `scsi_pkt`, `fcp_pkt`, and `fc_packet_t` for normal I/O. `fcp_ipkt_t` models internal commands such as PLOGI, PRLI, INQUIRY, REPORT_LUNS, and passthrough, with restart timing, link/change counters, retry count, and embedded `fc_packet_t`. `fcp_tgt_t` models remote SCSI targets with WWNs, D_ID, LUN list, discovery counters, target state/capability flags, manual configuration state, and trace bits. `fcp_lun_t` models OS-visible LUNs, including NDI/MDI child handle, state, type, target-init count, GUIDs, inquiry data, MPxIO flag, and packet queue.
+
+The file also defines target/LUN state flags, discovery trace macros, hotplug/reset/offline queue elements, LUN masking entries, SCSI address conversion macros, timeout constants, lock annotations, DMA/no-DMA copy macros, open state flags, and attach/init wait timeouts. Its comments are unusually detailed and document generation-counter behavior used to discard stale discovery work after link or target changes.

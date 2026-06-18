@@ -1,0 +1,7 @@
+# File Research: sources/os/bsd/openbsd-src/sbin/unwind/libunbound/util/configparser.h
+
+`configparser.h` is the generated yacc token header for Unbound configuration parsing. It assigns numeric token IDs for lexical categories such as spaces, newlines, comments, colons, zone strings, and string arguments, then enumerates every recognized configuration keyword token from `VAR_SERVER` through `VAR_LOG_THREAD_ID`.
+
+The token list mirrors the directives implemented in `configparser.y` and the fields declared in `config_file.h`. It includes server options for networking, caches, DNSSEC, local zones, views, tagging, response-IP, rate limiting, DNS64/NAT64, TLS/DoH/DoQ, cookies, dnstap, DNSCrypt, cachedb/Redis, ipset, auth-zones, RPZ, dynamic libraries, iterator scrub options, and logging. Because this file is generated from the grammar, its numeric values are part of the compile-time interface between the lexer and parser rather than hand-authored business logic.
+
+The semantic value type is a single-member `YYSTYPE` union carrying `char* str`; every meaningful parser argument is passed from the lexer as an allocated string and then consumed or freed by grammar actions. The header also declares the global `yylval` used by the lexer to hand values to the parser. In this OpenBSD libunbound copy, `configyyrename.h` maps these yacc names to `ub_c_*` names to avoid symbol collisions with other lex/yacc parsers in the same program.

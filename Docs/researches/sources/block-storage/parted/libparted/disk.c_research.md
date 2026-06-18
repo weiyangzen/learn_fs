@@ -1,0 +1,11 @@
+# File Research: sources/block-storage/parted/libparted/disk.c
+
+Core libparted disk-label and partition-list implementation. It owns the global `PedDiskType` registry, disk probing/opening/duplication/destruction, partition table commit paths, generic disk sanity checks, and the public partition mutation API.
+
+The main design is a two-level abstraction: generic code manages `PedDisk`, `PedPartition`, ordering, constraints, free-space placeholders, metadata placeholders, and feature gating, while label-specific behavior is delegated through `PedDiskOps`. `ped_disk_probe()` iterates registered disk labels with exceptions fetched/cleared. `ped_disk_new()` probes, allocates a fresh disk object, calls the label reader, then pushes/pops update mode to rebuild metadata and free-space virtual partitions. `ped_disk_commit_to_dev()` optionally clobbers old signatures before invoking the label writer; `ped_disk_commit()` keeps the device open across device and OS commits to avoid unwanted udev events.
+
+Update mode is the key invariant. `_disk_push_update_mode()` removes virtual free-space partitions and metadata; `_disk_pop_update_mode()` reallocates label metadata before leaving update mode and then regenerates free-space placeholders. Add/remove/resize operations use this state so raw partition list changes occur against active partitions only. `_disk_raw_add()` keeps primary and logical lists ordered by start sector, with logical partitions stored under the extended partition.
+
+Partition mutation is constraint-driven. `ped_disk_add_partition()` checks basic type/count rules, intersects caller constraints with overlap-derived free-space constraints, enumerates, aligns via the disk label, validates label-specific rules, and inserts. `ped_disk_set_partition_geom()` preserves the old geometry on failure. Maximize/minimize helpers use neighboring partitions and extended-partition bounds to grow or shrink safely.
+
+The file also exposes disk/partition flags, names, type IDs, type UUIDs, and UUIDs with feature checks before calling label-specific ops. Flag/name lookup supports translated and English strings. Risk areas are nested update-mode reentrancy, cleanup on partial add/delete failures, and label-specific callbacks that assume metadata/free-space placeholders are present or absent at the wrong time.

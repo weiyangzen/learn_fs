@@ -107,7 +107,7 @@ lvm2	lib	LVM metadata and volume management source.
 thin-provisioning-tools	src	dm-thin/cache/era metadata tools.
 cryptsetup	lib	cryptsetup library source.
 cryptsetup	src	cryptsetup tools source.
-vdo	src	VDO userspace source.
+vdo	utils/vdo	VDO userspace source.
 kvdo	.	kvdo kernel source.
 stratisd	src	Stratis daemon source.
 stratis-cli	src	Stratis CLI source.
@@ -199,7 +199,6 @@ juicefs-csi-driver	pkg	JuiceFS CSI implementation.
 fuse-overlayfs	.	fuse-overlayfs source.
 containers-storage	drivers	Container storage graph drivers.
 containers-storage	pkg	Container storage support packages.
-containerd	snapshots	Containerd snapshotter interfaces and implementations.
 containerd	core/snapshots	Containerd snapshotter core source.
 stargz-snapshotter	.	Stargz snapshotter source.
 nydus	.	Nydus lazy image filesystem source.
@@ -232,8 +231,9 @@ fscrypt	.	fscrypt userspace.
 fsverity-utils	.	fsverity userspace tools.
 ecryptfs-utils	src	eCryptfs utilities.
 gocryptfs	.	gocryptfs source.
-cryfs	src	CryFS source.
-encfs	encfs	EncFS source.
+cryfs	crates/*/src	CryFS Rust workspace source crates.
+cryfs	old-cpp/src	CryFS legacy C++ source.
+encfs	src	EncFS source.
 ima-evm-utils	src	IMA/EVM userspace source.
 rsync	.	rsync source.
 syncthing	lib	Syncthing core libraries.
@@ -341,12 +341,13 @@ libsmb2	lib	libsmb2 source.
 impacket	impacket	Impacket protocol source.
 smbj	src	SMBJ source.
 smblibrary	SMBLibrary	SMBLibrary source.
-longhorn	app	Longhorn manager source.
+longhorn	chart	Longhorn deployment chart source.
+longhorn	examples	Longhorn storage examples and integration manifests.
 longhorn-engine	.	Longhorn engine source.
-csi-spec	spec	CSI spec source.
+csi-spec	spec.md	CSI spec source.
 csi-spec	csi.proto	CSI protobuf source.
 mayastor	io-engine	Mayastor SPDK-backed IO engine.
-mayastor	control-plane	Mayastor control plane.
+mayastor	jsonrpc	Mayastor control/API glue.
 csi-driver-nfs	pkg	NFS CSI driver implementation.
 csi-driver-smb	pkg	SMB CSI driver implementation.
 csi-driver-iscsi	pkg	iSCSI CSI driver implementation.
@@ -358,7 +359,7 @@ fuse-overlayfs-snapshotter	.	fuse-overlayfs snapshotter source.
 nydus-snapshotter	.	Nydus snapshotter source.
 composefs-rs	.	Rust composefs source.
 moby	daemon/graphdriver	Docker graphdriver source.
-moby	layer	Docker layer source.
+moby	daemon/containerd	Containerd integration source.
 buildkit	cache	BuildKit cache source.
 buildkit	snapshot	BuildKit snapshot source.
 cri-o	internal	CRI-O internal rootfs/storage source.
@@ -398,8 +399,8 @@ lz4	lib	LZ4 library source.
 zlib	.	zlib source.
 syzkaller	.	syzkaller source.
 xnu	bsd/vfs	Darwin/XNU VFS source.
-macfuse	kext	macFUSE kernel extension source.
-macfuse	lib	macFUSE library source.
+macfuse	Framework	macFUSE framework source.
+macfuse	Library-*	macFUSE library source.
 ocfs2-tools	.	OCFS2 userspace tools.
 gfs2-utils	.	GFS2 userspace tools.
 dlm	.	Distributed lock manager userspace.

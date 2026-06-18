@@ -1,0 +1,5 @@
+# File Research: sources/os/bsd/openbsd-src/sbin/unwind/libunbound/util/configyyrename.h
+
+`configyyrename.h` renames yacc and lex global symbols for the configuration parser so they do not collide with other generated parsers linked into the same binary. It maps generic names such as `yyparse`, `yylex`, `yyerror`, `yylval`, parser tables, parser stack variables, lexer buffer functions, allocation hooks, lexer streams, and debug/line/text accessors to `ub_c_*` names.
+
+The header is included before parser/lexer generated code and effectively makes the config parser's ABI names unique to Unbound's config subsystem. It covers both yacc-side symbols (`yychar`, `yynerrs`, `yytable`, `yycheck`, stack pointers, etc.) and flex-side symbols (`yy_create_buffer`, `yy_switch_to_buffer`, `yy_scan_string`, `yyget_lineno`, `yylex_destroy`, `yyalloc`, and related APIs). The result is that callers use declarations such as `ub_c_parse`, `ub_c_lex`, `ub_c_in`, and `ub_c_error` from `config_file.h` while the generated source can still be written in normal yacc/flex terms.

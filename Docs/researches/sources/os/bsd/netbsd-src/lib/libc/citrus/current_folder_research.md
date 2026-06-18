@@ -1,0 +1,79 @@
+# Folder Research: sources/os/bsd/netbsd-src/lib/libc/citrus
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `69`
+- recursive_file_count: `116`
+- direct_child_folder_count: `1`
+
+## Direct Files
+
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/Makefile.inc` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/Makefile.inc_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_aliasname_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_aliasname_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs_strtol.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs_strtol.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs_strtoul.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_bcs_strtoul.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_csmapper.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_csmapper.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_csmapper.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_csmapper.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_fallback.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_fallback.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_fallback.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_fallback.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_template.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_ctype_template.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_factory.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_factory.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_factory.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_factory.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_file.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_file.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_hash.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_hash.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_hash.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_db_hash.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_esdb.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_esdb.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_esdb.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_esdb.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_esdb_file.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_esdb_file.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_fix_grouping.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_fix_grouping.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_hash.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_hash.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_hash.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_hash.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_iconv.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_iconv.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_iconv.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_iconv.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_iconv_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_iconv_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_ctype.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_ctype.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_messages.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_messages.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_messages.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_messages.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_monetary.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_monetary.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_monetary.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_monetary.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_numeric.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_numeric.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_numeric.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_numeric.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_template.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_template.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_template_decl.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_template_decl.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_time.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_time.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_time.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lc_time.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup_factory.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup_factory.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup_factory.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup_factory.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup_file.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_lookup_file.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mapper.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mapper.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mapper.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mapper.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mapper_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mapper_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_memstream.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_memstream.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_memstream.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_memstream.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mmap.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mmap.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mmap.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_mmap.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_module.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_module.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_module.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_module.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_namespace.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_namespace.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_none.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_none.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_none.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_none.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_pivot_factory.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_pivot_factory.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_pivot_factory.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_pivot_factory.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_pivot_file.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_pivot_file.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_prop.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_prop.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_prop.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_prop.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_region.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_region.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc.c` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc.c_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc_local.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc_local.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc_template.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_stdenc_template.h_research.md`
+- `sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_types.h` -> `Docs/researches/sources/os/bsd/netbsd-src/lib/libc/citrus/citrus_types.h_research.md`

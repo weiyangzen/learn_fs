@@ -1,0 +1,5 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/ffs.c
+
+BSD FFS/UFS recognizer. Small helpers check disklabel magic, UFS1 superblock magic, and UFS2 superblock magic. `FsRecFfsFsControl` handles mount by getting sector size, reading the BSD disklabel from `LABELSECTOR`, and, when a valid disklabel is found, scanning up to `MAXPARTITIONS` for `FS_BSDFFS` partitions. For each candidate partition it computes the byte filesystem offset, reads the UFS1 superblock at `FSOffset + SBLOCK_UFS1`, and if that fails magic validation retries the UFS2 superblock at `FSOffset + SBLOCK_UFS2`.
+
+If the disklabel is absent or invalid, the recognizer also probes UFS1 and UFS2 superblocks at the base device offset. Successful UFS1 or UFS2 recognition returns `STATUS_FS_DRIVER_REQUIRED`; probe buffers are freed after each attempt. Device errors on floppy media use the same permissive fallback as several other recognizers. Load requests target the `ffs` service, and unsupported minor functions return `STATUS_INVALID_DEVICE_REQUEST`.

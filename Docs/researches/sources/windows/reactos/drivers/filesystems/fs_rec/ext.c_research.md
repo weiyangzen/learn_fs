@@ -1,0 +1,3 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/ext.c
+
+EXT filesystem recognizer for ext-family superblocks. `FsRecIsExtVolume` checks the superblock magic field for `0xEF53`. `FsRecExtFsControl` handles mount by obtaining the sector size, reading the superblock at byte offset `0x400` with size `0x400`, checking the magic, and returning `STATUS_FS_DRIVER_REQUIRED` on success. As with other disk recognizers, device errors on floppy media cause the recognizer to request the real filesystem driver anyway. Load requests target the `Ext2fs` service, and unsupported minor functions fail with `STATUS_INVALID_DEVICE_REQUEST`.

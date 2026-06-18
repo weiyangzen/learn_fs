@@ -1,0 +1,86 @@
+# Folder Research: sources/block-storage/lvm2/tools
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `76`
+- recursive_file_count: `76`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/block-storage/lvm2/tools/Makefile.in` -> `Docs/researches/sources/block-storage/lvm2/tools/Makefile.in_research.md`
+- `sources/block-storage/lvm2/tools/args.h` -> `Docs/researches/sources/block-storage/lvm2/tools/args.h_research.md`
+- `sources/block-storage/lvm2/tools/cmdnames.h` -> `Docs/researches/sources/block-storage/lvm2/tools/cmdnames.h_research.md`
+- `sources/block-storage/lvm2/tools/command-lines.in` -> `Docs/researches/sources/block-storage/lvm2/tools/command-lines.in_research.md`
+- `sources/block-storage/lvm2/tools/command.c` -> `Docs/researches/sources/block-storage/lvm2/tools/command.c_research.md`
+- `sources/block-storage/lvm2/tools/command.h` -> `Docs/researches/sources/block-storage/lvm2/tools/command.h_research.md`
+- `sources/block-storage/lvm2/tools/command_enums.h` -> `Docs/researches/sources/block-storage/lvm2/tools/command_enums.h_research.md`
+- `sources/block-storage/lvm2/tools/commands.h` -> `Docs/researches/sources/block-storage/lvm2/tools/commands.h_research.md`
+- `sources/block-storage/lvm2/tools/dumpconfig.c` -> `Docs/researches/sources/block-storage/lvm2/tools/dumpconfig.c_research.md`
+- `sources/block-storage/lvm2/tools/errors.h` -> `Docs/researches/sources/block-storage/lvm2/tools/errors.h_research.md`
+- `sources/block-storage/lvm2/tools/formats.c` -> `Docs/researches/sources/block-storage/lvm2/tools/formats.c_research.md`
+- `sources/block-storage/lvm2/tools/license.inc` -> `Docs/researches/sources/block-storage/lvm2/tools/license.inc_research.md`
+- `sources/block-storage/lvm2/tools/lv_props.h` -> `Docs/researches/sources/block-storage/lvm2/tools/lv_props.h_research.md`
+- `sources/block-storage/lvm2/tools/lv_types.h` -> `Docs/researches/sources/block-storage/lvm2/tools/lv_types.h_research.md`
+- `sources/block-storage/lvm2/tools/lvchange.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvchange.c_research.md`
+- `sources/block-storage/lvm2/tools/lvconvert.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvconvert.c_research.md`
+- `sources/block-storage/lvm2/tools/lvconvert_poll.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvconvert_poll.c_research.md`
+- `sources/block-storage/lvm2/tools/lvconvert_poll.h` -> `Docs/researches/sources/block-storage/lvm2/tools/lvconvert_poll.h_research.md`
+- `sources/block-storage/lvm2/tools/lvcreate.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvcreate.c_research.md`
+- `sources/block-storage/lvm2/tools/lvdisplay.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvdisplay.c_research.md`
+- `sources/block-storage/lvm2/tools/lvextend.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvextend.c_research.md`
+- `sources/block-storage/lvm2/tools/lvm-static.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvm-static.c_research.md`
+- `sources/block-storage/lvm2/tools/lvm.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvm.c_research.md`
+- `sources/block-storage/lvm2/tools/lvm2cmd-static.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvm2cmd-static.c_research.md`
+- `sources/block-storage/lvm2/tools/lvm2cmd.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvm2cmd.c_research.md`
+- `sources/block-storage/lvm2/tools/lvm2cmd.h` -> `Docs/researches/sources/block-storage/lvm2/tools/lvm2cmd.h_research.md`
+- `sources/block-storage/lvm2/tools/lvm2cmdline.h` -> `Docs/researches/sources/block-storage/lvm2/tools/lvm2cmdline.h_research.md`
+- `sources/block-storage/lvm2/tools/lvmcmdlib.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvmcmdlib.c_research.md`
+- `sources/block-storage/lvm2/tools/lvmcmdline.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvmcmdline.c_research.md`
+- `sources/block-storage/lvm2/tools/lvmdevices.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvmdevices.c_research.md`
+- `sources/block-storage/lvm2/tools/lvmdiskscan.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvmdiskscan.c_research.md`
+- `sources/block-storage/lvm2/tools/lvpoll.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvpoll.c_research.md`
+- `sources/block-storage/lvm2/tools/lvreduce.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvreduce.c_research.md`
+- `sources/block-storage/lvm2/tools/lvremove.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvremove.c_research.md`
+- `sources/block-storage/lvm2/tools/lvrename.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvrename.c_research.md`
+- `sources/block-storage/lvm2/tools/lvresize.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvresize.c_research.md`
+- `sources/block-storage/lvm2/tools/lvscan.c` -> `Docs/researches/sources/block-storage/lvm2/tools/lvscan.c_research.md`
+- `sources/block-storage/lvm2/tools/man-generator.c` -> `Docs/researches/sources/block-storage/lvm2/tools/man-generator.c_research.md`
+- `sources/block-storage/lvm2/tools/polldaemon.c` -> `Docs/researches/sources/block-storage/lvm2/tools/polldaemon.c_research.md`
+- `sources/block-storage/lvm2/tools/pvchange.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvchange.c_research.md`
+- `sources/block-storage/lvm2/tools/pvck.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvck.c_research.md`
+- `sources/block-storage/lvm2/tools/pvcreate.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvcreate.c_research.md`
+- `sources/block-storage/lvm2/tools/pvdisplay.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvdisplay.c_research.md`
+- `sources/block-storage/lvm2/tools/pvmove.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvmove.c_research.md`
+- `sources/block-storage/lvm2/tools/pvmove_poll.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvmove_poll.c_research.md`
+- `sources/block-storage/lvm2/tools/pvmove_poll.h` -> `Docs/researches/sources/block-storage/lvm2/tools/pvmove_poll.h_research.md`
+- `sources/block-storage/lvm2/tools/pvremove.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvremove.c_research.md`
+- `sources/block-storage/lvm2/tools/pvresize.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvresize.c_research.md`
+- `sources/block-storage/lvm2/tools/pvscan.c` -> `Docs/researches/sources/block-storage/lvm2/tools/pvscan.c_research.md`
+- `sources/block-storage/lvm2/tools/reporter.c` -> `Docs/researches/sources/block-storage/lvm2/tools/reporter.c_research.md`
+- `sources/block-storage/lvm2/tools/segtypes.c` -> `Docs/researches/sources/block-storage/lvm2/tools/segtypes.c_research.md`
+- `sources/block-storage/lvm2/tools/stub.h` -> `Docs/researches/sources/block-storage/lvm2/tools/stub.h_research.md`
+- `sources/block-storage/lvm2/tools/tags.c` -> `Docs/researches/sources/block-storage/lvm2/tools/tags.c_research.md`
+- `sources/block-storage/lvm2/tools/tool.h` -> `Docs/researches/sources/block-storage/lvm2/tools/tool.h_research.md`
+- `sources/block-storage/lvm2/tools/toollib.c` -> `Docs/researches/sources/block-storage/lvm2/tools/toollib.c_research.md`
+- `sources/block-storage/lvm2/tools/toollib.h` -> `Docs/researches/sources/block-storage/lvm2/tools/toollib.h_research.md`
+- `sources/block-storage/lvm2/tools/tools.h` -> `Docs/researches/sources/block-storage/lvm2/tools/tools.h_research.md`
+- `sources/block-storage/lvm2/tools/vals.h` -> `Docs/researches/sources/block-storage/lvm2/tools/vals.h_research.md`
+- `sources/block-storage/lvm2/tools/vgcfgbackup.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgcfgbackup.c_research.md`
+- `sources/block-storage/lvm2/tools/vgcfgrestore.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgcfgrestore.c_research.md`
+- `sources/block-storage/lvm2/tools/vgchange.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgchange.c_research.md`
+- `sources/block-storage/lvm2/tools/vgck.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgck.c_research.md`
+- `sources/block-storage/lvm2/tools/vgcreate.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgcreate.c_research.md`
+- `sources/block-storage/lvm2/tools/vgdisplay.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgdisplay.c_research.md`
+- `sources/block-storage/lvm2/tools/vgexport.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgexport.c_research.md`
+- `sources/block-storage/lvm2/tools/vgextend.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgextend.c_research.md`
+- `sources/block-storage/lvm2/tools/vgimport.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgimport.c_research.md`
+- `sources/block-storage/lvm2/tools/vgimportclone.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgimportclone.c_research.md`
+- `sources/block-storage/lvm2/tools/vgimportdevices.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgimportdevices.c_research.md`
+- `sources/block-storage/lvm2/tools/vgmerge.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgmerge.c_research.md`
+- `sources/block-storage/lvm2/tools/vgmknodes.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgmknodes.c_research.md`
+- `sources/block-storage/lvm2/tools/vgreduce.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgreduce.c_research.md`
+- `sources/block-storage/lvm2/tools/vgremove.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgremove.c_research.md`
+- `sources/block-storage/lvm2/tools/vgrename.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgrename.c_research.md`
+- `sources/block-storage/lvm2/tools/vgscan.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgscan.c_research.md`
+- `sources/block-storage/lvm2/tools/vgsplit.c` -> `Docs/researches/sources/block-storage/lvm2/tools/vgsplit.c_research.md`

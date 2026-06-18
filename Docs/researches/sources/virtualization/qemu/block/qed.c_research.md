@@ -1,0 +1,11 @@
+# File Research: sources/virtualization/qemu/block/qed.c
+
+Implements the QED block format driver. It handles probing, header endian conversion, header updates, option validation, open, create, close, reopen, length/info queries, block status, read/write I/O, write-zeroes, grow-only truncate, backing-file changes, cache invalidation, consistency checking, AioContext timer management, and final `BlockDriver` registration.
+
+Open reads and validates the QED header, feature bits, cluster/table sizes, logical image size, L1 offset, file size, and optional backing filename/format flag. It initializes table geometry (`table_nelems`, `l1_shift`, `l2_shift`, `l2_mask`), loads the L1 table, initializes the L2 cache, repairs unclean images when writable and not opened for check, and starts the delayed `QED_F_NEED_CHECK` cleanup timer when needed.
+
+The write path is built around `QEDAIOCB`. `qed_aio_next_io()` iterates cluster runs from `qed_find_cluster()`. Reads return zero clusters, backing data, or file data. In-place writes update existing clusters directly. Allocating writes are serialized through `allocating_acb` and `allocating_write_reqs`, allocate data clusters or zero markers, set `QED_F_NEED_CHECK` when required, perform copy-on-write prefill from backing for untouched cluster regions, write data, then update L2 and possibly L1 metadata.
+
+Crash-consistency logic centers on `QED_F_NEED_CHECK`. Allocating writes without a backing file mark the image dirty before metadata updates; a virtual-clock timer later plugs new allocating writes, flushes data, clears the bit, writes the header, and flushes again. With a backing file, subcluster COW writes flush data clusters before L2 updates to avoid losing inherited backing data after a crash.
+
+Creation supports QAPI and legacy create options, validates cluster/table/image sizes, creates a file child, writes the header and optional backing filename, and initializes the L1 table. Runtime metadata helpers expose block status from QED allocation maps, report dirty status through `BlockDriverInfo`, grow image size by rewriting the header, rewrite backing-file fields within existing header space, and route `.bdrv_co_check` to `qed_check()` under `table_lock`.

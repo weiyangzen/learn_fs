@@ -1,0 +1,73 @@
+# Folder Research: sources/os/plan9/plan9/sys/src/cmd/aux/vga
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `63`
+- recursive_file_count: `63`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/3dfx.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/3dfx.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/ark2000pv.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/ark2000pv.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/att20c49x.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/att20c49x.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/att21c498.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/att21c498.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/bt485.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/bt485.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/ch9294.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/ch9294.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/clgd542x.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/clgd542x.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/clgd546x.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/clgd546x.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/ct65540.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/ct65540.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/cyber938x.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/cyber938x.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/data.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/data.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/db.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/db.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/error.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/error.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/et4000.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/et4000.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/et4000hwgc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/et4000hwgc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/hiqvideo.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/hiqvideo.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/i81x.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/i81x.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/ibm8514.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/ibm8514.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/icd2061a.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/icd2061a.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/ics2494.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/ics2494.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/ics534x.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/ics534x.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/io.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/io.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/mach32.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/mach32.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/mach64.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/mach64.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/mach64xx.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/mach64xx.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/main.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/main.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/mga2164w.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/mga2164w.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/mga4xx.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/mga4xx.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/neomagic.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/neomagic.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/nvidia.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/nvidia.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/palette.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/palette.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/pci.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/pci.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/pci.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/pci.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/radeon.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/radeon.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/radeon.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/radeon.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/rgb524.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/rgb524.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/rgb524mn.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/rgb524mn.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/riva_tbl.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/riva_tbl.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3801.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3801.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3928.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3928.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3clock.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3clock.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3generic.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3generic.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3hwgc.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/s3hwgc.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/sc15025.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/sc15025.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/stg1702.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/stg1702.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/t2r4.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/t2r4.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/template.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/template.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/trio64.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/trio64.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3020.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3020.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3025.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3025.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3025clock.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3025clock.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3026.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3026.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3026clock.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/tvp3026clock.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vesa.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vesa.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vesadb.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vesadb.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vga.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vga.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vga.h` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vga.h_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/virge.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/virge.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vision864.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vision864.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vision964.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vision964.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vision968.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vision968.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/vmware.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/vmware.c_research.md`
+- `sources/os/plan9/plan9/sys/src/cmd/aux/vga/w30c516.c` -> `Docs/researches/sources/os/plan9/plan9/sys/src/cmd/aux/vga/w30c516.c_research.md`

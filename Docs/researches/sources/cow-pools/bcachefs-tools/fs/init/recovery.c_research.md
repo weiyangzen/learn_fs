@@ -1,0 +1,91 @@
+# File Research: sources/cow-pools/bcachefs-tools/fs/init/recovery.c
+
+Main recovery orchestration for existing filesystems, journal replay, journal rewind, btree root loading, allocation reconstruction, and new filesystem initialization.
+
+Key responsibilities:
+- Handles btree data-loss reporting in `bch2_btree_lost_data()`:
+  - Marks `ext->btrees_lost_data`.
+  - Schedules topology and allocation repair passes.
+  - Silences expected follow-on fsck errors.
+  - Schedules btree-specific passes for alloc, backpointers, need_discard, freespace, bucket_gens, lru, accounting, snapshots, or generic topology scan.
+- Provides `kill_btree()` to mark a root dead and remove matching journal keys.
+- Implements `bch2_reconstruct_alloc()` for `-o reconstruct_alloc` and no-alloc-info recovery:
+  - Schedules allocation-related recovery passes.
+  - Silences expected allocation/accounting/backpointer/LRU errors.
+  - Clears alloc-info compatibility and no-alloc-info feature.
+  - Writes the superblock.
+  - Kills allocation-related btrees so they are rebuilt.
+- Provides `bch2_ignore_journal_rewind_errors()` to silence expected stale allocation/backpointer/accounting errors after rewind.
+- Implements `bch2_set_may_go_rw()`:
+  - Seals the journal replay key buffer by moving its gap to the end.
+  - Sets `BCH_FS_may_go_rw`.
+  - Reconstructs alloc info if needed and starts early RW if recovery requires it.
+- Implements journal replay:
+  - `bch2_journal_replay_accounting_key()` replays accounting deltas first, accumulating against existing accounting keys and preserving original journal sequence for non-allocated keys.
+  - `bch2_journal_replay_key()` replays regular keys, handles missing depth during scan recovery, uses cached iterators for alloc leaf keys, disables key-cache coherency for other early replay paths, and stages accounting keys separately.
+  - `bch2_journal_replay()`:
+    - Logs replay range and key count.
+    - Replays accounting keys before write buffer flush can apply accounting.
+    - Tries sorted-order replay for locality.
+    - Falls back to journal-order replay for keys that cannot be replayed in the fast path.
+    - Releases replay pins as journal-order replay progresses.
+    - Drops initial journal keys when retention is not requested.
+    - Marks replay done and flushes repair-created entries immediately.
+- Implements early journal replay of roots/usage/blacklist/clock entries:
+  - `journal_replay_entry_early()`
+  - `journal_replay_early()`
+- Implements `read_btree_roots()`:
+  - Reads all alive roots.
+  - Records fsck errors for invalid or unreadable roots.
+  - Allows reconstructable btrees to continue.
+  - Allocates fake roots for missing core btrees.
+- Implements `__bch2_fs_recovery()`:
+  - Reads clean superblock section for clean shutdowns or reads journal for unclean/retained/rewind/scrub modes.
+  - Resumes journal position from member info.
+  - Verifies clean superblock against journal if needed.
+  - Handles dirty-with-no-journal cases and clean-section fallback.
+  - Sets journal replay start/end.
+  - Runs early journal replay.
+  - Performs resize-on-mount.
+  - Forces read-only for unresized image or missing default superblock layout.
+  - Reconstructs alloc info for no-alloc-info RW mount or dangerous reconstruct option.
+  - Adds and rereads rewind ranges for journal rewind.
+  - Disables fix modes that require alloc info when alloc info is unavailable.
+  - Skips/blacklists post-crash journal sequences after unclean shutdown.
+  - Starts the journal.
+  - Advances encrypted key version after unclean shutdown.
+  - Sorts journal keys and reads btree roots.
+  - Sets `BCH_FS_btree_running`.
+  - Runs option hooks and upgrade extra setup.
+  - Optionally scrubs recent journal entries and converts detected flush/FUA failure into journal rewind + fsck.
+  - Runs startup recovery passes.
+  - Sets final recovery flags, flushes async node rewrites, persists repairs, optionally reruns fsck in debug builds, reads quotas, clears superblock error/lost-data markers after successful fsck, GCs blacklist entries, sets `no_stale_ptrs` compatibility when eligible, triggers dead snapshot deletion, and runs replicas accounted GC.
+- `bch2_fs_recovery()` wraps recovery with fsck-error flushing and emergency RO on failure.
+- `bch2_fs_initialize()` creates a new filesystem:
+  - Marks new-fs and compatibility bits.
+  - Applies version upgrade if enabled.
+  - Marks members pre-usage/freespace-uninitialized.
+  - Allocates fake roots.
+  - Marks superblock/journal regions.
+  - Starts journal at sequence 1.
+  - Enables RW/replay path.
+  - Initializes subvolumes and snapshots.
+  - Creates root inode and `lost+found`.
+  - Marks all recovery passes done.
+  - Wakes copygc/reconcile.
+  - Reads quotas if enabled.
+  - Flushes first journal entry.
+  - Advances rewind limit beyond initialization entries.
+  - Marks superblock initialized and dirty, clears silent errors and required passes, and writes superblock.
+
+Important interactions:
+- Central bridge between journal read/replay, btree topology, fsck pass scheduling, allocation reconstruction, quota, snapshots, superblock clean fields, and RO/RW transition.
+- Calls `bch2_fs_read_write_early()` from recovery after `set_may_go_rw`.
+- Uses `bch2_journal_add_rewind_range()` and `bch2_journal_reread_for_rewind()` for rewind support.
+- Relies on `passes.c` to execute ordered repair/check passes.
+
+Notable invariants:
+- Journal keys must be sorted before btree-root reading and normal replay.
+- Early root/blacklist/clock journal entries must be replayed before btree roots are read.
+- After recovery passes, `BCH_FS_may_go_rw` is set even if journal replay did not run, to leave the filesystem in a coherent post-recovery state.
+- Initialization disallows rewind into initial journal entries.

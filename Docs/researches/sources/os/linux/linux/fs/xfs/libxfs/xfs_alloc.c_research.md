@@ -1,0 +1,90 @@
+# File Research: sources/os/linux/linux/fs/xfs/libxfs/xfs_alloc.c
+
+Implements XFS free-space allocation, freeing, AGFL management, AGF/AGFL verification, reservation accounting, deferred extent freeing, and free-space btree query helpers.
+
+Key behavior:
+- Defines global allocator resources:
+  - extent-free intent slab cache.
+  - allocation workqueue pointer.
+- Computes AGFL size, preallocated AG metadata blocks, refcount root placement, AGFL set-aside, and maximum usable AG allocation length.
+- Wraps free-space btree lookup/update for bnobt and cntbt records.
+- Converts and validates free-space records, marking btrees sick on corruption.
+- Implements allocation candidate logic:
+  - trims busy extents.
+  - applies min/max AG block ranges.
+  - applies alignment.
+  - computes locality distance for near allocations.
+  - adjusts length by `prod`/`mod`.
+- Maintains `agf_longest` from the by-count btree when records affecting the largest extent change.
+- Updates both free-space btrees when allocating from the beginning, end, middle, or entirety of a free extent.
+- Verifies AGFL buffers:
+  - CRC filesystems validate magic, uuid, seqno, entries, LSN, and checksum.
+  - non-CRC filesystems skip full AGFL verification due to historical uninitialized entries.
+- Reads AGFL buffers and marks AGFL sick on metadata errors.
+- Updates AGF free-block counters and logs AGF fields.
+- Implements exact allocation:
+  - finds containing bnobt record.
+  - rejects busy or too-small regions.
+  - updates bnobt/cntbt.
+- Implements near allocation:
+  - uses cntbt and two bnobt cursors in parallel for size and locality.
+  - retries after busy-extent flush.
+  - falls back to largest usable extent when locality fails.
+- Implements size allocation:
+  - searches cntbt for large enough records.
+  - settles for smaller largest records when necessary.
+  - handles busy extents and retries.
+- Implements free-space insertion/merge:
+  - checks left/right contiguous neighbors.
+  - merges with neither, one, or both neighbors.
+  - keeps bnobt and cntbt synchronized.
+  - updates counters, reservations, stats, and rmap.
+- Computes allocator max btree levels and longest free extent after AGFL/reservation constraints.
+- Computes minimum AGFL length needed for worst-case btree splits across bnobt, cntbt, and optional rmapbt.
+- Decides whether an AG has enough free space for an allocation before fixing the freelist.
+- Detects inconsistent AGFL indices and marks perag for reset.
+- Resets corrupted AGFL state, warning that blocks were leaked and repair is needed.
+- Schedules deferred extent frees using EFI items, including realtime validation and owner flags.
+- Provides autoreap support for crash-safe unwritten-space allocation:
+  - schedule paused free intent.
+  - cancel by marking EFI cancelled.
+  - commit by unpausing.
+- `xfs_alloc_fix_freelist`:
+  - reads/initializes AGF.
+  - respects metadata-preferred AGs for user data.
+  - checks available space.
+  - resets bad AGFL state.
+  - shrinks overfull AGFL by deferred freeing.
+  - refills underfull AGFL from free space.
+  - updates rmap and counters for AGFL movement.
+- `xfs_alloc_get_freelist` and `xfs_alloc_put_freelist` pop/push AGFL blocks, update AGF ring indices, btree block counts, and perag counters.
+- Verifies AGF headers:
+  - magic/version.
+  - uuid/LSN for CRC filesystems.
+  - seqno and length.
+  - AGFL indices/count.
+  - free/longest counters.
+  - btree levels and block counts.
+  - rmap/refcount fields when enabled.
+- Reads AGF and initializes perag cached AGF fields, including allocbt block accounting.
+- Checks allocation arguments and enforces transaction AG lock ordering through `t_highest_agno`.
+- Provides public allocation entry points:
+  - `xfs_alloc_vextent_this_ag`.
+  - `xfs_alloc_vextent_start_ag`.
+  - `xfs_alloc_vextent_first_ag`.
+  - `xfs_alloc_vextent_exact_bno`.
+  - `xfs_alloc_vextent_near_bno`.
+- Frees extents through `__xfs_free_extent` after freelist preparation, bounds validation, free-space btree insertion, and busy-extent insertion.
+- Provides free-space btree query helpers:
+  - range query.
+  - query all.
+  - record-presence classification.
+  - AGFL walking.
+- Creates and destroys the extent-free intent cache.
+
+Important interactions:
+- Works tightly with bnobt/cntbt btree operations from `xfs_alloc_btree.c`.
+- Calls rmap updates for allocated/freed extents unless owner info requests skipping.
+- Calls per-AG reservation helpers for metadata/rmapbt accounting.
+- Uses extent-busy tracking to avoid reusing blocks still unsafe after transaction activity.
+- Coordinates AGF/AGFL logging with transaction buffer logging.

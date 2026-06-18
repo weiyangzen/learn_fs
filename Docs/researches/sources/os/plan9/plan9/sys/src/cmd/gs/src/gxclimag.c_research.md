@@ -1,0 +1,7 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gxclimag.c
+
+High-level mask, image, compositor, halftone, and color-mapping command-list writer. `clist_fill_mask` converts eligible masks into cached bitmap/tile commands, falling back to the default fill-mask path for complex clipping, uncached ids, non-default RasterOp, disabled alpha copy, or non-pure alpha colors. It updates per-band lop, clipping, drawing color, and tile state before emitting copy commands.
+
+The high-level image path uses `clist_image_enum`. `clist_begin_typed_image` accepts only supported image types/color spaces/depths/matrices, rejects nested images and unsupported alpha/CIE/complex cases, serializes a begin-image command, computes conservative colors-used and Y band bounds, and clears relevant known-state flags. `clist_image_plane_data` maps source rows to affected bands, computes per-band image subrectangles, emits begin-image state/preamble as needed, and writes image data in chunks constrained by the command buffer. `clist_image_end_image` emits EOD markers to bands with active begin-image state and handles retryable memory errors.
+
+Utilities serialize compositors, data_x changes, full halftones split into segments when needed, transfer/black-generation/undercolor maps, and image-band bounding boxes for rectangular or general transforms. `check_rect_for_trivial_clip` allows optimized paths when clipping is absent, contains the rectangle, or is rectangular and intersecting. This file is one of the main producers of the command bytecode defined in `gxcldev.h`.

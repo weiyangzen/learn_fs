@@ -1,0 +1,72 @@
+# Folder Research: sources/local-fs/ntfs-3g/ntfsprogs
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `62`
+- recursive_file_count: `62`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/local-fs/ntfs-3g/ntfsprogs/Makefile.am` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/Makefile.am_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/attrdef.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/attrdef.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/attrdef.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/attrdef.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/boot.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/boot.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/boot.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/boot.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/cluster.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/cluster.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/cluster.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/cluster.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/list.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/list.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/mkntfs.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/mkntfs.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/mkntfs.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/mkntfs.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscat.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscat.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscat.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscat.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscat.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscat.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsck.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsck.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsclone.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsclone.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsclone.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsclone.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscluster.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscluster.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscluster.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscluster.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscluster.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscluster.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscmp.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscmp.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscmp.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscmp.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscp.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscp.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfscp.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfscp.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsdecrypt.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsdecrypt.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsdecrypt.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsdecrypt.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsdump_logfile.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsdump_logfile.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsfallocate.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsfallocate.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsfallocate.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsfallocate.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsfix.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsfix.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsfix.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsfix.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsinfo.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsinfo.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsinfo.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsinfo.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfslabel.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfslabel.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfslabel.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfslabel.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsls.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsls.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsls.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsls.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsmftalloc.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsmftalloc.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsmove.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsmove.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsmove.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsmove.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsprogs.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsprogs.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsrecover.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsrecover.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsrecover.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsrecover.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsrecover.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsrecover.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsresize.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsresize.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsresize.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsresize.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfssecaudit.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfssecaudit.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfssecaudit.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfssecaudit.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfstruncate.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfstruncate.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfstruncate.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfstruncate.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsundelete.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsundelete.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsundelete.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsundelete.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsundelete.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsundelete.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsusermap.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsusermap.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfsusermap.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfsusermap.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfswipe.8.in` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfswipe.8.in_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfswipe.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfswipe.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/ntfswipe.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/ntfswipe.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/playlog.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/playlog.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/sd.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/sd.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/sd.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/sd.h_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/utils.c` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/utils.c_research.md`
+- `sources/local-fs/ntfs-3g/ntfsprogs/utils.h` -> `Docs/researches/sources/local-fs/ntfs-3g/ntfsprogs/utils.h_research.md`

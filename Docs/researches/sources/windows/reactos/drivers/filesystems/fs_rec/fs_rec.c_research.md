@@ -1,0 +1,7 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/fs_rec.c
+
+Main ReactOS filesystem recognizer driver. `FsRecLoadFileSystem` serializes load attempts with the global `FsRecLoadSync` event, checks linked recognizer device state, calls `ZwLoadDriver` for the requested service, walks alternate recognizer devices into unloading state, unregisters the recognizer filesystem, and marks it loaded. This prevents repeated load attempts across recognizer aliases for the same filesystem family.
+
+The dispatch routines are minimal. `FsRecCreate` only allows opens of the recognizer device itself, rejecting nonempty file names with `STATUS_OBJECT_PATH_NOT_FOUND`; `FsRecClose` completes cleanup/close successfully; `FsRecFsControl` switches on the recognizer device extension's filesystem type and delegates to the specific recognizer for VFAT, NTFS, CDFS, UDFS, EXT, BTRFS, REISERFS, FFS, or FATX before completing the IRP.
+
+`FsRecRegisterFs` first checks whether the real filesystem device name already exists; if so, it returns `STATUS_IMAGE_ALREADY_LOADED`. Otherwise it creates a recognizer device with a `DEVICE_EXTENSION`, records filesystem type and pending state, links alternates through the parent recognizer when applicable, and registers it with the I/O manager. `DriverEntry` pages the driver, allocates the load-sync event, installs dispatch routines, and registers recognizers for CDFS CD/disk, UDFS CD/disk, FAT disk/CD, NTFS, EXT disk/CD, BTRFS, ReiserFS, FFS, and FATX. It succeeds if at least one recognizer was registered.

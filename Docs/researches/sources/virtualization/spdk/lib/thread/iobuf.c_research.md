@@ -1,0 +1,19 @@
+# File Research: sources/virtualization/spdk/lib/thread/iobuf.c
+
+This file implements SPDK's shared I/O buffer pool service. It provides globally configured small and large DMA buffer pools, optional per-NUMA allocation, per-thread/per-module channel caches, wait queues for buffer starvation, module registration, asynchronous finish, and stats aggregation across channels.
+
+Global state lives in `g_iobuf`: options, registered module list, finish callback, and one `iobuf_node` per NUMA ID. Each node owns a small and large `spdk_ring` plus contiguous DMA backing memory. Defaults are 8192 small 8 KiB buffers and 1024 large 132 KiB buffers, aligned to 4096 bytes; minimum pool and buffer sizes are enforced by `spdk_iobuf_set_opts()`.
+
+Initialization rounds buffer sizes up to alignment, initializes each configured NUMA node, fills central rings with buffer pointers, registers `g_iobuf` as an SPDK I/O device, and enables the initialized flag. Finish unregisters the I/O device; the unregister callback frees module names/records, validates and frees node pools, and invokes the user finish callback. If finish is called before initialization, the callback runs immediately.
+
+Each SPDK thread gets an internal `iobuf_channel` via the I/O device system. Public `spdk_iobuf_channel_init()` validates that the named module was registered, obtains the parent iobuf I/O channel, stores the caller channel in one of 64 per-thread slots for stats, initializes small/large cache structures for each NUMA node, and pre-populates configured cache sizes from central rings. Failure unwinds through `spdk_iobuf_channel_fini()`. Finalization asserts no pending wait entries from the module remain, returns cached buffers to central rings in batches, removes the channel from the per-thread slot array, and releases the parent I/O channel.
+
+Module registration is a simple name list with duplicate checks. Unregistration removes and frees a module by name. Pending iobuf entries store a module pointer when queued, and `spdk_iobuf_for_each_entry()` iterates only entries owned by the channel's module across small and large queues. `spdk_iobuf_entry_abort()` removes a queued request entry from any NUMA-node queue that matches its size class.
+
+`spdk_iobuf_get()` is thread-affine to the channel's parent SPDK thread. It currently uses cache index 0 for allocation, chooses small or large class by requested length, returns from the per-channel cache when possible, otherwise dequeues a batch from the central ring and caches all but the returned buffer. If no buffer is available, an optional entry is appended to the pool wait queue with module/callback metadata and NULL is returned.
+
+`spdk_iobuf_put()` determines the buffer's NUMA node when NUMA is enabled, selects size class by length, and either returns to the local cache/central ring or directly satisfies the first waiter by invoking its callback with the returned buffer. Local caches can exceed configured size by one batch; when high enough, a batch is pushed back to the central pool. The callback path includes queue manipulation intended to preserve fairness when callbacks requeue entries.
+
+Stats collection allocates a module stats array, seeds module names, then uses `spdk_for_each_channel()` on the iobuf I/O device to visit every thread's internal iobuf channel. It aggregates per-module small/large cache hits, main-pool hits, retries, and configured cache sizes, then calls the user callback and frees temporary storage.
+
+Important invariants are NUMA index bounds, channel/thread affinity, matching `spdk_iobuf_get()` and `spdk_iobuf_put()` size classes, no outstanding module wait entries during channel finalization, central ring counts returning to configured pool counts at shutdown, and keeping option ABI handling updated when `struct spdk_iobuf_opts` grows.

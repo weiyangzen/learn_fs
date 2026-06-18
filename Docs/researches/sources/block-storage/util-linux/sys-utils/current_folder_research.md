@@ -1,0 +1,80 @@
+# Folder Research: sources/block-storage/util-linux/sys-utils
+
+This folder report is synthesized from accepted per-file research reports.
+
+- direct_file_count: `70`
+- recursive_file_count: `70`
+- direct_child_folder_count: `0`
+
+## Direct Files
+
+- `sources/block-storage/util-linux/sys-utils/Makemodule.am` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/Makemodule.am_research.md`
+- `sources/block-storage/util-linux/sys-utils/blkdiscard.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/blkdiscard.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/blkpr.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/blkpr.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/blkzone.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/blkzone.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/chcpu.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/chcpu.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/chmem.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/chmem.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/choom.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/choom.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/ctrlaltdel.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ctrlaltdel.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/dmesg.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/dmesg.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/eject.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/eject.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/fallocate.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/fallocate.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/flock.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/flock.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/fsfreeze.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/fsfreeze.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/fstrim.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/fstrim.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/fstrim.service.in` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/fstrim.service.in_research.md`
+- `sources/block-storage/util-linux/sys-utils/fstrim.timer` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/fstrim.timer_research.md`
+- `sources/block-storage/util-linux/sys-utils/hwclock-cmos.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/hwclock-cmos.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/hwclock-parse-date.y` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/hwclock-parse-date.y_research.md`
+- `sources/block-storage/util-linux/sys-utils/hwclock-rtc.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/hwclock-rtc.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/hwclock.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/hwclock.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/hwclock.h` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/hwclock.h_research.md`
+- `sources/block-storage/util-linux/sys-utils/ipcmk.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ipcmk.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/ipcrm.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ipcrm.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/ipcs.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ipcs.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/ipcutils.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ipcutils.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/ipcutils.h` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ipcutils.h_research.md`
+- `sources/block-storage/util-linux/sys-utils/irq-common.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/irq-common.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/irq-common.h` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/irq-common.h_research.md`
+- `sources/block-storage/util-linux/sys-utils/irqtop.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/irqtop.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/ldattach.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/ldattach.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/losetup.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/losetup.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-arm.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-arm.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-cpu.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-cpu.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-cputype.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-cputype.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-dmi.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-dmi.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-riscv.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-riscv.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-topology.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-topology.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu-virt.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu-virt.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lscpu.h` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lscpu.h_research.md`
+- `sources/block-storage/util-linux/sys-utils/lsipc.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lsipc.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lsirq.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lsirq.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lsmem.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lsmem.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/lsns.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/lsns.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/meson.build` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/meson.build_research.md`
+- `sources/block-storage/util-linux/sys-utils/mount.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/mount.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/mountpoint.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/mountpoint.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/nsenter.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/nsenter.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/pivot_root.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/pivot_root.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/prlimit.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/prlimit.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/readprofile.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/readprofile.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/renice.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/renice.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/rfkill.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/rfkill.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/rtcwake.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/rtcwake.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/setarch.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/setarch.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/setpgid.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/setpgid.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/setpriv-landlock.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/setpriv-landlock.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/setpriv-landlock.h` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/setpriv-landlock.h_research.md`
+- `sources/block-storage/util-linux/sys-utils/setpriv.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/setpriv.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/setsid.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/setsid.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/swapoff.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/swapoff.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/swapon-common.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/swapon-common.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/swapon-common.h` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/swapon-common.h_research.md`
+- `sources/block-storage/util-linux/sys-utils/swapon.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/swapon.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/switch_root.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/switch_root.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/tunelp.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/tunelp.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/umount.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/umount.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/unshare.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/unshare.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/wdctl.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/wdctl.c_research.md`
+- `sources/block-storage/util-linux/sys-utils/zramctl.c` -> `Docs/researches/sources/block-storage/util-linux/sys-utils/zramctl.c_research.md`

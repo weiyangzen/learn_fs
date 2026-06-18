@@ -1,0 +1,9 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/puffs/puffs_msgif.h
+
+This is the exported PUFFS kernel/user ABI header. It defines protocol operation classes (`PUFFSOP_VFS`, `PUFFSOP_VN`, `PUFFSOP_CACHE`, `PUFFSOP_ERROR`, `PUFFSOP_FLUSH`, `PUFFSOP_SUSPEND`, `PUFFSOP_UNMOUNT`), request flags (`FAF`, response), and operation enums for VFS and vnode operations. `PUFFSVERSION` is `30`, and the mount type prefix is `puffs|`.
+
+The mount handshake structure is `struct puffs_kargs`, containing version, putter fd, kernel flags, maximum message length, vnode operation mask, file-handle size/flags, type/mount-from names, root cookie/type/size/rdev, initial statvfs data, and `pa_time32` compatibility control. Kernel flags control name/page caching, operation mask behavior, write-through cache, inactive policy, full-path lookup buffers, TTL caching, dotdot caching, and metadata flush behavior.
+
+All messages derive from `struct puffs_req`, which embeds `struct putter_hdr`, message ID, node cookie, operation class/type, return value, setback flags, caller pid/lid, and buffer length. Supporting structs include `puffs_statvfs` with conversion helpers, `puffs_kcred` for user or internal credentials, `puffs_kcn` for component names, `puffs_flush` for cache invalidation/flush commands, and `puffs_error` for kernel-to-server error reports.
+
+The bulk of the file defines fixed message layouts for each VFS and vnode operation: mount/unmount/stat/sync/file-handle/extattr-control messages; lookup/create/mknod/open/close/access/getattr/setattr/read/write/ioctl/fcntl/poll/fsync/seek/remove/mkdir/rmdir/link/rename/symlink/readdir/readlink/reclaim/inactive/print/pathconf/advlock/mmap/abortop/extattr/fallocate/fdiscard vnode messages. Flexible arrays carry variable data such as reads, writes, directory data, file handles, and extended attributes. This header is the schema consumed by both kernel implementation files and userland PUFFS servers.

@@ -1,0 +1,19 @@
+# File Research: sources/block-storage/linux-dm/drivers/md/bcache/request.c
+
+`request.c` is the main bcache block I/O path. It handles cached backing-device requests, flash-only volume requests, cache lookup, cache insertion, miss handling, bypass decisions, writeback-mode decisions, detached-device forwarding, error recovery, and request accounting.
+
+The cache insertion path centers on `struct data_insert_op` and `bch_data_insert()`. Data is split into cache-sized keys, sectors are allocated with `bch_alloc_sectors()`, optional checksums are computed with `bio_csum()`, writes are submitted to cache via `bch_submit_bbio()`, then generated keys are journaled and inserted into the btree. If allocation fails for non-writeback writes, writethrough writes invalidate the remaining range while cache-miss fills can insert already-written fragments or bail out. If a non-replace cache write fails, `bch_data_insert_error()` strips pointers from generated keys to invalidate the affected cache ranges instead of pointing at unwritten data.
+
+`check_should_bypass()` decides whether a cached-device bio should skip cache. It bypasses on detach, high cache occupancy, discards, cache mode `none`, writearound writes, selected read-ahead/background I/O depending on policy, unaligned I/O, torture testing, sequential I/O beyond threshold, or congestion. It updates sequential I/O tracking with a recent-I/O hash/LRU and records bypassed sectors in stats.
+
+Reads use a `struct search` closure. `cache_lookup_fn()` walks matching btree keys, calls the device-specific miss handler for holes, chooses a cache pointer, splits the request, copies/cuts a bkey into the child `bbio`, and submits cache reads. Clean cache reads are rechecked for stale pointers at completion; stale clean reads are treated as recoverable cache-read races. `cache_lookup()` maps keys through the btree and marks dirty-cache read errors as unrecoverable from backing storage.
+
+Cached-device miss handling is in `cached_dev_cache_miss()`. It may allocate a bounce bio for the miss range, read from backing storage, then `cached_dev_read_done()` copies fetched data to the original bio and optionally inserts it into cache using replace semantics. If cache read recovery is permitted, `cached_dev_read_error()` retries failed clean cache reads from the backing device.
+
+Writes use `cached_dev_write()`. It checks overlap with moving GC and active writeback keys, forces writeback for overlapping dirty writeback ranges, bypasses discards, consults `should_writeback()`, and either sends I/O to the backing device, writes only to cache in writeback mode, or clones the bio for writethrough. Flushes in writeback mode also submit a backing-device flush. All write paths call `bch_data_insert()` to update or invalidate cache metadata.
+
+`cached_dev_submit_bio()` is the block-layer entry point for cached backing devices. It rejects I/O when the cache set or backing device is disabled, resets idle/max-writeback-rate state on new I/O, remaps to the backing device and data offset, allocates a search if the cached device is active, and dispatches empty flushes, reads, or writes. If the cache device is detached, it forwards directly through `detached_dev_do_request()` while preserving accounting and error handling.
+
+Flash-only devices use `flash_dev_submit_bio()`. Reads map cache keys and zero-fill misses; writes are always cache writeback/insertion operations, with discards represented as bypass invalidations. The file initializes per-device request callbacks and owns the `bch_search_cache` slab via `bch_request_init()`/`bch_request_exit()`.
+
+Major cross-file dependencies include `journal.c` for key persistence, `btree.c` for lookup/insert, `writeback.h` for writeback decisions, `io.c` for bbio submission/error handling, `stats.c` for accounting, and `super.c` for device registration callbacks.

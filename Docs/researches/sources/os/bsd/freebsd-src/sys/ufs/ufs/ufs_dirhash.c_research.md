@@ -1,0 +1,102 @@
+# File Research: sources/os/bsd/freebsd-src/sys/ufs/ufs/ufs_dirhash.c
+
+## Purpose
+Implements optional hash-based lookup and free-space indexing for large UFS directories. It caches name-to-directory-offset mappings, maintains per-directory-block free-space summaries, and recycles hashes under memory pressure.
+
+## Key Contents
+Compiled under `#ifdef UFS_DIRHASH`.
+
+- Sysctls:
+  - `vfs.ufs.dirhash_minsize`
+  - `vfs.ufs.dirhash_maxmem`
+  - `vfs.ufs.dirhash_mem`
+  - `vfs.ufs.dirhash_docheck`
+  - `vfs.ufs.dirhash_lowmemcount`
+  - `vfs.ufs.dirhash_reclaimpercent`
+- Allocation and global state:
+  - `M_DIRHASH`
+  - UMA zone `ufsdirhash_zone`
+  - Global list `ufsdirhash_list`
+  - Global mutex `ufsdirhash_mtx`
+- Locking/refcount model:
+  - Directory hash pointer belongs to inode and is protected by vnode exclusive lock or vnode interlock with shared vnode lock.
+  - Hash contents protected by `dh_lock`.
+  - Global list and memory counters protected by `ufsdirhash_mtx`.
+  - `ufsdirhash_hold`, `ufsdirhash_drop`, `ufsdirhash_release`.
+- Create/acquire/free:
+  - `ufsdirhash_create`
+    - Creates new hash or locks existing hash.
+    - Handles races with recycling.
+  - `ufsdirhash_acquire`
+    - Gets exclusive lock for mutation paths.
+    - Frees recycled hash when encountered.
+  - `ufsdirhash_free`
+  - `ufsdirhash_free_locked`
+- Build:
+  - `ufsdirhash_build`
+    - Skips small directories, old format directories, and zero-link inodes.
+    - Allocates hash slots at 150% of maximum possible entries for current directory size.
+    - Allocates block free-space summary storage.
+    - Reads directory blocks and inserts live entries.
+    - Fails back to linear lookup on allocation or corruption failures.
+    - Inserts successfully built hash on global LRU/LFU list.
+- Lookup:
+  - `ufsdirhash_lookup`
+    - Searches linear-probing hash chain.
+    - Reads target directory buffers as needed.
+    - Verifies entries by name and length.
+    - Maintains sequential lookup hint `dh_seqoff`.
+    - Updates cache score and last-used time.
+    - Returns `ENOENT` for miss or `EJUSTRETURN` to request linear fallback.
+- Free-space search:
+  - `ufsdirhash_findfree`
+    - Uses `dh_firstfree[]` to find a directory block with enough free space.
+    - Reads the block to identify the exact compaction range.
+  - `ufsdirhash_enduseful`
+    - Finds trailing fully-free directory blocks suitable for truncation.
+- Mutation hooks:
+  - `ufsdirhash_add`
+    - Inserts new entry and updates free-space stats.
+    - Frees hash if utilization exceeds 75%.
+  - `ufsdirhash_remove`
+    - Removes entry and updates free-space stats.
+  - `ufsdirhash_move`
+    - Changes cached offset after directory compaction.
+  - `ufsdirhash_newblk`
+    - Accounts for one newly appended directory block.
+    - Frees hash if preallocated summary space is exhausted.
+  - `ufsdirhash_dirtrunc`
+    - Handles directory shrink.
+    - Frees hash if directory becomes much smaller.
+- Debug checker:
+  - `ufsdirhash_checkblock`
+    - Optional runtime consistency check against actual directory block contents.
+- Internal helpers:
+  - `ufsdirhash_hash`
+    - FNV hash over name plus hash object address salt.
+  - `ufsdirhash_adjfree`
+    - Updates per-block free-space bucket state.
+  - `ufsdirhash_findslot`
+    - Finds exact name/offset slot or panics.
+  - `ufsdirhash_delslot`
+    - Handles linear-probing deletion and trailing `DIRHASH_DEL` cleanup.
+  - `ufsdirhash_getprev`
+    - Finds previous directory entry within a block.
+  - `ufsdirhash_destroy`
+    - Detaches and frees hash backing memory.
+  - `ufsdirhash_recycle`
+    - Frees low-score hashes until memory target is met.
+  - `ufsdirhash_lowmem`
+    - VM low-memory callback.
+  - `ufsdirhash_set_reclaimpercent`
+    - Validates reclaim percentage.
+- Lifecycle:
+  - `ufsdirhash_init`
+    - Sizes max memory from `hibufspace`, creates UMA zone, initializes mutex/list, registers low-memory event.
+  - `ufsdirhash_uninit`
+    - Requires global list empty, destroys UMA zone and mutex.
+
+## Interactions
+- `struct inode` stores `i_dirhash`.
+- Directory lookup and mutation paths call build/lookup/add/remove/move/truncate hooks.
+- Depends on `dir.h` directory record invariants and `ufs_extern.h` block access.

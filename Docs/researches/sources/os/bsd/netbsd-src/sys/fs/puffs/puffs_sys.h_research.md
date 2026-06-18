@@ -1,0 +1,9 @@
+# File Research: sources/os/bsd/netbsd-src/sys/fs/puffs/puffs_sys.h
+
+This kernel-private PUFFS header connects the message ABI to in-kernel mount, node, vnode, and helper definitions. It declares vnode operation vectors, puffs node/vattr pools, debug macros, pointer-conversion macros (`MPTOPUFFSMP`, `VPTOPP`, `VPTOPNC`), cache-policy macros, file-handle size transforms, and operation-existence checks.
+
+The key structures are `struct puffs_mount` and `struct puffs_node`. `puffs_mount` holds the copied mount arguments, outgoing and reply wait queues, mount pointer, root identity, putter instance, reference count and unmount coordination state, status/suspend flags, message ID counter, special-operation thread state/queues, and compat mode flag. Status values move from before-init to mounting, running, and dying. `puffs_node` embeds `genfs_node`, holds node locks/refcounts, userspace cookie, vnode backpointer, node status flags, select state, metadata cache fields, server-known size, lockf state, size mutex, name/attribute TTL cache state, cached vattr, and cached parent vnode.
+
+The header declares all cross-file routines for message allocation/enqueue/wait/dispatch, sop thread, vnode creation and lookup, credential/component conversion, async completion callbacks, mount references, genfs hooks, error notifications, compat translation, node metadata updates, and putter callbacks.
+
+The macros `PUFFS_MSG_VARS`, `PUFFS_MSG_ALLOC`, `PUFFS_MSG_RELEASE`, and `PUFFS_MSG_ENQUEUEWAIT*` provide the idiom used throughout `puffs_vnops.c` and `puffs_vfsops.c`: allocate a typed message plus park, fill fields, set operation metadata, enqueue to userland, wait, then release. `checkerr()` validates server errno values and converts protocol-invalid errors into `EPROTO` after sending a PUFFS error notification.

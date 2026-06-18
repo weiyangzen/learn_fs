@@ -1,0 +1,15 @@
+# File Research: sources/os/bsd/openbsd-src/sbin/unwind/libunbound/util/config_file.c
+
+`config_file.c` owns libunbound configuration construction, parsing, mutation, querying, cleanup, and runtime application. `config_create()` allocates `struct config_file` and fills extensive defaults for transport, logging, caches, RTT/infra behavior, DNSSEC validation, local zones/data, remote control, rate limits, DNSCrypt/DNSTAP/cachedb/IPsec modules when compiled, cookies, padding, scrub limits, and quotas. `config_create_forlib()` derives smaller library defaults.
+
+`config_set_option()` is the imperative option setter used by lib callers. It normalizes option names to colon form, validates integers/yes-no/power-of-two/memory sizes, updates strings/lists, and applies selected side effects immediately: log timestamp formatting, cache TTL globals, RTT globals, serve-expired globals, infra rate-limit globals, AUTR holddown behavior, TLS protocol validation, NSID parsing, port permit/avoid policy, local-zone parsing, and outgoing-interface array growth. Unsupported parser-only sections return failure.
+
+`config_get_option()` mirrors a broad set of options through callback-based printing macros. `config_get_option_list()` and `config_get_option_collate()` collect those callback results into list or newline-joined string form. It supports scalar, string, list, pair/triple list, interface array, memory-size, and tag-list output.
+
+`config_read()` handles direct config files and optional glob expansion for includes. It opens files, initializes the global parser state, invokes the generated parser, reports accumulated parse errors with filename/line context, disables DNSCrypt port when DNSCrypt is off, and computes automatic slab values based on thread count.
+
+The destructor layer frees all nested config allocations: string lists, pair/triple lists, auth/stub/view objects, arrays, tag byte lists, module-specific fields, cache/rate-limit lists, control interfaces, trust anchors, local data/zones, and file paths. This is important because `config_create()` may fail mid-construction and calls `config_delete()` on the partial object.
+
+Utility routines cover outgoing port initialization from `iana_ports.inc`, permit/avoid range parsing, port condensation to dense arrays, optional Linux ephemeral-port-range policy, parser error callbacks, string-list insertion/appending/find helpers, UTC date parsing, memory-size parsing, tag definition and bitset parsing/printing/intersection, NSID parsing from `ascii_` or hex forms, applying config values to global runtime variables, username lookup, and chroot/chdir-aware filename construction.
+
+Local DNS helpers parse `local-zone` values, convert `local-data-ptr` IP/name input into reverse PTR records, determine whether remote-control interfaces are filesystem sockets or addresses, test whether an interface/port is TLS, proxy-protocol, HTTPS, DNSCrypt, or QUIC, scan automatic interface port lists, validate/derive allowed TLS protocol versions, and return file mtimes with nanosecond support when the platform exposes it.

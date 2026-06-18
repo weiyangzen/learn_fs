@@ -1,0 +1,5 @@
+# File Research: sources/windows/reactos/drivers/filesystems/fs_rec/blockdev.c
+
+Generic block-device helper routines for filesystem recognizers. `FsRecGetDeviceSectors` works only on disk devices, sends `IOCTL_DISK_GET_PARTITION_INFO` with `SL_OVERRIDE_VERIFY_VOLUME`, waits synchronously when pending, and divides partition length by the caller's sector size to return a sector count. `FsRecGetDeviceSectorSize` selects disk or CD-ROM geometry IOCTLs based on device type, also overrides verify, waits for completion, and returns `BytesPerSector` only if nonzero.
+
+`FsRecReadBlock` is the shared probe reader. It rounds reads up to at least one sector and to a sector boundary, allocates a nonpaged page-rounded buffer when the caller did not provide one, builds a synchronous `IRP_MJ_READ`, overrides volume verification, waits for pending completion, and optionally reports storage-stack failure through `DeviceError`. All recognizer files use this helper to keep mount-time signature checks synchronous and independent of normal filesystem verification state.

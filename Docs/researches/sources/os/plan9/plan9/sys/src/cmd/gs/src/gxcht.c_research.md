@@ -1,0 +1,7 @@
+# File Research: sources/os/plan9/plan9/sys/src/cmd/gs/src/gxcht.c
+
+Color halftone rendering implementation. It defines the `gx_dc_type_ht_colored` device-color type, including save, halftone lookup, load, fill-rectangle, equality, serialization, deserialization, and nonzero-component reporting. Serialization writes only changed base/level/alpha fields relative to a saved color, uses compact masks for 1-bit/component devices, and omits the halftone itself because it lives in imager state.
+
+`gx_dc_ht_colored_fill_rectangle` is the main renderer. It clips large rectangles, treats colored halftones as opaque textures for RasterOp, selects per-plane caches, prepares color lookup tables, and either creates a reusable LCM-sized tile or renders chunks that fit the stack tile buffer. It supports direct `copy_color`, `strip_tile_rectangle`, and `strip_copy_rop` paths.
+
+The second half builds per-plane color pairs and halftone bitmaps. There are optimized paths for up to four planes, a special 1-bit CMYK case, and a separable-color assumption for more than four planes. Tile cursor logic walks shifted halftone bitmaps row by row. `set_color_ht_le_4` expands plane bits into packed color indices for 4/8/16/24/32-bit targets, while `set_color_ht_gt_4` ORs separable component color indices. Important limitations are explicitly noted in comments for some DeviceN/>4-plane color mapping and alpha handling.
