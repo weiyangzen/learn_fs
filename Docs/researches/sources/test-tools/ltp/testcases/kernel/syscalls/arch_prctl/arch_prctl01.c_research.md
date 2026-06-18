@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/arch_prctl/arch_prctl01.c
+
+Purpose: tests `ARCH_SET_CPUID` and `ARCH_GET_CPUID` through `arch_prctl` on x86. Setup scans `/proc/cpuinfo` for `cpuid_fault`; each of two test indices tries to set CPUID faulting to the index, expecting success only when the CPU flag exists and `ENODEV` otherwise, then gets status and expects either the index or default 1. Important APIs are `tst_syscall(__NR_arch_prctl)`, `/proc/cpuinfo` parsing, `SAFE_FOPEN`, and string search. State is per-thread CPUID faulting control. Dependencies are x86/x86_64, kernel >= 4.12, and the CPU feature. Risks include incomplete cleanup/reset of the per-thread setting and fragile flag parsing. Test signal is set/get behavior matching feature availability.

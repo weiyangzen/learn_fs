@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/common/Types.h
+
+## Research
+`Types.h` declares shared target, pool, buddy-group, and state mapping types for the client module. `TargetMapping` maps a storage target ID to a `NumNodeID` and uses a union so the same object can live either in a target mapper rbtree or a serialized list. `TargetPoolMapping`, `BuddyGroupMapping`, and `TargetStateMapping` are list-oriented wire structures. The header also defines `TargetReachabilityState`, `TargetConsistencyState`, `CombinedTargetState`, and `TargetStateInfo`.
+
+Control flow is macro-declared serialization via `SERDES_DECLARE_*` and enum serializer definitions over `uint8_t`. State is owned by containers outside this header; private list/rbtree members encode container membership expectations. Dependencies include `StoragePoolId.h` and `Serialization.h`. Integration points are node/target discovery, mirror buddy group setup, target state stores, and management response messages. Risks include using the wrong private member for a container, enum value drift from the common library, and accidental copying of objects already linked into a list/tree. Test signals are target mapper updates from `GetTargetMappingsRespMsg`, target-state refreshes, and buddy group list deserialization with cleanup.

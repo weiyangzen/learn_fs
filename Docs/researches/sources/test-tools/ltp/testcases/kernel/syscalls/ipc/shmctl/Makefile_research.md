@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/Makefile
+
+Purpose: builds the `shmctl` tests and declares target-specific dependencies. It sets `LTPLIBS = newipc`, adds `-pthread` and `-lrt` for `shmctl05`, includes common testcase rules, and links `shmctl01`, `shmctl02`, `shmctl04`, and `shmctl06` with `-lltpnewipc`. The file has no runtime state; it encodes which tests need IPC helpers and which need threading/timing libraries. Integration points are the LTP build system and `generic_leaf_target.mk`. Risks are missing target-specific flags, especially for fuzzy sync/threaded regression coverage. Test signal is successful build of all local shared-memory control tests.

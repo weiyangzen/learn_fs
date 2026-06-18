@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup18.py
+
+Purpose: tests the `backup:query_id` cursor API for listing incremental backup IDs and verifies related statistics. It covers unconfigured, active-backup, reopen, force-stop, and crash-restart states.
+
+Important APIs are `session.open_cursor('backup:query_id')`, incremental backup primary cursors, `statistics:` cursor for `backup_cursor_open`, `backup_incremental`, `backup_granularity`, `simulate_crash_restart`, and sorted ID comparison. Control flow asserts query fails before configuration, opens an incremental primary and checks stats/default granularity, asserts query cannot be used as a duplicate or while backup cursor is open, closes and checks IDs, advances IDs through ID2/ID3, reopens and confirms persistence, force-stops and confirms query becomes unconfigured, configures again, then force-stops and simulates crash to ensure state is cleared. Risks include exact stats and error messages. Test signals are ID list equality, stat values, and expected errors.

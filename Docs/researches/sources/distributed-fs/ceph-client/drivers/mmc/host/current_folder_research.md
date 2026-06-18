@@ -1,0 +1,145 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/mmc/host
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 131
+- Recursive researched files: 131
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/alcor.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/atmel-mci.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/au1xmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/bcm2835.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cavium-octeon.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cavium-thunderx.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cavium.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cavium.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cb710-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cb710-mmc.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cqhci-core.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cqhci-crypto.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cqhci-crypto.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/cqhci.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/davinci_mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-bluefield.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-exynos.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-exynos.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-hi3798cv200.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-hi3798mv200.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-k3.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-pltfm.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-pltfm.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-rockchip.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc-starfive.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/dw_mmc.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/jz4740_mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/litex_mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/loongson2-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/meson-gx-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/meson-mx-sdhc-clkc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/meson-mx-sdhc-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/meson-mx-sdhc.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/meson-mx-sdio.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmc_hsq.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmc_hsq.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmc_spi.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmci.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmci.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmci_qcom_dml.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mmci_stm32_sdmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/moxart-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mtk-sd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mvsdio.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mvsdio.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mxcmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/mxs-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/of_mmc_spi.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/omap.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/omap_hsmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/owl-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/pxamci.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/pxamci.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/renesas_sdhi.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/renesas_sdhi_core.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/renesas_sdhi_internal_dmac.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/renesas_sdhi_sys_dmac.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/rtsx_pci_sdmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/rtsx_usb_sdmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-acpi.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-bcm-kona.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-brcmstb.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-cadence.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-cqhci.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-dove.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-esdhc-imx.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-esdhc-mcf.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-esdhc.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-iproc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-milbeaut.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-msm.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-npcm.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-arasan.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-aspeed-test.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-aspeed.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-at91.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-bst.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-dwcmshc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-esdhc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-hlwd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-k1.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-ma35d1.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-sparx5.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-omap.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pci-arasan.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pci-core.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pci-dwc-mshc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pci-gli.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pci-o2micro.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pci.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pic32.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pltfm.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pltfm.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pxav2.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-pxav3.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-s3c.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-spear.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-sprd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-st.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-tegra.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-uhs2.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-uhs2.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-xenon-phy.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-xenon.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-xenon.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci_am654.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci_f_sdh30.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci_f_sdh30.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sdricoh_cs.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sh_mmcif.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sunplus-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/sunxi-mmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/tifm_sd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/tmio_mmc.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/tmio_mmc_core.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/toshsd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/toshsd.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/uniphier-sd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/usdhi6rol0.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/ushc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/via-sdmmc.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/vub300.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/wbsd.c`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/wbsd.h`
+- `sources/distributed-fs/ceph-client/drivers/mmc/host/wmt-sdmmc.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

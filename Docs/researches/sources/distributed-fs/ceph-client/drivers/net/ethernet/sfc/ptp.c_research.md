@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/sfc/ptp.c
+
+Purpose: this file implements SFC Precision Time Protocol and hardware timestamping support. Firmware assists timestamp capture through MCDI; the driver defers long operations to workqueues, manages PTP RX/TX filtering, synchronizes host and NIC time, registers a PHC clock for the primary function, and attaches timestamps to SKBs.
+
+Important types and APIs: `struct efx_ptp_data` owns PTP queues, workqueues, filters, timestamp config, conversion functions, time-sync bounds, corrections, event fragments, DMA synchronization flag buffer, PHC/PPS state, statistics, and TX method selection. Public entry points include `efx_ptp_probe()`, `efx_ptp_remove()`, `efx_ptp_defer_probe_with_channel()`, `efx_ptp_start_datapath()`, `efx_ptp_stop_datapath()`, `efx_ptp_tx()`, `efx_ptp_is_ptp_tx()`, timestamp config get/set/info, event handlers, stats, and RX timestamp attach. PHC methods implement adjfine, adjtime, gettime, settime, and PPS enable.
+
+Control flow: probe allocates `efx_ptp_data`, a coherent `start` flag buffer, RX/TX queues, workqueues, conversion/correction data from firmware, and possibly a PHC clock. PTP enable installs multicast filters, enables firmware PTP mode, clears event assembly, and synchronizes baseline time. TX packets are queued and transmitted either through a timestamped TX queue or via MCDI; RX packets are queued until a matching event or timeout. Work processing handles reset-required restarts, expired/unwanted RX packets, queued TX, and packet delivery. Datapath start/stop toggles sync events and PTP firmware state.
+
+State and persistence: in-memory state includes queued SKBs, multicast/unicast filters with jiffies expiry, timestamp configuration, current frequency adjustment, sync-event state on the PTP channel, PHC registration, PPS enable, and counters. Firmware state includes enabled PTP mode, clock adjustment, filters, timestamp corrections, and sync-event subscription.
+
+Dependencies and integration: the file depends on MCDI PTP commands, Linux PTP clock/PPS APIs, net timestamping APIs, SFC filter insertion/removal, TX enqueue, channel allocation through `efx_channel_type`, and NIC type hooks for host-time writes and timestamp config.
+
+Risks and tests: risks include RX event/packet matching timeouts, filter leaks, workqueue lifetime races, incorrect timestamp conversion near wrap boundaries, sync-event loss, missing PHC cleanup, and firmware error recovery. Test signals include `ptp4l`/`phc2sys`, hardware TX/RX timestamp sockets, PPS enable events, PTP over IPv4/IPv6/Ethernet where supported, unicast filter expiry, MC timestamp-correction variants, reset/restart during PTP traffic, and event-fragment error injection.

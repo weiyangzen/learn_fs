@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/perf/arm-ccn.c
+
+Purpose: Implements perf support for ARM CCN-502/504/512 Cache Coherent Network PMUs. It discovers CCN topology, exposes node/XP/watchpoint events, programs the Debug/Test subsystem counters, handles overflow via IRQ or polling timer, and migrates the uncore PMU context on CPU hotplug.
+
+Important APIs and types: `struct arm_ccn` stores base MMIO, IRQ, topology arrays, feature flags, and the DT PMU. `struct arm_ccn_dt` stores DT base, config lock, counter allocations, compare masks, timer, CPU, and `struct pmu`. `struct arm_ccn_component` represents nodes and XPs with event/watchpoint allocation bitmaps. Perf callbacks include `arm_ccn_pmu_event_init()`, `add`, `del`, `start`, `stop`, `read`, `pmu_enable`, and `pmu_disable`. Configuration helpers program XP watchpoints, XP PMU events, node PMU events, DT active DSM routing, and compare masks.
+
+Control flow: Module init registers a CPU hotplug multi-state, populates event sysfs attribute pointers, and registers the platform driver. Probe maps CCN registers, tests whether PMU interrupt acknowledgement is writable, requests the IRQ when usable, walks the component-list bitmap once to count nodes/XPs and again to initialize component bases/types, then initializes DT PMU registers and registers perf. Event init validates topology, type, event ID, port, VC, grouping, and CPU affinity. Watchpoint-like MN/HN-I/SBSX events are translated to XP watchpoints. Add allocates a DT counter plus a source event slot or XP watchpoint, starts the polling timer if no IRQ, programs routing and event registers, and optionally starts counting.
+
+State and persistence: Hardware state includes DT enable/PMCR/overflow registers, active DSM mapping, XP DT config/control, compare values/masks, interface selection, and node event selector registers. Software state includes topology arrays, per-source allocation bitmaps, counter-to-event mappings, writable and predefined compare masks, selected CPU, hrtimer, and IDA-provided PMU names.
+
+Dependencies and integration points: Depends on Linux perf, platform/OF, MMIO, IRQ, hrtimer, IDA, cpuhotplug, and sysfs. It integrates through compatibles `arm,ccn-502`, `arm,ccn-504`, and `arm,ccn-512`; the PMU appears as `ccn` or `ccn_N`.
+
+Risks: The driver mutates `event->attr.config` when translating node watchpoints to XP watchpoints, so later code assumes the rewritten encoding. No-IRQ mode relies on a polling hrtimer; poll-period tuning affects overhead and overflow latency. Topology discovery trusts component-list and ID fields; malformed hardware/DT can cause sparse arrays and invalid node IDs. Compare-mask sysfs attributes are writable for masks 0-7 and global to the PMU, so changing them affects future watchpoint events.
+
+Test signals: Probe topology logs, sysfs events/format/cmp_mask/cpumask, IRQ path and timer fallback path, cycle counter and 32-bit event counters, XP watchpoint events with compare masks, HNF/RNI/SBAS/SBSX event visibility, overflow update behavior, CPU hotplug migration with IRQ affinity, and invalid topology/event/group rejection.

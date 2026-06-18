@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/control-plane/mayastor/io-engine/src/bdev/nexus/nexus_bdev_children.rs -->
+# sources/control-plane/mayastor/io-engine/src/bdev/nexus/nexus_bdev_children.rs
+
+Purpose: implements parent-side operations for adding, opening, removing, faulting, onlining, retiring, detaching, and resetting nexus children. It is the dynamic reconfiguration layer that keeps the child vector, SPDK I/O channels, persistent child health, and rebuild jobs consistent.
+
+Important APIs/types/functions: `new_child`, `add_child`, `remove_child`, `fault_child`, `online_child`, `try_open_children`, `close_children`, `min_num_blocks`, child lookup helpers, `DeviceEventListener` for `Nexus`, `retire_child_device`, `detach_device`, `disconnect_all_detached_devices`, `set_nexus_io_mode`, `try_self_shutdown`, and `reset_all_children`.
+
+Control flow: initial creation uses `new_child` only in `Init`, creating a device from a URI and pushing a `NexusChild`. Runtime add validates nexus operation state, creates the device, checks block size/count against the nexus, opens it as out-of-sync, acquires reservations, registers event listening, persists `AddChild`, and optionally starts rebuild. Removal protects against deleting the only child or last healthy child, pauses rebuild jobs and frontend I/O, persists `RemoveChild`, detaches channel handles, closes the child, removes it from the vector, then resumes I/O and rebuilds. Faulting stops related rebuilds, marks the child faulted, starts an optional I/O log, schedules retirement, and resumes rebuilds.
+
+State and persistence: child membership is in the `children` vector; channel state is changed by traversing all `NexusChannel` instances. Retire persistence uses `PersistOp::UpdateCond` and deliberately does not persist loss of the last healthy replica, so control plane can reconstruct from the latest data holder. Device retire is two-phase: detach handles from I/O paths, then disconnect/drop after pause. Reset state transitions use `Reconfiguring` and then `Open`.
+
+Dependencies/integration: relies on `device_create`, `device_destroy`, `device_lookup`, `device_cmd_queue`, `NexusChild`, `NexusChannel`, `NexusIoSubsystem`, rebuild pause guards, persistent nexus ops, `Reactors::master`, `NvmfSubsystem::reset_controller`, and SPDK channel traversal. Device events drive hot-remove, loopback removal, NVMe admin failure, and controller failure handling.
+
+Risks: many routines depend on strict ordering: persist before disconnecting a failed child, pause before final handle drop, and resume rebuilds through `RebuildPauseGuard`. `remove_child` returns `Ok(())` if pause fails after logging, which can hide a failed remove from callers. Unsafe mutable child access is used by `online_child` to operate on child and nexus in one scope. If device events arrive during close/destroy, the remove-channel handshake must avoid leaving descriptors around.
+
+Test signals: add/remove/fault/online with healthy, out-of-sync, faulted, and destroying children; last-child and last-healthy-child rejection; persistence failure rollback for add/remove/retire; hot remove while open vs intentional destroy; controller failure during pause; reset of only NVMe children; I/O channel detach/disconnect races; rebuild cancellation and restart around remove/fault.
+<!-- END_FILE_RESEARCH: sources/control-plane/mayastor/io-engine/src/bdev/nexus/nexus_bdev_children.rs -->

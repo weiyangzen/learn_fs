@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rtc/apple,smc-rtc.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rtc/apple,smc-rtc.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rtc/apple,smc-rtc.yaml` is a Linux devicetree YAML schema for the `Apple SMC RTC` real-time clock binding. Apple Silicon Macs (M1, etc.) have an RTC that is part of the PMU IC, but most of the PMU functionality is abstracted out by the SMC. An additional RTC offset stored inside NVMEM is required to compute the current date/time. It is not executable Ceph or kernel logic; it is a hardware-description ABI used by DTS authors, dt-schema, and Linux subsystem drivers so that board descriptions match what the driver will parse at probe or early boot.
+
+## Important APIs, Types, and Functions
+The public API surface is the schema's accepted node shape. `compatible` uses single `const` and covers 1 compatible token: `apple,smc-rtc`. Top-level properties are `compatible`, `nvmem-cells`, `nvmem-cell-names`. Across nested schemas and child nodes this file mentions 3 distinct property names; required properties observed at all levels include `compatible`, `nvmem-cell-names`, `nvmem-cells`. Node naming is constrained by no explicit node-name constraint. RTC properties declare timekeeping hardware resources: bus/register addressing {join_code(groups['addressing'], 8)}, alarm interrupts and wakeup capability none, clocks or supplies none, and RTC-specific behavior keys none. Required properties are `compatible`, `nvmem-cells`, `nvmem-cell-names`; the ABI drives RTC class-device registration, alarm support, and wake-from-suspend behavior.
+
+## Control Flow, State, and Persistence
+Control flow is declarative JSON-schema evaluation. `dt-doc-validate`, `dt_binding_check`, and `dtbs_check` load the YAML, expand `$ref` links, match nodes by `compatible` or referenced common-schema use, enforce required properties, evaluate composition/conditional keywords, and validate inline DTS examples. At runtime, RTC drivers bind through I2C/SPI/platform buses, register an RTC class device, program alarms, and coordinate wakeup interrupts and clock inputs. The YAML itself stores no mutable runtime state and writes no persistent data; persistence is the source-controlled devicetree ABI and the DTB blobs built from DTS. External references used in evaluation are none; schema composition/conditional keywords present are none.
+
+## Dependencies and Integration Points
+Maintainers: Sven Peter <sven@kernel.org>. Integration points include the Linux devicetree core meta-schema, any referenced common binding schemas, in-tree DTS/DTSI users under the Ceph-client kernel source, and driver `of_match_table` entries for the compatible strings. `$ref` dependencies are none; pattern-property child-node APIs are none. The file provides 0 example blocks that should stay aligned with the schema and driver expectations.
+
+## Risks
+Risks are ABI and integration risks. Changing compatible ordering, required keys, resource names, child-node patterns, cell counts, or strictness can reject existing DTS files or let invalid hardware descriptions reach runtime probe. This schema has 3 top-level properties, 3 distinct property names across nested schemas, and this strictness profile: unknown top-level properties are rejected. Conditional branches and shared `$ref` schemas should be checked against all in-tree users because schema-only edits can still break board builds or driver binding.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/rtc/apple,smc-rtc.yaml` for targeted schema and example validation, then `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/rtc/apple,smc-rtc.yaml` against representative DTS users using `apple,smc-rtc`. The file contains 0 inline examples, so example compilation should be part of the signal. Integration signals include RTC class-device registration, time read/write, alarm IRQ delivery, suspend wake tests, and bus probe coverage for required regulators, clocks, and address cells.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rtc/apple,smc-rtc.yaml -->

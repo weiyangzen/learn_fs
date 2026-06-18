@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/net/rds/send.c
+
+## Purpose
+Implements the core RDS transmit path: user `sendmsg()` validation, RDS message allocation and ancillary control parsing, connection/path selection, queueing onto socket and connection queues, transport-driven transmission, ACK-based cleanup, cancellation, and probe/ping messages used by handshake and multipath negotiation.
+
+## Important APIs, Types, and Functions
+Key exported entry points are `rds_send_path_reset()`, `rds_send_xmit()`, `rds_rdma_send_complete()`, `rds_atomic_send_complete()`, `rds_send_path_drop_acked()`, `rds_send_drop_acked()`, and `rds_send_ping()`. The file centers on `struct rds_conn_path`, `struct rds_connection`, `struct rds_sock`, `struct rds_message`, `struct rm_rdma_op`, `struct rm_atomic_op`, `struct rds_notifier`, and transport callbacks in `struct rds_transport`. Local helpers include `acquire_in_xmit()`, `release_in_xmit()`, `rds_mprds_cp0_catchup()`, `rds_send_remove_from_sock()`, `rds_send_queue_rm()`, `rds_rm_size()`, `rds_cmsg_send()`, and `rds_send_probe()`.
+
+## Control Flow
+`rds_sendmsg()` rejects unsupported flags, validates IPv4/IPv6 destinations and scope IDs, enforces bound-source compatibility, computes RDMA payload size, allocates a message large enough for data scatterlists plus cmsg state, copies or pins payload data, finds or creates an outgoing connection, selects a multipath lane, parses SOL_RDS cmsgs, waits on congestion, queues the message, and invokes `rds_send_xmit()`. `rds_send_xmit()` serializes each path with `RDS_IN_XMIT`, checks connection state, optionally sends a congestion map update, moves queued messages to the retransmit list, marks periodic ACK requirements, runs RDMA/atomic/data transport transmit callbacks, updates partial header/data offsets, drops non-retransmittable flushed or RDMA-retransmitted messages, and reschedules when work remains or the lower layer reports temporary backpressure. ACK processing moves retransmit-list entries to a private list and then removes them from the owning socket queue outside the connection lock.
+
+## State and Persistence
+Transmit state is in `cp_xmit_rm`, `cp_xmit_sg`, `cp_xmit_hdr_off`, `cp_xmit_data_off`, `cp_xmit_*_sent`, `cp_send_queue`, `cp_retrans`, `cp_next_tx_seq`, `cp_unacked_packets`, `cp_unacked_bytes`, and `cp_send_gen`. Socket send-buffer accounting is `rs_snd_bytes` plus `rs_send_queue`. Message flags such as `RDS_MSG_ON_CONN`, `RDS_MSG_ON_SOCK`, `RDS_MSG_ACK_REQUIRED`, `RDS_MSG_RETRANSMITTED`, `RDS_MSG_MAPPED`, and `RDS_MSG_HAS_ACK_SEQ` coordinate ownership and lifetime. No durable persistence is written; state is in kernel memory and is reset on path shutdown, socket close, or connection destruction.
+
+## Dependencies and Integration
+Depends on RDS connection, congestion, message, RDMA, atomic, and transport helpers declared through `rds.h`. TCP, IB, or other transports provide `xmit`, `xmit_rdma`, `xmit_atomic`, `xmit_path_prepare`, `xmit_path_complete`, and ACK classification. It integrates with socket sleeping/wakeup, sysctls for max unacked packets/bytes, global RDS stats, multipath negotiation extensions, and zero-copy support for TCP-only `MSG_ZEROCOPY`.
+
+## Risks and Test Signals
+Risk is concentrated in lock ordering across `rs_lock`, `cp_lock`, and `m_rs_lock`, message reference balancing between socket and connection queues, partial-send progress tracking, and reconnect races around `RDS_IN_XMIT`. Multipath ordering depends on lane 0 catch-up and source-port path hashing. Test signals should include blocking and nonblocking send-buffer exhaustion, ACK cleanup for TCP sequence wrap, RDMA/atomic notifier completion and cancellation, retransmission after reset, congestion-map sends, zero-length ping/probe messages, IPv4/IPv6 scope validation, and multipath lane fan-out without out-of-order delivery.

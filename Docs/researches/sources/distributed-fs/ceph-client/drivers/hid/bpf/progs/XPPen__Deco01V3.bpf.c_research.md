@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/hid/bpf/progs/XPPen__Deco01V3.bpf.c
+
+Purpose: This program normalizes XP-Pen Deco 01 V3 pad and pen HID behavior. It replaces the pad keyboard-style descriptor with a tablet-function-key descriptor, fixes the pen tilt logical range from -127..127 to -60..60, and converts incoming keyboard reports into a stable button bitmask.
+
+Important APIs/types/functions: `HID_BPF_CONFIG()` matches UGEE product `PID_DECO_01_V3`. Constants define the pad descriptor length 102, pen descriptor length 109, pad report length 8, pad report ID 6, and eight pad buttons. `fixed_rdesc_pad` uses descriptor-construction macros from `hid_report_helpers.h` to describe a keypad/tablet-function-key collection with button state in byte 1, dummy tablet-pad fields, and padding. `xppen_deco01v3_rdesc_fixup()` handles both descriptor sizes: replacing the pad descriptor or patching two pen tilt ranges in-place. `xppen_deco01v3_device_event()` maps keyboard scan-code reports to a button mask.
+
+Control flow: Probe accepts only 102-byte pad descriptors and 109-byte pen descriptors. During fixup, the pad descriptor is fully replaced. For the pen descriptor, two four-byte sequences at offsets 89 and 101 are compared against `{0x15, 0x81, 0x25, 0x7f}` and replaced with `{0x15, 0xc4, 0x25, 0x3c}` if present. During event processing, only report ID 6 is rewritten. The code derives button 3 from bit 2 in `data[1]` and scans bytes 2 through 7 for known key codes representing the other buttons, then writes `{ report_id, button_mask, 0, ... }` back over the report.
+
+State and persistence: There is no persistent mutable state. The report descriptor fix persists in the HID device instance after fixup. Per-event state is local to `button_mask` and loop indexes. The `pad_buttons` array inside the event program is static const and used only for lookup.
+
+Dependencies and integration points: The file depends on `hid_bpf.h`, `hid_bpf_helpers.h`, `hid_report_helpers.h`, and HID-BPF descriptor/event hooks. It integrates with the HID input stack by presenting the pad as tablet function keys rather than as an ordinary keyboard, which is important for libinput and userspace tablet configuration tools.
+
+Risks: The code relies on exact descriptor sizes and hard-coded pen descriptor offsets. Button recognition depends on firmware keyboard codes and byte ordering; future firmware could emit different codes or modifier encodings. `sizeof(pad_buttons)` is safe because the element type is one byte, but the zero placeholder for button 3 means byte value zero is deliberately ignored and button 3 must continue to be inferred from `data[1]`. The replacement descriptor contains dummy fields to force tablet-pad classification, so changes in HID classification heuristics could affect behavior.
+
+Test signals: Check that the pad no longer appears as a keyboard-only device, all eight buttons set stable bits under individual and combined presses, button 3 works through the modifier bit path, pen tilt reports are limited to -60..60, non-pad reports pass through unchanged, and the program rejects unrelated descriptor sizes.

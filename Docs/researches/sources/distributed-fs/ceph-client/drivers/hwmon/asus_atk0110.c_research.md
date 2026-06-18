@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/hwmon/asus_atk0110.c
+
+Purpose: legacy ASUS ATK0110 ACPI hwmon driver. It exposes ACPI-enumerated voltage, temperature, and fan sensors through manually built sysfs groups and supports both the old per-class ACPI methods and the newer GGRP/GITM/SITM multiplexed interface.
+
+Important APIs, types, and functions: `atk_data` tracks ACPI handles, interface type, EC enable state, sensor counts, debugfs state, and attribute groups. `atk_sensor_data` stores per-sensor sysfs attributes, ACPI ID/type/limits, cached value, validity, and label. `validate_hwmon_pack()` validates old/new ACPI package layouts; `atk_get_pack_member()` hides layout offsets. `atk_read_value_old()` calls RTMP/RVLT/RFAN methods; `atk_ggrp()`, `atk_gitm()`, and `atk_sitm()` implement the new ACPI enumerate/read/write calls. `atk_add_sensor()`, `atk_enumerate_old_hwmon()`, and `atk_enumerate_new_hwmon()` build sensor lists. Debugfs helpers expose raw GITM/GGRP inspection when enabled.
+
+Control flow: init first rejects unsafe ACPI resource enforcement and applies a DMI force-new-interface quirk. Probe gets the ACPI handle, optionally reads the board ID, probes available methods, chooses old or new interface, enumerates enabled sensors, creates four sysfs attributes per sensor (`input`, `label`, two limits), registers an `atk0110` hwmon device, and initializes debugfs. New-interface enumeration may enable the ATK EC before reading hwmon groups and remember to disable it during remove if it was previously off.
+
+State and persistence: each sensor caches a value for `CACHE_TIME` (`HZ`) in `cached_value`, guarded by per-sensor validity timestamps but without a global mutex around all sensors. The driver may change device state by enabling/disabling the ATK EC during new-interface probe and removal. `new_if` is a module parameter that overrides method selection.
+
+Dependencies and integration points: depends on ACPI platform matching for HID `ATK0110`, hwmon group registration, debugfs, DMI quirks, and ACPI method return formats. The code uses classic `hwmon_device_register_with_groups()` rather than the newer `hwmon_ops` channel-info model.
+
+Risks: ACPI package validation must match firmware quirks; new and old interfaces can both exist but the new one may be broken, hence the heuristic. Limit interpretation differs between interfaces (`limit2` is a delta in new mode). New-interface EC enable/disable behavior can affect firmware-visible state if probe or remove paths fail. Debugfs raw reads can compete with normal hwmon reads. The code trusts package string lifetimes only after duplicating names with devm memory.
+
+Test signals: probe old-interface boards, new-interface boards, and DMI-force-new boards. Verify voltage/temp/fan channel numbering and limit scaling, one-second cache reuse, disabled sensors being skipped, EC re-disable on unload, and error returns for malformed ACPI packages. `acpi_enforce_resources` settings and debugfs GITM/GGRP paths are important smoke tests.

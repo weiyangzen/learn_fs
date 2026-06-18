@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/name_to_handle_at/Makefile
+
+Purpose: generic build leaf for `name_to_handle_at` syscall tests. Important APIs/types/functions: standard `testcases.mk` and `generic_leaf_target.mk`. Control flow: delegates compilation and installation to LTP's common make rules. State/persistence: no custom state. Dependencies/integration: covers the three C tests in the directory and relies on their runtime metadata for root/tempdir needs. Risks: no special feature flags are set here; compatibility comes from included LTP headers. Test signals: successful build produces all `name_to_handle_at` test binaries.

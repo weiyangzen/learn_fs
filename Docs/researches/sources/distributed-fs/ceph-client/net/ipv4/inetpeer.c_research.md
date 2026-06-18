@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/ipv4/inetpeer.c
+
+Purpose: maintains long-lived per-peer IP state independent of routes, including redirect/rate-limit metadata and peer metrics storage, using an rb-tree per peer base rather than hash buckets to avoid collision attacks under bottom-half-disabled lookups.
+
+Important APIs/functions: exports or provides `inet_peer_base_init`, `inet_initpeers`, `inet_getpeer`, `inet_putpeer`, `inet_peer_xrlim_allow`, and `inetpeer_invalidate_tree`. Important globals are `inet_peer_threshold`, `inet_peer_minttl`, `inet_peer_maxttl`, and the `peer_cachep` slab. Key types are `struct inet_peer_base`, `struct inet_peer`, and `struct inetpeer_addr`.
+
+Control flow: initialization sizes the peer threshold to about one percent of RAM, clamps it, and creates the peer slab. Lookup first performs a seqlock-protected lockless rb-tree search under RCU; if a peer is found and the sequence did not change, the caller receives it without a refcount change. On miss or concurrent modification, the code takes the base write seqlock, repeats lookup while stacking visited peers for possible GC, allocates and inserts a new peer if still absent, and then garbage-collects old unreferenced peers. GC computes a TTL that becomes more aggressive as the tree approaches the threshold, removes peers with refcount one and stale `dtime`, and frees them by RCU. `inet_peer_xrlim_allow()` implements token-bucket rate limiting over peer fields. Tree invalidation erases all rb-tree nodes and drops their refs.
+
+State and persistence: peers live in `inet_peer_base.rb_root` until their refcount reaches zero, GC removes them, explicit invalidation drops the tree, or final RCU freeing completes. Fields such as `daddr`, redirect count, metrics, rate tokens, and recent-use time persist across route cache changes. `base->total` is updated under the seqlock. Rate-limit fields are updated with `READ_ONCE`/`WRITE_ONCE` and are intentionally lightweight rather than strongly serialized.
+
+Dependencies and integration: used by IPv4 fragment max-distance tracking, ICMP/ICMPv6 rate limiting, route metrics/redirect users, and per-net IPv4 peer bases. Depends on RCU, seqlock, rb-tree helpers, jiffies, secure sequence/rate helpers, and sysctl-exposed peer TTL/threshold tunables.
+
+Risks: callers must understand that `inet_getpeer()` does not automatically increment a reference; code that persists a peer must use `refcount_inc_not_zero()` where appropriate. GC relies on `refcount_dec_if_one()` to avoid removing active peers. Rate limiting is shared by source and destination uses, so changing token semantics can alter ICMP behavior globally. Invalidating the tree without appropriate external serialization could race readers that expect RCU protection.
+
+Test signals: ICMP rate-limit tests, route metrics persistence tests, IPv4 fragment `ipfrag_max_dist` behavior, peer sysctl tuning under memory pressure, namespace cleanup tests, and concurrency stress with KCSAN/lockdep around seqlock and refcount handling.

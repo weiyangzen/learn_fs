@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/nanosleep/nanosleep04.c
+
+Purpose: negative argument validation for `nanosleep(2)`. Important APIs/types/functions: static `struct timespec` testcase array, `TEST(nanosleep())`, `TST_RET`, `TST_ERR`, and `EINVAL` checks. Control flow: each case passes either negative seconds, nanoseconds equal to one billion, or negative nanoseconds and requires `-1/EINVAL`. State/persistence: no mutable state beyond the testcase index. Dependencies/integration: modern `tst_test` `.tcnt` dispatch. Risks: none significant; uses direct libc wrapper behavior matching kernel validation. Test signals: pass means invalid timespec fields are rejected with `EINVAL`.

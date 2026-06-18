@@ -1,0 +1,9 @@
+# sources/user-network-fs/libfuse/include/fuse_common.h
+
+`fuse_common.h` is the shared public API surface included indirectly by `fuse.h` and `fuse_lowlevel.h`. It defines version macros, ABI-sensitive data structures, connection capability flags, buffer vector abstractions, signal helpers, loop configuration helpers, and feature-flag helpers used throughout libfuse.
+
+Important exported types are `struct fuse_file_info`, `struct fuse_loop_config` or ABI-compatible `struct fuse_loop_config_v1`, `struct fuse_conn_info`, `struct fuse_buf`, `struct fuse_bufvec`, and `struct libfuse_version`. Public functions include `fuse_parse_conn_info_opts`, `fuse_apply_conn_info_opts`, `fuse_daemonize`, `fuse_version`, `fuse_pkgversion`, `fuse_pollhandle_destroy`, `fuse_buf_size`, `fuse_buf_copy`, signal handler setup/removal, loop config setters, and `fuse_set_feature_flag`/`fuse_unset_feature_flag`/`fuse_get_feature_flag`.
+
+The header has no runtime control flow, but defines negotiation and dataflow contracts: session init receives `struct fuse_conn_info`; filesystems inspect `capable_ext`, alter `want_ext`, and may apply parsed command-line overrides. State is per-open-file, per-connection, per-loop, and per-buffer-copy cursor. It integrates with `fuse_opt.h`, `fuse_log.h`, `buffer.c`, signal handling, daemonization, low-level sessions, and kernel protocol constants.
+
+Risks are ABI layout changes, misuse of legacy 32-bit capability fields for newer bits, cache and passthrough feature interactions, and missing 64-bit `off_t` on 32-bit platforms. Test signals include ABI size/layout checks, multi-version compile tests, feature-flag helper tests, connection option parsing, buffer-copy tests, and integration tests for cache invalidation, writeback, passthrough, no-open/no-opendir, and request-timeout negotiation.

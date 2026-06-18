@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c
+
+Purpose: implements core KMS driver load/unload, per-open file private setup/teardown, userspace `AMDGPU_INFO` query ioctl, vblank helpers, GPU instance accounting, and firmware debugfs output.
+
+Important APIs/functions: `amdgpu_driver_load_kms()` calls `amdgpu_device_init()`, runtime PM mode detection, ACPI init, and SmartShift load notification. `amdgpu_driver_unload_kms()` unregisters the GPU instance, tears down ACPI, and finalizes hardware. `amdgpu_info_ioctl()` is the large userspace query dispatcher for hardware IP info/counts, firmware versions, memory usage, MMR reads, device info, VBIOS, sensors, RAS, video caps, GPUVM fault, max IBs, and user-queue metadata. `amdgpu_driver_open_kms()` allocates file-private VM/PASID/context/userq state. `amdgpu_driver_postclose_kms()` tears those down. Vblank helpers use display scanout and IRQ refcounts.
+
+Control flow: the ioctl first validates nonzero return size and pointer, then switches on query type and uses bounded `copy_to_user()` with `min(size, sizeof(result))`. Hardware IP info derives available rings from live `sched.ready` and `no_user_submission`, handles JPEG as its own block when present, and computes user queue slots from MES masks. HW IP counts honor XCP partition masks when active. Device info aggregates PCI IDs, clocks, VM address limits, CU/cache topology, flags, PCIe capability masks, shadow/CSA sizes, and user queue IP mask. Open flushes delayed IB tests, rejects RAS-disabled devices, takes runtime PM, allocates fpriv, PASID, XCP assignment, VM/root PD, PRT VA, optional CSA, seq64 mapping, BO-list IDR, userq manager, EVF manager, and context manager. Error paths free PASID/VM/fpriv and drop runtime PM.
+
+State and persistence: global multi-GPU counts live in `mgpu_info` under a mutex. Per-open state lives in `struct amdgpu_fpriv`: VM, PASID, XCP ID, BO list handles, userq/EVF/context managers, CSA and seq64 mappings. Query results reflect current device state and counters; no durable persistence exists.
+
+Dependencies/integration: integrates DRM core, PM runtime, ACPI/SmartShift, AMDGPU device init/fini, RAS, reset domain, DPM sensors, TTM memory managers, VBIOS Atom context, KFD/PASID, XCP partitioning, user queues, display/vblank, UVD/VCE handles, debugfs, and firmware metadata.
+
+Risks: this file is userspace ABI-sensitive; every query must validate sizes, indexes, and offsets before exposing data or reading registers. MMR reads lock the reset domain and disable gfx off, but invalid register allowlists return `-EFAULT`. Open error paths are complex and must avoid leaks of PASID, VM BOs, CSA, seq64, and runtime PM refs. Firmware debugfs assumes an Atom context when printing VBIOS part number.
+
+Test signals: libdrm/mesa `AMDGPU_INFO` query tests, `modetest`/vblank tests, open/close leak tests, runtime PM balance checks, partitioned XCP query tests, sensor and VBIOS queries, firmware debugfs reads, RAS-disabled open rejection, and MMR register allowlist negative tests.

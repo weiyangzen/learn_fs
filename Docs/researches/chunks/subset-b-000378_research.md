@@ -1,0 +1,154 @@
+# sources/control-plane/csi-spec/lib/go/csi/csi.pb.go lines 7475-10081
+
+## Scope And Purpose
+
+This chunk covers the generated protobuf descriptor and reflection bootstrap section for the CSI Go package. The source file is generated from `sources/control-plane/csi-spec/csi.proto` by `protoc-gen-go` and is explicitly marked as generated code; this range should be treated as an artifact of the `.proto` schema rather than hand-maintained implementation logic.
+
+The first part of the range is the tail of `file_csi_proto_rawDesc`, a byte literal containing the serialized `FileDescriptorProto` for `csi.proto`. In this range the raw descriptor encodes the controller, node, group-controller, snapshot metadata, volume, snapshot, topology, capability, block metadata, extension-option, and service method schema. The raw bytes are the source used by the protobuf runtime to reconstruct names, field numbers, nested message structure, enum references, custom options, and service descriptors at runtime.
+
+The second part defines the runtime tables that bind that raw schema to Go types: raw descriptor compression state, enum and message info arrays, the `file_csi_proto_goTypes` type registry, the `file_csi_proto_depIdxs` dependency index table, and `file_csi_proto_init()`. Together these let `ProtoReflect()`, `Descriptor()`, protobuf marshaling/unmarshaling, oneof handling, extension descriptors, and generated gRPC stubs agree on the same CSI API contract.
+
+This chunk ends at the final line of `file_csi_proto_init()`, where the built `protoreflect.FileDescriptor` is assigned to `File_csi_proto` and large build-only tables are nilled. The merge lane should combine this with earlier chunks that define the concrete message structs, getters, enum constants, extension descriptors, and generated service interfaces/stubs.
+
+## Important APIs, Types, And Functions
+
+The key exported artifact in this range is `File_csi_proto`, declared just before the raw descriptor and built at the end of this chunk. It is the package-level `protoreflect.FileDescriptor` for the CSI schema. Runtime reflection users, protobuf internals, and generated descriptor methods indirectly depend on it.
+
+`file_csi_proto_rawDesc` is a generated `[]byte` literal holding the serialized schema. The requested range starts inside this literal, at the nested `DeleteVolumeRequest.SecretsEntry` descriptor, then continues through descriptors for major CSI message families:
+
+- Controller publish/unpublish, validation, list/get/modify volume, capacity, controller capabilities, snapshot, expansion, and node volume RPC request/response messages.
+- Node-side stage, publish, stats, capabilities, info, and expand messages.
+- Group-controller snapshot messages and the `GroupControllerServiceCapability` RPC oneof.
+- Snapshot metadata messages: `BlockMetadata`, `BlockMetadataType`, `GetMetadataAllocated*`, and `GetMetadataDelta*`.
+- Nested map-entry descriptors for secrets, parameters, mutable parameters, volume context, publish context, topology segments, and block metadata request secrets.
+- Service descriptors for `Identity`, `Controller`, `GroupController`, `SnapshotMetadata`, and `Node`, with their request and response message types.
+
+`file_csi_proto_rawDescOnce` and `file_csi_proto_rawDescData` back `file_csi_proto_rawDescGZIP()`. `file_csi_proto_rawDescGZIP()` uses `sync.Once` and `protoimpl.X.CompressGZIP` to lazily compress the raw descriptor for legacy `Descriptor() ([]byte, []int)` methods. This is the only function in the chunk besides `init()` and `file_csi_proto_init()`.
+
+`file_csi_proto_enumTypes = make([]protoimpl.EnumInfo, 8)` and `file_csi_proto_msgTypes = make([]protoimpl.MessageInfo, 134)` allocate protobuf runtime slots for all generated enum and message descriptors in `csi.proto`. The message count includes top-level messages plus nested messages, map-entry messages, and wrapper messages for oneof arms.
+
+`file_csi_proto_goTypes` maps descriptor indexes to Go runtime types. Important entries include:
+
+- Enum types: `BlockMetadataType`, plugin capability service and expansion enums, volume access mode enum, controller/node/group-controller RPC capability enums, and `VolumeUsage_Unit`.
+- Top-level CSI messages from `GetPluginInfoRequest` through `GetMetadataDeltaResponse`.
+- Nested Go messages such as `PluginCapability_Service`, `PluginCapability_VolumeExpansion`, `VolumeContentSource_*Source`, `VolumeCapability_*`, `ValidateVolumeCapabilitiesResponse_Confirmed`, list volume/snapshot entries, and controller/node/group-controller RPC capability payloads.
+- `nil` placeholders for generated map-entry message descriptors whose Go representation is a map rather than an exported struct type.
+- Imported protobuf types: `wrapperspb.BoolValue`, `wrapperspb.Int64Value`, `timestamppb.Timestamp`, and descriptor option types used as extension extendees.
+
+`file_csi_proto_depIdxs` is the generated dependency index table. It connects fields to message/enum types, custom extensions to `google.protobuf.*Options`, and service methods to input/output types. The tail entries define method routing for all five CSI services: three Identity methods, fifteen Controller methods, four GroupController methods, two SnapshotMetadata methods, and eight Node methods. The final sentinel indexes partition the table into method output types, method input types, extension type names, extension extendees, and field type names.
+
+`file_csi_proto_init()` is the descriptor bootstrap function called by `init()`. It is guarded by `if File_csi_proto != nil { return }`, assigns exporter functions when `!protoimpl.UnsafeEnabled`, configures oneof wrappers, builds the runtime descriptor with `protoimpl.TypeBuilder`, assigns `File_csi_proto`, and releases raw build tables.
+
+Exporter functions in `file_csi_proto_init()` expose `state`, `sizeCache`, and `unknownFields` for each concrete generated message when the unsafe fast path is disabled. This chunk includes exporters for all top-level messages and selected nested messages that have real Go structs. It intentionally skips map-entry placeholders and oneof wrapper structs that are not full protobuf messages.
+
+The oneof wrapper registrations are essential API glue:
+
+- `PluginCapability` accepts `PluginCapability_Service_` and `PluginCapability_VolumeExpansion_`.
+- `VolumeContentSource` accepts `VolumeContentSource_Snapshot` and `VolumeContentSource_Volume`.
+- `VolumeCapability` accepts `VolumeCapability_Block` and `VolumeCapability_Mount`.
+- `ControllerServiceCapability`, `NodeServiceCapability`, and `GroupControllerServiceCapability` each accept their respective `Rpc` wrapper.
+
+## Control Flow And Runtime Behavior
+
+Package initialization calls `file_csi_proto_init()` exactly once from `init()`. The guard makes repeated calls a no-op once `File_csi_proto` has been built.
+
+During initialization, the generated code first checks whether protobuf unsafe operations are enabled. If unsafe is not enabled, each `protoimpl.MessageInfo.Exporter` is set to a closure that type-asserts the message pointer and returns one of the three internal protobuf runtime fields by index. The protobuf runtime uses this path for reflection and marshaling bookkeeping without relying on unsafe memory access.
+
+After exporters are set, the function assigns `OneofWrappers` slices for the six messages in this schema that use Go oneof interfaces. Without this registration, unmarshaling and reflective oneof access would not know which concrete wrapper structs are valid for each oneof field.
+
+The final build path creates a local zero type `x` only to discover the Go package path with `reflect.TypeOf(x{}).PkgPath()`. It then constructs a `protoimpl.TypeBuilder` with:
+
+- `RawDescriptor: file_csi_proto_rawDesc`.
+- `NumEnums: 8`.
+- `NumMessages: 134`.
+- `NumExtensions: 7`.
+- `NumServices: 5`.
+- The generated Go type, dependency, enum, message, and extension info tables.
+
+Calling `.Build()` validates and links the descriptor graph, returning a built `protoreflect.FileDescriptor`. That file descriptor is stored in `File_csi_proto`. The raw descriptor, Go type list, and dependency list are then set to `nil` to allow the garbage collector to reclaim initialization-only memory. `file_csi_proto_msgTypes`, `file_csi_proto_enumTypes`, and `file_csi_proto_extTypes` remain because generated methods and extension descriptors need them at runtime.
+
+Descriptor compression is lazy and independent from `file_csi_proto_init()`. Legacy generated `Descriptor()` methods call `file_csi_proto_rawDescGZIP()`, which compresses `file_csi_proto_rawDescData` at most once. `file_csi_proto_rawDescData` is initialized from the raw descriptor before `file_csi_proto_init()` later nils `file_csi_proto_rawDesc`, so legacy descriptor access can still work after initialization.
+
+There is no business control flow here: no CSI request is served, no volume or snapshot state is changed, and no validation decisions are made. The runtime behavior is schema registration, reflection construction, oneof wiring, and descriptor compression.
+
+## State And Persistence Behavior
+
+The mutable package state is generated protobuf runtime state:
+
+- `File_csi_proto`, initially nil and later set to the built descriptor.
+- `file_csi_proto_rawDescData`, lazily replaced with the gzipped descriptor bytes.
+- `file_csi_proto_rawDescOnce`, which serializes compression.
+- `file_csi_proto_msgTypes[*].Exporter` and `.OneofWrappers`, populated during initialization.
+- `file_csi_proto_rawDesc`, `file_csi_proto_goTypes`, and `file_csi_proto_depIdxs`, nilled after the `TypeBuilder` build.
+
+This state is process-local and deterministic. It is not persisted to disk and does not read from environment variables or external stores. The persistence contract is instead wire/schema compatibility: field numbers, enum numbers, message names, extension numbers, service names, and oneof mappings encoded in this descriptor define what serialized CSI protobuf messages mean across process and version boundaries.
+
+Secrets are represented in the schema as map fields on requests such as delete, publish, unpublish, validate, snapshot, node stage/publish/expand, group snapshot, and metadata calls. This generated runtime state does not persist or scrub secret values itself; it only describes those fields and generated message storage. Callers and service implementations must handle secret lifetime and logging policy elsewhere.
+
+Because this is generated code, durable changes should originate in `csi.proto` plus regeneration. Manual edits to the raw descriptor bytes, dependency indexes, or oneof/exporter tables are fragile and will be overwritten on regeneration.
+
+## Dependencies And Integration Points
+
+This range depends on the modern Go protobuf runtime:
+
+- `google.golang.org/protobuf/reflect/protoreflect` for descriptor types.
+- `google.golang.org/protobuf/runtime/protoimpl` for `EnumInfo`, `MessageInfo`, `ExtensionInfo`, raw descriptor compression, and `TypeBuilder`.
+- `google.golang.org/protobuf/types/descriptorpb` for extension extendees.
+- `google.golang.org/protobuf/types/known/timestamppb` and `wrapperspb` for imported CSI field types.
+- Standard `reflect` and `sync`.
+
+The upstream schema input is `sources/control-plane/csi-spec/csi.proto`, whose `go_package` maps into this `csi` package. Generated sibling files are expected to consume the same descriptor state:
+
+- `csi.pb.go` earlier ranges define the concrete messages, enums, getters, extension descriptors, and `Descriptor()`/`ProtoReflect()` methods that point back into these tables.
+- The generated gRPC file for CSI services, usually `csi_grpc.pb.go` in the same Go package, depends on the same request/response types and service/method schema.
+- CSI plugin implementations import this package for strongly typed Identity, Controller, GroupController, SnapshotMetadata, and Node service APIs.
+- Any dynamic/reflection-based tooling, such as validation, OpenAPI-like schema extraction, conformance checks, or protobuf JSON handling, depends on `File_csi_proto` and the linked message descriptors.
+
+The descriptor table also integrates with custom CSI options:
+
+- `alpha_enum` on `EnumOptions`.
+- `alpha_enum_value` on `EnumValueOptions`.
+- `csi_secret` and `alpha_field` on `FieldOptions`.
+- `alpha_message` on `MessageOptions`.
+- `alpha_method` on `MethodOptions`.
+- `alpha_service` on `ServiceOptions`.
+
+The dependency index section maps those extensions to their `descriptorpb` extendees. This is important for schema consumers that inspect which CSI APIs are alpha or which fields carry secrets.
+
+## Risks And Edge Cases
+
+The highest risk is descriptor/table drift. `file_csi_proto_rawDesc`, `file_csi_proto_goTypes`, `file_csi_proto_depIdxs`, `file_csi_proto_msgTypes`, and oneof wrapper registrations must all describe the same schema. A mismatch can produce broken reflection, wrong field descriptors, failed marshaling/unmarshaling, incorrect service method descriptors, or panics during package initialization.
+
+Manual edits are especially risky because the descriptor bytes are opaque. Changing visible Go structs without regenerating the raw descriptor, or changing the raw descriptor without updating indexes and Go types, can create subtle runtime inconsistencies even when the package compiles.
+
+The dependency index table is order-sensitive. Method input/output entries and the final sub-list partition indexes must match the generated descriptor layout. Adding, removing, or reordering services or fields in `csi.proto` requires regeneration; hand-patching an index can route a reflected method to the wrong request/response descriptor.
+
+Oneof wrapper registrations are required for correctness. Missing or stale wrappers can make valid wire data unmarshal into unknown fields, break type switches over oneof interfaces, or cause reflective oneof setters to reject otherwise valid values. The oneof registrations for plugin capability, volume content source, volume capability, and service capability messages are therefore critical test targets after schema changes.
+
+The `protoimpl.UnsafeEnabled` branch changes how runtime internals access message state. Most platforms use the unsafe path, so exporter closures may receive less exercise. Builds or tests that disable unsafe are useful because stale exporter functions can otherwise sit unnoticed.
+
+The raw descriptor is nilled after `TypeBuilder.Build()`, but `file_csi_proto_rawDescData` preserves descriptor bytes for gzip access. Changing initialization order or removing that copy can break legacy `Descriptor()` callers.
+
+The CSI schema includes secret-bearing maps annotated with `csi_secret`. The generated descriptors expose those annotations, but do not enforce secret handling. Logging, validation, conformance tools, and service implementations must inspect or respect those descriptors elsewhere if they need redaction or policy enforcement.
+
+Because this file is generated with `protoc-gen-go v1.33.0` and `protoc v4.25.2`, upgrading generators can produce large mechanical diffs in descriptors, indexes, and initialization layout. Such diffs need schema-aware review rather than line-by-line interpretation of raw bytes.
+
+## Test Signals
+
+The basic build signal is that the `csi` Go package compiles and initializes without panic. A targeted reflection smoke test should import the package, access `File_csi_proto`, and assert the descriptor reports package `csi.v1`, eight enums, 134 messages, seven extensions, and five services.
+
+Service descriptor tests should assert method names and input/output descriptors for:
+
+- Identity: `GetPluginInfo`, `GetPluginCapabilities`, and `Probe`.
+- Controller: create/delete/publish/unpublish/validate/list/get/modify volume, capacity, controller capabilities, snapshot, and expansion RPCs.
+- GroupController: capabilities, create/delete/get volume group snapshot.
+- SnapshotMetadata: `GetMetadataAllocated` and `GetMetadataDelta`.
+- Node: stage/unstage/publish/unpublish, stats, expand, capabilities, and info.
+
+Oneof tests should marshal and unmarshal each registered oneof arm: plugin service and volume expansion capability, snapshot and volume content sources, block and mount volume capability, and controller/node/group-controller RPC capability payloads. The test should verify both the concrete Go wrapper type and reflective oneof descriptor.
+
+Extension tests should inspect `File_csi_proto.Extensions()` and verify that `alpha_enum`, `alpha_enum_value`, `csi_secret`, `alpha_field`, `alpha_message`, `alpha_method`, and `alpha_service` are present with the expected extendee option types and field numbers. Secret-field annotation checks are particularly useful for tooling that redacts CSI secrets.
+
+Descriptor stability tests should compare regenerated `csi.pb.go` against the checked-in file after changes to `csi.proto`. This catches accidental manual edits and generator-version drift. A stricter conformance lane can serialize `File_csi_proto` back to a descriptor proto and compare key service, field, enum, extension, and oneof facts to the source schema.
+
+Compatibility tests should run under normal unsafe-enabled builds and an unsafe-disabled configuration if feasible, so both the fast runtime path and the generated `Exporter` closures are exercised.

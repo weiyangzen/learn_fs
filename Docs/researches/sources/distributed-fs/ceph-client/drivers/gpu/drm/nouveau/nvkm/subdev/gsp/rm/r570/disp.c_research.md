@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/nouveau/nvkm/subdev/gsp/rm/r570/disp.c
+
+Purpose: implements R570 display RM API callbacks. It adapts display channel allocation, pushbuffer registration, output probing, DP capability/link-rate setup, backlight control, and static display info to R570 protocol payloads.
+
+Important APIs: `r570_dmac_alloc()` allocates display DMA channels with `NV50VAIO_CHANNELDMA_ALLOCATION_PARAMETERS`, setting channel instance, initial put offset, and `subDeviceId`. `r570_disp_chan_set_pushbuf()` sends `NV2080_CTRL_INTERNAL_DISPLAY_CHANNEL_PUSHBUFFER`, mapping Nouveau memory targets to RM `addressSpace`, `cacheSnoop`, and `pbTargetAperture`. `r570_dp_set_indexed_link_rates()` sends `DP_CONFIG_INDEXED_LINK_RATES`. `r570_dp_get_caps()` reads DP caps and translates RM max-link-rate enums to DPCD link bandwidth codes while returning MST and watermark support. `r570_bl_ctrl()` gets or sets percent backlight brightness. `r570_disp_get_active()`, `r570_disp_get_connect_state()`, `r570_disp_get_supported()`, and `r570_disp_get_static_info()` wrap common display controls. The exported `r570_disp` table wires these callbacks under `.get_static_info`, `.get_supported`, `.get_connect_state`, `.get_active`, `.bl_ctrl`, `.dp`, and `.chan`.
+
+Control flow and state: most functions allocate a control buffer, populate display IDs as `BIT(index)` masks or subdevice instance 0, push/read the control, copy output fields into Nouveau state, and call `_done()` for readback controls. Static info updates `disp->wndw.mask` and `disp->wndw.nr`. Pushbuffer registration can also invalidate a channel for class low byte `0x7a`.
+
+Dependencies and integration: depends on `rm/rm.h`, display engine/output structures, `nvhw/drf.h`, and R570 `nvrm/disp.h`. It integrates with DRM/KMS output probing, DP training, backlight, audio/ELD paths, and display channel setup.
+
+Risks: `r570_dp_set_indexed_link_rates()` indexes `linkRateTbl` by `outp->dp.rate[i].dpcd` while only checking `outp->dp.rates` against array size; malformed DPCD indexes would be dangerous if not constrained earlier. Memory target to aperture translation must match RM's R570 fields (`pbTargetAperture` is R570-specific). Backlight uses `brightnessType`, also R570-specific. Missing `_done()` on some error paths after `ctrl_push()` failure can leak control buffers depending on helper semantics.
+
+Test signals: modeset and hotplug probing should work, window masks should match hardware, DP caps should report correct link rates/MST/watermark support, indexed link-rate programming should succeed for UHBR-capable links, backlight get/set should round-trip, and display DMA channels should allocate with working pushbuffers.

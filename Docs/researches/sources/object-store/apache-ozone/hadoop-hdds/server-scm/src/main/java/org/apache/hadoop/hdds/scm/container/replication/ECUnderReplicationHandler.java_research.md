@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/main/java/org/apache/hadoop/hdds/scm/container/replication/ECUnderReplicationHandler.java
+
+Purpose: `ECUnderReplicationHandler` repairs EC containers by reconstructing missing indexes and copying indexes that exist only on decommissioning or maintenance nodes. It emits EC reconstruction commands for truly missing indexes and replication commands for one-to-one copies of existing indexes.
+
+Important APIs and behavior: `processAndSendCommands` builds `ECContainerReplicaCount`, exits if the container is already sufficient or will be sufficient after pending adds, computes excluded/used nodes, filters usable sources by replica index, and then runs three repair stages: `processMissingIndexes`, `processDecommissioningIndexes`, and `processMaintenanceOnlyIndexes`. It also exposes `integers2ByteString` for reconstruction target index encoding.
+
+Control flow: source filtering accepts `CLOSED` replicas on healthy datanodes, excluding pending deletes, preferring an `IN_SERVICE` source when multiple copies of an index exist. Missing indexes are reconstructed when at least `data` source indexes are available. The handler asks placement for targets, defers non-critical partial reconstruction if full placement would be possible only by using overloaded nodes, validates but does not require placement satisfaction, sends one `ReconstructECContainersCommand`, and records local pending adds. Decommission-only and maintenance-only indexes are copied one-for-one with `ReplicateContainerCommand` or push replication.
+
+State and persistence: local state is limited to the mutable `ECContainerReplicaCount`, local used/excluded lists, and command counters. Durable operational state is in pending ops scheduled by `ReplicationManager`. Metrics track skipped partial reconstruction, critical partial reconstruction, non-overload placement shortage, and partial out-of-service copies.
+
+Dependencies and integration: it depends on EC configs, placement policy, `ReplicationManagerUtil`, `ReplicationManager`, node status, `ReconstructECContainersCommand`, `ReplicateContainerCommand`, pending ops, and SCM metrics. It is selected for EC `UNDER_REPLICATED` queue entries.
+
+Risks: partial reconstruction is complex: target list pruning must stay aligned with the missing-index list, and command scheduling assumes target order matches encoded index order. Placement failures can trigger over-replication processing or unhealthy replica deletion to free targets, which is useful in small clusters but can interact with pending-delete races. Reconstruction reads may include maintenance/decommission sources if they are healthy and no in-service source exists for an index.
+
+Test signals: `TestECUnderReplicationHandler` covers reconstruction command content, source filtering, pending-op updates, maintenance/decommission handling, overloaded nodes, insufficient targets, partial reconstruction metrics, and unhealthy-replica deletion fallback.

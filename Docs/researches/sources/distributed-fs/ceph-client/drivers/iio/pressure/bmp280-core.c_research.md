@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/iio/pressure/bmp280-core.c -->
+# sources/distributed-fs/ceph-client/drivers/iio/pressure/bmp280-core.c
+
+Purpose: shared IIO core for Bosch BMP085/BMP180/BMP280/BME280/BMP380/BMP390/BMP580 pressure-family sensors. It owns calibration parsing, compensation math, direct reads, buffered reads, runtime PM, regulator/reset handling, and variant-specific chip descriptions.
+
+Important APIs, types, and functions: `bmp280_common_probe()` is exported to bus adapters. `struct bmp280_chip_info` supplies variant callbacks, channels, regmap config, chip IDs, oversampling/filter/frequency tables, coefficients, triggers, and mode handlers. Key direct-read paths are `bmp280_read_raw_impl()`, `bmp280_write_raw_impl()`, and `bmp280_read_avail()`. Variant families include BMP/BME280 calibration and compensation, BMP380/BMP390 command and compensation code, BMP580 built-in-compensation reads and NVMEM access, and BMP180/BMP085 legacy EOC conversion code.
+
+Control flow: bus drivers create a regmap and pass chip info to `bmp280_common_probe()`. Probe enables `vddd`/`vdda`, optional reset GPIO, verifies chip ID, runs preinit, applies chip config, reads calibration if needed, sets up triggered buffer and optional IRQ trigger, enters sleep, enables runtime PM, and registers the IIO device. Direct reads runtime-resume the chip, force a measurement, wait for conversion, call the variant read callback, apply coefficients for processed values, and autosuspend. Buffered operation enters normal mode on preenable and pushes compensated channel data from the variant trigger handler.
+
+State and persistence: `struct bmp280_data` stores calibration values read once from device NVM, current oversampling/filter/frequency settings, current operating mode, regulators, completion for BMP085 EOC, optional trigger state, and DMA-aligned transfer buffers. BMP580 additionally registers an nvmem provider that can read and write three NVM rows; other calibration is read-only. Runtime PM persists selected settings in memory and reapplies chip config on resume.
+
+Dependencies and integration points: depends on IIO core, IIO triggered buffers/triggers, regmap, regulators, runtime PM, optional GPIO reset, optional IRQ/fwnode properties, nvmem provider for BMP580, and bus-specific modules. It exports chip-info symbols and common probe in namespace `IIO_BMP280`.
+
+Risks: this is a high-blast-radius core where conversion math, coefficient scaling, and endian handling differ per chip generation. `pm_runtime_get_sync()` return values are ignored in read/write paths. Some stack scan buffers are not zero-initialized in non-BME handlers, so padding review matters. BMP580 NVM write support exposes persistent device state and must be carefully permission-tested. Sampling-frequency availability lengths are stored as `ARRAY_SIZE(table) * 2`, which matches IIO list flattening but is easy to misuse. Optional IRQ trigger setup only runs when platform IRQ is positive.
+
+Test signals: per-variant probe and chip-ID tests; coefficient parsing with known datasheet vectors; direct raw/processed reads; oversampling/filter/frequency write and rollback on config failure; runtime suspend/resume; triggered buffer scan layout; BMP085 EOC timeout; BMP380/BMP580 IRQ data-ready paths; BMP580 nvmem read/write; and allmodconfig namespace/modpost builds for I2C and SPI.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/iio/pressure/bmp280-core.c -->

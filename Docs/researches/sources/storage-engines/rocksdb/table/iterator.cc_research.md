@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/table/iterator.cc
+
+- **Purpose:** Implements default public iterator property handling and empty/error iterator factories for both public `Iterator` and internal `InternalIteratorBase<TValue>` types.
+- **Important APIs/types/functions:** `Iterator::GetProperty`; file-local `EmptyIterator`; file-local template `EmptyInternalIterator<TValue>`; factories `NewEmptyIterator`, `NewErrorIterator`, `NewErrorInternalIterator`, `NewEmptyInternalIterator` with heap and arena overloads; explicit instantiations for `Slice` and `IndexValue`.
+- **Control flow:** `GetProperty` handles key/value pinning properties and rejects null/unrecognized property names. Empty iterators always report invalid, no-op on seek methods, assert on movement/key/value access that requires validity, and return their stored status. Factory functions allocate OK or error empty iterators either normally or by placement-new in an arena.
+- **State and persistence behavior:** Empty iterators store only a `Status`. Arena factories transfer destruction responsibility to callers that know arena mode. No persistent data is read or written.
+- **Dependencies:** Depends on public iterator API, `Arena`, `InternalIteratorBase`, `IteratorWrapper` factory declarations, and `IndexValue` from table format.
+- **Integration points:** Used throughout table and DB code to represent empty sources or construction errors without returning null iterators. Cuckoo reader uses `NewErrorInternalIterator` when reader construction status is bad.
+- **Risks:** Invalid operations assert rather than return errors, so callers must check `Valid()` before `Next`, `Prev`, `key`, or `value`. Public `GetProperty` only reports non-pinned defaults here; concrete iterators must override for richer properties. Arena allocation requires manual destructor calls by owner code.
+- **Test signals:** Expected coverage from iterator factory/status tests and any reader tests that create error/empty iterators. `cuckoo_table_reader.cc` uses the error internal iterator path for bad reader status.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/irqflags.h
+
+Purpose: selects the correct ARC irqflags implementation for the configured ISA. Important APIs/types/functions: includes `irqflags-compact.h` for `CONFIG_ISA_ARCOMPACT` or `irqflags-arcv2.h` otherwise. Control flow: preprocessor-only dispatch. State and persistence: none directly; included file mutates IRQ state. Dependencies/integration: public `asm/irqflags.h` consumed by generic interrupt and locking code. Risks: wrong ISA selection would emit unsupported instructions or wrong status-bit logic. Test signals: compile matrix for ARCompact/ARCv2 and basic IRQ enable/disable tests.

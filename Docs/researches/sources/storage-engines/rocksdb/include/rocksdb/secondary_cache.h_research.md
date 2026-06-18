@@ -1,0 +1,15 @@
+# sources/storage-engines/rocksdb/include/rocksdb/secondary_cache.h
+
+Purpose: This header defines the modern secondary-cache interface for a lower cache tier such as non-volatile media or compressed block storage. It is used beneath the primary block cache and integrates with RocksDB's `Customizable` configuration system.
+
+Important APIs and types: `SecondaryCacheResultHandle` represents a lookup result that may be pending, ready-miss/error, or ready-hit. It exposes `IsReady()`, `Wait()`, `Value()`, and `Size()`. `SecondaryCache` extends `Customizable`, declares `Type()`, `CreateFromString()`, and virtual methods `Insert()`, `InsertSaved()`, `Lookup()`, `SupportForceErase()`, `Erase()`, `WaitAll()`, optional `SetCapacity()`, `GetCapacity()`, `Deflate()`, and `Inflate()`. `SecondaryCacheWrapper` forwards all calls to a target shared cache and is intended for decorators. `kSliceCacheItemHelper` is an external helper for cache entries that can be copied as slices.
+
+Control flow: A primary cache can suggest insertion through `Insert()`, passing the object and `CacheItemHelper` callbacks to serialize persistable bytes. `InsertSaved()` warms the cache from already saved bytes, optionally marked with compression type and source tier. `Lookup()` can block when `wait=true` or return a pending handle when `wait=false`; callers must wait before using `Value()`/`Size()`, and must take ownership of a hit value to avoid leaks. `advise_erase` lets the primary cache tell a supporting secondary cache to drop an entry after promoting it.
+
+State and persistence behavior: Implementations own the secondary tier state and capacity. Entries may be stored on persistent media, compressed memory, or another cache mechanism. Admission control can decline an insert while returning OK. Capacity-changing APIs are optional; `Deflate()`/`Inflate()` are temporary RAM-capacity adjustments intended to be lighter than a full `SetCapacity()`.
+
+Dependencies and integration points: It depends on `advanced_cache.h`, `customizable.h`, `options.h`, `Slice`, `Statistics`, and `Status`. It integrates with block cache entries through `Cache::ObjectPtr`, `CacheItemHelper`, and `CreateContext`; with `DBOptions::lowest_used_cache_tier`; and with configuration parsing via `CreateFromString()`.
+
+Risks and edge cases: The handle state comment has a typo saying ready-hit has `IsReady() == false`; the intended behavior is ready plus non-null value. Pending handles must not be destroyed. Some implementations might never report ready through polling without `Wait()` or `WaitAll()`. `Value()` transfers/returns ownership semantics through `ObjectPtr`; failing to consume a hit leaks memory. Exceptions must not propagate. `advise_erase` is only a hint and requires `SupportForceErase()` for force behavior.
+
+Test signals: Tests should cover synchronous and asynchronous lookup, `WaitAll()`, hit/miss/error handles, insert admission, saved-data warming with compression metadata, erase/advised erase, wrapper forwarding, capacity changes or NotSupported fallback, stats updates, and leak checks when handles produce values.

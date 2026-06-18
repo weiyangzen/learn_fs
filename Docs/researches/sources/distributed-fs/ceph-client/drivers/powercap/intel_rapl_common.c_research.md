@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/powercap/intel_rapl_common.c
+
+Purpose: shared Intel RAPL implementation used by interface backends such as MSR and TPMI. It converts backend register primitives into Linux powercap zones, constraints, energy counters, and optional perf PMU events.
+
+Important APIs/types/functions: exported `rapl_add_package*()`, `rapl_remove_package*()`, `rapl_find_package_domain*()`, `rapl_package_add_pmu*()`, `rapl_package_remove_pmu*()`, `rapl_default_check_unit()`, `rapl_default_set_floor_freq()`, and `rapl_default_compute_time_window()`. Core types come from `linux/intel_rapl.h`: `rapl_package`, `rapl_domain`, `rapl_if_priv`, `rapl_defaults`, `rapl_primitive_info`, and `reg_action`. The powercap-facing ops are `zone_ops[]` and `constraint_ops`.
+
+Control flow: a backend builds `rapl_if_priv` with register tables, primitive descriptors, callbacks, and a powercap control type, then calls `rapl_add_package()`. The common layer resolves package id, checks configuration, detects domains by reading energy status registers, initializes per-domain register/unit data, detects power-limit availability and BIOS locks, registers parent and child powercap zones, and adds the package to the global list. Sysfs callbacks read/write translated primitive values through `rapl_read_data_raw()` and `rapl_write_data_raw()`. Optional perf support registers a dynamic `power` PMU, maps perf event ids to RAPL domains, scales hardware energy deltas to 2^-32 Joules, and periodically samples counters with an hrtimer.
+
+State and persistence: `rapl_packages` is protected by the CPU hotplug read lock. Per-package state tracks domains, powercap parent zone, lead CPU, PMU data, IRQ-save state, and last suspend power limits. Suspend notifications save package PL values and restore them after resume. Removal disables PL enable/clamp bits, restores package power-limit interrupt masking, unregisters child zones before parent, removes the package list node, and frees memory through powercap release paths.
+
+Dependencies/integration: depends on x86 topology, MSR feature bits, powercap core, perf events, sysfs, suspend notifiers, CPU hotplug locking, and backend callbacks. It imports RAPL interface details from MSR/TPMI modules and exports the `INTEL_RAPL` namespace to those modules.
+
+Risks: primitive mask/shift mistakes affect all users; package identity differs between AMD/Hygon package-scope MSRs and Intel die-scope MSRs; PL lock detection must avoid writable sysfs for BIOS-locked controls; PMU updates unregister/re-register the PMU when domain coverage grows; energy counter wrap handling depends on hrtimer interval and scale math; `rapl_detect_domains()` currently does not abort on per-domain unit failures.
+
+Test signals: boot on supported MSR and TPMI platforms; inspect `/sys/class/powercap/intel-rapl:*`; read energy counters and constraint files; write power limits and time windows; suspend/resume and confirm limits persist; offline/online package CPUs; run `perf list`/`perf stat -e power/energy-pkg/`; exercise BIOS-locked and monitoring-only domains.

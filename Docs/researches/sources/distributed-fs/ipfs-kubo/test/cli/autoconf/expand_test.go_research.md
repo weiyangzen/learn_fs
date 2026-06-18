@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/cli/autoconf/expand_test.go
+
+Purpose: focused tests for preserving literal `auto` in stored config and expanding it only on explicit read paths. It also validates delegated endpoint filtering for supported routing/IPNS paths and native-versus-delegated system selection.
+
+Important functions: `TestAutoConfExpand`, `testConfigCommandsShowAutoValues`, `testMixedConfigurationPreserved`, `testConfigReplacePreservesAuto`, `testExpandAutoFiltersUnsupportedPathsDelegated`, `testExpandAutoWithAutoRouting`, `testExpandAutoWithMixedSystems`, `testExpandAutoWithFiltering`, `testExpandAutoWithoutCacheDelegated`, `testExpandAutoWithoutCacheAuto`, and `loadTestDataExpand`.
+
+Control flow sets `Bootstrap`, `DNS.Resolvers`, `Routing.DelegatedRouters`, and `Ipns.DelegatedPublishers` to `auto` or mixed static values, reads them normally, then uses `--expand-auto`. Some tests start daemons and wait for cache prewarming before asserting filtered endpoints from fixture files; no-cache tests expect hardcoded fallbacks. State includes stored config, daemon cache, and expanded JSON output. Dependencies are the CLI harness, `httptest`, fixture AutoConf JSON, and config replace. Risks include sleeps for cache fetch, exact endpoint expectations, and behavior changes in fallback routing systems. Test signal protects user-facing config semantics: `auto` remains durable, expansion is explicit, ordered, and filtered.

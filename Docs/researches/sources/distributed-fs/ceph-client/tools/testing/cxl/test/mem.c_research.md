@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/testing/cxl/test/mem.c
+
+Purpose: mock CXL memory-device platform driver that emulates a CXL mailbox, events, label storage, security, poison injection, firmware update, features, and memdev registration for the CXL test topology.
+
+Important APIs, types, and functions: constants define LSA, firmware, slot, and device capacities. `mock_cel` advertises supported command effects. `struct cxl_mockmem_data` stores LSA/FW buffers, FW slots, security state/passphrases/limits, event store, memdev state, timestamp, sanitize timeout, vendor test feature, and shutdown state. Command handlers include `mock_gsl`, `mock_get_log`, `mock_id`, `mock_rcd_id`, `mock_partition_info`, event handlers, security handlers, LSA handlers, health/shutdown handlers, poison handlers, firmware handlers, feature handlers, and dispatcher `cxl_mock_mbox_send()`. Probe path is `cxl_mock_mem_probe()`.
+
+Control flow: probing sleeps briefly to widen async race windows, allocates managed mock data plus vmalloc LSA/FW buffers, creates CXL memdev state and mailbox, installs `cxl_mock_mbox_send`, initializes event buffer and delayed sanitize work, marks RCD devices, enumerates commands from the CEL, initializes poison/timestamp/identify/DPA/features, seeds event logs, registers a CXL memdev, sets up firmware upload, sanitize notifier, and optional fwctl, drains initial events, and initializes the vendor feature. Mailbox commands are switched by opcode and routed to mock handlers that validate payload sizes, mutate mock state, and set CXL return codes when needed.
+
+State and persistence: each platform device owns `cxl_mockmem_data`. LSA contents, firmware buffer/checksum, selected/staged slots, security passphrases/lock/freeze/try-limit flags, event cursors, sanitize-active delayed work, shutdown state, and vendor feature data persist while the device exists. Poison state is a global fixed array keyed by `struct cxl_dev_state *`, with driver sysfs control for per-device injection max. Sysfs attributes expose `security_lock`, `event_trigger`, `fw_buf_checksum`, and `sanitize_timeout`.
+
+Dependencies and integration points: depends on CXL mailbox/memdev APIs, crypto SHA-256, platform driver infrastructure, trace header, firmware upload/sanitize/fwctl helpers, and namespace `CXL`. It is instantiated by platform devices from `test/cxl.c`.
+
+Risks: large and stateful emulation must track evolving CXL command structs and return-code semantics. Some commands deliberately emulate only enough behavior for tests. Global poison state must be empty before changing injection max. Security flows are complex and spec comments identify ambiguous cases. `cmd->size_out` expectations vary by command, so ABI drift can break tests.
+
+Test signals: CXL tools should enumerate mock memdevs with CEL, LSA, partition, poison, FW, feature, health, and event support. Event trigger sysfs should regenerate event reads. Security sysfs plus mailbox commands should exercise passphrase limits and lock/unlock. FW upload should change checksum and slot state. Poison inject/clear/get should reflect mock list updates.

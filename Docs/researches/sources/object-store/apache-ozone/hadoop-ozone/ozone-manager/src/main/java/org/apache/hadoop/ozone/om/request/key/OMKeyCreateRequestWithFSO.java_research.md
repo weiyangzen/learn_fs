@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/request/key/OMKeyCreateRequestWithFSO.java
+
+Purpose: `OMKeyCreateRequestWithFSO` implements the create/open phase for FSO buckets. It stores missing parents in the directory table, opens the file under an object-ID based open-file key, and returns network key info with the user-visible full path.
+
+Important APIs and types: The class extends `OMKeyCreateRequest` and uses `OMFileRequest.OMPathInfoWithFSO`, `OmDirectoryInfo`, `OmKeyInfo`, `OmBucketInfo`, `OmKeyLocationInfo`, `OMKeyCreateResponseWithFSO`, `CreateKeyResponse`, `ReplicationConfig`, and `getMultipartKeyFSO` for MPU open-key lookup.
+
+Control flow: `validateAndUpdateCache` acquires the bucket lock, validates volume/bucket, reads volume and bucket object IDs, verifies the FSO path through directory and file tables, loads an existing file if the target already exists, validates atomic/ETag preconditions, rejects directory or intermediate-file conflicts, builds missing parent directory infos, resolves replication config, prepares `OmKeyInfo` with FSO parent and leaf object IDs, validates encryption, builds the open-file DB key from volume/bucket/parent/name/client ID, appends preallocated blocks, checks quota, writes the open-file-table cache entry and directory-table cache entries, and returns an FSO create response carrying volume ID and parent entries.
+
+State and persistence behavior: Missing parents are represented as `OmDirectoryInfo` rows in the directory table, not zero-length directory keys in the key table. The open file is written to the open key table using `getOpenFileName(volumeId, bucketId, parentId, leaf, clientID)`. The actual file-table row is created at commit. Bucket namespace is incremented for missing parents only in create; the file namespace increment occurs at commit. Multipart open-key names are overridden to use FSO multipart DB keys.
+
+Dependencies and integration points: It depends on FSO path verification in `OMFileRequest`, transaction-derived object ID ranges in `OMKeyRequest`, bucket-table object IDs, response logic that batches directory and open-file updates, replication resolution, encryption validation, quota helpers, metrics/audit inherited from the base class, and the commit path that consumes the open-file entry.
+
+Risks: Correctness depends on stable parent object IDs from path verification and on keeping leaf name versus full path semantics straight. Directory creation can exceed the 255-per-transaction recursive limit inherited from `OMKeyRequest`. Quota namespace accounting differs from legacy create because missing parents and final file are counted at different phases. Existing file checks must load from the file table only when `FILE_EXISTS` is returned.
+
+Test signals: `TestOMKeyCreateRequestWithFSO` and `TestOMKeyCreateResponseWithFSO` should assert open-file-table keys, directory-table parent rows, response network key names, volume ID propagation, MPU FSO key naming, path conflict failures, quota deltas for parent creation, encryption checks, and atomic/ETag behavior against existing file-table rows.

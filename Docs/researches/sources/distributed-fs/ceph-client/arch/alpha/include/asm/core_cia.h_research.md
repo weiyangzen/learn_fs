@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/arch/alpha/include/asm/core_cia.h
+
+This chipset header describes the CIA/21171, CIA-2/21172, and PYXIS/21174 core logic used by EV5-class Alpha systems. It defines CSR addresses for CIA control, memory, PCI windows, HAE registers, diagnostics, performance counters, error registers, ALCOR GRU interrupt registers, PYXIS interrupt registers, sparse/dense memory spaces, and a CIA machine-check system-data frame.
+
+The important runtime APIs are `cia_ioread8/16/32/64`, `cia_iowrite8/16/32/64`, `cia_ioportmap`, `cia_ioremap`, `cia_is_ioaddr`, `cia_is_mmio`, plus BWX variants `cia_bwx_*`. Non-BWX accesses use sparse memory encodings with byte-enable/transfer-length bits and HAE state; BWX-capable paths can use more linear byte/word I/O. The header chooses `__IO_PREFIX` as `cia` or `cia_bwx` based on `__WANT_IO_DEF`.
+
+State includes chipset CSRs, HAE cache/register state mediated by `io.h`, PCI window registers, and machine-check logout data. Integration is via `asm/io.h`, `alpha_machine_vector`, PCI hose setup, interrupt code, and error handling. Risks are address-mask/HAE mistakes, sparse memory byte-lane encoding, PYXIS/CIA revision quirks, and generic-kernel dispatch selecting the wrong prefix. Useful test signals are Alpha defconfig or cross-build coverage, sparse/header dependency checks, and targeted boot-image build checks. Runtime validation normally requires Alpha SRM/QEMU or real hardware because many paths depend on PALcode, HWRPB data, chipset registers, or old ISA/PCI behavior.

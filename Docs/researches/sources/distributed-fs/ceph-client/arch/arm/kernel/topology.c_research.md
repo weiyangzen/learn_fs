@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/kernel/topology.c
+
+Purpose: builds ARM CPU topology and scheduler capacity data from MPIDR and device tree. Key functions are `init_cpu_topology`, `store_cpu_topology`, `parse_dt_topology`, and `update_cpu_capacity`.
+
+Control flow: boot resets topology, parses DT capacity data or legacy compatible/clock-frequency efficiency values, normalizes scheduler CPU scale, then each CPU stores package/core/thread ids from MPIDR and updates sibling masks. Persistent state includes `cpu_topology[]`, optional `__cpu_capacity`, `middle_capacity`, and `cap_from_dt`. Dependencies include OF CPU nodes, `topology_parse_cpu_capacity`, scheduler topology helpers, MPIDR macros, and arch topology scale APIs. Risks are missing CPU DT nodes, bad clock-frequency lengths, heterogeneous capacity normalization mistakes, and hotplug races if called outside the documented locked paths. Test signals include boot topology logs, scheduler capacity values on big.LITTLE systems, correct sibling masks, and fallback defaults on homogeneous systems.

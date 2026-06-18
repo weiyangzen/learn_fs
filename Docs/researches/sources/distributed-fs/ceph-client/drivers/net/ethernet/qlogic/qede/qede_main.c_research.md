@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/qlogic/qede/qede_main.c
+
+## Purpose
+This file is the qede PCI/netdev lifecycle and slowpath coordinator. It binds supported QLogic/Marvell FastLinQ PCI IDs, obtains the lower-layer `qed` Ethernet operations, creates and registers the netdev, configures features and queues, opens/closes vports, manages NAPI and interrupts, handles SR-IOV, TC offload, stats, RDMA and PTP integration, link updates, Tx timeout logging, AER, and firmware/hardware recovery.
+
+## Important APIs, Types, and Functions
+Important top-level objects are the `qede_pci_driver`, `qede_ll_ops` callback table, `qede_netdev_ops` variants for PF/VF/XDP, `qede_netdev_notifier`, and state in `struct qede_dev`: `cdev`, `ops`, `ndev`, fastpath arrays, queue counts, `sp_flags`, `err_flags`, `state`, stats, devlink, RDMA and PTP pointers.
+
+Key lifecycle functions are `qede_init()`, `qede_cleanup()`, `qede_probe()`, `__qede_probe()`, `qede_remove()`, `__qede_remove()`, `qede_shutdown()`, `qede_open()`, `qede_close()`, `qede_load()`, `qede_unload()`, and `qede_reload()`. Queue/resource helpers include `qede_set_num_queues()`, `qede_alloc_fp_array()`, `qede_init_fp()`, `qede_alloc_mem_load()`, `qede_start_queues()`, `qede_stop_queues()`, `qede_setup_irqs()`, and `qede_sync_free_irqs()`. Slowpath and error functions include `qede_sp_task()`, `qede_link_update()`, `qede_schedule_recovery_handler()`, `qede_recovery_handler()`, `qede_schedule_hw_err_handler()`, and `qede_io_error_detected()`.
+
+## Control Flow
+Module init initializes forced speed maps, gets `qed` Ethernet ops, registers the netdev notifier, and registers the PCI driver. Probe calls the lower-layer `qed` probe and slowpath start, reads device info, allocates or reconnects a netdev, configures netdev features and operations, registers devlink and netdev in normal probe mode, adds RDMA support, enables PTP for PFs, registers callbacks with `qed`, and starts periodic stats work when configured.
+
+Opening a netdev powers the device to D0 and calls `qede_load()`. Load chooses queue counts and interrupt resources, allocates fastpath structures, initializes Rx/Tx/XDP queue metadata, allocates status blocks and rings, sets real netdev queue counts, registers NAPI, requests MSI-X or configures SIMD handlers, starts the vport, starts Rx/Tx/XDP queues, activates the vport with RSS/Tx switching settings, configures TC layout and VLAN filters, requests link up, marks the device open, and applies coalescing. Close calls `qede_unload()`, which stops OS Tx, drops carrier, tears down link and queues, stops fastpath, releases ARFS filters and interrupts, removes NAPI, frees queue memory, clears PTP skip counters, and updates driver state.
+
+Deferred work in `qede_sp_task()` serializes recovery, Rx mode changes, ARFS configuration, hardware error reporting, and AER recovery. The recovery path marks `QEDE_STATE_RECOVERY`, calls lower-layer recovery prolog, unloads if the interface was open, removes and reprobes the lower-layer device in recovery mode, reloads queues if needed, and restores the previous state or detaches the netdev on failure.
+
+## State and Persistence Behavior
+The file owns long-lived in-memory driver state for the netdev lifetime: device identity, feature flags, queue topology, interrupt metadata, fastpath structures, stats snapshots, requested queue counts, coalescing preferences, VLAN list, RDMA registration state, PTP state, and devlink handle. Runtime state transitions are guarded by `qede_lock` and RTNL-aware wrappers. No durable storage is written; user-visible settings survive reload/recovery only when held in `qede_dev` fields, such as coalescing entries and requested queue counts.
+
+## Dependencies and Integration Points
+It depends heavily on `linux/qed/qed_if.h` and `struct qed_eth_ops` for PCI probe/remove, slowpath, vport, queue, interrupt, devlink, doorbell recovery, statistics, link, and firmware error APIs. It integrates with netdev operations from this file and other qede modules: fastpath (`qede_fp.c`), filters/Rx mode/VLAN/ARFS/TC helpers, ethtool, XDP, DCB, RDMA (`qede_rdma.c`), PTP (`qede_ptp.c`), SR-IOV `iov` operations, devlink fatal error reporting, PCI AER, and netdevice notifiers for name/MAC changes.
+
+## Risks
+The load/unload and recovery paths are ordering-sensitive. NAPI, IRQs, queue stop, fastpath stop, memory free, and lower-layer callbacks must be sequenced so no completion path touches freed rings. Recovery mode intentionally skips some normal removal steps, so stale `cdev`, devlink, RDMA, and stats state must be carefully reattached. `qede_sp_task()` uses different locking rules for recovery versus other flags; deadlocks are possible around RTNL, SR-IOV disable, and internal locks. Queue count/resource calculations must match allocated netdev queues and MSI-X vectors. Tx timeout handling reports diagnostics and schedules hardware error work only for PFs, so VF behavior depends on PF recovery. PTP is disabled after RDMA removal and before lower-layer remove; work cancellation must prevent timestamp work from using a stopped device.
+
+## Test Signals
+Build coverage should include PF, VF, SR-IOV, XDP-capable VF, DCB, ARFS, TC flower, and devlink configurations. Runtime signals include successful probe/remove loops, open/close/reload stress, queue count changes, link up/down callbacks, SR-IOV VF configuration, mqprio/flower offload operations, XDP attach/detach and traffic, PTP enable/disable, RDMA driver registration, PCI AER simulation, firmware recovery, Tx timeout handling, and no use-after-free under concurrent netdev notifier, close, and recovery events.

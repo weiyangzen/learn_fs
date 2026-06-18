@@ -1,0 +1,13 @@
+# sources/cloud-native/buildkit/client/llb/source.go
+
+Purpose: implements LLB source operations and public constructors/options for image, image blob, OCI layout blob, git, scratch, local directories, OCI layouts, HTTP downloads, auth, headers, checksums, file metadata, and capability annotation.
+
+Important APIs/types/functions: `SourceOp` implements `Vertex` for source identifiers/attrs. Constructors include `ImageBlob`, `OCILayoutBlob`, `Image`, `Git`, `Scratch`, `Local`, `OCILayout`, and `HTTP`. Option types include `ImageOption`, `GitOption`, `LocalOption`, `OCILayoutOption`, `HTTPOption`, `FileInfoOption`, `AuthOption`, and bundle/image/blob/store helpers. `GitInfo`, `LocalInfo`, `HTTPInfo`, `OCILayoutInfo`, and `ImageBlobInfo` hold option state. `platformSpecificSource` and `addCap` control platform/cap metadata.
+
+Control flow: each constructor parses/normalizes inputs, populates protobuf source attrs, adds required capabilities, creates a `SourceOp`, and returns a `State`. Image sources normalize references, set resolve mode/layer/checksum attrs, and optionally wrap in `Async` to resolve image config and optionally digest-pin the ref. Git sources parse URLs, support old fragment `ref:subdir`, canonicalize IDs independent of protocol where possible, set auth defaults, handle SSH known-hosts and socket attrs, bundle/import/export attrs, checksum/fetch flags, and source caps. Local and HTTP sources serialize patterns/headers/signatures and file metadata attrs.
+
+State and persistence: source ops are declarative; external persistence lives in registries, local session transfers, git remotes, OCI layout stores, HTTP endpoints, and BuildKit worker caches. `SourceOp.Marshal` mutates local source attrs to add unique ID when no session ID exists. Image async resolution can cache through the async state/resolver.
+
+Dependencies/integration points: distribution/reference parsing, BuildKit protobuf source attrs/caps, gitutil, sshutil keyscan, sourceresolver, image metadata resolver options, constraints, local session IDs, HTTP auth secret conventions, and tests for git/image blob/source/platform behavior.
+
+Risks/test signals: many string attrs form public wire contracts. Image digest pinning is important for cache safety with mutable tags. `OCIChecksum` sets a field that is not currently emitted to attrs in this file, which may be intentional gap or pending feature. Git SSH keyscan is best-effort network work during graph construction. JSON pattern marshal errors are ignored. Tests cover git attrs, invalid image blob refs, OCI blob attrs, image resolver behavior, platform propagation, and source maps.

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_bpf_fprog.c
+
+Mpers helper for fetching `struct sock_fprog` from a tracee. It exports `get_sock_fprog_size` and `fetch_bpf_fprog`, translating compat pointer/length fields into the native `struct sock_fprog` representation without printing on success. State is only the copied structure. Dependencies are `MPERS_DEFS`, `<linux/filter.h>`, and `bpf_fprog.h`. Risks are pointer truncation/extension across personalities and callers expecting no output from a fetch helper. Tests should fetch native and compat filter programs, bad pointers, zero-length filters, and callers that subsequently print BPF instructions.

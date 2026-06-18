@@ -1,0 +1,122 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/phy/qualcomm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 108
+- Recursive researched files: 108
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-ath79-usb.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-apq8064-sata.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-edp.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-eusb2-repeater.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-ipq4019-usb.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-ipq806x-sata.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-ipq806x-usb.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-m31-eusb2.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-m31.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-pcie2.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-combo.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-common.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-com-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy-v2.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-phy.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-dp-qserdes-com-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcie-msm8996.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcie-qhp.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-aon-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-aon-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-misc-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-misc-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-misc-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-misc-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v4_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v6_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v6_30.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-sgmii.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v2.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v7.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v2.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v4_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v6-n4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v6_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v6_30.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v7.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v8_50.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v2.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v7.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-dp-com-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-lalb-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-ln-shrd-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-ln-shrd-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-pll.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-pcie-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v7.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v2.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v3.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v4_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v5.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v5_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v5_5nm.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6_20.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6_n4.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v7.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-usb-legacy.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-usb.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-usb43-pcs-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-usb43-qserdes-com-v8.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-usbc.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp.h`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qusb2.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-sgmii-eth.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-uniphy-pcie-28lp.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-usb-hs-28nm.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-usb-hs.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-usb-hsic.c`
+- `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-usb-ss.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

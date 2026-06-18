@@ -1,0 +1,30 @@
+# sources/storage-engines/pebble/table_stats.go
+
+## Purpose
+This file implements Pebble's asynchronous table-statistics loading and estimation machinery. Table statistics influence compaction picking, deletion compensation, delete-only compactions, metrics, and compression reporting, but loading them can require table and blob-file I/O. The implementation queues new tables, incrementally scans existing tables after `Open`, populates `TableMetadata` and blob metadata with loaded properties, and computes estimates for point and range tombstones.
+
+## Important APIs, Types, and Functions
+The scheduler entry points are `maybeCollectTableStatsLocked`, `updateTableStatsLocked`, `shouldCollectTableStatsLocked`, and `collectTableStats`. `collectedStats` couples `*manifest.TableMetadata` with `manifest.TableStats` until `DB.mu` can be reacquired for mutation. Loading/scanning functions include `loadNewFileStats`, `scanReadStateTableStats`, `scanBlobFileProperties`, `loadTableStats`, `loadTablePointKeyStats`, and `loadTableRangeDelStats`.
+
+Estimation and helper functions include `seqNumRangeOfKind`, `estimateSizesBeneath`, `examineTablesBeneathTombstones`, `sanityCheckStats`, `estimateDiskUsageInTableAndBlobReferences`, `maybeSetStatsFromProperties`, `pointDeletionsBytesEstimate`, and `newCombinedDeletionKeyspanIter`. The file also defines manifest annotators: `deletionBytesAnnotator`, `tablePropsAnnotator`, and `blobCompressionStatsAnnotator`, with supporting `deletionBytes` and `aggregatedTableProps` types.
+
+## Control Flow
+New tables enter through `updateTableStatsLocked`, which checks whether any table lacks stats, appends entries to `d.mu.tableStats.pending`, and starts a collector if one is not already running. `collectTableStats` locks `DB.mu`, atomically claims the pending slice or initial-load scan work, marks `loading`, releases the mutex, loads a read state, performs I/O, unreferences the read state, then reacquires the mutex to populate metadata, broadcast waiters, possibly enqueue wide tombstones, and schedule compaction if tombstone compensation changed.
+
+When there is pending work, `loadNewFileStats` skips tables that already have stats or are no longer live at the expected level. Otherwise, initial loading uses `scanReadStateTableStats`, bounded to 50 tables per scan, and then `scanBlobFileProperties`. Table scanning checks remote object sizes for non-shared, non-external remote files before reading stats. `loadTableStats` reads table backing properties only if needed, opens tables with `fileCache.withReader`, loads range deletion stats when range tombstones exist, and estimates point deletion bytes when point deletions exist.
+
+Range deletion stats flow through `newCombinedDeletionKeyspanIter`, which merges defragmented range deletion spans with range-key delete spans. `loadTableRangeDelStats` estimates reclaimable bytes beneath each merged span, applies a bottommost-level heuristic for tombstones that may delete data within the same table, and records `tombspan.WideTombstone` candidates when lower tables could be dropped or excised. `estimateSizesBeneath` and `examineTablesBeneathTombstones` scan lower LSM levels to calculate average logical value sizes, compression ratios, full-overlap estimates, partial-overlap estimates, and delete-only compaction candidates.
+
+## State and Persistence Behavior
+The persistent inputs are MANIFEST metadata, table backing properties, SSTable range-deletion/range-key blocks, table sizes, blob references, and blob-file properties. The in-memory outputs are stored in `TableMetadata.PopulateStats`, `TableBacking.PopulateProperties`, and blob physical metadata `PopulateProperties`. The job is intentionally asynchronous and bounded: only one stats goroutine runs at a time through `d.mu.tableStats.loading`, and `loadedInitial` flips only after both table stats and blob properties are loaded for the current version.
+
+The collector reads under a referenced read state and mutates shared metadata only after reacquiring `DB.mu` or under the single-collector invariant. It is resilient to concurrent DB close through `d.closed` and `bgCtx` checks. It may retry later by returning `moreRemain` or by re-triggering `maybeCollectTableStatsLocked`. Extreme deletion estimates are guarded by `sanityCheckStats`, which panics in invariant builds and rate-limits logging otherwise.
+
+## Dependencies and Integration Points
+This code integrates with `manifest.Version`, `manifest.TableMetadata`, `manifest.TableBackingProperties`, blob-file metadata, object provider lookup/size APIs, the table file cache, `sstable.Reader`, `block.ReadEnv`, range-key/range-delete keyspan iterators, `tombspan.WideTombstone`, compaction scheduling, event listeners, DB metrics annotations, and Pebble format-version gates such as `FormatVirtualSSTables`. It depends on `crmath` for scaled blob reference estimates, `crtime` for rate-limited logs, `invariants` for defensive checks, and `redact` for safe logging.
+
+## Risks and Edge Cases
+Important risks include expensive O(number of tables/files) scans, stale read states causing work on files that have moved or disappeared, remote object size mismatches, inaccurate deletion byte estimates from compression-ratio approximations, bottommost tombstone heuristics overestimating ingested tables, and L0 sublevel limitations noted in comments. `newCombinedDeletionKeyspanIter` is subtle: it assumes range deletion bounds are already valid for physical/virtual tables and uses bound assertions to catch old or migrated invalid tombstones. Blob-file property loading can lag table stats and impacts compression metrics until completed.
+
+## Test Signals
+`table_stats_test.go` supplies datadriven coverage for scheduling, initial load, metadata stats, range deletion iteration, and metrics after reopen. The file's own comments and guards signal operational expectations: no user-latency I/O under `DB.mu`, bounded work per scan, event listener notification on initial load, background error reporting for retryable failures, and compaction scheduling when deletion estimates create tombstone compensation.

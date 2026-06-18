@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbserver/workloads/BackupToDBUpgrade.cpp
+
+Purpose: defines `BackupToDBUpgrade`, a backup-to-DB workload for DR version upgrade and switchover-style restore paths. It starts an older/differential backup, waits for upgrade to the latest DR version, locks/apply-checks the backup, aborts it, then restores data back through another backup-to-DB job.
+
+Important APIs, types, and functions: `BackupToDBUpgradeWorkload` extends `TestWorkload`. Options include `backupAfter`, `backupPrefix`, `backupRangeLengthMax`, `stopDifferentialAfter`, `backupTag`, `restoreTag`, and `backupRangesCount`. Helpers include `doBackup()`, `checkData()`, `_setup()`, `diffRanges()`, and `_start()`.
+
+Control flow: constructor creates non-overlapping `backupPrefix`/`extraPrefix`, random or whole ranges, and an extra database. `_setup()` optionally adds system backup ranges, waits `backupAfter`, and starts the backup on `extraDB`. `_start()` waits for both `stopDifferentialAfter` and `waitUpgradeToLatestDrVersion()`, reads the log UID and backed-up range list from backup config, locks the extra database for the log UID, waits until `appliedVersion >= commitVersion`, diffs copied ranges against primary data, aborts and unlocks the original backup, prepares restore ranges by prefixing the previous backup ranges, submits a restore backup into the primary, waits/unlocks it, and runs `checkData()` for both the original backup and restore tag.
+
+State and persistence behavior: the workload inspects and manipulates backup-to-DB config keys directly through `DatabaseBackupAgent::config`, including serialized `VectorRef<KeyRangeRef>` backup ranges, log UID, destination UID, applied-version keys, log ranges, latest-version keys, and mutation log keys. It locks databases during apply/restore transitions and clears restore destination ranges before submitting the restore backup.
+
+Dependencies and integration points: uses `FDBOptions.g.h`, `BackupAgent`, `ClusterConnectionMemoryRecord`, `ManagementAPI`, `ApiVersion`, simulator extra databases, `BulkSetup`, `TaskBucket`, and backup config primitives. It assumes exactly one extra database and disables `RandomRangeLock`.
+
+Risks and edge cases: it performs lower-level config reads and lock operations than most workloads, so schema or encoding changes in backup config can break it. The applied-version watch loop must handle races where the watched value is already high enough. `diffRanges()` logs rather than throws on data mismatch. Restore setup prints ranges to stdout and clears prefixed ranges under retry. `checkData()` waits for task drain and can be slow.
+
+Test signals: expected traces include `DRU_DoBackup`, `DRU_WaitDifferentialEnd`, `DRU_Locked`, `DRU_Applied`, `DRU_DiffRanges`, `DRU_AbortBackup`, `DRU_PrepareRestore`, `DRU_RestoreDb`, and `DRU_Complete`. Severe traces include `BackupCorrectnessLeftoverMutationKeys`, `BackupCorrectnessLeftoverVersionKey`, `BackupCorrectnessLeftoverLogKeys`, and top-level `BackupAndRestoreCorrectnessError`.

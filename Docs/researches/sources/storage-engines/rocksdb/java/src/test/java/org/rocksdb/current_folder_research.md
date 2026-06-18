@@ -1,0 +1,116 @@
+# Folder Research: sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 102
+- Recursive researched files: 119
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/AbstractTransactionTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/BackupEngineOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/BackupEngineTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/BlobOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/BlockBasedTableConfigTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/BuiltinComparatorTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ByteBufferUnsupportedOperationTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/BytewiseComparatorRegressionTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CheckPointTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ClockCacheTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ColumnFamilyOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ColumnFamilyTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactRangeOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionFilterFactoryTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionJobInfoTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionJobStatsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionOptionsFIFOTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionOptionsUniversalTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionPriorityTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompactionStopStyleTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ComparatorOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompressionOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/CompressionTypesTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ConcurrentTaskLimiterTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/DBOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/DefaultEnvTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/DirectSliceTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/EnvOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/EventListenerTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/FilterTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/FlushOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/FlushTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/HyperClockCacheTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ImportColumnFamilyTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/InfoLogLevelTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/IngestExternalFileOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/KeyExistsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/KeyMayExistTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/LRUCacheTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/LoggerTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MemTableTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MemoryUtilTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MergeCFVariantsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MergeTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MergeVariantsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MixedOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MultiColumnRegressionTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MultiGetManyKeysTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MultiGetTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MutableColumnFamilyOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MutableDBOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/MutableOptionsGetSetTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/NativeComparatorWrapperTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/NativeLibraryLoaderTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/OptimisticTransactionDBTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/OptimisticTransactionOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/OptimisticTransactionTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/OptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/OptionsUtilTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PerfContextTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PerfLevelTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PlainTableConfigTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PlatformRandomHelper.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PutCFVariantsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PutMultiplePartsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/PutVariantsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/RateLimiterTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ReadOnlyTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/ReadOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/RocksDBExceptionTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/RocksDBTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/RocksIteratorTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/RocksMemEnvTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/RocksNativeLibraryResource.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SecondaryDBTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SliceTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SnapshotTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SstFileManagerTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SstFileReaderTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SstFileWriterTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/SstPartitionerTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/StatisticsCollectorTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/StatisticsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/StatsCallbackMock.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TableFilterTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TimedEnvTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TransactionDBOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TransactionDBTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TransactionLogIteratorTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TransactionOptionsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TransactionTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/TtlDBTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/Types.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/VerifyChecksumsTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WALRecoveryModeTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WalFilterTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WriteBatchHandlerTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WriteBatchTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WriteBatchThreadedTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WriteBatchWithIndexTest.java`
+- `sources/storage-engines/rocksdb/java/src/test/java/org/rocksdb/WriteOptionsTest.java`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

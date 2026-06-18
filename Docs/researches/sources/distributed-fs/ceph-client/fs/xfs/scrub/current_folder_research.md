@@ -1,0 +1,122 @@
+# Folder Research: sources/distributed-fs/ceph-client/fs/xfs/scrub
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 108
+- Recursive researched files: 108
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/agb_bitmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/agb_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/agheader.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/agheader_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/agino_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/alloc.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/alloc_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/attr.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/attr.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/attr_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/attr_repair.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/bitmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/bmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/bmap_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/common.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/common.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/cow_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dab_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dabtree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dabtree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dir.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dir_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dirtree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dirtree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dirtree_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/dqiterate.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/findparent.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/findparent.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/fsb_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/fscounters.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/fscounters.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/fscounters_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/health.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/health.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/ialloc.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/ialloc_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/ino_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/inode.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/inode_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/iscan.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/iscan.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/listxattr.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/listxattr.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/metapath.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/newbt.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/newbt.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/nlinks.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/nlinks.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/nlinks_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/off_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/orphanage.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/orphanage.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/parent.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/parent_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/quota.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/quota.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/quota_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/quotacheck.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/quotacheck.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/quotacheck_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rcbag.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rcbag.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rcbag_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rcbag_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/readdir.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/readdir.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/reap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/reap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/refcount.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/refcount_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/repair.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rgb_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rgsuper.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rmap_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtb_bitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtbitmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtbitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtbitmap_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtrefcount.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtrefcount_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtrmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtrmap_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtsummary.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtsummary.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/rtsummary_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/scrub.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/scrub.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/stats.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/stats.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/symlink.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/symlink_repair.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/tempexch.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/tempfile.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/tempfile.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/trace.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/trace.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfarray.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfarray.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfblob.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfblob.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfile.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfile.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/scrub/xfs_scrub.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

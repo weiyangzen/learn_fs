@@ -1,0 +1,7 @@
+## sources/test-tools/syzkaller/syz-cluster/workflow/triage/main.go
+
+`triage-action` decides what tests a session should run. It loads session series/job info from the controller, queries configured trees/fuzz targets, chooses base commits/trees, prepares build/fuzz/retest targets, uploads triage logs/skip reason, and writes a JSON verdict for Argo.
+
+For normal series, `GetVerdict` selects fuzz configs from Cc, merges compatible campaigns, then calls `prepareFuzzingTask` per campaign. Base selection tries author base-commit hint, blob-hash base detection, then configured tree list with last successful builds and patch application. The returned `api.TestTarget` has matching base/patched build requests, patched `SeriesID`, track/fuzz config, and optional retest findings. For job sessions, `prepareJobTask` recreates patched build tasks from the job's finding groups and schedules retest when finding IDs exist.
+
+State persists through controller API calls for triage result and later workflow outputs. Dependencies include git tree ops, triage helper package, debug tracer, and controller API. Integration is central to `pkg/workflow/template.yaml`. Risks include only `amd64` support, skip reason overwritten by later skipped campaigns until at least one target succeeds, base-commit hint branch containment cutoff of 60 days, and real git worktree mutation. Unit tests are mostly in `pkg/triage`; this action lacks direct tests.

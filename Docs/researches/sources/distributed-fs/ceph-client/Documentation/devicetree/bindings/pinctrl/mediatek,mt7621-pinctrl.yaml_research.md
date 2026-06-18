@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/mediatek,mt7621-pinctrl.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/mediatek,mt7621-pinctrl.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/mediatek,mt7621-pinctrl.yaml` defines the legacy MediaTek/Ralink group-mux pin controller binding titled `MediaTek MT7621 Pin Controller`. MediaTek MT7621 pin controller for MT7621 SoC. The pin controller can only set the muxing of pin groups. Muxing individual pins is not supported. There is no pinconf support. The binding is part of the kernel devicetree ABI for describing hardware pin muxing, GPIO exposure, interrupt routing, and electrical pin configuration before the corresponding drivers probe.
+
+## Important APIs, Types, and Functions
+The API surface is the devicetree schema, not callable code. Supported compatible values are `ralink,mt7621-pinctrl`. Top-level properties are `compatible`. Required top-level properties are `compatible`. Nested required keys include `groups`, `function`, `compatible`. The important child-node contracts are: child patterns `-pins$`; functions `gpio`, `i2c`, `i2s`, `jtag`, `mdio`, `nand1`, `nand2`, `pcie refclk`, `pcie rst`, `pcm`, `rgmii1`, `rgmii2`, `sdhci`, `spdif2`, `spdif3`, `spi`, and 5 more; groups include `i2c`, `jtag`, `mdio`, `pcie`, `rgmii1`, `rgmii2`, `sdhci`, `spi`, `uart1`, `uart2`, `uart3`, `wdt`. The highest-risk ABI surface is function-to-group mux matrices with no individual pinmux or pinconf support.
+
+## Control Flow
+Control flow is declarative schema evaluation. `dt_binding_check` loads the YAML, validates extracted examples against referenced common schemas, and then `dtbs_check` matches real DTS nodes by `compatible` or by inclusion from another schema. The validator checks required properties, constants, enum values, array sizes, pattern-matched child nodes, and composition branches such as `allOf`. Runtime flow begins later when the compiled DTB is handed to Linux: the driver core matches the compatible, maps `reg` resources, registers GPIO or interrupt providers where present, and applies selected pinctrl states requested by device nodes.
+
+## State and Persistence Behavior
+The YAML file stores no mutable runtime state and writes no persistent data. Its persistent behavior is ABI-level: once compatibles, pin names, group names, register ordering, GPIO/interrupt cell counts, and child-node names are accepted into DTS files, those strings and shapes become long-lived DTB contracts. Runtime state is owned by the matched kernel drivers after probe, including selected mux mode for SoC pin groups.
+
+## Dependencies and Integration Points
+Schema dependencies include `pinctrl.yaml#`, `pinmux-node.yaml#`. Integration points include the Ralink/MediaTek pinctrl driver, board pinctrl state nodes, and consumers selecting I2C, UART, SPI, SDHCI, PCIe, Ethernet, watchdog, LED, PCM/I2S, and GPIO group functions. The file also integrates with `pinctrl.yaml`, `pinmux-node.yaml`, `pincfg-node.yaml`, `/schemas/types.yaml`, GPIO and interrupt-controller bindings where referenced, Linux `make dt_binding_check`, Linux `make dtbs_check`, board DTS pinctrl state phandles, and driver `of_match_table` review.
+
+## Risks
+Primary risks are incompatible edits to function-to-group mux matrices with no individual pinmux or pinconf support; drift between documented compatibles and driver match tables; incorrect `reg` or `reg-names` ordering; mismatched GPIO/interrupt cell counts; over-broad or under-broad child regexes; stale pin/function/group enumerations compared with the driver tables; and electrical settings that validate but are unsupported on a specific pad. This schema's local closure behavior is: top-level unknown properties are rejected; child nodes are admitted only through regex patterns. Regressions normally surface as dtbs_check failures, unbound pinctrl drivers, missing GPIO/IRQ providers, or devices booting with the wrong mux or bias state.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/pinctrl/mediatek,mt7621-pinctrl.yaml` to validate the schema and its 1 embedded example(s). Run `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/pinctrl/mediatek,mt7621-pinctrl.yaml` against boards using the relevant SoC or controller. Additional review signals are matching every compatible against the driver `of_match_table`, checking example `reg` tuple counts and `reg-names`, validating GPIO/interrupt provider cells, and exercising representative pinctrl states that cover mux, GPIO, interrupt, bias, drive-strength, and SoC-specific properties.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/mediatek,mt7621-pinctrl.yaml -->

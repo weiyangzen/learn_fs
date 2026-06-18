@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_indirect_syscall_args.c
+
+Helper for architectures or multiplexed syscall ABIs where real syscall arguments are stored indirectly in tracee memory. It fetches the pointed argument block into `tcp->u_arg` so normal decoders can run. State mutation is the `tcb` argument array, making it an integration point before syscall-specific decoding. Dependencies are `umove`/tracee memory access and architecture sysent metadata. Risks are fetching the wrong word size, overwriting arguments after partial failure, and incompatibility with syscall restart handling. Tests should use indirect socket/ipc calls or architecture fixtures that verify decoded arguments match the tracee memory block.

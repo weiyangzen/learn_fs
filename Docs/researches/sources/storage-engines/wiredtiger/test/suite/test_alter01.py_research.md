@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_alter01.py
+
+Purpose: smoke-tests `WT_SESSION.alter` for file/table metadata options `access_pattern_hint` and `cache_resident` across plain files, simple tables, column groups, indexes, tiered storage, and optional reopen. Important APIs are `session.create`, `session.alter`, `session.open_cursor('metadata:')`, cursor inserts, and `reopen_conn`; the test type is `test_alter01(TieredConfigMixin, WiredTigerTestCase)`.
+
+Control flow builds a matrix from tiered storage, URI shape, create-time hint/cache settings, and reopen mode, creates the main object and optional subobject, writes integer rows, verifies default or explicit metadata, then loops all alter combinations. State and persistence are checked through metadata cursor scans before and after reopen. Dependencies include `helper_tiered` and `wtscenario`. Integration risk is high around default value changes, because defaults are hard-coded as `access_pattern_hint=none` and `cache_resident=false`. Test signals are metadata string assertions and tiered file URI skips.

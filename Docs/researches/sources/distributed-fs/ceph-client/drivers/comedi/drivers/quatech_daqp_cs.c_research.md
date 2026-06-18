@@ -1,0 +1,11 @@
+## sources/distributed-fs/ceph-client/drivers/comedi/drivers/quatech_daqp_cs.c
+
+Purpose: Comedi PCMCIA driver for Quatech DAQP-208/DAQP-308 data acquisition cards. It supports analog input in instruction and command modes, single-shot analog output, digital input, digital output, and PCMCIA suspend/resume blocking.
+
+Important APIs, types, and functions: `struct daqp_private` stores the programmed pacer divisor and a `stop` flag used during suspend. `daqp_clear_events()`, `daqp_ai_cancel()`, `daqp_ai_get_sample()`, and `daqp_interrupt()` are the async acquisition core. `daqp_ai_set_one_scanlist_entry()`, `daqp_ai_insn_read()`, `daqp_ns_to_timer()`, `daqp_set_pacer()`, `daqp_ai_cmdtest()`, and `daqp_ai_cmd()` configure and run AI. `daqp_ao_insn_write()`, `daqp_di_insn_bits()`, and `daqp_do_insn_bits()` implement other subdevices. PCMCIA integration uses `daqp_auto_attach()`, `daqp_cs_attach()`, suspend/resume hooks, and `module_comedi_pcmcia_driver()`.
+
+Control flow and state: auto attach enables the PCMCIA function, requests IRQ, then creates AI, AO, DI, and DO subdevices. AI instruction mode resets the scan queue and FIFO, programs one scan entry, arms a one-shot conversion, polls AUX conversion status, and munges two's-complement FIFO samples. AI command mode validates timer/follow trigger combinations, computes the 5 MHz pacer divisor, programs the scanlist, sets a FIFO threshold based on stop count or half FIFO, enables FIFO interrupts, clears sticky events, and arms continuous internal conversion. The ISR drains samples until FIFO empty, data loss, stop count, or loop limit, then raises Comedi events.
+
+Dependencies and integration: It depends on `linux/comedi/comedi_pcmcia.h`, PCMCIA IDs, Comedi async buffers, `comedi_timeout()`, `comedi_offset_munge()`, and port I/O. PCMCIA removal delegates to `comedi_pcmcia_auto_unconfig()`.
+
+Risks and test signals: FIFO threshold logic intentionally allows extra samples to be collected before final interrupt. Status event clearing may require repeated reads. The ISR has a loop limit to avoid hangs. Suspend only sets `stop` and does not cancel hardware already in progress. Validation should include command timing correction, finite and continuous acquisition, data-lost event propagation, suspend/resume `-EIO` blocking, AO timeout behavior, and PCMCIA IRQ-less fallback.

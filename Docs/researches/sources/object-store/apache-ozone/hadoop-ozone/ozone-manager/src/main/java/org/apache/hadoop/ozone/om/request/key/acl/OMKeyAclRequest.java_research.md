@@ -1,0 +1,15 @@
+## sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/request/key/acl/OMKeyAclRequest.java
+
+Purpose: `OMKeyAclRequest` is the base class for add, remove, and set ACL operations on key objects in non-FSO key-table layouts. It centralizes validation, bucket-link resolution, ACL authorization, bucket locking, key lookup, mutation application, cache update, response hooks, auditing, and bucket-layout discovery.
+
+Important APIs/types/functions: The main API is `validateAndUpdateCache(OzoneManager, ExecutionContext)`. Subclasses implement `getPath`, `getObject`, `onInit`, `onSuccess`, `onComplete`, and `apply`. `initializeBucketLayout` discovers the bucket's layout for request routing. It uses `ObjectParser`, `ResolvedBucket`, `checkAcls`, `IAccessAuthorizer.ACLType.WRITE_ACL`, `BUCKET_LOCK`, `OmKeyInfo.Builder`, `CacheKey`, `CacheValue`, and `OMKeyAclResponse`.
+
+Control flow: Validation parses the requested key path, resolves linked buckets to real volume/bucket names, optionally checks WRITE_ACL permission, acquires the bucket write lock, reads the key-table row by flat ozone key, and throws `KEY_NOT_FOUND` if absent. The subclass `apply` callback mutates the ACL collection. If the operation reports success, the request modification time is copied from the relevant protobuf request. The updated `OmKeyInfo` gets the transaction update ID and is written to the key-table cache. Completion hooks run after lock release for logging and audit.
+
+State and persistence behavior: The class only updates OM metadata cache; persistence occurs through the normal double-buffer response path. It always writes an updated cache entry after a found key, even when add/remove reports no logical change, preserving the current request behavior. Bucket layout defaults to `BucketLayout.DEFAULT` if initialization fails or the bucket is missing during constructor-time discovery.
+
+Dependencies and integration points: It integrates with Ozone native ACL authorization, bucket-link resolution, OM lock tracking, audit logging, metrics in subclasses, and response replay via `OMKeyAclResponse`. It also serves as the compatibility bridge for old-client validators in concrete subclasses.
+
+Risks and edge cases: Path parsing failures and invalid paths are treated as request failures. Linked buckets require authorization and DB lookup against the resolved real bucket, while audit maps come from the original object. Constructor-time bucket layout discovery logs failures and falls back, so callers must pass/initialize layout correctly. The modification-time logic checks which request oneof is present and should remain aligned with concrete operation types.
+
+Test signals: Tests should verify ACL add/remove/set on existing and missing keys, authorization failures, link-bucket resolution, audit fields, modification time updates only on successful logical changes where expected, lock release on failures, and replay of cache entries through `OMKeyAclResponse`.

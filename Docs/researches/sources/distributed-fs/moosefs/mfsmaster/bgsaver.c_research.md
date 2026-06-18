@@ -1,0 +1,11 @@
+# sources/distributed-fs/moosefs/mfsmaster/bgsaver.c
+
+`bgsaver.c` isolates slow disk work from the main master process. A forked background writer receives framed packets over pipes, writes `metadata_download.tmp`, appends and rotates `changelog.0.mfs`, acknowledges changelog progress, and emits heartbeat packets. The parent side queues commands and integrates with the main poll/time/reload/shutdown hooks.
+
+Key protocol commands include `BGSAVER_START`, `BGSAVER_WRITE`, `BGSAVER_FINISH`, `BGSAVER_CHANGELOG`, `BGSAVER_ROTATELOG`, `BGSAVER_TERMINATE`, `BGSAVER_DONE`, changelog ack/nack, and alive. `bgsaverconn` owns data and status pipes, parse state, input/output queues, callback userdata, and mode (`FREE`, `DATA`, `KILL`). Public functions are `bgsaver_cancel`, `bgsaver_open`, `bgsaver_store`, `bgsaver_close`, `bgsaver_changelog`, `bgsaver_rotatelog`, and `bgsaver_init`.
+
+`bgsaver_init` creates and tests `.bgwriter.lock`, creates nonblocking pipes, forks, redirects child stdio to `/dev/null`, and registers event-loop hooks. The child locks `.bgwriter.lock`, polls the data pipe, reads packet headers and payloads, performs file or changelog work, and writes status packets. The parent creates queued output packets, flushes them with `write` or `writev`, reads status into an incremental parser, dispatches completed packets, and kills the connection on malformed packets, pipe errors, or heartbeat timeout.
+
+Persistent side effects are `.bgwriter.lock`, `metadata_download.tmp`, `changelog.0.mfs`, and rotated `changelog.N.mfs`. Metadata chunks are offset-written and CRC-checked, then fsynced on finish. Changelog appends are acked by timestamp; rotation uses the configured `BACK_LOGS`.
+
+Dependencies include `datapack`, `crc`, `cfg`, `main`, `mfslog`, `massert`, `sockets`, `mfsalloc`, `processname`, and `clocks`. `changelog.c` uses this module in background save mode, and `init.h` initializes it before the changelog module. Risks include singleton callback state, unchecked raw allocations in the child, fatal shutdown on changelog NACK, fixed relative filenames, and protocol-state sensitivity in `bgsaver_cancel`. Test signals are metadata download success/failure, CRC mismatch handling, log rotation, child death, partial packet parsing, and heartbeat timeout behavior.

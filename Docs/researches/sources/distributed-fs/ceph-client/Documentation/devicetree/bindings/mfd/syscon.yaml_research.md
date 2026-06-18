@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/syscon.yaml
+
+Purpose: Main binding for system-controller (`syscon`) devices, covering many SoC-specific miscellaneous register blocks that expose regmap-backed system control and may act as simple-MFD parents.
+
+Important schema surface and control flow: the schema enumerates many allowed compatible sequences, including vendor-specific compatibles followed by `syscon`, and in some cases `simple-mfd`. `reg` is required, and optional `resets` supports reset-gated syscon blocks. `allOf` includes `syscon-common.yaml` and conditional restrictions for compatible-specific combinations. The binding rejects additional top-level properties outside the syscon contract unless allowed by included schemas.
+
+State, dependencies, and integration: DT syscon nodes persist MMIO register windows accessed by many drivers through syscon/regmap phandles, reset controllers, power/reset children, or simple-MFD child devices. Dependencies include syscon-common, reset bindings, simple-mfd conventions, and many consumer drivers that call syscon lookup APIs. Risks include adding arbitrary register blocks under generic `syscon` without a specific compatible, wrong compatible ordering, exposing unrelated hardware through one regmap, and missing reset controls. Test signals are `dt_binding_check`, compatible sequence validation, syscon lookup by phandle/compatible at runtime, and child-device probe when `simple-mfd` is present.

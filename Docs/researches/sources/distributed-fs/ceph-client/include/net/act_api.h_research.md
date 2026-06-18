@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/net/act_api.h
+
+Purpose: This header defines the public traffic-control action API shared by classifiers, qdiscs, action implementations, and flow offload integration.
+
+Important APIs, types, and functions: `struct tcf_idrinfo` stores the per-net action IDR and mutex. `struct tc_action` contains action ops, type, IDR info, index, refcount, bind count, action code, timing, software and hardware stats, drops/overlimits, rate estimator, locks, percpu stats, user cookie, goto chain, flags, hardware stats preferences, and in-hardware count. `struct tc_action_ops` defines action kind/id, per-net ID, object size, owner module, act/dump/cleanup/lookup/init/walk/stats/get-size/get-device/get-psample/offload callbacks. Helpers update last-use timing, dump timing, translate hardware stats flags, initialize/exit per-net action state, create/search/insert/cleanup/release IDR entries, register/unregister actions, load/init/destroy/execute/dump action arrays, update software/hardware stats, reoffload, validate/set control actions, and transmit fragmented packets when enabled.
+
+Control flow: Action modules register `tc_action_ops` with per-net operations. Netlink parsing loads ops, initializes one or more action instances, allocates or binds IDR entries, and attaches actions to classifier/qdisc rules. Packet processing executes action arrays under RCU BH context through the `act` callback, updates stats, and returns control actions such as ok, drop, shot, redirect, or goto chain. Dump paths collect timing, stats, cookies, and hardware state for netlink replies.
+
+State and persistence behavior: Action instances are runtime kernel objects keyed by per-net IDR index and lifetime-managed by refcount and bind count. Stats may be global or percpu. User cookies, rate estimators, and goto chains are RCU-managed. Timing fields store install, lastuse, firstuse, and expires in jiffies.
+
+Dependencies and integration points: It depends on refcounting, flow offload, qdisc internals, packet scheduler uAPI, net namespaces, generic netns storage, RCU, IDR, and optional `CONFIG_NET_CLS_ACT` and `CONFIG_INET`. It integrates with tc netlink, classifier chains, flow hardware offload, psample, and dev queue transmit.
+
+Risks: The `act` callback runs under RCU BH lock, so blocking is unsafe. Refcount and bind count must distinguish bound filter use from temporary references. Per-cpu and global stats paths must not race. Hardware stats flags are user-visible, and invalid values warn and degrade to dont-care. Goto-chain RCU lifetime must be respected. The no-`CONFIG_NET_CLS_ACT` stubs mean callers must handle unavailable action infrastructure.
+
+Test signals: Register/unregister each action, IDR allocation collisions and replacement, bind/unbind/refcount release, packet action execution and control flow, stats updates under percpu and global modes, hardware offload and reoffload callbacks, netns teardown, netlink dump size, invalid hw_stats values, and builds with `CONFIG_NET_CLS_ACT` disabled.

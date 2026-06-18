@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/cs35l56-spi.c
+
+Purpose: SPI bus binding for the CS35L56 ASoC smart amplifier core. It allocates the private codec object, builds the SPI regmap using the shared CS35L56 SPI configuration, initializes SPI-specific bus details, invokes the common ASoC probe/init sequence, and wires the optional SPI IRQ into the shared threaded IRQ handler.
+
+Important APIs and data: `cs35l56_spi_probe` is the main entry point; `cs35l56_spi_remove` tears the core down. The file declares `cs35l56_id_spi`, ACPI match ID `CSC355C`, and a `spi_driver` named `cs35l56` using `cs35l56_pm_ops_i2c_spi`. It imports the `SND_SOC_CS35L56_CORE` and `SND_SOC_CS35L56_SHARED` namespaces. It relies on shared `cs35l56_regmap_spi`, `cs35l56_init_config_for_spi`, `cs35l56_common_probe`, `cs35l56_init`, `cs35l56_irq_request`, and `cs35l56_remove`.
+
+Control flow: probe allocates `struct cs35l56_private`, stores it with `spi_set_drvdata`, seeds `base.type` as `0x56`, creates a 32-bit big-endian SPI regmap, sets `base.dev`, marks `can_hibernate`, applies SPI bus configuration, runs the common probe, then performs hardware init and IRQ request. If init or IRQ setup fails after common probe, it calls `cs35l56_remove` to unwind registered ASoC/runtime-PM state. Remove simply delegates to the core remove path.
+
+State and persistence: no persistent state is owned in this wrapper beyond the driver data pointer and initial `base` fields. Runtime/system PM behavior is inherited from `cs35l56_pm_ops_i2c_spi`, and regcache/firmware/calibration state belongs to the shared/core layers. The wrapper’s most important state decision is `can_hibernate = true`, enabling the shared runtime PM hibernate path.
+
+Dependencies and integration points: integrates Linux SPI, ACPI, module tables, regmap, and the CS35L56 shared/core modules. Risks are mostly sequencing and unwind related: failures after common probe must not leave workqueues, supplies, runtime PM, or IRQs live; SPI reset correctness depends on the shared SPI bus-locking reset implementation. There are no local KUnit tests for this file; test signals are successful SPI probe/remove, ACPI/SPI modalias binding, firmware boot logs, IRQ delivery, and suspend/resume on SPI-attached systems.

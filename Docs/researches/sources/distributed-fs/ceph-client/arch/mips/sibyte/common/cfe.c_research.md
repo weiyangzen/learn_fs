@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/sibyte/common/cfe.c
+
+Purpose: common CFE firmware integration for SiByte boards. It initializes CFE, obtains console handles and command line, discovers memory, registers SMP ops, and implements restart/halt through firmware.
+
+Important APIs and control flow: `_machine_restart`, `_machine_halt`, and `pm_power_off` call `cfe_linux_exit()` with warm/cold semantics, routing the exit to CPU0 if needed. `prom_meminit()` enumerates CFE memory blocks, filters by addressability, carves out initrd if present, subtracts prefetch padding, and adds memblock RAM; it also reserves initrd. `initrd_setup()` parses `size@addr`. `prom_init()` decodes old/new loader argument conventions, validates CFE entry seal, calls `cfe_init()`, gets console handle, obtains `LINUX_CMDLINE`, parses initrd, runs memory init, and registers SB1250 or BCM1480 SMP ops by config. `prom_putchar()` writes through CFE console.
+
+State, persistence, and integration: state includes `cfe_cons_handle`, machine hooks, `arcs_cmdline`, initrd bounds, memblock RAM/reservations, and SMP ops. Dependencies include CFE API, loader ABI, firmware memory map, and SoC-specific SMP ops. Risks include spinning on invalid entry seal or missing command line, subtle MAX_RAM_SIZE clipping expression, prefetch padding reducing usable RAM, and firmware exit behavior on SMP. Test signals are CFE command line import, memory map correctness, initrd reservation, firmware console output, and restart/halt returning to CFE.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/disasm.h
+
+Purpose: ARC instruction decoding helpers for exception, kprobe, and unaligned-access handling. Important APIs/types/functions: defines instruction-size/opcode extraction helpers and decode constants used to classify ARC compact/regular instructions. Control flow: header-only bit decoding over instruction words. State and persistence: stateless. Dependencies/integration: used by low-level fault/debug code that must inspect trapped instructions. Risks: decoder drift from ISA encodings causes wrong fault emulation or probe handling. Test signals: kprobe tests, unaligned access emulation, and instruction error paths across 16-bit and 32-bit instruction forms.

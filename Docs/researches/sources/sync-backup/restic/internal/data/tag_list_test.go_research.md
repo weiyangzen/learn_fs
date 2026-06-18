@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/data/tag_list_test.go
+
+Purpose: validates tag-list flattening. API under test is `TagLists.Flatten`. Control flow table-tests nil/empty input, one tag list, multiple lists, and duplicate tags, then compares expected flattened `TagList`. State is local slices. Dependencies are internal test equality helpers. Integration signal: this guards retention and snapshot filtering code that needs a single deduplicated tag list for display or operations. Risks covered are nil-vs-empty behavior and duplicate removal while retaining deterministic order. Missing signal: parsing (`Set`), string rendering, and empty tag semantics are tested elsewhere or remain implicit.

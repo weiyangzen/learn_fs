@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/synopsys/dwc-xlgmac-desc.c
+
+Purpose: Owns XLGMAC channel/ring allocation, descriptor memory allocation, RX page-buffer management, TX SKB DMA mapping, and descriptor data cleanup.
+
+Important APIs/functions: `xlgmac_init_desc_ops()` fills the descriptor operation table. `xlgmac_alloc_channels_and_rings()` allocates channel array plus TX/RX ring arrays and coherent descriptor rings. `xlgmac_map_tx_skb()` maps TSO headers, skb linear data, and frags into one or more descriptors, reserving context descriptors for MSS/VLAN changes. `xlgmac_map_rx_buffer()` allocates page-backed header and payload buffers and assigns DMA ranges. `xlgmac_tx_desc_init()` and `xlgmac_rx_desc_init()` bind descriptor metadata to DMA descriptors and call hardware reset/init callbacks. `xlgmac_unmap_desc_data()` frees TX mappings/SKBs and RX page references/mappings, including incomplete receive saved state.
+
+Control flow and state: `struct xlgmac_ring` owns coherent descriptor memory and a parallel `struct xlgmac_desc_data` array. RX uses reusable page allocations split into 512-byte header buffers and `rx_buf_size` payload buffers; selected descriptors become responsible for unmapping pages when the page allocation is exhausted. TX mapping advances from `ring->cur` but hardware descriptor fields are filled later by `hw_ops->dev_xmit()`.
+
+Dependencies and integration points: Used by open/close, restart, and hardware init paths. Depends on DMA APIs, page allocator, SKB fragment mapping, descriptor/hardware operation tables, and ring constants from `dwc-xlgmac.h`.
+
+Risks and test signals: `xlgmac_init_ring()` leaks coherent descriptor memory if `desc_data_head` allocation fails because it returns without freeing `dma_desc_head` until outer cleanup sees a partially initialized ring. `xlgmac_alloc_channels()` increments `tx_ring`/`rx_ring` pointers and then frees the incremented pointer on error, which is fragile. TX error unwind maps descriptor indices linearly without wrapping, relying on sufficient ring space prechecks. Test allocation failure injection, DMA mapping failures for linear and fragmented SKBs, TSO/VLAN context transitions, RX page recycling, close/restart cleanup, and DMA API debug.

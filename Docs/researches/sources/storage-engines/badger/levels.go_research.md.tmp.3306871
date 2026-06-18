@@ -1,0 +1,28 @@
+# sources/storage-engines/badger/levels.go
+
+## Purpose
+This file implements Badger's LSM level controller: startup table loading, manifest reconciliation, compaction scheduling, table selection, subcompaction, prefix/tree dropping, lookup iteration, table/level introspection, and checksum/key-split helpers. It is the central coordinator between memtable flush output, SSTable files, manifest durability, value-log discard statistics, and background compactor goroutines.
+
+## Important APIs, Types, And Functions
+`levelsController` owns `levels`, `kv`, `nextFileID`, L0 stall accounting, and `compactStatus`. `newLevelsController` reconciles `MANIFEST` with directory contents via `revertToManifest`, opens table files concurrently with encryption/compression options, initializes `levelHandler`s, validates invariants, and syncs the directory. `dropTree` removes all tables with manifest delete changes; `dropPrefixes` uses forced compactions to remove prefix ranges.
+
+Compaction planning uses `targets`, `levelTargets`, `compactionPriority`, `pickCompactLevels`, `compactDef`, `fillTablesL0ToLbase`, `fillTablesL0ToL0`, `fillTables`, and `fillMaxLevelTables`. Execution flows through `doCompact`, `runCompactDef`, `compactBuildTables`, `subcompact`, `buildChangeSet`, and `addSplits`. Read and inspection APIs include `get`, `appendIterators`, `getTableInfo`, `getLevelInfo`, `verifyChecksum`, and `keySplits`.
+
+## Control Flow
+Startup validates manifest table presence, deletes unreferenced SSTables, opens each manifest table under a throttle of three goroutines, then initializes sorted level handlers and validates non-overlap/range invariants. Background compaction starts `NumCompactors` workers; worker zero prioritizes L0, and worker two optionally runs Lmax-to-Lmax stale-data cleanup every roughly ten seconds. Each worker repeatedly computes dynamic level targets, derives compaction priorities, fills a `compactDef` while registering ranges in `compactStatus`, builds replacement tables, writes manifest changes, swaps new tables into the destination level, deletes source tables, and clears compaction status.
+
+`subcompact` merges ordered iterators over top and bottom tables, skips configured dropped prefixes, enforces snapshot visibility through `discardAtOrBelow`, respects `NumVersionsToKeep`, preserves deletion markers when lower-level overlap exists, records stale value-pointer bytes for value-log GC, and emits new tables through bounded builder goroutines. `addSplits` divides compactions by bottom-table key ranges when possible. `get` searches levels from L0 upward to avoid observing post-compaction lower levels with pre-compaction upper levels.
+
+## State And Persistence Behavior
+The controller is persistence-critical. Table creation/deletion is recorded in `MANIFEST` before old files are logically removed from levels, and newly built table directory entries are synced before manifest replacement. `addLevel0Table` writes a manifest create change before exposing a new non-memory table to L0. `dropTree` writes manifest delete changes before removing table refs. Compaction updates value-log discard stats based on discarded value pointers.
+
+Dynamic targets use the size of the last level, base/table size multipliers, L0 table count, and a guard that clamps `baseLevel` to at least L1 so very large databases do not compact L0 into itself. In-memory mode bypasses manifest-backed table creation for in-memory tables and skips discard stats. L0 stalls are tracked when `tryAddLevel0Table` cannot add because table count is above the stall threshold.
+
+## Dependencies And Integration Points
+The file depends on `table.Table`, `table.Builder`, `levelHandler`, `compactStatus`, `keyRange`, `Manifest`, `pb.ManifestChangeSet`, `Options`, `KeyRegistry`, value-log discard stats, transaction oracle discard timestamps, Badger metrics in `y`, mmap files from `z`, and OpenTelemetry spans. It integrates with DB startup, memtable flushes, range iteration, `DropAll`, `DropPrefix`, value-log GC, checksum verification, and public table/level info APIs.
+
+## Risks And Edge Cases
+The main risks are compaction-order correctness, stale version deletion while snapshots exist, deletion-marker removal when lower levels still overlap, manifest/table swap ordering, L0 starvation/stalls, and memory pressure from subcompaction builders. The checksum mismatch path logs and ignores corrupt tables, which prioritizes opening over strict recovery and needs operational caution. `dropPrefixes` returns nil after some L0 compaction errors, so callers may not receive a hard failure for that stage. Same-level and L0-to-L0 compactions have special locking/status rules and are easy to regress.
+
+## Test Signals
+`levels_test.go` heavily exercises this file: overlap checks, version dropping, tombstone retention/removal, discard timestamps, `bitDiscardEarlierVersions`, same-level stale cleanup, prefix containment, compaction status cleanup, key splits, L0/L1 stall tests currently skipped, and the base-level-zero regression for huge Lmax sizes. Manifest tests indirectly validate compaction manifest change persistence.

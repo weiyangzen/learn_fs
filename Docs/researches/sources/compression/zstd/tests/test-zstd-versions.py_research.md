@@ -1,0 +1,13 @@
+# sources/compression/zstd/tests/test-zstd-versions.py
+
+Purpose: This Python integration test verifies interoperability across zstd release versions. It builds historical zstd tags plus the current development binary, generates compressed files and dictionaries, removes duplicates, and checks that each selected version can decompress compatible outputs.
+
+Important APIs and functions: Configuration globals define the upstream repo, temporary directory, make/git commands, sample file, head tag name, dictionary source globs, and build arguments. `execute()`, `proc()`, `make()`, and `git()` wrap subprocess execution. `get_git_tags()` lists release tags. `dict_ok()` validates a dictionary. `create_dict()` builds or falls back to a dictionary. `zstd()` runs a tagged binary with file redirection. `compress_sample()`, `dict_compress_sample()`, `decompress_zst()`, and `decompress_dict()` generate and validate artifacts. `remove_duplicates()` collapses byte-identical compressed files. `sha1_of_file()` reports final artifact hashes.
+
+Control flow: The script creates `tests/versionsTest`, clones the zstd repo if needed, copies `README.md` as test data, discovers tags `v[0-9].[0-9].[0-9]`, filters from `v0.5.0`, builds each historical tag and current head with appropriate legacy support, cleans old `.zst`/`.dec` files, creates dictionary source files, builds the head dictionary, then for each tag creates a dictionary, dictionary-compresses, deduplicates, dictionary-decompresses, plain-compresses, deduplicates, and plain-decompresses. It finishes by listing remaining compressed files with size and SHA1.
+
+State and persistence: It creates and reuses `tests/versionsTest`, cloned source, checked-out tag directories, built binaries named `zstd.<tag>`, dictionaries, compressed samples, and decompressed files. It mutates current working directory extensively.
+
+Dependencies and integration points: Requires network access for clone if the cache is absent, git, make, working compilers, zstd build compatibility across old tags, and a repository layout with `README.md` and `programs`. It is a high-cost integration lane rather than a quick unit test.
+
+Risks and test signals: Tag filtering compares version strings lexicographically, which can be wrong for multi-digit components. Some command paths use `shell=True` with joined filenames for dictionary training. The script has no cleanup for the versions test directory, so it can consume significant disk. Compatibility expectations include explicit skips for v0.6.0 with older dictionaries. Success is absence of raised exceptions and a final enumeration of distinct `.zst` files.

@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resolved_ts/tests/failpoints/mod.rs
+
+This integration-test module uses failpoints to exercise resolved-ts behavior under timing stalls and quota pressure. It imports the shared `TestSuite` and manipulates PD TSO, raft leadership, TiKV KV operations, and endpoint diagnosis tasks.
+
+`test_check_leader_timeout` pauses check-leader calls on follower stores, commits a locked key, and verifies resolved-ts does not advance until enough follower leadership confirmation recovers. `test_report_min_resolved_ts` and `test_report_min_resolved_ts_disable` force short reporting intervals and verify PD min-resolved-ts reporting can advance or remain disabled. `test_pending_locks_memory_quota_exceeded` pauses after scanner snapshot acquisition so incoming prewrite locks accumulate in endpoint pending state, then shrinks memory quota and asserts the quota failpoint fires. `test_change_log_task_channel_memory_quota_exceeded` pauses after change-log handling, accumulates pending command bytes, lowers quota, resumes, and asserts re-registration drains locks and channel bytes.
+
+The tests validate volatile state transitions rather than persistence. They are strong signals for concurrency boundaries: scan pending state, channel memory accounting, active quota checks, and backoff-based re-registration. Risks covered include deadlocked pending scans, quota leaks, stale locks after all-region re-registration, and incorrect PD min-resolved-ts reporting.

@@ -1,0 +1,38 @@
+# sources/user-network-fs/samba/source3/modules/vfs_fruit.c
+
+## Purpose
+`vfs_fruit.c` implements Samba's `fruit` VFS module for macOS SMB, AppleDouble, and Netatalk interoperability. It recognizes the Apple special streams `AFP_AfpInfo` and `AFP_Resource`, maps them to configurable storage backends, negotiates the SMB2 AAPL create context, exposes macOS readdir attributes, coordinates optional Netatalk share-mode locks, and adds Time Machine and OS X copyfile behavior. The module expects to sit in a VFS stack with `catia` and `streams_xattr` when private-character mapping and stream storage are needed.
+
+## Important APIs, Types, And Functions
+The main configuration carrier is `struct fruit_config_data`, populated from `fruit:*` and `readdir_attr:*` smb.conf parameters in `init_fruit_config()`. Important enums select backend behavior: `fruit_rsrc` chooses resource-fork storage as normal stream, AppleDouble sidecar file, or Netatalk xattr; `fruit_meta` chooses metadata as stream or Netatalk xattr; `fruit_locking` enables Netatalk lock synchronization; `fruit_encoding` selects private Unicode or native ASCII mapping through catia.
+
+Per-open state lives in `struct fio`, an FSP extension linking the Samba `files_struct` to module config, AppleDouble backend FSPs, fake descriptors, stream type, and deferred open flags. `fruit_get_complete_fio()` filters out internal AppleDouble opens so recursive backend operations pass through to lower modules.
+
+Core VFS entry points are registered in `vfs_fruit_fns`: connect, disk free, fchmod, unlinkat, renameat, openat, close, pread/pwrite and async variants, fsync, stat/lstat/fstatat/fstat, streaminfo, fntimes, ftruncate, fallocate, create_file, freaddir_attr, server-side offload read/write, fs_file_id, and NT ACL get/set. `vfs_fruit_init()` registers the module as `fruit` and creates a debug class.
+
+## Control Flow
+On connect, `fruit_connect()` calls the next module, initializes config, adjusts share parameters, optionally appends veto patterns for AppleDouble and `.localized`, injects `catia:mappings` for native encoding, and enables durable handles while disabling kernel oplocks/share modes/posix locking for Time Machine shares.
+
+Create/open flow starts in `fruit_create_file()`, which handles AAPL negotiation via `check_aapl()`, optionally converts legacy AppleDouble files before Apple stream opens, calls the lower `create_file`, rejects empty named-stream opens for AAPL clients, and applies Netatalk byte-range lock compatibility for base-file opens. `fruit_openat()` dispatches only named Apple streams specially: `AFP_AfpInfo` goes to metadata handlers, `AFP_Resource` goes to resource handlers, and all other files/streams are delegated.
+
+Metadata stream handling differs by backend. `FRUIT_META_STREAM` opens a lower ADS when present, otherwise returns a fake fd for create-on-first-write. `FRUIT_META_NETATALK` always exposes a fake fd and reads/writes AppleDouble metadata in `AFPINFO_EA_NETATALK`. Reads normalize macOS behavior by ignoring most offsets and returning an `AFP_INFO_SIZE` packed blob. Writes validate or repair AFPInfo, copy only FinderInfo-relevant content, and mark all-zero FinderInfo writes delete-on-close to match macOS semantics.
+
+Resource fork handling similarly dispatches by backend. `FRUIT_RSRC_STREAM` delegates to lower stream storage. `FRUIT_RSRC_XATTR` uses Solaris `attropen()` when available. `FRUIT_RSRC_ADFILE` opens a hidden `._` AppleDouble sidecar through `adouble_open_from_base_fsp()`, returns a fake fd to upper layers, and redirects resource reads/writes/truncates to the `ADEID_RFORK` offset inside the AppleDouble file while maintaining AppleDouble entry length.
+
+Stream enumeration first asks the lower stack, then filters or synthesizes Apple streams. Metadata streaminfo removes raw Netatalk xattrs and only exposes `AFP_AfpInfo` when FinderInfo is non-empty or the lower stream is valid. Resource streaminfo hides zero-length resource streams and synthesizes `AFP_Resource` from AppleDouble sidecars when the resource fork length is non-zero.
+
+## State And Persistence
+Persistent data is stored in multiple filesystem locations depending on configuration: `AFP_AfpInfo` as a lower ADS or Netatalk xattr, `AFP_Resource` as a lower ADS, Netatalk xattr, or AppleDouble `._*` file. The module also mutates share runtime parameters on connect, changes veto-file patterns, may convert/delete AppleDouble files through `ad_convert()`, may update AppleDouble creation dates in `fruit_fntimes()`, and may chmod files after MS NFS ACL mode requests.
+
+Runtime state includes per-share `fruit_config_data`, per-FSP `fio`, fake descriptors for virtual streams, internal AppleDouble FSP references, and global `global_fruit_config.nego_aapl`, which records that an AAPL create context was negotiated. Offload copyfile support uses a static `fruit_offload_ctx` token database context. Time Machine disk accounting is computed on demand by scanning sparsebundle directories and is not persisted by this module.
+
+## Dependencies And Integration Points
+This module depends heavily on Samba VFS APIs, `files_struct`, `smb_filename`, talloc, tevent, NTSTATUS helpers, security descriptor helpers, byte-range locks, `adouble` parsing/writing, macOS stream constants from `MacExtensions.h`, `util_macstreams`, `hash_inode()`, `string_replace` mappings, and offload token helpers. It integrates with lower VFS modules through `SMB_VFS_NEXT_*`, with `streams_xattr` for named streams, with `catia` for macOS character mapping, and with Netatalk-compatible xattrs and AppleDouble sidecars.
+
+SMB protocol integration centers on SMB2 AAPL create blobs, AAPL readdir attributes, OS X copyfile over copychunk/offload operations, durable handles for Time Machine, and optional MS NFS-style virtual ACEs for Unix mode/uid/gid transport. Test discovery shows Samba selftests and torture suites for `vfs_fruit`, metadata stream/netatalk modes, stream depot, xattr, Time Machine, zero file IDs, AFPInfo validation, and AppleDouble cleanup behavior.
+
+## Risks
+The module has many backend-dependent paths, so behavior can diverge between stream, xattr, and AppleDouble configurations. Fake fds and recursive AppleDouble opens require careful FSP-extension lifetime handling; a missed `fio` detach or backend close can produce stale descriptors. `global_fruit_config.nego_aapl` is process-global, so its semantics are broader than one share or one client. Time Machine sizing scans and parses sparsebundles with regex and directory counts, which can be expensive and race with clients creating bundles. AppleDouble conversion and deletion options can modify sidecar files during normal stream operations. ACL handling intentionally injects and strips virtual MS NFS ACEs, which can surprise consumers expecting exact descriptor round-trips. Several compatibility choices intentionally mimic macOS quirks, including AFPInfo offset behavior, all-zero metadata deletion, zero-length resource fork hiding, and zero file IDs.
+
+## Test Signals
+High-value tests are the Samba `source4/torture/vfs/fruit.c` suites and selftest entries for metadata netatalk, metadata stream, stream depot, xattr, Time Machine max size, zero file ID, AFPInfo validation enabled/disabled, delete-empty AppleDouble files, and intentionally blank resource forks. Additional signals should cover AAPL negotiation and readdir attributes, FinderInfo persistence across backends, empty and non-empty resource fork open/delete/stat/streaminfo behavior, rename/chmod/unlink propagation to AppleDouble sidecars, Netatalk lock conflict behavior, copyfile copying named streams, Time Machine sparsebundle disk-free calculation, and ACL mode chmod through MS NFS virtual ACEs.

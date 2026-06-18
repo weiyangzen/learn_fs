@@ -1,0 +1,24 @@
+# sources/test-tools/strace/bundled/linux/include/uapi/rdma/ib_user_verbs.h
+
+## Purpose
+Defines the legacy write-based RDMA uverbs ABI used by libibverbs and kernel RDMA providers, giving strace stable command numbers, command headers, object lifecycle payloads, work request layouts, flow steering specs, completion event descriptors, extended query responses, and device capability flags.
+
+## Important APIs, Types, and Functions
+Read coverage: 1380 lines and 29479 bytes. Global constants include `IB_USER_VERBS_ABI_VERSION`, `IB_USER_VERBS_CMD_THRESHOLD`, `IB_USER_VERBS_CMD_COMMAND_MASK`, `IB_USER_VERBS_CMD_FLAG_EXTENDED`, `IB_USER_VERBS_MAX_LOG_IND_TBL_SIZE`, and `IB_DEVICE_NAME_MAX`. `enum ib_uverbs_write_cmds` enumerates command IDs for context/device/port/GID/P_Key query, PD/MR/MW/CQ/QP/AH/SRQ lifecycle, posting send/receive work, multicast attach/detach, flow create/destroy, extended CQ/QP/device operations, WQ and RWQ indirection table commands, and CQ modification. Header and event structures include `ib_uverbs_cmd_hdr`, `ib_uverbs_ex_cmd_hdr`, `ib_uverbs_async_event_desc`, `ib_uverbs_comp_event_desc`, and `ib_uverbs_cq_moderation_caps`.
+
+Object and query payloads include `ib_uverbs_get_context`, `ib_uverbs_query_device`, extended query structs and ODP/RSS/tag-matching caps, `ib_uverbs_query_port`, PD allocation/deallocation, XRCD open/close, MR register/reregister/deregister, MW allocation/deallocation, completion channel/CQ create/resize/poll/notify/destroy, QP create/open/query/modify/destroy, AH create/destroy, SRQ create/modify/query/destroy, WQ create/modify/destroy, RWQ indirection table create/destroy, and CQ moderation. Data-path structures include `ib_uverbs_sge`, send and receive work requests, work-completion opcodes, QP attributes/destinations, global route and AH attributes, and post-send/recv response bad-WR reporting. Flow steering structures include Ethernet, IPv4, IPv6, TCP/UDP, tunnel, ESP, GRE, MPLS, action tag/drop/handle/count specs, plus `ib_uverbs_flow_attr`. Capability enums cover ODP, raw-packet capabilities, placement/selectivity levels, and device capability flags.
+
+## Control Flow
+Userspace opens an RDMA uverbs device and writes command headers plus command-specific payloads. A typical flow gets a context, queries device and port capability, allocates a protection domain, registers memory, creates completion queues and queue pairs, moves QPs through modify/query states, posts send/receive work requests, polls or arms CQs, and eventually destroys objects in dependency order. More advanced flows create address handles, shared receive queues, work queues, receive indirection tables, flow steering rules, multicast memberships, XRC domains, and use extended command headers for newer object features.
+
+## State and Persistence Behavior
+State is kernel RDMA object state scoped to a uverbs file/context and hardware provider: contexts, PDs, MRs, memory windows, completion channels, CQs, QPs, AHs, SRQs, WQs, multicast memberships, flow rules, and indirection tables. Work requests and completions are transient queue entries, while handles, keys, queue numbers, and capability responses are runtime state visible to userspace. There is no durable on-disk state, but resources map to pinned memory, DMA keys, device queues, and provider hardware state until destroyed or the file is closed.
+
+## Dependencies and Integration Points
+Direct include is `<linux/types.h>`. In strace it supports decoding write-based uverbs command payloads independently of host RDMA header freshness. It integrates with `/dev/infiniband/uverbs*`, rdma-core/libibverbs, provider libraries, InfiniBand/RoCE/iWARP hardware drivers, memory registration and pinning, CQ event file descriptors, multicast, flow steering, and the newer ioctl-based RDMA uAPI that coexists with this legacy path.
+
+## Risks and Edge Cases
+The ABI is broad and compatibility-sensitive. Risks include 32/64-bit pointer encoding through `__u64` addresses, structure alignment and reserved fields, extended command flag parsing, provider-specific command data appended after generic payloads, bad-WR index reporting, flow-spec length validation, object lifetime ordering, stale capability bits retained for old kernels, ODP and RSS capability interpretation, and security-sensitive MR registration/pinning. Strace must decode without assuming provider-private payload shape beyond the generic structs.
+
+## Test Signals
+Strace tests should cover write command numbers, command headers, extended command flag decoding, representative create/query/modify/destroy payloads, post-send/recv bad-WR output, flow specs, and compat pointer fields. Runtime signals include rdma-core verbs tests on software or hardware providers, 32-bit userspace compat runs, MR registration/reregistration edge cases, CQ event and poll paths, QP state transitions, multicast attach/detach, flow steering filters, WQ/RSS objects, and ABI size/layout checks.

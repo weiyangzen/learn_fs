@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/bd9576-regulator.c
+
+Purpose: This driver supports ROHM BD9576MUF and BD9573MUF regulators. It registers six mostly fixed or tune-readable outputs, adds BD9576-only protection configuration and IRQ notification support, supports optional VOUT1 GPIO control, and adapts DDR output voltage from board properties.
+
+Important APIs, types, and functions: `struct bd957x_regulator_data` extends each descriptor with protection ranges, notification flags, IRQ configuration registers, and the registered `rdev`. `struct bd957x_data` stores shared regmap and regulator data. Voltage listing is custom in `bd957x_list_voltage()` and `bd957x_vout34_list_voltage()` because selector bit 7 changes sign or table half. `bd9576_set_ocp()`, `bd9576_set_uvp()`, `bd9576_set_ovp()`, and `bd9576_set_tw()` implement regulator protection callbacks. `bd9576_uvd_handler()`, `bd9576_ovd_handler()`, and `bd9576_thermal_handler()` translate PMIC IRQ status bits into regulator error states.
+
+Control flow: Probe gets the parent regmap, optionally acquires `rohm,vout1-en` GPIO when `rohm,vout1-en-low` is present, mutates VDDDR fixed voltage based on `rohm,ddr-sel-low`, selects BD9573 or BD9576 ops arrays, and registers every regulator. For BD9576 it collects rdev arrays and installs regulator IRQ helpers for named UVD, OVD, and thermal IRQs. Missing non-deferred IRQ helpers only warn, so basic regulator registration can still succeed.
+
+State and persistence behavior: Regulator enable and tune status are PMIC-backed and mostly read-only from this driver. Protection configuration writes threshold selector registers, while driver memory records whether each protection maps to WARN or ERR notification. The static global `bd957x_regulators` is mutated at probe for regmap, ops, DDR voltage, GPIO-derived config, and protection flags. IRQ helper `opaque` stores the last status bits to decide whether re-enable should keep IRQs suppressed.
+
+Dependencies and integration points: The file depends on the ROHM BD957x MFD, regulator core protection and IRQ-helper APIs, regmap, platform named IRQs, GPIO descriptors, OF/device properties, and linear-range helpers. Platform IDs distinguish `"bd9573-regulator"` from `"bd9576-regulator"`.
+
+Risks: Static mutable `bd957x_regulators` is not instance-safe for multiple PMICs, and comments acknowledge the limitation. The code uses UVD fields for VOUTS1 over-current warning, which is compact but easy to misinterpret. WARN and ERR cannot be supported simultaneously per protection type; the first or stronger configuration wins with warnings. GPIO mode errors out if the control GPIO is not provided. IRQ registration warnings can hide missing protection notifications.
+
+Test signals: Test BD9573 read-only behavior versus BD9576 protection behavior, VOUT1 GPIO required/absent cases, DDR select property, custom voltage listing sign/table branches, OCP with internal and external FET resistance, WARN/ERR mismatch handling, IRQ handlers for UVD/OVD/thermal bit mapping, IRQ re-enable with unchanged status, and probe behavior with missing or deferred named IRQs.

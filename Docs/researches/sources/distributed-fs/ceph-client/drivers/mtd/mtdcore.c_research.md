@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/mtdcore.c
+
+Purpose: central MTD registry, device-class implementation, notifier hub, NVMEM/debugfs/sysfs integration, and public operation wrapper layer. It registers MTD devices and partitions, exposes `/proc/mtd`, initializes `mtdchar`, and translates partition-relative operations to master devices.
+
+Important APIs/types/functions: `add_mtd_device()`, `del_mtd_device()`, `mtd_device_parse_register()`, `mtd_device_unregister()`, `register_mtd_user()`, `get_mtd_device()`, `__get_mtd_device()`, `put_mtd_device()`, `mtd_read/write/read_oob/write_oob/erase/panic_write`, OOB layout helpers, OTP helpers, lock/bad-block helpers, `mtd_kmalloc_up_to()`, `init_mtd()`, `cleanup_mtd()`. It depends on global `mtd_idr`, `mtd_table_mutex`, Linux device model, char major registration, partition parser APIs, optional virtual concat, NVMEM, debugfs, reboot notifiers, and LED triggers.
+
+Control flow: module init registers the MTD class, backing device info, `/proc/mtd`, char device, and debugfs. Device registration validates callbacks and geometry, allocates an ID, initializes defaults, optionally unlocks power-up-locked chips, registers sysfs devices and ro char node, adds NVMEM/debugfs, notifies users, and optionally sets root device from DT. Parse-register adds OTP NVMEM, optionally registers partitioned master, parses partitions or fallback parts, joins virtual concats, and installs reboot notifier. Operation wrappers validate ranges and flags, translate offsets through partition hierarchy, update ECC stats, support SLC-on-MLC emulation, and normalize return codes.
+
+State and persistence: persistent data is in devices; core state is IDR entries, krefs, parent/partition hierarchy, notifier list, sysfs/debugfs/proc/NVMEM providers, ECC stats, bitflip threshold, and reboot notifier state.
+
+Risks and test signals: registration and unregister paths are highly stateful and must balance idr/device/kref/module/NVMEM/OF references. Operation wrappers must preserve ABI return semantics for ECC and OOB. Tests should cover duplicate registration, invalid callback combinations, partitioned master on/off, notifier add/remove ordering, refcounted open/remove, OOB validation, SLC emulation translation, OTP NVMEM failures, and cleanup ordering.

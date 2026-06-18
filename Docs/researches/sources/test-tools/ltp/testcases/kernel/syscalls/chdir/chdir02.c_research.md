@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chdir/chdir02.c
+
+Purpose: verifies that absolute paths consisting only of slashes and shorter than `PATH_MAX` are accepted by `chdir()`. It fills a buffer with 1 to `PATH_MAX-1` slash characters, calls `chdir` for each, counts failures, and reports a single pass if none fail. Important APIs are `chdir`, buffer allocation via `.bufs`, and `TST_EXP_PASS_SILENT`. State is current working directory repeatedly set to root-equivalent slash paths. Dependencies are standard pathname normalization. Risks are runtime cost from PATH_MAX iterations and any platform-specific slash handling. Test signal is no failures for lengths 1 through PATH_MAX-1.

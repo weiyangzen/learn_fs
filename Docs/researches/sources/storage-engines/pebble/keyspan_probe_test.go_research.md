@@ -1,0 +1,13 @@
+# sources/storage-engines/pebble/keyspan_probe_test.go
+
+Purpose: this test helper file provides a programmable wrapper around `keyspan.FragmentIterator` so tests can inject iterator errors, substitute returned spans, and log range-span iterator operations. It is explicitly duplicated from internal keyspan datadriven helpers until the shared keyspan types can move to a common test package.
+
+Important APIs/types/functions: `keyspanProbe` is the mutation hook interface. `parseKeyspanProbes` and `attachKeyspanProbes` build wrapper chains from a small DSL. `keyspanProbeContext` carries the operation under inspection through `keyspanOp`, including operation kind, seek key, returned span, and error. Probe implementations include `errorProbe`, `ifProbe`, `returnSpan`, `noop`, and `loggingProbe`. Predicate/value DSL support is provided through `equal`, `keyspanOpKind`, `bytesConstant`, `startKey`, and `seekKey`. `probeKeyspanIterator` implements `keyspan.FragmentIterator` by forwarding to a child iterator and then invoking the configured probe.
+
+Control flow: every iterator method constructs a `keyspanOp`, optionally asks the wrapped iterator for the real result, and then calls `handleOp`, which installs the operation into the context and lets the probe rewrite `Span` or `Err`. Conditional probes run nested probes based on DSL predicates; logging probes observe the post-child, pre-rewrite state passed to them in wrapper order. `WrapChildren`, `SetContext`, `TreeStepsNode`, and `Close` preserve integration with normal iterator plumbing and tracing.
+
+State and persistence behavior: state is transient and test-local. The wrapper stores only the child iterator, the probe, and mutable probe context. It performs no durable writes. Returned `returnSpan` spans reference parsed test values, so callers should treat them as test-controlled fixtures, not production-owned span memory.
+
+Dependencies and integration points: depends on `internal/dsl` for parser composition, `internal/keyspan` for span iterator contracts, `treesteps` for iterator tree introspection, and Go reflection for predicate equality. It is used by iterator tests that need deterministic error injection or abnormal span behavior.
+
+Risks and test signals: because this code can violate iterator invariants by design, misuse can hide production bugs or produce unrealistic states. `Close` ignores injected close errors after probing, matching test-helper semantics rather than production error propagation. The main test signal is whether higher-level range-key/range-delete iterators respond correctly to injected nil spans, errors, reordered results, and logging traces.

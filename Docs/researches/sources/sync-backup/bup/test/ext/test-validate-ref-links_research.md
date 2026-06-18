@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-validate-ref-links -->
+# sources/sync-backup/bup/test/ext/test-validate-ref-links
+
+Purpose: validates reference-level link checking and selective ref validation. Important helper `expect-one-src-missing()` asserts exactly one missing source reference diagnostic. APIs include `bup validate-ref-links`, `bup rm --unsafe`, `bup index`, `save --strip`, Git tree entry lookup, and stdout/stderr capture. Control flow creates a valid `src` branch and checks validation succeeds, corrupts or removes an object link to force one missing diagnostic, creates an additional `more` branch to verify selecting specific refs, then removes `src` and validates remaining refs. State is branch refs, object links, and validation logs. Dependencies are Git object/ref state and bup validation commands. Risks are false positives when unrelated refs are present and fragile counts in diagnostic output. Test signals are exit codes, empty output on valid refs, and expected missing-reference messages.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-validate-ref-links -->

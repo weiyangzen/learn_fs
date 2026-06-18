@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/shell/TestOzoneTenantShell.java
+
+Purpose: This HA integration suite validates `ozone tenant` shell behavior with OM multi-tenancy enabled and Ranger calls skipped through the in-memory/dev controller. It covers tenant lifecycle, user access IDs, secrets, tenant admin and delegated-admin permissions, JSON/text output, audit logging, existing-volume takeover, and volume reference-count protection.
+
+Important APIs and types: The file uses `TenantShell`, `OzoneShell`, `MiniOzoneHAClusterImpl`, `OzoneConfiguration`, `OMMultiTenantManagerImpl.OZONE_OM_TENANT_DEV_SKIP_RANGER`, `OZONE_OM_MULTITENANCY_ENABLED`, `OmVolumeArgs`, `UserGroupInformation`, `OMRangerBGSyncService`, `AuthorizerLockImpl`, and picocli `CommandLine`. Helpers inject HA OM config, append `--om-service-id`, capture command writers, validate exact or partial output, and delete backing volumes through `ozone sh`.
+
+Control flow: `init` deletes prior audit logs, enables multi-tenancy, builds a three-OM HA cluster without datanodes, and prepares tenant and ozone shells. Tests create tenants, list them, assign users to multiple tenants, get and set generated or explicit secrets, assign/revoke admin roles, run commands as different UGIs, delete tenants and backing volumes, and check failure paths for duplicate tenants, duplicate access IDs, overlong IDs, non-empty tenants, and unauthorized secret/admin operations.
+
+State and persistence behavior: Tenant creation persists tenant metadata and creates a backing volume. User assignment persists access IDs and S3 secrets. Admin operations persist `isAdmin` and `isDelegatedAdmin` flags. Tenant deletion updates volume reference counts and must precede volume deletion when tenant features reference the volume. The suite also reads `audit.log` to verify success audit entries and triggers Ranger background sync on every OM after a failed delete path.
+
+Dependencies and integration points: It connects CLI command handling to OM multi-tenant manager logic, S3 secret management, audit logging, in-memory Ranger policy/role simulation, HA OM routing, volume metadata, and UGI-based authorization. The `USE_ACTUAL_RANGER` switch documents but disables real Ranger integration.
+
+Risks: The test depends on exact output formatting and ordering for many text and JSON assertions. It shares static shells and cluster state, so cleanup is important. The in-memory Ranger controller differs from real Ranger behavior. HA leadership changes can require syncing all OMs, which the test explicitly handles after a failed delete.
+
+Test signals: Signals include empty and populated tenant lists, exact JSON for verbose commands, access-key export output, expected stderr messages, audit lines containing success, backing volume existence, `volumeRefCount` protection, nonzero exit codes for invalid operations, UGI-specific authorization failures, and successful cleanup leaving no tenants.

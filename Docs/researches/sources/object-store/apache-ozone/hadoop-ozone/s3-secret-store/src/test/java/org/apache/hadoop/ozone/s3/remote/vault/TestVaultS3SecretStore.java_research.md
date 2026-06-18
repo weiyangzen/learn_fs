@@ -1,0 +1,7 @@
+# sources/object-store/apache-ozone/hadoop-ozone/s3-secret-store/src/test/java/org/apache/hadoop/ozone/s3/remote/vault/TestVaultS3SecretStore.java
+
+Purpose: `TestVaultS3SecretStore` verifies the Vault-backed S3 secret store's basic read/write/delete behavior and its re-authentication behavior after Vault returns unauthorized responses.
+
+Important APIs and flow: setup creates a mocked `Vault`, a custom `Auth` lambda, and a `VaultS3SecretStore` with engine, namespace, secret path, and retry count. `LogicalMock` overrides `read`, `write`, and `delete`, using atomic counters to return either success or HTTP 401-like `LogicalResponseMock` instances. `testReadWrite` stores `S3SecretValue.of("id", "value")` and reads it back. `testReAuth` forces an auth operation before successful store/get/revoke. `testAuthFail` verifies that read and revoke throw `IOException` after authorization is exhausted.
+
+State, dependencies, risks, and tests: test persistence is an in-memory `STORE` map keyed by Vault path; auth and success limits are mutable atomic counters reset before each test. Dependencies include BetterCloud Vault logical APIs, Mockito, JUnit 5, and Ozone `S3SecretValue`. Risks include mocked response behavior being narrower than real Vault namespaces, KV versions, and response payloads. Passing tests signal that the store maps secrets to Vault data, retries auth on 401, and surfaces repeated auth failure as `IOException`.

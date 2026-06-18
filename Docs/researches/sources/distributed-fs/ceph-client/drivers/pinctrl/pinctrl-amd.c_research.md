@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/pinctrl-amd.c
+
+Purpose: Implements the AMD GPIO/pinctrl driver for ACPI-described AMD GPIO controllers. It provides GPIO direction/value operations, generic pin configuration, optional IOMUX pinmux selection, IRQ handling with wake status processing, ACPI s2idle wake checks, and suspend/hibernate save/restore.
+
+Important APIs and functions: GPIO methods are `amd_gpio_get_direction()`, direction input/output, get/set value, and `amd_gpio_set_config()`. Pinconf methods are `amd_pinconf_get()`, `amd_pinconf_set()`, and group wrappers. IRQ methods include enable/disable, mask/unmask, `amd_gpio_irq_set_wake()`, `amd_gpio_irq_set_type()`, `amd_gpio_irq_eoi()`, and `do_amd_gpio_irq_handler()`. PM paths are `amd_gpio_suspend_hibernate_common()`, `amd_gpio_suspend()`, `amd_gpio_hibernate()`, and `amd_gpio_resume()`. Probe/remove are `amd_gpio_probe()` and `amd_gpio_remove()`.
+
+Control flow: Probe maps the MMIO resource, fetches the shared parent IRQ, allocates suspend state, fills `gpio_chip`, registers pinctrl using tables from `pinctrl-amd.h`, clears wake bits, wires a GPIO IRQ chip without a parent handler, adds the gpiochip and pin range, requests the shared IRQ, and registers ACPI wake/s2idle hooks. IRQ handling reads wake status registers, expands each status bit to four pins, dispatches pending unmasked GPIO IRQs through the gpio irq domain, masks spurious non-IRQ lines, and writes EOI. Pinmux, when the optional `"iomux"` resource exists, writes a 2-bit selection byte and verifies readback.
+
+State and persistence: `struct amd_gpio` owns MMIO bases, the gpiochip, pinctrl device, groups, lock, IRQ, and suspend `saved_regs`. Register changes persist in GPIO/IOMUX hardware. Suspend saves only pins with mux/gpio owners or IRQ use, masks non-wake interrupts, clears debounce for wake reliability, and restores saved config while preserving pending IRQ/wake status bits.
+
+Dependencies and integration points: Integrates with ACPI IDs `AMD0030`, `AMDI0030`, `AMDI0031`, and `AMDI0033`, gpiolib, pinctrl, pinmux, generic pinconf, IRQ core, suspend/ACPI LPS0 wake checks, and static data in `pinctrl-amd.h`.
+
+Risks: Register bit semantics are delicate: `INTERRUPT_MASK_OFF` uses inverted naming relative to mask/unmask intent, and type changes busy-wait with the raw spinlock held until hardware reports interrupt enable. `amd_gpio_irq_set_wake()` logs enable/disable IRQ wake errors but returns 0. Optional IOMUX support mutates the global `amd_pinctrl_desc.pmxops` to NULL when absent, which is safe for one platform device but would be risky if multiple variants with different resources coexisted. Debugfs output contains non-ASCII glyphs and is unsuitable as a stable parser target.
+
+Test signals: Probe on each ACPI ID, GPIO direction/value operations, debounce boundary values, bias and drive-strength pinconf, IRQ rising/falling/both/level modes, wake from s2idle/S3/S4, spurious interrupt masking, suspend/resume with GPIO owners, and optional IOMUX DT/ACPI resource validation are key signals.

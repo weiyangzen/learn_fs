@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/io/compress/zstd/TestZStandardCompressorDecompressor.java -->
+## sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/io/compress/zstd/TestZStandardCompressorDecompressor.java
+
+Purpose: Comprehensive tests for ZStandard codec compression/decompression, stream wrappers, direct decompression, reset-after-error behavior, worker configuration, and bundled test-resource compatibility.
+
+Important APIs/types/functions: static setup loads `/zstd/test_file.txt` and `/zstd/test_file.txt.zst` and configures file buffer size. Tests use `ZStandardCodec`, `ZStandardCompressor`, `ZStandardDecompressor`, `ZStandardDirectDecompressor`, `CompressorStream`, `DecompressorStream`, `CompressionInputStream`, `CompressionOutputStream`, `FileUtils`, and `ZstdException`. Helpers are `generate`, `compressDecompressLoop`, and `bytesToHex`.
+
+Control flow: resource-based compression test reads an uncompressed file, writes each byte through codec output stream, asserts compressor counters/finished state, then decompresses and compares bytes. Exception tests use `assertThrows` for null and invalid bounds on compressor/decompressor APIs. Large input test drives `compress` in a loop until finished. Stream tests compress/decompress 100 KiB through generic compressor/decompressor streams and verify equality. Finish/reset test writes three segments separated by `finish`/`resetState` and reads the concatenated result. Multi-thread test runs core round trip in 10 threads. Direct tests compress through `CompressorStream`, use direct byte buffers, and verify output for several sizes. Resource decompression tests read known `.zst` resource through codec streams. Corrupted-data regression drops the first 10 compressed bytes, expects `ZstdException`, resets the decompressor, and ensures valid input can be set and decompressed without `BufferOverflowException`. Worker tests verify workers > 0 round-trip, negative workers rejected, default workers zero, and `reinit` picks up a new worker count.
+
+State and persistence behavior: reads bundled resources; otherwise uses in-memory buffers. Static `Configuration`, `File` references, and `Random` are shared. Compression worker settings are per-configuration and can be applied through compressor `reinit`.
+
+Dependencies and integration points: integrates Hadoop `ZStandardCodec`, luben zstd Java library exceptions, Hadoop common file buffer keys, generic compression interfaces, direct buffers, test resources, and multithreaded testing.
+
+Risks and edge cases: static random is shared across tests and threaded calls. Several stream reads use a single `read(result)` for full data, which assumes enough bytes are returned at once. Hex string comparisons are less direct than array comparisons and can be expensive for large data. Worker behavior depends on zstd-jni support.
+
+Test signals: validates byte-for-byte round trips, API argument validation, finish/reset multi-frame behavior, direct-buffer decompression, decompression of known fixture files, recovery after corrupted input, compression worker configuration, and compressor reinitialization.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/io/compress/zstd/TestZStandardCompressorDecompressor.java -->

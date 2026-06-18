@@ -1,0 +1,15 @@
+# sources/distributed-fs/openafs/src/WINNT/afsd/cm_nls.c
+
+Purpose: provides Windows NLS, Unicode normalization, UTF-8/UTF-16 conversion, sanitization, case-insensitive comparison, case mapping, and character navigation helpers for OpenAFS path and name handling.
+
+Important APIs/types/functions: `cm_InitNormalization()` lazily loads `Normaliz.dll` and resolves `NormalizeString`/`IsNormalizedString`, selecting an English US LCID workaround on Windows 2000. `NormalizeUtf16String()` is the core internal normalization helper. Public conversion helpers include `cm_NormalizeStringAlloc`, `cm_NormalizeString`, `cm_Utf16ToUtf8Alloc`, `cm_Utf16ToUtf8`, `cm_Utf16ToUtf16`, `cm_NormalizeUtf16StringToUtf8`, `cm_NormalizeUtf8StringToUtf16`, `cm_NormalizeUtf8StringToUtf16Alloc`, `cm_Utf8ToUtf16`, `cm_Utf8ToUtf16Alloc`, and `cm_NormalizeUtf8String`. Comparison/case helpers include `cm_strnicmp_utf8`, `cm_strnicmp_utf16`, `cm_stricmp_utf16`, `cm_stricmp_utf8`, `cm_strlwr_utf16`, `cm_strupr_utf16`, and `strupr_utf8`. Navigation/validation helpers are `char_next_utf8`, `char_prev_utf8`, `char_next_utf16`, `char_prev_utf16`, `char_this_utf16`, and `cm_is_valid_utf16`.
+
+Control flow: most public functions lazily initialize normalization, handle NULL/empty inputs, convert through Win32 `MultiByteToWideChar` or `WideCharToMultiByte`, normalize to NFC (`NormalizationC`), and either write caller buffers or allocate new ones. Invalid UTF-8 falls back to CP-1252 after `sanitize_bytestring()` percent-escapes bytes that are illegal in Windows names or undefined in CP-1252. Converted UTF-16 is checked for dangling surrogates; invalid surrogate code units are percent-escaped by `sanitize_utf16string()`. Case-insensitive compares convert UTF-8 to wide strings and call `CompareStringW`.
+
+State and persistence: module-global state is limited to resolved function pointers, `nls_lcid`, and `nls_init`; no persistent storage is written. Returned allocated strings are caller-owned.
+
+Dependencies and integration: used by ioctl parsing, freelance name comparisons, SMB/redirector path handling, and any cache-manager path logic that must bridge filesystem strings and Windows client strings. Depends on Win32 NLS APIs, `Normaliz.dll`, `strsafe`, and OpenAFS `cm_nls.h` typedefs.
+
+Risks: several fixed `NLSMAXCCH` stack buffers cap conversion size; comments note TODOs around guaranteed NUL termination. Some `MultiByteToWideChar` calls pass `cch_src * sizeof(char)`, harmless for single-byte `char` but easy to cargo-cult incorrectly. `char_prev_utf8` contains pointer-decrement logic that should be tested carefully. CP-1252 fallback may preserve otherwise invalid input as percent escapes, which is intentional but security-sensitive for path matching.
+
+Test signals: normalized and already-normalized UTF-16; valid UTF-8, invalid UTF-8 CP-1252 fallback, invalid bytes requiring percent escape, dangling surrogate input, insufficient caller buffers, empty and non-NUL-terminated inputs, case-insensitive comparisons under invariant/Win2K LCID, upper/lower mapping, and UTF-8/UTF-16 character stepping across multibyte and surrogate-pair boundaries.

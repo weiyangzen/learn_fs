@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_bug006.py
+
+Purpose: regression test that destructive or exclusive session APIs fail while a cursor is open and succeed after it closes. It covers file and table URIs, skipping tiered storage negative API behavior.
+
+Important APIs are `session.create`, cursor writes, `session.drop`, `session.salvage`, `session.verify`, `salvageUntilSuccess`, `session.truncate`, `verifyUntilSuccess`, and `dropUntilSuccess`. Control flow creates and populates the object, keeps the cursor open, asserts drop/salvage/verify all raise `WiredTigerError`, closes the cursor, then salvages, truncates all content, verifies, and drops successfully. State behavior is handle exclusivity and post-salvage/truncate file state. Dependencies are `simple_key/simple_value` and tiered hook detection. Risks include broad exception assertions without message checks and skip behavior tied to hook names. Test signals are expected failures with open cursor and successful operations after close.

@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/base_image/defaults/main.yml
+
+This defaults file provides base image role toggles and helper variables. It defaults to user-session libvirt (`libvirt_uri_system: false`), disables copying sources into guests, disables custom raw images, leaves `kdevops_uid` blank, and sets the default GRUB update command to `/usr/sbin/update-grub2`.
+
+The file is declarative; behavior is implemented by `base-image.yml` and `custom-image.yml`. Integration points are libguestfs, virt-builder, virt-customize, libvirt ownership expectations, and templates that use `kdevops_uid` and `update_grub_cmd`. Persistent state is created later as raw images and virt-builder repository metadata. Risks are configuration mismatch: system libvirt needs different ownership, distro-specific GRUB commands are adjusted later only for selected image versions, and empty `kdevops_uid` changes generated guest user behavior. Test signals should render the virt-builder template under both system and user libvirt modes.

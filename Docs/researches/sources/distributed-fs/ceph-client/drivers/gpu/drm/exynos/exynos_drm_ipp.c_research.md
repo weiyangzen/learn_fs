@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/exynos/exynos_drm_ipp.c
+
+Purpose: this file is the common Exynos Image Post Processing framework. It registers hardware IPP engines, exposes enumeration/capability/limit/commit IOCTLs, validates userspace tasks, manages GEM references and DMA addresses, serializes work per engine, and delivers optional completion events.
+
+Important APIs and data: global `ipp_list` and `num_ipp` track registered engines. `exynos_drm_ipp_register()` initializes an engine's lock, todo list, waitqueue, callbacks, caps, format table, and id. `exynos_drm_ipp_unregister()` removes it. IOCTLs are `exynos_drm_ipp_get_res_ioctl()`, `exynos_drm_ipp_get_caps_ioctl()`, `exynos_drm_ipp_get_limits_ioctl()`, and `exynos_drm_ipp_commit_ioctl()`. `exynos_drm_ipp_task_done()` is the backend completion callback.
+
+Control flow: userspace first enumerates IPP ids and format/limit data, then submits a commit with a packed parameter buffer. Commit validates flags, finds the IPP, allocates a task with default full-size rectangles and rotate-0, copies each parameter according to `exynos_drm_ipp_params_maps`, validates rectangles, capabilities, formats, pitch, plane GEM ids, size limits, alignment, and scale limits, then resolves source and destination GEMs. Test-only submissions stop after validation. Real jobs may reserve a DRM event, then enqueue the task. Nonblocking jobs return after enqueue and are cleaned up from a work item after completion; blocking jobs wait on the IPP waitqueue and abort on interruption. The scheduler runs one task at a time per IPP by moving the first todo entry to `ipp->task` and calling backend `commit()`.
+
+State and persistence: each IPP object stores current task, todo list, spinlock, waitqueue, sequence counter, format table, and caps. Each task stores source/destination buffers, transform, alpha, event, flags, return code, and cleanup work. No disk persistence exists.
+
+Dependencies and integration points: depends on DRM UAPI structures, DRM events, blend/rotation helpers, GEM lookup, Exynos GEM DMA addresses, and backend drivers such as FIMC and GSC. The top-level driver exposes these IOCTLs.
+
+Risks: `ipp_list` lookup is not explicitly locked, relying on component serialization for modification and stable runtime registration. Packed userspace parameter parsing must reject unknown ids and undersized buffers. Validation must stay consistent with backend hardware; otherwise backend register programming can see impossible geometry. Blocking waits can be interrupted, invoking backend abort if the task is active. WARNs in unregister catch leaked active/todo tasks.
+
+Test signals: enumeration two-pass behavior, caps/limits copyout, malformed parameter buffers, missing GEM ids, undersized buffers, unsupported format/modifier, crop/rotate/scale/convert capability rejection, test-only jobs, blocking and nonblocking completion, event sequence/timestamps, interrupted blocking wait, and backend unregister with empty queues.

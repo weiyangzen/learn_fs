@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/cachestat/cachestat.h
+
+Purpose: shared helper header for cachestat tests. It includes `tst_test.h` and `lapi/mman.h`, then defines `print_cachestat` to log all five counters at `TDEBUG`: cache, dirty, writeback, evicted, and recently evicted. State is none beyond reading the supplied `struct cachestat`. Integration point is common diagnostics in `cachestat01` and `cachestat02`. Dependencies are LTP result logging and lapi definitions of `struct cachestat`. Risks are only compile compatibility with syscall wrapper types. Test signal is indirect through clearer debug output when counter assertions fail.

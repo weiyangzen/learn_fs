@@ -1,0 +1,18 @@
+# sources/distributed-fs/ceph-client/include/linux/dma/ti-cppi5.h
+
+## Purpose
+This header defines the descriptor layout and inline manipulation helpers for Texas Instruments CPPI5/UDMA descriptors. It covers common descriptor headers, host packet descriptors, monolithic descriptors, transfer request descriptors, transfer request records, and transfer response records. It is a hardware ABI header: the packed/aligned structures and bitfield masks must match what TI DMA hardware consumes and produces.
+
+## Important APIs, types, and functions
+Key data structures are `struct cppi5_desc_hdr_t`, `struct cppi5_host_desc_t`, `struct cppi5_desc_epib_t`, `struct cppi5_monolithic_desc_t`, the TR record layouts `cppi5_tr_type0_t`, `cppi5_tr_type1_t`, `cppi5_tr_type2_t`, `cppi5_tr_type3_t`, `cppi5_tr_type15_t`, and `struct cppi5_tr_resp_t`. The constants define descriptor type fields, packet length fields, return queue policy, tag IDs, PS data sizes, TR record sizes, trigger modes, and response statuses.
+
+The helper API is entirely inline. Common descriptor helpers include `cppi5_desc_get_type()`, `cppi5_desc_get_errflags()`, `cppi5_desc_get_pktids()`, `cppi5_desc_set_pktids()`, `cppi5_desc_set_retpolicy()`, `cppi5_desc_get_tags_ids()`, `cppi5_desc_set_tags_ids()`, `cppi5_desc_is_tdcm()`, and `cppi5_desc_dump()`. Host descriptor helpers include `cppi5_hdesc_calc_size()`, `cppi5_hdesc_init()`, `cppi5_hdesc_update_flags()`, `cppi5_hdesc_update_psdata_size()`, packet length/PS flag/packet type getters and setters, buffer attach/reset helpers, host-buffer-descriptor link helpers, and accessors for in-descriptor PS data and software data. TR helpers include `cppi5_trdesc_calc_size()`, `cppi5_trdesc_init()`, `cppi5_tr_init()`, `cppi5_tr_set_trigger()`, and `cppi5_tr_csf_set()`.
+
+## Control flow, state, and persistence
+The header has no runtime ownership or allocation logic. State is encoded directly into descriptor words that are later submitted to hardware rings. The inline functions update selected bit ranges by masking and shifting, so the observable state is the descriptor memory image itself. Host descriptors carry current and original buffer addresses/lengths; `cppi5_hdesc_reset_to_original()` restores `buf_ptr` and `buf_info1` from the original buffer fields. Descriptor chains persist through `next_desc` until reset. TR descriptors encode reload index/count and record size in header words; the reload count can request infinite looping.
+
+## Dependencies and integration points
+It depends on `linux/bitops.h` for `BIT()`, `GENMASK()`, and `ALIGN()`, on `linux/printk.h` for descriptor dumps, and on DMA address types from the kernel environment. DMA controller drivers using TI K3 UDMA/CPPI5 include this header to construct ring descriptors, parse completion descriptors, attach protocol metadata, and generate transfer request packets. The packed and aligned annotations make it part of a device-facing ABI.
+
+## Risks and test signals
+The main risks are hardware ABI drift, incorrect PS data sizing, invalid alignment, bad return ring IDs, and unguarded caller input. For example, `cppi5_hdesc_init()` and `cppi5_hdesc_update_psdata_size()` do not enforce the maximum or 4-byte multiple, while `cppi5_hdesc_calc_size()` only rejects too-large PS data. `cppi5_trdesc_init()` assumes `tr_count > 0` and a valid `tr_size`; otherwise `tr_count - 1` and `ffs(tr_size >> 4) - 1` encode invalid fields. Tests should exercise descriptor field round trips, size calculations, EPIB and PS-data placement, host buffer reset/link behavior, TR record size encoding for 16/32/64/128 byte records, and known hardware completion response values.

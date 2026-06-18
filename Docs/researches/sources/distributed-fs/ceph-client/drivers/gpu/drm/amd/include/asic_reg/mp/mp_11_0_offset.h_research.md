@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/include/asic_reg/mp/mp_11_0_offset.h
+
+Purpose: generated generic AMD MP 11.0 register-offset header, despite the include guard name `_mp_11_0_2_OFFSET_HEADER`. It supplies the broader MP 11.0 SMN mailbox and public/PMI offsets used by PSP 11.0 and SMU 11 code paths.
+
+Important APIs and state: MP0 `C2PMSG_32..103` are `0x0060..0x00a7`; MP0 additionally has `ACTIVE_FCN_ID` at `0x00c0`, `IH_CREDIT` at `0x00c1`, `IH_SW_INT` at `0x00c2`, and `IH_SW_INT_CTRL` at `0x00c3`. MP1 `C2PMSG_32..103` are `0x0260..0x02a7`; MP1 then defines `ACTIVE_FCN_ID`, `IH_CREDIT`, `IH_SW_INT`, `IH_SW_INT_CTRL`, `FPS_CNT`, `PUB_CTRL`, and `EXT_SCRATCH0..7` at `0x02c0..0x02c5` and `0x03c0..0x03c7`. The public MMU decode block adds SMN absolute addresses `smnMP1_PMI_3_START` (`0x3030204`), `smnMP1_PMI_3_FIFO` (`0x3030208`), and `smnMP1_PMI_3` (`0x3030600`). Register-index macros have `_BASE_IDX 0`.
+
+Control flow: no control flow is defined here. Runtime users include `amdgpu/psp_v11_0.c`, `pm/swsmu/smu11/smu_v11_0.c`, `sienna_cichlid_ppt.c`, and `nv.c`. Typical flows write MP0 C2P registers during PSP ring setup, configure MP1 message/response/argument registers for SMU messages, and read/write MP1 interrupt registers while enabling, disabling, or acknowledging SMU interrupts.
+
+State and persistence: macro constants are stateless. The addressed hardware state includes firmware mailbox contents, interrupt mask/ack bits, active virtual-function status, FPS counters, public-control state, extended scratch words, and PMI registers. These values persist in hardware until reset or firmware/driver writes and may also change asynchronously as MP firmware runs.
+
+Dependencies and integration: protected by the include guard and paired with `mp_11_0_sh_mask.h` for bitfield definitions. The offsets are consumed by SOC15 register infrastructure, especially `SOC15_REG_OFFSET(MP0/MP1, instance, macro)`, `RREG32_SOC15`, and `WREG32_SOC15`. SMU common code also relies on matching mask macros for `MP1_FIRMWARE_FLAGS` and C2P response fields, while PSP code relies on exact MP0 mailbox locations.
+
+Risks and test signals: this is a central hardware ABI header, so incorrect values break early firmware boot, SMU message routing, interrupt delivery, SR-IOV active-function tracking, or PMI access. The generic 11.0 file differs from 11.0.8 by adding active-function, public-control, and PMI entries; using the wrong header for an ASIC can address nonexistent or shifted registers. Test signals include PSP 11 ring initialization, SMU 11 message timeout-free operation, interrupt mask/unmask and ack paths, SR-IOV validation where applicable, and compile coverage for all included ASIC-specific PPT files.

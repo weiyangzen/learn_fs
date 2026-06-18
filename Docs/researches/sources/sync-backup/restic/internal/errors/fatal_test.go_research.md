@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/errors/fatal_test.go
+
+Purpose: validates fatal error classification and wrapping semantics. APIs under test are `Fatal`, `Fatalf`, `IsFatal`, and standard `errors.Is` interoperability through the internal facade. Control flow checks nil/nonfatal cases, direct fatal errors, formatted fatal errors, and wrapping a sentinel underlying error so both fatal classification and underlying matching work. State is local error values. Dependencies include testing and internal errors package. Risks covered: fatal marker must survive wrapping and must not hide the underlying cause. Missing signal: multi-error `Join` fatal classification is not tested here.

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/samba/source3/registry/reg_perfcount.c -->
+# sources/user-network-fs/samba/source3/registry/reg_perfcount.c
+
+Purpose: Implements Samba's registry-facing performance counter provider. It reads counter metadata and live values from `state_path("perfmon")` TDB databases and marshals Windows `PERF_DATA_BLOCK` data for the `HKEY_PERFORMANCE_DATA` registry path.
+
+Important APIs, types, and functions: Public entry points are `reg_perfcount_get_base_index()`, `reg_perfcount_get_last_counter()`, `reg_perfcount_get_last_help()`, `reg_perfcount_get_counter_help()`, `reg_perfcount_get_counter_names()`, and `reg_perfcount_get_hkpd()`. Internal builders include `_reg_perfcount_multi_sz_from_tdb()`, `_reg_perfcount_assemble_global()`, `_reg_perfcount_add_object()`, `_reg_perfcount_add_counter()`, `_reg_perfcount_get_counter_info()`, `_reg_perfcount_get_instance_info()`, `_reg_perfcount_perf_data_block_fixup()`, and marshalling helpers for data blocks, objects, counters, instances, and counter data. It uses generated `PERF_DATA_BLOCK`, `PERF_OBJECT_TYPE`, `PERF_COUNTER_DEFINITION`, `PERF_INSTANCE_DEFINITION`, and `PERF_COUNTER_BLOCK` types from `perfcount.h`.
+
+Control flow: Counter name/help calls open `names.tdb`, fetch sequential numeric keys, encode index/name pairs as registry UTF-16 strings, and append the final double-NUL terminator. HKPD retrieval computes the base index, initializes a `PERF_DATA_BLOCK`, scans each even counter id's relationship key, creates parent objects for `p...` relationships and counters for `c[...]` relationships, fetches values from `data.tdb`, fixes offsets and 64-bit alignment, then writes the block and objects into the caller's `prs_struct`. If the full payload exceeds `max_buf_size`, only the header is marshalled and `WERR_INSUFFICIENT_BUFFER` is returned with the requested length capped.
+
+State and persistence behavior: Persistent input lives in `perfmon/names.tdb` and `perfmon/data.tdb` under Samba's state directory. The module creates the `perfmon` directory if needed. Per-request output is allocated from the caller's talloc or parse context; fetched TDB buffers are manually freed. It does not cache TDB handles or counter layouts.
+
+Dependencies and integration points: Integrates with the virtual registry layer through `reg_perfcount.h` and `reg_parse_prs.h`, TDB via `tdb_open_log()` and `tdb_fetch()`, registry string encoding via `push_reg_sz()` and `rpcstr_push_talloc()`, server identity via `lp_netbios_name()`, and Samba state paths via `state_path()`.
+
+Risks: Many TDB values are copied into fixed `PERFCOUNT_MAX_LEN` stack buffers and parsed with `atoi()`, `atof()`, or `strtol()`, so malformed or oversized database values can truncate or produce surprising numeric results. Several helper failures close no already-open `names` handle on early return. `object_ids` is accepted by `reg_perfcount_get_hkpd()` but not used to filter objects. Payload layout is alignment-sensitive, and a single bad relationship or missing parent object can suppress the whole HKPD response.
+
+Test signals: Useful tests would create temporary `names.tdb`/`data.tdb` fixtures covering name/help MULTI_SZ construction, parent-before-child assembly, missing relationship keys, missing data keys, 32-bit, 64-bit, and variable-length counters, instance names and data, big-endian parse contexts, insufficient-buffer behavior, and malformed TDB values near `PERFCOUNT_MAX_LEN`.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/samba/source3/registry/reg_perfcount.c -->

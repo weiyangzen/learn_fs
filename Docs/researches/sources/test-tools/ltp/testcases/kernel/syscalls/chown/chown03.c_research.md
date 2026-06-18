@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chown/chown03.c
+
+Purpose: verifies non-root owner can change a file's group to its effective group and that setuid/setgid bits are cleared. Setup drops to nobody and creates a file; run as root resets group and special mode, drops to nobody, checks starting owner/mode, calls `CHOWN(filename, -1, egid)`, then verifies group changed and setuid/setgid cleared. Important APIs are `SAFE_SETEUID`, `SAFE_SETEGID`, `SAFE_CHOWN`, `SAFE_CHMOD`, `CHOWN`, and `SAFE_STAT`. State is file ownership/mode and process credentials. Dependencies are root and nobody user. Risks are filesystem mode-bit behavior. Test signal is chown success, expected owner/group, and cleared special bits.

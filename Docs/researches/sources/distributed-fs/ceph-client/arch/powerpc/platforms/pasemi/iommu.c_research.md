@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/pasemi/iommu.c
+
+Purpose: PA Semi IOB IOMMU setup and DMA mapping integration for PCI devices.
+
+Important APIs and control flow: `iob_init` allocates a 2 MiB low-memory L2 table, a dummy page for invalid entries, maps IOB registers, writes 64 L1 entries, selects a 2 GiB translation window, and enables address translation. `iobmap_build` writes valid L2 entries from physical pages and invalidates IOB TLB entries; `iobmap_free` replaces entries with the dummy-page value and invalidates. `iommu_table_iobmap_setup` initializes common `iommu_table` state and ops. PCI DMA setup lazily initializes the table and assigns it to devices, except the DMA engine bypasses translation outside LPAR unless force is configured. `iommu_init_early_pasemi` honors config and `/chosen/linux,iommu-off`, installs PCI controller DMA hooks, and sets `dma_iommu_ops`.
+
+State, dependencies, and risks: global state includes IOB MMIO, L1/L2 empty values, L2 table base, `iommu_table_iobmap`, and initialization flag. Dependencies include memblock early allocation, firmware LPAR feature, PA IOB registers, generic IOMMU code, and PCI controller ops. Risks include fixed 2 GiB window, panic on allocation/map failures, dummy-page mapping for freed entries, and device-specific DMA-engine bypass differences. Test signals are boot with IOMMU enabled/disabled, DMA mappings for PCI devices, LPAR DMA-engine behavior, and no IOTLB stale translations.

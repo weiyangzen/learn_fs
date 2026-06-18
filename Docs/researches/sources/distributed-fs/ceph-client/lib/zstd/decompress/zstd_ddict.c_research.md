@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/lib/zstd/decompress/zstd_ddict.c
+
+## Purpose
+Owns the internal representation and lifecycle of decompression dictionaries (`ZSTD_DDict`). A DDict is a digested dictionary object that may either copy or reference dictionary bytes, parse a conformant Zstd dictionary header, prebuild entropy decode tables, expose dictionary metadata, and quickly seed a decompression context with dictionary history and entropy.
+
+## Important APIs, Types, and Functions
+The central private type is `struct ZSTD_DDict_s`, containing `dictBuffer`, `dictContent`, `dictSize`, parsed entropy tables, `dictID`, `entropyPresent`, and custom allocator state. Public or internal entry points include `ZSTD_DDict_dictContent()`, `ZSTD_DDict_dictSize()`, `ZSTD_copyDDictParameters()`, `ZSTD_createDDict_advanced()`, `ZSTD_createDDict()`, `ZSTD_createDDict_byReference()`, `ZSTD_initStaticDDict()`, `ZSTD_freeDDict()`, `ZSTD_estimateDDictSize()`, `ZSTD_sizeof_DDict()`, and `ZSTD_getDictID_fromDDict()`. Private helpers are `ZSTD_initDDict_internal()` and `ZSTD_loadEntropy_intoDDict()`.
+
+## Control Flow
+Creation starts in `ZSTD_createDDict_advanced()`, which validates that custom allocation and free callbacks are paired, allocates a `ZSTD_DDict`, stores allocator state, and delegates to `ZSTD_initDDict_internal()`. Internal initialization either references the caller's dictionary bytes or allocates and copies them, initializes the Huffman table capacity descriptor, and calls `ZSTD_loadEntropy_intoDDict()`. Entropy loading treats `ZSTD_dct_rawContent` as content-only, rejects too-small or wrong-magic input when `ZSTD_dct_fullDict` is required, otherwise accepts non-conformant input as raw content in auto mode. For conformant dictionaries, it reads `dictID` after the magic and calls `ZSTD_loadDEntropy()` to build Huffman and FSE decode tables.
+
+`ZSTD_copyDDictParameters()` is the hot integration path: it copies dict identity, prefix/history pointers, `previousDstEnd`, fuzzing bounds, entropy table pointers, and repeat offsets into a `ZSTD_DCtx`. If the DDict has no parsed entropy, it clears `litEntropy` and `fseEntropy` so frames load entropy from their blocks instead. Static initialization lays out the `ZSTD_DDict` at the start of a caller workspace and, for by-copy mode, stores dictionary bytes immediately after the object, then initializes by reference to that internal copy. Freeing releases the optional copied dictionary buffer and the DDict itself through the stored custom allocator.
+
+## State and Persistence Behavior
+`ZSTD_DDict` persists dictionary bytes when loaded by copy and only borrows them when loaded by reference or static workspace. Borrowed dictionary content must outlive the DDict. Parsed entropy and `dictID` remain cached for reuse across frames. `ZSTD_copyDDictParameters()` does not clone entropy tables; it points the decompression context at DDict-owned entropy storage, so the DDict must outlive decompression. Static DDicts are not heap-owned and are returned as `const ZSTD_DDict*`; callers must not pass them to heap-free paths unless the broader API contract allows it.
+
+## Dependencies and Integration Points
+The file depends on custom allocation helpers, memory utilities, CPU/common headers, FSE and Huffman table definitions, `zstd_decompress_internal.h` for `ZSTD_DCtx` and entropy table layout, and `zstd_ddict.h` for declarations. It integrates with `zstd_decompress.c` through `ZSTD_decompressBegin_usingDDict()`, `ZSTD_DCtx_refDDict()`, multiple-DDict selection, and one-shot `ZSTD_decompress_usingDDict()`. It also depends on `ZSTD_loadDEntropy()` implemented in the decompressor file to parse full dictionary entropy.
+
+## Risks and Edge Cases
+The main correctness risks are lifetime mismatches in by-reference mode, allocator-pair mismatches, assuming non-conformant dictionaries have entropy when they are intentionally content-only, and corrupt dictionary headers causing partially initialized DDicts. `ZSTD_initStaticDDict()` requires 8-byte alignment and enough workspace for the object plus optional copy; violations return `NULL`. `ZSTD_copyDDictParameters()` installs pointers into the target context, so freeing or mutating the DDict during decompression can corrupt output. Empty or `NULL` dictionaries normalize to size zero and no entropy.
+
+## Test Signals
+Useful signals include round-trip decompression with copied DDicts, by-reference DDicts whose source buffer remains valid, static DDict workspace alignment/size failures, corrupt dictionary magic and too-small full dictionaries, dictionaries with and without entropy sections, custom allocator failure injection, `ZSTD_getDictID_fromDDict()` behavior for raw and conformant dictionaries, and repeated decompressions from the same DDict to prove entropy table reuse.

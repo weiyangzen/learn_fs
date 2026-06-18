@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/bpf/bpf_prog01.c
+
+Purpose: basic eBPF program load/run test. It creates an array map, builds socket-filter bytecode that looks up key 0 and writes value 1, loads the program, attaches it to a Unix datagram socket, sends a packet, then reads map[0]. Important APIs are BPF instruction macros, `bpf_init_prog_attr`, `bpf_load_prog`, `bpf_run_prog`, and `bpf_map_array_get`. State includes map fd, program fd, verifier log buffer, and message buffer. Dependencies are BPF socket filter support and memlock limit. Risks are verifier rejection due to policy or kernel support, and map fd substitution in bytecode. Test signal is map value exactly 1 after program execution.

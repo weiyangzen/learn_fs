@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/sja1000/peak_pci.c
+
+Purpose: this PCI driver supports PEAK PCAN PCI, PCIe, miniPCI, cPCI, PC/104, OEM, and optionally ExpressCard adapters with up to four SJA1000 channels. It also provides optional ExpressCard LED control via a bit-banged I2C PCA9553 LED controller.
+
+Important types and APIs: `struct peak_pci_chan` is per-channel private data containing config BAR, previous netdev chain link, PITA interrupt mask, and optional ExpressCard card pointer. Under `CONFIG_CAN_PEAK_PCIEC`, `struct peak_pciec_card` owns I2C bit-bang data, LED adapter, delayed LED work, and channel activity snapshots. `peak_pci_probe()`/`peak_pci_remove()` are PCI entry points; `peak_pciec_probe()`/`remove()` manage ExpressCard LEDs.
+
+Control flow: probe enables PCI, requests regions, reads subsystem ID to infer channel count, maps config and channel BARs, toggles PITA reset/mux state, optionally logs FPGA firmware, then loops over channels. For each channel it allocates an SJA1000 netdev with `peak_pci_chan`, assigns shifted-register read/write callbacks, PITA post-IRQ ack, clock/OCR/CDR, shared IRQ, interrupt mask, dev_id, and a linked-list previous-device pointer. ExpressCard variants initialize the I2C LED controller before registration and override the write callback so SJA1000 reset/normal mode changes update LED state. After all channels register, PITA interrupt masks are enabled. Remove disables interrupts, walks the channel chain, removes optional LED resources, unregisters/free netdevs, unmaps BARs, releases regions, and disables PCI.
+
+State and persistence: channel chain state is stored through `pci_set_drvdata()` with the last registered netdev. LED state is cached in memory and periodically updated from netdev byte counters. Hardware state includes PITA GPIO/ICR/misc, optional PCA9553 LED registers, and SJA1000 OCR/CDR. No durable persistence.
+
+Dependencies and integration points: depends on PCI, MMIO, SJA1000 core, optional I2C and `i2c-algo-bit`, delayed work, and shared IRQ post-ack. It integrates channel activity with external LEDs by observing netdev stats and SJA1000 mode writes.
+
+Risks and test signals: channel count inference from subsystem ID is device-contract-sensitive. The linked-list cleanup must remain correct on partial failures. ExpressCard LED code runs only under a Kconfig option and can fail before CAN registration. Tests should cover all device IDs, one to four channels, PITA interrupt ack, FPGA firmware reporting, ExpressCard I2C/LED init and teardown, activity LED timer behavior, and failure cleanup from each channel.

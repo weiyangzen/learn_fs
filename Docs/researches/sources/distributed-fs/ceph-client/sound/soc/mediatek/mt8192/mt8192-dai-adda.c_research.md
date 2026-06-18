@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/sound/soc/mediatek/mt8192/mt8192-dai-adda.c
+
+This file implements the ADDA, ADDA_CH34, AP_DMIC, and AP_DMIC_CH34 backend DAIs. It includes DAPM mixers/routes, MTKAIF setup, analog/digital mic switching, playback/capture register programming, sidetone filter controls, and ADDA-related ALSA controls.
+
+`mt8192_dai_adda_register()` adds ADDA DAI drivers, controls, widgets, and routes to the base AFE. Runtime control centers on `mtk_dai_adda_hw_params()` plus DAPM events including `mtk_adda_ul_event()`, `mtk_adda_ch34_ul_event()`, `mtk_adda_dl_event()`, `mtk_adda_ch34_dl_event()`, `mtk_adda_pad_top_event()`, `mtk_adda_mtkaif_cfg_event()`, and `mtk_stf_event()`. Controls expose sidetone gain, ADDA downlink gain, MTKAIF DMIC, and ADDA6-only state.
+
+Playback hw_params builds downlink SRC settings from sample rate, configures upsampling, unmute, optional voice mode, gain, predistortion reset, sigma-delta modulator settings, and SDM auto reset. Capture hw_params maps uplink rate, enables IIR, writes high-pass coefficients, selects internal ADC/AMIC mode by default, and enables DMIC setup for AP_DMIC variants. DAPM power events select ADDA GPIOs and program MTKAIF protocol/phase/delay state. Sidetone setup selects a coefficient table by UL rate and writes coefficients while polling a ready bit.
+
+Mutable state is in `afe_priv`: MTKAIF protocol, phase calibration arrays, DMIC switches, ADDA6-only flag, and sidetone positive gain. Dependencies are clock/GPIO helpers, interconnection macros, common ADDA rate helpers, and ASoC DAPM/control APIs. Risks include trusted phase calibration state, ignored GPIO return values, limited control validation, and a suspicious route where ADDA DL CH4 labels `DL6_CH2` but uses `I_DL6_CH1`. Test signals include AMIC/DMIC capture, CH34 paths, ADDA6-only mode, MTKAIF protocol variants, sidetone at 16/32/48 kHz, and playback gain/SDM behavior.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/fsl_uli1575.c
+
+Purpose: Freescale-board PCI fixups for the ALi/ULi M1575 southbridge and related bridge, SATA, PATA, RTC, interrupt-routing, and HPCD sideband quirks.
+
+Important APIs and control flow: `is_quirk_valid` gates most fixups to specific Freescale machines. Early/header/final PCI fixups program PIRQ-to-8259 routing, device interrupt pins, SATA AHCI class, PATA native IRQs, i8259 trigger mode registers, RTC control/alarm masking, and dummy bridge reads needed for RTC access. HPCD-specific fixups disable INTx, enable sideband interrupts, change SATA programming interface, force PATA native mode, and remap SATA IRQ using raw OF interrupt parsing. `uli_init` detects `uli1575` under `fsl_pci_primary` and installs `uli_exclude_device` to hide modem and HD audio functions.
+
+State, dependencies, and risks: state includes the PIRQ mapping table and `ppc_md.pci_exclude_device` override. Dependencies include PCI fixup ordering, machine descriptors, FSL primary PCI node, i8259/CMOS I/O ports, OF IRQ mapping, and ULi-specific config registers. Risks are board-specific magic registers, overlapping fixups for the same device IDs, direct CMOS/ELCR writes, and exclusion logic tied to bus offsets. Test signals are correct interrupt routing for USB/SATA/PATA/SMBus, RTC operation, hidden unsupported functions, and resume-time PATA fixup behavior.

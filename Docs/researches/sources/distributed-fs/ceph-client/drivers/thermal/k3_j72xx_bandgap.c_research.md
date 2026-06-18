@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/thermal/k3_j72xx_bandgap.c
+
+Purpose: TI J72xx/J721E/J7200 VTM thermal driver. It builds a calibrated ADC-to-temperature table, optionally applies J721E errata i2128 software trimming from fuse registers, programs high-temperature shutdown/alert thresholds, registers one thermal zone per sensor, and restores hardware state across suspend/resume.
+
+Important APIs/types/functions: `struct k3_j72xx_bandgap` owns device, two MMIO windows, per-sensor pointers, and sensor count. `struct k3_thermal_data` stores control/status offsets. `compute_value()` and `init_table()` generate polynomial reference tables from `golden_factors` or `pvt_wa_factors`. `get_efuse_values()`, `create_table_segments()`, and `prep_lookup_table()` derive the calibrated table from trim errors. `k3_bgp_read_temp()` samples three times and indexes `derived_table`. `k3_j72xx_bandgap_temp_to_adc_code()` binary-searches the table for threshold programming. `k3_j72xx_bandgap_init_hw()` enables sensors and configures `MAX_TEMP`/`COOL_DOWN_TEMP` alert limits.
+
+Control flow: probe maps the VTM and config windows, checks match data for errata, maps fuses if needed, uses runtime PM, reads sensor count, allocates per-sensor state plus a temporary reference table and devm `derived_table`, fills calibration tables, initializes hardware, registers each thermal zone, adds hwmon, and frees the temporary table. Runtime reads go through the thermal callback to `derived_table`. Suspend disables runtime PM; resume re-enables PM and reruns hardware initialization.
+
+State/persistence: `derived_table` is global but allocated during probe and shared by all sensors on the device; per-sensor offsets live in devm arrays. Hardware threshold and control registers are reprogrammed on resume. Dependencies: OF compatibles `ti,j721e-vtm` and `ti,j7200-vtm`, three MMIO resources for errata devices, runtime PM, thermal OF, hwmon.
+
+Risks: lookup-table derivation can silently leave interpolated regions if fuse data is malformed; `derived_table` global state limits assumptions about multiple devices; threshold search depends on monotonic table content. Test signals include errata and non-errata probe paths, fuse skip bits, sensor-count handling, suspend/resume reinitialization, alert threshold register values, and invalid ADC code behavior.

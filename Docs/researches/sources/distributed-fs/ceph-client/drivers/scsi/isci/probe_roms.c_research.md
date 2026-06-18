@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/isci/probe_roms.c
+
+Purpose: locates and validates ISCI OEM parameter data from platform firmware sources. It can parse a PCI option ROM, load the `isci/isci_firmware.bin` firmware blob, or read the `RstScuO` EFI variable, each yielding a packed `struct isci_orom` used by controller initialization.
+
+Important APIs/types/functions: `isci_request_oprom()` maps the PCI BIOS ROM and scans for `$OEM` blocks containing an `ISCUOEMB` table; `isci_request_firmware()` requests the firmware file, validates the table signature, copies it to devm memory, and applies preproduction silicon AFE defaults for older revisions; `isci_get_efi_var()` reads the EFI vendor variable, validates the OEM header, checksum, and ISCI table signature. `get_efi()` abstracts `CONFIG_EFI`.
+
+Control flow: option-ROM parsing maps the ROM, allocates a destination, walks in `$OEM` signature-sized increments, copies the OEM header and payload, computes an additive checksum over header plus full destination table, validates the inner ISCI signature, then unmaps the ROM. Firmware loading validates minimum size and signature before devm-copying. EFI loading allocates a 1 KiB buffer, asks firmware for the variable, treats data after `struct isci_oem_hdr` as the ISCI table, and performs the same signature/checksum checks.
+
+State and persistence: this file creates devm-managed in-memory copies of firmware tables; it does not persist changes. The returned pointers are owned by the PCI device lifetime. Firmware blobs and EFI variables are persistent platform inputs but are treated as read-only.
+
+Dependencies and integration points: depends on Linux PCI BIOS ROM mapping, firmware loader, EFI runtime services, device-managed allocation, and ISCI silicon revision helpers such as `is_c0()`/`is_c1()`. The returned `struct isci_orom` matches definitions in `probe_roms.h` and feeds host OEM parameters used by port configuration and PHY tuning.
+
+Risks: option-ROM scanning advances by four bytes and trusts `oem_hdr.len` enough to compute `copy_len = min(oem_hdr.len - sizeof(oem_hdr), sizeof(*rom))`; malformed short lengths can underflow before `min()`. The checksum loop always sums `sizeof(*rom)` bytes, even when less was copied from OROM. Firmware loading allocates `fw->size` bytes for a `struct isci_orom *` result, so consumers must only rely on known table layout. EFI reading assumes 1 KiB is sufficient. Test signals include missing/invalid firmware, bad signatures, checksum failures, short/oversized tables, EFI-disabled builds, and revision-specific AFE override behavior.

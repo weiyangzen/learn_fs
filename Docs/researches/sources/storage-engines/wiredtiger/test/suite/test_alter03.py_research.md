@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_alter03.py
+
+Purpose: checks `app_metadata` alteration semantics for table and backing file metadata, including the `exclusive_refreshed` switch. It uses `test_alter03(TieredConfigMixin, WiredTigerTestCase)` with tiered scenarios and direct metadata lookup.
+
+Important APIs are `session.create`, `session.alter`, `open_cursor('metadata:')`, cursor writes, `wiredtiger.WT_NOTFOUND`, `assertRaisesException`, and `reopen_conn`. Control flow creates a table with metadata, writes rows, verifies table and file metadata, performs alters with default exclusive behavior, explicit `exclusive_refreshed=true`, and `exclusive_refreshed=false`, then repeats with an open cursor to assert exclusive refresh failures while non-exclusive metadata-only table updates succeed. State is persisted and checked after connection reopen. Integration points are table/file metadata naming, including tiered file object naming. Risks include stale backing file metadata when non-exclusive alter is used by design. Test signals are exact metadata strings and expected `WiredTigerError` paths with open handles.

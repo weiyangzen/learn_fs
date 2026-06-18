@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/landlock/landlock01.c
+
+Purpose: negative errno coverage for `landlock_create_ruleset`. Setup verifies Landlock is enabled, computes valid, too-small, and too-big attribute sizes, and allocates a ruleset buffer. Test cases vary handled filesystem access, size, flags, and invalid attr pointer, expecting `EINVAL`, `E2BIG`, `EFAULT`, or `ENOMSG`. State is one userspace ruleset attribute buffer; any unexpectedly created fd is closed. Dependencies are Landlock enabled, root with `CAP_SYS_ADMIN`, and ABI-1 attr layout from LTP lapi. Risks are kernel ABI changes in validation ordering. Test signal is expected errno for unknown access, invalid flags/size/address, and empty access.

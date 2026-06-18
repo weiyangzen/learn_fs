@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/gcsfuse/tools/integration_tests/concurrent_operations/setup_test.go
+
+Purpose: package-level setup for concurrent operation integration tests. It loads test configuration, creates the shared storage client, selects bucket type, configures default flag matrices, and chooses static mounting for package execution.
+Important APIs and types: constants `testDirName`, `GKETempDir`, `onlyDirMounted`; global `testEnv`, `mountFunc`, `mountDir`, `rootDir`; `env` holds storage client, context, test directory, `TestConfig`, and bucket type; `TestMain` owns process-wide setup.
+Control flow: `TestMain` parses setup flags, reads `test_config.yaml`, populates fallback `ConcurrentOperations` config when absent, initializes environment and storage client, handles mounted-directory mode separately, otherwise prepares the test bucket directory and runs the test binary.
+State and persistence: persistent test data is under `TestConcurrentOperations` in the selected bucket. Config flags may rewrite cache directories under `/gcsfuse-tmp`; cleanup removes the GCS test directory after test execution.
+Dependencies and integration points: integrates `test_suite.ReadConfigFile`, `setup.TestEnvironment`, `client.CreateStorageClientWithCancel`, `static_mounting.MountGcsfuseWithStaticMountingWithConfigFile`, and `setup.BuildFlagSets` consumed by individual test files.
+Risks and edge cases: fallback config hard-codes run names for both read and listing tests, so renaming tests can silently skip cases. Mounted-directory mode requires both `GKEMountedDirectory` and `TestBucket`; cache path overrides must stay aligned with GKE/GCE paths.
+Test signals: correct setup is visible through successful mount selection, generated flag subtests, created test directories, and final cleanup without leaked bucket prefixes.

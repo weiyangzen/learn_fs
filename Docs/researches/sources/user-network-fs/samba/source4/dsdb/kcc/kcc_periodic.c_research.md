@@ -1,0 +1,9 @@
+# sources/user-network-fs/samba/source4/dsdb/kcc/kcc_periodic.c
+
+Purpose: timer-driven KCC maintenance for Samba AD DC. It either invokes the Python `samba_kcc` topology generator or runs the older in-process "simple KCC", then performs deleted-object garbage collection, DNS record tombstoning, and DNS tombstone deletion.
+
+Important APIs/functions: `kccsrv_periodic_schedule()` manages the `tevent_timer`; `kccsrv_periodic_run()` is the main maintenance body; `kccsrv_simple_update()` searches `nTDSDSA` objects and builds `repsFrom` candidates; `kccsrv_add_repsFrom()` persists `repsFrom` and prunes stale `repsTo`; `kccsrv_replica_flags()` chooses writable-vs-RODC flags; `kccsrv_samba_kcc()` launches the external KCC command with `samba_runcmd_send()`. DNS cleanup is delegated to `dns_tombstone_records()` and `dns_delete_tombstones()`.
+
+Control flow/state: the scheduled handler clears the old timer, runs maintenance, then reschedules. Simple KCC gathers all peer NTDS DSAs, skips this DC's `ntds_guid`, uses `check_MasterNC()` to avoid non-master sources, updates connection objects with `kccsrv_apply_connections()`, and notifies `dreplsrv` by IRPC refresh when topology attributes change. Persistent state lives in DSDB attributes (`repsFrom`, `repsTo`, `hasPartialReplicaNCs`) and tombstone/delete effects; transient throttles are `last_deleted_check`, `last_dns_scavenge`, and `last_dns_tombstone_collection`.
+
+Dependencies/integration: relies on LDB/SAMDB helpers, DRSUAPI blob formats, `kcc_connection`, `dreplsrv` IRPC, loadparm intervals, and AD DC role context. Risks include stale topology after failed writes, broad `repsFrom` generation in simple mode, asynchronous command timeout behavior, and cleanup timing being approximate. Test signals: check `kccsrv:*_interval`, RODC flag differences, GC partial NC additions, notification to `dreplsrv`, and DNS/deleted-object cleanup error logs.

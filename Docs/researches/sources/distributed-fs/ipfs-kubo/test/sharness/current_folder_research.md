@@ -1,0 +1,119 @@
+# Folder Research: sources/distributed-fs/ipfs-kubo/test/sharness
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 105
+- Recursive researched files: 112
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/distributed-fs/ipfs-kubo/test/sharness/GNUmakefile`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/Rules.mk`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0001-tests-work.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0002-docker-image.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0003-docker-migrate.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0012-completion-fish.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0015-basic-sh-functions.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0018-indent.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0021-config.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0022-init-default.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0023-shutdown.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0024-datastore-config.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0025-datastores.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0026-id.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0027-rotate.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0040-add-and-cat.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0042-add-skip.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0043-add-w.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0044-add-symlink.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0045-ls.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0046-id-hash.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0047-add-mode-mtime.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0050-block.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0051-object.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0052-object-diff.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0053-dag.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0054-dag-car-import-export.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0055-dag-put-json-new-line.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0060-daemon.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0061-daemon-opts.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0062-daemon-api.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0063-daemon-init.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0064-api-file.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0065-active-requests.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0066-migration.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0067-unix-api.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0070-user-config.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0080-repo.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0081-repo-pinning.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0082-repo-gc-auto.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0084-repo-read-rehash.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0086-repo-verify.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0087-repo-robust-gc.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0088-repo-stat-symlink.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0090-get.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0095-refs.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0101-iptb-name.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0109-gateway-web-_redirects.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0112-gateway-cors.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0114-gateway-subdomains.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0115-gateway-dir-listing.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0116-gateway-cache.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0119-prometheus.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0120-bootstrap.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0121-bootstrap-iptb.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0131-multinode-client-routing.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0140-swarm.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0141-addfilter.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0142-testfilter.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0150-clisuggest.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0151-sysdiag.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0152-profile.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0160-resolve.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0165-keystore.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0180-p2p.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0181-private-network.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0182-circuit-relay.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0183-namesys-pubsub.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0184-http-proxy-over-p2p.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0185-autonat.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0190-quic-ping.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0191-webtransport-ping.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0195-noise.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0220-bitswap.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0230-channel-streaming-http-content-type.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0231-channel-streaming.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0235-cli-request.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0236-cli-api-dns-resolve.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0240-republisher.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0250-files-api.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0251-files-flushing.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0252-files-gc.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0260-sharding.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0270-filestore.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0271-filestore-utils.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0272-urlstore.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0275-cid-security.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0276-cidv0v1.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0280-plugin-dag-jose.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0280-plugin-fx.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0280-plugin-git.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0280-plugin-peerlog.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0280-plugin.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0290-cid.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0295-multibase.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0320-pubsub.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0321-pubsub-gossipsub.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0322-pubsub-http-rpc.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0400-api-no-gateway.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0401-api-browser-security.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0410-api-add.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0500-issues-and-regressions-offline.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0600-issues-and-regressions-online.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/t0800-blake3.sh`
+- `sources/distributed-fs/ipfs-kubo/test/sharness/x0601-pin-fail-test.sh`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

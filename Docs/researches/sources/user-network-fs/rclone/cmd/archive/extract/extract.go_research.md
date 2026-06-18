@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/cmd/archive/extract/extract.go
+
+Purpose: implements `rclone archive extract`, reading an archive object from a source Fs, auto-identifying its format, and extracting included entries into a destination Fs directory.
+
+Control flow: command parsing obtains source file and destination dir; `ArchiveExtract` verifies source is an object, creates destination directory, opens the source with accounting and download headers, obtains a read-at seeker for `archives.Identify`, checks the identified format supports `archives.Extraction`, then iterates entries. It strips exactly one leading `./`, skips the root `./` directory entry, prefixes with destination dir, applies filters, creates dirs, and writes files with `operations.Rcat` unless dry-run. State changes are destination directories/files and accounting transfer state. Risks include archive path traversal still possible for `../` entries, reliance on archive library identification, read-at-seeker buffering cost, and no explicit closing of each archive entry reader after `Rcat` unless handled by library/reader. Tests cover `./` stripping and archive round trips.

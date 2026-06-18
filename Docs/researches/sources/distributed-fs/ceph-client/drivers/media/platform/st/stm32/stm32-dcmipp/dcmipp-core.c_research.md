@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
+
+Purpose: is the platform and media-graph core for the STM32 DCMIPP driver. It selects SoC-specific topology configuration, creates DCMIPP entities and immutable internal links, binds the external camera/CSI source, fans out the shared IRQ, registers the media device/subdev nodes, and owns clocks, reset, runtime PM, and system PM.
+
+Important APIs and functions: topology data is stored in `dcmipp_pipeline_config`, `dcmipp_ent_config`, and `dcmipp_ent_link`. `dcmipp_create_subdevs` calls entity init functions, `dcmipp_create_links` builds internal links, and `dcmipp_graph_init` registers the async remote source notifier. IRQ dispatch is `dcmipp_irq_callback` and `dcmipp_irq_thread`. Async notifier callbacks are bound/unbind/complete. Platform lifecycle is `dcmipp_probe`, `dcmipp_remove`, runtime suspend/resume, and system suspend/resume.
+
+Control flow: probe gets match data for MP13 or MP25, resets hardware, maps registers, requests the shared threaded IRQ, gets `kclk` and optional `mclk`, registers V4L2 and media devices, creates input/byteproc/bytecap entities, links input -> byteproc -> bytecap, registers the remote endpoint notifier, and enables runtime PM. When the remote subdev binds, the core parses endpoint bus type, validates CSI support and BT.656 width, stores bus settings in the input entity, and creates an immutable external link. Completion registers the media device and subdev nodes. The top-half IRQ calls each entity handler and records its return; the thread calls each entity thread function that requested `IRQ_WAKE_THREAD`.
+
+State and persistence: state is volatile platform state: device resources, register base, clocks, selected topology config, media/V4L2 devices, entity array, and async notifier. No disk persistence exists.
+
+Dependencies and integration points: depends on platform/OF match data (`st,stm32mp13-dcmipp`, `st,stm32mp25-dcmipp`), media controller, V4L2 async/fwnode APIs, reset/clock/pinctrl/runtime PM, and the common/entity modules. It integrates external sensors or CSI bridges with internal DCMIPP processing/capture nodes.
+
+Risks and test signals: risks include optional `mclk` handling where runtime PM unconditionally disables/enables `mclk`, cleanup if entity creation fails after graph init, shared IRQ fan-out return semantics, endpoint parsing across parallel/BT.656/CSI, and media device registration only after async completion. Test with MP13 and MP25 device-tree variants, CSI unsupported on MP13, invalid bus width, probe failure injection at each entity, shared IRQ activity during streaming, media graph enumeration, runtime/system suspend-resume, and remove after async bind.

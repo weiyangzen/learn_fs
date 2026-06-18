@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/ext2/inode.c
+
+Purpose: Implements ext2 inode lifecycle, classic direct/indirect block mapping, iomap integration, buffered/DAX address-space operations, truncation/freeing of block trees, on-disk inode read/write, getattr/setattr, and eviction.
+
+Important APIs/types/functions: Public entry points include `ext2_iget`, `ext2_write_inode`, `ext2_evict_inode`, `ext2_get_block`, `ext2_iomap_ops`, `ext2_fiemap`, `ext2_aops`, `ext2_set_file_ops`, `ext2_set_inode_flags`, `ext2_getattr`, `ext2_setattr`, and `ext2_write_failed`. Internal block-tree helpers include `ext2_block_to_path`, `ext2_get_branch`, `ext2_find_goal`, `ext2_alloc_blocks`, `ext2_alloc_branch`, `ext2_splice_branch`, `ext2_get_blocks`, `ext2_find_shared`, `ext2_free_data`, and `ext2_free_branches`.
+
+Control flow: Reads of inodes use `iget_locked`, locate the raw inode in its group inode table, validate deleted/corrupt states, load metadata/block pointers, and select regular/dir/symlink/special operation tables. Block lookup translates logical blocks to direct/indirect offsets, reads the branch, verifies it against concurrent truncation, and either returns a contiguous mapping or, for creates, locks `truncate_mutex`, allocates all indirect/data blocks unreachable from the inode, zeroes DAX allocations, revalidates, and splices the final pointer. Truncation invalidates page cache, locks mapping invalidation and `truncate_mutex`, detaches partial indirect branches, frees right-side subtrees, clears later inode-rooted subtrees, and discards reservation state.
+
+State and persistence behavior: On-disk inode fields are serialized/deserialized with endian conversion, including 32-bit UID/GID compatibility, large-file high size, file ACL block, generation, direct/indirect block pointers, timestamps, flags, and device encoding. Metadata buffer heads are tracked via `mapping_metadata_bhs` for fsync/writeback. Eviction writes deletion time, truncates blocks, deletes xattrs, clears metadata tracking, frees reservation info, and returns the inode bitmap entry.
+
+Dependencies and integration points: Depends on block allocator/freeing, xattr deletion, ACL hooks, quota, buffer heads/mpage, iomap, DAX, VFS attribute helpers, page cache invalidation, inode operation tables from other ext2 files, and superblock feature updates for large files.
+
+Risks: Correctness depends on ordering: allocate and initialize branches before splicing, verify chains against truncation, and detach truncated branches before freeing. DAX zeroout and block-device alias cleaning prevent stale data exposure. Large-file feature mutation must sync the superblock. Fast symlinks share `i_data`, so truncation/writeback must not treat them as block trees.
+
+Test signals: fsx/xfstests for indirect, double, and triple-indirect files; concurrent writes and truncates; DAX zeroing; failed writes beyond EOF; eviction of unlinked open files; fast/slow symlink handling; corrupt raw inode fields; large-file feature enable; fiemap over sparse files.

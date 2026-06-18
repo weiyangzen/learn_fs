@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.h
+
+Purpose: public/private interface for the RTL8723B two-antenna coexistence module. It defines BT-info bit meanings, RSSI thresholds, BT-status and coexistence-algorithm enums, the persistent decision/observation structs used by the C file, and the external notification entry points called by the rtlwifi coexistence core.
+
+Important APIs/types/functions: `BT_INFO_8723B_2ANT_B_*` maps firmware BT profile and busy bits. `enum BT_INFO_SRC_8723B_2ANT` identifies C2H sources: Wi-Fi firmware, BT response, and BT active auto-report. `enum BT_8723B_2ANT_BT_STATUS` normalizes BT state into non-connected idle, connected idle, inquiry/page, ACL busy, SCO busy, and ACL+SCO busy. `enum BT_8723B_2ANT_COEX_ALGO` names the policy branches for SCO, HID, A2DP, PAN EDR/HS, and combined profiles. `struct coex_dm_8723b_2ant` stores current/previous coexistence mechanism settings, and `struct coex_sta_8723b_2ant` stores measured BT/Wi-Fi state. The `ex_btc8723b2ant_*` prototypes form the file's integration contract.
+
+Control flow: the header has no executable logic, but it defines the event-driven lifecycle: power-on/pre-load firmware setup, hardware config, coexistence DM init, notifications for IPS/LPS/scan/connect/media/special packets/BT info/halt/PNP, periodic maintenance, and diagnostic display. The enums constrain the C file's switch statements for algorithm selection and BT status.
+
+State and persistence: `coex_dm_8723b_2ant` persists policy outputs such as BT power reduction, firmware DAC swing level, ignore-WLAN-active state, PS-TDMA type and bytes, auto TDMA flags, RF/BB register shadows, coexistence table values, current algorithm, Wi-Fi channel info, LPS/RPWM, and antenna switch state. `coex_sta_8723b_2ant` persists status inputs including profile booleans, IPS/LPS state, priority counters, BT RSSI and retry count, C2H history/counters, inquiry/remote-name flags, AP count, CRC counters, force-LPS state, display-version counter, and A2DP bitpool.
+
+Dependencies and integration: uses kernel integer/bool types and bit macros supplied through the enclosing Realtek BT coexistence headers. All function prototypes take `struct btc_coexist *`; the display callback also depends on `struct seq_file`. The header is included through `halbt_precomp.h` and must stay consistent with the dispatcher that calls the `ex_btc8723b2ant_*` hooks.
+
+Risks: struct field names are directly consumed by the C file, so reordering is safe for C but changing meaning or deleting fields can silently alter policy persistence. C2H arrays are fixed at 10 bytes per source, so firmware message length assumptions must remain aligned with parser behavior. The `BT_8723B_2ANT_COEX_ALGO_MAX` value is part of debug/range expectations and should track enum additions.
+
+Test signals: compile all rtlwifi coexistence code to verify prototypes and enum names. Runtime debug output should show stable interpretation of BT-info bits, correct algorithm names, nonzero C2H counters per source, and coherent `coex_dm` current/pre fields after policy changes.

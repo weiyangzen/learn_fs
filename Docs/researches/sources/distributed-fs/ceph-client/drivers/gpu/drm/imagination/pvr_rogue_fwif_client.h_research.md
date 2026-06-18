@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/imagination/pvr_rogue_fwif_client.h
+
+Purpose: This header defines client workload command payloads for geometry, fragment, compute, and transfer/TDM work. These layouts are shared with firmware and are partly visible to userspace command generation, while kernel code patches the protected shared prefix for geometry/fragment jobs.
+
+Important APIs/types/functions: Constants include PM sizing (`ROGUE_PM_PAGE_SIZE`, `ROGUE_PM_MAX_FREELIST_SIZE`), geometry flags (`FIRSTKICK`, `LASTKICK`, `SINGLE_CORE`), fragment flags (`SINGLE_CORE`, visibility results, depth/stencil/scratch buffers, disable pixel merge, prevent CDM overlap), compute flags (`PREVENT_ALL_OVERLAP`, `SINGLE_CORE`), and transfer `SINGLE_CORE`. Main structs are `rogue_fwif_geom_regs`, `rogue_fwif_dummy_rgnhdr_init_geom_regs`, `rogue_fwif_cmd_geom`, `rogue_fwif_frag_regs`, `rogue_fwif_cmd_frag`, `rogue_fwif_compute_regs`, `rogue_fwif_cmd_compute`, `rogue_fwif_transfer_regs`, and `rogue_fwif_cmd_transfer`.
+
+Control flow: There is no executable flow, but the data describes submission flow. Geometry commands carry the shared kernel-patched RT/pr-buffer prefix, register programming for VDM/PPP/TE/TPU/PDS, first/last kick flags, partial-render fence, and BRN workaround fields. Fragment commands configure ISP/USC/PBE/ZLS/PDS state and execution count. Compute commands select either user-mode queue or control-stream base paths, context state, TPU/CDM registers, temporary regions, stream start, and multicore execute count. Transfer commands configure ISP/PDS/PBE state for transfer render work.
+
+State and persistence behavior: Instances are stored in client CCB memory and consumed by firmware. The header itself has no state, but its fields become persistent until firmware reads the command and updates associated context/HWRT/fence state. PM freelist constants constrain long-lived parameter memory allocation.
+
+Dependencies and integration points: Includes Linux `bits`, `kernel`, `sizes`, `types`, and `pvr_rogue_fwif_shared.h`; it includes `pvr_rogue_fwif_client_check.h` for layout assertions. It integrates with userspace winsys/UM command streams, kernel bridge validation, CCCB submission, FW task dispatch, PM allocation, partial render handling, and hardware feature/BRN-specific command packing.
+
+Risks: The geometry/fragment shared prefix must remain first so the kernel can safely patch FW addresses without understanding the whole BVNC-specific command. Incorrect field alignment around 64-bit registers breaks firmware reads. Feature-conditional fields must be zero or ignored correctly on GPUs lacking the feature. Freelist size errors can allow PM address wrap/corruption.
+
+Test signals: Compile-time client layout checks, userspace-to-kernel command submission tests, Vulkan/OpenGL geometry and fragment workloads, compute queue tests with and without user-mode queues, transfer/TQ tests, PM OOM/partial-render tests, BRN-specific regression workloads, and command stream fuzzing against `ROGUE_FWIF_DM_INDEPENDENT_KICK_CMD_SIZE`.

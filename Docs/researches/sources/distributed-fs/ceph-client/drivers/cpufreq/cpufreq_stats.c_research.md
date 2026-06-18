@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/cpufreq_stats.c
+
+Purpose: implements per-policy CPUFreq statistics exposed under each policy's `stats` sysfs group: total transitions, time spent in each frequency state, reset, and a transition matrix.
+
+Important APIs and control flow: `cpufreq_stats_create_table()` counts valid frequency-table entries, allocates one block for `time_in_state`, unique `freq_table`, and `trans_table`, records the initial frequency index, and creates the sysfs group. `cpufreq_stats_record_transition()` handles deferred reset, maps old/new frequencies to state indexes, updates elapsed time from `local_clock()`, increments matrix and total counters, and skips unknown or unchanged states. `store_reset()` records a reset timestamp and defers table clearing until the next transition to reduce races. Show functions render total transitions, time-in-state with pending-reset handling, and the transition table with PAGE_SIZE guarding.
+
+State and persistence behavior: `struct cpufreq_stats` is attached to `policy->stats` and persists for policy lifetime. It stores counters, last timestamp, state count, last index, frequency list, transition matrix, and deferred reset fields. Statistics reset is observable immediately in sysfs through pending-reset branches even before the next transition finalizes it.
+
+Dependencies and integration points: depends on cpufreq core policy lifecycle, frequency tables, sysfs `freq_attr` support, `local_clock()`, and transition recording calls from `cpufreq_notify_transition()` and fast-switch paths. It is created by `cpufreq_policy_online()` after sysfs setup and freed during policy teardown.
+
+Risks and test signals: risks include no explicit locking around stats reads versus transition updates, transition table output exceeding one page for large frequency tables, duplicate unsorted frequency entries requiring uniqueness filtering, `last_index == -1` causing early transition skips until a known frequency is reached, and deferred reset ordering relying on memory barriers. Test signals include non-empty stats directory on table-backed policies, increasing time-in-state and transition counts across target changes, reset behavior, warning and `-EFBIG` for oversized matrices, and clean removal during policy free.

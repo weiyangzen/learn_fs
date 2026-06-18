@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/functional/package-info.java
+
+This package descriptor defines `org.apache.hadoop.util.functional` as public but unstable support for functional programming inside Hadoop APIs. Its central rationale is Java's checked exception mismatch: standard `java.util.function` types cannot throw checked `IOException`, while most Hadoop filesystem APIs can.
+
+There is no executable code or stored state. The documentation highlights two design pillars. First, the package provides checked-IO functional interfaces and adapters so IO failures can be preserved or deliberately wrapped. Second, `RemoteIterators` go beyond Java iterators by supporting `Closeable` and `IOStatisticsSource`, allowing wrapper chains to expose inner iterator statistics and encourage cleanup.
+
+Dependencies are Hadoop audience/stability annotations and documentation references to `RemoteIterators` and filesystem statistics. Integration spans the rest of the package plus S3A, wrapped IO, contract tests, and committers. The package-level risk is stability: it is public but explicitly unstable, so downstream users should expect API evolution. Another risk is mixed checked/unchecked exception boundaries; utilities make the boundary explicit, but callers must choose correctly. Test signals are broad: `TestFunctionalIO`, `TestRemoteIterators`, `TestTaskPool`, `TestLazyReferences`, and `TestFutureIO` exercise the package's documented themes.

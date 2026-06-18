@@ -1,0 +1,126 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 112
+- Recursive researched files: 112
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ahb.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ani.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ani.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/antenna.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar5008_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar5008_phy.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9001_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9002_calib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9002_hw.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9002_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9002_mac.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9002_phy.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9002_phy.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_aic.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_aic.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_buffalo_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_calib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_hw.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_mac.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_mac.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_mci.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_mci.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_paprd.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_phy.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_phy.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_rtt.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_rtt.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_wow.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9340_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9485_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar953x_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9565_1p1_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar956x_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ath9k.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/beacon.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/btcoex.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/btcoex.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/calib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/calib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/channel.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-beacon.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-beacon.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-debug.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-debug.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-init.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-init.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-spectral.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common-spectral.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/common.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/debug.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/debug.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/debug_sta.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/dfs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/dfs.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/dfs_debug.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/dfs_debug.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/dynack.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/dynack.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/eeprom.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/eeprom.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/eeprom_4k.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/eeprom_9287.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/eeprom_def.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/gpio.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/hif_usb.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/hif_usb.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_drv_debug.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_drv_init.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_drv_main.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_hst.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/htc_hst.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/hw-ops.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/hw.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/hw.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/init.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/link.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/mac.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/mac.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/main.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/mci.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/mci.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/pci.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/phy.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/recv.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/reg.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/reg_aic.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/reg_mci.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/reg_wow.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/rng.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/tx99.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/wmi.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/wmi.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/wow.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/xmit.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

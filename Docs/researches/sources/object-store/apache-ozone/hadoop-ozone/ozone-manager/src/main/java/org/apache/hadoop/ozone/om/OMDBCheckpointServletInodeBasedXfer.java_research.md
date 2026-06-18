@@ -1,0 +1,26 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/OMDBCheckpointServletInodeBasedXfer.java
+
+## Purpose
+`OMDBCheckpointServletInodeBasedXfer` is an OM DB checkpoint servlet variant optimized around inode-based deduplication. It collects files by inode/last-modified id, hardlinks selected files into a temp directory through `OMDBArchiver`, releases the bootstrap lock, and then streams the archive. This reduces redundant transfer for hardlinked RocksDB and snapshot files and shortens time spent holding OM bootstrap locks.
+
+## Important APIs, types, and functions
+`init` mirrors the standard servlet authorization setup and uses `OMDBCheckpointServlet.Lock`. `processMetadataSnapshotRequest` implements the request flow directly: validate leader readiness, parse excluded SST ids, acquire bootstrap lock, create temp directory, collect files, release lock, write archive, and clean up. `collectDbDataToTransfer` is the main collection algorithm. Helpers include `getSstBackupDir`, `getCompactionLogDir`, `getSnapshotDirsFromDB`, `collectSnapshotData`, overloaded `collectFilesFromDir`, `writeHardlinkFile`, `getSnapshotLocalDataPaths`, `createAndPrepareCheckpoint`, and `extractSSTFilesFromCompactionLog`.
+
+## Control flow
+On a request, the servlet parses excluded SST identifiers from multipart form data or request parameters using superclass helpers. While holding the bootstrap write lock, it creates a temp directory under bootstrap temp data, sets it on `OMDBArchiver`, and calls `collectDbDataToTransfer`. The output stream is not written until after lock release.
+
+`collectDbDataToTransfer` decides whether snapshot data is requested. If snapshots are requested, it first gets snapshot DB paths from the active OM DB and performs early SST-only collection from snapshot DBs, SST backup dir, and compaction log dir, respecting `ozone.om.ratis.snapshot.max.total.sst.size`. Then, if still under the limit, it acquires snapshot cache and local data locks, creates a flushed active DB checkpoint, disables the size limit for active DB files so they transfer as one batch, collects active checkpoint files, rereads compaction log and snapshot info from the checkpoint, collects compaction log entries, collects backup SST files referenced by the checkpoint compaction log while tolerating pruner races, and collects snapshot DB plus local snapshot property YAML files. On success it marks the archiver complete.
+
+`collectFilesFromDir` iterates files, optionally filtering to `.sst`. For each file it computes an inode/last-modified file id, remaps checkpoint-dir paths back to the active OM DB destination path, records a hardlink mapping, and, unless the id is already excluded, creates a hardlink entry in the archiver using the id as the archive entry name. It decrements the remaining SST byte budget and returns false when adding the next file would exceed the budget. `writeHardlinkFile` serializes relative metadata-dir paths and file ids into `OM_HARDLINK_FILE`.
+
+## State and persistence behavior
+The servlet reads live OM DB files, snapshot DB files, snapshot local metadata YAML files, compaction log entries, SST backup files, and checkpoint metadata. It creates a RocksDB checkpoint and temporary hardlinks but does not write OM metadata tables. It relies on in-memory exclusion sets to avoid sending the same file id twice during a request. The hardlink metadata file persists only inside the tar stream. Snapshot cache/local-data locks protect snapshot directories from purge while checkpoint collection reads them.
+
+## Dependencies and integration points
+It depends on `DBCheckpointServlet`, `OzoneManager`, `OMDBArchiver`, `RocksDBCheckpointDiffer`, `OmSnapshotLocalDataManager`, `SnapshotCache`, `CompactionLogEntry`, `OmSnapshotUtils.getFileInodeAndLastModifiedTimeString`, `OMStorage.getOmDbDir`, and the standard OMDB checkpoint lock. It also uses Recon and OM admin configuration for access control.
+
+## Risks and edge cases
+The exclusion protocol uses inode/last-modified ids, not filenames. Followers and leaders must agree on id semantics, and local files that disappear between collection and hardlink creation are handled only where `ignoreNoSuchFileException` is true. `getSnapshotLocalDataPaths` walks previous snapshot ids through `versionNodeMap` without explicit null checks for missing map entries. Snapshot data collection has multiple phases; if the size budget is exhausted early, the archiver remains incomplete and only collected file entries are streamed without completion metadata. `collectFilesFromDir` ignores subdirectories; callers must pass actual DB directories whose files are direct children. Path remapping for active checkpoint files depends on detecting `OM_CHECKPOINT_DIR` in the absolute path.
+
+## Test signals
+Tests should cover leader rejection, form versus query exclusion parsing, lock scope around collection only, inode-id de-duplication, max SST size early stop, active checkpoint path remapping, ignored pruner `NoSuchFileException`, snapshot cache/local-data lock acquisition, compaction-log-referenced backup files, snapshot local YAML inclusion, hardlink file relative path serialization, and cleanup of checkpoints/temp directories on both success and failure.

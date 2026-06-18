@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/alarm/alarm05.c
+
+Purpose: checks alarm replacement return value and eventual signal delivery. It sets a 10-second alarm, sleeps one second, replaces it with a 1-second alarm expecting return value 9, sleeps two seconds, then expects exactly one `SIGALRM`. Important APIs are `alarm`, `sleep`, `SAFE_SIGNAL`, and signal counter state. State is the process alarm timer and volatile counter. Dependencies are scheduler timing accurate enough for the short sleeps; `.timeout=2` bounds LTP runtime. Risks are timing flake under heavy load. Test signal is remaining value 9 and one delivered signal.

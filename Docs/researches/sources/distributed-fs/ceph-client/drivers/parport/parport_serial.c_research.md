@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/parport/parport_serial.c
+
+Purpose: supports PCI multi-I/O cards that expose serial and parallel functions through one PCI function/BAR layout. It coordinates parallel-port registration through `parport_pc_probe_port()` and serial-port registration through the 8250 PCI helper layer.
+
+Important APIs/types/functions: `struct parport_pc_pci` describes per-card parallel BAR geometry and optional hooks; `pci_parport_serial_boards[]` describes serial geometry for `pciserial_init_ports()`. `netmos_parallel_init()` derives NetMos parallel-port count from subsystem IDs. `parport_serial_private` stores the serial handle, copied parallel card descriptor, and registered parport pointers. `parport_serial_pci_probe()` enables the PCI device, calls `parport_register()`, then `serial_register()`.
+
+Control flow/state: probe allocates managed private storage, installs drvdata, enables the device with `pcim_enable_device()`, probes all declared parallel BARs using shared IRQs, and then initializes serial ports. If serial registration fails, all successfully registered parallel ports are immediately unregistered. Remove tears down serial ports first and then parports. Suspend/resume delegates only to serial helpers and explicitly leaves parport handling as a FIXME.
+
+Dependencies/integration: relies on PCI ID matching, 8250 PCI board data, parport_pc low-level probing, and shared IRQ support. Risks include large static card tables, BAR interpretation quirks where `hi > 6` means offset, mismatch between parallel and serial geometry, returning an IRQ-vector error mid-loop after earlier parports were created, and missing parport power-management restore. Test signals are probe/remove on representative cards, NetMos subsystem variations, serial-failure unwind, and suspend/resume checks for serial plus parport usability after resume.

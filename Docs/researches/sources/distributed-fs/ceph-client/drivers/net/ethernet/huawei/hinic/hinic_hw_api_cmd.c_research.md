@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/huawei/hinic/hinic_hw_api_cmd.c
+
+Implements the HiNIC DMA-backed hardware API command chain for writes to the management CPU. Public APIs are `hinic_api_cmd_init()`, `hinic_api_cmd_write()`, and `hinic_api_cmd_free()`.
+
+Initialization creates a 32-cell power-of-two circular chain for `HINIC_API_CMD_WRITE_TO_MGMT_CPU`, allocating coherent DMA memory for each cell and a 2048-byte command buffer per cell, plus write-back status memory. Hardware setup cleans control, programs status address, restarts the chain, configures XOR checking/cell size, writes cell count, and installs the head pointer.
+
+Writes take a semaphore, check for ring space, prepare big-endian cell control and descriptor with XOR checksums, copy command data into the DMA buffer, increment producer index, issue `wmb()`, write hardware PI, advance the current node, and poll write-back status until consumer catches producer or timeout. State is in `struct hinic_api_cmd_chain` and hardware CSRs/DMA ring. Dependencies are PCI DMA, semaphores, jiffies polling, barriers, byteorder helpers, HINIC CSR/hwif helpers, and node IDs. Risks include unchecked command size versus 2048-byte buffer, polling timeout sensitivity, power-of-two index assumptions, DMA unwind correctness, and hardware ABI bitfields/checksums. Test init/free, command success, busy/full, timeout, checksum errors, allocation failures, concurrency, and reset reinit.

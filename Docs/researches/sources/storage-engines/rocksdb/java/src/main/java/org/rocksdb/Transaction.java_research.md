@@ -1,0 +1,19 @@
+# sources/storage-engines/rocksdb/java/src/main/java/org/rocksdb/Transaction.java
+
+## Purpose
+`Transaction` is the main Java wrapper for RocksDB optimistic and pessimistic transactions. It exposes transaction lifecycle, snapshot isolation, reads including uncommitted writes, conflict-tracking reads, write-batch mutation, savepoints, two-phase commit preparation, diagnostics, and native transaction metadata.
+
+## Important APIs and Types
+Lifecycle APIs include `setSnapshot`, `setSnapshotOnNextOperation`, `getSnapshot`, `clearSnapshot`, `prepare`, `commit`, `rollback`, `setSavePoint`, and `rollbackToSavePoint`. Read APIs include overloaded `get`, `multiGetAsList`, deprecated array `multiGet`, `getForUpdate`, and `multiGetForUpdateAsList`. Mutation APIs include overloaded tracked `put`, `merge`, `delete`, experimental `singleDelete`, untracked variants, `putLogData`, `disableIndexing`, and `enableIndexing`. Introspection APIs include counters, elapsed time, `getWriteBatch`, write options, lock timeout, `undoGetForUpdate`, rebuild/commit-time batch, log number, transaction name/ID, deadlock state, waiting transactions, `getState`, and experimental `getId`. Nested types are `TransactionState` and `WaitingTransactions`.
+
+## Control Flow
+The object is package-constructed by `TransactionDB` or `OptimisticTransactionDB` and keeps references to the parent DB and default column family. Nearly every public method asserts ownership then delegates to native code. Overloads mostly normalize default column-family usage, list/array conversion, offset/length calculation, `ByteBuffer` direct-vs-array dispatch, and Java result wrapping (`GetStatus` for buffer reads). Multi-get with explicit column families validates key/CF counts before crossing JNI to avoid native crashes. Iterator creation wraps a native iterator handle with the parent DB. `setSnapshotOnNextOperation` optionally registers a native notifier handle.
+
+## State and Persistence Behavior
+Core state is native: transaction write batch, conflict tracking/locks, snapshots, savepoints, transaction state, log number, name, and commit-time batch. Tracked writes participate in conflict validation; untracked writes bypass conflict checking but may still acquire locks in pessimistic transactions. `commit` atomically writes batched changes to the DB; `rollback` and savepoint rollback discard pending operations. `disableIndexing` changes whether future writes are searchable by transaction reads. Java-side state is limited to parent/default-CF references and native handle ownership.
+
+## Dependencies and Integration Points
+It depends on `RocksObject`, `RocksDB`, `TransactionDB`, `OptimisticTransactionDB`, `ColumnFamilyHandle`, `ReadOptions`, `WriteOptions`, `TransactionOptions`, `Snapshot`, `AbstractTransactionNotifier`, `RocksIterator`, `WriteBatch`, `WriteBatchWithIndex`, `GetStatus`, `Status`, `RocksDBException`, and JNI implementations for all transaction operations.
+
+## Risks and Test Signals
+Tests should cover optimistic vs pessimistic conflict behavior, snapshot timing, `setSnapshotOnNextOperation` notifier callbacks, `get` versus `getForUpdate`, exclusive/shared locks, lock timeouts, `doValidate=false`, savepoint rollback, 2PC prepare/commit recovery, untracked write visibility, indexing disabled reads, iterator invalidation after commit/rollback/savepoint rollback, multi-CF validation, old transaction reuse, and ownership after close. Buffer overloads require all buffers in a call to be either direct or array-backed; mixed buffers throw `RocksDBException`. Several APIs return direct native-backed wrappers (`Snapshot`, write options, write batches) whose lifetimes need explicit testing. Some `ByteBuffer` merge paths do not advance positions consistently in the default-CF overload, so buffer-position behavior deserves regression tests.

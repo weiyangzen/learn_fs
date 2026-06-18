@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/racer/fs_racer_file_symlink.sh
+
+Purpose: symlink-specific namespace mutator. It takes `DIR` and `MAX`, chooses adjacent numeric names, then attempts symlinks from the destination to both a top-level numeric source and a nested `$file/$file/$file` source. Dependencies are Bash and `ln -s`; it integrates with directory creation, deletion, listing, concat, and rename workers. State is a changing set of symlink directory entries that may point to files, directories, or nonexistent targets. Errors are expected and suppressed when destinations already exist or vanish. Risks are infinite operation and unquoted paths; pass/fail signal is lack of filesystem/kernel instability while symlink resolution and directory changes race.

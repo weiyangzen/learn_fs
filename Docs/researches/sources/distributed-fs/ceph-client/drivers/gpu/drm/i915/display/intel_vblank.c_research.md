@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_vblank.c
+
+Purpose: implements i915 display vblank counters, scanout position/timestamp helpers, scanline waits, active timing updates, interlace-aware timing accessors, and vblank evasion used to avoid unsafe atomic updates around double-buffer latch points.
+
+Important functions: `i915_get_vblank_counter()` synthesizes a vblank counter from gen3/4 frame and pixel counters. `g4x_get_vblank_counter()` reads G4x frame count directly. `intel_crtc_get_vblank_timestamp()` bridges DRM vblank timestamping through `i915_get_crtc_scanoutpos()`. `intel_get_crtc_scanline()` returns adjusted scanline position. `intel_crtc_update_active_timings()` updates DRM timestamp constants and CRTC scanline/VRR state under locks. `intel_vblank_evade_init()` and `intel_vblank_evade()` compute and wait out the dangerous pre-vblank update window.
+
+Control flow: scanout queries enter a timing-critical section with local IRQs disabled and, for I915, the uncore lock held. Depending on platform/mode flags they read scanline counters, timestamp registers, or pixel counters, normalize for interlace, vblank start/end, hsync timing, VRR, and scanline offsets, then return DRM's signed vblank-relative position. Vblank evasion prepares a wait on the vblank queue, repeatedly samples the scanline, sleeps up to a short timeout while inside the dangerous range, and applies a VLV/CHV DSI polling workaround for the first vblank line.
+
+State and persistence: persistent software state includes `crtc->mode_flags`, `scanline_offset`, `vmax_vblank_start`, DRM timestamp constants, and vblank counter behavior. Hardware state includes frame/pixel counters, PIPEDSL, PIPE_FRMTMSTMP, IVB timestamp counter, and VRR-derived vblank limits.
+
+Dependencies and tests: depends on DRM vblank helpers, display MMIO, color DSB decisions, VRR helpers, mode flags from TV/DSI/HDMI, and atomic state helpers. Risks are timestamp races across vblank, platform-specific scanline offsets, VRR dynamic vblank handling, uncore serialization, interlaced field math, and update failure if evasion misses latch windows. Test signals include vblank timestamp accuracy, page-flip jitter, VRR fastset/LRR/M/N updates, TV/DSI scanline fallback, suspend/resume counters, and atomic commit stress near vblank.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/rdma/ib_sa.h
+
+Purpose: defines the kernel Subnet Administration client API, SA record structures, component masks, path conversions for IB/RoCE/OPA, service and multicast records, async query APIs, multicast join/free, and address-handle initialization helpers.
+
+Important APIs and types: constants define SA class versions, methods, attribute IDs, selectors, multicast join states, component masks for path, multicast, service, and GUID info records. `struct sa_path_rec` stores common path fields plus IB, RoCE, or OPA-specific union data and `rec_type`; helpers convert GID type to path record type, convert IB/OPA paths, identify RoCE/OPA paths, get/set SLID/DLID/raw traffic, and set/get RoCE destination MAC. Other records include `sa_service_rec`, `ib_sa_mcmember_rec`, and `ib_sa_guidinfo_rec`. `struct ib_sa_client` tracks users with atomic and completion. APIs include client register/unregister, `ib_sa_cancel_query()`, path/service/GUID info queries, multicast join/free/get-member, AH initialization from multicast or path records, and pack/unpack helpers for path and service records.
+
+Control flow: a consumer registers an SA client, issues asynchronous queries with component masks and callbacks, optionally cancels by query ID, and unregisters after outstanding users drain. Multicast joins allocate an `ib_sa_multicast` tracker and complete through callback; the tracker must be freed outside the callback unless callback returns nonzero. Path records are packed into MAD wire attributes or unpacked from responses, then used to initialize AH/QP/CM state.
+
+State and persistence: `ib_sa_client` and `ib_sa_multicast` are runtime tracking objects. Query results and path/service records are transient copies of subnet manager data. Multicast membership state exists in the subnet manager/fabric and in the kernel tracker for the join lifetime.
+
+Dependencies and integration points: depends on completions, atomics, netdevice, `ib_verbs.h`, MAD, RDMA address helpers, OPA address helpers, GID types, and SA component masks. It feeds RDMA CM, multicast users, address handles, path resolution, and userspace SA marshalling.
+
+Risks and test signals: risks include component-mask mismatch with populated fields, callback lifetime mistakes, freeing multicast from callback, OPA/IB LID conversion errors, RoCE DMAC not set or stale, query cancellation races, and AH attributes missing SGID/netdevice context. Test path queries for IB/RoCE/OPA, service record query/pack/unpack, multicast join failure and fatal reset handling, cancellation before response, client unregister with live queries, AH initialization from path and multicast, and conversion helpers for multicast/OPA GIDs.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/RdmaInfo.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/RdmaInfo.h
+
+**Purpose:** Declares optional RDMA metadata for NVFS/GPU direct transfers and its serialization format. **APIs/types:** `RdmaInfo` stores SG count, DMA count, tag, key, IB device, page and scatterlist pointers; `RdmaInfo_serialize` writes DMA count, tag, key, and each DMA address/length/offset; externs acquire/release NVFS, detect GPU-backed requests, map/unmap read/write, and query NVFS device priority. **Control flow/state:** NULL serializes as zero DMA entries; nonzero mappings expose up to `RDMA_MAX_DMA_COUNT` entries. Debug helpers dump iterators and SG tables. **Dependencies/integration:** guarded by `BEEGFS_NVFS`, includes RDMA socket, serialization, and NVFS headers. **Risks/tests:** serialization assumes dmalist entries are valid and mapped; tests should verify zero serialization, one/multiple coalesced entries, and priority calls with valid `nvfs_ops`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/RdmaInfo.h -->

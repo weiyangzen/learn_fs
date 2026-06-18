@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/shmctl08.c
+
+Purpose: tests `shmctl(IPC_SET)` mode changes and ctime update behavior. Setup creates a segment with mode `0666`. The run reads `IPC_STAT`, records old mode and ctime, sleeps one second, clears group/other permission bits, calls `IPC_SET`, re-reads metadata to verify mode and that `shm_ctime` advanced within a ten-second window, then restores the old mode and checks it masked by `MODE_MASK`. State is one segment with mutable permission metadata. Dependencies include wall-clock timestamp granularity and SysV shm metadata semantics. Risks are timing flake if system time behaves unexpectedly. Test signals are successful `IPC_SET`, expected mode values, and ctime advancement.

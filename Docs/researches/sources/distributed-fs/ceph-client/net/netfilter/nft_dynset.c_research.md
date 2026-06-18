@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_dynset.c
+
+Purpose: implements dynamic nft set mutation from packet rules. It can add/update/delete set elements, optionally map data, timeout state, and per-element expressions.
+
+Important APIs/types/functions: `struct nft_dynset` stores the target `nft_set`, extension template, operation, key/data registers, timeout, invert flag, expression array, and set binding. `nft_dynset_new()` constructs a new element with key/data/timeout and cloned element expressions. `nft_dynset_eval()` drives delete or set `update()` operations. Init is the large validator that binds the set, parses expressions, prepares extensions, and enforces set capability flags.
+
+Control flow: init runs under `commit_mutex`, looks up the set by name/id, rejects object/constant/non-updatable sets, validates operation and timeout compatibility, parses key and optional map data registers, and either accepts provided element expressions or clones the set defaults. Eval deletes directly for `NFT_DYNSET_OP_DELETE`; otherwise it calls the set backend's `update()`. Existing elements can have timeout expiration refreshed and element expressions evaluated. Misses produce `NFT_BREAK` unless inverted.
+
+State/persistence: persistent state is the bound set reference plus cloned element-expression templates. Runtime state lives in the set: elements, timeouts, expression private state, and `set->nelems`. Dependencies include nft set backends, nf_tables set binding lifecycle, register parsing, and expression cloning. Risks include atomic allocation failure on packet path, set size accounting leaks, expression compatibility with set-declared expressions, timeout overflow, and transaction activation/deactivation reference bugs. Test signals: add/update/delete paths, maps and non-maps, timeout refresh, invert behavior, anonymous/named set binding, element expressions with multiple slots, full set failure, and transaction rollback.

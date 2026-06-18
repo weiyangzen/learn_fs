@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_gayle.c
+
+Purpose: Amiga Gayle platform PIO driver for A1200/A4000-style IDE interfaces. It maps Gayle board register spacing into libata SFF and handles the A1200 explicit interrupt acknowledgement path.
+
+Important APIs and control flow: `pata_gayle_data_xfer` uses raw 16-bit transfers with trailing-byte support. `pata_gayle_set_mode` forces detected devices to PIO0 without hardware tuning. `pata_gayle_irq_check` reads `GAYLE_IRQ_IDE`; `pata_gayle_irq_clear` reads status and writes the Gayle IRQ clear value for explicit-ack systems. `pata_gayle_init_one` consumes `gayle_ide_platform_data`, requests the memory resource, allocates a single ATA port, selects A1200 or A4000 ops based on `explicit_ack`, fills Zorro-style register addresses and control register, stores IRQ port in `ap->private_data`, activates on `IRQ_AMIGA_PORTS`, and saves host drvdata.
+
+State, dependencies, and risks: state is platform data, requested Gayle memory region, host drvdata, and per-port IRQ port pointer. Dependencies include Amiga hardware headers, `ZTWO_VADDR`, Gayle platform data, shared Amiga port IRQ, and libata SFF. Risks include PIO-only/no-IORDY behavior, forced PIO0, platform data assumptions, different IRQ acknowledgement requirements between A1200 and A4000, and no DMA support. Test signals are A1200/A4000 probe log style, IRQ check/clear behavior, correct register offset mapping, successful shared IRQ activation, and odd-byte transfer correctness.

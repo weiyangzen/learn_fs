@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/i2c/i2c-core-base.c
+
+Purpose: main Linux I2C core implementation for this tree. It defines the I2C bus type, client and adapter device types, matching and uevent logic, adapter/client registration, class-based probing, transfer dispatch, bus recovery, host-notify IRQ domains, firmware timing parsing, debugfs roots, and DMA-safe message buffer helpers.
+
+Important APIs: exported entry points include `i2c_add_adapter()`, `i2c_add_numbered_adapter()`, `devm_i2c_add_adapter()`, `i2c_del_adapter()`, `i2c_register_driver()`, `i2c_del_driver()`, `i2c_new_client_device()`, dummy/ancillary/scanned client helpers, `i2c_transfer()`, `__i2c_transfer()`, `i2c_recover_bus()`, `i2c_parse_fw_timings()`, adapter lookup helpers, and DMA bounce-buffer helpers. Key state is `core_lock`, `i2c_adapter_idr`, `i2c_bus_type`, `i2c_client_type`, and `i2c_adapter_type`.
+
+Control flow: `postcore_initcall(i2c_init)` registers the bus, debugfs root, dummy driver, and firmware reconfig notifiers. Adapter registration allocates an ID, initializes locks/runtime PM/host-notify IRQs, adds the device, registers OF/ACPI/static clients, and notifies already-registered drivers. Client creation validates address/flags, serializes address reservation, sets fwnode/software node/device name, and calls `device_register()`. Transfers lock the adapter segment, reject suspended adapters and quirk violations, optionally trace messages, retry `-EAGAIN` until timeout, and dispatch to atomic or normal algorithm callbacks.
+
+State and persistence: persistent kernel state includes adapter IDs, adapter/client devices, address locks, user-created clients, debugfs directories, host-notify IRQ domains, devres groups, wake IRQ setup, PM-domain attachment, and firmware-populated flags. Runtime mutable state includes adapter timeout/retries, recovery GPIO/pinctrl setup, suspend-report bits, and tracepoint static key reference counts.
+
+Dependencies and integration: integrates with driver core, OF, ACPI, PM runtime/domains, debugfs, IRQ domains, GPIO/pinctrl recovery, SMBus core, tracepoints, and mux traversal for address-conflict checks. External adapter drivers provide `struct i2c_algorithm`; client drivers bind through `struct i2c_driver`.
+
+Risks: lifecycle ordering is delicate around `device_register()` failures, fwnode reference release, adapter delete waits, and dummy-client two-pass removal. Address collision checks must include mux parents/children. Atomic transfer mode only works when algorithms provide atomic callbacks. Class probing can still instantiate legacy devices and has corruption-avoidance special cases. Recovery and host-notify setup depend on firmware resources.
+
+Test signals: adapter add/delete, OF/ACPI/static client enumeration, sysfs `new_device`/`delete_device`, transfer retry/quirk paths, suspended-transfer warnings, bus recovery with GPIO/pinctrl, host-notify IRQ mapping, class scanning, DMA-safe buffer copyback, debugfs cleanup, and module unload with `DEBUG_KOBJECT_RELEASE`.

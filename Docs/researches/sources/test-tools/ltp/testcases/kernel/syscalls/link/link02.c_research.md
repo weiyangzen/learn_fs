@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/link/link02.c
+
+Purpose: basic positive `link()` test. Setup creates `oldpath`; the test calls `link("oldpath", "newpath")`, then stats both paths and checks the original link count is greater than one and equal to the new link count. It unlinks `newpath` after validation. State is a tmpdir file and its hard link. Dependencies are filesystem support for hard links and LTP safe stat/touch helpers. Risks are filesystems that do not support hard links or unusual link count semantics. Test signals are syscall success and matching `st_nlink` values.

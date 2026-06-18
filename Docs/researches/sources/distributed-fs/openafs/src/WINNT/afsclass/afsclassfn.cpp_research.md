@@ -1,0 +1,17 @@
+# sources/distributed-fs/openafs/src/WINNT/afsclass/afsclassfn.cpp
+
+## Purpose
+Implements high-level administrative operations for the Windows AFS class library. These functions translate `LPIDENT` objects into BOS, VOS, KAS, and PTS worker tasks, send notifications, release the global class lock while performing remote operations, and refresh cached class objects after mutations.
+
+## Important APIs and Control Flow
+The file covers server/service actions (`GetServerLogFile`, auth toggle, start/stop/restart service, create/delete service, install/uninstall/prune files, restart times, execute command), fileset/VLDB/VOS actions (create/delete/move/rename fileset, quota, sync VLDB, lock/unlock, create/delete/move replica, clone, dump/restore, release, salvage), BOS admin/key/host list editing, PTS property access, user lifecycle/property/password/unlock operations, and group lifecycle/property/rename/membership operations.
+
+Most functions follow a common pattern: `AfsClass_Enter`, send an `evt...Begin` notification, open the necessary cell/server/service/fileset/aggregate/user/group object, obtain low-level handles such as hBOS, hVOS, hKAS, or hCell, fill a `WORKERPACKET`, call `AfsClass_Leave` before `Worker_DoTask`, re-enter, invalidate or refresh affected caches, close opened objects and server handles, send an `evt...End` notification, then write `pStatus` only on failure.
+
+Fileset operations pay attention to ghost status bits to decide whether to delete VLDB entries, zap server volumes, or do both. Replica move has compensating cleanup depending on whether source and target are on the same server. User creation can create KAS and/or PTS entries and rolls back KAS creation if PTS creation fails. User and group deletion/rename collect owner/member multi-strings so related cached accounts can be refreshed after the worker task.
+
+## State, Dependencies, and Integration
+Persistent state lives outside this file in AFS servers and in afsclass caches. Local state is mostly stack `WORKERPACKET`s, allocated list structures (`ADMINLIST`, `KEYLIST`, `HOSTLIST`), and temporary log or multi-string buffers. Dependencies include Winsock headers, `afsconfig.h`, `roken.h`, `afsclass.h`, `internal.h`, notification events, object `Open*/Close` methods, cache invalidation/refresh methods, and worker task enums/packet fields.
+
+## Risks and Test Signals
+The file is correctness-critical because it coordinates remote side effects and local cache coherence. Several end notifications appear mismatched or incomplete, such as `AfsClass_SetUserProperties` and `AfsClass_SetGroupProperties` sending `evtChange...Begin` at the end rather than an end event, and `AfsClass_UnlockAllFilesets` ending without status. Many functions use fixed `cchNAME` buffers and `lstrcpy`/`wsprintf`. `AfsClass_CreateService` concatenates command and params into `MAX_PATH + MAX_PATH` without bounds checking. Some worker calls occur while still holding the global class lock in list/key helpers, unlike the broader pattern of leaving around remote work. `status` is sometimes left dependent on earlier calls when success paths skip assignment. Tests should mock `Worker_DoTask` and object open/refresh methods to verify notification pairing, lock release/reacquire behavior, handle close calls, rollback paths, ghost-status branching, cache invalidation coverage, and `pStatus` propagation across failures.

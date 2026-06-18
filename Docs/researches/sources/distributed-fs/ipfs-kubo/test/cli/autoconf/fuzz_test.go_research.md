@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/cli/autoconf/fuzz_test.go
+
+Purpose: adversarial/table-driven tests for the boxo AutoConf client parser and validation behavior. Despite the filename, these are deterministic fuzz-style cases run through `httptest` servers and fallback detection.
+
+Important helpers: `testAutoConfWithFallback`, `testAutoConfWithFallbackAndTimeout`, and `generateManyResolvers`. Test groups cover AutoConf version types/ranges, bootstrap arrays, DNS resolvers, delegated endpoints/routers, delegated publisher URLs, malformed JSON, and large payloads. A custom fallback config with marker version `-999` proves when parsing or validation falls back.
+
+Control flow creates JSON maps per case, serves them over HTTP, constructs an `autoconf.Client` with URL, user agent, refresh interval, timeout, and fallback function, then calls `GetCachedOrRefresh`. Success cases validate parsed `autoconf.Config` fields; expected-error cases require fallback usage. State is in-memory config plus fallback boolean. Dependencies include `github.com/ipfs/boxo/autoconf`, `context`, `httptest`, JSON, and testify. Risks include expectations documenting current parser leniency, such as negative versions and HTTP delegated publisher URLs being accepted, and large payload tests consuming time/memory. Test signal is strong for schema hardening and graceful fallback instead of panic or partial invalid cache.

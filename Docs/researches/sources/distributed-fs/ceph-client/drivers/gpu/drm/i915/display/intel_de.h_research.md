@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_de.h
+
+Purpose: provides the i915 display-engine MMIO accessor layer. It wraps uncore register reads/writes with display-specific DMC wakelock handling, exposes wait helpers implemented in `intel_de.c`, and offers explicit firmware/unlocked/notrace/DSB variants for contexts that need different locking or batching semantics.
+
+Important APIs/types/functions: `__to_uncore()` maps `intel_display` to `intel_uncore`. Normal accessors are `intel_de_read()`, `intel_de_read64_2x32()`, `intel_de_posting_read()`, `intel_de_write()`, and `intel_de_rmw()`, each acquiring and releasing DMC wakelocks around uncore access. Wait declarations cover microsecond/millisecond waits and set/clear helpers. Legacy byte declarations are `intel_de_read8()` and `intel_de_write8()`. Firmware/unlocked accessors are `intel_de_read_fw()`, `intel_de_write_fw()`, and `intel_de_rmw_fw()`, with explicit trace calls. Notrace helpers are `intel_de_read_notrace()` and `intel_de_write_notrace()`. `intel_de_write_dsb()` writes through a display state buffer when present or falls back to firmware writes.
+
+Control flow: normal inline accessors acquire the relevant DMC wakelock for the register, perform the uncore operation, then release it. RMW reads and writes under the same DMC wakelock. FW accessors skip the normal uncore locking/wakelock path and trace register IO themselves. DSB writes either append to the DSB command stream or immediately write firmware-style MMIO, depending on whether a `struct intel_dsb *` is supplied.
+
+State and persistence: the header owns no state but manipulates persistent hardware MMIO registers and transient DMC wakelock references. RMW helpers return the old value to allow callers to reason about prior register state. DSB writes may persist in a command buffer until the DSB is executed by surrounding code.
+
+Dependencies and integration: includes display core, DMC wakelock, DSB, uncore, and uncore trace headers. This accessor layer is used pervasively by i915 display code, including DDI programming, power wells, transcoders, planes, PHYs, and hotplug. It isolates display code from direct uncore calls and keeps DMC wake requirements close to register access.
+
+Risks: FW/unlocked accessors bypass serialization and are documented as dangerous on architectures where concurrent same-cacheline register access can fail; callers must provide appropriate locking or know the context is safe. Mixing DSB and immediate writes can reorder hardware programming if surrounding code is not careful. Normal accessors rely on DMC wakelock lookup for each register, so incorrect register definitions or missing wakelock coverage can affect low-power states. Notrace accessors reduce observability and should be reserved for paths that require it.
+
+Test signals: compile and boot with register tracing, DMC firmware, and DSB paths enabled. Validate register access under display power saving, DMC DC states, modeset stress, and DDI link training. Use lockdep and register trace inspection for FW users, and compare DSB versus immediate programming behavior in paths that support both.

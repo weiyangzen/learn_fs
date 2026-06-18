@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/blktests/defaults/main.yml
+
+This defaults file configures the blktests workflow. It disables test execution by default, defines rerun/failure and skip toggles, sets optional oscheck and test-limit arguments, declares source repositories and local paths for blktests, NBD, and optional dbench compilation, and defaults `blktests_test_devs` to `/dev/null` as a safety placeholder.
+
+The variables are consumed by dependency installation, source checkout/build, test execution, and result collection. Persistent state is later created under `data_path`, `/usr/local/blktests/`, and workflow result directories. Integration points include upstream blktests, NBD, dbench, kdevops workflow scripts, and block devices supplied by inventory. Risks include the typo-like `blktets_data` variable name, `/dev/null` requiring explicit override before tests, and source checkouts pinned to moving branches/tags such as blktests `master`. Test signals should render role vars and assert safety failures when devices are unset.

@@ -1,0 +1,142 @@
+# Folder Research: sources/user-network-fs/samba/source3/smbd
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 128
+- Recursive researched files: 140
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/user-network-fs/samba/source3/smbd/avahi_register.c`
+- `sources/user-network-fs/samba/source3/smbd/blocking.c`
+- `sources/user-network-fs/samba/source3/smbd/close.c`
+- `sources/user-network-fs/samba/source3/smbd/conn.c`
+- `sources/user-network-fs/samba/source3/smbd/conn_idle.c`
+- `sources/user-network-fs/samba/source3/smbd/conn_msg.c`
+- `sources/user-network-fs/samba/source3/smbd/connection.c`
+- `sources/user-network-fs/samba/source3/smbd/dfree.c`
+- `sources/user-network-fs/samba/source3/smbd/dir.c`
+- `sources/user-network-fs/samba/source3/smbd/dir.h`
+- `sources/user-network-fs/samba/source3/smbd/dmapi.c`
+- `sources/user-network-fs/samba/source3/smbd/dnsregister.c`
+- `sources/user-network-fs/samba/source3/smbd/dosmode.c`
+- `sources/user-network-fs/samba/source3/smbd/durable.c`
+- `sources/user-network-fs/samba/source3/smbd/error.c`
+- `sources/user-network-fs/samba/source3/smbd/fake_file.c`
+- `sources/user-network-fs/samba/source3/smbd/fd_handle.c`
+- `sources/user-network-fs/samba/source3/smbd/fd_handle.h`
+- `sources/user-network-fs/samba/source3/smbd/file_access.c`
+- `sources/user-network-fs/samba/source3/smbd/fileio.c`
+- `sources/user-network-fs/samba/source3/smbd/filename.c`
+- `sources/user-network-fs/samba/source3/smbd/files.c`
+- `sources/user-network-fs/samba/source3/smbd/globals.c`
+- `sources/user-network-fs/samba/source3/smbd/globals.h`
+- `sources/user-network-fs/samba/source3/smbd/mangle.c`
+- `sources/user-network-fs/samba/source3/smbd/mangle_hash.c`
+- `sources/user-network-fs/samba/source3/smbd/mangle_hash2.c`
+- `sources/user-network-fs/samba/source3/smbd/msdfs.c`
+- `sources/user-network-fs/samba/source3/smbd/notify.c`
+- `sources/user-network-fs/samba/source3/smbd/notify_fam.c`
+- `sources/user-network-fs/samba/source3/smbd/notify_inotify.c`
+- `sources/user-network-fs/samba/source3/smbd/notify_msg.c`
+- `sources/user-network-fs/samba/source3/smbd/ntquotas.c`
+- `sources/user-network-fs/samba/source3/smbd/open.c`
+- `sources/user-network-fs/samba/source3/smbd/oplock_linux.c`
+- `sources/user-network-fs/samba/source3/smbd/password.c`
+- `sources/user-network-fs/samba/source3/smbd/posix_acls.c`
+- `sources/user-network-fs/samba/source3/smbd/proto.h`
+- `sources/user-network-fs/samba/source3/smbd/pysmbd.c`
+- `sources/user-network-fs/samba/source3/smbd/quotas.c`
+- `sources/user-network-fs/samba/source3/smbd/scavenger.c`
+- `sources/user-network-fs/samba/source3/smbd/scavenger.h`
+- `sources/user-network-fs/samba/source3/smbd/seal.c`
+- `sources/user-network-fs/samba/source3/smbd/sec_ctx.c`
+- `sources/user-network-fs/samba/source3/smbd/server.c`
+- `sources/user-network-fs/samba/source3/smbd/server_exit.c`
+- `sources/user-network-fs/samba/source3/smbd/server_reload.c`
+- `sources/user-network-fs/samba/source3/smbd/session.c`
+- `sources/user-network-fs/samba/source3/smbd/share_access.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_aio.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_aio.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_ipc.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_ipc.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_lanman.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_lanman.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_message.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_message.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_negprot.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_negprot.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_nttrans.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_nttrans.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_oplock.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_oplock.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_pipes.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_pipes.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_process.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_process.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_reply.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_reply.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_service.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_service.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_sesssetup.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_sesssetup.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_signing.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_signing.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_trans2.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_trans2.h`
+- `sources/user-network-fs/samba/source3/smbd/smb1_utils.c`
+- `sources/user-network-fs/samba/source3/smbd/smb1_utils.h`
+- `sources/user-network-fs/samba/source3/smbd/smb2_aio.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_break.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_close.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_create.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_flush.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_getinfo.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_glue.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl_dfs.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl_filesys.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl_named_pipe.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl_network_fs.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl_private.h`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ioctl_smbtorture.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_ipc.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_keepalive.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_lock.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_negprot.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_notify.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_nttrans.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_oplock.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_pipes.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_posix.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_process.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_query_directory.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_read.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_reply.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_server.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_service.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_sesssetup.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_setinfo.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_signing.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_tcon.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_trans2.c`
+- `sources/user-network-fs/samba/source3/smbd/smb2_write.c`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_client.c`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_open.c`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_open.h`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_session.c`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_session.h`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_tcon.c`
+- `sources/user-network-fs/samba/source3/smbd/smbXsrv_version.c`
+- `sources/user-network-fs/samba/source3/smbd/smbd.h`
+- `sources/user-network-fs/samba/source3/smbd/smbd_cleanupd.c`
+- `sources/user-network-fs/samba/source3/smbd/smbd_cleanupd.h`
+- `sources/user-network-fs/samba/source3/smbd/srvstr.c`
+- `sources/user-network-fs/samba/source3/smbd/uid.c`
+- `sources/user-network-fs/samba/source3/smbd/utmp.c`
+- `sources/user-network-fs/samba/source3/smbd/vfs.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

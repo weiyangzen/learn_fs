@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/memory-controllers/ddr/jedec,sdram-props.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/memory-controllers/ddr/jedec,sdram-props.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/memory-controllers/ddr/jedec,sdram-props.yaml` defines the JEDEC SDRAM topology or device-property schema titled `Common properties for SDRAM types`. Different SDRAM types generally use the same properties and only differ in the range of legal values for each. It is a Linux devicetree YAML schema that constrains source DTS/DTB hardware descriptions before the corresponding kernel drivers consume the nodes.
+
+## Important APIs, Types, and Functions
+The exported API is the devicetree ABI, not callable functions. `compatible` uses a composed compatible schema with 0 tokens: no local compatible constants. Top-level properties are `compatible`, `reg`, `revision-id`, `density`, `io-width`. Required top-level properties are none declared. Important reusable or nested constraints are: referenced schemas: `/schemas/types.yaml#/definitions/uint32`, `/schemas/types.yaml#/definitions/uint32-array`; non-compatible enum/const values include `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096`, `6144`, `8192`, and 7 more. The highest-risk contract area is SDRAM density, bus width, rank/channel placement, timing child nodes, and JEDEC manufacturer/revision compatible encoding.
+
+## Control Flow
+Control flow is declarative schema evaluation. `dt_binding_check` parses the YAML, validates embedded examples against this schema and any `$ref` targets, then `dtbs_check` matches real DTS nodes by `compatible`, `$nodename`, or inclusion from a parent schema. Validation checks required properties, array lengths and constants, applies no top-level conditionals, descends into pattern-matched child nodes, and finally enforces `additionalProperties` or `unevaluatedProperties`. Runtime flow starts only after the DTB is loaded: Linux driver core or MFD population uses the compatible and resources to bind drivers.
+
+## State and Persistence Behavior
+The YAML file stores no mutable runtime state and writes no persistent data. Its persistent behavior is ABI-level: property names, compatible fallback order, address-cell layout, child-node names, and example nodes become contracts shipped in source DTS files and compiled DTBs. Runtime state is owned by the matched kernel drivers after probe, including memory topology metadata consumed by memory-controller bindings and firmware-authored DTBs.
+
+## Dependencies and Integration Points
+Maintainers listed: Krzysztof Kozlowski <krzk@kernel.org>. Schema dependencies include `/schemas/types.yaml#/definitions/uint32`, `/schemas/types.yaml#/definitions/uint32-array`. Integration points include DDR/LPDDR memory description, boot firmware generated memory nodes, memory-controller child nodes, and dt-schema validation of rank/channel geometry. The binding also participates in Linux `make dt_binding_check`, `make dtbs_check`, YAML example extraction, driver `of_match_table` review, and DTS board-file validation.
+
+## Risks
+Primary risks are incompatible ABI changes to SDRAM density, bus width, rank/channel placement, timing child nodes, and JEDEC manufacturer/revision compatible encoding, mismatch between documented compatibles and the driver's match table, resource ordering or cell-count mistakes that pass review but break probe, permissive extra properties that can hide spelling errors unless a parent/child schema catches them, lack of embedded examples, leaving coverage dependent on in-tree DTS users. This schema permits additional top-level properties so it can be layered with device-specific child bindings. Because these bindings describe hardware contracts, regressions can appear as boot-time probe failures, missing child devices, invalid timing/ECC configuration, or dtbs_check noise across unrelated boards.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/memory-controllers/ddr/jedec,sdram-props.yaml` for targeted schema validation and `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/memory-controllers/ddr/jedec,sdram-props.yaml` against boards that instantiate the binding. There are no embedded examples, so representative DTS users and schema-only validation carry the coverage. Also compare compatible strings with in-tree driver `of_match_table` entries and review DTS examples for register tuple counts, interrupt names, clocks/resets, address ranges, and phandle references.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/memory-controllers/ddr/jedec,sdram-props.yaml -->

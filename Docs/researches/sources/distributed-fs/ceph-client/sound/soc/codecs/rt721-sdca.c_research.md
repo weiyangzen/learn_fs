@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/rt721-sdca.c
+
+Purpose: ASoC component implementation for the RT721 SDCA SoundWire codec. It supports headphone playback, headset-mic capture, speaker playback, digital-mic capture, headset jack/button detection, DAPM power sequencing, mixer controls, SoundWire DAI stream setup, and hardware preset programming.
+
+Important APIs and functions: `rt721_sdca_init()` allocates private state, stores normal/MBQ regmaps, initializes mutexes and delayed work, initializes mute state, and registers the component with three DAIs. `rt721_sdca_io_init()` enables regcache I/O on attach, sets up runtime PM on first attach, optionally bypasses cache on reinit, runs `rt721_sdca_dmic_preset()`, `rt721_sdca_amp_preset()`, and `rt721_sdca_jack_preset()`, then marks hardware initialized. `rt721_sdca_probe()` parses `realtek,jd-src`, stores the component pointer, and resumes PM. `rt721_sdca_set_jack_detect()` stores the ASoC jack, resumes the device, and enables jack interrupt behavior through `rt721_sdca_jack_init()`.
+
+Control flow: jack detection is workqueue-based. `rt721_sdca_jack_detect_handler()` reacts to SDCA status bits captured by the bus driver, calls shared `rt_sdca_headset_detect()` and `rt_sdca_button_detect()`, reports headset/buttons, and schedules button rechecks for release polling. `rt721_sdca_btn_check_handler()` rereads HID message data and reports button state. Mixer controls convert ALSA gain values to 16-bit SDCA volume/boost encodings, maintain combined DAPM/mixer mute state for FU0F and FU1E, and expose DMIC gain arrays. ADC mux helpers route analog and digital mic sources through SDCA HDA-float mux registers.
+
+DAPM and PCM: DAPM widgets model HP, SPK, MIC/LINE/DMIC inputs, PDE supplies, DAC/ADC function units, muxes, and DP1/DP2/DP3/DP6 endpoints. Event handlers write request-power states and mute/unmute FU/PDE controls. `rt721_sdca_pcm_hw_params()` maps AIF1 playback to port 1 and capture to port 2, AIF2 playback to port 3, AIF3 capture to port 6, adds the SoundWire slave, validates channel count, and writes sample-frequency indices for the relevant SDCA clock selectors.
+
+State and persistence: `rt721_sdca_priv` tracks jack state, SDCA interrupt status, delayed work, DAPM/mixer mute booleans, regmaps, mutexes, and init flags. Regcache persists user controls across runtime/system suspend; preset functions run after attach and mark cache dirty on reinit to force a coherent restore.
+
+Dependencies and integration points: depends on ASoC, SoundWire stream helpers, runtime PM, regmap, SDCA macros, and `rt-sdw-common.h` for shared RT SDCA jack/button/index helpers. It is paired with `rt721-sdca-sdw.c` for interrupts, PM, and regmap creation.
+
+Risks: jack/button handling depends on component/card instantiation checks and delayed-work races coordinated by the bus layer. Many vendor preset writes ignore errors. Some DAPM event sequences use fixed sleeps or unverified writes. Source inspection shows an extra closing brace near one PDE event in this snapshot, so compile coverage is important. If `sdw_stream_add_slave()` succeeds and later validation fails, stream cleanup is not performed in this function.
+
+Test signals: build-test, enumerate all three DAIs, play HP and speaker streams, capture headset and DMIC streams, exercise headset insertion/removal and four button codes, test all mixer and mux controls, validate DAPM power transitions through debug logs/register traces, and suspend/resume during audio and jack events.

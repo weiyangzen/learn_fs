@@ -1,0 +1,19 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/rpcbind/src/rpcbind.c -->
+# sources/user-network-fs/rpcbind/src/rpcbind.c
+
+Purpose: Main daemon implementation for rpcbind. It parses daemon options, enforces singleton execution, initializes transports from netconfig and optional systemd sockets, registers rpcbind/portmap service versions, drops privileges, restores warm-start data, initializes network helpers, and enters the RPC service loop.
+
+Important APIs, types, and functions: Public daemon globals include `debugging`, `doabort`, `dofork`, `createdsocket`, `list_rbl`, `list_pml`, `runasdaemon`, `insecure`, `oldstyle_local`, `verboselog`, `hosts`, `nhosts`, and `rpcbindlockfd`. Core functions are `main`, `init_transport`, `rbllist_add`, `terminate`, `rpcbind_abort`, `parseargs`, `reap`, and `toggle_verboselog`. Optional integrations are gated by `SYSTEMD`, `PORTMAP`, `WARMSTART`, `LIB_SET_DEBUG`, `RPCBIND_USER`, and `NSS_MODULES`.
+
+Control flow: `main` parses `-adfh:ilsvw`, obtains `/run/rpcbind.lock` with `flock`, raises `RLIMIT_NOFILE` to at least 128, requires effective root, configures service NSS lookup, opens netconfig, initializes local/unix transport first, then all visible netconfig transports. It installs signal handlers, daemonizes unless `-f`, optionally drops to `daemon` or configured `RPCBIND_USER`, reads warm-start state when requested, runs `network_init`, notifies systemd readiness, and calls `my_svc_run`.
+
+Transport setup: `init_transport` filters unsupported transport semantics, derives socket info, then tries systemd socket activation if enabled. A matching systemd fd must match address family, socket type, and protocol; IPv6 sockets must already be `IPV6_V6ONLY`. Without systemd, local/unix sockets are bound at `_PATH_RPCBINDSOCK`, while network sockets are bound to configured `-h` hosts plus loopback for datagram transports. It registers PMAP v2 when applicable, RPCB v3 and v4 via `svc_reg`, adds self mappings to `list_rbl`, tracks bindability with `add_bndlist`, and optionally creates remote-call forwarding fds for datagram transports.
+
+State and persistence: Runtime registrations are stored in `list_rbl` and optional `list_pml`; self-registrations are added during initialization and warm-start data later appends non-rpcbind entries. The lock file and unix socket are cleaned in `terminate`; warm-start is written in `terminate` and `rpcbind_abort` when compiled with `WARMSTART`. `createdsocket` tracks whether this process created the local socket so it can unlink it.
+
+Dependencies and integration points: Relies on libtirpc service creation/registration APIs, `/etc/netconfig`, `getaddrinfo`, systemd `sd_listen_fds`/`sd_notify`, NSS lookup configuration, privilege APIs (`setgid`, `setgroups`, `setuid`), `warmstart.c`, `rpcb_svc_com.c`, portmap service code, and `security.c` globals. The systemd unit in this subset passes `-f` and socket-activates the daemon.
+
+Risks: The daemon must start as root and bind privileged ports before dropping privileges; failures before privilege drop are fatal. Host-specific binding mutates the `hosts` array by replacing `"*"` with `NULL`, which is subtle. Systemd dual-stack sockets are explicitly rejected, so unit/socket configuration must stay aligned with code expectations. Some error paths close `fd` after `svc_tli_create` may have taken ownership. The lock file mode is read-only and cleanup unlinks it; stale locks are handled by `flock`, not file existence.
+
+Test signals: Validate command-line parsing, singleton lock behavior, root requirement, binding to local, IPv4, IPv6, and host-restricted addresses, systemd socket activation with separate IPv4/IPv6 sockets, privilege drop to configured user, warm-start restore ordering, and clean termination unlink/write behavior. Build matrix should cover `SYSTEMD`, `PORTMAP`, `WARMSTART`, and IPv6 feature combinations.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/rpcbind/src/rpcbind.c -->

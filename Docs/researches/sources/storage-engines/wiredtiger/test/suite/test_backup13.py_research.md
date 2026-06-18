@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup13.py
+
+Purpose: tests block incremental backup plus `force_stop` cleanup under different session isolation levels. It also verifies old incremental metadata cannot be reused after force stop, crash restart, or normal restart.
+
+Important APIs are scenario `session_config`, `add_data`, `take_full_backup`, `take_incr_backup`, `wiredtiger_open`, `session.open_cursor('backup:', 'incremental=(force_stop=true)')`, and `simulate_crash_restart`. Control flow creates a table, writes data or expects errors for read-committed/read-uncommitted isolation, performs initial incremental full backup and later incremental backup, removes stale files, recovers the backup, force-stops incremental state, then asserts a backup with old `src_id=ID1` fails after force stop, simulated crash, and reopen. State behavior centers on persisted incremental ID metadata and its reset semantics. Risks include isolation-specific unsupported transaction behavior and crash simulation effects. Test signals are expected errors and backup recovery success.

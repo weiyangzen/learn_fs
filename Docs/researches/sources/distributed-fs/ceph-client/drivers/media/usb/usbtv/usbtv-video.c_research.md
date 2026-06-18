@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/usbtv/usbtv-video.c
+
+Purpose: implements the V4L2 capture device for USBTV007. It exposes a YUYV interlaced video capture node, manages vb2 buffers, programs decoder/input/norm controls through vendor registers, submits isochronous URBs, and reconstructs frames from proprietary 256-byte USB chunks.
+
+Important APIs and functions: exported lifecycle functions are `usbtv_video_init` and `usbtv_video_free`. Capture setup uses `usbtv_configure_for_norm`, `usbtv_select_input`, `usbtv_select_norm`, and `usbtv_setup_capture`. Streaming uses `usbtv_start`, `usbtv_stop`, `usbtv_setup_iso_transfer`, `usbtv_iso_cb`, `usbtv_image_chunk`, and `usbtv_chunk_to_vbuf`. V4L2/vb2 operations are provided through `usbtv_ioctl_ops`, `usbtv_fops`, and `usbtv_vb2_ops`. Image controls are handled by `usbtv_s_ctrl`.
+
+Control flow: init configures NTSC dimensions by default, initializes locks and the vb2 queue, creates brightness/contrast/saturation/hue/sharpness controls, registers a `v4l2_device`, and registers a video node. Streaming start suspends audio, switches to alternate setting 0, programs capture registers, applies norm/input/controls, switches to alternate setting 1, resumes audio, allocates 16 isochronous URBs, and submits them. URB completion walks packet descriptors and feeds every 256-byte chunk to the image assembler. The assembler validates magic, frame id, field bit, and chunk number, copies the 240-word payload into alternating field lines, and completes the first queued vb2 buffer when the last odd field finishes.
+
+State and persistence: frame assembly state includes `frame_id`, `chunks_done`, `last_odd`, `sequence`, `n_chunks`, dimensions, input, norm, and the queue of user buffers protected by `buflock`. URBs are transient and freed on stream stop. No settings are persisted outside the device; control defaults are re-applied at capture setup.
+
+Dependencies and integration points: depends on V4L2 ioctl/control APIs, videobuf2 vmalloc memory, USB isochronous transfers, and shared USBTV constants/register helper. It coordinates with audio suspend/resume around USB alternate setting changes. Userspace integration is standard V4L2 read/mmap/userptr capture with fixed format reporting.
+
+Risks: frame completion compares `chunks_done` only to `n_chunks`, yet two fields are involved; missing chunks or field transitions can mark buffers error or drop frames. The code copies chunk data while holding a spinlock, increasing IRQ-off work. Control writes allocate small buffers and perform synchronous USB control requests under V4L2 control context. `vidioc_s_fmt_vid_cap` ignores requested format and only reports current fixed geometry. URB setup assumes `iso_size` from probe remains valid for the chosen endpoint/altsetting.
+
+Test signals: stream NTSC and PAL/SECAM-like norms, switch composite/S-Video inputs, adjust all image controls, verify YUYV frame size and interlacing, stress slow userspace with too few buffers, inject corrupt chunk magic/frame ids/missing chunks, run video while ALSA capture is active, and test streamoff/disconnect during active URBs.

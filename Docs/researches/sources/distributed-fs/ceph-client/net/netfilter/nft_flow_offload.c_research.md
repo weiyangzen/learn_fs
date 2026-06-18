@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_flow_offload.c
+
+Purpose: implements the `flow_offload` expression that promotes eligible established flows into an nf_flow_table for software or hardware fast path.
+
+Important APIs/types/functions: `struct nft_flow_offload` stores a referenced `nft_flowtable`. `nft_flow_offload_eval()` performs eligibility checks, route creation, `flow_offload_alloc()`, `flow_offload_route_init()`, and `flow_offload_add()`. `flow_offload_ct_tcp()` relaxes conntrack TCP window validation because conntrack will miss offloaded packets. A netdevice notifier calls `nf_flow_table_cleanup()` on `NETDEV_DOWN`.
+
+Control flow: validate limits use to IPv4/IPv6/inet forward hooks. Init looks up the named flowtable, increments its use count, and gets conntrack namespace support. Eval skips secpath and IPv4 options, requires conntrack, allows established TCP, UDP, and limited GRE, rejects helpers, seq adjust, NAT clash, unconfirmed entries, and already-offloaded entries. It sets `IPS_OFFLOAD_BIT`, computes routes, allocates/adds a flow, and clears the bit plus releases dsts on failures. Failures break rule evaluation.
+
+State/persistence: expression state references the flowtable and conntrack namespace; runtime state is per-connection `IPS_OFFLOAD_BIT` and flowtable entries. Dependencies include conntrack core/extend, flowtable route helpers, netdevice notifier, and forward-chain placement. Risks include leaked offload bits on unusual failure paths, stale flows after device down, NAT/GRE eligibility gaps, TCP validation side effects, and flowtable use restoration during transactions. Test signals: established TCP/UDP offload, skipped secpath/IP options, helper/NAT-clash rejection, route allocation failure cleanup, device-down cleanup, forward-hook validation, flowtable delete transactions, and hardware bidirectional flag behavior.

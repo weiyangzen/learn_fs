@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/can/at91_can.c -->
+## sources/distributed-fs/ceph-client/drivers/net/can/at91_can.c
+
+Purpose: this is the SocketCAN netdevice driver for Atmel/Microchip AT91 SoC CAN controllers, including AT91SAM9263 and AT91SAM9X5 layouts. It programs controller bit timing, mailbox RX/TX layout, timestamped RX offload, CAN error reporting, optional transceiver PHY power, and a SAM9263-specific mailbox-0 filter sysfs knob.
+
+Important APIs, types, and functions: `struct at91_priv` embeds `struct can_priv`, `struct can_rx_offload`, MMIO base, clock, PHY, TX head/tail counters, devtype data, and `mb0_id`. `struct at91_devtype_data` selects RX mailbox range and TX mailbox count. Main paths include `at91_setup_mailboxes()`, `at91_set_bittiming()`, `at91_chip_start()`, `at91_chip_stop()`, `at91_start_xmit()`, `at91_mailbox_read()`, `at91_irq_tx()`, `at91_irq_err_line()`, `at91_irq_err_frame()`, `at91_irq()`, `at91_open()`, `at91_close()`, `at91_set_mode()`, and `at91_can_probe()`.
+
+Control flow: probe selects devtype from OF or platform id, obtains `can_clk`, maps MMIO, allocates a CAN netdev with echo slots matching the TX mailbox count, configures CAN bittiming and supported modes, attaches timestamped RX offload, optionally sets a PHY bitrate limit, and registers the netdev. Open powers the PHY, opens the CAN core, enables the clock, requests the shared IRQ, starts the chip, enables RX offload, and starts the queue. TX writes a frame into the current mailbox, handles ID/DLC/RTR/data registers, queues echo skb by mailbox index, advances priority-encoded `tx_head`, and enables that mailbox interrupt. IRQ service drains RX mailboxes through rx-offload, completes TX mailboxes in order, and emits error frames for state or protocol errors.
+
+State and persistence: persistent runtime state is `tx_head`, `tx_tail`, current CAN state, RX offload queue state, mailbox configuration, and optional `mb0_id` used for disabled mailbox errata handling. Hardware state includes mode, bit timing, interrupt masks, mailbox IDs/masks/data/control, error counters, and timestamp registers. Close disables queue/offload, stops the chip, frees the IRQ, disables the clock, powers off the PHY, and closes the CAN core.
+
+Dependencies and integration points: it depends on platform devices, OF compatibles `atmel,at91sam9x5-can` and `atmel,at91sam9263-can`, clocks, optional PHY transceivers, SocketCAN core, CAN error frames, rx-offload timestamp helpers, netdevice ops, ethtool timestamp info, and RTNL for `mb0_id` sysfs writes.
+
+Risks: mailbox arithmetic differs by SoC and must match hardware errata, especially disabled mailbox 0 on SAM9263-style parts. The TX priority wrap logic intentionally stops the queue at counter wrap to preserve ordering. Some status bits are clear-on-read, so `reg_sr` accumulation in IRQ handling is important. Bus-off recovery is affected by hardware auto recovery and latched state bits. `mb0_id` writes are rejected while up and must mask SFF/EFF values correctly.
+
+Test signals: probe both devtypes, validate bitrate programming and 3-sample/listen-only modes, transmit enough frames to wrap mailbox priority counters, receive timestamped frames and overflow error frames, force warning/passive/bus-off states, verify `mb0_id` sysfs behavior on SAM9263, and exercise open/close error paths for PHY, clock, and IRQ failures.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/can/at91_can.c -->

@@ -1,0 +1,112 @@
+# Folder Research: sources/sync-backup/casync/src
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 98
+- Recursive researched files: 98
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/sync-backup/casync/src/75-casync.rules.in`
+- `sources/sync-backup/casync/src/cacache.c`
+- `sources/sync-backup/casync/src/cacache.h`
+- `sources/sync-backup/casync/src/cachunk.c`
+- `sources/sync-backup/casync/src/cachunk.h`
+- `sources/sync-backup/casync/src/cachunker.c`
+- `sources/sync-backup/casync/src/cachunker.h`
+- `sources/sync-backup/casync/src/cachunkid.c`
+- `sources/sync-backup/casync/src/cachunkid.h`
+- `sources/sync-backup/casync/src/cacommon.h`
+- `sources/sync-backup/casync/src/cacompression.c`
+- `sources/sync-backup/casync/src/cacompression.h`
+- `sources/sync-backup/casync/src/cadecoder.c`
+- `sources/sync-backup/casync/src/cadecoder.h`
+- `sources/sync-backup/casync/src/cadigest.c`
+- `sources/sync-backup/casync/src/cadigest.h`
+- `sources/sync-backup/casync/src/caencoder.c`
+- `sources/sync-backup/casync/src/caencoder.h`
+- `sources/sync-backup/casync/src/cafileroot.c`
+- `sources/sync-backup/casync/src/cafileroot.h`
+- `sources/sync-backup/casync/src/caformat-util.c`
+- `sources/sync-backup/casync/src/caformat-util.h`
+- `sources/sync-backup/casync/src/caformat.h`
+- `sources/sync-backup/casync/src/cafuse.c`
+- `sources/sync-backup/casync/src/cafuse.h`
+- `sources/sync-backup/casync/src/caindex.c`
+- `sources/sync-backup/casync/src/caindex.h`
+- `sources/sync-backup/casync/src/calocation.c`
+- `sources/sync-backup/casync/src/calocation.h`
+- `sources/sync-backup/casync/src/camakebst.c`
+- `sources/sync-backup/casync/src/camakebst.h`
+- `sources/sync-backup/casync/src/camatch.c`
+- `sources/sync-backup/casync/src/camatch.h`
+- `sources/sync-backup/casync/src/canametable.c`
+- `sources/sync-backup/casync/src/canametable.h`
+- `sources/sync-backup/casync/src/canbd.c`
+- `sources/sync-backup/casync/src/canbd.h`
+- `sources/sync-backup/casync/src/caorigin.c`
+- `sources/sync-backup/casync/src/caorigin.h`
+- `sources/sync-backup/casync/src/caprotocol-util.c`
+- `sources/sync-backup/casync/src/caprotocol-util.h`
+- `sources/sync-backup/casync/src/caprotocol.h`
+- `sources/sync-backup/casync/src/caremote.c`
+- `sources/sync-backup/casync/src/caremote.h`
+- `sources/sync-backup/casync/src/caseed.c`
+- `sources/sync-backup/casync/src/caseed.h`
+- `sources/sync-backup/casync/src/castore.c`
+- `sources/sync-backup/casync/src/castore.h`
+- `sources/sync-backup/casync/src/casync-http.c`
+- `sources/sync-backup/casync/src/casync-tool.c`
+- `sources/sync-backup/casync/src/casync.c`
+- `sources/sync-backup/casync/src/casync.h`
+- `sources/sync-backup/casync/src/cautil.c`
+- `sources/sync-backup/casync/src/cautil.h`
+- `sources/sync-backup/casync/src/chattr.c`
+- `sources/sync-backup/casync/src/chattr.h`
+- `sources/sync-backup/casync/src/compressor.c`
+- `sources/sync-backup/casync/src/compressor.h`
+- `sources/sync-backup/casync/src/copy.c`
+- `sources/sync-backup/casync/src/def.h`
+- `sources/sync-backup/casync/src/dirent-util.c`
+- `sources/sync-backup/casync/src/dirent-util.h`
+- `sources/sync-backup/casync/src/fssize.c`
+- `sources/sync-backup/casync/src/fssize.h`
+- `sources/sync-backup/casync/src/gc.c`
+- `sources/sync-backup/casync/src/gc.h`
+- `sources/sync-backup/casync/src/gcc-macro.h`
+- `sources/sync-backup/casync/src/hash-funcs.c`
+- `sources/sync-backup/casync/src/hash-funcs.h`
+- `sources/sync-backup/casync/src/hashmap.c`
+- `sources/sync-backup/casync/src/hashmap.h`
+- `sources/sync-backup/casync/src/log.c`
+- `sources/sync-backup/casync/src/log.h`
+- `sources/sync-backup/casync/src/mempool.c`
+- `sources/sync-backup/casync/src/mempool.h`
+- `sources/sync-backup/casync/src/meson.build`
+- `sources/sync-backup/casync/src/notify.c`
+- `sources/sync-backup/casync/src/notify.h`
+- `sources/sync-backup/casync/src/parse-util.c`
+- `sources/sync-backup/casync/src/parse-util.h`
+- `sources/sync-backup/casync/src/quota-projid.c`
+- `sources/sync-backup/casync/src/quota-projid.h`
+- `sources/sync-backup/casync/src/realloc-buffer.c`
+- `sources/sync-backup/casync/src/realloc-buffer.h`
+- `sources/sync-backup/casync/src/reflink.c`
+- `sources/sync-backup/casync/src/reflink.h`
+- `sources/sync-backup/casync/src/rm-rf.c`
+- `sources/sync-backup/casync/src/rm-rf.h`
+- `sources/sync-backup/casync/src/set.h`
+- `sources/sync-backup/casync/src/signal-handler.c`
+- `sources/sync-backup/casync/src/signal-handler.h`
+- `sources/sync-backup/casync/src/siphash24.c`
+- `sources/sync-backup/casync/src/siphash24.h`
+- `sources/sync-backup/casync/src/time-util.c`
+- `sources/sync-backup/casync/src/time-util.h`
+- `sources/sync-backup/casync/src/udev-util.h`
+- `sources/sync-backup/casync/src/util.c`
+- `sources/sync-backup/casync/src/util.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

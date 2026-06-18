@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/fusefrontend_reverse/virtualnode.go -->
+# sources/security-integrity/gocryptfs/internal/fusefrontend_reverse/virtualnode.go
+
+- Purpose: Provides in-memory virtual nodes for synthesized diriv and long-name metadata files in reverse mode.
+- Important APIs/types/functions: `type fileType int`, `type VirtualMemNode struct`, `const (`, `const (`, `func (n *Node) lookupFileType(cName string) fileType`, `func (n *Node) newVirtualMemNode(content []byte, parentStat *syscall.Stat_t, inoTag uint8) (vf *VirtualMemNode, errno syscall.E...`, `func (f *VirtualMemNode) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno)`, `func (f *VirtualMemNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno`, `func (f *VirtualMemNode) Read(ctx context.Context, fh fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno)`.
+- Control flow and state: participates in directory-IV based name encryption state; handles long-name sidecar metadata and cleanup; treats invalid internal invariants as fatal/panic conditions. Source size is 4365 bytes across 138 lines, read as part of this work item.
+- Dependencies and integration points: standard library: context, log, syscall; external/internal modules: github.com/hanwen/go-fuse/v2/fs, github.com/hanwen/go-fuse/v2/fuse, github.com/rfjakob/gocryptfs/v2/internal/configfile, github.com/rfjakob/gocryptfs/v2/internal/inomap, github.com/rfjakob/gocryptfs/v2/internal/nametransform. It integrates with the surrounding gocryptfs package through the source path `sources/security-integrity/gocryptfs/internal/fusefrontend_reverse/virtualnode.go` and the declarations listed above.
+- Risks and review notes: FUSE/syscall code is race-prone; fd ownership, symlink safety, and errno translation are primary review points.
+- Test signals: No direct tests in this file; rely on package integration tests and callers.
+<!-- END_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/fusefrontend_reverse/virtualnode.go -->

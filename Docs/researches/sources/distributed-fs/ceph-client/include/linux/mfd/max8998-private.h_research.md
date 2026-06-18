@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/max8998-private.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/max8998-private.h
+
+This private MAX8998/LP3974/LP3979 header defines the register enum, IRQ enum, interrupt masks, variant IDs, and core state for the older Samsung/Maxim PMIC MFD. `MAX8998_NUM_IRQ_REGS` fixes four interrupt mask/status banks. The register enum covers IRQ, status, charger, active discharge, on/off, buck voltage, LDO voltage, backup charger, and low-battery configuration registers. The IRQ enum covers DC input, jig, power key, RTC watchdog/alarm, charger, and low-battery events.
+
+`struct max8998_dev` stores shared runtime state: device and platform data, I2C clients for regulator and RTC functions, I/O and IRQ mutexes, IRQ base/irqdomain, hardware IRQ numbers, current and cached IRQ mask arrays, variant type, and wakeup flag. Declared APIs are IRQ lifecycle/resume helpers and register access helpers for read, write, bulk read/write, and masked update. Control flow is the standard MFD split: core probe initializes the shared struct and IRQ domain, then child drivers use helper APIs and register constants to operate regulators, charger, and RTC.
+
+State lives primarily in PMIC registers, with IRQ masks mirrored in `irq_masks_cur`/`irq_masks_cache` for bus-lock synchronization. Dependencies include platform data from `max8998.h`, I2C, mutex, irqdomain, and variant-specific child code. Risks include enum register numbering being implicit rather than explicit addresses, variant differences for LP3974/LP3979, four-bank IRQ mask synchronization, and wakeup behavior across suspend. Test signals include IRQ masking cache coherency, RTC alarm and wake tests, regulator helper update tests, and variant probe tests.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/max8998-private.h -->

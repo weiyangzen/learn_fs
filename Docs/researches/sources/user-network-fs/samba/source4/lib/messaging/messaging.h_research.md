@@ -1,0 +1,7 @@
+# sources/user-network-fs/samba/source4/lib/messaging/messaging.h
+
+`messaging.h` is the public source4 messaging API. It declares the opaque `imessaging_context`, `msg_callback_t`, `SAMBA_PARENT_TASKID`, send/register/deregister routines, context constructors, datagram cleanup, fork reinit, pointer send, server-id access, and process cleanup. The callback contract receives the context, private data, message type, source `server_id`, optional file descriptors, and payload `DATA_BLOB`.
+
+The header defines the integration boundary for users of the messaging library while hiding the dispatch arrays, IDR state, datagram reference, and name database in `messaging_internal.h`. Callers must provide a loadparm context, tevent context, and server ID, then register callbacks before expecting delivery. Temporary registrations allocate message IDs at or above `MSG_TMP_BASE`.
+
+State behavior is owned by the implementation, but the API exposes lifecycle-sensitive operations: `imessaging_dgm_unref_ev()` must run before an event context disappears, and `imessaging_reinit_all()` must be called after fork. Risks are mostly ownership and callback-lifetime mistakes: private data must outlive registered handlers, fd-bearing messages need explicit handling, and contexts created with discard-incoming drop messages unless an IRPC pending call temporarily increments listeners. Compile coverage plus local messaging tests are the main test signals.

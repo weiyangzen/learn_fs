@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/staging/media/sunxi/sun6i-isp/sun6i_isp_proc.c
+
+Purpose: ISP processor V4L2 subdev implementation. It models the ISP processing block in the media graph, discovers CSI sources asynchronously, validates/sets raw Bayer media-bus formats, configures frontend input and module registers, controls streaming and runtime PM, and creates links from external CSI sources to proc.
+
+Important APIs/functions: `sun6i_isp_proc_dimensions()` exposes active mbus dimensions. `sun6i_isp_proc_format_find()` maps 8-bit/10-bit Bayer mbus codes to hardware input format. IRQ helpers enable/disable/clear frontend interrupts. `sun6i_isp_proc_enable/disable()` toggles frontend source mode and capture enable. `sun6i_isp_proc_configure()` enables source module and writes input format/mode bits into the load table. `sun6i_isp_proc_s_stream()` resolves the connected CSI source, handles off/on streaming, runtime PM, table/params/proc/capture configuration, initial state update with ready hold, IRQ enable, frontend enable, and upstream source streaming. Subdev pad ops enumerate/get/set mbus format. Async notifier callbacks bind CSI0/CSI1 sources and create media links, enabling CSI0 by preference and CSI1 if CSI0 absent. `sun6i_isp_proc_setup()` registers the subdev, pads, notifier, and sources; cleanup unregisters them.
+
+Control flow: setup registers a three-pad subdev: CSI sink, params sink, capture source. During streamon from capture, proc identifies the single remote CSI source, resumes PM, clears IRQs, configures DMA tables and load-table parameters, stages initial capture/params state without immediately setting ready, enables IRQ/frontend, and starts upstream CSI. Streamoff disables IRQ, stops upstream, disables frontend, and drops runtime PM.
+
+State and persistence: `proc.mbus_format` persists active raw input format and dimensions. `source_csi0/source_csi1` remember expected/bound async sources. Load-table module/input configuration persists until next configure.
+
+Dependencies/integration: depends on PM runtime, regmap, V4L2 fwnode async notifier, media graph pads/links, capture/params/core configuration helpers, and register macros.
+
+Risks: `sun6i_isp_proc_irq_clear()` writes zero to interrupt enable then clears status; streamon re-enables later, but naming may obscure side effects. If upstream source `s_stream(1)` fails after frontend enable, code disables frontend and PM but does not explicitly clear pending state staged earlier. Format set does not clamp width/height here; init defaults are 1280x720 but user-provided dimensions rely on subdev framework/capture link validation. Source selection assumes any non-CSI0 bound source is CSI1 after earlier endpoint parsing.
+
+Test signals: async binding for CSI0 only, CSI1 only, both sources; media link creation/enabled defaults; mbus code enum/get/set for 8/10-bit Bayer; capture dimension mismatch validation; streamon failure from upstream CSI; runtime PM balance; IRQ register enable/clear traces; and full pipeline streaming with params/capture nodes.

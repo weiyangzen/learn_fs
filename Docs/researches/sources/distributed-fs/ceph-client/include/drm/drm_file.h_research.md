@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/drm/drm_file.h
+
+Purpose: Defines DRM minor node identity, per-open file/client state, pending event delivery structures, file operation entry points, memory accounting structs, and fdinfo reporting helpers.
+
+Important APIs, types, and functions: Defines global `drm_minors_xa`, `enum drm_minor_type`, `struct drm_minor`, `struct drm_pending_event`, `struct drm_file`, `struct drm_memory_stats`, node-type predicates `drm_is_primary_client()`, `drm_is_render_client()`, `drm_is_accel_client()`, and APIs for file errors, PID updates, minor acquire/release, open/read/release/poll, event reserve/cancel/send, memory-stat printing, fdinfo display, and mock file creation. `struct drm_file` tracks client capability flags, master/auth state, PID/client ID, GEM handle IDR, syncobj xarray, driver private data, framebuffer list, blob list, event queues/space, PRIME caches, client name, and debugfs client directory.
+
+Control flow: Opening a DRM node creates a `drm_file`, assigns its minor, sets client capabilities through IOCTLs, optionally authenticates primary clients, and adds it to device file lists. GEM handles, framebuffers, blobs, syncobjs, and PRIME caches are scoped to the file. Event producers reserve event space, add pending events, and later send or cancel them; `drm_read()` drains ready events, while `drm_poll()` waits for them. Release unwinds pending events, handles, per-file framebuffers, driver private data, debugfs client entries, and master/auth references.
+
+State and persistence: State is per open file descriptor and lasts until release. Event queues are transient but userspace-visible through `read()`/`poll()`. GEM handles and framebuffer references are per-file namespaces; global object references can outlive a file only through other refs such as dma-buf or other handles.
+
+Dependencies and integration points: Depends on Linux files, devices, completions, waitqueues, IDR, xarray, PRIME, dma fences, DRM events/uapi, masters, GEM, syncobjs, debugfs clients, and fdinfo memory accounting. Integrates with all DRM file operations and driver `open`/`postclose` callbacks.
+
+Risks and test signals: Risks include event-space leaks, pending event use-after-close, master pointer lifetime races, RCU PID misuse, per-file GEM handle races, framebuffer list locking errors, syncobj namespace leaks, incorrect primary/render/accel permission checks, and fdinfo stats double-counting shared objects. Test open/close storms, auth/master handoff, render-node access without auth, event reserve/send/cancel under close, read/poll behavior, GEM handle create/delete, PRIME import cache cleanup, fdinfo with shared/private buffers, and debugfs client removal.

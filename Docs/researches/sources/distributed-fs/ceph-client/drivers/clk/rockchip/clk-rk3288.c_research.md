@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/clk/rockchip/clk-rk3288.c
+
+## Purpose
+`clk-rk3288.c` is the CRU driver for RK3288 and RK3288W. It describes a large clock tree for a Cortex-A17-class Rockchip SoC and includes explicit suspend/resume register preservation for CRU state lost or modified by maskrom during fastboot wake. It covers APLL/DPLL/CPLL/GPLL/NPLL, ARM and debug dividers, CPU/peripheral/VIO buses, GPU, VPU/video, RGA, crypto, display interfaces, audio, UARTs, MMC, USB PHYs, HSIC, GMAC, EDP/HDMI/VIP/ISP, timers, PMU/alive domains, and variant-specific `hclk_vio` parent selection.
+
+## Important APIs, Types, And Functions
+Important definitions include `rk3288_variant`, `rk3288_pll_rates`, `rk3288_cpuclk_rates`, `rk3288_cpuclk_data`, `rk3288_pll_clks`, `rk3288_clk_branches`, `rk3288w_hclkvio_branch`, `rk3288_hclkvio_branch`, and the suspend state arrays `rk3288_saved_cru_reg_ids` / `rk3288_saved_cru_regs`. Fractional mux descriptors cover I2S, SPDIF, SPDIF 8-channel, and UART0-4. `rk3288_clk_suspend()`, `rk3288_clk_resume()`, and `rk3288_clk_shutdown()` manage low-power and restart PLL mode state. `rk3288_common_init()` registers the provider for both variants, with `rk3288_clk_init()` and `rk3288w_clk_init()` bound to their OF compatibles.
+
+## Control Flow
+Common init maps the CRU into the file-global `rk3288_cru_base`, initializes the provider, registers PLLs against `RK3288_GRF_SOC_STATUS1`, registers the main branch table, adds the RK3288 or RK3288W `hclk_vio` divider branch depending on compatible, protects critical clocks, registers the ARM clock, registers 12 soft-reset registers, registers a restart notifier with `rk3288_clk_shutdown()` as shutdown callback, registers syscore ops, and publishes the OF provider. During system suspend, syscore saves selected CRU registers, forces `aclk_dmac1` on for deep sleep entry, and switches PLLs other than DPLL to slow mode. During resume it restores saved registers in reverse order using hiword writes. Shutdown also switches PLLs to slow mode before restart.
+
+## State And Persistence Behavior
+This file has the strongest persistence behavior in the group. `rk3288_cru_base` and saved register arrays are global state used by syscore callbacks. Saved registers include PLL mode, ARM clock select registers, selected peripheral clock selects, and a gate register for DMAC1. The comments explain that maskrom resets some CRU registers during wake, so the driver proactively saves and restores them. Critical clocks protect CPU/peri/VIO/RGA interconnect, alive/PMU clocks, OTG PMU, and `pclk_rkpwm` because PWM regulators may depend on it during handoff.
+
+## Dependencies And Integration Points
+The driver depends on `dt-bindings/clock/rk3288-cru.h`, Rockchip clock helpers, OF mapping, CCF, reset and restart helpers, and `linux/syscore_ops.h`. Consumer integration includes CPUfreq, GPU, VPU/codec, DRM display paths, HDMI/eDP/VIP/ISP, audio I2S/SPDIF including 8-channel SPDIF, UART0-4, MMC/SDIO/eMMC phase clocks, USB/HSIC PHY clocks, GMAC, crypto, timers, PMU/alive GPIO/PWM/WDT/I2C/SPI/SARADC blocks, and suspend/resume infrastructure. The RK3288W compatible changes the `hclk_vio` parent from `aclk_vio0` to `aclk_vio1`.
+
+## Risks
+Suspend/resume ordering is high risk: saving the wrong registers, restoring in the wrong order, or losing hiword-mask semantics can break resume clocks. The slow-mode writes intentionally affect multiple PLLs; incorrect masks can destabilize DRAM or CPU. Global `rk3288_cru_base` assumes one CRU instance. Variant-specific `hclk_vio` branch selection can break display/camera/peripheral buses on RK3288W if the wrong compatible is used. Parent names containing `unstable:usbphy480m_src` signal a deliberately constrained or problematic parent; consumers should not depend on it casually.
+
+## Test Signals
+Beyond normal boot, test suspend-to-RAM/deep sleep and resume repeatedly with display, storage, network, and serial active. Check that `aclk_dmac1` gate state is restored after resume. Verify restart path reliability. Inspect `clk_summary` before suspend, during late resume if possible, and after resume for PLL modes and key parent restoration. Exercise CPUfreq, GPU/VPU/display, HDMI/eDP/VIP/ISP clocks, UART0-4, MMC tuning, USB/HSIC, GMAC, audio fractional rates, PWM regulator boards, reset-controller users, and both RK3288 and RK3288W compatibles for `hclk_vio` selection.

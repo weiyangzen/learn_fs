@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/gpio/dce120/hw_translate_dce120.h
+
+Purpose: DCE 12.0 translator declaration. Important API is `dal_hw_translate_dce120_init(struct hw_translate *tr)`. The include guard and forward declaration keep the header narrow. It has no runtime control flow and persists no state. Dependencies are limited to a compatible `struct hw_translate` declaration in users. Integration is through `dal_hw_translate_init` for DCE 12.0/12.1. Risks are prototype drift and build configurations that include this header before any translator type declaration. Tests are compiler/linker checks plus GPIO service creation on DCE 12.x versions.

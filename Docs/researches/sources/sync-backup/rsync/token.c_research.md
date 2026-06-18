@@ -1,0 +1,9 @@
+# sources/sync-backup/rsync/token.c
+
+Purpose: transfer-token stream implementation for rsync’s delta algorithm. It sends and receives literal data runs and matching-block token references, optionally compressed with zlib, zstd, or lz4.
+
+Important APIs/types/functions: public entry points are `init_compression_level()`, `set_compression()`, `send_token()`, `recv_token()`, and `see_token()`. Internal suffix-tree functions parse skip-compress suffixes. Simple mode uses `simple_send_token()`/`simple_recv_token()`. Zlib mode uses token-run encodings (`TOKEN_REL`, `TOKENRUN_REL`, long forms), `send_deflated_token()`, `recv_deflated_token()`, and `see_deflate_token()` to keep compressor/decompressor histories aligned. Optional zstd and lz4 paths implement equivalent framed chunks using the same outer token flag format.
+
+Control flow and state: compression uses static stream state across calls and resets when `last_token == -1` or receiver state returns to `r_init`. Literal runs are chunked to `CHUNK_SIZE`; compressed data records fit `MAX_DATA_COUNT`. Token runs compress consecutive token IDs into relative or long encodings. `recv_state`, `rx_token`, and `rx_run` model the receive-side state machine.
+
+Dependencies and integration: depends on rsync I/O primitives, `map_ptr()`, negotiated `do_compression`, protocol version, daemon skip-compress config, zlib, and optional zstd/lz4. Risks include protocol desynchronization, integer overflows in token/run arithmetic, compressor flush edge cases, and static state reuse across files. The code includes hardening for oversized simple literal runs, zlib insert-only overflow/drain behavior, and invalid compressed token bounds. Test signals include transfer tests with compression, `symlink-dirlink-basis_test.py` compressed update, checksum/data integrity tests, and interoperability with older protocols.

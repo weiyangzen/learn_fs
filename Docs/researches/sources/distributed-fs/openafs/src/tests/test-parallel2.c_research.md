@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/openafs/src/tests/test-parallel2.c -->
+# sources/distributed-fs/openafs/src/tests/test-parallel2.c
+
+## Purpose
+Runs a focused C filesystem test with entry points `getcwd_worker, mkdir_worker, mkdir_rmdir_worker, rename_worker, stat_worker`.
+
+## Important APIs, Types, and Functions
+functions: getcwd_worker, mkdir_worker, mkdir_rmdir_worker, rename_worker, stat_worker, main
+
+## Control Flow
+`main` drives the test through helper functions `getcwd_worker, mkdir_worker, mkdir_rmdir_worker, rename_worker, stat_worker` and terminates via `err`/`errx` or exit status on failures.
+
+## State and Persistence Behavior
+Uses POSIX filesystem calls `open, close, stat, mkdir, rmdir, rename, fork, chdir`; state is usually a temporary file/tree in the current harness directory.
+
+## Dependencies and Integration Points
+OpenAFS build headers (`afsconfig.h`, `afs/param.h`) and libc/POSIX calls; BSD-style err/warn reporting
+
+## Risks and Test Signals
+nonzero exit through `err`/`errx` is the primary test signal.
+
+## Source Notes
+Read as C program; 181 source lines; generated from manifest group `subset-b-007804` in source-tree order.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/openafs/src/tests/test-parallel2.c -->

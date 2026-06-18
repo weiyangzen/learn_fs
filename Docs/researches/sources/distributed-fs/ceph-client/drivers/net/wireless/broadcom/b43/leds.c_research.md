@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/broadcom/b43/leds.c
+
+This file implements optional b43 LED support by mapping SPROM GPIO LED behavior bytes to Linux LED class devices and mac80211 LED triggers, then driving GPIO bits in `B43_MMIO_GPIO_CONTROL`.
+
+Important functions are `b43_led_turn_on()`, `b43_led_turn_off()`, `b43_led_update()`, `b43_leds_work()`, `b43_led_brightness_set()`, `b43_register_led()`, `b43_unregister_led()`, `b43_map_led()`, `b43_led_get_sprominfo()`, `b43_leds_register()`, `b43_leds_init()`, `b43_leds_stop()`, `b43_leds_exit()`, and `b43_leds_unregister()`. Behavior codes map to TX/RX activity LEDs, radio LEDs, association LEDs, or static on/off handling; missing SPROM LED data falls back to hardcoded board-sensitive defaults.
+
+Runtime flow registers LEDs during setup, receives brightness callbacks from LED triggers, queues work on the mac80211 workqueue, locks `wl->mutex`, checks a started current device, and updates GPIO state only when requested state differs from cached hardware state. Radio-off or hardware-rfkill state forces LEDs off. Init synchronizes registered LED state and applies static LED defaults.
+
+State lives in `struct b43_leds` and `struct b43_led`: LED classdevs, GPIO indexes, active-low flags, generated names, atomic requested brightness, cached hardware state, stop flag, and work item. Dependencies include b43 MMIO, SPROM board data, rfkill/radio helpers, LED class APIs, and mac80211 LED trigger names. Risks are board-specific fallback mistakes, duplicate behavior mapping to one logical LED, intentionally racy brightness reads, uninitialized indexes in exit paths, and work/unregister ordering. Test signals include LED class registration, trigger behavior, active-low polarity, rfkill forcing off, SPROM fallback handling, and safe stop/unregister during removal.

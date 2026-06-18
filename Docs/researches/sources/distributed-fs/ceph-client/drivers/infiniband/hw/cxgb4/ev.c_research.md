@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/cxgb4/ev.c
+
+Purpose: asynchronous event and completion-notification handling for `iw_cxgb4`. It decodes error CQEs, maps hardware error status to RDMA core events, transitions affected QPs toward terminate/error handling, optionally wakes CQ completion handlers, and handles ingress queue notification queue IDs.
+
+Important APIs, types, and functions: exported entry points are `c4iw_ev_dispatch()` for firmware CQE async events and `c4iw_ev_handler()` for CQ notification queue IDs. Internal helpers are `print_tpte()`, `dump_err_cqe()`, and `post_qp_event()`. `post_qp_event()` logs the CQE, moves RTS QPs to `C4IW_QP_STATE_TERMINATE`, fills an `ib_event`, invokes the QP event handler, and triggers the CQ completion handler if the CQ was armed.
+
+Control flow: `c4iw_ev_dispatch()` receives a CQE, looks up the QP by `CQE_QPID`, selects send or receive CQID based on CQE type, looks up the CQ, takes QP/CQ references under the QP xarray lock, then classifies the hardware status. Incoming RDMA write errors are treated as request errors. Access-like statuses become `IB_EVENT_QP_ACCESS_ERR`; ECC/internal statuses become `IB_EVENT_DEVICE_FATAL`; protocol/resource/MSN/overflow statuses become `IB_EVENT_QP_FATAL`; unknown statuses default to QP fatal. `c4iw_ev_handler()` looks up a CQ by queue ID, refs it, clears armed state, invokes the CQ comp handler under `comp_handler_lock`, then drops the ref.
+
+State and persistence: no persistent state is owned by this file. It reads live QP/CQ xarrays, increments `c4iw_qp` and `c4iw_cq` references during callback delivery, may change QP state via `c4iw_modify_qp()`, and clears CQ armed state in the embedded `t4_cq`. Logging can read TPTE adapter state for offending STAGs.
+
+Dependencies and integration points: depends on Chelsio CQE macros and TPTE read helpers, `c4iw_modify_qp()` from QP management, CQ ref management from `cq.c`, QP ref helpers, IB event and completion callbacks, and the receive/firmware dispatch paths in `device.c` and `cm.c`.
+
+Risks: event handlers call driver/user-provided callbacks from interrupt-adjacent paths after taking refs but outside xarray locks; callback reentrancy into destroy paths depends on ref correctness. `post_qp_event()` checks QP state without taking the QP lock, so a concurrent state transition can race with the terminate transition. `dump_err_cqe()` reads TPTE for some ingress errors, which can fail or race with deregistration. Bad CQID/QPID events are only logged and dropped, so missed error notification can leave higher layers waiting for normal completions.
+
+Test signals: inject representative CQE statuses for access, fatal device, protocol fatal, unknown, and success-with-AE cases; verify QP event callback type and QP transition; verify armed CQ generates a completion callback after error; dispatch with missing QP and missing CQ; test STAG/TPTE logging on ingress write/read-response errors; run destroy-race stress where CQs/QPs are destroyed while async events are delivered.

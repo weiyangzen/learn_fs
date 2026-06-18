@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/feature-fixups-test.S
+
+This assembly file supplies the code/data fixtures consumed by `feature-fixups.c` selftests under `CONFIG_FTR_FIXUP_SELFTEST`. It defines original, alternative, and expected instruction sequences for CPU feature, firmware feature, lwsync, branch translation, nested macro, and prefixed-instruction fixup cases.
+
+The early sections define `ftr_fixup_test1` through `ftr_fixup_test7` to test nop-out behavior, replacement with shorter/longer alternative sections, branches internal to an alternative, external branch translation, and branch-to-end cases. The `MAKE_MACRO_TEST` and `MAKE_MACRO_TEST_EXPECTED` macros generate large matrices for `FTR` and, on 64-bit, `FW_FTR` macros: simple feature sections, nested sections, alt sections, nested alt sections, padded alternatives, and larger else cases. Later labels define `lwsync_fixup_test` expected either as `lwsync` or `sync`, plus prefixed instruction tests where a prefixed instruction occupies two words and must be nop-filled or replaced atomically as a logical instruction.
+
+State is only static text fixtures linked into the kernel test image. Dependencies include `asm/feature-fixups.h`, PPC opcode macros, and the C selftest's external symbol references. Risks are fixture drift from macro semantics, assembler layout changes that hide branch translation bugs, and prefixed-instruction expectations on 32-bit builds. Test signal is the late-init "feature fixup self-tests" run and absence of printed failure lines.

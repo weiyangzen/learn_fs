@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/include/uapi/linux/dm-log-userspace.h
+
+Purpose: This header defines the netlink connector protocol between the device-mapper userspace dirty log target and a userspace daemon. It mirrors callbacks from `dm-dirty-log.h` into request types that userspace receives, processes, and returns to the kernel.
+
+Important APIs and types: `DM_ULOG_CTR` through `DM_ULOG_IS_REMOTE_RECOVERING` encode constructor, destructor, suspend/resume, region size, region cleanliness, sync state, flush, mark/clear region, resync work selection, sync count, status, and remote recovery queries. `DM_ULOG_REQUEST_MASK` and `DM_ULOG_REQUEST_TYPE()` reserve low 8 bits for request IDs while leaving upper bits for future compatibility. `DM_ULOG_REQUEST_VERSION` is currently 3, adding constructor log-device returns and integrated flush payloads. `struct dm_ulog_request` carries a local unique ID, dm UUID, version, error result, sequence number, request type, data size, and flexible payload.
+
+Control flow and state: Userspace opens a `NETLINK_CONNECTOR` socket, joins `CN_IDX_DM`, then loops receiving `struct dm_ulog_request` plus optional payload and returning the same request with `error` and response payload filled. The constructor establishes a UUID/luid association and may return a backing log device name. Region operations send or receive `__u64` region identifiers and `__s64` boolean-like results. Integrated flush can bundle region marks into a flush request to reduce round trips.
+
+Persistence and dependencies: Persistent dirty-log state is intentionally outside the kernel target when this module is used; the daemon owns region dirty/sync state and any backing store. The ABI depends on `<linux/types.h>`, `DM_UUID_LEN` from `dm-ioctl.h`, connector netlink membership, and the kernel dm userspace log implementation.
+
+Integration points: It is consumed by clustered mirroring or replication stacks that need a user-managed dirty log. The protocol integrates with dm table constructor arguments, `dm_get_device()` for an optional log device, suspend/resume ordering, and target status output.
+
+Risks and test signals: Risks include lost or reordered netlink messages, mismatched sequence IDs, daemon crashes holding authoritative log state, version skew, incorrect `data_size`, UUID/luid collisions when live and inactive tables overlap, and ambiguous signed integer boolean payloads. Tests should simulate each request type, validate payload sizes for scalar and array operations, exercise integrated flush, verify constructor/destroy device reference behavior, confirm error propagation, and cover daemon restart or timeout handling in the kernel component.

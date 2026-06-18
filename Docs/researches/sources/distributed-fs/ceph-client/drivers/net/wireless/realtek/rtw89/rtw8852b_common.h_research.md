@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw89/rtw8852b_common.h
+
+Purpose: This header defines the shared 8852B-family interface used by concrete chip files and RFK code. It provides the packed efuse layout, PMAC/TSSI helper structures, the `rtw8852bx_info` function-pointer dispatch table, and static inline wrappers that call the current common implementation.
+
+Important APIs, types, and data: It defines `RF_PATH_NUM_8852BX` and `BB_PATH_NUM_8852BX` as 2, `enum rtw8852bx_pmac_mode`, packed efuse structs `rtw8852bx_u_efuse`, `rtw8852bx_e_efuse`, `rtw8852bx_tssi_offset`, and `rtw8852bx_efuse`, PMAC info `rtw8852bx_bb_pmac_info`, TSSI backup `rtw8852bx_bb_tssi_bak`, and the central `struct rtw8852bx_info`. The function table includes MAC BB/RF enable, BB reset/setup/path control, PMAC TX, TSSI backup/restore, TX mode switch, channel MAC/BB programming, BTG/NBTG coexistence control, PPDU/RSSI handling, efuse/PHY-cap parsing, power trim, TX power configuration, thermal reads, ADC config, and BTC operations. Inline wrappers expose each operation with `rtw8852bx_*` names.
+
+Control flow: The header itself has no branches other than inline forwarding. It shapes runtime dispatch: callers invoke a typed inline helper, which dereferences `rtw8852bx_info.<operation>` and calls the implementation installed by `rtw8852b_common.c`. This keeps concrete chip code concise while allowing the common implementation to be exported as one table.
+
+State and persistence: The packed efuse structs describe persistent device-programmed data read from logical efuse/PHY-cap maps. The PMAC and TSSI backup structures hold transient state during calibration. The function table is immutable once linked. Inline wrappers do not store state, but the target functions mutate `struct rtw89_dev` and hardware registers.
+
+Dependencies and integration points: Depends on `core.h`, including RTW89 core types, RF paths, channel structures, RX PPDU/status structures, and efuse block enums. It is included by 8852B chip, common, and RFK code. Its ABI must match `rtw8852b_common.c` exactly and is used by bus/chip code through `rtw8852b.c`.
+
+Risks: Packed efuse layout is high risk because offsets and bitfields must match the device map; accidental padding or field movement corrupts MAC address, TSSI, RFE, country, gain, and thermal parsing. The function-pointer table has no null checks in wrappers, so every used slot must be initialized before use. Since many wrappers return void and write hardware, wrong dispatch wiring can create silent RF behavior changes. The header uses 8852BX naming for shared B/BT behavior, so new variants need clear compatibility review before reuse.
+
+Test signals: Build catches function-pointer signature drift and missing `rtw8852bx_info`. Runtime validation includes efuse parsing for USB and PCIe layouts, common channel/TX power/BT coexistence flows through every wrapper used by `rtw8852b.c`, TSSI alignment backup/restore correctness, PMAC TX calibration, and static analysis or pahole-style checks for packed efuse offsets if available.

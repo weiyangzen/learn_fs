@@ -1,0 +1,18 @@
+# sources/distributed-fs/ceph-client/drivers/net/fddi/skfp/skfddi.c
+
+## Purpose
+`skfddi.c` is the Linux PCI/netdevice adapter layer for SysKonnect SK-55xx/SK-58xx FDDI adapters. It binds the old SysKonnect hardware module and SMT/CMT stack to Linux PCI probing, IRQ handling, DMA allocation, `struct net_device` operations, FDDI receive/transmit framing, multicast filtering, statistics, and private ioctl handling.
+
+## Important APIs and Functions
+The PCI surface is `skfp_init_one()`, `skfp_remove_one()`, `skfddi_pci_tbl`, and `module_pci_driver()`. The netdevice surface is `skfp_netdev_ops`, with `skfp_open()`, `skfp_close()`, `skfp_send_pkt()`, `skfp_ctl_get_stats()`, `skfp_ctl_set_multicast_list()`, `skfp_ctl_set_mac_address()`, and `skfp_siocdevprivate()`. Hardware-module callbacks include `mac_drv_get_space()`, `mac_drv_get_desc_mem()`, `mac_drv_virt2phys()`, `dma_master()`, `dma_complete()`, `mac_drv_tx_complete()`, `llc_restart_tx()`, `mac_drv_rx_complete()`, `mac_drv_requeue_rxd()`, `mac_drv_fill_rxd()`, `mac_drv_clear_rxd()`, and `mac_drv_rx_init()`. State indications are surfaced through `ring_status_indication()`, `smt_stat_counter()`, `cfm_state_change()`, `ecm_state_change()`, `rmt_state_change()`, and `drv_reset_indication()`.
+
+## Control Flow
+Probe enables the PCI device, requests BARs, maps MMIO or PIO space, allocates an FDDI netdev with `struct s_smc` private data, initializes queues and bus metadata, calls `skfp_driver_init()`, then registers the netdev. Driver initialization allocates a coherent local RX fallback buffer and hardware-module shared memory, stops the card, runs `mac_drv_init()`, reads the adapter address, sets `dev_addr`, and seeds SMT defaults. Opening requests the shared IRQ, restores the factory address, initializes SMT via `init_smt()`, brings SMT online, enables adapter interrupts, clears multicast filters, disables promiscuous mode, and starts the queue. Closing disables adapter interrupts, resets SMT defaults, stops the card, clears hardware queues, stops TX, frees the IRQ, and purges queued SKBs.
+
+TX enqueues valid FDDI LLC frames into `SendSkbQueue`; `send_queued_packets()` selects async/sync queue from the frame-control byte, asks the hardware module for TX descriptors, patches missing source addresses, maps the SKB for DMA, and hands the fragment to `hwm_tx_frag()`. TX completion unmaps DMA, updates stats, and frees the SKB. RX completion expects one fragment, uses DMA already unmapped by `dma_complete()`, removes any routing information field, updates stats, translates the FDDI header with `fddi_type_trans()`, and injects the SKB with `netif_rx()`.
+
+## State, Dependencies, and Integration
+Persistent runtime state lives in `smc->os`: coherent shared memory heap, local RX fallback, `SendSkbQueue`, queue credit counter, netdev pointer, PCI device copy, driver lock, statistics, and reset flag. It depends heavily on the SysKonnect hardware/SMT headers under `h/` plus Linux PCI, DMA, FDDI, SKB, netdevice, and capability APIs. IRQs call `fddi_isr()` under `DriverLock`; hardware callbacks may temporarily drop/reacquire the lock around queued TX.
+
+## Risks and Test Signals
+High-risk areas are DMA lifecycle correctness, lock ordering around `llc_restart_tx()`, RX RIF removal, reset from interrupt context via `ResetRequested`, private ioctl user-copy handling, and fallback RX buffers shared by multiple descriptors. Compile coverage should catch API signature drift; runtime tests need PCI probe/open/close, IRQ sharing, TX under descriptor exhaustion, RX with and without RIF, multicast/allmulti/promisc changes, MAC address reset, and ioctl stats/clear permission checks.

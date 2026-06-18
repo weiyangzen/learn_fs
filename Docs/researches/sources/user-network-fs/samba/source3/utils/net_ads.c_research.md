@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source3/utils/net_ads.c
+
+Purpose: implements the `net ads` Active Directory command tree, with no-ADS stubs when `HAVE_ADS` is unavailable. It covers discovery (`info`, `lookup`, `workgroup`), membership (`join`, `leave`, `testjoin`, `changetrustpw`), directory users/groups/printers/searches, DNS registration, Kerberos/keytab/PAC, SPN, GPO dispatch, and encryption-type attribute management.
+
+Important APIs/types/functions: shared connection setup is `ads_startup_int()`, exported as `ads_startup()` and `ads_startup_nobind()`. The top-level `net_ads()` functable dispatches exported subcommands such as `net_ads_user()`, `net_ads_group()`, `net_ads_join()`, `net_ads_keytab()`, `net_ads_kerberos()`, `net_ads_setspn()`, and `net_ads_changetrustpw()`. Internal helpers include `assume_own_realm()`, JSON emitters under `HAVE_JANSSON`, `net_ads_cldap_netlogon()`, `usergrp_display()`, and enctype lookup/dump helpers.
+
+Control flow: commands allocate a talloc frame, validate usage, connect or discover ADS via `ads_startup*()`, perform one libads/libnet/Kerberos operation, free LDAP messages, and return shell status. `ads_startup_int()` initializes an `ADS_STRUCT`, optionally does CLDAP-only discovery, otherwise binds with credentials, and retries after namecache deletion if the closest-DC heuristic asks for a better DC. `net_ads_join()` parses key/value join options, fills `libnet_JoinCtx`, calls `libnet_Join()`, falls back from DNS to NetBIOS domain naming in one DC lookup case, reports results, then calls DNS update code unless disabled.
+
+State and persistence: mutates AD LDAP state for users, groups, machine accounts, printers, SPNs, and `msDS-SupportedEncryptionTypes`; reads/writes local trust secrets and keytabs; can modify registry-backed Samba config during join/leave through libnet contexts; DNS commands update AD-integrated DNS; PAC save writes a caller-specified file.
+
+Dependencies/integration: depends on libads, CLDAP, libnet join/unjoin, secrets/passdb, Kerberos helpers, winbind SID lookup, spoolss RPC, `utils/net_dns.h`, optional Jansson JSON helpers, and `struct net_context` command options. `net_group.c` delegates ADS group operations here; `net_ads_gpo.c` supplies the `gpo` subcommand; `net_ads_join_dns.c` supplies post-join DNS updates.
+
+Risks: raw LDAP filters/DNs are accepted for diagnostics; `net_ads_enctype_lookup_account()` builds a filter from account input without escaping. Several commands are destructive. Printer remove's "not found" path references `argv[1]` even when only one argument may exist. Passwords may be provided on the command line, although some buffers are wiped. Behavior is highly build-option and DC/network dependent.
+
+Test signals: no-ADS stubs; CLDAP `lookup/info/workgroup`; join/testjoin/leave with file and registry config backends; user/group add/delete/list; DNS register/unregister and clustered refusal; keytab, Kerberos, PAC, SPN, enctype commands; JSON with/without Jansson; malformed LDAP/account input.

@@ -1,0 +1,31 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/strace/src/linux/sparc/rt_sigframe.h -->
+# sources/test-tools/strace/src/linux/sparc/rt_sigframe.h
+
+## Purpose
+
+This header models the user-space realtime signal frame layout for sparc, including `ucontext`, `siginfo`, or mask offsets needed by strace signal-frame decoding.
+
+## Important APIs, Types, And Functions
+
+This source is classified as `rt-sigframe` for the `sparc` strace backend. It has SHA-1 prefix `9606529111af`, 25 lines, and 507 bytes. Key local interface signals: includes "ptrace.h", <signal.h>; defines STRACE_RT_SIGFRAME_H, OFFSETOF_SIGMASK_IN_RT_SIGFRAME.
+
+## Control Flow
+
+The file participates in strace architecture hook dispatch: shared tracing code fetches registers, calls these static hooks through include-time wiring, and uses the resulting `struct tcb` fields for syscall decode, tampering, or signal-frame printing.
+
+## State And Persistence Behavior
+
+Mutable state lives outside this file in the per-tracee `struct tcb`, the architecture register cache, ptrace regsets, and tracee memory reached by `umoven_or_printaddr`; this file does not write durable storage.
+
+## Dependencies And Integration Points
+
+preprocessor includes: "ptrace.h", <signal.h> Linux ptrace regset APIs. The integration point is strace's per-architecture Linux backend under `src/linux/sparc`, where these files are pulled into common syscall tracing, register access, ioctl decoding, or signal-frame code by the build and include structure.
+
+## Risks
+
+Structure layout drift or alignment mistakes can over/under-print register fields; the code mitigates this with size checks but depends on exact ABI offsets. Also watch for host/tracee word-size confusion, because many of these files are compiled on one host while describing another ABI's register and structure layout.
+
+## Test Signals
+
+Build strace for the target architecture or cross target with this file included. Exercise signal-delivery and sigreturn traces and verify saved mask/frame addresses for native and compat tasks. Non-empty generated research output for this file should be reconciled to `Docs/researches/sources/test-tools/strace/src/linux/sparc/rt_sigframe.h_research.md`.
+<!-- END_FILE_RESEARCH: sources/test-tools/strace/src/linux/sparc/rt_sigframe.h -->

@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/blobfuse2/cmd/mount.go -->
+# sources/user-network-fs/blobfuse2/cmd/mount.go
+
+Purpose: core `mount [path]` command that parses Blobfuse2 config/flags, validates mount settings, builds an internal component pipeline, starts it in foreground or daemon mode, handles logging/profiling/monitoring, and exposes mount subcommands.
+
+Important APIs/types/functions: `LogOptions`, `mountOptions`, global `options`, `validate`, `OnConfigChange`, `parseConfig`, `mountCmd`, `monitorChild`, `ignoreFuseOptions`, `runPipeline`, `startMonitor`, `tempCacheCleanup`, `cleanupCachePath`, `sigusrHandler`, `setGOConfig`, `startDynamicProfiler`, `internal.NewPipeline`, `pipeline.Start/Stop`, `go-daemon`, `config`, `common`, and `log`.
+
+Control flow: `RunE` expands the input mount path, finds or reads the config file, decrypts secure configs when requested, unmarshals options, and synthesizes a default component pipeline if none is configured. It inserts `entry_cache` for entry-cache config, validates component order, applies block-cache or preload pipeline overrides, converts v1 `libfuse-options` into v2 config keys, rejects direct-IO plus kernel-cache disabling, supplies default logging, validates mount path/work dir/log paths, initializes logging, runs version check, logs unsupported v1 flags, enables monitoring flags, removes `attr_cache` for direct-IO, optionally cleans cache directories, and creates the pipeline. In background mode it daemonizes, writes pid/trace files, waits for child success, timeout, or early child exit, and reads child trace output on failure. In foreground mode it optionally runs CPU/memory profiles and blocks in `runPipeline`.
+
+State/persistence behavior: reads YAML or encrypted config, writes/locks daemon pid files under the default work dir, creates trace files, creates default work/log directories, updates global config keys such as `mount-path` and `direct-io`, can delete cache directory contents when cleanup flags are set, starts monitor processes, and writes logs. Signal handling reloads config/logging on `SIGUSR1`.
+
+Dependencies/integration: integrates Cobra flags with the custom config layer, common filesystem/mount helpers, component pipeline construction, libfuse component behavior, secure config crypto helpers, go-daemon, Go pprof HTTP server, and health-monitor command invocation. `mount list` and `mount all` are registered as child commands here.
+
+Risks/test signals: package-global `options` and viper/config state require careful reset in tests. Background daemon control depends on signals, pid files, trace files, and mount timing. FUSE option parsing rejects unknown options and accepts a selected compatibility subset. Direct-IO modifies pipeline state by removing `attr_cache`. Tests cover missing/invalid config, mount path validation, non-empty mount handling, component order, direct-IO config propagation, v1 fuse option parsing, invalid uid/gid/umask, cleanup-on-start, log goroutine defaults, and many command error paths.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/blobfuse2/cmd/mount.go -->

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/nice/Makefile
+
+Purpose: build leaf for `nice` syscall tests, adding pthread support for `nice05`. Important APIs/types/functions: `nice05: CFLAGS += -pthread`, common LTP make includes. Control flow: applies a target-specific compiler flag before generic target rules. State/persistence: standard build artifacts only. Dependencies/integration: integrates five C tests; `nice05` needs pthread headers and link behavior supplied by the flag/toolchain. Risks: if a platform requires pthread linker flags separately from `CFLAGS`, common LTP make handling must propagate it correctly. Test signals: successful build proves all `nice` tests compile, including the threaded scheduler test.

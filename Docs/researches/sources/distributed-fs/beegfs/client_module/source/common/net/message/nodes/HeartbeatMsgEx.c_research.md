@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/common/net/message/nodes/HeartbeatMsgEx.c
+
+## Research
+`HeartbeatMsgEx.c` implements heartbeat serialization, deserialization, and incoming processing. Payload fields include instance and NIC-list versions, node type, string node ID, aligned ack ID, node/root numeric IDs, root buddy-mirror flag, UDP/TCP ports, NIC list, and machine UUID. Incoming processing validates node numeric ID, selects the correct node store by type, parses NICs, constructs or updates a `Node`, sets local NIC capabilities on its connection pool, logs new nodes, applies root metadata owner information, and responds to ack requests.
+
+Control flow has explicit rejection paths for zero numeric IDs and invalid node types, but still reaches ack handling. State changes are significant: node stores, connection pool NIC capabilities, and root owner may be updated. Dependencies include `App`, `Node`, `NodeStoreEx`, `NodeConnPool`, `ListTk`, `MsgHelperAck`, `Config`, socket formatting, and serialization. Risks include cleanup of `nicList`/`localNicList` on all paths, trusting heartbeat-provided node data, root-owner races, and handling allocation failure from `Node_construct`. Test signals are heartbeat receive/update tests, new-node log events, root owner setting from metadata heartbeats, ack behavior, and RDMA NIC capability propagation.

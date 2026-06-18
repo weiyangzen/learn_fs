@@ -1,0 +1,113 @@
+# Folder Research: sources/storage-engines/foundationdb/flow/include/flow
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 99
+- Recursive researched files: 102
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/storage-engines/foundationdb/flow/include/flow/ActorCollection.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ActorContext.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Arena.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ArgParseUtil.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/AsioReactor.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/AutoCPointer.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/BenchMain.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/BooleanParam.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Buggify.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ChaosMetrics.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/CodeProbe.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/CodeProbeUtils.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/CompressedInt.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/CoroUtils.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Coroutines.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/CoroutinesImpl.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/DebugTrace.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Deque.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/DeterministicRandom.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/EncryptUtils.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Error.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/FastAlloc.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/FastRef.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/FaultInjection.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/FileIdentifier.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/FlowThread.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/GetSourceVersion.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Hash3.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Histogram.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Hostname.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IAsyncFile.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IConnection.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IDispatched.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IPAddress.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IRandom.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IRateControl.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IThreadPool.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ITrace.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IUDPSocket.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/IndexedSet.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Knobs.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/MkCert.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Msgpack.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Net2Packet.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/NetworkAddress.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/OTELMetrics.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ObjectSerializer.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ObjectSerializerTraits.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Optional.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/OwningResource.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/PKey.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Platform.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/PriorityMultiLock.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ProcessEvents.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Profiler.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ScopeExit.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/SendBufferIterator.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/SignalSafeUnwind.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/SimBugInjector.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/SimpleCounter.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/StreamCipher.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/SystemMonitor.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TDMetric.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TLSConfig.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TaskPriority.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TaskQueue.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ThreadHelper.actor.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ThreadPrimitives.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ThreadSafeQueue.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Trace.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Traceable.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TreeBenchmark.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TxnCounters.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/TypeTraits.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/UnitTest.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/UnitTestRunner.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/Util.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/WatchFile.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/WipedString.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/WriteOnlySet.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/actorcompiler.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/error_definitions.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/flat_buffers.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/flow.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/genericactors.actor.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/network.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ppc-asm.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/ppc-opcode.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/serialize.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/singleton.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/sse2neon.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/swift.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/swift_concurrency_hooks.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/swift_future_support.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/swift_stream_support.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/swift_support.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/unactorcompiler.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/unsafe_swift_compat.h`
+- `sources/storage-engines/foundationdb/flow/include/flow/xxhash.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

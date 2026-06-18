@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/nodes/TargetStateStore.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/nodes/TargetStateStore.h
+
+**Purpose:** Declares the target state rb-tree used by the client to decide whether target communication is allowed or should wait/retry. **APIs/types:** `TargetStateStore` wraps an `RWLock` and rb-root of `TargetStateInfo`; public APIs sync states and groups, export states as lists, stringify states, set all reachability states, and query one target. **Control flow/state:** the unlocked sync helper is exposed only for callers already holding the write lock. **Dependencies/integration:** includes common target-state types, mirror buddy group mapper, and list iterators. **Risks/tests:** callers must not call unlocked sync without the store write lock; tests should validate string mappings and default state on unknown target.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/nodes/TargetStateStore.h -->

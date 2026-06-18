@@ -1,0 +1,15 @@
+# sources/control-plane/rook/pkg/operator/ceph/cluster/cluster_external.go
+
+Purpose: configures Rook to connect to and optionally manage aspects of an external Ceph cluster. It validates external specs, populates external `ClusterInfo`, writes connection/config state, creates optional secrets and monitoring resources, and cleans up external-mode connection artifacts during deletion.
+
+Important APIs and functions: `configureExternalCephCluster` is the main external-mode reconcile path. `purgeExternalCluster` deletes connection ConfigMaps and Secrets. `validateExternalClusterSpec` enforces `DataDirHostPath` when an image is supplied and defaults external mgr prometheus port when monitoring is enabled. `configureExternalClusterMonitoring` creates a metrics Service, external metrics endpoint, and ServiceMonitor through the mgr package and controller helpers.
+
+Control flow: external reconcile sets a Connecting condition, populates external cluster info from Kubernetes secrets, validates the health checker key is base64 keyring data, optionally writes local connection config when no Ceph image is specified, validates Ceph version and creates config override/config store when a Ceph image is specified, verifies cluster identity, infers `RequireMsgr2` from v2 mon endpoints, creates crash/exporter secrets when enabled and credentials allow, discovers external Ceph version for monitoring, creates CSI CephConnection and default client profile, and finally sets a Connected condition.
+
+State and persistence behavior: persists connection config, config override ConfigMap, global config Secret, crash collector secret, exporter secret, monitoring Service, external metrics endpoint, ServiceMonitor, CephConnection, default client profile, and cluster status conditions. `purgeExternalCluster` removes mon endpoint/config override ConfigMaps and several mon/CSI/config Secrets, ignoring not-found errors.
+
+Dependencies and integration points: uses `opcontroller.PopulateExternalClusterInfo`, mon connection config, Ceph client version/port helpers, nodedaemon secret helpers, mgr metrics and ServiceMonitor logic, CSI resource creation, and Kubernetes clientsets. It reuses the same `cluster` state object as local orchestration but does not start local daemon deployments unless external management settings require supporting artifacts.
+
+Risks: external mode's behavior changes significantly depending on whether `Spec.CephVersion.Image` is set. Mutating `Spec.Network.Connections.RequireMsgr2` in memory based on external mon ports is important for CSI behavior but may not persist back to the CR. Exporter secret creation is conditional on admin credentials and a non-secret-name key value, which could surprise configurations with lower-privileged users. `purgeExternalCluster` deletes broad connection artifacts in the namespace and only logs failures.
+
+Test signals: `cluster_external_test.go` covers only validation/defaulting. There are no tests here for full external connection, key validation, monitoring resource creation, msgr2 inference, or purge behavior.

@@ -1,0 +1,157 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 143
+- Recursive researched files: 237
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allegro,al5e.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun4i-a10-csi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun4i-a10-ir.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun4i-a10-video-engine.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun50i-h6-vpu-g2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun6i-a31-csi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun6i-a31-isp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun6i-a31-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun8i-a83t-de2-rotate.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun8i-a83t-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/allwinner,sun8i-h3-deinterlace.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,axg-ge2d.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,c3-isp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,c3-mipi-adapter.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,c3-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,gx-vdec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,meson-ir-tx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amlogic,meson6-ir.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/amphion,vpu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/arm,mali-c55.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/aspeed,video-engine.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/atmel,isc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/brcm,bcm2835-unicam.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/cdns,csi2rx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/cnm,wave521c.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/coda.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/fsl,imx-capture-subsystem.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/fsl,imx6-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/fsl,imx6q-vdoa.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/fsl,imx6ull-pxp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/fsl,imx8qm-isi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/fsl,imx8qxp-isi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/gpio-ir-receiver.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/img,e5010-jpeg-enc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/marvell,mmp2-ccic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-fg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-hdr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-rdma.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-rsz.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-stitch.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-tcc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-tdshp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mdp3-wrot.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mt7622-cir.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mt8173-mdp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mt8173-vpu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mt8195-jpegdec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,mt8195-jpegenc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,vcodec-decoder.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,vcodec-encoder.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek,vcodec-subdev-decoder.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek-jpeg-decoder.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/mediatek-jpeg-encoder.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/microchip,csi2dc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/microchip,sama5d4-vdec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/microchip,xisc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nuvoton,npcm-ece.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nuvoton,npcm-vcd.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nvidia,tegra-vde.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,dw100.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,imx-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,imx7-csi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,imx8-isi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,imx8-jpeg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,imx8mq-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/nxp,imx8mq-vpu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,msm8916-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,msm8916-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,msm8939-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,msm8953-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,msm8996-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,msm8996-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,qcm2290-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,qcm2290-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,qcs8300-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sa8775p-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sc7180-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sc7280-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sc7280-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sc8280xp-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sdm660-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sdm660-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sdm670-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sdm845-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sdm845-venus-v2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sdm845-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm6150-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm8250-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm8250-venus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm8550-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm8550-iris.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm8650-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,sm8750-iris.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,venus-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/qcom,x1e80100-camss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/raspberrypi,pispbe.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/raspberrypi,rp1-cfe.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,ceu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,drif.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,fcp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,fdp1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,imr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,isp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,jpu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,r9a09g057-ivc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,rzg2l-cru.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,rzg2l-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,vin.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/renesas,vsp1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip,px30-vip.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip,rk3568-mipi-csi2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip,rk3568-vepu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip,rk3568-vicap.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip,vdec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip-isp1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip-rga.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/rockchip-vpu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,exynos4210-csis.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,exynos4210-fimc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,exynos4212-fimc-is.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,exynos4212-fimc-lite.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,fimc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,s5c73m3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,s5p-mfc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/samsung,s5pv210-jpeg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/silabs,si470x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/snps,dw-hdmi-rx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/st,stm32-dcmi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/st,stm32-dcmipp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/st,stm32-dma2d.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/st,stm32mp25-csi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/st,stm32mp25-video-codec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/ti,cal.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/ti,j721e-csi2rx-shim.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/ti,omap3isp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/ti,vip.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/ti,vpe.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/video-interface-devices.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/video-interfaces.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/media/video-mux.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

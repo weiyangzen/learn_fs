@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/include/linux/dmaengine.h
+
+## Purpose
+This is the core public DMAEngine interface for kernel DMA providers and clients. It defines transaction types, transfer directions, descriptor flags, capability masks, channel/device structures, descriptor metadata semantics, async transaction descriptors, client request helpers, device registration APIs, and status/termination helpers.
+
+## Important APIs, types, and functions
+Important enums include `dma_status`, `dma_transaction_type`, `dma_transfer_direction`, `dma_ctrl_flags`, `sum_check_flags`, `dma_desc_metadata_mode`, `dma_slave_buswidth`, `dma_residue_granularity`, `dmaengine_tx_result`, and `dmaengine_alignment`. Important structs include `dma_interleaved_template`, `data_chunk`, `dma_vec`, `dma_chan`, `dma_chan_dev`, `dma_slave_config`, `dma_slave_caps`, `dmaengine_result`, `dmaengine_unmap_data`, `dma_descriptor_metadata_ops`, `dma_async_tx_descriptor`, `dma_tx_state`, `dma_slave_map`, `dma_filter`, and `dma_device`.
+
+Provider-facing APIs are centered on `struct dma_device`, which holds capability masks and a vtable for resource allocation, DMA prep operations, slave config, pause/resume/terminate/synchronize, status polling, issue-pending, release, and optional debugfs summary. Registration APIs include `dma_async_device_register()`, `dmaenginem_async_device_register()`, `dma_async_device_unregister()`, `dma_async_device_channel_register()`, and `dma_async_device_channel_unregister()`.
+
+Client-facing helpers include `dma_request_chan()`, `devm_dma_request_chan()`, `dma_request_chan_by_mask()`, `dma_request_channel()`, `dma_release_channel()`, `dma_get_slave_caps()`, `dmaengine_slave_config()`, `dmaengine_prep_slave_single()`, `dmaengine_prep_slave_sg()`, `dmaengine_prep_peripheral_dma_vec()`, `dmaengine_prep_dma_cyclic()`, `dmaengine_prep_interleaved_dma()`, `dmaengine_prep_dma_memset()`, `dmaengine_prep_dma_memcpy()`, `dmaengine_submit()`, `dma_async_issue_pending()`, `dmaengine_tx_status()`, `dma_async_is_tx_complete()`, `dma_async_is_complete()`, `dma_sync_wait()`, and `dma_wait_for_async_tx()`.
+
+## Control flow, state, and persistence
+DMA transaction state is tracked by cookies. Positive `dma_cookie_t` values identify submitted requests and negative values are errors; `dma_submit_error()` normalizes this convention. Each channel stores its last issued and completed cookies, client counts, router data, private data, and sysfs/debug names. Providers create descriptors, clients submit them with `tx_submit`, and hardware work begins only when `device_issue_pending()` is called.
+
+Metadata state is per descriptor. `DESC_METADATA_CLIENT` means the client owns the buffer and attaches it before submit; `DESC_METADATA_ENGINE` means the provider owns metadata and the client uses get/set helpers. The header explicitly warns that the modes are incompatible for a descriptor and that engine metadata is valid only until completion callback return. Termination has two paths: async termination may return before transfers and callbacks have stopped, while sync termination calls `dmaengine_synchronize()` to guarantee quiescence.
+
+## Dependencies and integration points
+The header integrates with the device model, scatterlists, bitmaps, async_tx, DMA mapping, OF/client lookup, sysfs class devices, debugfs, and optional RapidIO. Provider drivers populate `struct dma_device`; client drivers use request/config/prep/submit/issue/status/terminate helpers. Capability masks gate features such as cyclic, interleaved, repeat, PQ, XOR, memset, slave, and async memory operations.
+
+## Risks and test signals
+Several helper families are null-safe for prep operations, but other helpers assume valid objects and vtables. For example, status, submit, issue-pending, pause, resume, and termination wrappers dereference `chan` or `desc` directly. Descriptor reuse requires `dma_get_slave_caps()` and `descriptor_reuse`; `dmaengine_desc_free()` calls `desc_free()` only after the reuse flag is set. `dma_maxpq()` depends on max source count and continuation flags and can underflow conceptually if provider limits are too small. Tests should include cookie wraparound logic in `dma_async_is_complete()`, metadata mode exclusivity, disabled-`CONFIG_DMA_ENGINE` stubs, terminate-async/synchronize ordering, repeat interleaved capability rejection, alignment helpers, descriptor reuse permission, and provider registration/unbind behavior.

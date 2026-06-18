@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listxattr/listxattr01.c
+
+Purpose: positive `listxattr()` test ensuring a file's extended attribute names can be listed. Setup creates `testfile` and sets `security.ltptest1` to `"test"` with `SAFE_SETXATTR`. The test calls `listxattr(TESTFILE, buf, sizeof(buf))`, then scans the NUL-separated name list with `has_attribute()` for the expected key. State is one file with one xattr. Dependencies include root, `<sys/xattr.h>`, filesystem xattr support, and permission to set `security.*`. Risks include filesystem/security policy rejecting security attributes. Test signal is syscall success and presence of the expected attribute name.

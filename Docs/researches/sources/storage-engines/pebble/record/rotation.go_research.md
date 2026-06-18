@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/pebble/record/rotation.go
+
+- **Purpose:** Provides `RotationHelper`, a small state machine for deciding when a record log should rotate to a new file containing a snapshot plus subsequent edits.
+- **Important APIs/types/functions:** `RotationHelper` tracks `lastSnapshotSize`, `sizeSinceLastSnapshot`, and `lastRecordSize`. `AddRecord(recordSize)` accumulates edit size and remembers the last record. `ShouldRotate(nextSnapshotSize)` returns true when edits since the last snapshot exceed either the previous snapshot size or the next/current snapshot estimate. `Rotate(snapshotSize)` records the new snapshot size and carries forward the latest record as post-snapshot edit size. `DebugInfo` exposes state for tests.
+- **Control flow:** Callers add every record. When external file-size rotation pressure exists, they call `ShouldRotate` with the estimated next snapshot size. On rotation, `Rotate` resets the baseline while preserving the latest edit because that edit is applied after the newly written snapshot.
+- **State and persistence behavior:** In-memory only. It influences persistent log-file rotation frequency and therefore replay cost, but it does not write records itself.
+- **Dependencies:** No imports. It is deliberately unit-less: sizes may be bytes, entry counts, or another monotonic estimate correlated with snapshot and edit cost.
+- **Integration points:** Used by record-log clients that write periodic snapshots and incremental edits. The policy balances write amplification from snapshots against recovery replay cost.
+- **Risks:** The helper is only as good as the caller's size estimates and call ordering. Forgetting `AddRecord`, calling `Rotate` at the wrong point, or using incomparable units for record and snapshot size will produce too-frequent rotation or excessive replay tails. Strict `>` comparisons mean equality does not rotate.
+- **Test signals:** `rotation_test.go` drives the helper with datadriven `add`, `should-rotate`, and `rotate` commands and checks debug state/output.

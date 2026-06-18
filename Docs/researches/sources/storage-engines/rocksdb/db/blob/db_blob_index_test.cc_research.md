@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/storage-engines/rocksdb/db/blob/db_blob_index_test.cc -->
+# sources/storage-engines/rocksdb/db/blob/db_blob_index_test.cc
+
+## Purpose
+This GoogleTest file verifies how RocksDB stores, exposes, resolves, filters, iterates, compacts, garbage-collects, and recovers blob-index-backed values. It covers both the legacy StackableDB BlobDB contract for raw `kTypeBlobIndex` records and the integrated BlobDB/wide-column path where large columns or values are stored in blob files and resolved on demand.
+
+## Important APIs, Types, And Functions
+`DBBlobIndexTest` derives from `DBTestBase` and defines storage tiers (`kMemtable`, `kImmutableMemtables`, `kL0SstFile`, `kLnSstFile`) to exercise the same operation from memtables and SSTs. Helper methods include `PutBlobIndex()`, `GetImpl()`, `GetBlobIndex()`, `GetBlobIterator()`, `MaybeResolveDirectWriteValueForTest()`, `MaybeResolveMemtableBlobValueForTest()`, `GetTestOptions()`, `GetBlobTestOptions()`, and `MoveDataTo()`. The file defines multiple compaction filters and factories: plain value filters for flush, lazy wide-column filters using `WideColumnBlobResolver`, eager/resolving filters, FilterV3-only compatibility filters, remove filters, and a TTL-style entity drop filter. `CorruptPinnedBlobIndexOnCleanup()` stresses pinned-slice lifetime by corrupting backing storage after cleanup.
+
+## Control Flow
+The early tests write raw blob-index values through `WriteBatchInternal::PutBlobIndex`, move data across tiers, and assert `GetImpl` returns raw blob indexes only when `is_blob_index` is supplied; normal base-DB reads fail with `NotSupported` from memtables or `Corruption` from SSTs. Update and iterator tests combine blob indexes with puts, merges, deletes, single deletes, delete ranges, snapshots, normal iterators, and blob-exposing iterators. Direct-write helper tests ensure blob indexes are decoded before `PinnableSlice` cleanup and fail closed when no blob fetcher is available. The integrated tests write wide-column entities with large blob-backed columns, flush, compact, recover from WAL, mix entity writes with regular puts, run lazy/eager compaction filters, delete backing blob files to force resolver errors, and verify passive GC drops all-garbage blob files after filtered entity removal.
+
+## State And Persistence Behavior
+The tests persist raw internal value types in memtables/SSTs, wide-column entity encodings, blob files, manifest blob metadata, snapshots, WAL records, and DB properties/statistics. Snapshot tests require older blob-backed entity values to remain readable through a snapshot while current values move forward. Recovery tests require blob-backed entities in flushed SSTs and unflushed WAL entries to survive close/reopen, including `avoid_flush_during_recovery`. Passive GC tests rely on compaction-produced blob garbage metadata to remove blob files whose only references came from dropped wide-column entities.
+
+## Dependencies And Integration Points
+The file ties together `DBImpl::GetImpl`, `DBImpl::MaybeResolveDirectWriteValue`, `DBImpl::MaybeResolveMemtableBlobValue`, `ArenaWrappedDBIter`, `BlobIndex`, `WriteBatchInternal`, merge operators, `ColumnFamilyData`, wide-column APIs (`PutEntity`, `GetEntity`, `Iterator::columns()`), `CompactionFilter` FilterV3/FilterV4 contracts, `WideColumnBlobResolver`, blob file name helpers, DB statistics tickers, and universal compaction/passive GC. It is a broad integration surface between read path blob-index exposure, compaction filtering, blob fetching, and garbage accounting.
+
+## Risks And Edge Cases
+Raw blob-index bytes must never be returned as user values accidentally; unresolved memtable blob values without a fetcher must fail closed. FilterV3-only filters expect eager resolution and must fail compaction if blob reads fail before the filter sees data. FilterV4 lazy filters can avoid blob IO by using `IsBlobColumn()`, but once `ResolveColumn()` reports an error the compaction must fail even if the filter returns `kKeep`. Iterators must distinguish exposed blob values from normal values and set status correctly across seek/next/prev paths. Passive GC can regress if `BlobGarbageMeter` misses `kTypeWideColumnEntity` garbage after filters drop entities.
+
+## Test Signals
+The suite asserts exact status categories (`OK`, `NotFound`, `NotSupported`, `Corruption`, `IOError`), raw blob-index equality, iterator validity/status, `ArenaWrappedDBIter::IsBlob()`, blob read byte statistics, blob file counts and sizes, DB properties (`kNumBlobFiles`, `kTotalBlobFileSize`), background error severity, and post-compaction entity/regular value equality. Missing-blob tests deliberately delete blob files and check compaction and background error propagation.
+<!-- END_FILE_RESEARCH: sources/storage-engines/rocksdb/db/blob/db_blob_index_test.cc -->

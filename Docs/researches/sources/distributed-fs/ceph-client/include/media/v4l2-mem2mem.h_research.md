@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/include/media/v4l2-mem2mem.h
+
+Purpose: declares the V4L2 memory-to-memory framework for drivers with both source/output and destination/capture buffers, including job scheduling, per-open contexts, two vb2 queues, drain/stop state, media-controller registration, request handling, ioctl helpers, mmap, and poll.
+
+Important APIs/types: `struct v4l2_m2m_ops` provides required `device_run` plus optional `job_ready` and `job_abort`. `struct v4l2_m2m_queue_ctx` wraps a vb2 queue, ready-buffer list, spinlock, ready count, and buffered-queue flag. `struct v4l2_m2m_ctx` is per filehandle and stores queue lock, new-frame flag, drain state (`is_draining`, `last_src_buf`, `next_buf_last`, `has_stopped`), capture-streaming override, owning `m2m_dev`, capture/output queue contexts, scheduler list node, job flags, finish waitqueue, and driver private pointer. `struct v4l2_m2m_buffer` embeds a `vb2_v4l2_buffer` with ready-list linkage.
+
+Control flow: drivers call `v4l2_m2m_init()` at probe and `v4l2_m2m_ctx_init()` at open with a queue-init callback. vb2 `buf_queue` calls `v4l2_m2m_buf_queue()`, which adds buffers to ready lists and scheduling can proceed through `v4l2_m2m_try_schedule()`. The framework checks streaming, source/destination readiness, buffered queues, and optional `job_ready`, then invokes `device_run()`. Drivers finish work with `v4l2_m2m_job_finish()` or `v4l2_m2m_buf_done_and_job_finish()` for held capture buffers. Release paths call `v4l2_m2m_ctx_release()` and `v4l2_m2m_release()` or reference-counted `get/put()`.
+
+Runtime APIs multiplex vb2 operations by buffer type: reqbufs, querybuf, qbuf, dqbuf, prepare, create, export, streamon/off, encoder/decoder commands, poll, mmap, and no-MMU area lookup. Ready-list helpers count, peek, iterate, remove first/last/exact/indexed buffers and copy metadata from output to capture. Request-aware drivers use `v4l2_m2m_request_queue()`.
+
+State and persistence: per-open contexts persist until file release; per-driver `m2m_dev` serializes hardware access across contexts. Ready queues are protected by spinlocks; job completion uses wait queues and internal flags. Drain state tracks end-of-stream and LAST-buffer behavior, and suspend/resume pauses scheduling around power management.
+
+Dependencies and integration: includes `videobuf2-v4l2.h`; integrates with `v4l2-fh` through `fh->m2m_ctx`, `v4l2-ioctl.h` helper callbacks, media requests, media-controller entity registration, vb2 queues, encoder/decoder command ioctls, and file ops for mmap/poll.
+
+Risks: failing to call job finish stalls all queued contexts; wrong `job_ready` can run hardware without enough buffers or sleep in an atomic scheduling path; held capture buffers require `v4l2_m2m_buf_done_and_job_finish()`; drain flags must be reset on streamoff/start; ready-list manipulation must use the framework locks; shared hardware requires correct `get/put()` refcounting; and mmap offset translation must remain consistent for both queues.
+
+Test signals: multi-instance scheduling fairness, source/destination queue readiness, buffered queue behavior, job abort and suspend/resume, drain/last-buffer transitions, held capture buffer slices, every ioctl helper, request queue integration, metadata copy, ready-list removal by buffer and index, poll read/write readiness, and media-controller registration under enabled/disabled configs.

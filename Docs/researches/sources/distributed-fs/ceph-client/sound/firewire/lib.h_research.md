@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/sound/firewire/lib.h
+
+Purpose: public header for miscellaneous FireWire audio helpers. It declares `snd_fw_transaction()`, transaction flags `FW_GENERATION_MASK`, `FW_FIXED_GENERATION`, `FW_QUIET`, and inline `rcode_is_permanent_error()`.
+
+The header has no runtime state but defines semantics used across the FireWire audio drivers. Callers encode an optional generation in the low eight flag bits and use fixed generation when a register write must be tied to a resource allocation generation. `rcode_is_permanent_error()` classifies type and address errors as not worth retrying and is reused by async MIDI completion code. Dependencies are FireWire constants, Linux types/scheduling, and rawmidi includes for broader helper consumers. Risks are flag-bit overlap if future flags exceed the mask, caller mistakes when combining fixed generation and generation value, and too-narrow permanent-error classification for some devices. Test signals: compile coverage, transaction calls with fixed generation, quiet error paths, and async completion paths that branch on permanent errors.

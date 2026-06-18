@@ -1,0 +1,9 @@
+# sources/control-plane/rook/pkg/daemon/ceph/client/osd.go
+
+Purpose: wraps OSD status, usage, CRUSH weight/device-class changes, safe-to-destroy checks, OSD tree/list queries, ok-to-stop checks, primary affinity, metadata, and client blocklisting.
+
+Important APIs/types: `OSDUsage`, `OSDNodeUsage`, `OSDDump`, `SafeToDestroyStatus`, `OsdTree`, `OsdList`, `OSDDeviceClass`, `OSDOkToStopStats`, and `OSDMetadata` map Ceph JSON. Functions include flag helpers on `OSDDump`, `SetFlagOnCrushUnit()`, `UnsetFlagOnCrushUnit()`, `StatusByID()`, `GetOSDUsage()`, `ResizeOsdCrushWeight()`, `SetDeviceClass()`, `GetOSDDump()`, `OsdSafeToDestroy()`, `HostTree()`, `OsdListNum()`, `OSDDeviceClasses()`, `OSDOkToStop()`, `SetPrimaryAffinity()`, `GetOSDMetadata()`, and `Blocklist()`.
+
+Control flow and state: most functions are direct Ceph command wrappers. `UpdateFlagOnCrushUnit()` avoids redundant set/unset commands by inspecting `CrushNodeFlags`. `ResizeOsdCrushWeight()` parses current CRUSH weight and KiB size, converts KiB to TiB, and reweights only when calculated weight is positive, greater than current, and more than 1 percent higher. `SetDeviceClass()` removes the current class before setting the desired one. `OSDOkToStop()` returns command failure as not safe and returns the queried ID plus an error if JSON parsing fails after command success.
+
+Dependencies and integration: used heavily by OSD orchestration, upgrades, maintenance, and device class reconciliation. It depends on `json.Number` to preserve numeric precision, shared command execution, and Ceph CLI semantics. Risks include destructive/mutating operations, division by zero in the percentage calculation if current CRUSH weight is zero, `SetDeviceClass()` leaving an OSD classless if the second command fails, and a typo in `Blocklist()` error text. Tests cover tree/list parsing, device classes, KiB-to-TiB conversion, and ok-to-stop behavior; many mutation paths are untested.

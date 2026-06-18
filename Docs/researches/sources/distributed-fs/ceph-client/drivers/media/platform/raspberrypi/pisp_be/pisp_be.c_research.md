@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/raspberrypi/pisp_be/pisp_be.c
+
+Purpose: implements the Raspberry Pi PiSP Back End ISP driver as a media-controller/V4L2 device with multiple video/meta nodes representing main input, TDN/stitch inputs, image outputs, TDN/stitch outputs, and configuration metadata input.
+
+Important APIs/types/functions: `pispbe_node`, `pispbe_job_descriptor`, and `pispbe_dev` hold node, queued job, and device state. `pispbe_queue_job()` writes sanitized addresses/config to hardware. `pispbe_prepare_job()` pulls buffers from required queues and builds a job. `pispbe_schedule()` submits queued jobs when hardware is idle. `pispbe_isr()` tracks queued/running job completion through hardware started/done counters. Format negotiation uses `pispbe_find_fmt()`, `pispbe_try_format()`, and `pispbe_set_plane_params()`. Probe/remove use `pispbe_hw_init()`, `pispbe_init_devices()`, and `pispbe_destroy_devices()`.
+
+Control flow: probe maps registers, requests IRQ, sets a 36-bit DMA mask, enables runtime PM/clock, validates hardware version, initializes media/V4L2 devices, registers a processing subdev and eight video nodes, then allocates coherent config/tile buffers. Buffer prepare copies config metadata into coherent storage and validates it against active node formats. Buffer queue appends to a node ready list, tries to prepare a complete job, then schedules hardware if possible. A valid job requires CONFIG and MAIN_INPUT plus any streaming nodes whose config enables require buffers. ISR completes running or queued jobs, stamps all involved buffers with a shared sequence/timestamp, and schedules the next job.
+
+State and persistence: in-memory state includes `streaming_map`, per-node ready queues/formats, coherent config array, `job_queue`, `queued_job`, `running_job`, `hw_busy`, hardware counters, and sequence. Runtime PM controls the clock with autosuspend. No durable persistence exists.
+
+Dependencies and integration: depends on V4L2, media controller, vb2 dma-contig, runtime PM, platform resources, and UAPI `pisp_be_config.h`. Media links connect each video node to the PiSP BE subdev. Format capabilities come from `pisp_be_formats.h`.
+
+Risks: job construction can deadlock userspace if enabled config blocks do not correspond to streaming/queued buffers. Hardware lockups are explicitly guarded against by disabling invalid TDN/stitch/Bayer/RGB enables and by config size/stride checks. ISR counter mismatch handling must stay synchronized with hardware semantics where a new job can start and finish in one interrupt. Address readback failure prevents queueing but leaves the job path sensitive to hardware/IOMMU setup.
+
+Test signals: media graph enumeration, per-node format set/get/enum, config validation failures for undersized strides and invalid tiles, multi-node streaming with optional outputs disabled/enabled, IRQ completion sequencing under back-to-back jobs, runtime PM autosuspend, and stress tests that stop one node while other nodes have queued buffers.

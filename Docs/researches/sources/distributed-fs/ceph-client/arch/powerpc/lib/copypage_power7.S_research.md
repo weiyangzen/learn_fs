@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/copypage_power7.S
+
+`copypage_power7.S` implements a POWER7-oriented page copy routine, `copypage_power7`, used as an optimized target from `copy_page` feature fixups. It sets up enhanced data-cache touch streams for source and destination, with parameters adjusted for 64 KiB versus smaller page configurations, then copies in 128-byte units.
+
+When Altivec is configured, the routine calls `enter_vmx_ops`. If VMX access is granted, it loops over the page using eight vector loads and stores per 128-byte chunk and tail-calls `exit_vmx_ops`. If VMX is not available or Altivec is not configured, it uses a scalar loop that saves `r14-r20`, loads sixteen doublewords, stores sixteen doublewords, advances by 128 bytes, and restores registers at the end. The control flow is all deterministic for `PAGE_SIZE / 128` iterations and has no exception recovery.
+
+State consists of the temporary VMX enable/disable state managed by `enter_vmx_ops`/`exit_vmx_ops` and the saved nonvolatile GPRs in the scalar path. Dependencies include Altivec availability, cache-stream macros, page size, and ABI save/restore rules. Risks include using VMX in an unsafe context, mismatched stack unwind when VMX entry fails, and poor behavior on CPUs where stream setup is not suitable. Test signals are Book3S 64 page-copy benchmarks, VMX enabled/disabled kernels, 4 KiB and 64 KiB page builds, and MM stress.

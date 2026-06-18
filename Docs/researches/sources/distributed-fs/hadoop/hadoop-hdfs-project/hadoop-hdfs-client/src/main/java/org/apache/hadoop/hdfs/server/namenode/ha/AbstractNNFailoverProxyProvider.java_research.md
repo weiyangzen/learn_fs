@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/server/namenode/ha/AbstractNNFailoverProxyProvider.java
+
+Purpose: `AbstractNNFailoverProxyProvider<T>` is the base implementation for HDFS NameNode HA `FailoverProxyProvider`s. It centralizes configuration cloning, UGI capture, IPC retry settings, lazy proxy construction, NameNode address discovery, optional domain-name expansion, randomized proxy ordering, and delegation-token cloning for logical URIs.
+
+Important APIs/types/functions: subclasses implement `useLogicalURI()`, `getProxy()`, `performFailover()`, and `close()`. `NNProxyInfo<T>` extends `ProxyInfo<T>` by adding an `InetSocketAddress` and cached `HAServiceState`. `createProxyIfNeeded()` lazily resolves unresolved addresses when `dfs.client.failover.lazy.resolved` is enabled and creates the RPC proxy via `HAProxyFactory`. `getProxyAddresses()` reads configured NameNode addresses with `DFSUtilClient.getAddresses`, optionally resolves domains through `DomainNameResolver`, shuffles based on `getRandomOrder()`, and clones delegation tokens for concrete addresses. `setFallbackToSimpleAuth()`/`getFallbackToSimpleAuth()` propagate security fallback state.
+
+Control flow: construction clones the supplied `Configuration`, records interface/factory/current user, and maps HDFS failover retry keys to generic IPC retry keys. Subclasses request proxy lists or single addresses, then call `createProxyIfNeeded()` in their `getProxy()` implementations. Proxy construction failures are logged and rethrown as `RuntimeException`.
+
+State and persistence behavior: state is in-memory only: configuration copy, interface class, factory, UGI, fallback auth flag, and per-proxy cached address/state. Delegation-token cloning mutates current user token aliases so tokens for a logical URI can authenticate against physical NameNode addresses.
+
+Dependencies and integration points: integrates with Hadoop RPC retry infrastructure, `HAProxyFactory`, `DFSUtilClient`, `HAUtilClient`, `NetUtils`, `DomainNameResolverFactory`, and `UserGroupInformation`. Subclasses in the same package use it for configured HA, IP failover, observer reads, request hedging, and alias-map failover.
+
+Risks and test signals: misconfigured URI hosts or address keys fail at runtime. Lazy DNS and domain-name expansion can multiply targets and alter ordering. Security regressions around token cloning are high impact. Tests should cover address discovery, random-order precedence between generic and per-nameservice keys, lazy resolution, resolve-to-FQDN behavior, delegation-token aliases, and proxy creation failure handling.

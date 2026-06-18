@@ -1,0 +1,15 @@
+# sources/distributed-fs/tahoe-lafs/src/allmydata/test/test_encodingutil.py
+
+Purpose: tests Unicode, bytes, path, argv, output quoting, and filesystem conversion helpers in `allmydata.util.encodingutil`. It preserves cross-platform behavior for Linux UTF-8, Windows `mbcs`, macOS normalization, Python 3 Unicode platforms, Twisted `FilePath` conversion, and terminal-safe quoting of invalid bytes and unusual Unicode.
+
+Important APIs and types include `EncodingUtil`, `StdlibUnicode`, `QuoteOutput`, `QuotePaths`, `FilePaths`, `UbuntuKarmicUTF8`, `Windows`, `MacOSXLeopard`, and `TestToFromStr`. Tested functions include `unicode_to_url`, `unicode_to_output`, `unicode_to_argv`, `unicode_platform`, `listdir_unicode`, `get_filesystem_encoding`, `quote_output`, `quote_path`, `quote_local_unicode_path`, `quote_filepath`, `to_filepath`, `extend_filepath`, `unicode_from_filepath`, `unicode_segments_from`, `to_bytes`, `from_utf8_or_none`, and `_reload`.
+
+Control flow patches `sys.platform`, `os.listdir`, and `sys.getfilesystemencoding` to simulate saved platform observations. `EncodingUtil` verifies URL/output/argv/listdir behavior under platform-specific class attributes. `StdlibUnicode` creates actual Unicode-named directories and files when the current filesystem can represent them. `QuoteOutput` runs a common corpus through ASCII, Latin-1, UTF-8, and default stdout encodings, comparing mandatory or optional quote styles. Path tests normalize Windows long-path prefixes and POSIX separators, while `FilePaths` verifies conversion to and from Twisted `FilePath`.
+
+State and persistence include temporary filesystem entries in the process working directory for Unicode stdlib tests, monkeypatched module globals restored by `_reload`, and platform-specific class fixtures that model historical systems. The `__main__` helper can generate new platform fixture classes by probing a real host, but it is not part of normal test execution.
+
+Dependencies include Twisted Trial, Twisted `FilePath`, Tahoe common utilities for representability skips and exact equality, `fileutil.expanduser`, and the encodingutil module's module-level cached platform/encoding state. Integration points are CLI output, Web/API URL encoding, local filesystem traversal, and path display in diagnostics.
+
+Risks covered include mojibake, invalid UTF-8 bytes, unpaired surrogates, astral-plane codepoints, newline shell escaping, quotes/backslashes/dollar/backtick escaping, Windows `\\?\` path display, macOS NFC/NFD filename equivalence, non-Unicode filesystem limitations, and passing `None` through byte conversion. Residual risk is that some behavior depends on the current host's filesystem and stdout encoding, so platform-specific branches are simulated instead of fully executed on every OS.
+
+Test signals are exact string/bytes comparisons for quoted output, normalized filename set equality for directory listings, expected `UnicodeEncodeError` and `UnicodeDecodeError` boundaries, `FilePath` equality and path values, and platform-specific class fixtures that document expected outputs for Linux, Windows, and macOS.

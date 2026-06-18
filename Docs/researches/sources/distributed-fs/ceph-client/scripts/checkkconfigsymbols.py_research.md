@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/scripts/checkkconfigsymbols.py
+
+## Purpose
+`checkkconfigsymbols.py` is a repository scanner for Kconfig hygiene. It finds Kconfig symbols that are referenced from source files or Kconfig expressions but are not defined by any `config` or `menuconfig` entry in the current Git tree, or in a selected commit/range. It also supports similarity lookup for a single symbol and optional history lookup for commits that mention a newly undefined symbol.
+
+## Important APIs, Types, And Functions
+The script is command-line oriented rather than import-oriented. `parse_options()` defines the user interface: `--commit`, `--diff`, `--find`, `--ignore`, `--sim`, `--force`, and `--no-color`. `print_undefined_symbols()` is the main driver and performs either current-tree scanning or commit/range comparison. `check_symbols()` and `check_symbols_helper()` coordinate multiprocessing over source and Kconfig files and return `(undefined, defined_symbols)`.
+
+Parsing is split by file type. `parse_source_file()` extracts `CONFIG_FOO` and `DCONFIG_FOO` style references from non-Kconfig files with `REGEX_SOURCE_SYMBOL`. `parse_kconfig_file()` extracts definitions with `REGEX_KCONFIG_DEF` and references from `if`, `select`, `imply`, `depends on`, and `default ... if ...` statements with `REGEX_KCONFIG_STMT`. `find_sims()` uses `difflib.get_close_matches()` against the defined symbol set. Git helpers include `get_files()`, `tree_is_dirty()`, `get_head()`, `reset()`, `find_commits()`, and the common `execute()` wrapper.
+
+## Control Flow
+Execution starts in `main()`, which calls `print_undefined_symbols()` and handles broken stdout pipes cleanly. Option parsing rejects simultaneous `--commit` and `--diff`, validates `commit1..commit2` syntax, refuses destructive Git reset operations on a dirty tree unless `--force` is passed, and prevents `--commit HEAD...` usage because that mode compares a commit against its parent by resetting the tree.
+
+For a plain current-tree run, `check_symbols()` creates a `multiprocessing.Pool`, then `check_symbols_helper()` enumerates `git ls-files`, partitions Kconfig files from all other source files, parses both groups in parallel, builds an inverse `symbol -> referencing files` map, filters known placeholders and `_MODULE` aliases, and returns undefined symbols. For `--commit` and `--diff`, the driver saves the current HEAD, resets to the earlier revision to collect baseline undefined symbols, resets to the later revision to collect candidate undefined symbols and definitions, reports symbols or referencing files newly introduced in the later tree, and resets back to the original HEAD. When `--find` is combined with `--diff`, it runs `git log -G <symbol>` over the diff range for likely introducing commits.
+
+## State And Persistence
+The script keeps all scan data in memory: dictionaries for defined and undefined symbols, file-to-reference maps, and sets for inverse lookup. It does not write cache files or persistent reports. The major persistent side effect is in commit/range modes: `reset()` executes `git reset --hard <commit>`, mutating the worktree and index. The dirty-tree guard reduces the risk but `--force` intentionally bypasses it. Color state is held in the global `COLOR`.
+
+## Dependencies And Integration Points
+The script depends on Python standard library modules: `argparse`, `difflib`, `os`, `re`, `signal`, `subprocess`, `sys`, and `multiprocessing`. It integrates tightly with Git through `git ls-files`, `git status --porcelain`, `git rev-parse HEAD`, `git reset --hard`, and `git log -G`. It assumes it is executed inside the Linux-style source tree represented by the Ceph client checkout, with Kconfig files named `Kconfig`, `Kconfig.*`, or similar.
+
+## Risks And Edge Cases
+The most important operational risk is destructive checkout behavior in `--commit` and `--diff`; interrupted runs after a reset can leave the worktree at an older revision. The scanner also assumes all relevant files are tracked by Git and ignores directories, files containing `.git`, `ChangeLog`, `.log`, and paths under `tools/`, so generated or untracked references are invisible. Kconfig parsing is regex based and does not fully parse nested Kconfig grammar, continuation edge cases, quoted expressions beyond simple removal, or every possible symbol-producing construct. `partition(lst, size)` can create empty worker chunks when there are fewer files than CPUs, which is safe but wasteful. Multiprocessing pools are explicitly terminated on `KeyboardInterrupt` for full checks, but `find_sims()` does not wrap its pool in the same interrupt cleanup path.
+
+## Test Signals
+Useful validation starts with `--sim KNOWN_SYMBOL` to confirm Kconfig definition extraction without tree mutation. Current-tree scans should be run from a clean tree and compared against known intentionally undefined placeholders. Commit/range modes need tests on disposable clones to verify reset-back-to-HEAD behavior and the dirty-tree guard. Parser tests should cover `CONFIG_FOO`, `DCONFIG_FOO`, Kconfig `depends on`, `select`, `imply`, `default ... if`, multiline continuations, numeric literals, quoted strings, `_MODULE` suffix handling, ignored paths, and invalid ignore regex handling.

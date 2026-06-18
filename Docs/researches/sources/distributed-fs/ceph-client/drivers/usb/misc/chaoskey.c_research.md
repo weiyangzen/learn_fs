@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/usb/misc/chaoskey.c
+
+Purpose: USB driver for Altus Metrum ChaosKey and Araneus Alea I random-number devices. It registers both a `/dev/chaoskey%d` class device and a kernel `hwrng`, letting userspace and the random subsystem consume the same bulk-IN entropy stream.
+
+Important APIs and types: `struct chaoskey` tracks interface lifetime, hwrng registration, autosuspend, one bulk read URB, shared buffer cursors, and open/present flags. Core functions are `chaoskey_probe()`, `chaoskey_disconnect()`, `chaoskey_open()`, `chaoskey_release()`, `_chaoskey_fill()`, `chaoskey_read()`, `chaoskey_rng_read()`, `chaos_read_callback()`, and PM resume handling.
+
+Control flow: probe finds a bulk-IN endpoint, caps packet size to 64 bytes, allocates the URB/buffer/name, registers the char device and hwrng, and enables autosuspend. Reads and hwrng calls serialize through `rng_lock` and `lock`; when the buffer is empty `_chaoskey_fill()` wakes the interface, submits the URB, waits for completion or timeout, and exposes `valid/used` bytes. Alea devices use a longer timeout on first read and after resume.
+
+State and persistence: buffer contents are transient entropy bytes, protected by mutexes and completion via `wait_q`. Disconnect unregisters hwrng, deregisters the char device, marks `present=false`, poisons the URB, and frees immediately only if no open fd remains. Risks include shared consumption between hwrng and direct readers, timeout mapping to `-EAGAIN` for userspace, reliance on a write memory barrier before `reading=false`, and no entropy quality validation in this driver. Test signals include hot-unplug while blocking in read, autosuspend wake failure, nonblocking read behavior, hwrng registration failure, Alea first-read timeout, and concurrent hwrng/user reads.

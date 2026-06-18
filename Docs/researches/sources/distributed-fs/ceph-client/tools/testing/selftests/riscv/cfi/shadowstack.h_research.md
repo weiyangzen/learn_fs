@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/cfi/shadowstack.h
+
+Purpose: declares the shadow-stack test callback table type and exported functions used by CFI tests. It defines `struct shadow_stack_tests` entries with a name and function pointer, the `csr_read` helper/macro for reading RISC-V CSRs, and prototypes such as `execute_shadow_stack_tests` and individual test functions. State is compile-time only. Dependencies are RISC-V CSR syntax and the implementation in `shadowstack.c`. Risks are function signature drift between header and implementation and CSR reads trapping if used without required architecture support. Test signals are successful compilation and valid CSR_SSP reads during runtime.

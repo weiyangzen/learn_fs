@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/vc4/vc4_validate.c
+
+Purpose: Validates untrusted VC4 userspace binning command lists and shader records before the GPU reads them. Because VC4 lacks an IOMMU, this file is a central security boundary for preventing arbitrary DMA reads/writes via command streams, textures, vertex/index buffers, and shader uniforms.
+
+Important APIs/types/functions: `vc4_use_bo()` validates BO indexes and rejects shader BO misuse. `vc4_check_tex_size()` validates dimensions/tiling/offset against BO size. `vc4_validate_bin_cl()` walks the bin CL with a packet whitelist. Packet validators include `validate_flush()`, `validate_start_tile_binning()`, `validate_increment_semaphore()`, `validate_indexed_prim_list()`, `validate_gl_array_primitive()`, `validate_gl_shader_state()`, `validate_tile_binning_config()`, and `validate_gem_handles()`. `reloc_tex()` validates/relocates texture and direct UBO uniforms. `validate_gl_shader_rec()` relocates shader records, uniforms, textures, and vertex attributes. `vc4_validate_shader_recs()` validates all referenced shader states.
+
+Control flow: Bin CL validation copies allowed packets to the validated BO, skips pseudo `GEM_HANDLES`, dispatches validators from `cmd_info[]`, relocates address fields to DMA addresses, stops at HALT, sets CT0 end address, and requires start-tile-binning plus increment-semaphore/flush termination. Shader validation consumes handle tables and shader record packets, checks shader BO metadata and thread mode, copies uniforms, relocates texture descriptors/UBOs, fills uniform-address reset slots, and validates attributes against maximum primitive index.
+
+State and persistence: Mutates `struct vc4_exec_info`: BO index table, shader state array/count, `found_*` packet flags, bin tile dimensions, bin slots, tile alloc offset, CT0 end address, shader/uniform CPU and GPU pointers, and max indices. It allocates binner slots through V3D state. No permanent state outside the job except temporarily allocated bin slots released by submit completion.
+
+Dependencies and integration points: Depends on UAPI submit structs, `vc4_packet.h`, V3D binner allocation, BO metadata from shader validation, DRM GEM DMA objects, and render CL generation that consumes bin tile information. Texture bounds logic is reused by `vc4_render_cl.c`.
+
+Risks: This is high-risk security code: integer overflow, off-by-one BO checks, incomplete packet whitelist, wrong shader record size, or texture mip/cube-map math bugs can expose arbitrary DMA. The shader handle check uses `src_handles[i] > exec->bo_count`; boundary correctness should be reviewed with surrounding BO array allocation. `cmd_info` must stay synchronized with packet sizes. Gen>4 is unsupported.
+
+Test signals: Fuzz malformed bin CLs and shader records. Cover bad packet IDs/lengths/order, missing flush/semaphore, duplicate bin config/start, invalid BO handles, shader BO misuse, index/vertex bounds overflow, direct UBO bounds, unsupported texture formats, mip underflow, cube-map stride errors, tile count/bin slot allocation, and successful legal GL indexed/array primitive submits.

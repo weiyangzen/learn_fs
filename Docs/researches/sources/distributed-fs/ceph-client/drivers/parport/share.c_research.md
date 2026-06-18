@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/parport/share.c
+
+Purpose: core parallel-port resource manager. It owns parport bus registration, port lifetime, driver notifications, pardevice registration, exclusive/shared access arbitration, wait queues, and IRQ dispatch.
+
+Important APIs/types/functions: exports `__parport_register_driver()`, `parport_unregister_driver()`, `parport_register_port()`, `parport_announce_port()`, `parport_remove_port()`, `parport_register_dev_model()`, `parport_unregister_device()`, find/get/put helpers, `parport_claim()`, `parport_claim_or_block()`, `parport_release()`, and `parport_irq_handler()`. `dead_ops` replaces low-level callbacks after port removal.
+
+Control flow/state: `all_ports` assigns stable parport numbers; `portlist` holds announced live ports; `registration_lock` serializes driver attach/detach. Port registration initializes device-model state, IEEE1284 state, locks, lists, default timing, and class defaults. Announcement registers proc entries, attaches daisy slaves, and notifies drivers. Device registration handles exclusive/lurking policy, module references, pardevice lists, state initialization, and per-device proc entry. Claiming preempts the current owner when callbacks permit, saves/restores hardware state, and manages wait lists.
+
+Dependencies/integration: integrates Linux driver core bus APIs, kmod low-level autoloading, parport procfs, IEEE1284 daisy helpers, module reference counting, and low-level driver ops. Risks are documented wait-list locking gaps in release, preemption callbacks from interrupt context, stale ops after removal, exclusive-device races, and reference-counting complexity across device model failures. Test signals include concurrent claim/release stress, driver register/unregister attach/detach ordering, exclusive registration denial, low-level driver autoload, device removal while clients wait, and IRQ forwarding to `parport_generic_irq()`.

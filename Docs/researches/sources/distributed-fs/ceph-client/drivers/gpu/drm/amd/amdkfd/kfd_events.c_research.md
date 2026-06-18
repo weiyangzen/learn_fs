@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdkfd/kfd_events.c
+
+`kfd_events.c` implements per-process KFD events, signal-page slots, wait semantics, CRIU checkpoint/restore, event mmap, and signaling from interrupts, VM faults, GPU resets, poison, and process termination.
+
+Lifecycle APIs are `kfd_event_init_process` and `kfd_event_free_process`. User-facing operations include `kfd_event_create`, `kfd_event_destroy`, `kfd_set_event`, `kfd_reset_event`, `kfd_wait_on_events`, `kfd_event_mmap`, and `kfd_kmap_event_page`. CRIU uses `kfd_criu_checkpoint_events` and `kfd_criu_restore_event`. Signalers include `kfd_signal_event_interrupt`, `kfd_signal_hw_exception_event`, `kfd_signal_vm_fault_event`, `kfd_signal_reset_event`, `kfd_signal_poison_consumed_event`, and `kfd_signal_process_terminate_event`.
+
+Events live in `p->event_idr`; signal/debug events use low IDs that index the signal page, and nonsignal events use the upper ID range. Signal pages are kernel allocated or mapped from a user BO for restore. `set_event` handles signaled state, auto-reset, event-age increments, waiter activation, and wakeups. Interrupt signaling first tries partial-ID lookup against signal-page slots, then scans signaled slots. Wait setup is protected by `event_mutex`, wait queues are protected by per-event spinlocks, and destroyed events wake waiters then free through RCU.
+
+Dependencies include `/dev/kfd` ioctls, process PASID lookup, GPUVM BO kernel mapping, DQM eviction on userptr faults, Linux wait queues, IDR, RCU, and UAPI event payloads. Risks include waiter lifetime races, partial-ID collisions, auto-reset rollback on restartable signals, CRIU duplicate IDs, signal-page size compatibility, copy_to_user faults, and fallback Unix signals. Test event types, wait-all/any, timeout/interruption, destroy while waiting, partial mailbox interrupts, VM fault/reset/ECC/poison paths, and CRIU restore.

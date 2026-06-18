@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/mfd/wm831x-core.c
+
+`wm831x-core.c` is the common MFD core for WM8310/WM8311/WM8312/WM8320/WM8321/WM8325/WM8326 PMICs. It owns register access policy, keyed-register locking, exported register helpers, child-device tables, OF match data, initialization, suspend cleanup, and soft shutdown.
+
+Important APIs include exported `wm831x_isinkv_values[]`, `wm831x_reg_lock()`, `wm831x_reg_unlock()`, `wm831x_reg_read()`, `wm831x_bulk_read()`, `wm831x_reg_write()`, `wm831x_set_bits()`, `wm831x_regmap_config`, `wm831x_of_match`, `wm831x_device_init()`, `wm831x_device_suspend()`, and `wm831x_device_shutdown()`. Regmap callbacks enumerate readable, writable, and volatile registers, with writeability also checking protected keyed registers while `wm831x->locked` is true.
+
+Probe flow is bus frontend to `wm831x_device_init()`: initialize locks, read/validate parent ID, revision, and reset ID, handle engineering samples, set variant feature flags, lock the security key, call platform `pre_init`, apply GPIO defaults, initialize IRQ and AUXADC, add variant-specific MFD cells, optionally add RTC and backlight, initialize OTP, then call `post_init`. Suspend acknowledges masked charger IRQs for wake behavior; shutdown clears `WM831X_CHIP_ON` when platform data requests soft shutdown.
+
+State includes lock fields, platform data copy, variant feature flags, IRQ/AUXADC/OTP state, child MFD devices, regmap cache, and hardware security/GPIO/clock/power registers. Dependencies include regmap, MFD core, WM831x IRQ/AUXADC/OTP modules, platform data callbacks, and child drivers for regulators, GPIO, power, RTC, watchdog, status LEDs, touch, hwmon, backup, clocks, and current sinks.
+
+Risks: this copied source contains duplicate declarations that would normally be compile errors; manual register policy tables are broad and fragile; optional touch add failures are ignored; security-key software state can diverge from hardware if bypassed; OTP cleanup is not visible in later failure paths. Test signals include variant probe coverage, child resource verification, locked-write tests, suspend charger IRQ acknowledgement, and RTC registration with/without the 32.768 kHz crystal.

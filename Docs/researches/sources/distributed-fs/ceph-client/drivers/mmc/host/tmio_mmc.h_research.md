@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/tmio_mmc.h
+
+Purpose: this header defines the shared TMIO/MMC host register interface and private host contract used by `tmio_mmc_core.c` and SoC wrapper drivers. It centralizes register offsets, status and mask bits, card-option flags, SDIO IRQ bits, DMA-enable bits, host state, callback hooks, exported core APIs, and bus-shift-aware MMIO helpers.
+
+Important APIs, types, and functions: `struct tmio_mmc_dma_ops` abstracts DMA start, enable, request, release, abort, data-end, optional end, and DMA IRQ handling. `struct tmio_mmc_host` is the shared runtime object with command/request/data pointers, PIO scatterlist cursors, DMA channels and bounce storage, delayed reset and done work, IRQ masks, clock cache, locks, native hotplug and SDIO state, mandatory clock callbacks, optional platform hooks, and DMA ops. Public entry points declared here include `tmio_mmc_host_alloc()`, `tmio_mmc_host_probe()`, `tmio_mmc_host_remove()`, `tmio_mmc_do_data_irq()`, IRQ mask helpers, `tmio_mmc_irq()`, and runtime PM helpers.
+
+Control flow: wrapper drivers allocate or embed platform data, call `tmio_mmc_host_alloc()`, fill callbacks and flags, request an IRQ using `tmio_mmc_irq()`, and then call `tmio_mmc_host_probe()`. During operation, the core uses the inline accessors to read/write registers at `host->ctl + (addr << host->bus_shift)`, allowing 16-bit logical TMIO registers to be placed on wider SoC address maps. The write helper for 16-bit registers optionally invokes `write16_hook()` to let a platform veto writes during idle-wait quirks.
+
+State and persistence: the header itself stores no state, but it defines which state survives in the host: IRQ masks, cached clock, DMA channels, current request pointers, scatterlist offsets, and platform callbacks. Register definitions describe persistent hardware state such as command, response, status, clock control, transfer length/count, card options, SDIO masks, DMA enable, reset, version, and SoC-specific mode/status registers.
+
+Dependencies and integration points: it includes Linux MMC host APIs, platform devices, scatterlists, workqueues, DMAEngine, and `linux/mfd/tmio.h`. It is the contract between generic TMIO core code and wrappers such as UniPhier or Renesas SDHI variants.
+
+Risks: register access width and `bus_shift` must match the wrapper's hardware, or every register access lands incorrectly. `sd_ctrl_write32_as_16_and_16()` adds `sdcard_irq_setbit_mask` for IRQ/status writes, so platform masks must be correct. Optional callbacks are invoked from mixed contexts; wrappers must honor locking and sleepability expectations. Host state exposes raw pointers for current request/data, so core/wrapper ownership conventions matter.
+
+Test signals: compile coverage with multiple TMIO wrappers, correct register spacing on bus-shifted SoCs, SDIO IRQ mask behavior, DMA ops fallback to PIO, runtime PM callback linkage, and wrapper-specific reset/clock/write-hook interactions through the common exported functions.

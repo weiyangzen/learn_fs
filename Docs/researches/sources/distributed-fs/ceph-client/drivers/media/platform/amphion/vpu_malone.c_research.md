@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/media/platform/amphion/vpu_malone.c -->
+# sources/distributed-fs/ceph-client/drivers/media/platform/amphion/vpu_malone.c
+
+Purpose: implements the Malone decoder firmware ABI for Amphion. It lays out the decoder RPC shared memory, configures stream buffers and system settings, maps V4L2 formats to Malone formats, packs decoder commands, converts/unpacks firmware messages, inserts codec-specific start codes/padding, copies compressed input into the firmware ring, and manages Malone command FIFO readiness.
+
+Important APIs/functions: exported iface hooks include `vpu_malone_get_data_size()`, `vpu_malone_init_rpc()`, `vpu_malone_set_log_buf()`, `vpu_malone_set_system_cfg()`, `vpu_malone_get_version()`, stream buffer get/config/update functions, `vpu_malone_set_decode_params()`, `vpu_malone_pack_cmd()`, `vpu_malone_convert_msg_id()`, `vpu_malone_unpack_msg_data()`, `vpu_malone_add_scode()`, `vpu_malone_input_frame()`, command readiness hooks, instance init, max-instance count, and format enable/check.
+
+Control flow: core probe asks for private data size and calls init to carve the RPC reserved memory into iface structure, command/message rings, codec/jpeg/sequence/picture/GOP/qmeter/log tables, per-stream engine buffers, and encryption records. Decoder start configures stream registers and shared params. Commands are mapped from driver IDs to Malone VID_API IDs and optionally filled with frame-store or timestamp payloads. Firmware messages are mapped back to common VPU message IDs and unpacked into shared structs. Input frames may get synthetic sequence/picture headers for VC1/VP8/SPK, payload bytes are copied into the circular stream buffer, optional EOS/abort/low-latency padding is inserted, then a timestamp command informs firmware of input size.
+
+State and persistence: `struct malone_iface` lives in shared RPC memory visible to firmware. Driver-private `struct vpu_dec_ctrl` caches pointers into RPC subregions and stream-buffer MMIO windows. Static `fmt_mappings` is mutable because RV support is enabled/disabled based on firmware version. Module parameter `low_latency` affects padding insertion.
+
+Dependencies and integration: selected as decoder iface in `vpu_rpc.c`; used heavily by `vdec.c`. Depends on `vpu_imx8q` system config and register offsets, `vpu_helpers` ring copying and plane-size helpers, `vpu_color` conversion helpers, and command helpers for timestamp submission.
+
+Risks: many firmware payload fields are unpacked without checking `pkt->hdr.num` except for optional constraint flags, so malformed short messages can read beyond valid event payload. Shared-memory layout assumes RPC size is sufficient; `vpu_core.c` only checks total rpc/log size, not every Malone suballocation in isolation. Static format disabling is global, so multiple decoder cores with different firmware capabilities would share it. Padding/start-code insertion must preserve ring-space assumptions made in `vdec_process_output()`.
+
+Test signals: decode every advertised compressed format, especially VC1 Annex G/L, VP8, SPK, H.264/HEVC low-latency/display-delay paths, RV enablement by firmware version, EOS/abort padding, stream-buffer wraparound, frame-store allocation/release packing, timestamp size accounting with `extra_size`, and malformed/short firmware event fuzzing.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/media/platform/amphion/vpu_malone.c -->

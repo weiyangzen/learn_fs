@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/nice/nice03.c
+
+Purpose: verify a normal process can increase nice by a small positive increment. Important APIs/types/functions: `SAFE_FORK`, `nice(2)`, `SAFE_GETPRIORITY`, `MIN()`, `MAX_PRIO`, and child reaping. Control flow: parent forks; child records original priority, calls `nice(2)`, verifies return/no errno and actual priority equals `min(19, orig+2)`, reports pass, and exits; parent reaps. State/persistence: priority changes are isolated to the child process. Dependencies/integration: fork support through LTP `.forks_child`. Risks: if inherited priority is already at max, expected value remains 19 and still passes. Test signals: pass confirms ordinary priority lowering works without privilege.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/ci/gitlab-ci.yml
+
+Purpose: is the top-level GitLab CI configuration for DRM kernel CI. It pins the external Mesa/DRM CI environment, includes freedesktop and Mesa templates, defines pipeline-wide variables, stages, rule anchors, build/container scheduling policy, sanity checks, archive generation, and imports local CI fragments for containers, builds, tests, static checks, DT checks, and KUnit.
+
+Important sections: global variables pin `DRM_CI_PROJECT_PATH`, `DRM_CI_COMMIT_SHA`, `UPSTREAM_REPO`, `TARGET_BRANCH`, `IGT_VERSION`, deqp runner, ci-templates commit, MinIO/S3 paths, LAVA tags, runner priority tags, artifact URLs, and environment-variable filtering. `default.before_script` downloads Mesa CI scripts/bin from the pinned commit, sets up test environment, and materializes an S3 JWT file; `after_script` restores JWT to the environment if present. Includes pull freedesktop ci-templates, many Mesa CI fragments, local DRM CI files, and lab-status YAML. Stages span sanity, container, deploy, git archive, build, static checks, kunit, validation, and per-driver hardware stages. Rule anchors distinguish merge attempt, post-merge, merge request, fork push, scheduled, and direct push pipelines. `make-git-archive` publishes a source archive to S3. `sanity` checks image tag length. Test job templates and concrete jobs define LAVA/crosvm execution for MSM, Rockchip, i915, amdgpu, MediaTek, Meson, Panfrost/Panthor, virtio_gpu, and vkms.
+
+Control flow: local fragment includes define most jobs; this file supplies common variables, stages, and rule sets. Build/container jobs run automatically for merge/scheduled pipelines but are often manual for MRs/forks, depending on rules. Hardware tests consume artifacts uploaded by build jobs.
+
+State and persistence: writes temporary Mesa CI scripts into the working directory, S3 JWT file `/s3_jwt`, downloaded Mesa CI fragments, Git archive tarball, and MinIO artifacts through downstream scripts.
+
+Dependencies and integration points: highly coupled to Mesa CI templates, freedesktop ci-templates, lab-status, MinIO, LAVA farms, deqp-runner, IGT artifacts, kernel build artifacts, and GitLab environment variables. Local files `image-tags.yml`, `container.yml`, `static-checks.yml`, `build.yml`, `test.yml`, `check-devicetrees.yml`, and `kunit.yml` extend this scaffold.
+
+Risks: many external includes are pinned but still represent a large imported CI surface. The default script downloads and overwrites `.gitlab-ci*` and `bin`, so local file names can collide. S3/JWT handling is sensitive; variables are intentionally unset after writing token files. Hardware job rule complexity can cause jobs to run ahead of artifact producers if dependencies are wrong. Device lists and runner tags can drift from lab availability.
+
+Test signals: pipeline lint expansion, pinned Mesa CI download success, sanity tag-length check, source archive upload, job scheduling for MR/merge/scheduled/fork paths, S3 token availability, and LAVA jobs finding rootfs/kernel artifacts.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/parsers/operatingsystem/operatingsystem_linux.go -->
+# sources/cloud-native/moby/pkg/parsers/operatingsystem/operatingsystem_linux.go
+
+Purpose: Linux OS-release and containerization parser. Important APIs are `GetOperatingSystem`, `GetOperatingSystemVersion`, `getValueFromOsRelease`, and `IsContainerized`. Control flow reads `/etc/os-release` with fallback to `/usr/lib/os-release`, trims quotes/whitespace from requested keys, defaults missing pretty name to `Linux`, and detects containerization by scanning `/proc/1/cgroup` for non-root/non-init.scope cgroup paths. State is read-only host files, with package variables allowing tests to redirect paths. Dependencies are bufio, bytes, os, and strings. Risks include simplistic os-release parsing, last key wins, cgroup v1/v2 format assumptions, and false positives for systemd scopes. Test signal is broad in `operatingsystem_linux_test.go`.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/parsers/operatingsystem/operatingsystem_linux.go -->

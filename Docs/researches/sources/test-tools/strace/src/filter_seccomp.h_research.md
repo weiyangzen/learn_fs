@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/filter_seccomp.h
+
+Header for seccomp filtering integration. It declares global seccomp state and functions used by startup and ptrace-loop code, including filter checking/installation and restart-operator selection. It owns no state itself but exposes mutable state from `filter_seccomp.c`. Dependencies are `struct tcb` and ptrace constants from project headers. Risks are callers reading `seccomp_filtering` before initialization or ignoring `seccomp_before_sysentry` ordering. Tests are compile-time integration plus runtime `--seccomp-bpf` traces that validate initialization and restart decisions.

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/ethernet/aquantia/atlantic/hw_atl/hw_atl_llh.h -->
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/aquantia/atlantic/hw_atl/hw_atl_llh.h
+
+Purpose: Declares the low-level Atlantic register accessor API implemented by `hw_atl_llh.c`. It gives the rest of the driver named hardware operations instead of exposing raw MMIO addresses, masks, and shifts.
+
+Important APIs, types, and functions: The header forward-declares `struct aq_hw_s` and declares accessors grouped by hardware block: temperature sensor, SMBus, global semaphores/reset/scratchpads, statistics, interrupts, RX descriptor manager, generic register programming, RX packet buffer, RX packet filter, RX packet offload/LRO, TX descriptor manager, TX header manager, TX packet buffer, TX packet offload, TX scheduler/rate limiting, MSM indirect register access, PCI reset control, PCS PTP clock read, firmware up-force interrupt, L3/L4 filter data programming, MDIO interface registers, and firmware semaphore getters.
+
+Control flow: There is no executable control flow in this header. Its structure reflects the hardware block order used by `hw_atl_llh.c` and the generated register metadata in `hw_atl_llh_internal.h`. Callers include this header and invoke block-specific setters/getters as part of higher-level configuration sequences such as reset, ring setup, filter setup, link handling, interrupt setup, and PTP operations.
+
+State and persistence behavior: The declarations imply operations on `struct aq_hw_s` and hardware MMIO state but carry no state themselves. Effects persist in device registers until reset, deinit, power transition, or later programming changes them. The `void *context` signatures for outer VLAN tag mode are looser than most functions and permit integration through generic callback contexts.
+
+Dependencies and integration points: Includes `<linux/types.h>` and forward-declares `struct aq_hw_s`, keeping the API usable across Atlantic driver modules without pulling in the full hardware struct definition. It is the public local contract between generated-style low-level register accessors and higher-level Atlantic modules such as `hw_atl_utils.c`, generation-specific `hw_atl_b0.c`/`hw_atl_b0_internal.c`, PTP, filters, and MACSec/firmware support.
+
+Risks: Prototype drift between this header and `hw_atl_llh.c` breaks builds or, worse, encourages duplicate raw register access elsewhere. The API does not encode valid index ranges for queues, descriptors, traffic classes, filters, LRO contexts, scratchpad numbers, or MDIO interfaces, so range validation must stay in callers. Some naming is historical and inconsistent (`*_addresslswset`, mixed casing, `context` vs `aq_hw`), which increases the chance of calling the wrong accessor when adding features. Because this header exposes very granular operations, higher-level code must still preserve programming order and register sharing rules.
+
+Test signals: Compile coverage across the Atlantic driver is the primary signal. Functional signals include successful NIC probe/reset, queue allocation, interrupt moderation, RSS, VLAN/L2/L3/L4 filters, checksum/LRO/TSO offloads, traffic class scheduler programming, PTP clock reads, and firmware semaphore/MDIO paths using only these accessors instead of raw duplicated MMIO.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/ethernet/aquantia/atlantic/hw_atl/hw_atl_llh.h -->

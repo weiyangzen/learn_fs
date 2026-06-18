@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chmod/chmod07.c
+
+Purpose: verifies root can set sticky bit permissions on a file it does not own while in the file's group. Setup creates `testfile`, changes owner to nobody and group to `users` or `daemon`, then sets process gid to that group. Run applies `01777`, stats, and checks the expected bits. Important APIs are `SAFE_GETPWNAM`, `SAFE_GETGRNAM_FALLBACK`, `SAFE_CHOWN`, `SAFE_SETGID`, `chmod`, and `stat`. State includes file ownership/group and process gid. Dependencies are root and group database. Risks are special-bit behavior on the backing filesystem. Test signal is mode includes requested sticky/permission bits.

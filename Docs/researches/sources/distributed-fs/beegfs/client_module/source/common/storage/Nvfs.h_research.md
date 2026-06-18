@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/Nvfs.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/Nvfs.h
+
+**Purpose:** Declares the optional NVFS integration interface and shields BeeGFS `MIN/MAX` macros from NVIDIA headers. **APIs/types:** defines module-name based register/unregister symbol macros, NVFS pseudo-error values, hold time, `nvfs_ops`, `nvfs_shutdown`, per-CPU op counters, and inline `nvfs_count_ops`, `nvfs_get_ops`, `nvfs_put_ops`. **Control flow/state:** `nvfs_get_ops` refuses when shutdown is set or ops are unavailable, increments this CPU's active count, then rechecks shutdown and rolls back if needed; `nvfs_put_ops` decrements. **Dependencies/integration:** included by `RdmaInfo` and only active under `BEEGFS_NVFS`. **Risks/tests:** every successful acquire must be paired with put; tests should cover unavailable ops, shutdown race, and build compatibility with/without NVFS headers.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/Nvfs.h -->

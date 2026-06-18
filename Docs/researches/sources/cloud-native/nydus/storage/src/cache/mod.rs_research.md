@@ -1,0 +1,11 @@
+# sources/cloud-native/nydus/storage/src/cache/mod.rs
+
+Purpose: defines the cache layer abstraction between storage backends and `BlobDevice`, plus shared logic for backend reads, decompression, decryption, digest validation, merged IO requests, chunk decompression iteration, and cache manager lifecycle. It exports dummy/file/fscache managers and the cache state module.
+
+Important APIs and control flow: `BlobIoMergeState` groups adjacent `BlobIoDesc` entries into `BlobIoRange` requests bounded by compressed size and gap. `BlobCache` exposes blob metadata accessors, backend reader access, chunk map access, chunk-info lookup, prefetch lifecycle, direct read, and optional blob-object access. Default helpers include `read_chunks_from_backend`, which fetches one compressed range and returns `ChunkDecompressState`; `read_chunk_from_backend`, which reads/decrypts/decompresses/validates one chunk; `decompress_chunk_data`; `validate_chunk_data`; `check_digest`; and streaming-cache hook `cache_chunk_data`. `ChunkDecompressState` iterates requested chunks and handles normal, Batch, and ZRan decompression paths by caching the current batch/zran decompressed buffer.
+
+State and persistence behavior: this file owns no persistent state but defines how cache implementations expose `ChunkMap` state and how validation is forced. `ChunkDecompressState` holds the merged compressed buffer and temporary decompressed batch/zran buffer, with index fields to avoid repeated decompression when consecutive chunks share context.
+
+Dependencies and integration points: depends on backend `BlobReader`/`RequestSource`, FUSE volatile slices, `BlobInfo`/`BlobIoDesc`/`BlobIoRange`, compression including zran decoder, encryption helpers, digest/CRC utilities, blob compression metadata, and `RAFS_MAX_CHUNK_SIZE`.
+
+Risks and test signals: merged reads require chunk offsets/sizes to fit the fetched buffer and enforce max decompressed size. Legacy stargz compressed size is estimated differently and validation is skipped for legacy stargz. Batch/ZRan paths depend on metadata context consistency. Tests cover IO merge state construction, issuing behavior under gap/size limits, and continuity checks through `BlobIoDesc`.

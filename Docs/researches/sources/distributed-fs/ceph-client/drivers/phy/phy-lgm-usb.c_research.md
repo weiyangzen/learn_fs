@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-lgm-usb.c
+
+This Intel LGM USB PHY driver uses the legacy `struct usb_phy` API rather than generic PHY. It manages APB/controller resets, PHY resets, a VBUS regulator, TCPC mux register programming, and optional extcon-based Type-C polarity/connect state.
+
+Probe maps one MMIO resource, gets `vbus`, obtains controller resets (`apb`, `ctrl`) and PHY resets (`phy31`, `phy`), asserts both reset groups, deasserts controller resets in-band, waits, initializes work, and registers via `usb_add_phy_dev()`. `phy_init()` deasserts PHY resets, polls `SRAM_INIT_DONE`, sets `SRAM_EXT_LD_DONE`, marks initialized, and either forces connected/no-extcon mode or schedules work. Work reads extcon polarity, detects `EXTCON_USB_HOST`, writes `TCPC_CONN` or `TCPC_DISCONN`, and toggles VBUS. Shutdown flushes work, disables VBUS, writes disconnect, and reasserts PHY resets.
+
+Persistent state is `regulator_enabled`, `phy_initialized`, and `connected`, plus deferred work. Dependencies are reset, regulator, extcon through usb_phy notifiers, MMIO polling, and workqueues. Risks include asynchronous extcon changes racing with shutdown despite `flush_work()`, errors from reset operations often not checked in loops, and the old usb_phy integration path differing from generic PHY consumers. Test signals are hardware initialization and extcon events; no in-tree unit test is present here.

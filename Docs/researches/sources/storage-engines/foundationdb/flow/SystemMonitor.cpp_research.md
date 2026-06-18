@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/storage-engines/foundationdb/flow/SystemMonitor.cpp -->
+# sources/storage-engines/foundationdb/flow/SystemMonitor.cpp
+- Purpose: Emits process, network, disk, allocator, machine, cgroup, and memory-limit telemetry as Flow trace events.
+- Important APIs/types/functions: `initializeSystemMonitorMachineState`, `machineStartTime`, `NetworkData::init`, `systemMonitor`, `getSystemStatistics`, `customSystemMonitor`, `startMemoryUsageMonitor`, and allocator detail macros.
+- Control flow: Initialization stores machine identity and monitor start time. `systemMonitor()` calls `customSystemMonitor()` outside deterministic debug. `customSystemMonitor()` snapshots platform statistics and network counters, emits delta/rate trace events, records allocator and priority-starvation data, optionally emits machine/cgroup metrics, updates saved states, and returns current stats. `startMemoryUsageMonitor()` schedules periodic resident-memory checks.
+- State and persistence behavior: Global `machineState` and static `StatisticsState` instances hold previous snapshots for delta computation. Telemetry persists only through trace logs and latest-event tracking. Memory monitor may terminate via `platform::outOfMemory()`.
+- Dependencies and integration points: Depends on `Platform`, `TDMetric`, `SystemMonitor`, `g_network`, Flow knobs, `FastAllocator`, Linux cgroup reporting, allocation instrumentation globals, and ASAN memory profiling hooks.
+- Risks: Metrics are only emitted when not simulated and platform stats are initialized, so missing stats can hide telemetry. Delta math depends on monotonically increasing counters and elapsed time. Allocation instrumentation takes locks and copies maps, so it must stay off hot paths. Memory-limit failure is intentionally fatal.
+- Test signals: Existing coverage is mostly indirect through trace/monitor integration. Useful signals include emitted `ProcessMetrics`, `MemoryMetrics`, `NetworkMetrics`, `MachineMetrics`, cgroup fields on Linux, and ASAN memory profile output before OOM termination.
+<!-- END_FILE_RESEARCH: sources/storage-engines/foundationdb/flow/SystemMonitor.cpp -->

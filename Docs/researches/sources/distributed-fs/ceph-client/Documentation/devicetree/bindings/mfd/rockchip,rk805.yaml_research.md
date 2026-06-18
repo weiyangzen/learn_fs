@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rockchip,rk805.yaml
+
+Purpose: Devicetree schema for the Rockchip RK805 I2C PMIC MFD, describing the top-level PMIC node, its regulator children, GPIO role, clock output, wakeup capability, and power-controller flags.
+
+Important schema surface and control flow: `compatible` is limited to `rockchip,rk805`; `reg`, `interrupts`, and `#clock-cells` are required. The schema exposes `gpio-controller` with two-cell GPIO specifiers, the deprecated `rockchip,system-power-controller`, generic `system-power-controller`, `wakeup-source`, six input supplies, and a `regulators` object whose children must be `DCDC_REG1` through `DCDC_REG4` or `LDO_REG1` through `LDO_REG3` and must satisfy the common regulator schema. An `allOf` branch changes `clock-output-names` cardinality: one name when `#clock-cells` is 0, otherwise two.
+
+State, dependencies, and integration: persistent state is the board DT description consumed by the RK8xx MFD, regulator, GPIO, clock, interrupt, and power-management drivers. Dependencies include the core DT meta-schema, common regulator binding, Rockchip clock IDs in `dt-bindings/clock/rockchip,rk808.h`, and interrupt/pinctrl bindings used by board examples. Risks are incorrect regulator child casing, stale use of the deprecated Rockchip power-controller flag, and clock name count mismatches. Test signals are `dt_binding_check`, example validation, and boot-time probe of RK805 regulators, GPIOs, wake IRQ, and optional 32 kHz output.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup14.py
+
+Purpose: broad block incremental backup workflow test covering add/update, remove-all, drop/recreate table, new table introduction, and bulk logged versus non-logged table inserts. It validates incremental backup directories against full backup directories after each phase.
+
+Important APIs are `backup_base.setup_directories`, `add_data`, `take_full_backup`, `take_incr_backup`, `compare_backups`, table `drop/create`, `runWt list`, bulk cursor configuration, and manual cursor `remove`. Control flow switches home to `WT_BLOCK`, initializes full/incremental homes, seeds the main table, alternates full and incremental backups, removes all records and validates, drops `table:main` and creates `table:extra`, recreates main with new content, then bulk inserts into logged and non-logged tables and compares backups. State behavior includes block incremental metadata across deletes, schema churn, and logging modes. Risks include shared mutable class fields, filesystem directory reuse, and shell `grep` use. Test signals are backup content comparisons and absence of dropped table in listings.

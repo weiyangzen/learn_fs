@@ -1,0 +1,15 @@
+# sources/control-plane/ceph-csi/e2e/deployment.go
+
+Purpose: supplies generic deployment and YAML-resource helpers for the e2e suites, including pod command execution, Deployment lifecycle waits, CSI deployment readiness waits, generic resource deployers, and rollout-safe container argument updates.
+
+Important APIs/types/functions: `execCommandInPodWithName()` wraps Kubernetes e2e pod exec. `loadAppDeployment()`, `createDeploymentApp()`, `deleteDeploymentApp()`, `waitForDeploymentInAvailableState()`, and `waitForDeploymentComplete()` manage app Deployments. `waitForCSI()` waits for a provisioner Deployment and nodeplugin DaemonSet concurrently. `ResourceDeployer`, `yamlResource`, and `yamlResourceNamespaced` abstract kubectl create/delete over raw or templated YAML. `waitForDeploymentUpdateScale()`, `waitForDeploymentUpdate()`, and `waitForContainersArgsUpdate()` update Deployment scale/spec/arguments with polling.
+
+Control flow: Deployment creation goes through client-go create then availability polling. Deletion polls until the Deployment is not found. Completion polling checks ready replica count against desired replica count. `waitForCSI()` uses `errgroup` to wait for controller and node sides together. `yamlResource.Do()` reads a file, optionally applies replacement strings and custom namespace, then sends it to kubectl. `yamlResourceNamespaced.Do()` first performs namespace replacement, log-level replacement, temporary VGS alpha disabling, optional one-replica conversion, topology/read-affinity/fencing/crush-label injection, then applies via kubectl. Argument update scales a Deployment down, edits selected container args, clears server-managed metadata, updates the Deployment, scales back, and waits for restored replica count.
+
+State and persistence: mutates Kubernetes Deployments and arbitrary YAML resources, including CSI control-plane/nodeplugin objects. The argument updater preserves the original replica count and rewrites persisted Deployment specs.
+
+Dependencies and integration points: uses client-go Apps/Core APIs, Kubernetes deployment util, e2e pod framework, wait polling, shared kubectl helpers, YAML text transformation helpers, and `isRetryableAPIError()`. It underpins CephFS, NFS, NVMe-oF, Vault, and gateway deployment paths.
+
+Risks: YAML transformation is text-based and depends on template structure. `waitForDeploymentInAvailableState()` only checks that an Available condition exists, not its status. `waitForDeploymentComplete()` compares status replicas and ready replicas, which may be zero during scale-down. Argument matching compares args exactly to `key` but writes `--key=value`, so existing args must follow expected form. Resetting `ResourceVersion` to `"0"` is unusual and can conflict with API expectations.
+
+Test signals: deployment helpers are validated indirectly by CSI readiness, app availability, successful kubectl resource application, scale/update convergence, and failure logs showing namespace resource state when readiness does not converge.

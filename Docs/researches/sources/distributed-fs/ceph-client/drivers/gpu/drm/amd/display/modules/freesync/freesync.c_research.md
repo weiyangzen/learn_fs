@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/modules/freesync/freesync.c
+
+Purpose: Implements FreeSync/VRR parameter calculation, below-the-range frame insertion, fixed-refresh fallback/ramping, flip-interval workaround management, and AMD FreeSync/VRR info packet construction for HDMI and DP.
+
+Important APIs and functions: Public functions are `mod_freesync_create`, `mod_freesync_destroy`, `mod_freesync_calc_v_total_from_refresh`, `mod_freesync_build_vrr_infopacket`, `mod_freesync_build_vrr_params`, `mod_freesync_handle_preflip`, `mod_freesync_handle_v_update`, `mod_freesync_calc_nominal_field_rate`, and `mod_freesync_get_freesync_enabled`. Internal helpers calculate durations/vtotals, update static-screen ramping, apply BTR, apply fixed refresh, detect flip-interval workaround needs, and build packet headers/data/checksums for packet versions 1-3.
+
+Control flow: Creation stores a `dc` pointer in `core_freesync`. `mod_freesync_build_vrr_params` derives nominal/min/max refresh, clamps to hardware max vtotal, initializes BTR/fixed state, and computes vtotal min/max based on VRR state. `mod_freesync_handle_preflip` uses render time since previous plane update to engage BTR or fixed refresh and update flip-interval detection. `mod_freesync_handle_v_update` advances counters on vblank, programs BTR inserted frame durations, handles workaround cleanup, and performs static-screen ramping. Info packet construction selects FS v1/v2/v3/VRR behavior, fills AMD OUI and refresh fields, adds FS2 color metadata when requested, computes checksum, and optionally repacks DP packets to SDP 1.3.
+
+State and persistence: Persistent runtime state is mostly in caller-owned `mod_vrr_params`: state, supported flag, refresh bounds, duration bounds, BTR counters/durations, fixed-refresh counters, flip interval counters, and vtotal adjustment outputs. `core_freesync` only holds the DC pointer. No file or firmware persistence.
+
+Dependencies and integration points: Includes `dm_services.h`, `dc.h`, `mod_freesync.h`, and `core_types.h`. Uses stream timing, DC caps, signal classification helpers, plane update timestamps, DRM/DM timestamp helpers, and `dc_info_packet` structures. Integrates with timing generator vtotal programming, stream encoder info packets, and DM VRR policy inputs.
+
+Risks: Many calculations use integer division and mixed units (`uHz`, `us`, `100Hz` pixel clocks); rounding differs for min/max boundaries and HDMI MVRR ceiling. BTR and fixed-refresh thresholds are heuristic and can oscillate if margins are wrong. Hardware max vtotal and front-porch-limited caps must be correct. Info packet payload sizes/checksums differ across HDMI/DP and versions; malformed packets can disable VRR on sinks. Null checking is inconsistent for some public functions' stream/config inputs.
+
+Test signals: VRR range clamp tests, nominal field rate calculations, vtotal rounding at min/max/nominal, BTR entry/exit and inserted frame count, fixed refresh enter/exit/ramp, flip interval workaround activation/cleanup, HDMI vs DP packet byte golden tests for FS v1/v2/v3, SDP 1.3 repacking, and disabled/unsupported state behavior.

@@ -1,0 +1,30 @@
+# sources/distributed-fs/eos/mgm/fsview/FsView.cc
+
+## Purpose
+`FsView.cc` implements the MGM-side in-memory view of EOS filesystem topology. It keeps the same registered filesystem visible by filesystem id, FST node queue, scheduling group, space, and geotag tree, and it ties those views to shared-hash configuration, the persistent config engine, the scheduler, balancer/drainer services, and command/table output. It is the operational core behind filesystem registration, unregister, group moves, heartbeat-driven online/offline state, space defaults, capacity statistics, and view printing.
+
+## Important APIs, Types, And Functions
+The file defines the singleton `FsView::gFsView`, `FsSpace::gDisableDefaults`, `FsNode::sNumInstances`, and the node refresh tag `stat.refresh_fs`. `GeoTreeElement`, `GeoTree`, `DoubleAggregator`, and `LongLongAggregator` implement geotag-aware grouping and aggregation. `FsSpace` owns per-space service objects: `FsBalancer`, `GroupBalancer`, `GeoBalancer`, `GroupDrainer`, and `FileInspector`, except for the spare space. `FsNode` manages node shared-hash subscriptions and heartbeat updates.
+
+The most important `FsView` methods are `Register`, `UnRegister`, `MoveGroup`, `RegisterNode`, `RegisterSpace`, `RegisterGroup`, `Reset`, `ApplyFsConfig`, `ApplyGlobalConfig`, `SetGlobalConfig`, `GetGlobalConfig`, `StoreFsConfig`, `HeartBeatCheck`, `ReapplyDrainStatus`, `Df`, `UnderNominalQuota`, `CollectEndpoints`, `GetUnbalancedGroups`, `GetFsToBalance`, and the print helpers. `BaseView` contributes the shared API for `GetMember`, config member access, statistics (`SumLongLong`, `AverageDouble`, deviations, sigma), and `Print`.
+
+## Control Flow
+Filesystem registration first rejects null inputs and queue-path collisions, then updates `mIdView`, creates or reuses the node view, group view, and space view, and registers the filesystem in `GeoTreeEngine`. If GeoTreeEngine insertion fails, it tries to roll back through `UnRegister`. After the view maps are consistent, it applies core parameters, stores filesystem config, and signals the owning node to refresh. Unregistration snapshots the filesystem, removes it from node/group/space views, removes it from GeoTreeEngine when requested, erases id and uuid mappings, deletes persistent config on masters, optionally deletes shared hashes and empty node objects, then deletes the `FileSystem`.
+
+`MoveGroup` changes `schedgroup`, removes the filesystem from its previous space/group and GeoTreeEngine group, creates the target group or space when needed, reinserts into GeoTreeEngine, and attempts rollback if insertion fails. `ApplyFsConfig` is the config-load path: it parses serialized filesystem config, validates `queuepath`, `id`, and `uuid`, creates mappings and `FileSystem` objects as needed, applies durable key updates in a batch, handles `configstatus` outside the transaction to avoid drain deadlocks, and calls `Register`.
+
+`HeartBeatCheck` runs every ten seconds. It warns when live `FsNode` instances differ from `mNodeView.size()`, marks nodes online only when their shared-hash heartbeat is recent, and updates each filesystem under the node based on node config, group status, boot status, active overload thresholds (`max.ropen`, `max.wopen`), and scheduler disk status. `Df` combines space nominal capacity, node network capacity, namespace tree size, file/container counts, and policy size factor into table or JSON output.
+
+## State And Persistence
+Primary in-memory state is protected by `FsView::ViewMutex` and includes `mSpaceGroupView`, `mSpaceView`, `mGroupView`, `mNodeView`, `mIdView`, `mFilesystemMapper`, and a short-lived nominal quota cache `mUsageOk` guarded by `mUsageMutex`. Individual `BaseView` status strings are guarded by a local mutex; heartbeat timestamps are atomic. `GeoTree` owns dynamically allocated branch nodes and tracks leaves by fsid.
+
+Persistent and distributed state flows through `mq::SharedHashWrapper` and `IConfigEngine`. `BaseView::SetConfigMember` writes to the view shared hash and, on the master and for non-status values, to config storage under the global namespace. `StoreFsConfig` persists serialized filesystem config under the `fs` namespace. Global config is stored in the global MGM shared hash and config engine. `FsNode` subscribes to its node hash so FST heartbeat and traffic shaping updates affect MGM state.
+
+## Dependencies And Integration Points
+This file integrates with `FileSystem`, `FileSystemRegistry`, `FilesystemUuidMapper`, `GeoTreeEngine`, `FsScheduler`, `GroupBalancer`, `GeoBalancer`, `GroupDrainer`, `FsBalancer`, `FileInspector`, QuarkDB/shared-hash wrappers, namespace metadata services, `Policy`, table formatting, JSON, token generation, FUSE server settings, traffic shaping, and the global `gOFS` MGM service object. It assumes callers hold `ViewMutex` for several operations noted in comments, especially config application and some view lookups.
+
+## Risks
+The file mixes raw pointer ownership, distributed config side effects, thread lifecycle, and rollback logic. Failed partial registration can leave inconsistent state if rollback paths also fail. Many methods rely on external locking discipline; missing `ViewMutex` locking around map access would be high risk. `UnRegisterNode`, `UnRegisterSpace`, and `UnRegisterGroup` use `retc |= UnRegister(fs)`, so an earlier failure can be obscured by later successes. `UnderNominalQuota` reads view maps under `mUsageMutex` but not `ViewMutex`, so callers must ensure broader view safety. `BaseView::Print` parses user format strings with minimal validation and assumes split key/value pairs exist.
+
+## Test Signals
+Useful signals include unit tests for `GeoTree` insert/erase/aggregation, registration/unregistration rollback tests with mocked `GeoTreeEngine`, config load tests for `ApplyFsConfig`, heartbeat tests covering node online/offline and overload transitions, shared filesystem de-duplication tests in `SumLongLong`, output golden tests for `Df` and `Print`, and leak checks around `Reset` verifying `FsNode::sNumInstances == mNodeView.size()`.

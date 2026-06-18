@@ -1,0 +1,15 @@
+# sources/object-store/rustfs/crates/protocols/src/common/dummy_storage.rs
+
+Purpose: This test-only module provides `DummyBackend`, a queue-driven implementation of the protocol crate's S3 `StorageBackend` trait. It is built for SFTP and FTPS driver unit tests that need deterministic S3 responses, call observation, and cancellation/timeout fixtures without a real object store.
+
+Important APIs and types: `DummyError` models backend miss, deny, upload, injected, and unconfigured failures. `AbortCall`, `UploadPartCall`, `PutObjectCall`, `CreateMultipartCall`, `CompleteCall`, and `HeadObjectCall` are observation records. `DummyBackend` exposes queue helpers such as `queue_head_object_ok`, `queue_put_object_err`, `queue_create_multipart_upload_ok`, `queue_upload_part_ok`, `queue_upload_part_copy_ok`, `queue_complete_multipart_upload_err`, `queue_get_object_range_bytes`, and `queue_list_objects_v2_ok_empty`; observer methods snapshot the recorded call logs. Stall helpers `stall_upload_part`, `stall_put_object`, and `stall_list_objects_v2` use `tokio::sync::Notify` plus `std::future::pending` to test cancellation and deadline behavior.
+
+Control flow: Each `StorageBackend` method pops one response from its method-specific `VecDeque`. Defaults are intentionally strict: not-found for reads and deletes, empty success for benign listings, and `Unconfigured` for operations whose use should be explicitly scripted. Methods that can stall decide and pop while holding the mutex, then release it before awaiting so a stalled future does not poison the test backend.
+
+State and persistence behavior: All state is in-memory behind one `Mutex<Inner>` and is normally shared through `Arc<DummyBackend>`. There is no filesystem or S3 persistence. Queues are FIFO and call logs append in invocation order; stall flags and notify handles are runtime-only cancellation-test state.
+
+Dependencies and integration points: It depends on `s3s::dto` request/response types, `bytes`, `futures_util` streams, `async_trait`, and the crate-local `StorageBackend` abstraction. The generated streaming blobs let read/write tests drive the same body-consumption paths used by production drivers. Error strings intentionally contain S3-like substrings such as `NoSuchKey`, `NoSuchBucket`, `AccessDenied`, and `NoSuchUpload` so protocol error mappers classify them realistically.
+
+Risks: Because all queues and logs share one mutex, highly concurrent tests can observe serialized rather than backend-realistic interleavings. Some default successes, especially `put_object` and `abort_multipart_upload`, can hide missing setup if tests forget to assert call logs. Stall mode must always release the lock before awaiting; this file does that explicitly.
+
+Test signals: Local tests verify default `head_object` reports a mappable not-found, queued `head_object` responses are returned, multipart abort calls are logged, and unconfigured multipart creation fails loudly. Downstream driver tests use the call logs, queue lengths, stall notifications, and injected typed errors as stronger behavior signals.

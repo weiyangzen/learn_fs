@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chmod/chmod03.c
+
+Purpose: verifies non-root owner can set sticky bit and permissions on owned file and directory when group constraints are satisfied. Setup drops effective uid to nobody, creates a file and directory, and run applies mode `01777` to both then checks sticky/permission bits. Important APIs are `SAFE_GETPWNAM`, `SAFE_SETEUID`, `chmod`, and `SAFE_STAT`. State is tmpdir fixtures owned by nobody and process euid changed to nobody. Dependencies are root to drop credentials and normal ownership semantics. Risks are filesystem special-bit behavior. Test signal is mode includes all requested `01777` bits.

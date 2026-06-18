@@ -1,0 +1,7 @@
+# sources/distributed-fs/glusterfs/xlators/cluster/ec/src/ec-code-c.h
+
+Purpose: declares the portable C erasure-coding backend used when dynamic CPU-specific code is disabled or generation fails. It is the fallback ABI for computing linear and interleaved GF combinations.
+
+Important APIs: `ec_code_c_prepare(ec_gf_t *gf, uint32_t *values, uint32_t count)` prepares static state for the portable routines; `ec_code_c_linear(void *dst, void *src, uint64_t offset, uint32_t *values, uint32_t count)` combines data from a linear source buffer; `ec_code_c_interleaved(void *dst, void **src, uint64_t offset, uint32_t *values, uint32_t count)` combines per-fragment source pointers. These prototypes depend on `ec-types.h` and the GF tables referenced through `ec_gf_t`.
+
+Control flow and integration: `ec-code.c` calls `ec_code_c_prepare()` and returns one of these function symbols from `ec_code_build()` when no `ec_code_gen_t` is available. State is intentionally minimal at the header boundary; any persistent prepared state lives in the implementation, not in this header. Risks center on ABI compatibility with `ec_code_func_linear_t` and `ec_code_func_interleaved_t`, and on thread-safety of the portable implementation because the header exposes shared function symbols rather than per-build closures. Test signals should compare output parity/reconstruction against dynamic x64/SSE/AVX backends and force `cpu-extensions=none` or dynamic-generation failure paths.

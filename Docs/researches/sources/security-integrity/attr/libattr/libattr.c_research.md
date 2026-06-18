@@ -1,0 +1,5 @@
+## sources/security-integrity/attr/libattr/libattr.c
+
+Purpose: implementation of the deprecated IRIX-style `attr_*` API over Linux xattr syscalls.
+
+Important functions include namespace converters `api_convert`/`api_unconvert`, simple get/set/remove/list path and fd variants, list packing into `attrlist_t`, and userspace `attr_multi` decomposition. Control flow maps bare names into `user.`, `security.`, `trusted.`, or legacy `xfsroot.` namespaces, retries compatibility namespaces, handles `ERANGE` as `E2BIG` with required size, and tracks list cursor position in `cursor->opaque[0]`. State is caller buffers/cursors only. Dependencies are `<sys/xattr.h>`, public `attributes.h`, errno names, and Linux namespace semantics. Risks include fixed 64 KiB list buffer, cursor instability if xattrs mutate, no `ATTR_SECURE`/`ATTR_ROOT` checks beyond namespace filtering, deprecated ABI expectations, and `attr_multi` returning aggregate failure while per-op errors live in errno indirectly. Tests should cover namespace flags, compatibility fallback, list packing overflow, and multi-op invalid flags.

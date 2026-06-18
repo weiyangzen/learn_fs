@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ialloc.h
+
+Purpose: `xfs_ialloc.h` declares the inode allocation public interface used by libxfs and kernel XFS code. It exposes the allocator, freer, mapper, AGI accessors, inode btree record helpers, geometry setup, and shrink validation implemented mostly by `xfs_ialloc.c`.
+
+Important APIs and types: `XFS_INODE_BIG_CLUSTER_SIZE` sets the default desired inode cluster size. `struct xfs_icluster` reports whether freeing an inode deleted a whole inode chunk, the first inode in that chunk, and the physical allocation bitmap for sparse chunks. `xfs_make_iptr` maps a buffer and inode index to an ondisk `struct xfs_dinode`. Public functions include `xfs_dialloc`, `xfs_difree`, `xfs_imap`, `xfs_ialloc_log_agi`, `xfs_read_agi`, `xfs_ialloc_read_agi`, `xfs_inobt_lookup`, `xfs_inobt_get_rec`, `xfs_inobt_rec_freecount`, `xfs_ialloc_inode_init`, `xfs_inobt_btrec_to_irec`, `xfs_inobt_check_irec`, `xfs_ialloc_has_inodes_at_extent`, `xfs_ialloc_count_inodes`, `xfs_inobt_insert_rec`, `xfs_ialloc_cluster_alignment`, `xfs_ialloc_setup_geometry`, `xfs_ialloc_calc_rootino`, and `xfs_ialloc_check_shrink`.
+
+Control flow: the header does not implement control flow beyond `xfs_make_iptr`, but its signatures define the required transaction and locking shape. Allocation takes `struct xfs_trans **` because it may roll the transaction while preserving caller context. Freeing requires a caller-provided `struct xfs_perag` and returns chunk deletion information through `struct xfs_icluster`. Mapping accepts flags such as untrusted lookup requirements so callers can force btree validation before reading inode buffers.
+
+State and persistence behavior: the declared functions mutate persistent inode allocation metadata: inode chunks, inobt/finobt records, AGI counters and roots, and superblock inode counters. `struct xfs_icluster` is an incore report of persistent chunk state used by callers to handle cache invalidation and sparse physical allocation. AGI read helpers initialize perag cached counters from disk and return locked buffers when requested.
+
+Dependencies and integration points: this header ties inode creation code, inode cache lookup, bulkstat, scrub, grow/shrink, btree repair, and transaction code to the allocator implementation. It forward-declares core XFS types to avoid heavy includes and relies on format definitions for inode record types and constants.
+
+Risks: misuse of transaction pointer semantics can break allocation when `xfs_dialloc` rolls the transaction. Calling `xfs_imap` without `XFS_IGET_UNTRUSTED` for externally supplied inode numbers can map stale or freed disk state. Callers of `xfs_difree` must pass the correct perag for the inode. `xfs_make_iptr` assumes valid buffer sizing and inode geometry.
+
+Test signals: compile coverage should catch signature drift across allocator, inode cache, and repair code. Behavioral tests should verify transaction rolling through `xfs_dialloc`, chunk deletion reporting from `xfs_difree`, untrusted imap validation, AGI trylock behavior, and geometry setup consumed by mkfs/mount.

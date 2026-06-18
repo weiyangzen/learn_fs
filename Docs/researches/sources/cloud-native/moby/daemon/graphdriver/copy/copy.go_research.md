@@ -1,0 +1,7 @@
+# sources/cloud-native/moby/daemon/graphdriver/copy/copy.go
+
+Purpose: Linux directory-copy helper for graphdrivers, preserving file content, hardlink relationships, metadata, selected xattrs, and special file types.
+
+Important APIs and control flow: `Mode` selects content copy or hardlinking. `copyRegular` creates a destination exclusively, tries `FICLONE`, falls back to `copy_file_range`, disables unsupported cross-device paths, then uses buffered copy. `DirCopy` walks `srcDir`, rebases each path under `dstDir`, handles regular files, directories, symlinks, FIFOs/sockets, and devices, tracks source `(dev, ino)` to preserve hardlinks in content-copy mode, copies ownership, `security.capability`, optionally `trusted.overlay.opaque`, modes, and timestamps. Directory mtimes are deferred and restored after children. Device creation is skipped inside user namespaces. `doCopyXattrs` currently copies only overlay opaque metadata.
+
+State, dependencies, and risks: state is temporary maps and deferred directory timestamp list. Dependencies include Linux syscalls, xattr helpers, user namespace detection, pools copy, and filesystem support for clone/range/xattrs/mknod. Risks include fallback complexity, skipped devices in user namespaces, copied xattrs failing on unsupported filesystems, and walk-time races if source changes. Tests cover regular copy, metadata preservation, and hardlink preservation.

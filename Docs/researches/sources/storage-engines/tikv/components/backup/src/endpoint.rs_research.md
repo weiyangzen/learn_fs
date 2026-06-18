@@ -1,0 +1,24 @@
+# sources/storage-engines/tikv/components/backup/src/endpoint.rs
+
+## Purpose
+This module is the core TiKV backup endpoint. It translates `BackupRequest` messages into region-range backup work, scans transactional MVCC or raw KV data from local snapshots, writes SST files through backup writers, persists them to external storage, sends `BackupResponse` messages, adapts worker concurrency, and reports metrics/errors.
+
+## Important APIs, Types, And Functions
+`storage_backend_config` converts online `BackupConfig` to external-storage backend options. `Task::new` validates CF names, builds a cancellable `Request`, sets rate limiting, request origin, lock bypass/access sets, raw/API version flags, compression, encryption cipher, and resource-control metadata. `BackupRange` represents one region-bounded scan. `KvWriter` abstracts transactional and raw writers. `InMemBackupFiles` carries a built writer plus response metadata to IO workers. `save_backup_file_worker` persists files and sends responses. `BackupRange::backup` scans MVCC entries through `SnapshotStore` and `TxnEntryScanner`; `backup_raw` and `backup_raw_kv_to_file` scan raw KV snapshots.
+
+`ConfigManager` applies online backup config changes. `SoftLimitKeeper` adjusts a `SoftLimit` based on CPU statistics and config. `Endpoint` owns worker/io runtimes, engines/tablets, region info, config, concurrency manager, API version, causal timestamp provider, and optional resource control. `Progress` slices requested key ranges/subranges into leader or replica `BackupRange`s. Public exports include `Endpoint`, `Task`, `backup_file_name`, and `storage_backend_config`.
+
+## Control Flow
+`Runnable::run` rejects pre-canceled tasks and calls `handle_backup_task`. `handle_backup_task` constructs a `KeyValueCodec`, validates API-version compatibility, flushes causal timestamps for raw KV, builds progress, creates external storage, resizes worker runtime, and spawns `num_threads` scan workers plus IO save workers connected by a bounded channel. Each scan worker repeatedly obtains a soft-limit guard, advances shared `Progress`, checks cancellation, resolves a tablet and backup file name, then scans either raw KV or transactional MVCC. Transactional backup updates max-ts, performs lock checks for leader reads or read-index context for replica reads, takes a snapshot, scans batches, splits SST writers when needed, and sends completed writers to IO. Raw backup uses cursor scans, TTL filtering, API-version key/value conversion, and raw MVCC snapshot wrappers when needed.
+
+## State And Persistence Behavior
+Endpoint state includes resizable worker pools, IO runtime, mutable online config, soft-limit permits, local tablets, and a shared progress cursor per task. Persistence is external: built SST files are saved through `ExternalStorage` implementations, and responses carry file metadata with converted key ranges, versions, API version, sizes, and checksums. Backup file names encode store id, region id, epoch, optional start-key hash, and timestamp; S3/local layouts use store-id directory prefixes. Metrics record scan/snapshot durations, range sizes, errors, writer wait time, raw expired values, thread pool size, and soft limits.
+
+## Dependencies And Integration Points
+The endpoint integrates with TiKV storage snapshots, MVCC scanners, raw KV encoding, raftstore region info, concurrency manager lock/max-ts checks, resource-control limiters, external storage backends, encryption cipher info, backup writers, online config, Prometheus metrics, causal timestamp providers, and `tikv_util` resizable runtimes. It also maps errors through `errors.rs` into BR protobuf errors.
+
+## Risks And Edge Cases
+Correctness depends on region epoch/leader state staying valid between progress slicing and snapshot acquisition; errors are returned for retry when not. Replica reads skip the explicit in-memory lock check but set snapshot context start_ts/ranges and still update max-ts with request-origin validation. The bounded save channel can backpressure scanners; metrics measure wait time. Raw API-version conversion only permits selected source/destination combinations. Cancellation is checked between ranges, not inside every low-level scan. IO worker count equals backup thread count even though they share one bounded receiver, so throughput and ordering are nondeterministic.
+
+## Test Signals
+Inline tests cover thread-pool resizing, storage config propagation, online GCP config changes, range and subrange slicing, replica-read inclusion of followers, lock bypass behavior, transactional backup file counts/checksums, raw backup API-version conversion and TTL expiry metrics, raw API v2 causal timestamp flush, scan error conversion for locks/not-leader/server-busy, cancellation before and during work, dynamic worker pool resizing, backup file naming by backend, and timestamp set conversion.

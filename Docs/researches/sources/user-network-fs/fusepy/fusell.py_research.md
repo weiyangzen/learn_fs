@@ -1,0 +1,15 @@
+## sources/user-network-fs/fusepy/fusell.py
+
+Purpose: Implements an experimental low-level Python ctypes binding to libfuse. It discovers `libfuse`, declares ABI-sensitive C structures and callbacks, starts a FUSE low-level session, and gives subclasses override points for inode-oriented filesystem operations.
+
+Important APIs/types/functions: `LibFUSE` configures ctypes argtypes/restypes for mount/session/reply helpers. `fuse_args`, `c_timespec`, `c_stat`, `c_statvfs`, `fuse_file_info`, `fuse_ctx`, `fuse_forget_data`, `fuse_entry_param`, and `fuse_lowlevel_ops` mirror libfuse ABI structures. `struct_to_dict`, `stat_to_dict`, `dict_to_stat`, and `setattr_mask_to_list` translate ctypes structures to Python dictionaries. `FUSELL` is the base class, exposing `reply_err`, `reply_entry`, `reply_attr`, `reply_readdir`, request context access, `fuse_*` callback adapters, and default operation implementations.
+
+Control flow: module import detects OS/architecture and fills platform-specific `struct stat` fields. Constructing `FUSELL` builds `fuse_lowlevel_ops`, wraps subclass methods into C callbacks, creates a minimal argv, mounts the mountpoint, creates a low-level session, installs signal handlers, adds the channel, enters `fuse_session_loop`, then removes handlers, destroys session state, and unmounts. Callback adapters decode byte names, copy buffers, convert structs, and delegate to overridable Python methods. Default operations return root metadata for inode 1, root directory entries for readdir, or conservative errors such as `ENOENT`, `EROFS`, `ENOSYS`, and `EIO`.
+
+State and persistence: there is no durable application state. Runtime state lives in libfuse session/channel handles and transient ctypes buffers. The mountpoint is externally visible while the process is in `fuse_session_loop`. SIGINT handling is temporarily replaced and restored where possible.
+
+Dependencies and integration points: depends on `ctypes`, `ctypes.util.find_library`, platform introspection, errno/stat/signal modules, and native libfuse or macOS FUSE variants. `FUSE_LIBRARY_PATH` can override discovery. Subclasses integrate by overriding `lookup`, `getattr`, `read`, `write`, `readdir`, and related low-level operations and replying exactly once per request.
+
+Risks: ABI definitions are platform and libfuse-version sensitive; comments note libfuse3 signature differences for `rename`, `forget`, and `readdirplus`, so mismatch can crash the interpreter. `assert` is used for mount/session/setup errors, which disappears under optimized Python. `reply_create` and statfs/xattr helpers are incomplete. `fuse_fsync` delegates to `fsyncdir`, likely a behavioral bug. The code mutates caller dictionaries in `reply_entry` and uses raw ctypes buffers, making lifetime and encoding mistakes dangerous.
+
+Test signals: no local tests are present for this file. Confidence must come from mounting a minimal subclass on supported Linux/macOS targets, exercising root `getattr`/`readdir`, and verifying create/read/write/error paths against libfuse versions used by consumers.

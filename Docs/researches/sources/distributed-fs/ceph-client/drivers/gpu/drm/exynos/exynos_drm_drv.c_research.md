@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/exynos/exynos_drm_drv.c
+
+Purpose: this is the top-level Exynos DRM driver. It registers platform subdrivers, creates virtual devices where needed, owns the DRM driver object, exposes Exynos GEM/G2D/IPP/VIDI IOCTLs, and coordinates component-master binding of display and processing blocks.
+
+Important APIs and data: `exynos_drm_driver` defines DRM features (`DRIVER_MODESET`, `DRIVER_GEM`, `DRIVER_ATOMIC`, `DRIVER_RENDER`), file operations, GEM dumb creation and PRIME import hooks, fbdev support, and IOCTL table. `exynos_ioctls[]` exposes GEM create/map/get, VIDI connection, G2D get/set/exec, and IPP get resources/caps/limits/commit. `exynos_drm_drivers[]` is the ordered registry of enabled component drivers, virtual devices, and FIMC devices shared with V4L2. `exynos_drm_bind()` and `exynos_drm_unbind()` are component master callbacks.
+
+Control flow: module init first creates virtual platform devices for virtual entries, then registers every enabled platform driver. The virtual `exynos-drm` platform driver probes, builds a `component_match` by scanning devices registered for each component driver, and installs the component master. Bind allocates a `drm_device`, allocates `struct exynos_drm_private`, initializes mode config, calls `exynos_drm_mode_config_init()`, computes encoder clone masks from pre-existing encoder list, binds all components, initializes vblank, resets mode config, starts KMS polling, registers the DRM device, and runs `drm_client_setup()`. Unbind unregisters the DRM device, stops polling, shuts down atomic state, unbinds components, cleans mode config and DMA, frees private state, and drops the DRM device.
+
+State and persistence: per-open state is `struct drm_exynos_file_private`, allocated in `exynos_drm_open()` and initialized by `g2d_open()`. Device-wide state lives in `struct exynos_drm_private`, including `g2d_dev`, `dma_dev`, `vidi_dev`, shared mapping, and atomic commit wait/lock fields. No disk persistence exists.
+
+Dependencies and integration points: this file integrates Linux component framework, platform driver registry, DRM core, GEM, fbdev emulation, G2D, IPP, VIDI, DMA helpers, and all Exynos display engines. Ordering matters: connector drivers are placed after CRTC drivers because they need CRTC pipe masks.
+
+Risks: partial bind failures must unwind every subsystem in the reverse order; this file has several staged `goto` paths, so missing cleanup would leak devices or mappings. `exynos_drm_match_add()` returns `-ENODEV` when no components are found. G2D open failure unwinds file-private allocation. Clone mask setup happens before `component_bind_all()`, so only encoders already created before that loop are included; this depends on local component behavior.
+
+Test signals: module load/unload, firmware-driver-only mode, enabled/disabled Kconfig permutations, deferred probes, virtual VIDI creation/removal, G2D and IPP IOCTL smoke tests, fbdev setup, suspend/resume, and component-bind failure injection.

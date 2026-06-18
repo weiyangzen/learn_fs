@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/em28xx/em28xx-i2c.c
+
+Purpose: provides Linux I2C adapter support for em28xx bridge chips, including legacy EM2800 transactions, normal EM28XX transactions, secondary EM25XX/Bus B access, optional I2C scan logging, and EEPROM discovery/parsing.
+
+Important APIs/types/functions: `em28xx_i2c_register()` and `em28xx_i2c_unregister()` publish/remove an `i2c_adapter` per bus. `em28xx_i2c_xfer()` is the `master_xfer` implementation and dispatches to algorithm-specific send/receive/check helpers. `em28xx_i2c_timeout()` computes transfer timeouts from bridge speed. `em28xx_i2c_read_block()` reads EEPROM/register blocks in chunks. `em28xx_i2c_eeprom()` detects EEPROM format, hashes contents, prints board configuration, and returns `dev->eedata`. `em28xx_do_i2c_scan()` probes 7-bit addresses and records `dev->i2c_hash`.
+
+Control flow: adapter registration copies templates, attaches `struct em28xx_i2c_bus` as `algo_data`, registers the adapter, initializes the internal client, and on bus 0 attempts EEPROM parsing. Each I2C transfer rejects disconnected devices, takes `dev->i2c_bus_lock` with `rt_mutex_trylock()`, switches the hardware selected bus if needed, executes each message as presence check/read/write, and unlocks. EM2800 paths use short reversed bridge-register transactions. EM28XX paths use USB control requests and status register `0x05`. EM25XX Bus B paths use request `0x06` and status request `0x08`.
+
+State and persistence: mutates `dev->cur_i2c_bus`, `dev->eedata`, `dev->eedata_len`, `dev->hash`, `dev->i2c_hash`, `dev->analog_xfer_mode`, and each `dev->i2c_client[bus].addr` during probing. EEPROM data is heap allocated and kept on the device for board detection and later consumers. Module parameters `i2c_scan` and `i2c_debug` alter scan behavior/logging.
+
+Dependencies and integration points: sits below the V4L2, DVB, audio, camera, and input extensions that instantiate subdevices or direct clients on these adapters. It relies on low-level USB control callback pointers in `struct em28xx`, Linux I2C core, `v4l2-common`, and tuner/xc2028 helpers.
+
+Risks: `rt_mutex_trylock()` returns `-EAGAIN`, so callers must tolerate transient bus contention. Presence checks on unsupported Bus B hardware may falsely succeed. The EEPROM parser assumes 256-byte hardware datasets even for new 16-bit-address EEPROM formats. Several status interpretations are empirical, especially clock-stretch timeout handling. Tests should include I2C scan on known boards, EEPROM-present/absent/corrupt cases, both primary and secondary buses, disconnect-time subdevice release, large block reads over EM2800 vs newer chips, and tuner/demod module probe sequences.

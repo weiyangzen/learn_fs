@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/mux/adg792a.c
+
+Purpose: I2C mux-controller driver for Analog Devices ADG792A/ADG792G triple 4:1 analog multiplexers. It supports either one controller that drives all three muxes in parallel or three independently addressable controllers, selected by `#mux-control-cells`.
+
+Important APIs and functions: `adg792a_write_cmd()` writes SMBus byte data and controls active-low reset through `ADG792A_RESETB`; `adg792a_set()` implements `struct mux_control_ops.set`; `adg792a_probe()` validates SMBus byte-data support, parses device properties, allocates a `mux_chip`, initializes idle states, resets/disables the chip, and registers with `devm_mux_chip_register()`. The driver exports I2C IDs and OF compatibles `adi,adg792a` and `adi,adg792g`.
+
+Control flow: probe checks adapter capability, reads `#mux-control-cells`, allocates either 1 or 3 controllers, sends `ADG792A_DISABLE_ALL` with reset asserted, reads optional `idle-state`, validates each controller state against 4 available states, and registers. At runtime, mux-core calls `adg792a_set()`, which chooses all-channel commands for parallel mode or per-controller commands using `mux_control_get_index()`.
+
+State and dependencies: persistent state is in mux-core fields (`states`, `idle_state`, cached state), not private driver data. Hardware state lives in the chip command latch. Dependencies are I2C, firmware properties, `linux/mux/driver.h`, and mux-core lifetime management. Risks include invalid `idle-state` handling: the switch accepts `0 ... 4` although `states` is 4, so state 4 is allowed as an idle property even though normal select validation would reject it. Test signals are I2C probe failure paths, property variants for one versus three controllers, disconnect idle behavior, and SMBus write error propagation.

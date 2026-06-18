@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/dev/dev.c
+
+Purpose: central SocketCAN netdevice support: CAN netdev setup/allocation, registration, common open/close, bus-off restart, state accounting, ctrlmode/capability helpers, transceiver termination, and timestamp operations.
+
+Important APIs and functions: `alloc_candev_mqs()` builds the private memory layout with driver private data, CAN mid-layer private data, and echo skb slots. `register_candev()` validates bit timing/termination metadata, loads optional GPIO termination, sets rtnl link ops, drops carrier, and registers the netdev. `open_candev()` validates configured timing and CAN FD data timing. `can_bus_off()`, `can_restart_now()`, and delayed restart work coordinate bus-off recovery. `can_change_state()` updates state, stats, and optional error frame content.
+
+Control flow and state: CAN state and statistics persist in `struct can_priv`; restart delay persists as delayed work; echo SKBs are flushed on close. Device MTU/capability state is recalculated when ctrlmode changes. Dependencies include rtnetlink `can_link_ops`, GPIO descriptors, OF transceiver child nodes, workqueues, echo SKB helpers, and ethtool/hwtstamp APIs. Risks are strict metadata consistency in `register_candev()`, restart races around carrier state, termination GPIO defaults, and correct MTU transitions for FD/XL/static modes. Test signals include netdev registration, bus-off restart logs, xstats counters, GPIO termination configuration, and `safe_candev_priv()` rejecting non-CAN devices.

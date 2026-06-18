@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/iio/imu/inv_mpu6050/inv_mpu_core.c
+
+Purpose: shared core for the legacy MPU6050-family driver. It supports many MPU/ICM/IAM variants, exposes one IIO device with accel/gyro/temp/magnetometer channels as applicable, handles raw/scale/calibration sysfs, sampling frequency, Wake-on-Motion events, chip reset/config, regulator/runtime PM, system sleep, and channel/scan-mask selection.
+
+Important APIs and functions: `inv_mpu_core_probe()` allocates IIO state, resolves orientation/IRQ/regulators, resets and configures the chip, initializes timestamp/magnetometer, sets bus-specific callbacks, runtime PM, triggered buffer/trigger, and registers the IIO device. `inv_mpu6050_switch_engine()` is the central sensor power-state transition function. `inv_mpu6050_read_raw()` and `write_raw()` implement direct IIO ABI. WoM helpers convert threshold units, configure low-power ODR/cycle mode, and expose IIO events.
+
+Control flow: probe validates chip type and WHOAMI, resets hardware, powers down sensors to match software state, initializes FSR/LPF/sample divider/interrupt pin, optionally probes magnetometer, then selects channel tables and scan masks by variant. Direct reads claim direct mode, lock, runtime-resume, enable needed sensors, wait for valid samples, read big-endian registers, and autosuspend. Sampling-frequency writes update divider, timestamp ODR, LPF, magnetometer rate, and WoM threshold.
+
+State and persistence: `struct inv_mpu6050_state` caches chip config, register map, regulators, trigger, timestamp state, FIFO buffer, magnetometer orientation/scales, mux state, suspend masks, and interrupt timestamp. Hardware persists FSR, LPF, divider, offsets, power bits, WoM thresholds, and FIFO settings.
+
+Dependencies and risks: integrates regmap, IIO trigger/buffer, runtime PM, regulators, aux/magnetometer helpers, and transport setup callbacks. Risks include broad chip-variant conditionals, clock switching around gyro power, WoM wakeup suspend paths, channel ABI compatibility, and mutable global scan layouts. Test signals include raw/scale/calibbias/temp/frequency ABI, buffered capture with IRQ trigger, no-IRQ direct-only behavior, WoM event enable/value/wakeup, magnetometer-enabled/disabled paths, runtime autosuspend, and system suspend/resume with active buffers.

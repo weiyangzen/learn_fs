@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
+
+Purpose: Handles DVM firmware alive transitions and init-ucode calibration, including calibration command setup, BT/WiMAX coexistence bootstrap, queue-to-TX-FIFO enablement, ALIVE notification wait, and calibration result capture.
+
+Important APIs and functions: `iwl_init_alive_start()` sends initial calibration configuration and optional BT environment setup. `iwl_send_prio_tbl()` and `iwl_send_bt_env()` program BT coexistence tables/environment. `iwl_load_ucode_wait_alive()` starts a selected firmware image and waits for `REPLY_ALIVE`. `iwl_run_init_ucode()` runs init firmware, waits for calibration complete, stores calibration results, and stops the device. Static helpers prepare XTAL and temperature-offset calibrations, disable WiMAX coexistence, enable AC/IPAN TX queues, and parse alive/calibration notifications.
+
+Control flow: Init firmware flow registers a wait for calibration result/complete notifications, calls `iwl_load_ucode_wait_alive(IWL_UCODE_INIT)`, sends init-alive calibration setup, waits up to two seconds for calibration completion, then stops the transport regardless of success. Alive loading changes `priv->cur_ucode`, registers a one-second ALIVE wait, starts firmware through the transport, validates the alive response, delays briefly for rfkill outside WoWLAN, calls `iwl_alive_notify()`, and rolls back `cur_ucode` on failure. `iwl_alive_notify()` marks transport firmware alive, enables default or IPAN queues to TX FIFOs, clears passive/queue-stop state, disables WiMAX coexistence, sends XTAL calibration when needed, and sends saved calibration results.
+
+State and persistence: Updates `priv->cur_ucode`, `priv->ucode_loaded`, `device_pointers.error_event_table`, `device_pointers.log_event_table`, `passive_no_rx`, and `transport_queue_stop`; stores calibration data through `iwl_calib_set()`. Calibration data persists in driver memory for later runtime firmware use, not across reloads.
+
+Dependencies and integration points: Depends on `iwl_trans_start_fw()`, `iwl_trans_fw_alive()`, notification wait infrastructure, DVM command send helpers, NVM calibration fields, firmware capability flags, BT coexistence commands, transport queue enable APIs, calibration storage helpers, and runtime/init firmware images.
+
+Risks: Notification waits must be removed on start/setup failure to avoid stale callbacks. `cur_ucode` and `ucode_loaded` need rollback on failed alive or post-alive setup. Queue-to-FIFO arrays differ for PAN/IPAN firmware and SKU capability. Temperature-offset calibration has v1/v2 layouts and fallback defaults. Init ucode always stops the device, so callers must not assume firmware remains loaded after calibration.
+
+Test signals: Firmware start failure, ALIVE timeout, invalid alive response, post-alive command failure, init image absent, calibration result accumulation until complete, temp-offset v1/v2/default paths, XTAL skipped by `no_xtal_calib`, PAN/IPAN queue mapping, BT coexistence enabled/disabled, and cleanup of notification waits on every error path.

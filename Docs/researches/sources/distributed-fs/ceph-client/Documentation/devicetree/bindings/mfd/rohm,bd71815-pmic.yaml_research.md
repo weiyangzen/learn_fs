@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rohm,bd71815-pmic.yaml
+
+Purpose: Devicetree schema for the ROHM BD71815 PMIC MFD, used to describe regulators, GPIOs/GPOs, charger sense resistor configuration, interrupt wiring, and a fixed 32 kHz clock output.
+
+Important schema surface and control flow: `compatible = "rohm,bd71815"`, `reg`, `interrupts`, and `regulators` are required. The schema exposes `gpio-controller` with two cells, `clocks`/`#clock-cells = 0`, `clock-output-names = "bd71815-32k-out"`, `rohm,clkout-open-drain`, `rohm,charger-sense-resistor-micro-ohms`, `gpio-reserved-ranges`, and `rohm,enable-hidden-gpo`. The regulator child schema is delegated to `/schemas/regulator/rohm,bd71815-regulator.yaml`, so rail details stay aligned with the dedicated regulator binding.
+
+State, dependencies, and integration: DT state controls PMIC I2C probe, IRQ routing, clock provider exposure, GPIO/GPO registration, charger calibration, and regulator initialization. Dependencies include the ROHM regulator schema, common clock/GPIO/interrupt bindings, and MFD/regulator/clock/GPIO drivers. Risks include using hidden GPOs without reserving unavailable GPIO lines, selecting an incorrect current-sense resistor value, and mismatching the fixed clock-output name. Test signals are `dt_binding_check`, regulator child validation through the referenced schema, GPIO range checks, and runtime clock/regulator/GPIO probe logs.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/kmod/kmod.sh
+
+`kmod.sh` stress-tests the kernel module loader and usermode-helper autoload paths. It drives the `test_kmod` kernel test driver through sysfs to exercise `request_module()`, filesystem `get_fs_type()`, concurrency limits, invalid module/filesystem names, modprobe path changes, and privileged versus unprivileged kernel-address visibility.
+
+Important state and APIs are `/sys/devices/virtual/misc/test_kmod0/` files such as `config_test_case`, `config_num_threads`, `config_test_driver`, `config_test_fs`, `trigger_config`, `test_result`, `reset`, and `config`; `/proc/sys/kernel/modprobe`; optional `/proc/sys/kernel/kmod-limit`; `modprobe`; `kmod --version`; `capsh --drop=CAP_SYSLOG`; `/proc/modules`; and `/sys/module/<module>/sections/.*text`. Test IDs `0001` through `0013` cover invalid names, missing modules/filesystems, normal single/multi-thread loads, exceeding modprobe limits, nonexistent or empty modprobe paths, and address hiding.
+
+Control flow checks requirements, applies defaults, loads `test_kmod`, saves the current modprobe path, installs a trap to restore it, parses CLI selection, and runs all or selected test IDs. Each case resets driver state, writes configuration knobs, triggers the kernel test, and compares `test_result` with expected errno. State includes loaded modules, sysfs configuration, and the global modprobe path.
+
+Dependencies are root, `modprobe`, `kmod` newer than 19, `test_kmod`, `test_module`, a default filesystem module suitable for autoloading, `capsh`, and enough memory for stress cases. A source-level risk is that `errno_val_to_name()` is missing its opening `{`, which would cause a shell syntax error if executed as shown. Other risks are mutating `/proc/sys/kernel/modprobe` and environment-sensitive defaults. Pass signals are expected errno names for each selected test and final restoration of modprobe.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup10.py
+
+Purpose: tests duplicate backup cursor behavior for log-only backup after a full backup cursor, under log removal on/off scenarios. It also validates duplicate cursor error rules.
+
+Important APIs are `session.open_cursor('backup:')`, duplicate `open_cursor(None, bkup_c, 'target=("log:")')` via helper methods, `take_full_backup`, `take_log_backup`, `session.log_flush`, and `wiredtiger_open`. Control flow writes until log file 2, opens primary backup cursor, writes/flushed data that lands in the switched log, copies full backup files, opens a duplicate log cursor and checks duplicate logs are a superset with exactly one additional log, then asserts multiple duplicates, duplicate-of-duplicate, and missing log target fail. State behavior is log file lifecycle and one-duplicate-per-primary state. Risks include hard-coded log filenames and exact error messages. Test signal is set membership on logs plus expected `WiredTigerError` messages and successful recovery.

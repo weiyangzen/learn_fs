@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/ast/ast_dp501.c
+
+Purpose: support for the DP501 DisplayPort transmitter used on some AST Gen4/Gen5 boards, including firmware loading/backup/launch, command handshaking, connection detection, EDID reads, DVO/analog setup, and DRM output creation.
+
+Important functions are `ast_load_dp501_microcode`, `ast_backup_fw`, `ast_launch_m68k`, `ast_init_3rdtx`, `ast_dp501_is_connected`, `ast_dp512_read_edid_block`, `ast_init_dvo`, `ast_init_analog`, DP501 encoder enable/disable callbacks, connector detect/get_modes callbacks, and `ast_dp501_output_init`. The file declares firmware `ast_dp501_fw.bin`.
+
+Control flow: Gen4/5 TX initialization either programs DVO/SIL164, launches M68K DP501 firmware from a backed-up or requested firmware image into reserved VRAM, or selects analog output. Command helpers exchange ACK/NACK bits through indexed registers to toggle DP501 video output. Detection validates firmware version and PnP monitor bits either through P2A boot memory or the reserved BAR0 buffer. EDID reads 4-byte chunks from DP501 memory. Connector detection caches physical status but returns logical connected for BMC fallback modes.
+
+State persists in `ast->dp501_fw`, firmware backup buffer, reserved firmware status mapping, SCU DVO/DAC mux registers, command mailbox bits, and cached connector physical status. Dependencies are firmware loader, P2A bridge, PCI reserved buffer mapping from generation constructors, DRM EDID helpers, and output mode config. Risks include unaligned firmware word reads, external firmware availability, long ACK/NACK waits, fallback to analog on ambiguous TX scratch values, always-connected logical status, and no bounds validation beyond EDID block count. Test signals are DP501 firmware launch, EDID read from P2A and non-P2A paths, video output enable/disable, fallback no-EDID modes, and analog/DVO mux correctness.

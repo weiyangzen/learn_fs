@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/bluetooth/btintel_pcie.c
+
+## Purpose
+Implements the Intel Bluetooth PCIe transport driver. It binds supported Intel PCI IDs, configures PCI/MMIO/MSI-X resources, allocates coherent DMA descriptor rings and context information for firmware, moves HCI packets over Intel's PCIe packet format, coordinates firmware boot through common `btintel` helpers, handles power-state transitions, collects hardware exception dumps, and performs bounded function-level-reset recovery.
+
+## Important APIs, Types, And Functions
+- PCI driver entry points are `btintel_pcie_probe`, `btintel_pcie_remove`, `btintel_pcie_init`, and `btintel_pcie_exit`, with PM callbacks through `btintel_pcie_pm_ops`.
+- HCI callbacks installed by `btintel_pcie_setup_hdev` include `btintel_pcie_send_frame`, `btintel_pcie_setup`, `btintel_shutdown_combined`, `btintel_pcie_hw_error`, `btintel_pcie_reset`, `btintel_pcie_wakeup`, `btintel_set_diag`, and `btintel_set_bdaddr`.
+- DMA/ring setup is handled by `btintel_pcie_alloc`, `btintel_pcie_init_ci`, `btintel_pcie_setup_txq_bufs`, `btintel_pcie_setup_rxq_bufs`, `btintel_pcie_setup_dbgc`, and `btintel_pcie_free`.
+- Interrupt and packet flow centers on `btintel_pcie_irq_msix_handler`, `btintel_pcie_msix_tx_handle`, `btintel_pcie_msix_rx_handle`, `btintel_pcie_msix_gp0_handler`, `btintel_pcie_recv_frame`, and `btintel_pcie_rx_work`.
+- Recovery and diagnostics use `btintel_pcie_dump_debug_registers`, `btintel_pcie_read_hwexp`, `btintel_pcie_dump_traces`, `btintel_pcie_read_dram_buffers`, `btintel_pcie_reset_bt`, and the recovery-count list keyed by PCI BDF.
+
+## Control Flow
+Probe allocates `struct btintel_pcie_data`, initializes locks/wait queues/workqueue, enables PCI master/DMA/BAR/MSI-X, allocates descriptor memory, writes context-info DMA addresses to CSR registers, enables the Bluetooth function, pre-posts RX buffers, and registers an HCI device. HCI setup then reads TLV version data, validates supported variants, applies common Intel quirks, calls `btintel_bootloader_setup_tlv`, saves coredump header metadata, and marks setup complete. If setup fails once, it dumps registers, disables and synchronizes interrupts, performs a shared hardware reset, reinitializes index arrays/MSI-X/hardware, and retries once.
+
+TX prepends a four-byte Intel PCIe packet type to the HCI skb, copies the packet into the current TFD DMA buffer, advances the transfer head index, rings the TX doorbell, waits for a TX completion, and for reset commands also waits for a GP0 alive interrupt. RX completions consume URBD1 completion descriptors, copy RFH-stripped packet data into skb queues, resubmit the RX buffer, and process packets in an ordered workqueue. GP0 interrupts update cached boot/image registers and drive the alive context state machine for ROM, firmware download, HCI reset, Intel reset, D0, and D3. Hardware exception interrupts schedule coredump and exception-event extraction from device memory.
+
+## State And Persistence
+The main persistent state is `struct btintel_pcie_data`: PCI/HCI handles, interrupt masks, cached boot/image registers, CNVi/CNVr IDs, alive context, wait conditions, workqueue and RX skb queue, DMA pool, descriptor rings, index arrays, context-info block, DBGC buffers, dump metadata, PM event, and state flags such as `BTINTEL_PCIE_CORE_HALTED`, `BTINTEL_PCIE_COREDUMP_INPROGRESS`, `BTINTEL_PCIE_RECOVERY_IN_PROGRESS`, and `BTINTEL_PCIE_SETUP_DONE`. A module-global recovery list stores per-BDF reset attempt counts and timestamps to limit FLR retry storms. Firmware lifecycle state is shared with `btintel.c` through `struct btintel_data` attached to the HCI device.
+
+## Dependencies And Integration Points
+Depends on the PCI core, DMA coherent allocation and DMA pools, MSI-X threaded IRQs, MMIO accessors, ordered workqueues, Bluetooth HCI core and HCI driver command interface, common Intel helpers from `btintel.c`, and optional devcoredump support. The firmware-facing ABI is defined by `btintel_pcie.h`: CSR offsets, context-info layout, TFD/URBD/FRBD descriptors, RFH header, and DBGC fragment format. The driver exposes one common HCI driver command, `HCI_DRV_OP_READ_INFO`, and advertises supported PCI IDs for Blazar/Scorpius product families.
+
+## Risks And Edge Cases
+Descriptor index management is sensitive to off-by-one and stale head/tail values; missed TX completions or GP0 alive interrupts cause command timeouts. RX path resubmits buffers even after malformed frames, so descriptor corruption can cascade if tags are wrong. Interrupt masking is manually restored after reset because hardware resets masks to all ones. Recovery is intentionally bounded but still asynchronously unregisters and re-registers the HCI device, which requires careful synchronization with workqueue, IRQ, and PCI remove paths. Hardware exception parsing trusts product-specific dump addresses and TLV lengths after signature checks. Suspend/resume handles S3 differently from freeze/hibernate; failures during D0 transition can schedule FLR and coredump concurrently.
+
+## Test Signals
+Test signals include PCI probe/remove with DMA allocation failure at each stage, MSI-X cause handling for TX, RX, GP0, GP1, and HWEXP, firmware download retry after first setup failure, HCI reset and Intel reset alive waits, RX malformed packet type/length accounting, D3-hot and D0 PM transitions including missed alive interrupt retry, freeze/hibernate FLR path, recovery retry throttling within `BTINTEL_PCIE_RESET_WINDOW_SECS`, user-triggered and firmware-assert devcoredumps, and successful re-registration after FLR recovery.

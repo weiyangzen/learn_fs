@@ -1,0 +1,15 @@
+# sources/control-plane/rook/pkg/operator/ceph/pool/radosnamespace/controller.go
+
+Purpose: implements the controller-runtime reconciler for `CephBlockPoolRadosNamespace`, creating, deleting, status-reporting, CSI-profile, and RBD mirroring behavior for RADOS namespaces under Ceph block pools.
+
+Important APIs/types/functions: `ReconcileCephBlockPoolRadosNamespace`, `Add`, `newReconciler`, `reconcile`, `createOrUpdateRadosNamespace`, `deleteRadosNamespace`, `updateStatus`, `buildClusterID`, `cleanup`, `reconcileMirroring`, `radosNamespaceChannelKeyName`, and `cancelMirrorMonitoring`. `mirrorHealth` tracks the context/cancel pair and whether a mirror checker goroutine has started. The controller registers an index field named `blockPoolName/radosNamespaceName` so deletion can detect duplicate CRs pointing at the same pool namespace.
+
+Control flow: `Reconcile` wraps `reconcile` with panic recovery, named logging, and `reporting.ReportReconcileResult`. `reconcile` gets the CR, installs the finalizer, initializes status, checks CephCluster readiness, loads cluster info, resolves the running OSD Ceph version, handles deletion, handles external-cluster short circuiting, fetches the referenced `CephBlockPool`, waits for pool readiness, creates the namespace with Ceph CLI helpers, reconciles mirroring, marks Ready, and writes CSI client profile RADOS namespace config. Deletion skips Ceph delete for external clusters, avoids deleting the shared namespace until the last duplicate CR is removed, blocks finalizer removal if the namespace has images, and can launch a cleanup job when force-delete is annotated.
+
+State and persistence: persistent state is Kubernetes CR finalizers/status, status `Info["clusterID"]`, CSI operator `ClientProfile` resources, and Ceph-side RADOS namespaces/mirroring settings. Runtime state is the in-memory `radosNamespaceContexts` map that owns mirror-monitoring goroutine cancellation. This map is not persisted and is rebuilt by later reconciles.
+
+Dependencies/integration: depends on controller-runtime, Rook `opcontroller` readiness/finalizer helpers, `cephclient` Ceph CLI wrappers, CSI config helpers, `reporting.UpdateStatus`, `k8sutil.Hash`/job-name truncation, and dependent-deletion condition helpers.
+
+Risks: deletion correctness depends on field-index consistency and duplicate CR detection. `radosNamespaceChannelKeyName` parameter order is easy to misuse because call sites pass namespace/name in different textual orders. Mirror monitoring has shared mutable map state with goroutines but no mutex. The controller logs status-update errors without returning them in `updateStatus`. Force cleanup can remove Ceph resources asynchronously while finalizer blocking still depends on Ceph delete results.
+
+Test signals: covered by `controller_test.go` for no cluster, unready cluster, unready block pool, successful namespace creation, external mode CSI profile update, cluster ID hashing, implicit namespace resolution, and mirroring enable/disable variants. Deletion, duplicate CR handling, force cleanup, and monitor cancellation are less directly tested here.

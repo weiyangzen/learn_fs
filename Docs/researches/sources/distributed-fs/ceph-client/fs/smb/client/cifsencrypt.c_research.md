@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/smb/client/cifsencrypt.c
+
+Purpose: implements NTLM/NTLMv2 authentication hashing, SMB request signature feeding, NTLMv2 target-info response construction, legacy session-key encryption, and cleanup of SMB3 encryption transforms.
+
+Important APIs and functions: exported functions are `__cifs_calc_signature`, `setup_ntlmv2_rsp`, `calc_seckey`, and `cifs_crypto_secmech_release`. Internal helpers include `cifs_sig_step`, `cifs_sig_iter`, `cifs_sig_final`, `build_avpair_blob`, `find_next_av`, `find_av_name`, `find_timestamp`, `calc_ntlmv2_hash`, `CalcNTLMv2_response`, and `set_auth_key_response`.
+
+Control flow: signing callers initialize a `cifs_calc_sig_ctx` with MD5, HMAC-SHA256, or AES-CMAC state, then `__cifs_calc_signature` streams request kvecs and the payload iterator into the selected primitive and finalizes the signature. NTLMv2 setup parses server AV pairs from the challenge or constructs a minimal domain AV blob, discovers domain and DNS domain names, reuses the server timestamp or current time, generates a client challenge, appends a `cifs/<hostname>` SPN target-name AV pair, computes the NTLMv2 hash from password/user/domain, computes the NTLMv2 proof string, and derives the session key. `calc_seckey` encrypts a random secondary key with ARC4 for legacy NTLMSSP. Crypto release frees AEAD handles cached on the server object.
+
+State and persistence behavior: state is per-session and per-server, not filesystem persistent. The code mutates `ses->auth_key.response` and `ses->auth_key.len`, may allocate `ses->domainName` and `ses->dns_dom`, reads `ses->ntlmssp` challenge state, and uses `TCP_Server_Info::secmech` AEAD pointers. Sensitive temporary buffers and old target-info blobs are released with sensitive/free paths where applicable.
+
+Dependencies and integration points: depends on kernel crypto helpers for MD5, HMAC-MD5, HMAC-SHA256, AES-CMAC, ARC4, random bytes, FIPS state, iov iterators, NLS/UTF-16 conversion, NTLMSSP AV-pair structures, and CIFS server/session locking. It is called by SMB1/SMB2/SMB3 authentication, signing-key derivation, and transport signing/encryption paths.
+
+Risks: NTLMv2 and ARC4 paths are disabled or rejected under FIPS, so mount/auth error handling must propagate those failures clearly. AV-pair parsing must reject odd UTF-16 lengths and truncated blobs. `set_auth_key_response` replaces `ses->auth_key.response`; callers must preserve and free the old target-info blob correctly. Signature calculation assumes non-user-backed iterators are already prepared and returns EIO when iterators advance short. Authentication changes can easily break interop with domain defaults, SPN target names, or timestamp tolerance.
+
+Test signals: NTLMv2 auth with explicit domain, auto-discovered domain, empty domain, DNS domain AV pairs, missing timestamp, and malformed AV blobs; FIPS-mode failures for NTLMv2/ARC4; signature calculation over kvec-only and iterator payload requests for MD5/HMAC/CMAC contexts; SPN target-name inclusion; memory leak checks around repeated session setup retries; and interoperability with Samba, Windows, and legacy NTLMSSP servers.

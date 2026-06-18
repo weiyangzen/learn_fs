@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/om/snapshot/TestOzoneManagerHASnapshot.java
+
+Purpose: This class tests snapshot behavior in a three-OM HA deployment. It focuses on leader restart/failover, snapshot metadata consistency across OM nodes, snapshot chain restoration, snapshot deletion service ownership after failover, follower double-buffer ordering, and in-flight snapshot counters.
+
+Important APIs/types/functions: The suite uses `MiniOzoneHAClusterImpl`, `OzoneManager`, `ObjectStore`, `OzoneBucket`, `SnapshotInfo`, `OmMetadataManagerImpl`, `OzoneManagerDoubleBuffer`, `RDBCheckpointUtils`, `SnapshotDiffResponse`, and `SnapshotUtils`. Important methods include `testSnapshotDiffWhenOmLeaderRestart`, `testSnapshotIdConsistency`, `testSnapshotNameConsistency`, `testSnapshotChainManagerRestore`, `testSnapshotDeletingServiceDuringOMFailover`, `testKeyAndSnapshotDeletionService`, `testSnapshotInFlightCount`, `createSnapshot`, and `checkSnapshotIsPurgedFromDB`.
+
+Control flow: `staticInit` enables snapshots and fast delete-service intervals, builds a three-OM HA cluster, creates a shared test bucket, and stores shared client handles. Tests create snapshots and keys, then deliberately restart leaders, shut down leaders to force failover, suspend deletion services, pause follower double buffers, or inspect each OM metadata table. Polling with `await` or `GenericTestUtils.waitFor` handles replication and async cleanup.
+
+State and persistence behavior: The tests validate snapshot IDs and generated names converge across all OM metadata tables, snapshot chain manager state can be restored after leader restarts and deletions, deleted snapshot rows are purged from `SnapshotInfoTable`, and snapshot directories exist before tests proceed. The double-buffer test simulates a lagging follower receiving key purge and snapshot purge transactions in the same batch and verifies both leader and follower purge the snapshot consistently.
+
+Dependencies and integration points: The file integrates snapshot diff jobs with HA leader election, Ratis/double-buffer flush mechanics, snapshot deleting service, key deleting service, snapshot chain manager, OM metadata tables, and checkpoint filesystem state. It uses HA cluster node lifecycle methods such as `shutdownOzoneManager`, `restartOzoneManager`, and `waitForLeaderOM`.
+
+Risks and edge cases: These tests are timing-sensitive by design: leader election, async delete service runs, Ratis replication, double-buffer flushes, and snapshot diff job completion can race. `testSnapshotNameConsistency` is marked flaky. The deletion-service failover test must restore the old leader in a `finally` block to protect later tests.
+
+Test signals: Signals include correct diff size after leader restart, identical snapshot IDs/names across OMs, non-corrupt snapshot chain after restart/deletion sequences, purged snapshot DB rows on new leaders and lagging followers, reset in-flight snapshot count after leader change, and successful cluster restoration after failover scenarios.

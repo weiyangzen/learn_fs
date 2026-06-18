@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/kernel/bpf/lpm_trie.c
+
+Purpose: implements `BPF_MAP_TYPE_LPM_TRIE`, a no-prealloc longest-prefix-match map for byte-array keys such as IPv4/IPv6 prefixes. It stores real value nodes and synthetic intermediate nodes in an RCU-visible binary trie and returns the most specific non-intermediate prefix matching a lookup key. The source was read as a complete 789-line file.
+
+Important APIs/functions: `trie_lookup_elem`, `trie_update_elem`, `trie_delete_elem`, `trie_get_next_key`, `trie_alloc`, `trie_free`, `trie_check_btf`, `trie_mem_usage`, and `trie_map_ops`. Important types are `struct lpm_trie`, `struct lpm_trie_node`, `struct bpf_lpm_trie_key_u8`, and flag `LPM_TREE_NODE_FLAG_IM`. Helpers include `extract_bit`, `__longest_prefix_match`, `lpm_trie_node_alloc`, and `trie_check_add_elem`.
+
+Control flow: allocation validates `BPF_F_NO_PREALLOC`, key/value size bounds, map flags, and initializes a `bpf_mem_alloc` cache. Lookup walks from the RCU root, compares the node prefix with the key using word-sized big-endian comparisons, remembers the last real node, and descends by the next bit. Update allocates a new node before locking, walks to the insertion slot, handles empty insert, real-node replacement, intermediate-node conversion, ancestor insertion, or creation of a new intermediate splitter. Delete locks the trie, finds an exact real node, then either marks a two-child node intermediate, removes a leaf plus unnecessary intermediate parent, or promotes a single child. `get_next_key` returns keys in postorder, preferring more-specific prefixes before less-specific ones.
+
+State and persistence: trie contents live in map memory and persist until map deletion. `n_entries` counts real entries, not intermediate nodes. Nodes are published through RCU pointers and freed through `bpf_mem_cache_free_rcu`; `trie_free` can raw-free nodes because no BPF program can still access the map. Data is stored big-endian in node `data[]`, followed by the map value.
+
+Dependencies/integration: uses BPF map ops, BTF map IDs, generic batch operations, `bpf_mem_alloc`, RCU, `rqspinlock_t`, and map access flags. It integrates with syscall map operations and eBPF helper map access. BTF checking only requires a struct key type embedding the LPM key shape.
+
+Risks and edge cases: prefix lengths greater than `max_prefixlen` are rejected. Empty trie, root replacement, and intermediate-node collapse are mutation hot spots. The raw res spinlock can return busy errors under resilient locking. Memory accounting reports real entries only and can understate intermediate-node memory. The best-fit traversal assumes valid big-endian key layout and key sizes matching map creation.
+
+Test signals: BPF selftests for LPM trie insert/lookup/delete, IPv4/IPv6 longest-prefix behavior, `BPF_NOEXIST`/`BPF_EXIST` semantics, postorder `get_next_key`, invalid prefix lengths, full-map `-ENOSPC`, BTF key validation, batch ops, and concurrent lookup/update/delete stress under RCU.

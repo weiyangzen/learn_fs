@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/iavf/iavf.h
+
+Purpose: this is the main private header for the iavf VF driver. It defines driver-wide constants, adapter/VSI/q-vector state, filter tracking objects, capability macros, state-machine values, and cross-module function prototypes.
+
+Important APIs/types: major types include `struct iavf_vsi`, `struct iavf_q_vector`, `struct iavf_mac_filter`, `struct iavf_vlan_filter`, `struct iavf_channel_config`, `struct iavf_cloud_filter`, and the central `struct iavf_adapter`. Enums define adapter lifecycle states (`__IAVF_STARTUP` through `__IAVF_RUNNING`), VLAN filter states, traffic-class state, cloud-filter state, and critical sections. Macros expose descriptor sizing, queue/vector limits, RSS capability choices (`RSS_PF`, `RSS_AQ`, `RSS_REG`), VLAN/CRC/TC/FDIR/advanced-RSS/QoS/RXDID/PTP capability checks, and AQ request bits.
+
+Control flow: adapter initialization progresses through version negotiation, resource retrieval, extended capabilities, software setup, down/running states, reset, and communication failure. The `aq_required` bitmask queues virtchnl requests for the admin queue worker; `extended_caps` sequences newer capability negotiations. Prototypes connect main, virtchnl, Tx/Rx, ethtool, Flow Director, advanced RSS, VLAN, QoS, PTP, reset, and filter-management modules.
+
+State and persistence: `struct iavf_adapter` holds workqueues, reset/admin/config workers, waitqueues, vectors, rings, MSI-X entries, netdev/PDI handles, hardware struct, current/last state, link state, negotiated PF version, VF resources, VLAN v2 caps, supported Rx descriptor ids, PTP data, current stats, RSS key/LUT/hash algorithm/hashcfg, ADq/cloud filters, Flow Director filters, and advanced RSS list. MAC/VLAN/cloud/FDIR/advanced-RSS list state is protected by spinlocks and later reconciled with PF responses.
+
+Dependencies and integration: it includes core Linux networking, PCI, interrupt, workqueue, VLAN/IP/TCP/SCTP/IPv6, traffic-control, net shaper, virtchnl, iavf type, Tx/Rx, FDIR, advanced RSS, and PTP-related types. It is the common include for almost every iavf source file.
+
+Risks and test signals: state enum ordering is significant for watchdog/reset logic. AQ and extended capability bits must stay synchronized with `iavf_virtchnl.c`. Filter state machines must handle PF rejection and reset replay. Tests should cover build coverage, PF version negotiation, reset recovery, capability-dependent VLAN/RSS/PTP/RXDID paths, MAC/VLAN list locking, FDIR/advanced-RSS limits, and state transition logging via `iavf_change_state`.

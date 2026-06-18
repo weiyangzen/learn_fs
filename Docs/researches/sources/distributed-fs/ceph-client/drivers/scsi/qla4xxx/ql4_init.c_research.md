@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/scsi/qla4xxx/ql4_init.c -->
+# sources/distributed-fs/ceph-client/drivers/scsi/qla4xxx/ql4_init.c
+
+Purpose: implements adapter bring-up, firmware boot/readiness, local queue initialization, firmware dump allocation, NVRAM-derived hardware configuration, and DDB state transition handling for qla4xxx iSCSI HBAs.
+
+Important APIs/types/functions: exported functions include `qla4xxx_init_rings()`, `qla4xxx_get_sys_info()`, `qla4xxx_alloc_fw_dump()`, `qla4xxx_pci_config()`, `qla4_8xxx_pci_config()`, `ql4xxx_lock_drvr_wait()`, `qla4xxx_start_firmware()`, `qla4xxx_free_ddb_index()`, `qla4xxx_initialize_adapter()`, `qla4xxx_ddb_change()`, `qla4xxx_flash_ddb_change()`, `qla4xxx_process_ddb_changed()`, and `qla4xxx_login_flash_ddb()`. Internal helpers include `ql4xxx_set_mac_number()`, `qla4xxx_init_response_q_entries()`, `qla4xxx_wait_for_ip_config()`, `qla4_80xx_is_minidump_dma_capable()`, `qla4xxx_fw_ready()`, `qla4xxx_init_firmware()`, `qla4xxx_set_model_info()`, `qla4xxx_config_nvram()`, and `qla4xxx_start_firmware_from_flash()`.
+
+Control flow: initialization configures PCI, disables interrupts, starts firmware through `isp_ops`, enables 83xx mailbox interrupts when needed, reads firmware identity and system info, initializes local AEN state, sends the firmware control block, waits for firmware/IP readiness, and rebuilds DDBs on reset. Legacy firmware start takes the global driver semaphore, detects already-initialized hardware, soft-resets if needed, validates/configures NVRAM, boots firmware from flash, clears crash-record flags, and initializes request/response rings.
+
+State and persistence: runtime state includes queue indices, response signatures, active MRB slots, AEN counters, adapter flags, firmware state/additional state, MAC/model/serial strings, minidump buffers, IOCB high-water data, and DDB mappings. Persistent inputs come from EEPROM/NVRAM and flash system info; persistent target state is represented by flash DDB entries. DDB state transitions block/unblock libiscsi sessions, mark failures, clear firmware index bits, and arm relogin timers.
+
+Dependencies and integration: depends on PCI config APIs, DMA coherent allocation, firmware mailbox helpers, NVRAM semaphore/read helpers, SCSI/iSCSI session APIs, delayed DPC flags, and adapter-family `isp_ops` callbacks. It links hardware readiness to libiscsi session behavior.
+
+Risks and test signals: readiness polling has many state exceptions for DHCP, IPv6, link-down, autoconnect, and config-wait. NVRAM fallback defaults and bitwise `|` use in some family checks deserve regression attention. Minidump size comes from firmware and drives `vmalloc()`. Test signals include cold boot, reset boot, existing BIOS-initialized firmware, invalid checksum fallback, DHCP/IPv6 address acquisition, flash DDB login/relogin, queue reinit after reset, and 80xx minidump capture mask handling.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/scsi/qla4xxx/ql4_init.c -->

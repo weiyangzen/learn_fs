@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_group.h
+
+Purpose: `xfs_group.h` defines the generic incore `struct xfs_group` and inline geometry helpers shared by allocation groups and realtime groups. It provides the contract implemented by `xfs_group.c` and used by perag/rtgroup code.
+
+Important types and APIs: `struct xfs_group` contains mount pointer, group number, group type, passive and active reference counters, precalculated usable block range, and kernel-only members for busy extents or zoned reset tracking, health state, state lock, deferred intent drain, and rmap update hooks. Function declarations cover get/hold/put, grab/rele, range iteration, marked iteration, insert/free, and lookup by fsblock. Mark macros wrap xarray mark operations. Inline conversion helpers include `xfs_group_max_blocks`, `xfs_groups_to_rfsbs`, `xfs_group_start_fsb`, `xfs_gbno_to_fsb`, `xfs_gbno_to_daddr`, `xfs_fsb_to_gno`, `xfs_fsb_to_gbno`, `xfs_verify_gbno`, and `xfs_verify_gbext`.
+
+Control flow: most code is declarative or inline arithmetic. Address conversion maps between group-relative block numbers, filesystem block numbers, and disk addresses. `xfs_gbno_to_daddr` has a key branch for group layouts with physical address gaps: if `has_daddr_gaps` is set, it converts through group FSB numbering; otherwise it multiplies group number by uniform group block count. Verification helpers reject blocks below `xg_min_gbno`, at or beyond `xg_block_count`, zero-length extents, and overflowed end calculations.
+
+State and persistence behavior: this header defines incore state, not on-disk layout. However, its geometry arithmetic must match persisted superblock group geometry and realtime group layout. The health fields are incore summaries that feed geometry ioctls and health monitoring. Intent drains synchronize transient deferred-operation state so online repair and scrub do not see intentional inconsistencies.
+
+Dependencies and integration points: it depends on mount group geometry (`mp->m_groups[type]`) and XFS integer types from format headers. Per-AG wrappers such as `pag_group` and realtime wrappers such as `rtg_group` integrate typed group users with generic helpers. `xfs_health.h` uses `struct xfs_group` for group-level health functions.
+
+Risks: address conversion errors can cause metadata I/O against the wrong group, particularly for realtime group layouts with gaps. Arithmetic overflow in extent verification is explicitly guarded; callers should use `xfs_verify_gbext` before trusting external or ondisk ranges. Reference fields must only be manipulated through the implementation helpers. Kernel-only union members require type discipline because the same storage means different things for zoned rtgroups and ordinary groups.
+
+Test signals: unit or fstests coverage should include group-relative conversion for AGs, rtgroups, internal realtime sections, and zoned gap layouts. Boundary tests should cover minimum usable block, last valid block, zero length, overflow length, and absent `blklog` behavior. Concurrency tests should pair header helpers with the lifecycle functions in `xfs_group.c`.

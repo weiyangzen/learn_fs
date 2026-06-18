@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/panfrost/panfrost_perfcnt.c
+
+`panfrost_perfcnt.c` implements Panfrost's unstable raw performance-counter uAPI. It manages a single device-wide counter session owned by one DRM file, allocates a GPU-visible shmem BO in that file's MMU context, programs performance-counter enable/config registers, triggers manual samples, waits for cache-clean completion, and copies the raw dump to userspace.
+
+Important state is `struct panfrost_perfcnt`: active GEM mapping, BO size, CPU vmap, owning `panfrost_file_priv`, mutex, and completion. Key entry points are `panfrost_perfcnt_init()`, `panfrost_perfcnt_fini()`, `panfrost_perfcnt_close()`, `panfrost_ioctl_perfcnt_enable()`, `panfrost_ioctl_perfcnt_dump()`, `panfrost_perfcnt_sample_done()`, and `panfrost_perfcnt_clean_cache_done()`.
+
+Control flow is enable, sample, dump, disable. Enable gates on `panfrost_unstable_ioctl_check()`, rejects invalid counter sets, runtime-resumes the GPU, creates and maps the sample BO, clears counters/caches, obtains an address-space slot, enables JM/shader/MMU-L2/tiler counters, and configures manual mode. Dump programs base address registers, issues `GPU_CMD_PERFCNT_SAMPLE`, waits up to one second, then copies `bosize` bytes. Disable tears down registers, vmap, file GEM open, AS ref, mapping, and PM ref.
+
+Dependencies are Panfrost GEM/MMU/job/device helpers, feature and issue helpers, `panfrost_regs.h`, DRM shmem, runtime PM, completions, and uAPI structs. Risks are exclusive ownership races, timeout/error unwinds, raw layout instability, cache-clean ordering, and HW issue 8186 tiler sequencing. Test signals include concurrent owners, invalid countersets, file-close cleanup, timeout injection, Midgard/Bifrost dump sizing, and runtime suspend after disable.

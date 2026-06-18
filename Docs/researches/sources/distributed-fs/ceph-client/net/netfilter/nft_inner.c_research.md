@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_inner.c
+
+Purpose: implements the nftables `inner` expression wrapper that parses encapsulated/tunnel packet headers and evaluates an embedded `payload` or `meta` expression against the inner packet context.
+
+Important APIs/types/functions: `struct nft_inner` stores flags, tunnel header size/type, embedded expression type, and an embedded `__nft_expr` private area for payload/meta data. Per-CPU `nft_pcpu_tun_ctx` caches `struct nft_inner_tun_ctx` under a local lock. Parsing helpers include `nft_inner_parse_tunhdr()`, `nft_inner_parse_l2l3()`, `nft_inner_parse()`, and cache save/restore helpers.
+
+Control flow: eval first obtains an inner offset via `nft_payload_inner_offset()`. If packet info lacks a reusable full inner context or type differs, it parses tunnel header, optional L2, network header, and transport header offsets. It handles GRE directly, UDP tunnel headers, Geneve option length, Ethernet/VLAN, IPv4 fragmentation, and IPv6 extension traversal. Then it calls `nft_payload_inner_eval()` or `nft_meta_inner_eval()` on the embedded expression and stores the context for subsequent expressions on the same skb.
+
+State/persistence: expression state is the embedded inner expression and parsing configuration; runtime cache is per-CPU and keyed by skb pointer. Dependencies include payload/meta inner ops, tunnel protocol headers, IPv4/IPv6 parsing, VLAN/Geneve/GRE helpers, and local BH locking. Risks include stale cache if skb pointer reuse collides, unsupported embedded expression types, malformed tunnel headers, incorrect offset for Geneve options, and fragment handling. Test signals: GRE and UDP tunnel packets, Geneve options, L2-present and network-only modes, IPv4 fragments, IPv6 extension headers, embedded payload and meta protocol/l4proto reads, cache reuse across multiple inner expressions, and invalid `NFTA_INNER_NUM`/hdrsize/type rejection.

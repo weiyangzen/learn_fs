@@ -1,0 +1,154 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/sh/include/asm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 140
+- Recursive researched files: 140
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/Kbuild`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/adc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/addrspace.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/alignment.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/asm-offsets.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/atomic-grb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/atomic-irq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/atomic-llsc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/atomic.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/barrier.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bitops-cas.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bitops-grb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bitops-llsc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bitops-op32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bitops.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bl_bit.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bl_bit_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/bug.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cache.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cache_insns.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cache_insns_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cacheflush.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cachetype.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/checksum.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/checksum_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/clock.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cmpxchg-cas.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cmpxchg-grb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cmpxchg-irq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cmpxchg-llsc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cmpxchg-xchg.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/cmpxchg.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/device.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/dma-register.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/dma.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/dmabrg.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/dwarf.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/elf.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/entry-macros.S`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/extable.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/fixmap.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/flat.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/fpu.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/freq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/ftrace.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/futex-cas.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/futex-irq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/futex-llsc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/futex.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/hardirq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/hd64461.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/heartbeat.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/hugetlb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/hw_breakpoint.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/hw_irq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/i2c-sh7760.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/io.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/io_generic.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/io_noioport.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/io_trapped.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/irq.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/irqflags.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/kdebug.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/kexec.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/kgdb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/kprobes.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/linkage.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/machvec.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/mmiowb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/mmu.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/mmu_context.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/mmu_context_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/mmzone.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/module.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/page.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/pci.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/perf_event.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/pgalloc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/pgtable-2level.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/pgtable-3level.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/pgtable.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/pgtable_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/platform_early.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/posix_types.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/processor.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/processor_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/ptrace.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/ptrace_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/push-switch.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/reboot.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/romimage-macros.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/rtc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/seccomp.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/sections.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/setup.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/sfp-machine.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/sh7760fb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/sh_bios.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/shmparam.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/siu.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/smc37c93x.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/smp-ops.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/smp.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/sparsemem.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/spi.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/spinlock-cas.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/spinlock-llsc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/spinlock.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/spinlock_types.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/sram.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/stackprotector.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/stacktrace.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/string.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/string_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/suspend.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/switch_to.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/switch_to_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/syscall.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/syscall_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/syscalls.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/syscalls_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/thread_info.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/timex.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/tlb.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/tlbflush.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/topology.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/traps.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/traps_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/types.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/uaccess.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/uaccess_32.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/uncached.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/unistd.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/unwinder.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/user.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/vermagic.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/vmalloc.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/vmlinux.lds.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/watchdog.h`
+- `sources/distributed-fs/ceph-client/arch/sh/include/asm/word-at-a-time.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

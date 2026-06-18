@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-hdds/rocksdb-checkpoint-differ/src/main/java/org/apache/ozone/rocksdiff/RocksDBCheckpointDiffer.java -->
+# sources/object-store/apache-ozone/hadoop-hdds/rocksdb-checkpoint-differ/src/main/java/org/apache/ozone/rocksdiff/RocksDBCheckpointDiffer.java
+
+Purpose: Core checkpoint differ service for Ozone Manager RocksDB. It listens to RocksDB compaction events, persists compaction history, builds/reconstructs an SST compaction DAG, computes SST diff candidates between snapshots, and prunes old history/backup SST data.
+
+Important APIs/types/functions: Public setup methods attach RocksDB event listeners, column-family handles, and active DB. Compaction listeners call `shouldSkipCompaction`, hard-link input SSTs to backup on begin, and on completion persist a `CompactionLogEntry`, populate `CompactionDag`, and enqueue entries for value pruning. `loadAllCompactionLogs` migrates legacy text logs and loads the compaction log table. `getSSTDiffList` and `getSSTDiffListWithFullPath` compute diff candidates. Pruning APIs include `pruneOlderSnapshotsWithCompactionHistory`, `pruneSstFiles`, `pruneSstFileValues`, and DAG prune helpers.
+
+Control flow and state: The constructor creates metadata subdirectories, configures scheduler intervals, optional native raw-SST pruning queue, metrics, and compaction DAG state. Compaction log table keys are zero-padded sequence numbers plus compaction time for lexicographic chronological scans. DAG traversal starts from source snapshot SSTs, follows output-to-input graph edges, marks files as same when a destination SST is reached, and returns empty optional if destination files cannot be accounted for. Pruning scans old log-table entries, removes graph nodes/files under bootstrap read lock, and rewrites backed-up SST files with key-only data when native tooling is available.
+
+Dependencies and integration points: Integrates RocksDB JNI listeners, HDDS managed RocksDB wrappers, protobuf compaction log entities, native raw SST reader/writer utilities, Ozone configuration keys, bootstrap state locking, scheduler, metrics, and table-prefix filtering.
+
+Risks: Event listener races are acknowledged through `inflightCompactions` fallback logging. Graph mutation requires synchronization. Native value pruning is optional and failures update metrics but leave queue/data state to retry semantics. Legacy text log parsing is permissive for deletion lines but malformed lines are mostly logged. Full diff fallback occurs when DAG traversal cannot account for destination SSTs.
+
+Test signals: `TestCompactionDag` validates log migration, table loading, pruning, and bootstrap lock behavior. Additional tests should cover compaction listener skip cases, prefix filtering, `getSSTDiffListWithFullPath`, native prune updates, and scheduler suspension/resume.
+<!-- END_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-hdds/rocksdb-checkpoint-differ/src/main/java/org/apache/ozone/rocksdiff/RocksDBCheckpointDiffer.java -->

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dmub/dmub_srv.h
+
+Purpose: this header defines the standalone DMUB service interface for AMD display DMCUB microcontroller management. It covers service creation, firmware memory layout, hardware initialization/reset, framebuffer and register inbox command submission, GPINT/inbox/outbox communication, diagnostics, power-state tracking, and firmware metadata extraction. The file explicitly states that the interface is not thread-safe and must be synchronized by callers.
+
+Important types: enums describe status codes, ASIC families, DMUB cache windows, notification types, DPIA bandwidth statuses, memory access mode, power state, and inbox command interface. Memory/layout structs include `dmub_region`, `dmub_window`, `dmub_fb`, region/memory params, region/fb info, SoC FB info, and hardware-init params. Runtime state is in `struct dmub_srv`, which stores ASIC/config flags, firmware/shared-state pointers, framebuffer regions, hardware callback tables, inbox/outbox ring buffers, feature caps, power state, diagnostics, and pre-OS info. `dmub_srv_base_funcs` and `dmub_srv_hw_funcs` are the platform/hardware callback surfaces. `dmub_notification` is the normalized outbox notification payload.
+
+Control flow and persistence: the documented sequence is create, query support, calculate regions, initialize hardware, queue/execute commands, wait for idle/pending/free space, and destroy/reset as needed. `dmub_srv` persists software state across calls; hardware and firmware state are managed through callback functions and mailbox/ring-buffer state.
+
+Dependencies and integration: it includes `inc/dmub_cmd.h` and `dc/dc_types.h`. Display manager code creates the service, DC wraps it in `dc_dmub_srv`, and stat code consumes notifications.
+
+Risks and tests: synchronization is caller-owned. Hardware callbacks may be ASIC-specific and partially unsupported. Timeouts, D3 power state, queue fullness, and mailbox desynchronization must be handled by callers. Tests should cover initialization sequences per ASIC, memory alignment/size calculations, command queue full/timeout behavior, GPINT and inbox0 ACK paths, D3 rejection, diagnostic capture after failures, and firmware metadata parsing.

@@ -1,0 +1,15 @@
+# sources/security-integrity/audit-userspace/auparse/expression.c
+
+Purpose: Implements auparse search expression parsing, expression tree construction, freeing, and evaluation against audit event records.
+
+Important APIs, types, and functions: Public functions include `expr_parse()`, `expr_free()`, `expr_create_comparison()`, `expr_create_timestamp_comparison_ex()`, `expr_create_timestamp_comparison()`, `expr_create_field_exists()`, `expr_create_regexp_expression()`, `expr_create_binary()`, and `expr_eval()`. Internal parser helpers include `lex()`, `parse_comparison()`, `parse_primary()`, `parse_and()`, and `parse_or()`. Evaluation helpers include `eval_raw_value()`, `eval_unsigned_value()`, `eval_interpreted_value()`, `compare_unsigned_values()`, and `compare_values()`.
+
+Control flow: `expr_parse()` initializes a parser state, lexes the first token, parses the recursive grammar (`||` over `&&` over primary expressions), rejects trailing tokens, and returns an expression tree or an allocated error string. `lex()` recognizes operators, field escapes, quoted strings, slash-delimited regexes, raw/interpreted comparison tokens (`r=`, `r!=`, `i=`, `i!=`), value comparisons, parentheses, boolean not, and unquoted strings. `parse_comparison()` handles normal fields, escaped virtual fields (`timestamp`, `timestamp_ex`, `record_type`), and `\regexp`. Numeric comparisons are limited to UID/GID fields and virtual fields. `expr_eval()` recursively evaluates boolean nodes, raw/interpreted string comparisons, numeric/value comparisons, field existence, and regex matches against the current `rnode`.
+
+State and persistence: Expression trees own allocated field names, string values, regex objects, and subexpressions. No persistence. Parser error strings are allocated for callers to free. Evaluation may move the record nvlist cursor while searching field names.
+
+Dependencies and integration points: Depends on `expression.h`, `interpret.h`, libaudit message type lookup, POSIX regex, auparse state/event data, `rnode`, and `nvlist`. `auparse.c` uses these trees for `ausearch_*()` APIs.
+
+Risks and edge cases: Deeply nested expressions can recurse through parser/evaluator stack. `parser_realloc()` frees the old pointer on failure, which is intentional for parser-owned buffers but differs from normal `realloc()` expectations. `parse_timestamp_value()` manually advances the lexer source and must stay synchronized with accepted timestamp formats; the `strspn()` character set omits colon after serial parsing, which can leave unexpected trailing tokens for extended timestamp strings if not fully consumed. Invalid terms evaluate false rather than surfacing runtime errors, so search mistakes can silently miss records. Regex compilation errors are reported at parse time.
+
+Test signals: Search expression tests should cover raw vs interpreted comparisons, field existence, boolean precedence, parentheses, escaped virtual fields, timestamp with milliseconds and serial, regex syntax errors, UID/GID numeric comparisons, and malformed expressions.

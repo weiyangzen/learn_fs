@@ -1,0 +1,11 @@
+# sources/cloud-native/ostree/rust-bindings/src/auto/repo.rs
+
+## sources/cloud-native/ostree/rust-bindings/src/auto/repo.rs
+
+Generated GIR binding for `OstreeRepo`, exposed as the crate's main repository object. It wraps the C `OstreeRepo` GObject with constructors such as `new`, `new_default`, `for_sysroot_path`, `create_at`, `open_at`, and `mode_from_string`, then maps a broad libostree repository surface into Rust methods returning `Result<_, glib::Error>` where the C API reports `GError`.
+
+Important APIs cover repository lifecycle (`create`, `open`, `reload_config`, `write_config_and_reload`), transaction flow (`prepare_transaction`, `commit_transaction`, `abort_transaction`, `transaction_set_ref*`, `transaction_set_collection_ref`), checkout and object IO (`checkout_at`, `checkout_tree`, `read_commit`, `load_variant`, `load_object_stream`, `write_commit`, `write_content_trusted`, `write_metadata_trusted`, `write_mtree`), remotes (`remote_add`, `remote_change`, `remote_fetch_summary`, `remote_gpg_import`, `remote_list`, option accessors), pulls (`pull`, `pull_one_dir`, `pull_with_options`), signatures/GPG (`sign_commit`, `sign_delta`, `verify_commit*`, `verify_summary`, `signature_verify_commit_data`), static deltas, pruning, and state accessors such as `path`, `mode`, `parent`, `dfd`, `collection_id`, and `min_free_space_bytes`.
+
+Control flow is almost entirely FFI marshaling: inputs are converted with `ToGlibPtr`, output pointers are initialized, C functions are called, and null `GError` means success. State and persistence live in the libostree repo on disk; this wrapper only observes or triggers mutations. Feature gates track libostree version availability. Integration points include `gio::File`, `gio::InputStream`, `glib::Variant`, `AsyncProgress`, `RepoFile`, `RepoCommitModifier`, `CollectionRef`, `Sign`, and `Sysroot`.
+
+Risks are typical generated-binding risks: several GIR-unhandled hash table/archive/traversal methods remain commented, successful C calls are trusted to initialize outputs, and methods that mutate remotes, refs, commits, signatures, or config directly affect repository persistence. Test signals are mostly indirect through handwritten `repo.rs` and crate tests; this generated file has no local tests.

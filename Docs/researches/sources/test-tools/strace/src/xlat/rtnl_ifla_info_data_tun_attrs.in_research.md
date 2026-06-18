@@ -1,0 +1,17 @@
+# sources/test-tools/strace/src/xlat/rtnl_ifla_info_data_tun_attrs.in
+
+Purpose: `rtnl_ifla_info_data_tun_attrs.in` is a strace xlat input table for rtnetlink constants. The xlat generator turns these rows into C lookup data so syscall decoders can print symbolic names instead of raw integers for this kernel ABI surface. Source provenance is `include/uapi/linux/if_link.h`, and the declared prefix is `IFLA_TUN_`.
+
+Important APIs/types/functions: this file has no executable functions; its API is the xlat mini-language consumed by strace's build tooling. Directives seen here are `#unconditional`, `#value_indexed`, `#From include/uapi/linux/if_link.h`, `#Prefix IFLA_TUN_`. Generation behavior is `#unconditional`, `#value_indexed`. Representative constants are `IFLA_TUN_UNSPEC`, `IFLA_TUN_OWNER`, `IFLA_TUN_GROUP`, `IFLA_TUN_TYPE`, `IFLA_TUN_PI`, `IFLA_TUN_VNET_HDR`, `IFLA_TUN_PERSIST`, `IFLA_TUN_MULTI_QUEUE`, `IFLA_TUN_NUM_QUEUES`, `IFLA_TUN_NUM_DISABLED_QUEUES`.
+
+Control flow: at build time, strace's xlat generation includes this `.in` file, interprets directives, evaluates the listed macros or explicit values against bundled/system headers, and emits a decoder table. At runtime, syscall-specific printers consult that generated table when decoding rtnetlink arguments, flags, attributes, ioctl values, socket options, or netlink fields.
+
+State/persistence behavior: the file is static source data and stores no runtime state. Persistence is through the generated C/header artifacts in the build tree; correctness depends on keeping the table synchronized with upstream UAPI definitions and preserving row ordering when `#sorted` or explicit values are present.
+
+Dependencies: primary dependency is `include/uapi/linux/if_link.h` plus the strace xlat generation scripts and compatibility headers. Prefix handling (`IFLA_TUN_`) controls printed-name normalization.  The value-indexed directive means consumers can use dense numeric lookup when the generated C table is emitted. `#unconditional` keeps these constants visible even when host headers do not expose the exact macro set.
+
+Integration points: integrated by syscall decoders that include the generated xlat for rtnetlink. Common integration surfaces in this group include ioctl decoders, netlink attribute decoders, socket option printers, memory-management/syscall flag printers, signal/prctl/perf/KVM/io_uring/V4L2 paths, and architecture-specific decoders.
+
+Risks: stale constants, wrong explicit numeric values, accidental prefix drift, or broken sort/value-indexing directives would produce misleading strace output without changing traced program behavior. Host-header variability is also a risk for rows without `#unconditional`.
+
+Test signals: useful checks are rebuilding generated xlat artifacts, running strace's decoder tests that exercise the relevant syscall family, comparing printed symbolic names against kernel UAPI headers, and verifying unknown-bit fallback output. This file has 14 source lines, 10 data rows, and value style: All 10 rows name constants without local values, so the generated xlat relies on the included header definitions. Inline category comments: none.

@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source4/dsdb/samdb/ldb_modules/tombstone_reanimate.c
+
+Purpose: This LDB module implements Active Directory tombstone reanimation. It recognizes a special modify request that deletes `isDeleted` and replaces `distinguishedName`, restores attributes required for live objects, then renames the deleted object to its requested DN.
+
+Important APIs, types, and functions: The central state type is `struct tr_context`, which carries the module, original request/message, search result/message, prepared modify request/result, prepared rename request/result, target rename DN, and DSDB schema. Key functions are `tr_init_context`, `is_tombstone_reanimate_request`, `tr_prepare_rename`, `tr_do_down_req`, `tr_prepare_attributes`, and `tombstone_reanimate_modify`. Module registration is through `ldb_tombstone_reanimate_module_init` and `ldb_reanimate_module_ops.modify`.
+
+Control flow: `tombstone_reanimate_modify` ignores special DNs, then checks for the exact reanimation pattern: `distinguishedName` replace with one value and `isDeleted` delete. It loads the deleted object with `DSDB_SEARCH_SHOW_DELETED`, rejects objects that are not actually deleted, prepares a shallow modify message that removes `distinguishedName`, deletes `isRecycled`, restores user/group/objectCategory-related attributes, prepares a rename request to the new DN, runs the modify with `LDB_CONTROL_SHOW_DELETED_OID` and `DSDB_CONTROL_RESTORE_TOMBSTONE_OID`, then runs the rename with the same controls. Successful completion calls `ldb_module_done` on the original request.
+
+State and persistence behavior: The module itself keeps no long-lived private state. Persistent effects are the LDB modify and rename performed on the tombstoned object. The prepared restore modify may add or replace attributes such as `isRecycled`, user defaults, `sAMAccountType`, `primaryGroupID`, group `sAMAccountType`, `adminCount`, `operatorCount`, and `objectCategory`.
+
+Dependencies and integration points: It depends on DSDB schema access, deleted-object searches, user/group account helper functions, objectCategory generation, LDB controls for showing deleted objects, and the restore tombstone DSDB control. It integrates with modules below it by issuing synchronous down requests with explicit controls.
+
+Risks: The module relies on a strict request shape and assumes restored user/group attributes can be reconstructed from existing tombstone data. Missing `userAccountControl` or `groupType` causes operations errors. Rename failures are normalized to `LDB_ERR_OPERATIONS_ERROR` except for entry-exists and insufficient-access cases, so diagnostic detail can be reduced. The code performs modify before rename; a later rename failure leaves reliance on transaction semantics for rollback.
+
+Test signals: This work item did not include a dedicated test file for tombstone reanimation. Useful test signals would include modifying a real deleted user/group tombstone, verifying required restore controls are present, checking attribute defaults, and confirming transaction rollback on rename failure.

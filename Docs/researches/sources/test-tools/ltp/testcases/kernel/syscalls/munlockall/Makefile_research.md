@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/munlockall/Makefile
+
+Purpose: standard LTP build leaf for the `munlockall` syscall test. Important APIs/types/functions: common `testcases.mk` and `generic_leaf_target.mk` includes. Control flow: delegates target discovery and compilation to the LTP make framework. State/persistence: no custom state beyond build outputs. Dependencies/integration: places `munlockall01.c` under the kernel syscall test make hierarchy. Risks: no special capabilities/flags are encoded in the Makefile; runtime metadata in the C file carries test requirements. Test signals: successful build indicates the generic rules compile this single test.

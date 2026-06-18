@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_base05.py
+
+Purpose: validates storage and retrieval of large mixed strings, UTF/non-ASCII strings, and Python unicode/string conversions through `key_format=S,value_format=S`. It stresses cursor ordering and exact byte/string round trips.
+
+Important APIs are `session.create`, cursor item assignment, cursor `search/get_key/get_value/reset`, iteration, and helper `mixed_string`. Control flow constructs repeatable strings from English text excerpts and non-Latin unicode strings, inserts 1000 mixed key/value pairs, spot-checks search for selected keys, then iterates all records, decodes the numeric suffix, and verifies each key/value pair. Two additional tests insert and read the non-English list either as original strings or after `str()` conversion. State behavior is table content with large variable-length strings. Risks include Python version string/unicode behavior, embedded non-ASCII handling, and very long keys affecting ordering. Test signals are exact search and iteration equality plus complete coverage of the inserted numeric set.

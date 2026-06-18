@@ -1,0 +1,19 @@
+# sources/storage-engines/rocksdb/db_stress_tool/db_stress_tool.cc
+
+## Purpose
+`db_stress_tool.cc` is the `db_stress` executable entry path under `#ifdef GFLAGS`. It parses command-line flags, validates cross-feature compatibility, builds the requested RocksDB environment and test harness, then launches one stress-test runner per configured DB. Its core responsibility is orchestration: it does not implement individual operations, but selects the correct `StressTest` subclass, initializes shared global resources, and enforces option combinations that would make later correctness checks unsound.
+
+## Important APIs, types, and functions
+The primary exported function is `int db_stress_tool(int argc, char** argv)`. File-local helpers include `ValidateNumDbsFlags()`, `DestroyAllDbs()`, `RegisterCrashCallbacks()`, and `ReturnFlagValidationError()`. The file owns process-lifetime guards for custom `Env` instances (`env_guard`, `legacy_env_wrapper_guard`) and a raw-pointer vector `fault_fs_for_crash_report` used only by crash callbacks. It also defines the global `KeyGenContext key_gen_ctx`.
+
+## Control flow
+Startup registers flag validators, parses gflags, sanitizes double-valued options, configures compression/checksum globals, and creates `raw_env` from `--env_uri` or `--fs_uri`. Early-exit flags destroy DBs or delete directories before full validation. The long validation block rejects incompatible percentages, snapshot modes, WAL/reopen settings, blob direct-write combinations, trie index modes, read-only mutations, best-efforts recovery misuse, transaction constraints, wide-column constraints, and multi-DB incompatibilities. It then chooses DB, expected-value, and secondary paths, initializes shared cache/write-buffer-manager/rate-limiter resources, creates one `StressTest` per DB through `CreateCfConsistencyStressTest`, `CreateBatchedOpsStressTest`, `CreateMultiOpsTxnsStressTest`, or `CreateNonBatchedOpsStressTest`, constructs `SharedState` objects, starts per-DB threads running `RunStressTest()`, joins them, and calls `CleanUp()`.
+
+## State and persistence behavior
+The file maps CLI options into durable path layout. For `--num_dbs > 1`, it creates parent DB and expected-value directories and appends `db_N` suffixes for each instance. Secondary directories are created under `--secondaries_base` or the Env test directory. `DestroyAllDbs()` destroys each DB path and removes the parent for multi-DB mode. It also initializes process-global cache, hot-key, WBM, and rate-limiter objects that are shared by every DB runner. Crash callback state is intentionally file-static because signal handlers cannot safely capture `StressTest` objects.
+
+## Dependencies and integration points
+This file integrates the common flag definitions in `db_stress_common.h`, the stress-test factory APIs in `db_stress_driver.h`, `SharedState`, Env/FS creation through `rocksdb/convenience.h`, fault injection through `utilities/fault_injection_fs.h`, and stack-trace crash callback registration through `port/stack_trace.h`. Its option validation gates protect downstream code in the batched, non-batched, CF consistency, and multi-op transaction tests from unsupported combinations.
+
+## Risks and test signals
+The largest risk is option drift: new stress features must be added to this validation matrix or they may run in configurations whose verification logic is invalid. Multi-DB mode is intentionally limited and rejects CF clearing and multi-op transaction testing. Blob direct-write support is deliberately narrow. Crash callback handling uses raw pointers guarded by process lifetime; cleanup nulls the vector entries after worker completion. Test signals are mostly executable behavior: invalid flag combinations should fail early with explicit errors, early destroy/delete flags should return accurate status, multi-DB path construction should isolate DBs, and injected FS failures should be printed on crashes.

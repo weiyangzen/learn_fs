@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/video/fbdev/pxafb.h
+
+Purpose: defines private data structures, DMA descriptor layouts, overlay metadata, controller state constants, and geometry limits for `pxafb.c`.
+
+Important APIs/types/functions: `struct pxafb_dma_descriptor` mirrors the hardware DMA descriptor fields `fdadr`, `fsadr`, `fidr`, and `ldcmd`. Palette and DMA channel enums define base, overlay, cursor, command, and branch descriptor indices. `struct pxafb_dma_buff` groups palette storage, smart-panel command buffer, palette descriptors, and doubled frame DMA descriptors for branch updates. Overlay definitions include `OVERLAY1`, `OVERLAY2`, YUV/RGB format ids, `NONSTD_TO_XPOS`, `NONSTD_TO_YPOS`, `NONSTD_TO_PFOR`, `struct pxafb_layer_ops`, and `struct pxafb_layer`. `struct pxafb_info` is the main driver state container.
+
+Control flow: `pxafb.c` allocates `struct pxafb_info`, fills it from platform data, and uses the embedded `fb_info` as the registered base framebuffer. DMA setup writes into `pxafb_dma_buff`; panning and overlays select channel indices from the enums; smart-panel code writes commands into `cmd_buff`; state transitions use `C_DISABLE`, `C_ENABLE`, `C_DISABLE_CLKCHANGE`, `C_ENABLE_CLKCHANGE`, `C_REENABLE`, `C_DISABLE_PM`, `C_ENABLE_PM`, and `C_STARTUP`.
+
+State and persistence: `pxafb_info` persists for the lifetime of the platform device and holds MMIO base, clock, DMA buffers and physical addresses, framebuffer memory and physical address, palette pointer/size, platform-derived LCCR config, shadow registers, hsync timing, volatile controller state, workqueue and mutex synchronization, completions, optional smart-panel thread state, optional overlay state, cpufreq notifier, regulator state, power callbacks, and copied machine info. Overlay state tracks registered status, usage count, control registers, video memory, branch completion, and parent pointer.
+
+Dependencies and integration: included by `pxafb.c` and relies on fbdev, clk, DMA address types, completions, mutexes, work structs, wait queues, regulators, notifier blocks, and platform machine info definitions included by the C file before this header.
+
+Risks: this private header is tightly coupled to `pxafb.c`; changing enum order or descriptor layout can break hardware programming. The doubled descriptor arrays rely on `DMA_MAX * 2` and `PAL_MAX * 2` indexing discipline. `video_mem` is declared `void __iomem *` even though it is allocated with normal pages in `pxafb.c`, which can confuse access assumptions. `state` and `task_state` are volatile bytes, but correctness depends on external locking/workqueue rules rather than volatility.
+
+Test signals: compile all optional PXA framebuffer configurations, validate descriptor offsets with `offsetof` users in `pxafb.c`, run overlay and smart-panel paths that exercise every channel enum, and check controller state transitions during blanking, PM, and cpufreq changes. Static review should ensure every allocated field is released on remove/failure paths.

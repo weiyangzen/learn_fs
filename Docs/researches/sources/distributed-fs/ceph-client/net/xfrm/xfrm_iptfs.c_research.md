@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/xfrm/xfrm_iptfs.c
+
+Purpose: `xfrm_iptfs.c` implements IP-TFS/AGGFRAG tunnel mode for IPsec ESP, per RFC 9347. It aggregates multiple inner IP packets into one ESP payload, fragments large inner packets across multiple outer packets, reorders incoming tunnel packets, reassembles fragmented inner packets, and exposes mode-specific netlink attributes.
+
+Important types and APIs: `struct xfrm_iptfs_config` stores packet size, queue size, reorder window, and dont-frag setting. `struct xfrm_iptfs_data` stores per-SA output queue, queue accounting, output hrtimer, payload MTU, reorder window, drop timer, and reassembly state. The mode registers `struct xfrm_mode_cbs` with `init_state`, `clone_state`, `destroy_state`, `user_init`, `copy_to_user`, `sa_len`, `get_inner_mtu`, `input`, `output`, and `prepare_output`.
+
+Control flow: Output starts at `iptfs_output_collect()`, which optionally GSO-segments, enforces dont-frag PMTU, queues skbs under `x->lock`, marks ECN CE above 95 percent queue capacity, and starts `iptfs_timer`. Timer expiry drains the queue into `iptfs_output_queued()`. The first skb is converted into an IP-TFS packet; oversized packets are split by `iptfs_copy_create_frags()`, while following queued packets are appended by moving/sharing fragments or linking frag_list entries. Final packets go to `xfrm_output()`. Input starts at `iptfs_input()`, which uses a reorder window unless disabled. Ordered packets go to `iptfs_input_ordered()`, which validates IP-TFS headers, handles block offsets, calls reassembly helpers, extracts inner IPv4/IPv6 packets, completes DSCP/ECN metadata, and reinjects each inner packet through `xfrm_input(..., -2)`.
+
+State and persistence: Per-SA mode data owns output queue bytes, timers, reorder array, pending reassembly skb/runt bytes, default/user config, and module reference. SA lifetime persists through XFRM state; queued packets and reorder entries are freed on destroy.
+
+Dependencies and integration: Depends on XFRM mode callback registry, ESP AEAD block/auth sizes for MTU calculation, `xfrm_inout.h`, XFRM input/output resume semantics, skb fragment APIs, hrtimers, tracepoints from `trace_iptfs.h`, UAPI attributes parsed by `xfrm_user.c`, and compat handling in `xfrm_compat.c`.
+
+Risks: The file is high risk because it rewrites skb geometry and shares page frags. Reorder/drop timer logic must avoid accepting stale fragments or leaking pending skbs. Queue accounting controls memory pressure and ECN marking. `dont_frag` PMTU behavior differs from classic ESP by ignoring inner DF unless configured. Timer and state destroy locking must prevent use-after-free.
+
+Test signals: Validate IP-TFS SA add/dump with each attribute, aggregate small packets, fragment/reassemble large packets, disabled and nonzero reorder windows, out-of-order/duplicate/missing ESP sequences, drop timer expiry, runts at payload boundaries, IPv4/IPv6 inner packets, DSCP/ECN flags, GSO segmentation, queue overflow, dont-frag ICMP/local errors, configured packet size, module clone/destroy, and tracepoint output.

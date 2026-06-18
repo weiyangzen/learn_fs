@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/abort/abort01.c
+
+Purpose: checks that `abort()` terminates a child with `SIGIOT` and produces a core dump. Setup raises `RLIMIT_CORE` to at least 512 KiB if possible; `verify_abort` forks, the child calls `abort`, and the parent checks `WIFSIGNALED`, `WCOREDUMP`, and `WTERMSIG`. Important APIs are `SAFE_FORK`, `SAFE_WAIT`, `abort`, `getrlimit`, `setrlimit`, and wait-status macros. State includes only process state and core-limit settings in a tmpdir. Dependencies are fork support and core dumps not disabled by hard limits; non-root cannot raise too-low hard limits. Risks include system core dump policy masking the core signal. Test signals are separate pass/fail reports for core dump and `SIGIOT`.

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fs_0x15_ioctl.c
+
+Filesystem ioctl decoder for ioctl type `0x15`. It handles `FS_IOC_GETFSUUID`, `FS_IOC_GETFSSYSFSPATH`, and `FS_IOC_GETLBMD_CAP`, printing output-only `fsuuid2`, sysfs path, and logical block metadata capability structures on exit. State is tracee output memory only. Dependencies are `<linux/fs.h>`, `lbmd_pi_cap_flags`, `lbmd_pi_csum_types`, and `umove_or_printaddr`. Risks are output printing after failed syscalls, bounded string/uuid lengths, and new filesystem capability fields. Tests should cover all three commands, zero and oversized lengths, nonzero metadata flags, unknown commands, and bad pointers.

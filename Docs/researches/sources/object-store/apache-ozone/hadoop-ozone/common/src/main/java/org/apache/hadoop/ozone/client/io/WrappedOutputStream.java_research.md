@@ -1,0 +1,3 @@
+# sources/object-store/apache-ozone/hadoop-ozone/common/src/main/java/org/apache/hadoop/ozone/client/io/WrappedOutputStream.java
+
+Purpose: pure delegating `OutputStream` wrapper. It stores one underlying `OutputStream` and forwards all `write` overloads, `flush`, and `close`. There is no selection, buffering, synchronization, or persistence beyond effects performed by the wrapped stream. Dependencies are Java IO only. Integration point is APIs that need a distinct wrapper type while preserving standard output behavior. Risks are minimal; null underlying stream is not checked in constructor, so misuse produces later `NullPointerException`. Test signal is straightforward delegation behavior.

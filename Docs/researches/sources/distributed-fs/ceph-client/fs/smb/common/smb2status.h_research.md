@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/smb/common/smb2status.h
+
+Purpose: provides the shared SMB2/SMB3 NTSTATUS namespace used by the SMB client/server code to place Windows protocol status values on the wire and to support generated status-to-POSIX error mapping. The file is a protocol constant table, sourced from MS-ERREF, not an executable module.
+
+Important APIs/types/functions: `struct ntstatus` describes the severity/facility/code shape of an NTSTATUS value. `STATUS_SEVERITY_*` constants expose success, informational, warning, and error severity encodings. The bulk of the file is `#define STATUS_*`, `DBG_*`, `RPC_NT_*`, `EPT_NT_*`, and related facility-specific constants as little-endian `__le32` values, with trailing comments naming the Linux errno intended for `smb2_error_map_table` generation. High-use statuses include `STATUS_SUCCESS`, `STATUS_PENDING`, `STATUS_MORE_PROCESSING_REQUIRED`, `STATUS_ACCESS_DENIED`, `STATUS_OBJECT_NAME_NOT_FOUND`, `STATUS_OBJECT_NAME_COLLISION`, `STATUS_INVALID_PARAMETER`, `STATUS_NOT_SUPPORTED`, `STATUS_NETWORK_NAME_DELETED`, and the SMB-specific `STATUS_SMB_NO_PREAUTH_INTEGRITY_HASH_OVERLAP`.
+
+Control flow: there is no runtime control flow in this header. Protocol code includes it and writes these little-endian constants directly into SMB2 headers or compares received status fields against them. The comments are part of a tooling contract: mapping generation reads the status definitions and the annotated POSIX errno comments to build lookup tables elsewhere.
+
+State and persistence behavior: there is no mutable state or persistence. The constants are compile-time ABI data. Because the values are little-endian expressions, consumers should avoid rewrapping them with host-endian conversions except when explicitly comparing numeric CPU-order values.
+
+Dependencies and integration points: depends on Linux endian helper macros and integer types through its includers. It integrates with SMB2 response encoding, error conversion, client/server status handling, DCE/RPC named-pipe status propagation, and any generator that builds `smb2_error_map_table` from the comments.
+
+Risks: mistakes in numeric values or endian form produce wire-incompatible SMB errors. Mistakes in the errno comments can silently degrade generated POSIX mappings even though the C compiler sees only comments. Duplicate or rarely used facility values are intentionally preserved from Microsoft references; cleanup that deduplicates names or rewrites spelling can break compatibility with external specifications. Adding a status without a sensible POSIX comment risks defaulting to overly generic `-EIO` behavior.
+
+Test signals: useful signals are SMB2 error-path interoperability tests for open/create/delete/rename/share conflicts, authentication failures, DFS/referral errors, lease/oplock transitions, encrypted-session negotiation failures, and generated status-to-errno table diffs. Compile-time coverage should catch missing macros used by protocol code, but semantic coverage requires comparing wire statuses against Windows/Samba expectations.

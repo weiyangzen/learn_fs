@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/alpha/kernel/entry.S
+
+**Purpose:** Defines Alpha kernel exception, interrupt, syscall, context-switch, fork, signal-return, FPU save/restore, and special syscall assembly entry points. It is the ABI-critical bridge between PALcode frames, Linux `pt_regs`, scheduler/work-pending logic, tracing/seccomp/audit, and C handlers.
+
+**Important APIs/types/functions:** Main symbols include `entInt`, `entArith`, `entMM`, `entIF`, `entUna`, `entDbg`, `entSys`, `ret_from_sys_call`, `work_pending`, `do_switch_stack`, `undo_switch_stack`, `__save_fpu`, `alpha_switch_to`, `ret_from_fork`, `ret_from_kernel_thread`, `alpha_fork`, `alpha_vfork`, `alpha_clone`, `alpha_clone3`, `sys_sigreturn`, `sys_rt_sigreturn`, and `alpha_syscall_zero`. Critical macros are `SAVE_ALL`, `RESTORE_ALL`, `DO_SWITCH_STACK`, `UNDO_SWITCH_STACK`, CFI frame helpers, and `SYSCALL_SKIP_RETURN_RESTART_GATE`.
+
+**Control flow:** PALcode vectors branch to entry labels, which save registers into the Alpha `pt_regs` layout, set up `current` by masking the stack pointer, and call C handlers such as `do_entInt`, `do_page_fault`, `do_entIF`, or `do_entUnaUser`. `entSys` saves the syscall number in both a mutable shadow (`regs->r1`) and restart copy (`regs->r2`), checks syscall trace/audit/seccomp flags, dispatches through `sys_call_table`, and stores Alpha ABI return state in `r0` plus `a3` (`r19`) error flag. The traced path calls `syscall_trace_enter`/`leave`, handles `nr == -1` skip-dispatch, and uses `SYSCALL_SKIP_RETURN_RESTART_GATE` to prevent invalid `-1` success and restrict syscall restart to `ERESTART*` codes. Return-to-user raises IPL while sampling work flags, calls `do_work_pending` for signals/notify, and restores FPU state when thread status requests it.
+
+**State and persistence behavior:** Mutates kernel stack frames, thread-info flags/status, saved HAE cache/register, FP register slots, syscall shadow/original registers, and PAL context through `PAL_swpctx`/`PAL_rti`. No persistent storage is involved; correctness is entirely runtime architectural state.
+
+**Dependencies and integration points:** Depends on generated offsets, PAL constants, `alpha_mv`, `sys_call_table`, thread-info flags, C handlers in traps/irq/signal/ptrace/process code, and Alpha syscall ABI conventions. CFI directives integrate with unwinding/debugging.
+
+**Risks:** Very high risk because register offsets, restart gating, `a3` error semantics, FPU lazy-save state, and IPL transitions are ABI and correctness critical. Recent seccomp/ptrace skip handling must avoid returning `r0 == -1, a3 == 0` and must not restart skipped successful syscalls. Stack layout changes require matching `asm-offsets`.
+
+**Test signals:** Build and boot with syscall tracing, audit, seccomp, signal delivery, `fork`/`clone`/`clone3`, FPU-heavy context switches, unaligned-access traps, page faults, and interrupt returns. Targeted tests should cover syscall `-1` injection, `ERESTART*` restart paths, `force_successful_syscall_return()`, `sigreturn`, kernel threads, and debug unwinding through CFI frames.

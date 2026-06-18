@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/tty/vt/gen_ucs_fallback_table.py
+
+Purpose: `gen_ucs_fallback_table.py` is a Python host generator for `ucs_fallback_table.h`. It uses Python `unicodedata` and the external `unidecode` package, plus many manual overrides, to build a compact C table mapping Unicode BMP characters to single-character fallback glyphs for terminal display when exact glyphs are unavailable.
+
+Important functions and data: constants include `DEFAULT_OUT_FILE = "ucs_fallback_table.h"` and `RANGE_MARKER = 0x00`. The script records `unidecode_version` for generated-file provenance. Major functions are `generate_fallback_map()`, `get_special_overrides()`, `organize_by_pages()`, `compress_ranges()`, `generate_header()`, and `main()` using `argparse`.
+
+Control flow: generation iterates BMP code points from `0x0080` through `0xffff`, skips unnamed/control characters, calls `unidecode()`, and stores mappings only when transliteration is exactly one character. Manual overrides replace or add mappings for ligatures, comparison operators, arrows, currency signs, symbols, punctuation, negated math, dashes, check/cross marks, stars, quadrant blocks, and exclusions. Full-width printable ASCII and selected line-separator behavior are assigned zero so later organization filters them out because runtime code handles or ignores them separately. Entries are grouped by high-byte page, sorted, and compressed when three or more consecutive offsets share the same fallback. The generated header emits page descriptors and page entries using range markers.
+
+State and persistence: the script has no runtime kernel state. Its output is a deterministic generated C header when run with the same Python, Unicode database, `unidecode` version, and source overrides. `-o` selects the output file; otherwise it writes `ucs_fallback_table.h`.
+
+Dependencies and integration points: opt-in regeneration is wired from `drivers/tty/vt/Makefile` when `GENERATE_UCS_TABLES` is set. The generated header is consumed by `ucs.c`, and runtime lookup is expected to handle full-width ASCII programmatically. The script depends on Python 3, `unicodedata`, `unidecode`, `argparse`, `collections.defaultdict`, and `pathlib`.
+
+Risks: output can change when Python Unicode data or `unidecode` changes, so generated files may not be reproducible across environments without version control. Manual override choices are semantic and UI-visible. Restricting to single-character fallbacks means many transliterations are intentionally excluded. `RANGE_MARKER` must not conflict with valid fallback entry encoding. Compression/decompression must match `ucs.c` lookup expectations exactly.
+
+Test signals: run the generator with and without `-o`, verify generated C syntax, compare regenerated shipped header under the expected dependency versions, spot-check overrides for ligatures, arrows, currency, negated operators, full-width ASCII exclusions, range compression for repeated fallbacks, empty/unassigned character filtering, and runtime `ucs_get_fallback()` lookup against generated ranges and individual entries.

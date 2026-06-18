@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fs_x_ioctl.c
+
+Decoder for ioctl type `X` filesystem commands: `FITRIM`, `FS_IOC_FSGETXATTR`, `FS_IOC_FSSETXATTR`, `FS_IOC_SHUTDOWN`, `FIFREEZE`, and `FITHAW`. It prints trim ranges, fsxattr flags/extents/project/cow fields, shutdown flags, and no-argument freeze/thaw commands. State is tracee memory and syscall phase. Dependencies are `<linux/fs.h>`, `fs_xflags`, `fs_shutdown_flags`, and generic ioctl return flags. Risks are output-only get xattrs, nonzero hidden fields, and new xflags/shutdown flags. Tests should cover get/set xattr, trim, shutdown, freeze/thaw, bad pointers, and unknown command passthrough.

@@ -1,0 +1,15 @@
+## sources/storage-engines/foundationdb/fdbrpc/include/fdbrpc/simulator.h
+
+Purpose: Declares the main simulation policy and simulator interfaces used to create processes/machines, inject network/disk/process failures, track roles/exclusions, simulate HTTP, and provide a simulated file system.
+
+Important APIs/types/functions: `ISimulationPolicy` defines process-protection, availability, datacenter death, version validation, corruption, swap, capability, and kill-permission hooks. `ISimulator : INetwork` exposes process/machine creation, scheduling (`onProcess`, `onMachine`), kill/reboot APIs at interface/machine/zone/DC/datahall/all scopes, availability and address exclusion queries, network clog/disconnect controls, process/machine lookup/destruction, SimHTTP registration, simulation policy access, protected address tracking, role add/remove/query, cleared/excluded/switched-cluster state, swap disabling, process-global access, and connection-failure disabling helpers. Globals include `g_simulator`, `simulationPolicyHasCapability()`, startup helpers, `DiskParameters`, `waitUntilDiskReady()`, connection failure enable/disable/extend, `getMaxSatelliteLogs()`, and `Sim2FileSystem`.
+
+Control flow: Simulator implementations schedule process actors, enforce policy when killing, mutate role/exclusion/cleared/switch maps with trace events, and route network/file operations through simulated implementations. `simulationPolicyHasCapability()` checks that the network is simulated, a simulator exists, and a policy is installed before querying capabilities. Connection failure helpers manipulate simulator-wide clogging disable windows.
+
+State and persistence behavior: Extensive in-memory simulation state includes current process thread-local pointers, process/machine lists in implementations, role/exclusion/cleared/switch maps, protected addresses, disabled maps, auth keys, corrupted blocks, HTTP handlers, and simulated file-system metadata. `Sim2FileSystem` performs simulated file operations, not host durable operations.
+
+Dependencies and integration points: Depends on Flow networking, histograms, chaos metrics, protocol versions, async files, HTTP, failure monitor, locality, replication policy, and simulator kill types. It is used by simulation tests and by runtime code that needs to branch on simulation capabilities.
+
+Risks: Thread-local `currentProcess` and `isMainThread` are explicitly subtle in a deterministic simulator. Kill-type policy downgrades must preserve fault model invariants. Role/exclusion reference counts must balance. Connection failure disabling can mask important network faults if not re-enabled. Simulation-only state should not leak assumptions into production code.
+
+Test signals: Process/machine lifecycle, kill/reboot scopes, policy protection/downgrade, role add/remove balancing, exclude/include/clear/switch cluster behavior, clog/disconnect/reconnect, connection-failure disable/extend timing, simulated disk delay, SimHTTP registration, simulated file operations, corruption injection, and capability-gated behavior.

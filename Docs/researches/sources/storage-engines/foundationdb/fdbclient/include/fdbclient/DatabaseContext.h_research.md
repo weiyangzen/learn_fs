@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbclient/include/fdbclient/DatabaseContext.h
+
+Purpose: Declares the native client database runtime context: connection record, client info monitoring, proxy selection, storage location cache, watches, tag throttling, metrics, status, special key space, global config, version vector cache, and backoff.
+
+Important APIs/types/functions: Helper types include `StorageServerInfo`, `LocationInfo`, `CommitProxyInfo`, `GrvProxyInfo`, `ClientTagThrottleData`, `WatchParameters`, `WatchMetadata`, `MutationAndVersionStream`, `EndpointFailureInfo`, and `KeyRangeLocationInfo`. `DatabaseContext` creates/clones databases, manages location cache get/set/invalidate, tracks failed endpoints, samples read tags/costs, updates and returns GRV/commit proxies, fetches health/storage metrics, splits storage metrics, queries hot ranges and cluster protocol, manages watch counters/maps/ref-counts, applies database options, handles connection changes/hot-standby switch, runs management actions, exposes client status JSON, and maintains request backoff. `Backoff` is a standalone exponential randomized delay helper.
+
+Control flow: A database context is built from a connection record and `AsyncVar<ClientDBInfo>`, then monitors client info to update proxy models and global config. Transactions and reads consult caches, proxies, throttles, and version-vector state. Watches are tracked by key/version to survive connection changes and avoid cancellation races. Management methods route to cluster/worker/proxy RPCs. Errors can be deferred and checked before operations.
+
+State and persistence behavior: Most state is process-local: caches, counters, throttled tags, watches, metrics, status snapshots, proxy models, and backoff. Persistent influence comes through the connection record, global config, special key space transactions, and management RPCs. `minAcceptableReadVersion` prevents reads from an old cluster after switching connection records.
+
+Dependencies and integration points: Depends on NativeAPI, key range maps, commit/GRV/storage interfaces, special key space, queue model, event metrics, smoothers, DDSketch, version vectors, global config, and Flow actors. It is the core integration point for client transactions and status.
+
+Risks: This class owns many asynchronous actors and shared references; destruction and `StorageServerInfo::notifyContextDestroyed()` must avoid dangling context pointers. Watch ref-count uses version multisets to avoid races during connection-file changes. Cache invalidation mistakes can direct reads to wrong storage servers. Proxy provisional state must keep GRV and commit proxy use consistent. Backoff and throttle handling affect client-wide throughput.
+
+Test signals: Database clone/create lifecycle; proxy update and change trigger behavior; location cache hit/miss/invalidation; failed endpoint tracking refresh/clear; watch count/ref-count race cases across connection switch; hot standby min-version validation; health/storage metric fetching; tag throttle expiry; client status JSON; global config initialization; backoff growth/reset behavior.

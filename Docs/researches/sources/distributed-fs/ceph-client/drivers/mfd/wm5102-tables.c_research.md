@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/mfd/wm5102-tables.c
+
+## Purpose
+`wm5102-tables.c` supplies WM5102-specific static data for the Arizona MFD framework. It provides silicon revision patches, always-on and main interrupt chip descriptions, register defaults for regcache, readable/volatile register predicates, and exported SPI/I2C regmap configurations.
+
+## Important APIs, Types, And Functions
+The exported function is `wm5102_patch(struct arizona *arizona)`, which selects `wm5102_reva_patch[]` for revision 0 and `wm5102_revb_patch[]` otherwise, then writes it with `regmap_multi_reg_write_bypassed()`. Exported interrupt chips are `wm5102_aod` and `wm5102_irq`. Exported regmaps are `wm5102_spi_regmap` and `wm5102_i2c_regmap`. Large static tables include `wm5102_aod_irqs[]`, `wm5102_irqs[]`, and `wm5102_reg_default[]`. Access predicates are `wm5102_readable_register()` and `wm5102_volatile_register()`.
+
+## Control Flow
+Bus glue creates either the SPI or I2C regmap using 32-bit register addresses and 16-bit values in big-endian format; SPI adds 16 pad bits. The Arizona core calls `wm5102_patch()` after the regmap exists, applying a bypassed multi-register patch selected by `arizona->rev`. Runtime register operations then flow through the readable and volatile callbacks. The readable predicate allowlists reset/revision, control interfaces, write sequencer, wake/sequence controls, clocking, FLL1/FLL2, power supplies, mic/headphone detection, inputs/outputs, AIF1-AIF3, SLIMbus, mixers, DSP1, ASRC/ISRC, GPIO, IRQ, EQ/DRC/HPLPF, and ADSP memory windows. The volatile predicate narrows this to reset/revision, sequencer/status, sample-rate and haptics status, DAC compensation, FX status, IRQ/raw/AOD status, DSP status/buffers/scratch/config, headphone/mic detect live values, and ADSP memory windows.
+
+## State, Persistence, And Dependencies
+The file owns no mutable runtime state. Persistent effects are patch writes and regcache defaults. `wm5102_reg_default[]` seeds maple cache values for tone/PWM/wake sequencing, haptics, clocks, FLLs, mic charge pump/LDO/mic bias, accessory/headphone/mic detection, input and output paths, PDM speaker, AIFs, SLIMbus, extensive mixer routes, EQ/DRC/HPLPF/ASRC/ISRC blocks, GPIO1-GPIO5, interrupt masks, AOD masks, jack debounce, and DSP1 control. Dependencies include Arizona core structures, Arizona register definitions, Linux regmap, regmap IRQ, module exports, and `REGCACHE_MAPLE`.
+
+## Integration Points
+The Arizona MFD core consumes the regmap configs and patch function during WM5102 probe. Regmap IRQ infrastructure consumes `wm5102_irq` for the five main interrupt status registers and `wm5102_aod` for one always-on interrupt register with wake control. Codec, GPIO, haptics, jack-detect, clock, DSP, audio-routing, SLIMbus, and power-management components depend on this file for safe register visibility and cache coherency. ADSP memory ranges `0x100000-0x105fff`, `0x180000-0x1807ff`, `0x190000-0x1947ff`, and `0x1a8000-0x1a97ff` are explicitly readable and volatile.
+
+## Risks
+The revision selector treats every nonzero revision as Rev B-compatible; future incompatible revisions would need a new patch path. The readable allowlist is very large and hand-maintained, so omissions can block valid regmap access while excess entries can expose undefined registers. ADSP memory is volatile and uncached for correctness, which increases bus traffic. Main and AOD IRQ arrays are sparse over `ARIZONA_NUM_IRQ`; consumers must use matching enum indices. Patch writes are bypassed, so they deliberately avoid normal cache behavior and must remain consistent with defaults and later cache sync. Default-table drift can create subtle resume or first-use mismatches.
+
+## Test Signals
+Validation should probe WM5102 over SPI and I2C, confirm endian/pad configuration, and verify Rev A versus Rev B patch selection with injected write failures. Regmap tests should sample representative readable/unreadable registers and volatile/cacheable boundaries, including reset, FLLs, AIFs, SLIMbus status, IRQ masks/status, GPIOs, DSP1 scratch/status, and ADSP memory window edges. IRQ tests should trigger main and AOD interrupts, including wake behavior through `ARIZONA_WAKE_CONTROL`. Audio smoke tests should cover playback/capture routes through inputs, outputs, AIF1-AIF3, PDM speaker, mixers, ASRC/ISRC, haptics, jack/mic detection, and DSP firmware memory access. Suspend/resume should verify regcache restores defaults while volatile status is reread.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmat/shmat03.c
+
+Purpose: regression for low-address `shmat()` behavior with `SHM_RND | SHM_REMAP`, tied to Linux commits around nil-page protection and Xorg compatibility. Setup creates a one-page private shared-memory segment. The run calls `shmat(shm_id, (void *)1, SHM_RND | SHM_REMAP)`: `EINVAL` is accepted, while a successful map must not land in the first 64 KiB and must tolerate a write. State is one segment and optional mapping. Dependencies include root permission to avoid `security_mmap_addr()` interference. Risks are architecture-specific low-address policy and kernel ABI differences. Test signals are `TPASS` for `EINVAL` or safe non-low mapping, `TFAIL` for mapping in protected low memory.

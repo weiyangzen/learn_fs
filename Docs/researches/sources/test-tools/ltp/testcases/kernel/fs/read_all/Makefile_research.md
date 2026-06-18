@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/read_all/Makefile
+
+Purpose: LTP leaf Makefile for the `read_all` filesystem exerciser. It sets `top_srcdir`, includes `include/mk/testcases.mk`, adds `_GNU_SOURCE` and `-pthread` to `CFLAGS`, links `read_all` with `-lrt`, and includes `generic_leaf_target.mk`. Dependencies are the LTP make infrastructure, pthreads for worker processes/IPC support, and realtime clock symbols used by the test. State is build-only; no runtime files are created here. Risks are missing pthread or librt settings causing link failures. Test signal is successful compilation of `read_all.c` into the LTP testcase binary.

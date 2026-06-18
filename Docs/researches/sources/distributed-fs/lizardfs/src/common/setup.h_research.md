@@ -1,0 +1,3 @@
+# sources/distributed-fs/lizardfs/src/common/setup.h
+
+Purpose: declares common process setup hooks. Important APIs: `prepareEnvironment()` and external `gVerbosity`. Control flow: callers include the header and invoke setup during program startup before locale-sensitive work. State/persistence: `gVerbosity` is mutable global state shared across translation units; environment effects are implemented in the `.cc`. Dependencies: `platform.h`. Integration points: LizardFS binaries and tools. Risks: global variable has no synchronization or ownership documentation; header does not describe environment variables affected. Test signals: no direct tests in this subset.

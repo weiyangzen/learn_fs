@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/dsa/hirschmann/hellcreek_hwtstamp.c
+
+Purpose: this file implements Hellcreek hardware timestamp integration for DSA. It advertises timestamp capabilities, validates per-port hwtstamp configuration, queues TX and RX PTP packets, reads hardware timestamp registers, reconstructs full nanosecond time using the PTP software seconds tracker, and delivers timestamps through normal skb timestamp APIs.
+
+Important APIs, types, and functions: exported DSA callbacks are `hellcreek_get_ts_info()`, `hellcreek_port_hwtstamp_set()`, `hellcreek_port_hwtstamp_get()`, `hellcreek_port_txtstamp()`, `hellcreek_port_rxtstamp()`, `hellcreek_hwtstamp_work()`, `hellcreek_hwtstamp_setup()`, and `hellcreek_hwtstamp_free()`. Internal helpers include `hellcreek_should_tstamp()`, `hellcreek_ptp_hwtstamp_available()`, `hellcreek_ptp_hwtstamp_read()`, `hellcreek_txtstamp_work()`, and `hellcreek_get_rxts()`.
+
+Control flow: users configure timestamping through DSA hwtstamp callbacks; unsupported modes are rejected or normalized to the hardware-supported PTPv2 event filter and TX-on mode. TX timestamping clones eligible PTP skbs, allows only one outstanding TX timestamp per port, stores start jiffies, and schedules the PTP worker. The worker polls port-specific TX status/data registers until available or timeout, then completes the clone with a hardware timestamp. RX timestamping accepts eligible PTP packets, stores the PTP class in skb control data, queues the skb, and the worker reads the inline reserved-field nanoseconds, clears the field, adds the seconds component, and injects the skb with `netif_rx()`.
+
+State and persistence: per-port `hellcreek_port_hwtstamp` stores state bits, RX queue, TX start time, TX skb clone, and current config. Hardware state includes timestamp source settings, inline reserved-field timestamping, TX status/data registers, and RX inline timestamp insertion. Full timestamps depend on PTP `seconds` and `last_ts` maintained by `hellcreek_ptp.c`.
+
+Dependencies and integration points: it depends on DSA timestamp callbacks, `ptp_classify_raw()`, `ptp_parse_header()`, PTP worker scheduling, skb hwtstamp helpers, Hellcreek PTP register access, and state from `hellcreek.h`.
+
+Risks: only ports 2 and 3 are handled for TX timestamp register selection. One outstanding TX timestamp per port is allowed; extra timestampable packets are dropped from timestamp service. RX uses `skb->cb` to store PTP type and uses the PTP reserved field as a temporary timestamp carrier. Timestamp reconstruction around nanosecond rollover depends on the software seconds tracker being fresh. TX timeout frees the clone after 40 ms.
+
+Test signals: `ethtool -T` capability reporting, accepted and rejected hwtstamp configs, TX PTP event timestamp delivery and timeout behavior, RX PTPv2 L2/L4 event timestamping with reserved field clearing, concurrent timestamp attempts per port, timestamp rollover near one-second boundaries, and setup programming of `PR_SETTINGS_C`.

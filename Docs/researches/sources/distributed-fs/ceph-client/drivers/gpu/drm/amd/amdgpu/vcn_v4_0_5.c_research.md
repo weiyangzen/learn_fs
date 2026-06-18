@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/vcn_v4_0_5.c -->
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/vcn_v4_0_5.c
+
+## Purpose
+Implements the AMDGPU VCN 4.0.5 IP block driver. It wires VCN firmware loading, unified encode ring setup, dynamic/static power management, memory-controller windows, interrupt dispatch, ring reset, register-dump support, and IP block lifecycle callbacks for VCN 4.0.5/4.0.6 class hardware.
+
+## Important APIs, Types, And Functions
+The exported integration point is `vcn_v4_0_5_ip_block`, whose `amd_ip_funcs` cover early/software/hardware init, fini, suspend/resume, idle waits, clockgating, powergating, and VCN IP-state dump/print helpers. `vcn_v4_0_5_early_init()` sets one encode ring per VCN instance as the unified queue, installs ring and IRQ functions, attaches `set_pg_state`, and calls `amdgpu_vcn_early_init()`. `vcn_v4_0_5_sw_init()` allocates VCN software state, resumes firmware buffers, registers general-purpose and poison IRQ IDs, initializes the doorbell-backed unified ring, configures `amdgpu_vcn4_fw_shared`, optional firmware logging, DPG pause hooks, reset masks, SR-IOV MM table state, sysfs reset mask, and register dump coverage. `vcn_v4_0_5_start()`, `vcn_v4_0_5_stop()`, and their DPG variants are the core hardware sequencing routines. The `amdgpu_ring_funcs` instance reuses VCN 2.0 encoder packet emitters and supports reset through stop/start.
+
+## Control Flow
+Normal probe flows through early init, software init, then hardware init. Hardware init programs NBIO VCN doorbell ranges and runs `amdgpu_ring_test_helper()` on every non-harvested instance. Ungating calls `vcn_v4_0_5_start()`: DPM is enabled when available, DPG mode is selected if supported, otherwise static PG is disabled, VCPU/LMI/MPC registers are initialized, firmware cache/stack/context/shared windows are programmed, the VCPU is released from reset, readiness is polled with reset retries, master interrupts are enabled, and RB1 is configured. Gating sets firmware queue holdoff, drains ring and LMI clean status, resets VCPU/LMI, clears status, reapplies clock/power gating, and disables DPM. DPG start writes an SRAM command stream directly or indirectly through PSP, then programs RB1 and doorbell while managing firmware queue reset bits. Interrupts demux VCN0/VCN1 client IDs to an instance, process fence interrupts on the unified ring, and forward poison interrupts to common VCN poison handling.
+
+## State And Persistence
+Persistent driver state lives in `adev->vcn.inst[]`: firmware BO addresses, shared firmware memory, ring pointers, `sched_score`, per-instance `cur_state`, DPG pause state, SRAM staging pointers, reset masks, and delayed idle work. Hardware state is persisted in VCN registers and doorbells until suspend/reset. The firmware shared area advertises unified queue, SMU DPM interface type, optional VF RB setup, DRM key-injection workaround, and queue enable/reset/holdoff bits. SR-IOV additionally allocates/free a virtualization MM table.
+
+## Dependencies And Integration Points
+Depends on common AMDGPU VCN helpers, SOC15 register macros, VCN 4.0.5 offsets/masks, VCN 4.0 IRQ IDs, PSP firmware loading, NBIO doorbell aperture control, DPM, DRM device liveness guards, VCN firmware logging, sysfs reset-mask plumbing, and ring/fence scheduler helpers. It integrates with reset infrastructure through `supported_reset`, with debug collection through `amdgpu_vcn_reg_dump_init()`, and with secure submission by enabling `secure_submission_supported` for IP 4.0.5.
+
+## Risks And Test Signals
+Risks cluster around ordering-sensitive MMIO: VCPU boot polling, DPG pause/ack waits, readbacks used as write flushes, and ring reset bit transitions. Doorbell index math differs for SR-IOV and bare metal and can break ring progress if mismatched. Harvested instances must be skipped consistently. Test signals include successful `amdgpu_ring_test_helper()`, VCN IB tests, fence interrupts, sysfs reset-mask exposure, ring reset recovery, suspend/resume, poison interrupt handling, and VCN firmware log output when enabled.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/vcn_v4_0_5.c -->

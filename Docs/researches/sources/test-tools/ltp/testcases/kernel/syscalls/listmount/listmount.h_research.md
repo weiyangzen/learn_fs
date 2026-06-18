@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listmount/listmount.h
+
+Purpose: shared wrapper for the `listmount` syscall. It defines `_GNU_SOURCE`, includes LTP test, mount, and syscall lapi headers, and provides `static inline ssize_t listmount(...)` that fills `mnt_id_req` with `MNT_ID_REQ_SIZE_VER0`, requested mount ID, and iterator parameter, then calls `tst_syscall(__NR_listmount, ...)`. State is caller-provided mount ID arrays and request values. Dependencies are the Linux mount API lapi and kernel syscall availability. Risks are ABI changes to `mnt_id_req` or versioned size. Test signal support is raw return value/errno consumed by the individual tests.

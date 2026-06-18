@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/intel_gtt.h -->
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/intel_gtt.h
+
+Purpose: declares the core i915 GTT address-space contract, page-table types, PTE/PDE encoding constants, VM lifetime helpers, GGTT/PPGTT structs, and backend operation hooks used by the GT memory-management code.
+
+Important APIs and types: `struct i915_page_table`, `struct i915_page_directory`, and `struct i915_vm_pt_stash` model paging structure allocation and preallocation; `struct i915_vma_ops` defines VM-specific bind/unbind callbacks; `struct i915_address_space` is the central VM abstraction with drm_mm allocator, scratch levels, callbacks for inserting/clearing entries, and VM lists; `struct i915_ggtt` extends the VM with GMADR/GSM mappings, aperture, fences, userfault list, and global resources; `struct i915_ppgtt` wraps a private VM and root page directory. Inline helpers include `i915_vm_is_4lvl()`, `i915_vm_min_alignment()`, `i915_vm_to_ggtt()`, `i915_vm_to_ppgtt()`, `i915_vm_get/tryget/put()`, `i915_vm_resv_get/put()`, PTE/PDE index/count helpers, and DMA/vaddr page-table accessors. Prototypes cover GGTT init/suspend/resume, PPGTT creation/init, scratch setup, page-table allocation/free/stash, VMA bind/unbind, workarounds, PAT setup, and read-scratch VMAs.
+
+Control flow: code using this header allocates an address space, fills generation-specific callbacks, calls `i915_address_space_init()`, then uses `vm->vma_ops` to bind/unbind VMA resources. Page-table stashes are preallocated and mapped before taking paths that cannot fail. PTE/PDE indexing helpers keep binding code from crossing page-table boundaries. VM references and reservation references are separate krefs: `i915_vm_put()` releases the logical VM, while `i915_vm_resv_put()` releases the lock object after all shared page-table objects stop using it.
+
+State and persistence: the header defines persistent address-space state rather than implementing it: GTT total/reserved range, allocation color, scratch pages, bound/unbound VMA lists, pending unbind interval tree, per-memory-type alignment requirements, and function pointers for hardware-specific page insertion. GGTT persistent state includes aperture IO mapping, fence registers, error capture allocations, and optional aliasing PPGTT. PPGTT persistent state is the root page directory.
+
+Dependencies and integration points: integrates Linux `kref`, `drm_mm`, `io_mapping`, scatterlists, dma-resv, i915 VMA/resource types, reset locking, intel memory region types, and backend implementations in `gen6_ppgtt`, `gen8_ppgtt`, GGTT files, and migration/ring/LRC users.
+
+Risks: struct layout assumptions are enforced with `BUILD_BUG_ON` in container helpers; incompatible changes can break casts between `i915_ppgtt`/`i915_ggtt` and `i915_address_space`. PTE flag definitions are reused across backend encoders and must match hardware. `i915_pte_count()` assumes nonzero page-aligned ranges and panics on invalid input. VM callback fields must be fully initialized before binding. Reservation kref misuse can destroy locks while page-table objects still share them.
+
+Test signals: compile-time assertions, PPGTT creation/bind/unbind selftests, VM kref leak checks, huge-page and 64K page coverage, GGTT aperture/fence tests, suspend/resume, and lockdep validation of VM mutex/reservation locking.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/intel_gtt.h -->

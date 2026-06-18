@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/shell/CommandWithDestination.java
+
+Purpose: abstract base for shell commands that combine one or more sources with a destination, including `cp`, `put`, `get`, `appendToFile`, and `mv`. It validates destination arity rules, maps source paths to target paths, copies files, creates recursive destination directories, and optionally preserves metadata.
+
+Important APIs and types: `getLocalDestination()`, `getRemoteDestination()`, `processArguments()`, `processPathArgument()`, `processPath(src,dst)`, `recursePath()`, `getTargetPath()`, `copyFileToTarget()`, `copyStreamToTarget()`, `preserveAttributes()`, `FileAttribute`, and private `TargetFileSystem`. Flags include overwrite, checksum verify/write, lazy persist, direct write, and an `EnumSet<FileAttribute>` for timestamps, ownership, permissions, ACLs, and xattrs.
+
+Control flow: subclasses parse options and set `dst`, then `processArguments()` enforces that multi-source copies target an existing directory and that single-source copies do not overwrite unless allowed. `processPathArgument()` prevents copying a directory into itself on the same filesystem. File paths copy through `openFile(...WHOLE_FILE...)`, `copyStreamToTarget()`, and metadata preservation; recursive directory paths temporarily replace `dst` with the current target directory, create missing directories, recurse through `FsCommand`, and then preserve directory metadata.
+
+State and persistence: no durable internal state is kept, but operations mutate target filesystems by creating files, renaming temporary `._COPYING_` files, deleting overwrite targets, setting times/owner/group/permissions/ACLs/xattrs, and creating directories. `TargetFileSystem` uses `deleteOnExit`/`cancelDeleteOnExit` and `processDeleteOnExit()` to clean incomplete temp files without closing the underlying filesystem.
+
+Dependencies and integration: extends `FsCommand`, uses `PathData` for resolved path/status/fs triples, `FileSystem.openFile()` with `FutureIO.awaitFuture`, Hadoop `FSDataOutputStream`, `CreateFlag`, ACL and xattr APIs, and viewfs `NotInMountpointException` handling for lazy persist block size lookup. It is the shared integration point for all copy/move-like shell commands.
+
+Risks: raw xattr preservation is guarded by both source and target living under `/.reserved/raw`; mismatched paths throw. Direct write skips temporary-file atomicity and may expose partial files. Symlinks are rejected rather than copied or dereferenced. `TargetFileSystem.rename()` deletes an existing target before rename, so failure between delete and rename can lose the old target when overwrite is enabled. Preserving ACLs also sets base permission first. Lazy persist forces replication factor 1 and depends on filesystem support.
+
+Test signals: tests should cover multi-source destination validation, overwrite/direct/lazy combinations, self-copy and subdirectory-copy rejection, raw xattr path combinations, preservation of each `FileAttribute`, Windows local destination parsing, temp cleanup on copy failure, and viewfs lazy-persist fallback.

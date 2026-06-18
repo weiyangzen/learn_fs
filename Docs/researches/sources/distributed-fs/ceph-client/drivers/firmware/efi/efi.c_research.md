@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/firmware/efi/efi.c
+
+Purpose: implements the generic EFI subsystem: global EFI state, command-line options, `/sys/firmware/efi`, efivar backend registration, config-table parsing, memory-map helpers, EFI memory reservation, random seed handling, runtime workqueue setup, and selected kexec/reboot integration.
+
+Important APIs/types/functions: exports global `struct efi efi`, `efivar_ops_nh`, `efivars_generic_ops_register()`, `efivars_generic_ops_unregister()`, `efi_mem_desc_lookup()`, `efi_status_to_err()`, and many init helpers. Important functions include `parse_efi_cmdline()`, `efisubsys_init()`, `efi_find_mirror()`, `__efi_mem_desc_lookup()`, `efi_mem_reserve()`, `efi_config_parse_tables()`, `efi_systab_check_header()`, `efi_systab_report_header()`, `efi_md_typeattr_format()`, `efi_mem_attributes()`, `efi_mem_type()`, `efi_mem_reserve_persistent()`, and kexec random-seed update hooks.
+
+Control flow: early params set debug/runtime/soft-reserve flags. `efi_config_parse_tables()` walks firmware config tables, records known GUID addresses, seeds kernel randomness from EFI RNG data, initializes memory attributes/TPM logs, reserves EFI memreserve entries, applies runtime-properties masks, imports initrd metadata, and reserves unaccepted-memory tables. `subsys_initcall(efisubsys_init)` creates an ordered EFI runtime workqueue when needed, registers EFI RTC and efivar platform devices, creates `/sys/firmware/efi` attributes and `efivars` mount point, registers generic efivar ops, optionally loads SSDT overlays from efivars, initializes debugfs boot-service blobs, and probes optional OVMF/Coco devices.
+
+State and persistence behavior: `efi` stores config table addresses and runtime support flags for kernel lifetime. `efi_mm`, `efi_rts_wq`, `efi_kobj`, memreserve root mappings, persistent memreserve linked-list entries, and sysfs/debugfs objects persist after init. Persistent reservations can be appended for kexec handoff.
+
+Dependencies and integration points: central integration point for EFI runtime wrappers, efivars, ACPI, TPM, initrd, memblock, random subsystem, kexec, sysfs/debugfs, platform devices, and architecture config-table extensions.
+
+Risks and test signals: config-table addresses and memory descriptors are firmware-controlled; usability checks, x86-32 high-address rejection, memreserve traversal, and runtime support masks prevent unsafe access. Test signals include `/sys/firmware/efi/{systab,fw_platform_size,efivars}`, efivarfs mountability, EFI RNG seed consumption, TPM log detection, persistent memreserve behavior across kexec, and correct error conversion for runtime service failures.

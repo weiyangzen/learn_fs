@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/power/supply/mp2629_charger.c
+
+Purpose: implements the Monolithic Power Systems MP2629 charger subdriver under the MP2629 MFD. It registers separate USB and battery power supplies, exposes ADC-backed input/battery measurements, supports writable charger/input/precharge/termination limits, reports faults/status, and provides a battery impedance-compensation sysfs attribute.
+
+Important APIs/types/functions: `struct mp2629_charger` stores parent regmap, regmap fields, mutex, USB/battery supplies, IIO ADC channels, and latest fault. `mp2629_read_adc()`, `mp2629_get_prop()`, and `mp2629_set_prop()` centralize ADC and field conversions. `mp2629_charger_battery_get_prop()` and `_set_prop()` implement battery properties. `mp2629_charger_usb_get_prop()` and `_set_prop()` implement USB properties. `mp2629_irq_handler()` handles status/fault interrupts. `batt_impedance_compensation_show/store()` expose an extra sysfs control.
+
+Control flow: probe obtains the parent MFD regmap and IRQ, allocates regmap fields, obtains all named IIO channels, registers a devm disable action, registers USB and battery power supplies, enables charging, disables watchdog, initializes the mutex, requests the threaded IRQ, and enables input-source/charging-change interrupts. Battery capacity is estimated as battery voltage divided by charge voltage limit. IRQ handling locks state, reads fault register and records/logs faults if present, otherwise reads status and notifies the relevant supply for input-source or charging changes.
+
+State and persistence: `fault` is cached after a fault interrupt and used for health until another interrupt clears/overwrites it. Limit settings and impedance compensation are hardware register state. ADC values are read live from IIO channels. The devm disable action clears charge-control bits on teardown.
+
+Dependencies and integration: depends on MP2629 MFD parent data, regmap fields, IIO consumer channels named for battery/system/input voltage/current, platform IRQ, sysfs attribute groups, and power-supply core.
+
+Risks: USB power supply is registered without `drv_data`, but getters retrieve state from `psy->dev.parent`; this depends on parent device layout. Charge status/type compares shifted 2-bit values against `0x10`/`0x11`, making some cases unreachable after shifting. `fault` is not cleared when a later zero-fault interrupt is handled, so health can remain stale. Capacity estimation from voltage ratio is crude. Test signals include all IIO channels present, writable limit boundary tests, IRQ fault and status notifications, stale fault clearing, impedance sysfs parsing/rounding, and charge-type/status mappings.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/si.c
+
+Purpose: Southern Islands common ASIC support for amdgpu. It provides per-chip register programming tables, ASIC callback wiring, BIOS/register helpers, reset plumbing, PCIe link management, UVD/VCE clock programming, and the IP block list for Tahiti, Pitcairn, Verde, Oland, and Hainan.
+
+Important APIs, types, and functions: the file defines large golden-register and clock-gating init arrays, video codec capability tables, `si_asic_funcs`, `si_common_ip_block`, and exported `si_set_ip_blocks()`. Key helpers include indirect register accessors for PCIe/SMC/UVD context, `si_read_register()`, BIOS read fallbacks, `si_asic_reset()`, `si_set_uvd_clocks()`, `si_set_vce_clocks()`, `si_common_early_init()`, `si_init_golden_registers()`, `si_pcie_gen3_enable()`, and `si_program_aspm()`.
+
+Control flow: early init installs indirect register functions, assigns `adev->asic_funcs`, reads revision straps, and chooses clock/power-gating flags by ASIC. Hardware init fixes PCIe max read request size, applies chip-specific golden register sequences, retrains PCIe Gen2/Gen3 when allowed, and configures ASPM. Reset either uses normal PCI reset or the legacy PCI config reset path that bypasses clocks, powers down SPLL, clears bus mastering, resets, and waits for `CONFIG_MEMSIZE` to return. Media clock setters bypass clocks, calculate PLL dividers, program PLL registers, wait for control acks, and switch sources back to PLL output.
+
+State and persistence: persistent state is hardware register state, PCI config state, programmed ring/IP ordering, and fields stored on `adev` such as `cg_flags`, `pg_flags`, revision IDs, callback tables, and reset status. There is no filesystem persistence. Several helpers temporarily save display/VGA/ROM registers and restore them after BIOS reads.
+
+Dependencies and integration points: integrates with amdgpu core IP block management, gmc/gfx/sdma/smu/dce/uvd/vce blocks, DC or VKMS display selection, AtomBIOS, PCIe capability helpers, DRM logging, and generated SI register headers. The allowed-register table gates debugfs/ioctl-style register reads.
+
+Risks and test signals: PLL programming and PCIe retraining rely on timeouts and exact register masks; failures surface as boot hangs, reset failures, media clock timeouts, or bad link speed. `BUG()` is used for impossible ASIC cases. Test signals include SI board probe, suspend/resume, GPU reset recovery, UVD/VCE playback/encode clocks, PCIe link speed/lane reporting, BIOS read paths, and ring/IB tests after `si_set_ip_blocks()` ordering.

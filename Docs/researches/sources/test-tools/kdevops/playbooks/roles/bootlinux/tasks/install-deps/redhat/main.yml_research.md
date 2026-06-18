@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/bootlinux/tasks/install-deps/redhat/main.yml
+
+This Red Hat dependency file enables EPEL for non-Fedora systems, installs the kernel build package set with DNF and retries, conditionally installs `btrfs-progs` on Fedora, installs Clang/LLVM/Lld when `bootlinux_compiler_clang` is true, installs rpmbuild support when `bootlinux_builder` is true, and removes `dracut-config-generic` to avoid initramfs behavior that interferes with the workflow.
+
+Important APIs include `include_role`, `dnf`, retry/until loops, and conditional tasks. Persistent state is RPM package installation/removal. Integration points are EPEL, bootlinux build modes, ccache, packaged kernel artifacts, and GRUB/initramfs behavior. Risks include package-name drift, destructive removal of `dracut-config-generic`, Fedora-only btrfs install despite other Red Hat releases possibly needing it, and EPEL role availability. Test signals should cover Fedora and RHEL-family hosts, Clang mode, builder mode, and idempotent repeated runs.

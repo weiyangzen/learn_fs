@@ -1,0 +1,17 @@
+# sources/test-tools/strace/tests/btrfs.c
+
+Purpose: `btrfs.c` exercises strace decoding for Btrfs ioctl command families, including balance, qgroup, scrub, device, subvolume, send/receive, feature, fiemap, and filesystem info structures.
+
+Important APIs/types/functions: local functions include `sprint_xlat_`, `sprint_makedev`, `prfl_btrfs`, `prxval_btrfs`, `print_uint64`, `print_hex`, `print_uuid`, `max_flags_plus_one`, `btrfs_test_trans_ioctls`, ... (48 total), `btrfs_test_fs_info_ioctl`, `rm_test_dir`, `main`; macros include `XLAT_MACROS_ONLY`, `ioc`, `BTRFS_COMPRESS_TYPES`, `BTRFS_INVALID_COMPRESS`; included headers include `tests.h`, `errno.h`, `fcntl.h`, `inttypes.h`, `limits.h`, `stdint.h`, `stdio.h`, ... (43 total), `linux/fiemap.h`, `xlat/fiemap_flags.h`, `xlat/fiemap_extent_flags.h`. Kernel/user ABI names observed in the full file include `btrfs`, `ioctl`, `fcntl`. Prominent constants include `SPDX`, `GPL`, `XLAT_MACROS_ONLY`, `BTRFS_UUID_SIZE`, `UINT64_MAX`, `BYTE_HEX_CHARS`, `BTRFS_IOC_TRANS_START`, `BTRFS_IOC_TRANS_END`, `NULL`, ... (118 total), `AT_REMOVEDIR`, `BTRFS_SUPER_MAGIC`, `EEXIST`; prominent struct names include `xlat`, `btrfs_qgroup_inherit`, `btrfs_ioctl_vol_args_v2`, `btrfs_ioctl_vol_args`, `btrfs_balance_args`, ... (35 total), `xlat_data`, `btrfs_ioctl_fs_info_args`, `statfs`.
+
+Control flow: `main` builds deterministic arguments, invokes the target syscall or helper sequence, prints the expected strace line with `printf`/test helpers, and exits through the strace test harness. The Btrfs test walks through grouped helper functions for each ioctl family, using failing `ioctl(-1, ...)` calls for pure decoder checks and live filesystem setup where a real Btrfs mount is needed.
+
+State and persistence behavior: runtime state is intentionally temporary and test-local. The test may allocate tail buffers and/or create temporary files, directories, descriptors, sockets, eventfds, epoll instances, or mount/file handles, then relies on process exit or explicit cleanup for disposal. Btrfs live coverage can depend on an externally provided Btrfs test root, writable permissions, and filesystem feature support; otherwise decoder-only EBADF paths still validate formatting.
+
+Dependencies: strace test harness headers such as `tests.h`, `scno.h`, `print_utils.h`, `pidns.h`, `secontext.h`, local xlat tables, libc headers, and Linux UAPI headers provide syscall numbers, fallback structs, constants, and output helpers. This file directly includes `tests.h`, `errno.h`, `fcntl.h`, `inttypes.h`, `limits.h`, `stdint.h`, `stdio.h`, ... (43 total), `linux/fiemap.h`, `xlat/fiemap_flags.h`, `xlat/fiemap_extent_flags.h`.
+
+Integration points: the file participates in strace's testsuite as a compiled C test, AWK normalizer, header, or generator input. It integrates with generated xlat tables, syscall-number selection, test-driver `.test` scripts, and expected-output comparison.
+
+Risks: Btrfs ioctls have many variable-size structs and kernel-version-dependent flags, so stale xlat tables, wrong structure sizing, or assuming a writable Btrfs filesystem can make expected output drift.
+
+Test signals: useful validation is the corresponding strace testsuite target under the same basename, comparison of stdout against expected decoder lines, successful compilation under the configured personality/time ABI, and skip behavior when the kernel lacks the syscall or permission. The source was read in full for this report: 2182 lines, 61801 bytes, sha256 prefix `494021e88926`.

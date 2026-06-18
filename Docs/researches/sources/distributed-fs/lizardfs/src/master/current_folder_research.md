@@ -1,0 +1,121 @@
+# Folder Research: sources/distributed-fs/lizardfs/src/master
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 107
+- Recursive researched files: 107
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/lizardfs/src/master/CMakeLists.txt`
+- `sources/distributed-fs/lizardfs/src/master/acl_storage.cc`
+- `sources/distributed-fs/lizardfs/src/master/acl_storage.h`
+- `sources/distributed-fs/lizardfs/src/master/acl_storage_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/changelog.cc`
+- `sources/distributed-fs/lizardfs/src/master/changelog.h`
+- `sources/distributed-fs/lizardfs/src/master/chartsdata.cc`
+- `sources/distributed-fs/lizardfs/src/master/chartsdata.h`
+- `sources/distributed-fs/lizardfs/src/master/checksum.h`
+- `sources/distributed-fs/lizardfs/src/master/chunk_goal_counters.cc`
+- `sources/distributed-fs/lizardfs/src/master/chunk_goal_counters.h`
+- `sources/distributed-fs/lizardfs/src/master/chunk_goal_counters_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/chunks.cc`
+- `sources/distributed-fs/lizardfs/src/master/chunks.h`
+- `sources/distributed-fs/lizardfs/src/master/chunkserver_db.cc`
+- `sources/distributed-fs/lizardfs/src/master/chunkserver_db.h`
+- `sources/distributed-fs/lizardfs/src/master/datacachemgr.cc`
+- `sources/distributed-fs/lizardfs/src/master/datacachemgr.h`
+- `sources/distributed-fs/lizardfs/src/master/exports.cc`
+- `sources/distributed-fs/lizardfs/src/master/exports.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_checksum.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_checksum.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_checksum_background_updater.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_checksum_background_updater.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_checksum_updater.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_checksum_updater.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_dump.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_freenode.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_freenode.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_metadata.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_node.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_node.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_node_types.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_operations.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_operations.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_periodic.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_periodic.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_quota.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_quota.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_snapshot.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_snapshot.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_store.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_store.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_store_acl.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_store_acl.h`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_xattr.cc`
+- `sources/distributed-fs/lizardfs/src/master/filesystem_xattr.h`
+- `sources/distributed-fs/lizardfs/src/master/flocks_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/fs_context.h`
+- `sources/distributed-fs/lizardfs/src/master/get_servers_for_new_chunk.cc`
+- `sources/distributed-fs/lizardfs/src/master/get_servers_for_new_chunk.h`
+- `sources/distributed-fs/lizardfs/src/master/get_servers_for_new_chunk_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/goal_cache.h`
+- `sources/distributed-fs/lizardfs/src/master/goal_config_loader.cc`
+- `sources/distributed-fs/lizardfs/src/master/goal_config_loader.h`
+- `sources/distributed-fs/lizardfs/src/master/goal_config_loader_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/hstorage_init.cc`
+- `sources/distributed-fs/lizardfs/src/master/hstorage_init.h`
+- `sources/distributed-fs/lizardfs/src/master/hstring.h`
+- `sources/distributed-fs/lizardfs/src/master/hstring_bdbstorage.cc`
+- `sources/distributed-fs/lizardfs/src/master/hstring_bdbstorage.h`
+- `sources/distributed-fs/lizardfs/src/master/hstring_memstorage.cc`
+- `sources/distributed-fs/lizardfs/src/master/hstring_memstorage.h`
+- `sources/distributed-fs/lizardfs/src/master/hstring_storage.h`
+- `sources/distributed-fs/lizardfs/src/master/hstring_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/id_pool_detainer.h`
+- `sources/distributed-fs/lizardfs/src/master/id_pool_detainer_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/init.h`
+- `sources/distributed-fs/lizardfs/src/master/itree.cc`
+- `sources/distributed-fs/lizardfs/src/master/itree.h`
+- `sources/distributed-fs/lizardfs/src/master/locks.cc`
+- `sources/distributed-fs/lizardfs/src/master/locks.h`
+- `sources/distributed-fs/lizardfs/src/master/locks_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/masterconn.cc`
+- `sources/distributed-fs/lizardfs/src/master/masterconn.h`
+- `sources/distributed-fs/lizardfs/src/master/matoclserv.cc`
+- `sources/distributed-fs/lizardfs/src/master/matoclserv.h`
+- `sources/distributed-fs/lizardfs/src/master/matocsserv.cc`
+- `sources/distributed-fs/lizardfs/src/master/matocsserv.h`
+- `sources/distributed-fs/lizardfs/src/master/matomlserv.cc`
+- `sources/distributed-fs/lizardfs/src/master/matomlserv.h`
+- `sources/distributed-fs/lizardfs/src/master/matotsserv.cc`
+- `sources/distributed-fs/lizardfs/src/master/matotsserv.h`
+- `sources/distributed-fs/lizardfs/src/master/metadata_dumper.cc`
+- `sources/distributed-fs/lizardfs/src/master/metadata_dumper.h`
+- `sources/distributed-fs/lizardfs/src/master/mfsrestoremaster.in`
+- `sources/distributed-fs/lizardfs/src/master/personality.cc`
+- `sources/distributed-fs/lizardfs/src/master/personality.h`
+- `sources/distributed-fs/lizardfs/src/master/quota_database.cc`
+- `sources/distributed-fs/lizardfs/src/master/quota_database.h`
+- `sources/distributed-fs/lizardfs/src/master/quota_database_unittest.cc`
+- `sources/distributed-fs/lizardfs/src/master/recursive_remove_task.cc`
+- `sources/distributed-fs/lizardfs/src/master/recursive_remove_task.h`
+- `sources/distributed-fs/lizardfs/src/master/restore.cc`
+- `sources/distributed-fs/lizardfs/src/master/restore.h`
+- `sources/distributed-fs/lizardfs/src/master/setgoal_task.cc`
+- `sources/distributed-fs/lizardfs/src/master/setgoal_task.h`
+- `sources/distributed-fs/lizardfs/src/master/settrashtime_task.cc`
+- `sources/distributed-fs/lizardfs/src/master/settrashtime_task.h`
+- `sources/distributed-fs/lizardfs/src/master/snapshot_task.cc`
+- `sources/distributed-fs/lizardfs/src/master/snapshot_task.h`
+- `sources/distributed-fs/lizardfs/src/master/task_manager.cc`
+- `sources/distributed-fs/lizardfs/src/master/task_manager.h`
+- `sources/distributed-fs/lizardfs/src/master/topology.cc`
+- `sources/distributed-fs/lizardfs/src/master/topology.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

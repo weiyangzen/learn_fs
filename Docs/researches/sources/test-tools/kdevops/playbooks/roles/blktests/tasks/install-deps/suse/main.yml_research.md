@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/blktests/tasks/install-deps/suse/main.yml
+
+This SUSE dependency file derives release facts, decides whether repositories and `nvme-cli` are available, installs blktests dependencies, conditionally adds benchmark repositories for older SLE releases, installs dbench, and conditionally clones/builds/installs NBD from source.
+
+Important APIs are `set_fact`, `package`, `script`, `git`, `file`, `command`, and `community.general.make`. Persistent state includes installed packages, zypper repos, cloned NBD source, generated placeholder manpage inputs, and installed NBD binaries. Integration depends on the helper repo script, variables `nbd_git`, `nbd_version`, `nbd_data`, `num_jobs`, and `make`. Risks are high: several conditions reference `sle15sp4` instead of `is_sle15sp4`, Leap packages are guarded by `is_tumbleweed`, and NBD `autogen`, `configure`, build, and install tasks lack the same `compile_nbd`/`repos_present` guards as the clone. Test signals should include `ansible-playbook --syntax-check`, SUSE version fact simulation, and an actual SLE/openSUSE dependency run.

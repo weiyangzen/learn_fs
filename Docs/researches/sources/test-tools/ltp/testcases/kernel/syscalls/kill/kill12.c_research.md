@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill12.c
+
+Purpose: legacy test that ignored/caught signals do not terminate a child, except uncatchable `SIGKILL`. For signals 1 through 13, the child installs `SIG_IGN` for the current signal, notifies the parent with `SIGCHLD`, waits, and exits after receiving a second `SIGCHLD`; the parent sends the tested signal then `SIGCHLD`, waits, and validates either normal exit or SIGKILL termination. State is one child per signal, global `sig`, `chflag`, and old `sigset` handlers. Dependencies are old LTP `test.h` and traditional signal numbers. Risks include fragile wait loop logic and obsolete signal APIs. Test signal is aggregate pass when ignored signals exit normally and signal 9 terminates.

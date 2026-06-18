@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/pasemi/pci.c
+
+Purpose: PA Semi PXP PCI host bridge setup and config-space access operations, with root-port erratum and Nemo SB600 enumeration workaround.
+
+Important APIs and control flow: config addresses are computed by bus/devfn/offset into a large ioremapped PXP window. `pa_pxp_offset_valid` allows 8 KiB only for bus 0 devfn 0, otherwise 4 KiB. `workaround_5945` handles selected root-port registers by writing a dummy register before read and restoring the full word. Nemo `sb600_set_flag` toggles IOB error config so SB600 bus scanning permits nonzero devices only on the SB600 bus. `pa_pxp_read_config`/`pa_pxp_write_config` perform endian-safe MMIO config accesses. `pas_add_bridge` allocates the PCI controller, installs `pasemi_pci_controller_ops`, processes OF ranges, and scans for early ISA bridges. `pas_pci_init` finds `pasemi,rootbus` and enables all PCIe device scanning.
+
+State, dependencies, and risks: state includes hose config mapping, global controller ops, optional cached Nemo IOB mapping, and PCI flags. Dependencies include OF rootbus, PA PXP register layout, ISA bridge discovery, and PCI core access alignment. Risks include huge fixed config ioremap, root-port erratum special cases, Nemo bus-number assumptions, and scanning all PCIe devices increasing exposure to broken endpoints. Test signals are complete PCIe enumeration, config reads for root ports, SB600 devices on Nemo, and absence of machine checks during config scanning.

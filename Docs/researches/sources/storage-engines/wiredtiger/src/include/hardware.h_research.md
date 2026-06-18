@@ -1,0 +1,15 @@
+## sources/storage-engines/wiredtiger/src/include/hardware.h
+
+Purpose: this header layers shared-memory annotations, one-shot read/write macros, atomic flag manipulation, and cache-line padding helpers over the compiler/CPU primitives from `gcc.h`. It documents and implements common lock-free communication idioms used throughout WiredTiger.
+
+Important APIs/types/functions: `wt_shared` is an annotation-only macro for variables used in lock-free inter-thread communication. `WT_RELEASE_WRITE_WITH_BARRIER` and `WT_ACQUIRE_READ_WITH_BARRIER` are deprecated wrappers that either use TSAN-visible `__atomic` operations or explicit barriers plus relaxed accesses. `WT_READ_ONCE` and `WT_WRITE_ONCE` force a single source-level memory access to compile into a single load/store using volatile typed access under GCC/Clang, falling back to barrier wrappers elsewhere. Atomic flag helpers include `FLD_ISSET_ATOMIC_8/16/32`, `FLD_SET_ATOMIC_8/16/32`, `FLD_CLR_ATOMIC_8/16/32`, and object-oriented `F_ISSET_ATOMIC_*`, `F_SET_ATOMIC_*`, `F_CLR_ATOMIC_*` variants for `flags_atomic`. Cache-line support includes `WT_CACHE_LINE_ALIGNMENT` with architecture-specific sizes and `WT_CACHE_LINE_PAD_BEGIN/END`.
+
+Control flow: atomic flag set/clear first do a quick load to avoid unnecessary CAS, then loop loading the original value and using compare-and-swap until the masked update succeeds. `WT_READ_ONCE` and `WT_WRITE_ONCE` are used at individual access sites to prevent compiler load fusion, invented loads, or store duplication in algorithms that intentionally allow concurrent unsynchronized access. Padding macros wrap struct fields in an anonymous union so array elements can occupy separate cache lines without requiring aligned allocation.
+
+State and persistence behavior: this header only affects in-memory state, especially flags and counters read by multiple threads. It can indirectly affect durable behavior because shared flags coordinate checkpoint, eviction, block cache, background compact, shutdown, and transaction state.
+
+Dependencies and integration points: it depends on `gcc.h` atomic and barrier helpers, GCC/Clang `__typeof__` when available, TSAN build flags, `WT_CACHE_LINE_ALIGNMENT`, and structures with `flags_atomic` members. It is consumed by many engine structs and lock-free algorithms.
+
+Risks: the macros evaluate fields in low-level contexts and must be used with correctly sized integer fields. CAS loops are safe for simple bit masks but are not a substitute for higher-level locking when compound invariants exist. `WT_READ_ONCE`/`WT_WRITE_ONCE` provide compiler-access control, not full synchronization; callers still need acquire/release or stronger ordering when publishing data. Padding through anonymous unions is portable for supported compilers but affects struct layout and memory footprint.
+
+Test signals: TSAN builds, stress tests around atomic flags, shutdown and worker coordination tests, cache-line sensitive performance tests, and compile tests on PPC64/s390x/default architectures validate this header.

@@ -1,0 +1,22 @@
+# sources/test-tools/xfstests/tests/btrfs/237
+
+## Purpose
+Test that zone autoreclaim works as expected, that is: if the dirty threshold is exceeded the data gets relocated to new block group and the old block group gets deleted. On block group deletion, the underlying device zone also needs to be reset. This test requires specific data space usage, skip if we have compression enabled. Create a minimal FS to kick the reclaim process step 1, fill FS over $fillsize. In this subset it primarily covers multi-device, RAID, seed/sprout, or device-management paths.
+
+## Important APIs, Types, and Functions
+The fstest declaration is `auto quick zone balance`. Requirement and capability gates: line 17: `_require_scratch`; line 18: `_require_btrfs_command inspect-internal dump-tree`; line 19: `_require_btrfs_command filesystem sync`; line 20: `_require_command "$BLKZONE_PROG" blkzone`; line 21: `_require_zoned_device "$SCRATCH_DEV"`; line 25: `_require_no_compress`. Local helper surface: `get_data_bg()` (line 27), `get_data_bg_physical()` (line 35). Important command/API calls include line 13: `_begin_fstest auto quick zone balance`; line 17: `_require_scratch`; line 18: `_require_btrfs_command inspect-internal dump-tree`; line 19: `_require_btrfs_command filesystem sync`; line 20: `_require_command "$BLKZONE_PROG" blkzone`; line 21: `_require_zoned_device "$SCRATCH_DEV"`; line 25: `_require_no_compress`; line 29: `$BTRFS_UTIL_PROG inspect-internal dump-tree -t CHUNK $SCRATCH_DEV | grep -A 1 "CHUNK_ITEM" | grep -B 1 "type DATA" | grep -Eo "CHUNK_ITEM [[:digit:]]+" | cut -d ' ' -f 2 | tail -n `; line 38: `$BTRFS_UTIL_PROG inspect-internal dump-tree -t CHUNK $SCRATCH_DEV | grep -A 4 CHUNK_ITEM | grep -A 3 'type DATA\|SINGLE' | grep -Eo 'offset [[:digit:]]+'| cut -d ' ' -f 2 | tail -n`; line 44: `$BLKZONE_PROG report $SCRATCH_DEV | grep -q -e "nw" && _notrun "test is unreliable on devices with conventional zones"`; line 51: `devsize=$(($(_get_device_size $SCRATCH_DEV) * 1024))`; line 54: `_scratch_mkfs_sized $fssize >> $seqres.full 2>&1`; line 56: `_scratch_mkfs >> $seqres.full 2>&1`; line 58: `_scratch_mount -o commit=1 # 1s commit time to speed up test`.
+
+## Control Flow
+The control flow follows the xfstests pattern: source the common preamble, declare `_begin_fstest auto quick zone balance`, install cleanup if needed, enforce requirements, then formats scratch storage, mounts the test filesystem. The script then performs its focused state transition and relies on explicit command failures, `_fail`, filtered stdout, content comparisons, filesystem checks, or expected output matching to detect regressions. Cleanup hooks remove temporary send streams, loop devices, scratch pool devices, or `$tmp.*` artifacts when the test defines them.
+
+## State and Persistence Behavior
+The script owns scratch filesystem state and normally reformats, mounts, unmounts, or checks it through xfstests helpers. Multi-device tests allocate scratch pool devices and leave correctness evidence in chunk maps, device registry state, degraded mounts, and btrfs check results. Sync, remount, unmount, receive, or device-scan boundaries are used to separate in-memory success from on-disk or kernel-global persistence.
+
+## Dependencies and Integration Points
+This file integrates with xfstests `common/preamble`, Btrfs common helpers, scratch-device lifecycle helpers, output filters, and the Btrfs kernel interfaces reached through btrfs-progs, xfs_io. It also depends on the adjacent expected-output file for stable golden-output comparison: `QA output created by 237 | Silence is golden`.
+
+## Risks and Edge Cases
+device topology tests can expose races in device scan state, degraded mounts, stripe geometry, replacement, and cleanup of scratch device pools. Test reliability can also depend on mkfs defaults, sector size, nodesize, mount options, compression settings, discard support, device size, and whether helper commands support the specific subcommands used by the script.
+
+## Test Signals
+Primary pass signals are successful command completion, no unexpected stderr after filtering, expected `.out` text, clean `btrfs check` or `_check_scratch_fs` results when present, and matching file digests/fssum/byte dumps after replay or remount. Any mismatch in expected output, missing qgroup/device/snapshot state, uncorrected corruption, unexpected swapon success/failure, or receive/check failure indicates a regression for this source.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/coda/coda-src/venus/fso_cfscalls1.cc
+
+Purpose: implements the first group of Venus `fsobj` CFS calls for disconnected/local mutation paths: remove, link, rename, mkdir, rmdir, symlink, and connected `SetVV`. The dominant pattern is a three-layer API: `Local*` routines mutate cached second-class state inside an RVM transaction, `Disconnected*` routines append a `repvol` CML log entry and optionally call the local mutator, and public methods choose timestamps/users and demote objects on failure.
+
+Important APIs and flow: `LocalRemove`, `LocalLink`, `LocalRename`, `LocalMkdir`, `LocalRmdir`, and `LocalSymlink` update directory entries via `dir_Create`/`dir_Delete`, adjust `stat` fields, maintain link counts, kill unlinked objects, update cache stats, and touch hoard bindings. `Disconnected*` methods require a read-write replicated volume, allocate fids for new objects where needed, call `rv->Log*`, and use the `prepend` flag to avoid double-applying state during repair replay. `SetVV` is connected-only, calls `ViceSetVV` through multi-RPC for replicated volumes or a single connection for non-replicated volumes, collates COP2 responses, and then stores the new version vector locally.
+
+State and persistence: all local filesystem-object mutations are wrapped with `Recov_BeginTrans`/`Recov_EndTrans` and `RVMLIB_REC_OBJECT`. New directory/symlink fsobjs are matriculated, referenced, prioritized, and have `CleanStat` initialized after local creation. Failed allocation paths kill uninitialized fsobjs and release them back to `FSDB`.
+
+Dependencies and integration: depends on `repvol` CML logging, `FSDB`, cache accounting, directory helpers, Coda RPC2/Vice calls, mgroup/COP2 logic, hoard binding invalidation, and repair wrappers in `local_fso.cc`.
+
+Risks and test signals: high-risk areas are link-count correctness, `prepend` repair replay semantics, cleanup after partial mkdir/symlink allocation, cross-parent rename updates including `..`, and COP2 error mapping in `SetVV`. Tests should exercise disconnected mutation replay, repair prepend paths, rename over files/directories, cache-stat deltas, non-RW volume errors, and replicated/non-replicated `SetVV` return handling.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/checksum_32.S
+
+This 32-bit assembly file implements IP-style one's-complement checksums. It exports `__csum_partial`, `csum_partial_copy_generic`, and `csum_ipv6_magic`. `__csum_partial(buff, len, sum)` aligns to halfword/word boundaries, accumulates 32-bit words with carry through `adde`, handles trailing halfword and byte pieces, then folds the final carry with `addze`.
+
+`csum_partial_copy_generic(src, dst, len)` combines copy and checksum. Its control flow starts with destination cacheline alignment, optional byte/word prologue, a cacheline loop using `dcbt` prefetch and `dcbz` destination zeroing, then word/halfword/byte tails. The `CSUM_COPY_16_BYTES_WITHEX` macro performs unrolled 16-byte load/store/checksum steps, and `EX_TABLE` entries route any source or destination fault to a common `fault` return of zero. `csum_ipv6_magic` sums IPv6 source/destination addresses, length, protocol, and input sum, folds to 16 bits, complements, and exports the result.
+
+State is only register state and exception-table metadata; there is no persistence. Dependencies include cache geometry macros, PowerPC exception tables, and Linux checksum ABI expectations. Risks are endian byte placement, carry-chain correctness, cacheline assumptions around `dcbz`, and preserving the exact fault ABI. Test signals include networking checksum tests, packet RX/TX validation, fault-injected copy paths, and comparison against generic C checksum implementations.

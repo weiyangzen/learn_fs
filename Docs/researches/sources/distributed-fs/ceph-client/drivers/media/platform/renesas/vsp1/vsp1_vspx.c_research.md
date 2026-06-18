@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/renesas/vsp1/vsp1_vspx.c
+
+Purpose: implements Gen4 VSPX support and exports an ISP-facing API from `include/media/vsp1.h`. It builds a fixed single-shot RPF0 -> IIF -> WPF0 pipeline for transferring optional ConfigDMA parameter buffers and RAW image buffers for the ISP.
+
+Important APIs/functions: exported GPL symbols include `vsp1_isp_init()`, `vsp1_isp_get_bus_master()`, `vsp1_isp_alloc_buffer()`, `vsp1_isp_free_buffer()`, `vsp1_isp_start_streaming()`, `vsp1_isp_stop_streaming()`, `vsp1_isp_job_prepare()`, `vsp1_isp_job_run()`, and `vsp1_isp_job_release()`. Internal helpers map ISP formats to VSP1 formats (`vsp1_vspx_rwpf_set_subdev_fmt()`), configure RPF0 for a transfer (`vsp1_vspx_pipeline_configure()`), and handle frame-end callbacks. `vsp1_vspx_init()` creates the fixed pipeline.
+
+Control flow/state: `struct vsp1_vspx_pipeline` embeds a `vsp1_pipeline`, one static partition, a mutex for start/stop sequences, a spinlock-protected `enabled` flag for IRQ/job-run interaction, and caller callback data. Start obtains a VSP1 runtime reference, verifies WPF0 is idle, and sets enabled. Job prepare allocates display-list(s), configures IIF/WPF routing, optionally adds a ConfigDMA transfer if pair count is more than 16, configures RAW transfer, and chains lists. Job run refuses busy/stopped hardware, commits the display list, clears ownership of `job->dl`, and starts the pipeline under `pipe->irqlock`. Stop disables the flag, stops the pipeline, resets WPF0 DLM, and drops the device reference.
+
+Dependencies/integration: depends on RPF/WPF/IIF entities, display-list manager, runtime PM via `vsp1_device_get/put`, DMA coherent allocation through the FCPX/bus-master device, V4L2 pixel formats, and ISP-provided job descriptors.
+
+Risks and test signals: the API is IRQ-context aware, so the spinlock/mutex split is important. Pair-count validation exists because 16 or fewer ConfigDMA pairs can corrupt/freeze VSPX. Test start/stop idempotence, busy WPF0 detection, stopped-job rejection, display-list release ownership, ConfigDMA plus image chains, RAW formats GREY/Y10/Y12/Y16, callback invocation, and cleanup after prepared-but-unrun jobs.

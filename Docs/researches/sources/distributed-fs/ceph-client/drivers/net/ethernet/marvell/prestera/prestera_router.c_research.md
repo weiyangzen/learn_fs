@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/marvell/prestera/prestera_router.c
+
+Purpose: Bridges Linux IPv4 routing/neighbour state into Prestera router hardware objects. It maintains kernel FIB/neighbour caches, reacts to route/address/neighbour notifications, programs hardware RIF/FIB/nexthop state through `prestera_router_hw`, and updates kernel offload/trap flags.
+
+Important APIs/types/functions: Public `prestera_router_init/fini()`. Internal cache types `prestera_kern_neigh_cache` and `prestera_kern_fib_cache`, rhashtable params, route/neighbour conversion helpers, arbiter functions `prestera_k_arb_fib_evt()`, `prestera_k_arb_n_evt()`, `__prestera_k_arb_fc_apply()`, `__prestera_k_arb_nc_apply()`, RIF address notifier handlers, FIB and netevent work handlers, and periodic neighbour hardware-state probing.
+
+Control flow: Init allocates router state, initializes router hardware library, two rhashtables, nexthop hardware-state cache, delayed neighbour probe work, inetaddr validators/notifiers, netevent notifier, and FIB notifier. IPv4 address up/down creates or destroys RIF entries for standalone Prestera ports. FIB notifications are copied under RCU into work items, then processed under RTNL to create/update/remove FIB cache entries and corresponding hardware FIB nodes. Neighbour updates create/fetch neighbour cache entries, read kernel neighbour validity/MAC/interface, update neighbour LPM and hardware nexthop state, and update kernel offload flags.
+
+State and persistence: Runtime-only router state includes rhashtable caches, held `fib_info` refs, held net_device refs for neighbours/RIFs, RIF entries, nexthop groups/neighbours, FIB nodes, hardware nexthop bitmap cache, notifier registrations, and delayed work. Hardware state is recreated from kernel events after driver init; no durable persistence.
+
+Dependencies/integration: Depends on Linux FIB, ARP/neighbour, inetaddr, netevent, switchdev, l3mdev, VLAN/macvlan/LAG/bridge device helpers, rhashtable, Prestera core netdev identity helpers, and `prestera_router_hw` object APIs. Uses shared workqueues from `prestera_main.c`.
+
+Risks: IPv6 helpers exist partially but notifier path ignores non-AF_INET; IPv6 support is incomplete. Route overlap handling is a TODO limited to local/main table interactions. ECMP is capped by `PRESTERA_NHGR_SIZE_MAX` and larger groups silently avoid nexthop cache creation. Several helper failures return 0 in cache creation paths, reducing visibility. Correctness depends on RTNL/RCU/refcount discipline across async work. Fini destroys FIB cache rhashtable after `prestera_k_arb_abort()` already frees it, so double-destroy behavior should be reviewed against rhashtable API expectations.
+
+Test signals: IPv4 address add/del RIF programming, invalid MAC or multicast address rejection, route add/replace/delete for unicast/direct/trap/drop cases, local/main overlap cases, neighbour reachable/stale/dead transitions, kernel offload/trap flags, ECMP up to four nexthops, unsupported ECMP >4, nexthop hardware-state polling, driver unload with pending works, notifier unregister ordering, and route/neighbour churn under RTNL.

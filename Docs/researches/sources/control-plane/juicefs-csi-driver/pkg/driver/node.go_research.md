@@ -1,0 +1,13 @@
+# sources/control-plane/juicefs-csi-driver/pkg/driver/node.go
+
+Purpose: implements the CSI Node service, including publish/unpublish, node metadata, volume stats, health metrics, and unimplemented staging/expansion stubs.
+
+Important APIs and types: `nodeService` embeds CSI unimplemented node server and `mount.SafeFormatAndMount`, and owns `juicefs.Interface`, node ID, Kubernetes client, Prometheus metrics, recently unmounted paths, quota dispatch pool, and volume locks. `newNodeMetrics` registers counters and a `volume_path_health` gauge. `newNodeService` creates a real mounter, JuiceFS provider, metrics, shared volume locks, and starts cleanup of old unmounted-path markers.
+
+Control flow: `NodePublishVolume` validates target and mount capability, takes a per-target lock, skips already-mounted targets, creates the target directory, combines readonly/spec/volume-context mount options, calls `JfsMount`, creates or locates the volume subpath through `Jfs.CreateVol`, bind-mounts to the target, and optionally enqueues quota setting unless the controller already set quota or quota is disabled. `NodeUnpublishVolume` takes the same lock, delegates to `JfsUnmount`, marks the path recently unmounted, and deletes the health metric labels. `NodeGetVolumeStats` validates inputs, rejects recently unmounted paths, checks path existence and mountpoint state with timeouts, handles corrupted mounts asynchronously, records health, and returns byte and inode usage from `util.GetDiskUsage`.
+
+State and persistence behavior: process-local state includes volume locks, metric counters/gauges, and a `sync.Map` of unmounted paths retained for roughly five minutes. External state includes filesystem target directories, mount table changes delegated to JuiceFS, Kubernetes corruption handling, and quota commands run asynchronously through the dispatch pool.
+
+Dependencies and integration points: integrates CSI node RPCs, Kubernetes mount utilities, JuiceFS provider, Prometheus, global config, retry helpers, resource locks/corrupted-mount handling, and app pod volume paths. It depends on `volumeContext` keys such as `subPath`, `mountOptions`, `capacity`, and controller quota markers.
+
+Risks and test signals: async quota failures are logged but do not fail publish. `req.Secrets` is nulled before logging, mutating the request object. `NodeGetVolumeStats` can start background corrupted-mount remediation after a failed check. Tests cover publish/unpublish success and core failures, capability/info/stub methods, and input validation, but not all stats success paths, corrupted mount handling, or concurrent lock contention.

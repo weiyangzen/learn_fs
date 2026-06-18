@@ -1,0 +1,13 @@
+# sources/sync-backup/syncthing/cmd/infra/strelaypoolsrv/main.go
+
+Purpose: implements `strelaypoolsrv`, the public relay pool HTTP service. It serves static UI assets, returns known relay endpoints, accepts relay registration POSTs, probes relays before admitting them, persists known relays to a flat file, and exposes Prometheus metrics.
+
+Important APIs/types/functions: `location`, `relay`, `relayShort`, `stats`, `request`, `result`, `main`, `handleEndpointFull`, `handleEndpointShort`, `handleRegister`, `requestProcessor`, `handleRelayTest`, `evict`, `loadRelays`, `saveRelays`, `getLocation`, `errorTracker`, and `slimURL`. Global state includes `knownRelays`, `permanentRelays`, `evictionTimers`, `requests`, and `globalBlocklist`, protected primarily by `mut`.
+
+Control flow: `main` parses flags, initializes GeoIP, loads permanent relays, creates a testing certificate, starts worker goroutines, asynchronously reloads cached relays, starts metrics if requested, then routes GET/HEAD/OPTIONS and POST traffic. `handleRegister` derives the client IP, enforces the LRU failure blocklist, decodes and canonicalizes the advertised relay URL, optionally validates the TLS peer certificate against the advertised `id`, rejects IP spoofing without a client cert, then enqueues a relay test. `handleRelayTest` uses `client.TestRelay`, fetches status, enriches with GeoIP, replaces any same-host relay, starts a new eviction timer, saves the relay cache, and replies with `evictionIn`.
+
+State and persistence: in-memory relay slices and timers are the authoritative live state. `knownRelaysFile` stores one URL per line and is rewritten after successful dynamic registrations. Permanent relays are loaded from a separate file and never dynamically evicted. GeoIP lookups are runtime enrichment only.
+
+Dependencies/integration: integrates with Syncthing relay client protocol, `protocol.DeviceID`, `tlsutil.NewCertificate`, generated UI assets, GeoIP, `hashicorp/golang-lru`, Prometheus, and the sibling `stats.go` metrics/status logic. It is consumed by `strelaysrv` pool joins.
+
+Risks and test signals: relay registration is network-sensitive and intentionally rejects spoofed public IPs unless authenticated by cert. `append(permanentRelays, knownRelays...)` in the short endpoint can mutate backing arrays if capacity is shared; the full endpoint avoids that by copying. Queue saturation returns HTTP 429. Existing tests cover permanent relay preservation, URL query canonicalization, and slimming URLs, but not the network probe path, cert mismatch branch, cache writes, or blocklist threshold behavior.

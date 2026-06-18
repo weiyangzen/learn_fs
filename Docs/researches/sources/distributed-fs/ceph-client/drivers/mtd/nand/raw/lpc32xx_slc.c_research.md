@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/nand/raw/lpc32xx_slc.c
+
+Purpose: this is the NXP LPC32xx SLC NAND controller driver. It uses legacy raw NAND callbacks with DMA-assisted data transfers, hardware-generated Hamming ECC, syndrome/interleaved ECC placement, small-page-specific OOB/BBT layouts, timing from DT, and write-protect GPIO handling.
+
+Important APIs, types, and functions: `struct lpc32xx_nand_cfg_slc` contains DT timing fields. `struct lpc32xx_nand_host` stores the NAND chip, platform data, clock, WP GPIO, MMIO/DMA addresses, completion, DMA channel/config/SG, and combined data/ECC work buffer. Key functions include `lpc32xx_nand_setup()`, command/ready/read/write byte/buffer hooks, `lpc32xx_slc_ecc_copy()`, `lpc32xx_xmit_dma()`, `lpc32xx_xfer()`, syndrome page read/write/raw hooks, OOB hooks, `lpc32xx_nand_attach_chip()`, probe/remove, and suspend/resume.
+
+Control flow: probe maps registers, parses required `nxp,*` timing properties, gets optional WP GPIO and clock, installs legacy callbacks, resets/configures SLC timing, allocates a data/ECC work buffer, requests a DMA channel, scans one chip, and registers the MTD. Attach configures on-host ECC with 256-byte steps, strength 1, 3 ECC bytes, interleaved placement, hardware calculate no-op, software Hamming correction, and syndrome page callbacks. Page reads issue a read command, call `lpc32xx_xfer()` to DMA data while collecting hardware ECC words, read OOB through FIFO, convert hardware ECC words into stored OOB format, and correct each ECC step. Writes DMA data out with hardware ECC enabled, convert generated ECC into OOB bytes, write OOB, and finish program.
+
+State and persistence: persistent state includes timing parameters, the DMA channel and SG config, work buffer split into data and ECC regions, clock and WP GPIO state, and custom small-page BBT descriptors. Suspend forces CE high, enables write protect, and disables the clock. Resume reenables the clock, reinitializes timing/control registers, and disables write protect.
+
+Dependencies and integration points: the driver uses MTD/raw NAND legacy callbacks, DMAengine, clock APIs, optional platform DMA filter fallback, GPIO descriptors, DT compatible `nxp,lpc3220-slc`, and `rawnand_sw_hamming_correct` for correction.
+
+Risks: the DMA path is mandatory after probe; no FIFO fallback exists for ECC page transfers if DMA setup fails. DMA wait timeouts are not checked in `lpc32xx_xmit_dma()`. Buffer sizing constants are capped at 4096-byte pages plus ECC storage. Hardware ECC is converted manually with bit inversion/shift assumptions. Small-page BBT and OOB layouts differ from large-page defaults and must match existing flash contents. Remove/suspend code appears to clear CE using `SLC_CTRL` with an `SLC_CFG` bit, which deserves hardware validation.
+
+Test signals: test small and large page devices, OOB/ECC placement, BBT marker placement, read/write ECC correction and failure accounting, DMA timeout/FIFO-empty behavior, highmem-buffer bounce copying, suspend/resume clock/WP/CE behavior, and probe failures for missing DT timing or DMA resources.

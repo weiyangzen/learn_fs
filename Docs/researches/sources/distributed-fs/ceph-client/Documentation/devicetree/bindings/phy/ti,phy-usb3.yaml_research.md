@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/ti,phy-usb3.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/ti,phy-usb3.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/ti,phy-usb3.yaml` is a Texas Instruments PHY/control binding for `TI PIPE3 PHY Module`. It preserves the devicetree ABI for this hardware by constraining compatible matching, provider cells, required board resources, child nodes, and examples. Description signal: The TI PIPE3 PHY is a high-speed SerDes (Serializer/Deserializer) transceiver integrated in OMAP5, DRA7xx/AM57xx, and similar SoCs. It supports multiple protocols (USB3, SATA, PCIe) using the PIPE3 interface standard, which defines a common physical layer for high-speed serial interfaces..
+
+## Important APIs, Types, And Functions
+The effective API is the schema contract. `compatible` is `enum` list with values `ti,omap-usb3`, `ti,phy-pipe3-pcie`, `ti,phy-pipe3-sata`, `ti,phy-usb3`. Top-level properties are `$nodename`, `compatible`, `reg`, `reg-names`, `#phy-cells`, `clocks`, `clock-names`, `syscon-phy-power`, `syscon-pllreset`, `syscon-pcs`, `ctrl-module`. Required properties across the composed schema are `#phy-cells`, `clock-names`, `clocks`, `compatible`, `reg`, `reg-names`. All discovered property names, including nested child-node contracts, include `#phy-cells`, `$nodename`, `clock-names`, `clocks`, `compatible`, `ctrl-module`, `reg`, `reg-names`, `syscon-pcs`, `syscon-phy-power`, `syscon-pllreset`. Important numeric/constant limits include `minItems=2`, `maxItems=3`, `const=phy_rx`, `const=phy_tx`, `const=pll_ctrl`, `const=0`, `maxItems=7`, `maxItems=1`, `const=ti,phy-pipe3-sata`.
+
+## Control Flow
+Control flow is declarative JSON-schema evaluation, not imperative code. `dt-doc-validate` and `dt_binding_check` load the YAML, resolve `$ref` links, apply `allOf`/`oneOf`/`if`/`then` composition, validate embedded examples, and `dtbs_check` later applies the same rules to compiled board DTS. Runtime behavior begins after the matching PHY driver probes: it maps registers, enables clocks and supplies, deasserts resets, registers a PHY provider, and lets host controllers acquire the PHY by phandle using the declared `#phy-cells` shape. Referenced schemas include `/schemas/types.yaml#/definitions/phandle`, `/schemas/types.yaml#/definitions/phandle-array` conditional branches include `ti,phy-pipe3-sata` -> adjusts `syscon-pllreset`
+
+## State And Persistence
+State is static firmware description rather than runtime persistence. the binding itself has no mutable state; it constrains static devicetree data. Named resources such as `clocks`, `clock-names` must stay stable because driver probe, suspend/resume, and board DTS validation depend on their order and names.
+
+## Dependencies And Integration Points
+Integrates with Linux generic PHY framework and the consuming USB, PCIe, UFS, SATA, HDMI, DP, DSI, Ethernet, or CAN controller drivers. Schema dependencies are `/schemas/types.yaml#/definitions/phandle`, `/schemas/types.yaml#/definitions/phandle-array`. Observed driver-side references include `sources/distributed-fs/ceph-client/drivers/phy/ti/phy-ti-pipe3.c`. Observed DTS references include `sources/distributed-fs/ceph-client/arch/arm/boot/dts/ti/omap/dra7-l4.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/ti/omap/omap5-l4.dtsi`. External providers/consumers are signaled through `clocks`, `clock-names`.
+
+## Risks And Edge Cases
+conditional compatible branches can reject valid boards or admit invalid resource counts if a new SoC is added to the wrong enum strict property closure makes spelling and resource-name drift fail validation immediately ordered clock/reset names must match the driver data table and DTS examples wrong register ranges can point the driver at the wrong PHY lane, PLL, or mux block Closure rule: composition is closed by `unevaluatedProperties: false`. Representative enum constraints: properties.compatible: ti,omap-usb3, ti,phy-pipe3-pcie, ti,phy-pipe3-sata, ti,phy-usb3; properties.clock-names.items: wkupclk, sysclk, refclk, dpll_ref, dpll_ref_m2, phy-div, div-clk.
+
+## Test Signals
+`make dt_binding_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/ti,phy-usb3.yaml` should parse this YAML and validate 2 embedded examples. `make dtbs_check` should validate board DTS nodes using the compatible strings and resource names from this schema. spot-check representative compatibles such as `ti,omap-usb3`, `ti,phy-pipe3-pcie`, `ti,phy-pipe3-sata`, `ti,phy-usb3` against matching driver OF tables and DTS examples. exercise both sides of the conditional branches by validating DTS snippets for the affected SoC compatibles.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/ti,phy-usb3.yaml -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/platform/x86/amd/pmf/core.c
+
+Purpose: `core.c` is the PMF lifecycle and SMU transport core. It probes ACPI PMF devices, maps SMU registers, initializes ACPI and feature layers, manages metrics-table transfer, exposes NPU metrics to other kernel users, handles suspend/resume, and coordinates Smart PC/Auto Mode/CnQF selection.
+
+Important APIs, types, and functions: module parameters include `metrics_table_loop_ms`, `force_load`, and `smart_pc_support`. `amd_pmf_send_cmd()` is the locked SMU command path. `amd_pmf_set_dram_addr()` allocates/selects metrics buffer size by CPU and programs its physical address to SMU. `amd_pmf_init_metrics_table()` starts delayed metrics work; `amd_pmf_get_metrics()` transfers metrics and calls Auto Mode/CnQF transition engines. `amd_pmf_get_npu_data()` is exported in namespace `AMD_PMF`. Probe/remove are `amd_pmf_probe()` and `amd_pmf_remove()`.
+
+Control flow: probe ACPI-matches PMF device IDs, optionally blocks older `AMDI0100` unless `force_load`, allocates `amd_pmf_dev`, verifies root PCI ID, maps SMU MMIO from AMD SMN base registers, initializes mutexes, runs ACPI init, stores drvdata, registers debugfs, initializes features, installs ACPI notify handlers, sends SBIOS load heartbeat v2, and records a global `pmf_device`. Feature initialization enables static slider/platform profiles and power-source notifier, tries Smart PC first, otherwise enables Auto Mode or CnQF based on supported ACPI functions. PM callbacks restore metrics DRAM address after resume/restore and suspend/reinitialize TEE policy work as needed.
+
+State and persistence: per-device state holds MMIO base, metrics buffers/tables, delayed works, current platform profile, debugfs root, Smart PC/TEE fields, ACPI notification state, custom BIOS input state, and locks. `pmf_device` is a global pointer for exported NPU metrics. Firmware-visible runtime state includes SMU metrics-buffer address and applied power/thermal policies.
+
+Dependencies and integration points: depends on ACPI, PCI root device matching, AMD SMN, power_supply notifications, platform profile, debugfs, TEE/Smart PC helpers, AMD SFH through SPC, and PM sleep callbacks. The exported NPU metrics API integrates with other AMD components.
+
+Risks: `apmf_acpi_init(dev)` return is ignored in probe, so feature initialization can continue after ACPI interface failure. `pmf_device` is not cleared on remove, creating stale global access risk. Metrics buffer uses `virt_to_phys()` on `devm_kzalloc()` memory instead of DMA APIs, which depends on platform memory assumptions. Repeated NPU data calls with `alloc_buffer=true` can allocate a new devm buffer each time. Power-source notifier registration return is ignored.
+
+Test signals: ACPI/PCI match success and old-device `force_load` behavior, SMU command response handling, metrics transfer cadence, platform profile and power-source notifier behavior, feature selection precedence with Smart PC over Auto/CnQF, NPU metrics export on supported CPUs, suspend/resume reprogramming of DRAM address, and clean remove/deinit ordering.

@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/cmd/bisync/bisync_debug_test.go
+
+Purpose: test-side helper for generating VS Code debug launch configurations for bisync integration cases. It reads `fstest/test_all/config.yaml`, enumerates bisync testdata cases, and writes a large `testdata/bisync_vscode_debuggers_launch.json` with launch entries for LocalRemote, RemoteLocal, and RemoteRemote variations.
+
+Important structures mirror test config (`Config`, `Test`, `Backend`). `parseConfig` YAML-decodes the shared config; `(*bisyncTest).generateDebuggers` builds launch JSON from configured backends and test cases, skipping empty test dirs and local-only impossible variations. State change is writing the generated launch JSON with secure permissions. Dependencies include bisync test harness methods, YAML, bilib `PermSecure`, and fs logging. Risks include too many launch configs for VS Code, stale generated output when config/testdata changes, and no JSON escaping beyond `fmt.Sprintf` `%q` for selected fields. Test signal is assertion that the file write succeeds.

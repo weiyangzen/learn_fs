@@ -1,0 +1,13 @@
+# sources/test-tools/stress-ng/stress-regs.c
+
+Purpose: implements the `regs` CPU stressor, which keeps architectural general-purpose registers, and on x86 some SIMD registers, hot by repeatedly rotating values through explicit register variables. It is both a CPU power/register-pressure stressor and a verification pass for compiler register assignment support.
+
+Important APIs/types/functions: `stress_regs_info` registers the stressor with `VERIFY_ALWAYS`, `CLASS_CPU`, and options `regs-bitflip` and `regs-ops`. `regs_check32()`, `regs_check64()`, and `regs_check128()` validate register values and clear `stress_regs_success` on mismatch. `stress_regs_exercise()` and `stress_regs_exercise_bitflip()` are implemented per architecture using `register ... __asm__("reg")` bindings; x86_64 also has `stress_regs_exercise_sse()` and `stress_regs_exercise_mmx()` guarded by CPU feature probes. `SHUFFLE_REGS16()` repeats the architecture-specific shuffle macro 16 times.
+
+Control flow: `stress_regs()` selects the normal or bitflip function from `regs-bitflip`, synchronizes, detects x86 MMX/SSE support where applicable, and loops while `stress_continue()` and validation succeed. Each outer iteration calls the exercise function 1000 times with the current seed value, increments the seed, then records one bogo operation. Architecture blocks cover x86_64, x86_32, LoongArch64, HPPA, m68k, SH4, RISC-V, Alpha, PPC/PPC64, SPARC, MIPS, OpenRISC, ARM, and a generic fallback when no specialized block is compiled.
+
+State and persistence: state is process-local and volatile: `stress_regs_success`, `stash32`, `stash64`, optional `stash128`, and optional x86 feature flags. No filesystem or kernel object state is persisted. The volatile stashes keep computed values observable so the compiler cannot remove the work.
+
+Dependencies and integration points: requires GCC-or-musl compiler support at GCC 8 level and excludes clang/ICC/PCC/TCC for explicit register assignment reliability. It depends on `core-arch.h`, `core-cpu.h`, `core-put.h`, `core-target-clones.h`, stress-ng settings, sync, bogo counters, and stop flags. Builds without required compiler support expose `stress_unimplemented`.
+
+Risks and test signals: highest risk is architecture/compiler ABI fragility because named registers can conflict with calling conventions or optimizer behavior. Verification failures print the register name and expected/actual value. Test signals are successful compilation on each supported architecture, bogo increments per 1000 shuffle rounds, clean stop on `stress_continue()`, and failure return when any register check trips.

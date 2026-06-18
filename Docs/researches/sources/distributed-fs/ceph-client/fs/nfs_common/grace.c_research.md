@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs_common/grace.c
+
+Purpose: shared lock grace-period infrastructure for lockd and NFSD/NFSv4 state recovery. Public APIs are `locks_start_grace`, `locks_end_grace`, `locks_in_grace`, and `opens_in_grace`.
+
+Control flow registers per-net storage containing a list of active `lock_manager` objects. Starting grace adds a manager to the namespace list under `grace_lock`; ending grace deletes it. Querying lock grace checks whether the list is nonempty, while open grace only returns true if a listed manager has `block_opens`. State persists per network namespace until the pernet subsystem exits and is guarded by a global spinlock. Dependencies include netns generic storage, `struct lock_manager`, file locking, and module init/exit. Risks include double add/delete ordering, stale list entries at namespace exit, global lock contention, and incorrect open-vs-lock grace decisions affecting recovery semantics. Test signals: lockd/nfsd restart recovery, multi-netns grace isolation, duplicate start warnings, end idempotence expectations, and open blocking only when requested.

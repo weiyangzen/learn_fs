@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/authorization/middleware.go -->
+# sources/cloud-native/moby/pkg/authorization/middleware.go
+
+Purpose: daemon API middleware that wraps handlers with authorization plugin checks. Important APIs are `Middleware`, `NewMiddleware`, `SetPlugins`, `RemovePlugin`, and `WrapHandler`. Control flow snapshots the plugin chain under a mutex, extracts TLS common name as default user identity, runs request authorization, wraps the response writer in `ResponseModifier`, invokes the underlying handler, refreshes the plugin chain in case it changed, runs response authorization only when handler succeeded, and returns handler errors preferentially. State is the mutex-protected plugin slice. Dependencies include `plugingetter`, authorization context logic, HTTP, and containerd logging. Risks include global plugin getter mutation, plugin-chain changes mid-request, response buffering/hijacking interaction, and silently returning nil if plugins are removed after the handler. Test signal is in middleware tests.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/authorization/middleware.go -->

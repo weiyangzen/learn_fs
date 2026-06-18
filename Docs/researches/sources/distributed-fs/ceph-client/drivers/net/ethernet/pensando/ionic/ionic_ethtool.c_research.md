@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/pensando/ionic/ionic_ethtool.c
+
+Purpose: Implements Ionic ethtool operations for stats, driver/register info, link modes, pause/FEC, interrupt coalescing, ring and channel reconfiguration, RSS, tunables, module EEPROM pages, timestamp capability reporting, and autoneg restart.
+
+Important APIs and flow: Stats are delegated to `ionic_stats_groups`. Link settings read DMA-updated `port_info` transceiver data and map Ionic XCVR IDs to ethtool link modes; setters issue port autoneg/speed commands under `dev_cmd_lock`. Pause and FEC setters validate firmware reset/autoneg constraints and issue port commands. Coalescing converts usecs to hardware units and updates live interrupt registers and DIM state. Ring/channel setters validate power-of-two descriptors, CMB capability/page requirements, XDP split-interrupt restrictions, then either store values while down or call `ionic_reconfigure_queues()` under `queue_lock`. RSS get/set exposes indirection table and Toeplitz key. Module EEPROM reads consistent snapshots from port-info SPROM pages. `ionic_get_ts_info()` reports PHC and hardware timestamp filters from firmware capabilities. `ionic_nway_reset()` flaps port admin state down/up.
+
+State and persistence: Mutates LIF queue counts, descriptor counts, CMB TX/RX ring flags, coalescing values, DIM bits, RSS tables/keys, RX copybreak, and firmware port configuration. Many reads come from DMA-shared `lif->info` and `idev->port_info`.
+
+Dependencies and integration: Depends on LIF queue reconfiguration, stats descriptors, device command wrappers, bus info, firmware identity, PTP/PHC state, SFP page definitions, and netdev ethtool core.
+
+Risks and test signals: Most setters return `-EBUSY` during firmware reset but still rely on current LIF state consistency. CMB toggles require the device to be stopped, while descriptor count changes can reconfigure live queues. SPROM page offset handling assumes valid ethtool page requests. Test all setters during up/down and FW reset states, invalid ring/channel values, CMB insufficient pages, XDP plus split interrupts, FEC with autoneg enabled, unknown transceiver IDs, PTP absent/present, and module EEPROM page/bank validation.

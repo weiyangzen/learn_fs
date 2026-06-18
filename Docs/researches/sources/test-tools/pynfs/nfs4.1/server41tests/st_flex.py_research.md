@@ -1,0 +1,13 @@
+# sources/test-tools/pynfs/nfs4.1/server41tests/st_flex.py
+
+Purpose: flex-files pNFS server tests for `LAYOUTGET`, `LAYOUTRETURN`, `GETDEVICEINFO`, layout stateid sequencing, layoutstats reporting, and propagation of data-server errors through later layout requests. It exercises NFSv4.1 flex-file layout XDR with real packed opaque bodies.
+
+Important APIs/types/functions: `check_seqid`, `testStateid1`, `testFlexLayoutReturnFile`, `testFlexLayoutOldSeqid`, `testFlexLayoutStress`, `testFlexGetDevInfo`, `testFlexLayoutTestAccess`, `testFlexLayoutStatsSmall`, `_LayoutStats`, `layoutget_return`, `get_layout_cred`, and the `testFlexLayoutReturn*` error matrix. It uses `NFS4ops`, `NFS4Packer/NFS4Unpacker`, `ff_layoutreturn4`, `ff_layoutupdate4`, `ff_iostats4`, `device_error4`, `layoutreturn_file4`, `stateid4`, and `get_nfstime`.
+
+Control flow: tests create/open a file through a pNFS client session, issue `LAYOUTGET` with an open or layout stateid, decode returned flex layout bodies to find mirrors/data servers/device ids/credentials, optionally call `GETDEVICEINFO`, and finally return layouts. The stats tests build latency and I/O accounting structures from captured numeric traces, sleep between samples, and send `LAYOUTSTATS` or stats-bearing `LAYOUTRETURN` payloads. The error tests call `layoutget_return` to return layouts containing `ff_ioerr4` records, then verify subsequent layoutgets return success, delay, or the reported NFS error as appropriate for read/write mode.
+
+State and persistence behavior: the suite mutates server layout state and checks monotonically increasing layout stateid `seqid` values. It also verifies stale layout stateids are rejected on return, access credentials vary by I/O mode, layout stats are accepted across resets/overflow-like traces, and reported data-server errors can affect future layout grants. File data persistence is secondary; persistent state is mostly NFS server layout, device, and open-state tracking.
+
+Dependencies/integration: integrates `server41tests.environment` helpers, `nfs_ops`, generated NFSv4.1 XDR types/constants, `nfs4lib`, and flex-files data server configuration. It depends on an environment that advertises `FLAGS: flex` and sometimes `layoutstats`/`layoutreturn`.
+
+Risks and test signals: many checks assume a single mirror/data server and index the last returned layout/device record. Layoutstats use fixed trace arrays and timing sleeps, which can be slow or environment-sensitive. The strongest signals are status checks, exact stateid sequence assertions, decoded credential comparisons, and acceptance or rejection of layout-return error propagation.

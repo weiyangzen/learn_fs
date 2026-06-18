@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/bind/bind02.c
+
+Purpose: verifies unprivileged binding to a privileged TCP port fails with `EACCES`. Setup looks up nobody and its group, switches effective gid/uid, and `run` attempts to bind an IPv4 stream socket to port 463 on `INADDR_ANY`. Important APIs are `SAFE_GETPWNAM`, `SAFE_GETGRGID`, `SAFE_SETEGID`, `SAFE_SETEUID`, `socket`, and `bind`. State is process credentials and one socket per run. Dependencies are root to drop privileges and classic privileged-port behavior. Risks include systems with `net.ipv4.ip_unprivileged_port_start` lowered enough to allow the port. Test signal is `bind()` failing with `EACCES`.

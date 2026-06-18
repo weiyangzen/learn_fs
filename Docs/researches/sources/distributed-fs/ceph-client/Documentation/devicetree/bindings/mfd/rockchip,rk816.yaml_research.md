@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rockchip,rk816.yaml
+
+Purpose: Schema for the Rockchip RK816 I2C PMIC MFD, describing regulators, RTC, power button, GPIO controller capability, clock output, wakeup, and system power control.
+
+Important schema surface and control flow: it requires `compatible = "rockchip,rk816"`, `reg`, `interrupts`, and fixed `#clock-cells = 1`. It accepts `clock-output-names`, `gpio-controller` with `#gpio-cells = 2`, `system-power-controller`, `wakeup-source`, supplies `vcc1` through `vcc8`, and a regulator namespace using lowercase child names such as `dcdc1` through `dcdc4`, `ldo1` through `ldo6`, and switch/boost-style rails allowed by the schema. Pattern properties also allow `*-pins` pinmux nodes with constrained RK816 pin names and functions.
+
+State, dependencies, and integration: the node is persistent board configuration for the RK816 MFD, regulator, GPIO, clock, input, and RTC paths. It depends on the common regulator and pinmux schemas, Rockchip pinctrl constants, and interrupt bindings. Risks are regulator child-name mismatch with other RK8xx variants, power sequencing mistakes in suspend regulator states, and exposing GPIO controller cells without matching driver support on a board. Test signals are binding validation, example validation, successful regulator and GPIO provider registration, and suspend/resume rail checks.

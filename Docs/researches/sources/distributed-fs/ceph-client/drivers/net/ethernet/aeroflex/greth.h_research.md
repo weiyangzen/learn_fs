@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/net/ethernet/aeroflex/greth.h
+
+Purpose: this header defines the GRETH hardware contract used by `greth.c`: register bits, descriptor flags, ring sizes, buffer sizing, APB register layout, buffer descriptor layout, and the driver's private per-device state structure.
+
+Important APIs, types, and functions: the register/descriptor constants include reset/MDIO flags (`GRETH_RESET`, `GRETH_MII_BUSY`, `GRETH_MII_NVALID`), control bits (`GRETH_CTRL_FD`, `GRETH_CTRL_PR`, `GRETH_CTRL_SP`, `GRETH_CTRL_GB`, `GRETH_CTRL_MCEN`, `GRETH_CTRL_DISDUPLEX`), TX/RX descriptor ownership/wrap/interrupt/length bits, TX and RX error/status bits, checksum status bits, ring counts (`GRETH_TXBD_NUM`, `GRETH_RXBD_NUM`), and buffer sizes (`GRETH_TX_BUF_SIZE`, `GRETH_RX_BUF_SIZE`, `MAX_FRAME_SIZE`). `struct greth_regs` models the APB register block, `struct greth_bd` models each descriptor, and `struct greth_private` is the netdev private state shared across probe, open, IRQ/NAPI, TX/RX, PHY, and remove paths.
+
+Control flow: the header itself has no executable control flow. Its constants drive `greth.c` decisions about enabling TX/RX/IRQs, wrapping descriptor rings, checking completion/error bits, computing multicast hashes, exposing hardware capabilities, and selecting 10/100 versus gigabit behavior.
+
+State and persistence: `struct greth_private` defines persistent runtime state: RX/TX skb arrays, fixed DMA buffer arrays and lengths, ring indices, mapped register pointer, coherent descriptor ring pointers and DMA addresses, IRQ, device/netdev pointers, NAPI, spinlock, MDIO bus, PHY link state, message mask, PHY address, and capability flags for multicast, gigabit, MDIO interrupts, and EDCL. The descriptor and register structs define the in-memory/MMIO state exchanged with hardware.
+
+Dependencies and integration points: the header includes `<linux/phy.h>` for PHY-related types used by private state and relies on PAGE_SIZE for buffer-page macros. It is local to the Aeroflex driver and is included by `greth.c`; no exported kernel API is declared.
+
+Risks: descriptor counts and coherent ring allocation sizes in `greth.c` assume `GRETH_TXBD_NUM` and `GRETH_RXBD_NUM` of 128 with 8-byte descriptors; changing these constants requires auditing allocation sizes. The buffer-per-page macros contain the misspelled `PPGAE` name and are not actively used by `greth.c`. `MAX_FRAME_SIZE` is fixed at 1520, so jumbo frame support is absent despite gigabit support. The private structure mixes 10/100 fixed buffers and gigabit skb mappings, so callers must branch consistently on `gbit_mac`.
+
+Test signals: compile-time users should include this header without duplicate definitions, descriptor constants should match GRLIB GRETH documentation, ring wrap should occur at descriptor 127, `sizeof(struct greth_regs)` should match ethtool register dump expectations, and `struct greth_private` fields should be initialized by probe/open before IRQ, NAPI, or PHY callbacks use them.

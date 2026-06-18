@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/linux/mfd/wm8994/gpio.h
+
+Purpose: this header defines the WM8994-family GPIO configuration vocabulary. It gives the GPIO driver and board/DT defaults symbolic function selectors and bitfields for each of the eleven GPIO control registers.
+
+Important APIs, types, and constants: `WM8994_GPIO_MAX` is 11. `WM8994_GP_FN_*` values select pin-specific behavior, plain GPIO, IRQ, temperature, microphone-bias detect/short signals, FLL/SRC lock signals, DRC activity, write-sequencer status, FIFO error, OPCLK, thermal warning, DCS done, and FLL outputs. `WM8994_GPN_DIR`, pull-up/down, polarity, open-drain/push-pull, debounce, level, and function masks define the common layout for `WM8994_GPIO_1 + offset` registers.
+
+Control flow: the header has no functions. `drivers/gpio/gpio-wm8994.c` uses the masks to implement gpiolib callbacks: request rejects unavailable pins on WM8958, direction-in sets `GPN_DIR`, get reads `GPN_LVL`, direction-out updates direction and level, set updates level, set_config toggles open-drain/push-pull through `GPN_OP_CFG`, and to_irq maps GPIO offsets through the parent regmap IRQ data. The MFD core applies `pdata->gpio_defaults[i]` values to `WM8994_GPIO_1 + i` during initialization when the values are non-zero; DT `wlf,gpio-cfg` zero entries are converted to `WM8994_CONFIGURE_GPIO`.
+
+State and persistence: GPIO state is stored in hardware GPIO registers and cached by regmap. Platform defaults persist in `struct wm8994_pdata.gpio_defaults[]`; gpiolib line state is managed by the GPIO child driver. Alternate-function selections persist until overwritten by board defaults, gpiolib operations, reset, or suspend/resume cache synchronization.
+
+Dependencies and integration points: consumed by the WM8994 GPIO platform driver, MFD core GPIO-default programming, debugfs GPIO reporting, ASoC/event routing for function signals, and regmap IRQ support. It relies on register-address definitions from `wm8994/registers.h` in consumers and on `struct wm8994` helpers from `core.h`.
+
+Risks: the chip GPIOs are documented as 1-based for IRQ macro purposes, while gpiolib offsets are 0-based for register indexing; mixing those conventions can misroute IRQs. Some WM8958 GPIO offsets are invalid and must be rejected by the driver. A `gpio_defaults` value of zero normally means "do not configure" unless DT converted it to `WM8994_CONFIGURE_GPIO`, so board-data semantics differ from DT semantics. Incorrect alternate-function selection can steal pins from IRQ, clock, mic-detect, or audio status functions. Pull and output configuration mistakes can increase leakage or conflict electrically with board wiring.
+
+Test signals: build `gpio-wm8994`; probe should expose 11 GPIOs where supported and resources for `WM8994_IRQ_GPIO(1..11)`. Test direction/get/set operations by observing `GPN_DIR` and `GPN_LVL`, pinconf open-drain/push-pull behavior, `to_irq()` virtual IRQ mapping, WM8958 invalid-pin rejection, DT `wlf,gpio-cfg` defaults, and debugfs function names for alternate functions.

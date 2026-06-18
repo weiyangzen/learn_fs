@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmget/shmget06.c
+
+Purpose: verifies `shm_next_id` does not force reuse of an already allocated shared-memory ID. Setup writes the process PID as next ID, creates the first segment, and stores two keys. The test writes the first segment's ID back into `PATH_KERN_SHM_NEXT_ID`, creates a second segment with a different key, and passes if the second ID differs from the existing one. State is two potential shared-memory segments and kernel next-ID configuration. Dependencies include root and `CONFIG_CHECKPOINT_RESTORE=y`. Risks are concurrent shm allocations and cleanup double-removal if IDs are reset outside the test. Test signal is non-equality of the second ID plus cleanup of both segments.

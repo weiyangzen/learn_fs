@@ -1,0 +1,15 @@
+## sources/distributed-fs/coda/coda-src/volutil/codadump2tar.cc
+
+Purpose: `codadump2tar.cc` is a standalone converter from Coda binary volume dump format to a POSIX/GNU-style tar archive. It makes Coda backups portable outside Coda by reconstructing a pathname graph from directory vnodes, emitting tar directory/file/symlink/link records, and adding `..CodaACLs.yaml` metadata for external ACLs.
+
+Important APIs/types/functions: `DumpObject` models one dumped vnode/uniquifier object, including parent links, path components, directory attributes, and ACL text. `TarRecd` wraps a `union block` tar header and formats name, prefix, size, mode, type, uid, mtime, link target, and checksum fields. Main passes are `ParseArgs`, `DoGlobalSetup`, `ProcessDirectory`, `CreateDirectories`, `ProcessFileOrSymlink`, `ProcessHardLinks`, `DumpACLs`, `GetDumpObj`, and `AddNameEntry`.
+
+Control flow: `main` opens a `dumpstream`, reads `DumpHeader` and `VolumeDiskData`, initializes the Coda directory package, then walks the large vnode index first. Each directory vnode is parsed by `getNextVnode`, its directory pages are read with `readDirectory`, converted to a directory handle, and enumerated to create parent/name edges. After all directories are known, it emits directory tar records, then walks small vnodes to emit regular file or symlink entries. Hard links are emitted after regular data so link targets already exist. Finally `DumpACLs` emits a YAML file and `WriteZeroTrailer` closes the tar stream.
+
+State and persistence behavior: all graph state is in-process global memory (`DumpTable`, `LVNlist`, `RootName`, `ThisHead`, `ThisVDD`, `TarFile`). It writes tar records to stdout or `-o`; it does not modify Coda volumes. It stores ACL data as a generated tar entry rather than restoring Coda ACLs directly.
+
+Dependencies/integration points: consumes `dumpstream` and dump tags from `dump.h`; uses Coda directory routines (`DIR_Init`, `DH_EnumerateDir`, `DI_DiToDh`), PDB rights constants, `yaml_encode_double_quoted_string`, and GNU tar structures from `tar-FromRedHatCD.h`. It depends on Coda directory entries being network-order and converts vnode/unique ids with `ntohl`.
+
+Risks: tar name and prefix fields are fixed-size and truncated with ad hoc `~` markers, so very long paths can collide. Symlink targets are capped to tar header limits. Hard-link handling assumes the first path for an object is a valid target. `CollectACLs` parses external ACL text with `%ms` and newline scanning, so malformed ACLs can produce partial YAML. Directory output forces mode `0755`, intentionally dropping original directory modes. The root/lost+found fallback can hide missing directory links rather than failing.
+
+Test signals: use full dumps containing directories, files, symlinks, empty directories, hard links, long names, paths requiring tar prefix splitting, malformed/unusual ACL names, and incrementals with deleted vnodes. Validate with `tar tvf`, extraction checks, ACL YAML parsing, and round-trip comparison of file sizes, symlink targets, mtime/uid/mode behavior, and hard-link inode sharing.

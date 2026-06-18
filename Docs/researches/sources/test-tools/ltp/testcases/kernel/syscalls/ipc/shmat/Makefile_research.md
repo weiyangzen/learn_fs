@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmat/Makefile
+
+Purpose: builds the `shmat` shared-memory attach tests. It declares `LTPLIBS = newipc`, includes common LTP testcase rules, links all targets in the directory with `-lltpnewipc`, and uses the generic leaf target include. The Makefile has no runtime control flow; its role is to wire test binaries to IPC helper functions and constants such as `GETIPCKEY`, `INT_SIZE`, and `PROBE_FREE_ADDR`. Persistent state is only build metadata. Integration risk is missing `libltpnewipc` or wrong `top_srcdir`. Test signal is successful build of the shmat test set.

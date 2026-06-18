@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/sfc/tc_conntrack.c
+
+Purpose: offloads netfilter flowtable conntrack entries into SFC MAE connection-tracking tables. It manages CT zones, CT entries, NAT metadata, hardware counters, and callbacks from `nf_flow_table_offload_add_cb()`.
+
+Important APIs and functions: `efx_tc_init_conntrack()`, `efx_tc_destroy_conntrack()`, and `efx_tc_fini_conntrack()` manage two rhashtables: `ct_zone_ht` keyed by zone and `ct_ht` keyed by cookie-sized CT entry fields. `efx_tc_ct_register_zone()` reference-counts zones and registers `efx_tc_flow_block()` with netfilter; `efx_tc_ct_unregister_zone()` removes the callback, tears down hardware CT entries, waits for RCU, frees counters, and destroys the zone. `efx_tc_ct_replace()`, `efx_tc_ct_destroy()`, and `efx_tc_ct_stats()` implement flower replace/destroy/stats for CT entries.
+
+Control flow: replace allocates a zeroed `efx_tc_ct_entry`, inserts it by cookie to prevent duplicates, parses exact-match IPv4/IPv6 TCP/UDP five-tuple fields, parses `FLOW_ACTION_CT_METADATA` and supported IPv4 NAT `FLOW_ACTION_MANGLE` edits, fills default NAT fields, allocates a CT counter, inserts the CT into MAE, then links it under the zone mutex. Destroy finds the entry, removes it from the zone list and hardware, removes the rhashtable entry, waits for RCU readers, releases the counter, and frees memory. Stats reports delayed last-use time from the CT counter.
+
+State and dependencies: state is split between per-NIC rhashtables, per-zone linked lists protected by `ct_zone->mutex`, MAE firmware CT state, netfilter callbacks, and TC counter objects. RCU protects stats readers from concurrent removal. The parser depends on flow dissector exact masks and only supports IPv4 NAT; IPv6 NAT and labels are rejected.
+
+Risks and test signals: high-risk areas are duplicate cookie races, cleanup ordering when callbacks and driver teardown overlap, RCU/counter lifetime, and NAT direction consistency across multiple mangle actions. Test with add/delete/stats for IPv4/IPv6 TCP/UDP CT, unsupported masks/actions returning `-EOPNOTSUPP`, NAT source/dest combinations, repeated zone registration, netfilter flowtable removal, and driver unload with live entries.

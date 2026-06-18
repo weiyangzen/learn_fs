@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/compat-i915-headers/intel_clock_gating.h
+
+Purpose: forwards shared display code to the existing i915 clock-gating header. It defines no local functions, types, or state. Control flow is compile-time include delegation. Dependencies are the relative i915 header. Integration points are display workarounds and hardware programming code that still reference i915 clock-gating declarations while building under Xe. Risks are include path drift and mismatch between i915 clock-gating declarations and Xe implementation availability. Test signals are allmodconfig/build coverage and display workaround paths that include this shim.

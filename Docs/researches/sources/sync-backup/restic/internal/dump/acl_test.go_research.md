@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/dump/acl_test.go
+
+Purpose: verifies Linux ACL binary-to-text conversion. API under test is private `formatLinuxACL` in package `dump`. Control flow builds representative binary ACL byte slices and expected text output, then checks error cases such as wrong length, unsupported version, and unknown tag. State is local test vectors. Dependencies include testing and ACL constants from the same package. Integration signal protects tar dump metadata output because ACL text is embedded in archive headers. Risks covered include endian decoding, tag mapping, permission bit rendering, and validation. Missing signal: integration through `dumpNodeTar` PAX headers is covered by tar tests rather than this unit test.

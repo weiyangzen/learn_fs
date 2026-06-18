@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup15.py
+
+Purpose: stresses block incremental backup with large data followed by hotspot updates to a single key, alternating the order of full and incremental backups to detect interference.
+
+Important APIs are custom `add_complex_data`, `take_full_backup`, `take_incr_backup`, `compare_backups`, `setup_directories`, checkpoints, and cursor writes. Control flow creates `WT_BLOCK` home, writes an initial large dataset, takes an initial full backup into the incremental home, then for several iterations writes either new keys or repeated updates to the saved key, checkpoints, alternates full-before-incremental versus incremental-before-full, compares backup contents, and resets directories. State behavior is dirty block tracking for both broad inserts and concentrated repeated updates. Risks include runtime cost (`nops=100000`), class-level counters affecting backup IDs, and sensitivity to checkpoint behavior. Test signals are repeated full/incremental content equality checks.

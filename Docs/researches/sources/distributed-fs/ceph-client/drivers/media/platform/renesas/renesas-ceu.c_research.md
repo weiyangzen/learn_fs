@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/media/platform/renesas/renesas-ceu.c -->
+## sources/distributed-fs/ceph-client/drivers/media/platform/renesas/renesas-ceu.c
+
+Purpose: implements the Renesas Capture Engine Unit camera host as a V4L2 capture driver for parallel YUYV-style sensors. It binds sensors through V4L2 async, negotiates media-bus formats, configures CEU register conversion/reordering/downsampling, and captures frames into vb2 DMA-contig buffers.
+
+Important APIs, types, and functions: `struct ceu_device` owns the V4L2/video device, async notifier, selected subdevice, active pix format, vb2 queue, capture list, active buffer, MMIO base, locks, and platform IRQ mask. `struct ceu_subdev` wraps async connection, bound sensor, mbus flags, and selected YUYV bus format. `struct ceu_mbus_fmt` maps media-bus code to CEU input ordering. Major functions include `ceu_parse_dt()`, `ceu_parse_platform_data()`, `ceu_notify_complete()`, `ceu_init_mbus_fmt()`, `__ceu_try_fmt()`, `ceu_set_fmt()`, `ceu_hw_config()`, `ceu_start_streaming()`, `ceu_irq()`, and runtime PM handlers.
+
+Control flow: probe allocates the device, maps registers, requests IRQ, enables runtime PM, registers `v4l2_device`, initializes async notifier, parses either DT graph endpoints or legacy platform data, then registers the notifier. When all subdevices bind, vb2 is initialized, the first usable sensor is selected, a default NV16 VGA format is negotiated, and the video node is registered. Open powers the selected sensor and soft-resets CEU via runtime PM. Streaming programs CEU registers, starts sensor streaming, selects the first queued buffer, enables interrupts, and triggers one-frame capture. Each capture-end IRQ timestamps and completes the previous buffer, pulls the next queued buffer if present, and starts another capture; VBP error returns active and queued buffers as errors.
+
+State and persistence: active sensor selection, selected mbus format, current pix format, active buffer, queue list, and sequence counters are volatile. Runtime PM toggles sensor power through `s_power` and resets CEU. There is no disk persistence.
+
+Dependencies and integration points: V4L2 async/fwnode, V4L2 subdev pad ops, V4L2 controls inherited from sensor, vb2 DMA-contig, runtime PM, OF graph or `ceu_platform_data`, and platform-specific interrupt masks for RZ and SH4. Userspace gets one capture video node with input selection for multiple sensors.
+
+Risks: the start-streaming error path iterates queued buffers but calls `vb2_buffer_done()` on `ceudev->active`, which is not set on early errors and looks suspicious. IRQ error handling completes queued buffers without deleting/reinitializing list nodes. Only 8-bit YUYV media-bus permutations are supported; raw/JPEG/binary and 16-bit bus TODOs remain. Format negotiation asks the sensor to set TRY/ACTIVE formats and CEU cannot scale, so sensor behavior drives final dimensions. `ceu_s_input()` powers old/new sensors directly and assumes open/runtime state is coherent.
+
+Test signals: build with OF and platform-data configurations; bind a test sensor exposing each YUYV bus permutation; verify NV12/NV21/NV16/NV61 and packed YUYV/UYVY/YVYU/VYUY output; run v4l2-compliance; test multiple input switching before streaming; exercise streamon failures, VBP IRQ errors, queue underrun, runtime PM open/close, and DT endpoint polarity flags.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/media/platform/renesas/renesas-ceu.c -->

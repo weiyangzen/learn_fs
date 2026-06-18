@@ -1,0 +1,12 @@
+
+# sources/distributed-fs/openafs/src/ubik/ubikclient.c
+
+`ubikclient.c` implements Ubik client-side connection management, retry selection, sync-site discovery hints, and legacy variadic call wrappers. It is the layer that applications use to call generated Ubik RPC stubs while tolerating server failures and sync-site movement.
+
+Important APIs are `ubik_ParseClientList`, `afs_random`, `ubik_ClientInit`, `ubik_ClientDestroy`, `ubik_RefreshConn`, `ubik_CallIter`, `ubik_Call_New`, legacy `ubik_Call`, and `ubik_CallRock`. `ubik_ParseClientList` parses `-servers` command-line entries into network-order addresses. `ubik_ClientInit` optionally reinitializes an existing client, destroys old connections, initializes the mutex, randomizes connection ordering using `afs_randomMod15`, and stores the connection list. `ubik_ClientDestroy` releases/destroys all Rx connections and frees the client.
+
+Control flow in calls is two-pass retry. `CallIter` is the primitive iterator: choose the current connection, refresh it if Rx reports an error, skip recently failed servers when `UPUBIKONLY` is set, invoke the RPC function, mark negative errors as network failure, and advance the position. `ubik_Call_New` loops first over known-up servers and then all servers, returning on success or non-retryable global errors. Legacy `ubik_Call` additionally remembers RPC procedure pointers that returned `UNOTSYNC`, then biases later calls toward the remembered `syncSite` host. `ubik_CallRock` provides the same retry behavior for a type-safe callback carrying `struct ubik_callrock_info`.
+
+State is entirely client-side and transient: connection array, `CFLastFailed` bits, initialization generation, sync-site host hint, and a small static cache of procedure addresses that need a sync site. There is no persistent storage. In pthread builds, pseudo-random state is thread-specific and client state is mutex-protected.
+
+Dependencies include Rx connection APIs, rxgen constants, pthread globals, host lookup, and `ubik.h`. Risks include legacy function-pointer casts through `int *`, variadic long-argument RPC wrappers, weak non-cryptographic randomization, and behavior differences between pthread cached connections and non-pthread destruction. Test signals include reinitialization during an in-flight call, Rx connection errors causing refresh, first-pass skip/second-pass retry behavior, sync-site hint reuse, and `UBIK_CALL_NEW` compatibility.

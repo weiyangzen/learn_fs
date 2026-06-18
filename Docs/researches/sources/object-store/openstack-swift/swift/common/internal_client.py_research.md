@@ -1,0 +1,13 @@
+# sources/object-store/openstack-swift/swift/common/internal_client.py
+
+Purpose: offers Swift-internal clients that interact with a loaded proxy WSGI app or simple HTTP endpoints for operational daemons, dispersion tools, and container sync.
+
+Important APIs/types/functions: `UnexpectedResponse` carries the failed response; `CompressingFileReader` streams gzip-compatible compressed data from a file object; `InternalClient` loads or accepts a proxy app and exposes account, container, and object CRUD/listing/metadata helpers; `get_auth` implements auth v1.0 token retrieval; `SimpleClient` is a urllib-based retrying client; module-level `head_object`, `put_object`, and `delete_object` wrap `SimpleClient`.
+
+Control flow: `InternalClient.__init__` loads the proxy pipeline, rejects gatekeeper middleware, sets the backend user agent, caches rings, and optionally enables replication-network backend headers. `make_request` builds a `swob.Request`, attaches body files and params, executes `get_response` in a separate green thread to isolate corolocals, accepts explicit or class status codes, retries server errors/exceptions with exponential sleep, drains or closes response bodies between attempts, and raises `UnexpectedResponse` or the last exception. Listing methods repeatedly GET JSON with markers. Object helpers stream app iterators, iterate text lines with optional gzip decompression, and upload chunked when content length is absent. `SimpleClient` builds urllib requests, optionally fetches full listings by marker, logs transfer timing, and retries non-client failures.
+
+State and persistence: client objects store app, user agent, retry settings, replication-network preference, ring references, auth URL/token, and retry attempt counters. Persistent effects are Swift requests made through the proxy app or external URL.
+
+Dependencies and integration: integrates with Swift WSGI loading, `swob.Request`, gatekeeper policy, request helper headers, Swift HTTP status helpers, eventlet concurrency, urllib, JSON, and zlib. Used by internal daemons and tools that need proxy semantics without an external client dependency.
+
+Risks: gatekeeper must stay absent so internal `X-Backend-*` headers survive; response iterators returned by `get_object` must be consumed/closed by callers; retries can replay non-idempotent operations if misused; chunked upload depends on downstream support; `get_auth` exits for non-v1 auth; `CompressingFileReader.seek` only supports rewind. Tests should cover retry and drain behavior, acceptable status classes, gatekeeper rejection, metadata prefix mapping, listing pagination, gzip line iteration, chunked upload headers, and simple-client retry classification.

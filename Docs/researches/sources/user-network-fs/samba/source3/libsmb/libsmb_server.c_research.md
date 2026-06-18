@@ -1,0 +1,11 @@
+# sources/user-network-fs/samba/source3/libsmb/libsmb_server.c
+
+Purpose: owns server connection discovery, health checking, session setup, tree connects, DFS proxy handling, IPC attribute connections, and cache insertion/removal for libsmbclient.
+
+Important APIs: `SMBC_check_server()` verifies `cli_state` connectivity and throttles `cli_echo()` by `last_echo_time`. `SMBC_remove_unused_server()` closes and frees an `SMBCSRV` only when no open `SMBCFILE` references it. `SMBC_find_server()` searches the cache, calls auth callbacks when credentials are missing, and purges stale cache entries. `SMBC_server()` wraps `SMBC_server_internal()` and inserts new connections into the cache and server list. `SMBC_attr_server()` creates or reuses a special `*IPC$` connection and opens an LSA policy for attribute operations.
+
+Control flow/state: connection setup splits transports into NetBIOS and other transports, handles one-share-per-server retree-connects, starts SMB connection, applies timeout/signing/POSIX flags, creates credentials from context options, performs session setup with optional anonymous fallback, follows DFS proxy referrals recursively, tree-connects, records case-sensitivity/fs attributes, allocates `SMBCSRV`, and updates context credentials for DFS. Persistent state lives in `context->internal->servers`, cache callbacks, `SMBCSRV.cli`, dev id, pathinfo capability flags, policy handle, and echo timestamp.
+
+Dependencies and integration: depends on cli connection/session APIs, credentials, RPC LSA, srv cache callbacks, smb transport selection, and `smbXcli` protocol helpers. It is the central dependency of file, dir, stat, print, and xattr paths.
+
+Risks: credential fallback and anonymous login behavior are security-sensitive. Cache keys are delegated to callbacks and must remain consistent with connection semantics. SMB2 echo quirks are explicitly tolerated for some statuses. Failure after cache add or tree connect must not leak `cli_state`. Tests should cover cache reuse, stale echo removal, one-share retarget, Kerberos required blocking anonymous fallback, DFS proxy recursion, transport/port selection, encryption-required signing, IPC attr cache, and open-file removal refusal.

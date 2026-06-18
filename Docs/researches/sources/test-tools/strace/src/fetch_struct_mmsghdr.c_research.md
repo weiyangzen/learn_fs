@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_mmsghdr.c
+
+Fetches tracee `struct mmsghdr` for `sendmmsg`/`recvmmsg` and dumpio users. It deliberately uses `umove` rather than printing helpers because callers may need silent failure. If compat size differs, it expands pointer fields and copies message metadata plus `msg_len` into native layout. State is only the caller destination and returned byte count. Dependencies are `msghdr.h` and `MPERS_DEFS`. Risks are silent zero return on failure, pointer truncation bugs, and layout drift. Tests should cover native/compat `mmsghdr` arrays, dumpio behavior, bad pointers, and `sizeof_struct_mmsghdr`.

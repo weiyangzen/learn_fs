@@ -1,0 +1,11 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/main/resources/hdfs-rbf-default.xml
+
+This XML file is the default configuration catalog for HDFS Router-Based Federation (RBF). It is not runtime code, but it is a central integration contract: `RBFConfigKeys` and the Router services consume these keys unless an operator overrides them in `hdfs-rbf-site.xml`.
+
+Important configuration areas are Router identity and default nameservice selection, RPC/admin/HTTP service enablement and bind addresses, synchronous and asynchronous RPC handler sizing, downstream connection-pool behavior, metrics/JMX reporting, state-store driver and serializer selection, cache TTLs, router and namenode heartbeat intervals, safemode behavior, mount-table caching, quota management, client retry/partial-listing behavior, Kerberos/SPNEGO/keytab settings, delegation-token secret manager implementation, fairness policy controller permits, cross-namespace federation rename options, observer-read propagation, and async file/filesystem state-store driver threads.
+
+State and persistence behavior is defined through the state-store defaults: ZooKeeper is the default state-store backend, with file, filesystem, and MySQL alternatives described; membership and router records have expiration and optional deletion windows; mount table and quota state are cached inside Routers and refreshed on TTLs or optional refresh-service calls. The file also controls when Routers heartbeat themselves, monitor namenodes, and enter safemode if state-store reachability is lost.
+
+Dependencies are mostly class-name strings that bind this resource to Java implementations such as `MountTableResolver`, `MembershipNamenodeResolver`, `StateStoreSerializerPBImpl`, `StateStoreZooKeeperImpl`, `ZKDelegationTokenSecretManagerImpl`, and `NoRouterRpcFairnessPolicyController`.
+
+Risks are configuration drift and invalid defaults. The file contains a duplicated `dfs.federation.router.async.rpc.responder.count` property and an apparent extra `<property>` opening near the datanode-report cache section, so consumers and XML validation tests need to catch parse and duplicate-key issues. The test signal should include config-field coverage tests, XML parse validation, and targeted Router startup tests for RPC, state-store, security, fairness, and observer-read paths.

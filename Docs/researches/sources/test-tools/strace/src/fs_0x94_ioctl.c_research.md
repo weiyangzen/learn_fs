@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fs_0x94_ioctl.c
+
+Filesystem ioctl decoder for type `0x94`, covering clone, clone-range, dedupe-range, and filesystem label commands, while delegating unknown commands to `btrfs_ioctl`. `FIDEDUPERANGE` is bidirectional: entry prints source and destination requests, exit prints per-destination status/bytes with abbreviation limiting. State is tracee memory and enter/exit status. Dependencies are `<linux/fs.h>`, array printers, fd printers, and Btrfs decoder integration. Risks are large `dest_count`, output after syscall errors, struct layout changes, and label NUL handling. Tests should cover clone variants, dedupe success/failure per target, abbrev mode, get/set labels, and Btrfs fallback.

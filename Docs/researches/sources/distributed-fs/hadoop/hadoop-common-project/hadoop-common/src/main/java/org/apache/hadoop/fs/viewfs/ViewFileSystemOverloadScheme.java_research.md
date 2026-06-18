@@ -1,0 +1,11 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/viewfs/ViewFileSystemOverloadScheme.java
+
+`ViewFileSystemOverloadScheme` extends `ViewFileSystem` so an existing scheme such as `hdfs://cluster` or `s3a://bucket` can be backed by a viewfs mount table without using the `viewfs://` URI scheme. It keeps normal viewfs mount parsing but reports the original scheme and handles same-scheme child filesystem creation specially to avoid recursive overload resolution.
+
+Important APIs and state include `initialize`, `getScheme`, `supportAutoAddingFallbackOnNoMounts`, `setSupportAutoAddingFallbackOnNoMounts`, `fsGetter`, `getRawFileSystem`, `getMountPathInfo`, `getFallbackFileSystem`, and nested `ChildFsGetter`/`MountPathInfo`. Initialization stores the original URI, defaults mount links to non-symlink display, defaults mount-table-name parsing to ignore port, optionally loads external mount table XML through `MountTableConfigLoader`, then calls `super.initialize`.
+
+`ChildFsGetter` checks whether a target URI uses the overloaded root scheme. If so, it instantiates the real target filesystem class from `fs.viewfs.overload.scheme.target.<scheme>.impl` and initializes it directly; otherwise it delegates to normal `FileSystem` creation/cache APIs. Admin helper APIs resolve paths and expose either raw child filesystems or path-on-target plus target filesystem, unwrapping `ChRootedFileSystem` when needed.
+
+State is in-memory and configuration-driven. Persistent effects occur in underlying filesystems and in loaded mount table resources. Dependencies include `ViewFileSystem`, `FsGetter`, `MountTableConfigLoader`, `HCFSMountTableConfigLoader`, reflection, `FsConstants`, and `NotInMountpointException`.
+
+Risks include infinite recursion if same-scheme targets are not configured correctly, class-instantiation failures, default behavior differences from `viewfs://`, external mount-table loading failures, and admin APIs assuming chrooted targets. Tests should cover same-scheme and different-scheme targets, missing target impl config, fallback auto-add behavior, mount table loader invocation, port-ignore default, raw filesystem unwrapping, and `MountPathInfo` for links/internal dirs/fallback.

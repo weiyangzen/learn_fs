@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/platform/arm64/huawei-gaokun-ec.c
+
+Purpose: I2C EC core driver for Huawei Matebook E Go (`gaokun`) devices. It provides a serialized EC transaction API, exposes helper APIs for power-supply and UCSI auxiliary subdrivers, creates lid input and hwmon temperature interfaces, handles Fn-lock sysfs, and sends modern-standby enter/exit commands.
+
+Important APIs, types, and functions: `struct gaokun_ec` stores the client, EC transaction mutex, notifier chain, hwmon device, lid input, and suspend state. Exported helpers include `gaokun_ec_read()`, `gaokun_ec_write()`, `gaokun_ec_read_byte()`, notifier register/unregister, PSY register reads and smart-charge get/set/enable APIs, and UCSI read/write/register/pin-assignment-ack APIs. `gaokun_ec_request()` is the central two-message I2C transfer. `gaokun_aux_init()` creates auxiliary devices named by platform data.
+
+Control flow: requests use a three-byte header `{master_cmd, slave_cmd, data_len}` followed by payload; responses begin with status and length before data. `gaokun_ec_request()` holds `ec->lock`, writes and reads via `i2c_transfer()`, returns EC status, then sleeps like the ACPI reference method. Probe allocates state, initializes the notifier chain, registers a `SW_LID` input device, creates PSY and UCSI auxiliary devices, requests the threaded IRQ, and registers a multi-channel hwmon temp device. IRQ reads the event query command, reports lid state directly for `EC_EVENT_LID`, and forwards all other nonzero events to the blocking notifier chain. Suspend/resume sends standby commands, with resume retrying three times.
+
+State and persistence: transaction serialization is per-device. Fn-lock, smart-charge settings, UCSI registers, temperature readings, lid state, and standby state live in EC firmware. Kernel `suspended` prevents duplicate standby entry/exit. Auxiliary devices receive the EC pointer through `platform_data` and inherit the parent OF node.
+
+Dependencies and integration points: uses I2C, input, hwmon, auxiliary bus, blocking notifiers, OF matching `huawei,gaokun3-ec`, and public platform data declarations in `linux/platform_data/huawei-gaokun-ec.h`. Exported GPL symbols are consumed by separate gaokun PSY/UCSI drivers.
+
+Risks and edge cases: `gaokun_ec_request()` treats any short `i2c_transfer()` as an error value but may return a positive count rather than a normalized negative errno. Response length byte is documented unreliable and mostly ignored, so callers rely on fixed buffer sizes. `gaokun_ec_read_byte()` extracts a byte even if the read failed, although it returns the error. Smart-charge threshold validation only checks start/end range. IRQ lid path ignores the return value of the register read. Resume clears `suspended` even if all retries fail.
+
+Test signals: unit-like tests can cover smart-charge validation. Hardware tests should verify auxiliary PSY/UCSI devices bind, Fn-lock toggles, all advertised hwmon channels read plausible temperatures, lid events report correct polarity, standby commands are sent around suspend, and notifier consumers receive EC events.

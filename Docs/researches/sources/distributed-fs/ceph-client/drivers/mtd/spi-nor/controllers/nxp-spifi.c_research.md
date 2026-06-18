@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/spi-nor/controllers/nxp-spifi.c
+
+Purpose: platform driver for NXP LPC SPIFI controller. It supports command mode for register/program/erase and memory-mapped mode for fast reads, then exposes the flash through SPI NOR/MTD.
+
+Important APIs/types/functions: `struct nxp_spifi` holds device, clocks, register and flash windows, embedded `spi_nor`, memory-mode state, and precomputed memory read command. Controller ops include `read_reg`, `write_reg`, `read`, `write`, and `erase`. Setup functions include `nxp_spifi_reset()`, `nxp_spifi_set_memory_mode_on/off()`, `nxp_spifi_setup_memory_cmd()`, and `nxp_spifi_setup_flash()`.
+
+Control flow: probe maps `spifi` and `flash` resources, enables `spifi` and `reg` clocks, resets the controller, clears IDATA/MCMD, obtains the first available flash child, and sets it up. Flash setup parses `spi-rx-bus-width`, CPHA, and CPOL; configures control register timeout/chip-select high/feedback clock/dual-mode bits; supports only SPI mode 0 or 3; performs a dummy RDID workaround; scans SPI NOR with read/fast-read/page-program capabilities plus dual/quad read when configured; builds the memory-mode command; and registers MTD. Reads enter memory mode and copy directly from the mapped flash window. Writes/erases force command mode, program address/opcode/frame form, push bytes through DATA, and poll for completion.
+
+State and persistence: runtime state is clock-enabled MMIO, memory-mode boolean, embedded NOR parameters, and MTD registration. Persistent flash contents are changed by write and erase paths. Memory-mode state affects subsequent command legality and must be reset before register/program/erase commands.
+
+Dependencies and integration: depends on OF, named MMIO resources, two clocks, SPI NOR core, MTD registration, and child flash node properties. Risks include only one child flash, very short 30 us poll timeout constants, unsupported protocol modes beyond 1-1-1/1-1-2/1-1-4 reads, byte-wise programmed writes, memory-mode transition failures, and first-ID-read hardware quirk. Test signals include mode 0/3 and invalid mode, rx width 1/2/4 and invalid width, dummy ID read before scan, memory-mode read after register operations, write/erase command-mode transitions, timeout paths, and MTD unregister on remove.

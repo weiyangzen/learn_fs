@@ -1,0 +1,15 @@
+# sources/distributed-fs/openafs/src/WINNT/afsd/logon_ad.cpp
+
+Purpose: implements Active Directory and SSPI helpers used during Windows logon integration. It obtains delegated security contexts for a logon LUID, impersonates the user, queries AD profile/home information, determines the local AD short domain, and creates AFS authentication groups/PAGs through the redirector control device.
+
+Important APIs/types/functions: `_get_sec_err_text` maps common SSPI statuses for diagnostics. `LogonSSP` acquires `Negotiate` credentials for a logon ID and loops `InitializeSecurityContext`/`AcceptSecurityContext` until it obtains a delegated server context. `QueryAdHomePathFromSid` converts a SID to a string, uses `IADsNameTranslate` to map SID to an LDAP path, opens `IADsUser`, and reads the profile path. `GetAdHomePath` combines `LogonSSP`, impersonation, `LsaGetLogonSessionData`, and `QueryAdHomePathFromSid`, setting `LOGON_FLAG_AD_REALM` on success. `GetLocalShortDomain` uses `IADsADSystemInfo::get_DomainShortName`. `OpenRedirector` opens `AFS_SYMLINK_W`. `AFSCreatePAG` builds an `AFSAuthGroupRequestCB` from the user SID/session and sends redirector IOCTLs to query and create an auth group.
+
+Control flow: logon paths first create a delegated SSPI context, impersonate it, and then use LSA/ADSI under the user's security context. PAG creation intentionally toggles impersonation: it queries auth-group state outside and inside impersonation, reverts before issuing the create IOCTL, then queries again to log before/after GUIDs.
+
+State/persistence: no local persistent state is written by the file. External state changes occur through `IOCTL_AFS_AUTHGROUP_LOGON_CREATE` to the redirector, which creates/updates auth-group association for the logon session. COM is initialized and uninitialized per query. ADSI and LSA buffers are allocated/freed per call.
+
+Dependencies/integration: depends on SSPI/Secur32, LSA logon session APIs, ADSI COM interfaces, SDDL SID conversion, RPC UUID formatting, AFS logon option structures, and AFS redirector user IOCTL definitions under `afsrdr/common`. It integrates Windows logon authentication with AFS PAG/auth-group semantics.
+
+Risks: `LogonSSP` has complex token-buffer ownership; error paths can leak or double-manage SSPI buffers if statuses differ from expected sequences. Domain copying in `GetAdHomePath` treats `UNICODE_STRING.Length` as a WCHAR count even though it is bytes, which can over-allocate and terminate at the wrong index. `wcstombs` in `QueryAdHomePathFromSid` does not guarantee null termination on truncation. `AFSCreatePAG` allocates `pAuthGroup` but does not free it in cleanup. COM apartment assumptions are implicit. The code logs sensitive path/SID/auth-group information through `DebugEvent`.
+
+Test signals: exercise domain and non-domain logons, missing delegation, AD GC unavailable with domain fallback, long profile paths, SID conversion failures, redirector unavailable, IOCTL failures, and leak checks around `AFSCreatePAG` and SSPI loop exits.

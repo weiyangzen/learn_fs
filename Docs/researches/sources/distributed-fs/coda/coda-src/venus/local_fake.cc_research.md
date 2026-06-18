@@ -1,0 +1,11 @@
+# sources/distributed-fs/coda/coda-src/venus/local_fake.cc
+
+Purpose: implements expanded repair views for conflicts by replacing an object or mountpoint with a fake directory in the local Repair volume containing mountlinks to `_localcache` and individual server replicas.
+
+Important APIs and flow: `fsobj::ExpandObject` rejects already-expanded/local/non-replicated objects, detaches the object or mount root from its parent, creates a fake repair directory, inserts a local-cache mountlink, inserts one mountlink per replica server, replaces the original parent entry or mountlink with a fake mountlink to the repair directory, marks involved objects local/modified/expanded, increments bound CML expansion counts, pins the local object, and purges kernel cache entries. `volent::NewFakeDirObj` and `NewFakeMountLinkObj` allocate fake fids, initialize directory/symlink metadata, mark objects local, and matriculate them. `SetMtLinkContents` formats Coda mountlink target strings. `CollapseObject` normalizes calls from several possible expanded-view objects, finds `_localcache`, detaches fake mountlinks, restores the original object or mountlink, clears flags, decrements CML expansion counts, kills the fake tree, and releases references. `IsToBeRepaired`, `WhoIsLastAuthor`, `ExpandCMLEntries`, `CollapseCMLEntries`, and `HasExpandedCMLEntries` inspect/update CML bindings.
+
+State and persistence: fake fsobjs, directory entries, mountlink symlink data, parent/child pointers, mountpoint root links, flags, and CML expansion counters are modified under RVM transactions. Kernel name cache purges make expanded/collapsed views visible.
+
+Dependencies and integration: depends on replicated volumes, `VDB`, `REALMDB`, `FSDB`, fake fid generation, directory helpers, mountpoint cover/uncover logic, CML bindings, server host/vid lists, and worker/user context for collapse lookup.
+
+Risks and test signals: risks include reference leaks around `FSO_HOLD`, parent/mountpoint restoration after crashes, recursive expansion prevention, fake symlink formatting, collapse from any view node, and CML expansion counts under nested repair views. Tests should expand/collapse root and non-root objects, directories and files, hidden localcache cases, replica mountlinks, crash/restart recovery, and kernel purge visibility.

@@ -1,0 +1,12 @@
+# sources/distributed-fs/ceph-client/lib/stackdepot.c
+
+## Purpose
+Implements Stack Depot, a deduplicating storage service for kernel stack traces. It hashes stack frame arrays, stores unique records in page-sized pools, returns compact handles, optionally refcounts records, and exposes debug statistics.
+
+## APIs, Control Flow, and State
+Key APIs are `stack_depot_request_early_init()`, `stack_depot_early_init()`, `stack_depot_init()`, `stack_depot_save_flags()`, `stack_depot_save()`, `__stack_depot_get_stack_record()`, `stack_depot_fetch()`, `stack_depot_put()`, `stack_depot_print()`, `stack_depot_snprint()`, `stack_depot_set_extra_bits()`, and `stack_depot_get_extra_bits()`. Boot parameters `stack_depot_disable` and `stack_depot_max_pools` control availability and pool cap. Initialization allocates a hash table either through memblock in early boot or kvcalloc later, then allocates an array of pool pointers. Saving filters interrupt frames, hashes the stack, does a lockless RCU bucket lookup, optionally preallocates a pool, locks `pool_lock`, rechecks for duplicates, allocates or reuses a `stack_record`, publishes it with `list_add_rcu()`, and returns the encoded handle. Refcounted records can be put; zero-ref records leave the hash under RCU and enter an LRU-style freelist after an RCU grace cookie becomes reusable.
+
+Persistent state includes `stack_table`, `stack_pools`, `new_pool`, `pools_num`, `pool_offset`, `free_stacks`, per-record handles/refcounts/hash entries, and approximate debugfs counters. Debugfs creates `stackdepot/stats` late in boot.
+
+## Dependencies, Integration, Risks, and Tests
+Depends on jhash, stacktrace filtering/printing, memblock, kvalloc, raw spinlocks, RCU, refcounting, KMSAN/KASAN hooks, debugfs, early params, and printk-deferred regions. Integration points include KASAN, KMSAN, page owner, leak detectors, allocation tracking, and any subsystem needing stable stack trace handles. Risks include disabled or failed initialization returning zero handles, pool exhaustion, corrupted handles indexing outside pool arrays, refcount imbalance causing use-after-put warnings, NMI best-effort lock failure, memory growth from unfiltered interrupt stacks, and RCU misuse when recycling records. Test signals include stackdepot KUnit/selftests, sanitizer boot tests, refcount get/put stress, debugfs counter inspection, handle extra-bit round trips, early and late init paths, NMI/context stress, and pool-limit fault injection.

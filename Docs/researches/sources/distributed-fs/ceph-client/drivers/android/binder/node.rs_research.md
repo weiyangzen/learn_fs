@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/android/binder/node.rs
+
+Purpose: defines Binder nodes, local references to remote nodes, death notifications, reference-count work delivery, and oneway transaction serialization. A `Node` represents a userspace Binder object owned by one `Process`; `NodeRef` and `NodeRefInfo` model handles held by other processes.
+
+Important APIs/types/functions: `DeliveryState` tracks whether a node or wrapper is scheduled and whether pending work is weak or strong zero-to-one refcount work. `NodeInner` stores strong/weak `CountState`, oneway queues, death listeners, freeze listeners, active inc refs, and reverse ref lists. `Node::new`, `update_refcount_locked`, `incr_refcount_allow_zero2one`, `do_work_locked`, `submit_oneway`, `pending_oneway_finished`, `release`, freeze-list helpers, and debug helpers are central. `NodeRef` owns counted node refs and updates remote counts in `Drop`. `NodeDeath` implements `BR_DEAD_BINDER` and clear-complete delivery.
+
+Control flow: refcount updates mutate owner-process state under `ProcessInner`; zero-to-one increments may schedule the node or a wrapper so userspace receives `BR_INCREFS`/`BR_ACQUIRE`. `do_work_locked` compares Rust-side counts with userspace-visible `has_count` flags, emits increment or decrement commands, and removes nodes with no remaining weak reachability. Oneway transactions are serialized by `has_oneway_transaction`: the first is delivered, later ones wait in `oneway_todo` until buffer free completion calls `pending_oneway_finished`. Death registration stores `NodeDeath` objects on the target node; node release marks them dead and queues notifications to listeners.
+
+State and persistence: node state is volatile and lock-coupled to its owner process. It persists while the owner has a node mapping or foreign refs/death/freeze listeners exist. `refs` links enable cleanup from both owning and referencing processes; release cancels queued oneway work and wakes death listeners.
+
+Dependencies and integration points: integrates with `process.rs` handle tables, `thread.rs` work delivery, `transaction.rs` oneway transactions, `freeze.rs` listener enumeration, and C trace layout via `NODE_LAYOUT`. It relies heavily on kernel Rust `ListArc`, `LockedBy`, `SpinLock`, `AtomicTracker`, and Binder UAPI return codes.
+
+Risks: refcount sequencing is the highest-risk area; `active_inc_refs` intentionally delays decrements to avoid userspace-visible reordering. Incorrect delivery-state changes can lose critical zero-to-one notifications or deliver them to the wrong thread. Oneway serialization can deadlock or reorder if buffer-free signaling is missed. Unsafe list removals rely on invariants that each object is linked only into its documented owner list.
+
+Test signals: stress strong/weak acquire/release, cross-thread zero-to-one races, manager node refs, process death with active death notifications, oneway ordering, transaction replacement, and freeze listeners. Debug output should show balanced `hs/hw/cs/cw` counts and no refcount underflow or duplicate list warnings.

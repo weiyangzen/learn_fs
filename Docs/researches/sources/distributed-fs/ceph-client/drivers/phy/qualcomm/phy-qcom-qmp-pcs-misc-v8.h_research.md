@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-misc-v8.h
+
+This header defines a QMP V8 PCS_MISC config offset, `QPHY_V8_PCS_MISC_PCS_MISC_CONFIG1` at `0x08`. It is macro-only and contains no runtime behavior, state, or persistence. It integrates with V8 QMP PHY drivers that program a PCS_MISC base as part of init or mode switching. The only dependency is inclusion by C code that understands the V8 PCS_MISC block. The risk is that a single bad offset can silently program the wrong PCS_MISC register on V8 hardware. Test signals are successful builds and hardware bring-up paths that apply V8 PCS_MISC configuration, especially mode changes and low-power transitions.

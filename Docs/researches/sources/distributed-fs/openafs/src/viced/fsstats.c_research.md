@@ -1,0 +1,15 @@
+# sources/distributed-fs/openafs/src/viced/fsstats.c
+
+Purpose: implements the helper functions declared in `fs_stats.h` for recording fileserver RPC operation timings and fetch/store transfer statistics. It abstracts counter updates so individual RPC handlers can bracket operations with start/finish calls.
+
+Important APIs/functions: `fsstats_StartOp` validates an RPC index, records the target `rpcOpTimes` slot, increments `numOps` under `FS_LOCK`, and captures start time. `fsstats_FinishOp` records stop time and, only on success (`code == 0`), increments successes and updates sum, squared sum, min, and max elapsed times. `fsstats_StartXfer` validates transfer index, records start time, and selects the transfer slot. `fsstats_FinishXfer` always increments `numXfers`; on success, it increments successes, adds transferred bytes in KiB using a caller-maintained remainder, updates min/max bytes, buckets by requested object size, and updates elapsed timing aggregates.
+
+Control flow: callers create a `struct fsstats` scratch object and invoke start/finish around RPC or transfer work. Operation finish ignores failed operations for timing aggregate purposes except for the initial `numOps` count. Transfer finish increments total transfer attempts even on failure, but all byte/timing aggregates are success-only. Bucket selection is a straight threshold cascade from <=128 bytes through <=1 MiB, with the last bucket for larger transfers.
+
+State and persistence behavior: updates mutate the global `afs_FullPerfStats.det` structure in memory. There is no durable persistence. Locking is via `FS_LOCK`/`FS_UNLOCK` around shared counter mutations; start times are stored in the caller-owned `struct fsstats`. `remainder` carries sub-KiB bytes between transfer accounting calls so `sumBytes` tracks whole KiB while preserving fractional leftovers externally.
+
+Dependencies and integration: includes fileserver internals (`viced.h`), OpenAFS/Rx/NFS headers, and `fs_stats.h`. The helpers are called from fileserver RPC implementations using the `FS_STATS_RPCIDX_*` and `FS_STATS_XFERIDX_*` constants. The xstat path later reads the same global structures.
+
+Risks: `assert` index validation can disappear in release builds depending on `NDEBUG`, leaving out-of-range indexes unchecked. `fsstats_FinishOp` assumes `stats->opP` and start time were initialized by `fsstats_StartOp`; same for transfer fields. Min-time/min-byte fields must be initialized to large values elsewhere or first samples may not update correctly. `bytesXferred` and byte min/max are `afs_sfsize_t` but stored into 32-bit fields, which can truncate large transfers. Time macros mutate local elapsed values but are safe here because stop/start are local copies.
+
+Test signals: focused tests can initialize stats records, run successful and failed operation/transfer finish paths, verify lock-protected counters, bucket boundaries, remainder carry behavior, min/max initialization behavior, and no timing updates on failed operations. Integration signals are xstat collection values after known RPC workloads.

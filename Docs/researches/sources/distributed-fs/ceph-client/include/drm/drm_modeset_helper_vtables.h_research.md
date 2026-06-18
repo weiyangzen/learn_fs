@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/drm/drm_modeset_helper_vtables.h
+
+Purpose: gathers the helper callback tables for DRM KMS objects: CRTC, encoder, connector, plane, and global mode-config helper operations. These vtables define the contracts consumed by legacy helper paths, atomic modeset helpers, probe helpers, writeback helpers, panic display, and commit helpers.
+
+Important APIs and types: `struct drm_crtc_helper_funcs` includes legacy DPMS/prepare/commit/mode_set hooks, mode validation/fixup, atomic check/begin/flush/enable/disable, scanout-position, and vblank-timeout hooks. `struct drm_encoder_helper_funcs` covers encoder DPMS, mode validation/fixup, prepare/commit, mode_set/atomic_mode_set, detect, enable/disable, atomic enable/disable, and atomic_check. `struct drm_connector_helper_funcs` covers get_modes, atomic detect and mode validation with acquire context, best encoder selection, atomic connector check/commit, writeback job prepare/cleanup, and HPD enable/disable. `struct drm_plane_helper_funcs` covers framebuffer prepare/cleanup, begin/end access, atomic check/update/enable/disable, async check/update, panic scanout buffer retrieval, and panic flush. `struct drm_mode_config_helper_funcs` provides atomic commit tail/setup hooks. Inline `*_helper_add()` functions install vtables into object `helper_private` fields.
+
+Control flow: drivers attach helper vtables after creating each KMS object. Probe helpers use connector, encoder, and CRTC mode validation to build exposed mode lists. Atomic helpers call check hooks first without touching persistent state, then commit helpers invoke prepare/access/update/flush/enable/disable callbacks in defined phases. Nonblocking commits can use global commit setup/tail hooks to track completion and cleanup. Panic paths call plane scanout hooks under the panic lock.
+
+State and persistence behavior: vtable pointers persist in KMS objects for the device lifetime. Check callbacks must only mutate atomic state, while commit callbacks update hardware and driver runtime state. Framebuffer resources acquired in `prepare_fb` persist until cleanup; resources acquired in `begin_fb_access` last only for one commit.
+
+Dependencies and integration points: includes CRTC and encoder core headers and references atomic state, connector/CRTC/plane state, writeback jobs, scanout buffers, vblank helpers, probe helpers, and DRM panic support.
+
+Risks: legacy and atomic hooks have different semantics; mixing them incorrectly can break runtime PM or leak resources. Mode validation in probe paths cannot depend on current display state. Atomic check hooks may need to add more state and handle `-EDEADLK`. Async plane updates must swap framebuffer references correctly. Panic hooks run in constrained context and must not sleep or rely on complex locking.
+
+Test signals: mode probing with connector/encoder/CRTC validation, atomic commit ordering, runtime PM enable/disable symmetry, writeback job prepare/cleanup, async cursor update, framebuffer pin/vmap cleanup, vblank timestamp callbacks, panic scanout path, HPD enable/disable balance, and lockdep/deadlock retries in atomic checks.

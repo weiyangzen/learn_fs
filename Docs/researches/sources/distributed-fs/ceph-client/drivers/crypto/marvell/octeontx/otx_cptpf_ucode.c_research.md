@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/crypto/marvell/octeontx/otx_cptpf_ucode.c Research
+
+## sources/distributed-fs/ceph-client/drivers/crypto/marvell/octeontx/otx_cptpf_ucode.c
+
+### Purpose
+`otx_cptpf_ucode.c` manages OcteonTX CPT microcode and engine groups for the PF driver. It parses firmware tar archives or direct firmware names, allocates DMA memory for microcode images, reserves SE/AE engines, configures hardware engine group registers, exposes sysfs controls, supports mirrored engine groups, and tears all of it down safely.
+
+### Important APIs, Types, And Functions
+Public APIs are `otx_cpt_init_eng_grps()`, `otx_cpt_cleanup_eng_grps()`, `otx_cpt_try_create_default_eng_grps()`, `otx_cpt_set_eng_grps_is_rdonly()`, `otx_cpt_disable_all_cores()`, and exported `otx_cpt_uc_supports_eng_type()`. Important internals include tar parsing (`load_tar_archive()`, `process_tar_file()`, `get_uc_from_tar_archive()`), microcode loading (`ucode_load()`, `copy_ucode_to_dma_mem()`, `ucode_unload()`), engine reservation/release (`reserve_engines()`, `release_engines()`, `eng_grp_update_masks()`), hardware programming (`cpt_set_ucode_base()`, `cpt_attach_and_enable_cores()`, `cpt_detach_and_disable_cores()`), group creation/deletion, mirroring helpers, and sysfs `ucode_load_store()` / `eng_grp_info_show()`.
+
+### Control Flow, State, And Persistence
+Initialization creates per-group bookkeeping, bitmaps, sysfs names, supported engine-type masks, and the `ucode_load` device attribute. Default creation, invoked before first SR-IOV enable, loads `cpt8x-mc.tar`, selects SE and AE microcode entries, and creates groups using all available engines of each supported type. Manual sysfs input can create groups from `engine_type:count:ucode` style fields or delete `engine_groupN:null`, subject to the read-only flag. Group creation loads microcode, validates engine support, optionally mirrors an existing group with the same version string, reserves engines, computes bitmaps and reference counts, creates group info sysfs, writes microcode base registers, and enables cores. Cleanup removes sysfs, deletes mirrored groups before source groups, unloads DMA firmware, releases engine references, and frees bitmaps.
+
+### Dependencies, Integration Points, Risks, And Test Signals
+The file depends on Linux firmware loading, tar header parsing, PCI device state, PF register definitions, DMA coherent allocation, sysfs device attributes, mutex protection in `eng_grps->lock`, and PF/VF mailbox binding through group state. Risks include firmware archive bounds parsing, microcode size and alignment validation, mirrored group reference accounting, partial group creation unwind, engine refcount mismatches, read-only enforcement while VFs are enabled, timeout behavior when cores remain busy, and invalid user sysfs strings. Test signals include valid and malformed `cpt8x-mc.tar`, missing firmware, default group creation for SE and AE PFs, sysfs group create/delete, mirrored microcode reuse, SR-IOV read-only blocking, cleanup after failed load, and VF group binding to created groups.

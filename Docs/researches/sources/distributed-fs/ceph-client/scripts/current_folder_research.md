@@ -1,0 +1,132 @@
+# Folder Research: sources/distributed-fs/ceph-client/scripts
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 118
+- Recursive researched files: 345
+- Direct child folders represented: 18
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/scripts/Lindent`
+- `sources/distributed-fs/ceph-client/scripts/Makefile`
+- `sources/distributed-fs/ceph-client/scripts/as-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/asn1_compiler.c`
+- `sources/distributed-fs/ceph-client/scripts/bloat-o-meter`
+- `sources/distributed-fs/ceph-client/scripts/bootgraph.pl`
+- `sources/distributed-fs/ceph-client/scripts/bpf_doc.py`
+- `sources/distributed-fs/ceph-client/scripts/build-version`
+- `sources/distributed-fs/ceph-client/scripts/cc-can-link.sh`
+- `sources/distributed-fs/ceph-client/scripts/cc-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/check-function-names.sh`
+- `sources/distributed-fs/ceph-client/scripts/check-git`
+- `sources/distributed-fs/ceph-client/scripts/check-sysctl-docs`
+- `sources/distributed-fs/ceph-client/scripts/check-uapi.sh`
+- `sources/distributed-fs/ceph-client/scripts/check_extable.sh`
+- `sources/distributed-fs/ceph-client/scripts/checkdeclares.pl`
+- `sources/distributed-fs/ceph-client/scripts/checker-valid.sh`
+- `sources/distributed-fs/ceph-client/scripts/checkincludes.pl`
+- `sources/distributed-fs/ceph-client/scripts/checkkconfigsymbols.py`
+- `sources/distributed-fs/ceph-client/scripts/checkpatch.pl`
+- `sources/distributed-fs/ceph-client/scripts/checkstack.pl`
+- `sources/distributed-fs/ceph-client/scripts/checksyscalls.sh`
+- `sources/distributed-fs/ceph-client/scripts/checkversion.pl`
+- `sources/distributed-fs/ceph-client/scripts/cleanfile`
+- `sources/distributed-fs/ceph-client/scripts/cleanpatch`
+- `sources/distributed-fs/ceph-client/scripts/coccicheck`
+- `sources/distributed-fs/ceph-client/scripts/config`
+- `sources/distributed-fs/ceph-client/scripts/container`
+- `sources/distributed-fs/ceph-client/scripts/decode_stacktrace.sh`
+- `sources/distributed-fs/ceph-client/scripts/decodecode`
+- `sources/distributed-fs/ceph-client/scripts/depmod.sh`
+- `sources/distributed-fs/ceph-client/scripts/dev-needs.sh`
+- `sources/distributed-fs/ceph-client/scripts/diffconfig`
+- `sources/distributed-fs/ceph-client/scripts/elf-parse.c`
+- `sources/distributed-fs/ceph-client/scripts/elf-parse.h`
+- `sources/distributed-fs/ceph-client/scripts/extract-fwblobs`
+- `sources/distributed-fs/ceph-client/scripts/extract-ikconfig`
+- `sources/distributed-fs/ceph-client/scripts/extract-module-sig.pl`
+- `sources/distributed-fs/ceph-client/scripts/extract-sys-certs.pl`
+- `sources/distributed-fs/ceph-client/scripts/extract-vmlinux`
+- `sources/distributed-fs/ceph-client/scripts/extract_xc3028.pl`
+- `sources/distributed-fs/ceph-client/scripts/faddr2line`
+- `sources/distributed-fs/ceph-client/scripts/file-size.sh`
+- `sources/distributed-fs/ceph-client/scripts/gen-btf.sh`
+- `sources/distributed-fs/ceph-client/scripts/gen-crc-consts.py`
+- `sources/distributed-fs/ceph-client/scripts/gen-randstruct-seed.sh`
+- `sources/distributed-fs/ceph-client/scripts/gen_packed_field_checks.c`
+- `sources/distributed-fs/ceph-client/scripts/generate_builtin_ranges.awk`
+- `sources/distributed-fs/ceph-client/scripts/generate_initcall_order.pl`
+- `sources/distributed-fs/ceph-client/scripts/generate_rust_analyzer.py`
+- `sources/distributed-fs/ceph-client/scripts/generate_rust_target.rs`
+- `sources/distributed-fs/ceph-client/scripts/get_dvb_firmware`
+- `sources/distributed-fs/ceph-client/scripts/get_maintainer.pl`
+- `sources/distributed-fs/ceph-client/scripts/gfp-translate`
+- `sources/distributed-fs/ceph-client/scripts/git-resolve.sh`
+- `sources/distributed-fs/ceph-client/scripts/headerdep.pl`
+- `sources/distributed-fs/ceph-client/scripts/headers_install.sh`
+- `sources/distributed-fs/ceph-client/scripts/insert-sys-cert.c`
+- `sources/distributed-fs/ceph-client/scripts/install.sh`
+- `sources/distributed-fs/ceph-client/scripts/jobserver-exec`
+- `sources/distributed-fs/ceph-client/scripts/kallsyms.c`
+- `sources/distributed-fs/ceph-client/scripts/kernel-doc`
+- `sources/distributed-fs/ceph-client/scripts/ld-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/leaking_addresses.pl`
+- `sources/distributed-fs/ceph-client/scripts/link-vmlinux.sh`
+- `sources/distributed-fs/ceph-client/scripts/macro_checker.py`
+- `sources/distributed-fs/ceph-client/scripts/make_fit.py`
+- `sources/distributed-fs/ceph-client/scripts/makelst`
+- `sources/distributed-fs/ceph-client/scripts/markup_oops.pl`
+- `sources/distributed-fs/ceph-client/scripts/min-tool-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/misc-check`
+- `sources/distributed-fs/ceph-client/scripts/mkcompile_h`
+- `sources/distributed-fs/ceph-client/scripts/mksysmap`
+- `sources/distributed-fs/ceph-client/scripts/mkuboot.sh`
+- `sources/distributed-fs/ceph-client/scripts/module-common.c`
+- `sources/distributed-fs/ceph-client/scripts/module.lds.S`
+- `sources/distributed-fs/ceph-client/scripts/modules-check.sh`
+- `sources/distributed-fs/ceph-client/scripts/nsdeps`
+- `sources/distributed-fs/ceph-client/scripts/objdiff`
+- `sources/distributed-fs/ceph-client/scripts/objdump-func`
+- `sources/distributed-fs/ceph-client/scripts/orc_hash.sh`
+- `sources/distributed-fs/ceph-client/scripts/pahole-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/parse-maintainers.pl`
+- `sources/distributed-fs/ceph-client/scripts/patch-kernel`
+- `sources/distributed-fs/ceph-client/scripts/profile2linkerlist.pl`
+- `sources/distributed-fs/ceph-client/scripts/prune-kernel`
+- `sources/distributed-fs/ceph-client/scripts/recordmcount.c`
+- `sources/distributed-fs/ceph-client/scripts/recordmcount.h`
+- `sources/distributed-fs/ceph-client/scripts/recordmcount.pl`
+- `sources/distributed-fs/ceph-client/scripts/relocs_check.sh`
+- `sources/distributed-fs/ceph-client/scripts/remove-stale-files`
+- `sources/distributed-fs/ceph-client/scripts/rust_is_available.sh`
+- `sources/distributed-fs/ceph-client/scripts/rust_is_available_bindgen_libclang.h`
+- `sources/distributed-fs/ceph-client/scripts/rust_is_available_test.py`
+- `sources/distributed-fs/ceph-client/scripts/rustc-llvm-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/rustc-version.sh`
+- `sources/distributed-fs/ceph-client/scripts/rustdoc_test_builder.rs`
+- `sources/distributed-fs/ceph-client/scripts/rustdoc_test_gen.rs`
+- `sources/distributed-fs/ceph-client/scripts/setlocalversion`
+- `sources/distributed-fs/ceph-client/scripts/show_delta`
+- `sources/distributed-fs/ceph-client/scripts/sign-file.c`
+- `sources/distributed-fs/ceph-client/scripts/sorttable.c`
+- `sources/distributed-fs/ceph-client/scripts/spdxcheck-test.sh`
+- `sources/distributed-fs/ceph-client/scripts/spdxcheck.py`
+- `sources/distributed-fs/ceph-client/scripts/ssl-common.h`
+- `sources/distributed-fs/ceph-client/scripts/stackdelta`
+- `sources/distributed-fs/ceph-client/scripts/stackusage`
+- `sources/distributed-fs/ceph-client/scripts/syscallhdr.sh`
+- `sources/distributed-fs/ceph-client/scripts/syscallnr.sh`
+- `sources/distributed-fs/ceph-client/scripts/syscalltbl.sh`
+- `sources/distributed-fs/ceph-client/scripts/tags.sh`
+- `sources/distributed-fs/ceph-client/scripts/tools-support-relr.sh`
+- `sources/distributed-fs/ceph-client/scripts/tracepoint-update.c`
+- `sources/distributed-fs/ceph-client/scripts/unifdef.c`
+- `sources/distributed-fs/ceph-client/scripts/ver_linux`
+- `sources/distributed-fs/ceph-client/scripts/verify_builtin_ranges.awk`
+- `sources/distributed-fs/ceph-client/scripts/xen-hypercalls.sh`
+- `sources/distributed-fs/ceph-client/scripts/xz_wrap.sh`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

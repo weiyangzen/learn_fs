@@ -1,0 +1,19 @@
+# sources/storage-engines/foundationdb/fdbclient/include/fdbclient/MultiVersionTransaction.h
+
+## Purpose
+Declares the dynamic-library and multiversion client implementation layer. It wraps externally loaded `fdb_c` clients, exposes them through `IClientApi`, and lets a database/transaction transparently switch client libraries when cluster protocol versions change.
+
+## Important APIs, Types, And Functions
+`FdbCApi` stores function pointers for network, database, transaction, future, result, and legacy cluster C API calls, plus C-compatible structs for keys, selectors, range results, mapped values, and key ranges. `DLTransaction`, `DLDatabase`, and `DLApi` implement `ITransaction`, `IDatabase`, and `IClientApi` over one dynamically loaded library. `MultiVersionTransaction` wraps a transaction from the active database, tracks persistent and sensitive transaction options, maintains timeout state for missing underlying transactions, and can refresh its wrapped transaction after database changes. `ClientDesc` and `ClientInfo` describe local/external clients and protocol versions. `ClusterConnectionRecord` abstracts file vs connection-string database creation. `MultiVersionDatabase` wraps active database state and exposes management/status operations. `MultiVersionDatabase::DatabaseState` tracks active DB, protocol version monitor DB, initialization state, client map, options, shared state, and protocol monitor futures. `MultiVersionApi` manages local/external clients, network options, external library loading, supported versions, shared-state cache, callback threading, and public client API entry points.
+
+## Control Flow
+Startup configures `MultiVersionApi`, network options, local/external clients, and library paths. Creating a database opens with the selected client and starts protocol monitoring. When the cluster protocol version changes, `DatabaseState` selects a compatible `ClientInfo`, creates/replaces the active `IDatabase`, and notifies transactions via async variables. `MultiVersionTransaction::executeOperation()` routes each operation to the current transaction, wraps results with abort/timeout behavior, and reapplies persistent options after replacement. `DL*` classes translate each interface call into an external C API function pointer and `ThreadFuture` adapter.
+
+## State And Persistence Behavior
+Persistent database state is unchanged by the wrapper except through delegated transaction and management operations. Runtime state is substantial: loaded library handles/function pointers, network setup flags, options, client maps by protocol version, active database references, shared-state cache by cluster/protocol, transaction option vectors, timeout promises, and initialization errors. Sensitive transaction options use `WipedString` storage.
+
+## Dependencies And Integration Points
+The header depends on generated C and C++ option enums, FDB types, `IClientApi`, API/protocol version helpers, thread futures, arenas, and wiped strings. It integrates with the C bindings, external client library loading, cluster protocol monitoring, multiversion client deployment, management APIs exposed through `IDatabase`, and shared database state.
+
+## Risks And Test Signals
+Risks include ABI/layout mismatch with C structs, missing function pointers for a loaded client version, races during database replacement, persistent option replay bugs, sensitive option leakage, timeout behavior when no compatible client exists, shared-state cache invalidation on upgrade, and callback thread affinity errors. Test signals should include multiversion upgrade/downgrade simulations, external library load failures, protocol compatibility mapping, transaction replacement during in-flight reads/commits, option replay, management calls through external clients, shared-state lifecycle, and C API ABI conformance tests.

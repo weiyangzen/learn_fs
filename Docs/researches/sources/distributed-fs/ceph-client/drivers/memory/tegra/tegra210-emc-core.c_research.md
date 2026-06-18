@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/memory/tegra/tegra210-emc-core.c
+
+## Purpose
+This file is the Tegra210 EMC platform driver core. It maps EMC/MC/channel registers, attaches reserved-memory timing tables, selects a compatible clock-change sequence, registers with the Tegra210 EMC clock provider, exposes debugfs controls, manages thermal refresh derating, runs periodic training timers, implements suspend/resume, and provides helper functions used by the r21021 sequence.
+
+## Important APIs, Types, And Functions
+Key local data includes `tegra210_emc_sequences[]` and `tegra210_emc_table_register_offsets`, the offset map that translates timing-table arrays into register addresses. Driver entry points are `tegra210_emc_probe()`, `tegra210_emc_remove()`, `tegra210_emc_suspend()`, and `tegra210_emc_resume()`. Clock-provider integration is through `tegra210_emc_set_rate()`. Thermal/refresh control uses `tegra210_emc_set_refresh()`, `tegra210_emc_poll_refresh()`, and cooling-device ops. Exported helpers include `tegra210_emc_mrr_read()`, `tegra210_emc_do_clock_change()`, `tegra210_emc_find_timing()`, `tegra210_emc_wait_for_update()`, `tegra210_emc_timing_update()`, `tegra210_emc_compensate()`, DLL helpers, power ramp helpers, and `tegra210_emc_adjust_timing()`.
+
+## Control Flow
+Probe allocates state, gets the EMC clock and MC handle, maps base plus two channel windows, detects DRAM devices/type/channels, attaches nominal and optional derated reserved-memory EMC tables, validates monotonic rates/voltages, selects the current timing by the live EMC clock, picks the r21021 sequence by revision, builds Tegra clock configs from timing entries, attaches the EMC clock provider, initializes timers/debugfs, and registers a thermal cooling device. Rate changes from the clock framework validate the target timing and training status, enforce a minimum delay between changes, lock the EMC, call the selected sequence, update `clkchange_time` and `last`, then unlock. Refresh polling reads LPDDR MR4 temperature or a debug override and switches nominal, 2x, 4x, or throttle refresh.
+
+## State And Persistence
+`struct tegra210_emc` stores mapped registers, timing tables (`nominal`, `derated`, active `timings`, `last`, `next`), provider configs, refresh state, thermal/debugfs values, timers, spinlock, clock-change timing, and suspend resume rate. Reserved-memory tables are `memremap()`ed by `tegra210-emc-table.c` and retained until device release. Hardware state includes EMC timing registers, MC arbitration registers, DLL state, MRW/ZQ/autocal/pad state, and refresh configuration. Suspend stores `resume_rate`, forces 204 MHz, detaches the provider, then resume reattaches and restores the rate.
+
+## Dependencies And Integration Points
+The core depends on the Tegra210 clock API (`tegra210_clk_emc_attach()`, `tegra210_clk_emc_update_setting()`, DLL helpers), reserved-memory table ops, the common Tegra MC handle, thermal cooling framework, debugfs, timers, LPDDR mode-register semantics, and the r21021 sequence file. Timing table structure and register offset arrays must match firmware/BCT generated tables exactly. The thermal framework can enable refresh polling through the registered cooling device named `emc`.
+
+## Risks
+The driver trusts reserved-memory timing table layout and only performs limited validation; corrupt or mismatched tables can destabilize memory. Many helper waits busy-loop with microsecond delays, and some DLL loops do not have explicit timeout. Rate changes above 204 MHz require `timing->trained`, so missing training markers reject higher OPPs. Refresh switching can replace the active timing table with derated entries while preserving the current index, so nominal/derated table counts and ordering must match. Debugfs temperature override can force refresh modes and should not be exposed in production test assumptions.
+
+## Test Signals
+Important signals include successful reserved-memory attach for nominal/derated tables, current-rate matching at probe, sequence revision selection, clock OPP transitions through `tegra210_clk_emc_attach()`, debugfs rate/temperature behavior, thermal cooling state toggling refresh polling, MR4-driven refresh mode changes, suspend/resume returning to the pre-suspend rate, and memory stress during repeated rate changes. Warnings for timing update, clock-change completion, missing table entries, unsupported sequence, or cooling registration should be treated as regressions.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/input/input-compat.c
+
+`input-compat.c` centralizes user ABI conversion helpers shared by evdev and proc/sysfs-style formatting. It exports `input_event_from_user()`, `input_event_to_user()`, `input_ff_effect_from_user()`, and `input_bits_to_string()`.
+
+With `CONFIG_COMPAT`, event conversion detects 32-bit compat syscalls that do not use 64-bit time and translates between `struct input_event_compat` and native `struct input_event`. Force-feedback conversion accepts `struct ff_effect_compat`, copies it into the native storage layout, and rewrites the custom-data pointer with `compat_ptr()` for custom periodic effects. Bitmap formatting prints a native word as one hex field for native callers or as two 32-bit words for compat callers, preserving userspace-visible `/proc/bus/input/devices` formatting. Without compat, the helpers reduce to direct size validation and `copy_{to,from}_user()`.
+
+State is absent; all operations are per-call. Dependencies include `uaccess`, compat syscall detection, FF structures from input headers, and exported GPL symbols. Risks are ABI regressions for 32-bit userspace, time64 boundary behavior, assuming the compat custom pointer remains the final relevant field, and truncation/formatting mismatches for bitmaps. Test signals include native and 32-bit evdev reads/writes, `EVIOCSFF` with custom periodic data, proc bitmap output under compat tasks, invalid FF sizes returning `-EINVAL`, and user-copy fault handling.

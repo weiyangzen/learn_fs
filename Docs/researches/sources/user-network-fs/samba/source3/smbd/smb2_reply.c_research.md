@@ -1,0 +1,19 @@
+# sources/user-network-fs/samba/source3/smbd/smb2_reply.c
+
+## Purpose
+This file contains common smbd reply helpers used by SMB1 and SMB2 paths. It normalizes and validates paths, strips DFS prefixes, handles NetBIOS session-level special messages, validates quota fake handles, implements unlink/delete-on-close, supports read/write sendfile fallback helpers, performs rename and copy internals, and executes byte-range unlocks.
+
+## Important APIs, Types, And Functions
+Path helpers include `check_path_syntax()`, `smb2_strip_dfs_path()`, `srvstr_get_path()`, `srvstr_get_path_posix()`, `srvstr_get_path_req()`, and `srvstr_pull_req_talloc()`. Session helpers include `reply_special()`, `netbios_session_retarget()`, and `reply_called_name_not_present()`. File operation helpers include `unlink_internals()`, `fake_sendfile()`, `sendfile_short_send()`, `rename_internals_fsp()`, `rename_internals()`, `copy_file()`, `get_lock_offset()`, and `smbd_do_unlocking()`. Rename support uses `can_rename()`, `rename_open_files()`, `notify_rename()`, and share-mode rename messaging.
+
+## Control Flow
+Path syntax checking rewrites separators, collapses `.` and `..` components, rejects invalid Windows characters and stream syntax, preserves multibyte characters, and optionally follows POSIX pathname rules. DFS path handling strips server/share prefixes for SMB2 or normalizes SMB1/DFS strings before local validation. `reply_special()` answers NetBIOS session requests, keepalives, called-name rejection, and retarget responses. `unlink_internals()` stats and filters attributes, opens the target with `DELETE_ACCESS`, checks delete-on-close, sets delete-on-close across all opens for the file id, and closes. Rename opens or uses a source fsp, resolves destination and case-change semantics, rejects open streams and parent-to-child renames, checks destination collisions/open targets/parent access, calls VFS rename, updates local and remote open-file names through share-mode messaging, sets archive bit, and emits notify events. Unlocking validates lock-capable fsp state, runs under the share-mode byte-range lock, unlocks each element, and wakes waiters.
+
+## State And Persistence
+Persistent effects include delete-on-close marking, filesystem rename/copy operations, DOS attribute updates, close write time changes, notification delivery, byte-range lock removal, and open-file name updates in local and remote smbd processes. Transient state includes talloc path buffers, NetBIOS output buffers, synthetic `smb_filename` objects, share-mode locks, and copied old filenames for notifications.
+
+## Dependencies And Integration Points
+The file integrates string conversion, DFS and POSIX path handling, NetBIOS name service helpers, loadparm retarget configuration, VFS create/rename/copy/stat/sendfile operations, share-mode and byte-range lock databases, SMB2 POSIX create contexts, notification and directory lease break signaling, alternate stream handling, fake quota files, and low-level socket writes. It supplies helpers directly consumed by SMB2 read, setinfo, create, lock, and directory code as well as SMB1 compatibility paths.
+
+## Risks And Test Signals
+Tests should cover path normalization for repeated separators, `..`, POSIX `.` handling, streams, wildcards before streams, invalid control characters, DFS server/share stripping, NetBIOS retarget and invalid names, unlink hidden/system/directory/POSIX symlink behavior, delete-on-close sharing checks, same-directory case-only rename, replace-if-exists with open destination, stream rename, directory parent-to-child rejection, rename notification pairs, archive-bit updates, copy partial transfer/disk-full handling, large lock offset parsing, and unlock invalid-element failure. Risks include Windows compatibility edge cases, open-file rename propagation across shares, incorrect status codes for attribute mismatches, and socket termination after partial sendfile headers.

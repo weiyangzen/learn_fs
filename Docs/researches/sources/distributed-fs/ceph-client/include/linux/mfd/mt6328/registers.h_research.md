@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6328/registers.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/mt6328/registers.h
+
+This MT6328 register header defines a large 16-bit-offset PMIC map. It includes startup and analog startup registers, hardware/software chip ID, top status/control/test/clock/reset registers, interrupt mask/type/status registers, DEW wrapper diagnostics/cipher/CRC registers, buck and SMPS analog controls, VCORE/VPROC/VSRAM/VLTE/VPA regulator blocks, zero-cross and current-sink controls, analog/digital/special LDOs, speaker controls, OTP value/output ranges, RTC mix, fuel-gauge ADC, audio decode/encode/NCP blocks, AUXADC data/buffer/request/control/threshold/debug registers, accessory detect, charger controls, BATON, and EOSC/VRTC trim registers.
+
+There is no executable code. Drivers consume these defines through regmap operations: regulators use buck/LDO ranges, IRQ core uses interrupt control/status/type registers, fuel gauge and AUXADC drivers use ADC blocks, audio uses codec analog blocks, and charger/power code uses charger and BATON registers. State is hardware state, with volatile status/ADC/IRQ registers and calibration/OTP registers.
+
+Dependencies are the MT6328 core IRQ enum, MediaTek PMIC wrapper/regmap configuration, and child drivers for each functional block. Risks include high symbol volume, gaps and aliases in register sequences, `_SET`/`_CLR` register misuse, OTP/trim registers being sensitive, and 16-bit alignment assumptions. Test signals include register-map range validation, regmap readable/writeable/volatile tables if present, regulator voltage enable tests across VCORE/VPROC/VSRAM/VLTE/VPA, IRQ type/status tests, AUXADC channel reads, and charger plug tests.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6328/registers.h -->

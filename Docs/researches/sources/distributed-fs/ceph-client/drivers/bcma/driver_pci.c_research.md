@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/bcma/driver_pci.c
+
+Purpose: implements BCMA PCI/PCIe core client-side setup and runtime power hooks. It provides indirect PCIe register access, MDIO/SERDES access, early SPROM-related fixups, client-mode PCIe workarounds, and exported PCIe power-save behavior for BCMA devices hosted over PCI.
+
+Important APIs and functions: `bcma_pcie_read()` is exported within the BCMA subsystem for indirect PCIe register reads through `BCMA_CORE_PCI_PCIEIND_ADDR/DATA`. `bcma_pcie_write()` mirrors it for local writes. The MDIO helpers `bcma_pcie_mdio_set_phy()`, `bcma_pcie_mdio_read()`, `bcma_pcie_mdio_write()`, and `bcma_pcie_mdio_writeread()` program SERDES/PLL registers, with revision-specific address formats and polling on `BCMA_CORE_PCI_MDIOCTL_ACCESS_DONE`. `bcma_core_pci_early_init()` detects host mode and fixes SPROM core index mapping. `bcma_core_pci_init()` dispatches to host-mode initialization or client-mode workarounds. `bcma_core_pci_power_save()` is exported and adjusts MDIO management registers on core revisions 15-22. `bcma_core_pci_up()` and `bcma_core_pci_down()` toggle the L1 timer extension.
+
+Control flow: initialization is deliberately two-stage. Early init records `pc->hostmode` and, for client mode, calls `bcma_core_pci_fixcfg()` before SPROM reads. Full init then either calls `bcma_core_pci_hostmode_init()` from `driver_pci_host.c` or applies SERDES polarity/frequency-detect and L2/L3 exit fixups. Runtime up/down only changes the ASPM timer extension.
+
+State and persistence: state is held in `struct bcma_drv_pci` flags `early_setup_done`, `setup_done`, `hostmode`, and the associated core revision. Register changes persist in hardware until reset or later power-state changes. The file does not allocate memory or maintain Linux-visible persistent objects.
+
+Dependencies and integration points: depends on `bcma_private.h`, `linux/bcma/bcma.h`, PCI core register macros, `pcicore_read/write*`, sleep/delay primitives, and host-mode detection from `driver_pci_host.c`. It integrates with `main.c` through `bcma_core_pci_early_init()` and `bcma_core_pci_init()`, and with PCI-host runtime helpers through `bcma_host_pci_up/down()`.
+
+Risks: MDIO polling silently returns zero or continues after timeout, so hardware failures can look like valid register values. Revision-specific magic values make regressions likely when adding chips. The `setup_done` guard is checked but not set in this file, so correctness depends on surrounding subsystem behavior. Test signals include successful BCMA PCI enumeration, SPROM reads after early fixcfg, no link instability after SERDES workarounds, and suspend/resume or power-save tests across core revisions 15-22.

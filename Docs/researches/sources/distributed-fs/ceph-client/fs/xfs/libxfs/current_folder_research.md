@@ -1,0 +1,116 @@
+# Folder Research: sources/distributed-fs/ceph-client/fs/xfs/libxfs
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 102
+- Recursive researched files: 102
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ag.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ag.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ag_resv.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ag_resv.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_alloc.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_alloc.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_alloc_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_alloc_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr_leaf.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr_leaf.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr_remote.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr_remote.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_attr_sf.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bit.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bit.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bmap_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bmap_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_btree_mem.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_btree_mem.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_btree_staging.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_btree_staging.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_cksum.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_da_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_da_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_da_format.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_defer.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_defer.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2_block.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2_data.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2_leaf.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2_node.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2_priv.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dir2_sf.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_dquot_buf.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_errortag.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_exchmaps.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_exchmaps.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_format.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_fs.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_group.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_group.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_health.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ialloc.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ialloc.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ialloc_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ialloc_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_iext_tree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_inode_buf.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_inode_buf.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_inode_fork.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_inode_fork.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_inode_util.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_inode_util.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_log_format.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_log_recover.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_log_rlimit.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_metadir.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_metadir.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_metafile.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_metafile.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_ondisk.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_parent.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_parent.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_quota_defs.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_refcount.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_refcount.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_refcount_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_refcount_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rmap_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rmap_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtbitmap.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtbitmap.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtgroup.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtgroup.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtrefcount_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtrefcount_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtrmap_btree.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_rtrmap_btree.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_sb.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_sb.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_shared.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_symlink_remote.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_symlink_remote.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_trans_inode.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_trans_resv.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_trans_resv.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_trans_space.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_trans_space.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_types.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_types.h`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_zones.c`
+- `sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_zones.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

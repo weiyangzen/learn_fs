@@ -1,0 +1,134 @@
+# Folder Research: sources/distributed-fs/ceph/src/mds
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 120
+- Recursive researched files: 140
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/distributed-fs/ceph/src/mds/Anchor.cc`
+- `sources/distributed-fs/ceph/src/mds/Anchor.h`
+- `sources/distributed-fs/ceph/src/mds/BatchOp.cc`
+- `sources/distributed-fs/ceph/src/mds/BatchOp.h`
+- `sources/distributed-fs/ceph/src/mds/Beacon.cc`
+- `sources/distributed-fs/ceph/src/mds/Beacon.h`
+- `sources/distributed-fs/ceph/src/mds/CDentry.cc`
+- `sources/distributed-fs/ceph/src/mds/CDentry.h`
+- `sources/distributed-fs/ceph/src/mds/CDir.cc`
+- `sources/distributed-fs/ceph/src/mds/CDir.h`
+- `sources/distributed-fs/ceph/src/mds/CInode.cc`
+- `sources/distributed-fs/ceph/src/mds/CInode.h`
+- `sources/distributed-fs/ceph/src/mds/CMakeLists.txt`
+- `sources/distributed-fs/ceph/src/mds/Capability.cc`
+- `sources/distributed-fs/ceph/src/mds/Capability.h`
+- `sources/distributed-fs/ceph/src/mds/DamageTable.cc`
+- `sources/distributed-fs/ceph/src/mds/DamageTable.h`
+- `sources/distributed-fs/ceph/src/mds/FSMap.cc`
+- `sources/distributed-fs/ceph/src/mds/FSMap.h`
+- `sources/distributed-fs/ceph/src/mds/FSMapUser.cc`
+- `sources/distributed-fs/ceph/src/mds/FSMapUser.h`
+- `sources/distributed-fs/ceph/src/mds/InoTable.cc`
+- `sources/distributed-fs/ceph/src/mds/InoTable.h`
+- `sources/distributed-fs/ceph/src/mds/JournalPointer.cc`
+- `sources/distributed-fs/ceph/src/mds/JournalPointer.h`
+- `sources/distributed-fs/ceph/src/mds/LocalLockC.h`
+- `sources/distributed-fs/ceph/src/mds/Locker.cc`
+- `sources/distributed-fs/ceph/src/mds/Locker.h`
+- `sources/distributed-fs/ceph/src/mds/LogEvent.cc`
+- `sources/distributed-fs/ceph/src/mds/LogEvent.h`
+- `sources/distributed-fs/ceph/src/mds/LogSegment.h`
+- `sources/distributed-fs/ceph/src/mds/LogSegmentRef.h`
+- `sources/distributed-fs/ceph/src/mds/MDBalancer.cc`
+- `sources/distributed-fs/ceph/src/mds/MDBalancer.h`
+- `sources/distributed-fs/ceph/src/mds/MDCache.cc`
+- `sources/distributed-fs/ceph/src/mds/MDCache.h`
+- `sources/distributed-fs/ceph/src/mds/MDLog.cc`
+- `sources/distributed-fs/ceph/src/mds/MDLog.h`
+- `sources/distributed-fs/ceph/src/mds/MDSAuthCaps.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSAuthCaps.h`
+- `sources/distributed-fs/ceph/src/mds/MDSCacheObject.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSCacheObject.h`
+- `sources/distributed-fs/ceph/src/mds/MDSContext.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSContext.h`
+- `sources/distributed-fs/ceph/src/mds/MDSContinuation.h`
+- `sources/distributed-fs/ceph/src/mds/MDSDaemon.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSDaemon.h`
+- `sources/distributed-fs/ceph/src/mds/MDSMap.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSMap.h`
+- `sources/distributed-fs/ceph/src/mds/MDSMetaRequest.h`
+- `sources/distributed-fs/ceph/src/mds/MDSPerfMetricTypes.h`
+- `sources/distributed-fs/ceph/src/mds/MDSPinger.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSPinger.h`
+- `sources/distributed-fs/ceph/src/mds/MDSRank.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSRank.h`
+- `sources/distributed-fs/ceph/src/mds/MDSRankQuiesce.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSTable.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSTable.h`
+- `sources/distributed-fs/ceph/src/mds/MDSTableClient.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSTableClient.h`
+- `sources/distributed-fs/ceph/src/mds/MDSTableServer.cc`
+- `sources/distributed-fs/ceph/src/mds/MDSTableServer.h`
+- `sources/distributed-fs/ceph/src/mds/Mantle.cc`
+- `sources/distributed-fs/ceph/src/mds/Mantle.h`
+- `sources/distributed-fs/ceph/src/mds/MetricAggregator.cc`
+- `sources/distributed-fs/ceph/src/mds/MetricAggregator.h`
+- `sources/distributed-fs/ceph/src/mds/MetricsHandler.cc`
+- `sources/distributed-fs/ceph/src/mds/MetricsHandler.h`
+- `sources/distributed-fs/ceph/src/mds/Migrator.cc`
+- `sources/distributed-fs/ceph/src/mds/Migrator.h`
+- `sources/distributed-fs/ceph/src/mds/Mutation.cc`
+- `sources/distributed-fs/ceph/src/mds/Mutation.h`
+- `sources/distributed-fs/ceph/src/mds/OpenFileTable.cc`
+- `sources/distributed-fs/ceph/src/mds/OpenFileTable.h`
+- `sources/distributed-fs/ceph/src/mds/PurgeQueue.cc`
+- `sources/distributed-fs/ceph/src/mds/PurgeQueue.h`
+- `sources/distributed-fs/ceph/src/mds/QuiesceAgent.cc`
+- `sources/distributed-fs/ceph/src/mds/QuiesceAgent.h`
+- `sources/distributed-fs/ceph/src/mds/QuiesceDb.h`
+- `sources/distributed-fs/ceph/src/mds/QuiesceDbEncoding.h`
+- `sources/distributed-fs/ceph/src/mds/QuiesceDbManager.cc`
+- `sources/distributed-fs/ceph/src/mds/QuiesceDbManager.h`
+- `sources/distributed-fs/ceph/src/mds/RecoveryQueue.cc`
+- `sources/distributed-fs/ceph/src/mds/RecoveryQueue.h`
+- `sources/distributed-fs/ceph/src/mds/RetryMessage.h`
+- `sources/distributed-fs/ceph/src/mds/RetryRequest.h`
+- `sources/distributed-fs/ceph/src/mds/ScatterLock.h`
+- `sources/distributed-fs/ceph/src/mds/ScrubHeader.h`
+- `sources/distributed-fs/ceph/src/mds/ScrubStack.cc`
+- `sources/distributed-fs/ceph/src/mds/ScrubStack.h`
+- `sources/distributed-fs/ceph/src/mds/SegmentBoundary.h`
+- `sources/distributed-fs/ceph/src/mds/Server.cc`
+- `sources/distributed-fs/ceph/src/mds/Server.h`
+- `sources/distributed-fs/ceph/src/mds/SessionMap.cc`
+- `sources/distributed-fs/ceph/src/mds/SessionMap.h`
+- `sources/distributed-fs/ceph/src/mds/SimpleLock.cc`
+- `sources/distributed-fs/ceph/src/mds/SimpleLock.h`
+- `sources/distributed-fs/ceph/src/mds/SnapClient.cc`
+- `sources/distributed-fs/ceph/src/mds/SnapClient.h`
+- `sources/distributed-fs/ceph/src/mds/SnapRealm.cc`
+- `sources/distributed-fs/ceph/src/mds/SnapRealm.h`
+- `sources/distributed-fs/ceph/src/mds/SnapServer.cc`
+- `sources/distributed-fs/ceph/src/mds/SnapServer.h`
+- `sources/distributed-fs/ceph/src/mds/StrayManager.cc`
+- `sources/distributed-fs/ceph/src/mds/StrayManager.h`
+- `sources/distributed-fs/ceph/src/mds/cephfs_features.cc`
+- `sources/distributed-fs/ceph/src/mds/cephfs_features.h`
+- `sources/distributed-fs/ceph/src/mds/flock.cc`
+- `sources/distributed-fs/ceph/src/mds/flock.h`
+- `sources/distributed-fs/ceph/src/mds/fscrypt.h`
+- `sources/distributed-fs/ceph/src/mds/inode_backtrace.cc`
+- `sources/distributed-fs/ceph/src/mds/inode_backtrace.h`
+- `sources/distributed-fs/ceph/src/mds/journal.cc`
+- `sources/distributed-fs/ceph/src/mds/locks.c`
+- `sources/distributed-fs/ceph/src/mds/locks.h`
+- `sources/distributed-fs/ceph/src/mds/mds_table_types.h`
+- `sources/distributed-fs/ceph/src/mds/mdstypes.cc`
+- `sources/distributed-fs/ceph/src/mds/mdstypes.h`
+- `sources/distributed-fs/ceph/src/mds/snap.cc`
+- `sources/distributed-fs/ceph/src/mds/snap.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

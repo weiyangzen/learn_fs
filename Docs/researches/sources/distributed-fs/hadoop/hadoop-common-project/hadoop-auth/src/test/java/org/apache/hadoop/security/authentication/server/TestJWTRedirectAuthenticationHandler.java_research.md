@@ -1,0 +1,11 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-auth/src/test/java/org/apache/hadoop/security/authentication/server/TestJWTRedirectAuthenticationHandler.java
+
+Purpose: JUnit 5 tests for `JWTRedirectAuthenticationHandler`, a Kerberos-derived alternate authentication handler that accepts a signed JWT cookie or redirects clients to an external authentication provider. The class extends `KerberosSecurityTestcase`, creates MiniKDC principals for HTTP services, and generates RSA key pairs plus Nimbus `SignedJWT` instances for validation scenarios.
+
+Important APIs and control flow: tests call `handler.setPublicKey`, `handler.init(Properties)`, `alternateAuthenticate(request, response)`, and `constructLoginURL(request)`. `getProperties()` supplies `AUTHENTICATION_PROVIDER_URL`, `kerberos.principal`, and `kerberos.keytab`; individual tests mutate properties for custom cookie name, missing provider URL, and audience validation. `getJWT` builds claims with subject, issue time, issuer, scope, audience `bar`, and optional expiration, signs with `RSASSASigner`, then stores the serialized JWT in a servlet `Cookie`.
+
+State and dependencies: per-test state includes RSA keys, the handler instance, Kerberos keytab contents, mocked servlet request/response objects, and JWT claims. The file depends on Nimbus JOSE/JWT, Mockito, servlet APIs, MiniKDC, and Hadoop Kerberos test utilities. Persistent external state is limited to the generated keytab managed by the test base.
+
+Integration points: verifies signature validation, expiration handling, audience checking, JWT cookie naming, provider URL configuration, redirect URL encoding, and original URL query-string propagation. Successful JWTs produce `AuthenticationToken` usernames from `sub`; invalid parse/signature/expiration/audience cases trigger `sendRedirect` to the provider URL with `originalUrl`.
+
+Risks and test signals: negative tests expect specific exception messages for missing public key and provider URL, which can be brittle if production diagnostics change. Date-based expiration uses short offsets but does not sleep, so it is relatively stable. Redirect expectation depends on exact URL concatenation and query string handling, making it a good regression signal for login URL construction.

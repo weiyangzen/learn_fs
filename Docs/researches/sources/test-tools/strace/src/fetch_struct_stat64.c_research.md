@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_stat64.c
+
+Mpers fetcher for `struct stat64`. It mirrors `fetch_struct_stat` but gates support on `HAVE_M32/MX32_STRUCT_STAT64`, copies stat64 fields into `strace_stat`, and records whether nanoseconds are present. It owns no state beyond the destination object. Dependencies are `asm_stat.h`, `stat.h`, and mpers macros. Risks are architecture-specific absence of stat64, timestamp sign extension, and compat padding differences. Tests should cover `stat64`/`fstat64`/`lstat64` paths, native unsupported fallback where applicable, nanosecond fields, and invalid addresses.

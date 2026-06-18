@@ -1,0 +1,22 @@
+# sources/test-tools/xfstests/tests/btrfs/269
+
+## Purpose
+Test btrfs read repair over tricky stripe boundaries on the raid10 profile: | stripe 0 | stripe 2 mirror 1 | I/O FAIL | GOOD mirror 2 | GOOD | CSUM FAIL No data checksums for NOCOW and NODATACOW cases, so can't detect corruption and repair data. We need to ensure a fixed extent size and we corrupt by writing directly to the device, so skip if compression is enabled. ensure btrfs-map-logical sees the tree updates. In this subset it primarily covers multi-device, RAID, seed/sprout, or device-management paths, logical-to-inode extent resolution.
+
+## Important APIs, Types, and Functions
+The fstest declaration is `auto quick read_repair raid`. Requirement and capability gates: line 20: `_require_scratch`; line 21: `_require_odirect`; line 24: `_require_btrfs_no_nodatacow`; line 25: `_require_btrfs_no_nodatasum`; line 26: `_require_non_zoned_device "${SCRATCH_DEV}" # no overwrites on zoned devices`; line 29: `_require_no_compress`; line 30: `_require_scratch_dev_pool 4`. Local helper surface: no custom shell functions beyond the linear test body. Important command/API calls include line 20: `_require_scratch`; line 21: `_require_odirect`; line 24: `_require_btrfs_no_nodatacow`; line 25: `_require_btrfs_no_nodatasum`; line 26: `_require_non_zoned_device "${SCRATCH_DEV}" # no overwrites on zoned devices`; line 29: `_require_no_compress`; line 30: `_require_scratch_dev_pool 4`; line 31: `_scratch_dev_pool_get 4`; line 35: `_scratch_pool_mkfs "-d raid10 -b 1G" >>$seqres.full 2>&1`; line 36: `_scratch_mount`; line 38: `$XFS_IO_PROG -f -d -c "pwrite -S 0xaa -b 128K 0 128K" "$SCRATCH_MNT/foobar" | _filter_xfs_io_offset`; line 43: `sync`; line 45: `logical=$(_btrfs_get_first_logical $SCRATCH_MNT/foobar)`; line 47: `physical1=$(_btrfs_get_physical ${logical} 1)`.
+
+## Control Flow
+The control flow follows the xfstests pattern: source the common preamble, declare `_begin_fstest auto quick read_repair raid`, install cleanup if needed, enforce requirements, then mounts the test filesystem, runs btrfs check or xfstests scratch checks, cycles mounts to force persistence. The script then performs its focused state transition and relies on explicit command failures, `_fail`, filtered stdout, content comparisons, filesystem checks, or expected output matching to detect regressions. Cleanup hooks remove temporary send streams, loop devices, scratch pool devices, or `$tmp.*` artifacts when the test defines them.
+
+## State and Persistence Behavior
+The script owns scratch filesystem state and normally reformats, mounts, unmounts, or checks it through xfstests helpers. Multi-device tests allocate scratch pool devices and leave correctness evidence in chunk maps, device registry state, degraded mounts, and btrfs check results. Sync, remount, unmount, receive, or device-scan boundaries are used to separate in-memory success from on-disk or kernel-global persistence.
+
+## Dependencies and Integration Points
+This file integrates with xfstests `common/preamble`, Btrfs common helpers, scratch-device lifecycle helpers, output filters, and the Btrfs kernel interfaces reached through xfs_io. It also depends on the adjacent expected-output file for stable golden-output comparison: `QA output created by 269 | step 1......mkfs.btrfs | wrote 131072/131072 bytes | XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec) | step 2......corrupt file extent | step 3......repair the bad copy | step 4......check if the repair worked | XXXXXXXX:  aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa  ................ | ... (41 expected-output lines total)`.
+
+## Risks and Edge Cases
+device topology tests can expose races in device scan state, degraded mounts, stripe geometry, replacement, and cleanup of scratch device pools. Test reliability can also depend on mkfs defaults, sector size, nodesize, mount options, compression settings, discard support, device size, and whether helper commands support the specific subcommands used by the script.
+
+## Test Signals
+Primary pass signals are successful command completion, no unexpected stderr after filtering, expected `.out` text, clean `btrfs check` or `_check_scratch_fs` results when present, and matching file digests/fssum/byte dumps after replay or remount. Any mismatch in expected output, missing qgroup/device/snapshot state, uncorrected corruption, unexpected swapon success/failure, or receive/check failure indicates a regression for this source.

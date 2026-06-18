@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/iio/accel/bmc150-accel.h
+
+Purpose: shared interface and private state contract between the BMC150 core and its I2C/SPI transport modules. It declares exported core entry points, PM ops, the regmap config, chip type hints, interrupt/trigger IDs, and the core state structure.
+
+Important types: `enum bmc150_type` currently distinguishes unknown chips from `BOSCH_BMC156` when the board ID can be trusted. `struct bmc150_accel_interrupt` stores per-interrupt mapping plus an atomic user count. `struct bmc150_accel_trigger` links an IIO trigger to the shared data, setup callback, interrupt ID, and enabled state. `struct bmc150_accel_data` holds the regmap, IRQ, regulators, trigger and interrupt arrays, mutex, FIFO mode/watermark, direct-read and scan buffers, bandwidth/range/event settings, timestamp pair, chip info pointer, optional ACPI second I2C client/resume work, and mount matrix.
+
+Integration and risks: the header exposes a stable namespace boundary for bus modules and makes the bus files dependent on IIO core, regulator descriptors, mutexes, atomics, and workqueues. Because transport files store ACPI child-device state in `bmc150_accel_data`, changes to this structure can affect both normal core behavior and I2C-specific resume handling. Test signals are successful compilation of both transports, namespace imports, PM op linkage, and correct layout/alignment for scan buffers with timestamps.

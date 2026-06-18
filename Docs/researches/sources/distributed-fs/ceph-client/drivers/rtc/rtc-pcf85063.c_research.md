@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/rtc/rtc-pcf85063.c
+
+Purpose: supports the PCF85063/PCA85073A/PCF85063A/PCF85063TP and Micro Crystal RV8263/RV8063 RTC family over I2C or SPI. It provides timekeeping, optional alarms, oscillator offset correction, one-byte battery-backed RAM through nvmem, and optional clkout registration.
+
+Important APIs/types/functions: `struct pcf85063_config` describes the regmap and alarm/capacitance quirks. `pcf85063_rtc_read_time()` bulk-reads the time registers and rejects oscillator-stop data; `pcf85063_rtc_set_time()` stops the divider, writes all time registers, and restarts it. `pcf85063_rtc_read_alarm()`, `pcf85063_rtc_set_alarm()`, `pcf85063_rtc_alarm_irq_enable()`, and `pcf85063_rtc_handle_irq()` implement alarm support for variants with alarm registers. `pcf85063_read_offset()` and `pcf85063_set_offset()` expose RTC offset calibration. `pcf85063_nvmem_read/write()` map the single RAM byte. `pcf85063_clkout_*()` implements common-clock operations when enabled.
+
+Control flow: common probe verifies chip presence by reading seconds, allocates the RTC, performs a software reset after power-loss detection, programs quartz load capacitance from `quartz-load-femtofarads` or variant defaults, sets feature bits, requests an IRQ only for alarm-capable variants, registers the nvmem byte, optionally registers clkout, and registers the RTC. I2C and SPI front ends only select the proper config and initialize the regmap.
+
+State and persistence: the chip stores BCD time, alarm, offset calibration, alarm flags, clkout state, and one RAM byte. The driver has no durable state beyond chip registers; clkout and wake configuration are runtime kernel registrations. A POR issue triggers software reset but the driver still reports invalid time until userspace sets a new value.
+
+Dependencies and integration: depends on RTC core, regmap, I2C, SPI for RV8063, OF matching, PM wake IRQ, nvmem through RTC, and optionally common clock. Device tree can supply wakeup and clock-output names plus crystal load.
+
+Risks: `pcf85063_rtc_set_alarm()` writes `AF` back set when enabling alarms, relying on chip semantics where writing zero clears flags; this deserves hardware regression coverage. Offset range/rounding has two calibration modes and should be tested at limits. The common clk provider is added without an explicit remove call beyond devm clock lifetime. Test signals include OS invalid time, POR reset path, alarm IRQ clearing, offset read/write round trips, nvmem byte persistence, clkout rates/enable state, and I2C/SPI variant max-register behavior.

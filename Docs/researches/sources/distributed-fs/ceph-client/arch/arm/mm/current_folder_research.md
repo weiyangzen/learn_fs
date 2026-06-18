@@ -1,0 +1,121 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/arm/mm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 107
+- Recursive researched files: 107
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/arm/mm/Kconfig`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/Makefile`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-ev4.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-ev4t.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-ev5t.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-ev5tj.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-ev6.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-ev7.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-lv4t.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-macro.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/abort-nommu.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/alignment.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-b15-rac.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-fa.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-feroceon-l2.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-l2x0-pmu.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-l2x0.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-nop.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-tauros2.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-tauros3.h`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-uniphier.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-v4.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-v4wb.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-v4wt.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-v6.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-v7.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-v7m.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache-xsc3l2.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/cache.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/context.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-fa.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-feroceon.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-v4mc.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-v4wb.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-v4wt.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-v6.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-xsc3.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/copypage-xscale.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/dma-mapping-nommu.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/dma-mapping.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/dma.h`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/dump.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/extable.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/fault-armv.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/fault.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/fault.h`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/flush.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/fsr-2level.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/fsr-3level.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/idmap.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/init.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/iomap.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/ioremap.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/kasan_init.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/l2c-common.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/l2c-l2x0-resume.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/mm.h`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/mmap.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/mmu.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/nommu.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pabort-legacy.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pabort-v6.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pabort-v7.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pageattr.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pgd.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/physaddr.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pmsa-v7.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pmsa-v8.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm1020.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm1020e.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm1022.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm1026.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm720.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm740.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm7tdmi.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm920.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm922.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm925.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm926.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm940.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm946.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-arm9tdmi.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-fa526.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-feroceon.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-macros.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-mohawk.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-sa110.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-sa1100.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-syms.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-v6.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-v7-2level.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-v7-3level.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-v7-bugs.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-v7.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-v7m.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-xsc3.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc-xscale.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/proc.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/ptdump_debugfs.c`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/pv-fixup-asm.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb-fa.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb-v4.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb-v4wb.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb-v4wbi.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb-v6.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb-v7.S`
+- `sources/distributed-fs/ceph-client/arch/arm/mm/tlb.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/bpf/bpf_common.h
+
+Purpose: shared declaration and macro header for the BPF tests. It defines `BPF_MEMLOCK_ADD`, `BUFSIZE`, `BPF_MAP_ARRAY_STX` instruction macro, and prototypes for the common map/program helpers. Integration point is direct inclusion by every `bpf_map01`/`bpf_prog0*` source. State is compile-time only, except the macro expands into BPF bytecode that looks up an array element and stores a register value. Dependencies are LTP BPF and socket lapi headers. Risks are instruction macro correctness and register side effects in caller bytecode. Test signal is indirect through successful verifier acceptance/rejection and map value checks in consumers.

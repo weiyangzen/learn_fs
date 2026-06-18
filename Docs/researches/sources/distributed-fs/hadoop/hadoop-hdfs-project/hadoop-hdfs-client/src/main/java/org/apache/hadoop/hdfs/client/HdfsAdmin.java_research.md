@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/client/HdfsAdmin.java
+
+Purpose: `HdfsAdmin` is the public evolving administrative facade for HDFS. It wraps a `DistributedFileSystem` and exposes quota, snapshot, cache, encryption, storage policy, erasure coding, inotify, and open-file operations without requiring applications to use `DistributedFileSystem` or CLI-oriented `DFSAdmin` directly.
+
+Important APIs/types/functions: constructor `HdfsAdmin(URI,Configuration)` resolves a `FileSystem`, unwraps `ViewFileSystemOverloadScheme` to its raw DFS when needed, and rejects non-HDFS filesystems. `TRASH_PERMISSION` is `rwxrwxrwx` with sticky bit for snapshot/EZ trash provisioning. Methods include namespace/space/storage-type quota setters, snapshot allow/disallow and trash provisioning, cache directive/pool CRUD/listing, `getKeyProvider`, deprecated and flag-based `createEncryptionZone`, encryption-zone listing and re-encryption, `getFileEncryptionInfo`, inotify stream creation, storage policy CRUD, EC policy CRUD and status, `satisfyStoragePolicy`, and open-file listing.
+
+Control flow: almost all methods delegate directly to `dfs` or `dfs.getClient()`. `allowSnapshot` provisions snapshot trash after allowing snapshots if enabled by the target DFS. Flag-based `createEncryptionZone` calls `dfs.createEncryptionZone` first, then provisions EZ trash when `PROVISION_TRASH` is present, rejecting the simultaneous presence of `NO_TRASH`. List methods return `RemoteIterator` objects whose batching/consistency semantics are documented by the underlying DFS.
+
+State and persistence behavior: persistent effects are administrative HDFS mutations delegated to the NameNode: quotas, cache directives/pools, encryption zone metadata, storage policies, EC policy definitions/states, snapshot settings, and open-file queries. Local state is only the final `DistributedFileSystem` reference.
+
+Dependencies and integration points: integrates with `FileSystem`, `DistributedFileSystem`, `ViewFileSystemOverloadScheme`, HDFS protocol types, key providers, ACL/security exceptions, storage policy and EC APIs, and inotify.
+
+Risks: flag-based encryption-zone creation is not atomic with trash provisioning; a failure after zone creation can leave a zone without provisioned trash. Constructor unwrapping depends on default URI/raw FS behavior under viewfs. Most methods rely on NameNode authorization and can throw `AccessControlException`. Tests should cover non-HDFS rejection, viewfs raw DFS resolution, flag conflict validation, trash provisioning behavior, iterator delegation, and all direct delegate calls with mocked DFS failures.

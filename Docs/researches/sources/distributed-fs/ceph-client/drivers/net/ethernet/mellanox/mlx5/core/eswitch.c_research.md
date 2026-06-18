@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx5/core/eswitch.c
+
+## Purpose
+Provides the core mlx5 E-Switch implementation: device eligibility, vport allocation and lifecycle, legacy FDB programming, vport event resynchronization, SR-IOV/SF/PF/ECPF load and unload, devlink parameters, admin configuration, mode/user locking, and exported query helpers. It is the mode-neutral base that calls either legacy or offloads backends.
+
+## Important APIs, Types, and Functions
+Public lifecycle APIs include `mlx5_eswitch_init()`, `mlx5_eswitch_cleanup()`, `mlx5_eswitch_enable()`, `mlx5_eswitch_enable_locked()`, `mlx5_eswitch_disable_sriov()`, `mlx5_eswitch_disable_locked()`, and `mlx5_eswitch_disable()`. Vport APIs include `mlx5_esw_vport_alloc/free()`, `mlx5_eswitch_get_vport()`, `mlx5_esw_vport_enable()`, `mlx5_esw_vport_disable()`, PF/VF/SF load helpers, and `mlx5_eswitch_enable_pf_vf_vports()`. Admin/config APIs set MAC, state, VLAN, spoofcheck, trust, rate, and expose VF config/stats. Lock/reference APIs include `mlx5_esw_hold/release()`, `mlx5_esw_get/put()`, `mlx5_esw_try_lock()`, `mlx5_esw_lock()`, and `mlx5_esw_unlock()`.
+
+## Control Flow and State
+Initialization registers the multiport devlink parameter, allocates `struct mlx5_eswitch`, creates debugfs and a single-thread workqueue, queries ECPF host-function state, initializes all static vports in an xarray with type marks, initializes offload representor state, initializes QoS, and sets default legacy mode plus encap defaults. Enable asserts devlink locking, disables LAG changes around first FDB creation, creates ACL namespaces, registers NIC vport-change EQ notifier, initializes QoS, then calls `esw_legacy_enable()` or `esw_offloads_enable()`. Disable unregisters notifiers, notifies users of mode exit, tears down backend FDB state, cleans ACL namespaces, and destroys devlink rate nodes for offloads.
+
+## State and Persistence Behavior
+Persistent software state is centered in `struct mlx5_eswitch`: vports xarray, mode, flags, enabled vport count, `state_lock`, `mode_lock`, user count, offload state, QoS state, host-function counters, IPsec VF count, and devlink/workqueue/debugfs resources. Vport state stores MAC, VLAN, link state, trusted/spoofcheck flags, RoCE/migration/IPsec bits, VHCA ID, QoS nodes, enabled events, PF activation state, and optional devlink port. Hardware persistence is programmed through NIC vport contexts, ESW vport contexts, ACL namespaces, MPFS, flow tables, and vport counters; vport info is intentionally retained across disable where needed to restore configuration.
+
+## Dependencies and Integration Points
+Depends on firmware command helpers (`mlx5_cmd_exec*`, vport cap/query/modify calls), flow steering, MPFS, LAG, ECPF, IPsec acceleration, legacy/offload ACL modules, QoS, devlink, debugfs, xarray, workqueues, and notifier chains. `eswitch_offloads.c` supplies offloads backend lifecycle and representor operations; `esw/legacy.h` and legacy ACL code supply legacy FDB behavior. It exports mode and total-vport helpers to other mlx5 modules and uses devlink locks for user-visible mode/config changes.
+
+## Risks and Test Signals
+High-risk areas are enable/disable unwind ordering, notifier/workqueue races with vport disable, xarray mark/range assumptions for VF/SF/ECVF iteration, lock ordering between `state_lock`, devlink lock, `mode_lock`, LAG changes, and backend cleanup, and stale vport info after partial failures. Legacy MAC/multicast code is sensitive to refcounts for MPFS, multicast uplink rules, allmulti/promisc rules, and `mc_promisc` conversions. Test signals include SR-IOV enable/disable cycles in legacy and switchdev modes, ECPF host PF/VF function-change events, SF load/unload, VF MAC/VLAN/spoof/trust/rate operations, vport stats, IPsec block/unblock interactions, lockdep, KASAN leak checks, and devlink mode transition failure injection.

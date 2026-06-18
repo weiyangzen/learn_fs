@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/power/supply/max1720x_battery.c
+
+Purpose: implements the Maxim MAX17201/MAX17205 I2C ModelGauge m5 fuel-gauge driver. It exposes the main battery as a power-supply device and exposes the nonvolatile configuration block through read-only NVMEM cells plus temperature sysfs attributes for auxiliary/internal sensors.
+
+Important APIs/types/functions: `struct max1720x_device_info` stores the volatile regmap, ancillary nonvolatile I2C client/regmap, and RSense. `max1720x_battery_get_property()` converts gauge registers into power-supply properties. Conversion helpers translate time, percent, voltage, capacity, signed current, and signed temperature. `max1720x_probe_nvmem()` creates the 0xb ancillary I2C device, reads `nRSense`, registers named NVMEM cells, and prepares the nonvolatile regmap. `max1720x_nvmem_reg_read()` backs NVMEM reads, and `temp_ain1/temp_ain2/temp_int` sysfs attributes read nonvolatile temperature registers.
+
+Control flow: probe allocates device info, initializes the volatile I2C regmap with access/volatile tables and MAPLE cache, probes the ancillary NVMEM address, then registers a `max1720x` battery supply with the extra attribute group. Property reads pull fresh values from volatile registers, convert through RSense for current/capacity, map model IDs from `DEV_NAME`, and use a constant manufacturer string. Health reads status alert bits and writes back selected sticky alert bits so future events can be detected.
+
+State and persistence: driver runtime state is limited to regmaps, the ancillary client, and cached RSense. NVMEM cells are registered read-only and root-only; the driver does not mutate gauge configuration except for clearing status events. If RSense is zero, it warns and uses a runtime default of 10 milliohms.
+
+Dependencies and integration: depends on I2C, regmap access tables/cache, nvmem-provider, power-supply core, and unaligned register reads through regmap bulk operations. DT matching uses `maxim,max17201`; MAX17205 is inferred from the device-name register rather than a separate compatible.
+
+Risks: capacity and current units are only as correct as nonvolatile RSense. `max1720x_nvmem_reg_read()` assumes even offsets/lengths matching its word-size/stride registration. Clearing alert bits in a read path can hide events from another consumer. Model-name reads return `-ENODEV` for unknown low-nibble IDs. Test signals include NVMEM cell reads, ancillary-client cleanup, RSense zero fallback, model ID mapping, status-alert health mapping, and register-cache behavior for volatile versus nonvolatile ranges.

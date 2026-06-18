@@ -1,0 +1,20 @@
+# sources/user-network-fs/blobfuse2/component/azstorage/config.go
+
+## Purpose
+Configuration schema, environment binding, parsing, validation, and dynamic reconfiguration for the Blobfuse2 Azure storage component. It converts YAML/env options into `AzStorageConfig`, normalizes endpoints and proxy settings, selects account/auth modes, validates required credentials, sets retry and feature defaults, and supports runtime SAS/rate-limit updates.
+
+## Important APIs, Types, and Functions
+`AuthType` and `AccountType` are enum-backed integer types with parser/string support for `key`, `sas`, `spn`, `msi`, `azcli`, `workloadidentity`, `block`, and `adls`. `AzStorageOptions` is the user-facing config struct with `config` and `yaml` tags for account identity, auth credentials, endpoints, container/subdirectory, transfer sizing, retries, proxies, unsupported operation behavior, MD5 flags, virtual directories, compression, telemetry, ACL/CPK controls, blob filters, and read/IOPS caps.
+
+`RegisterEnvVariables()` binds Azure environment variables to `azstorage.*` config keys. `formatEndpointProtocol()` adds `http://` or `https://` and a trailing slash. `formatEndpointAccountType()` rewrites `.blob.` and `.dfs.` hostnames to match block or ADLS account type. `validateMsiConfig()` enforces mutual exclusion between MSI application, object, and resource IDs. `ParseAndValidateConfig()` performs full startup validation and fills `az.stConfig`. `configureBlobFilter()` enables `blobfilter.BlobFilter` only when the global `read-only` flag is set. `ParseAndReadDynamicConfig()` updates reloadable fields and can refresh a live SAS-backed service client.
+
+## Control Flow, State, and Persistence
+Startup parsing first requires `AccountName`, defaults missing account type to block, honors the legacy `use-adls` override, validates block size against Azure's maximum staged block size, and requires a container unless `mount-all-containers` is set. It maps legacy `use-https` to `UseHTTP`, validates CPK key material, defaults the endpoint to `<account>.blob.core.windows.net` or `<account>.dfs.core.windows.net`, normalizes protocol/account type, stores the Active Directory endpoint, strips leading slashes from `subdirectory`, and chooses proxy behavior based on HTTP mode.
+
+Dynamic fields are applied before auth selection: block size, max concurrency, tier, unsupported access modifier behavior, MD5 flags, virtual directory defaulting, list-page size, compression, ACL honoring, and rate caps. If no auth mode is explicit, `autoDetectAuthMode()` chooses MSI, key, SAS, or SPN from populated credentials. Auth validation stores key/SAS/MSI/SPN/AZCLI/workload identity fields and rejects missing required secrets or invalid modes. Retry defaults are set to 5 retries, 900 second max timeout, 4 second backoff, and 60 second max retry delay unless overridden. On SAS reload, the old SAS is restored if `az.storage.UpdateServiceClient("saskey", ...)` fails.
+
+## Dependencies and Integration Points
+Depends on Azure SDK block-blob limits and access-tier types, Blobfuse config/log packages, shared helpers from `utils.go` such as `sanitizeSASKey()`, `autoDetectAuthMode()`, `getAccessTierType()`, and `removeLeadingSlashes()`, and `github.com/vibhansa-msft/blobfilter`. It writes into `AzStorage.stConfig`, which is consumed by `NewAzStorageConnection()`, `BlockBlob`, `Datalake`, auth providers in `azauth.go`, and runtime component reload paths.
+
+## Risks and Test Signals
+Important risks include broad mutable global config state, legacy option interactions (`use-adls`, `use-https`, unsupported v1 flags), endpoint rewriting that assumes `.blob.`/`.dfs.` hostnames, possible secret exposure through logs if callers extend logging carelessly, CPK validation limited to presence rather than base64/length, and runtime SAS refresh dependency on a non-nil live storage client. Unit coverage in `config_test.go` validates missing/invalid account types, protocol/proxy behavior, auth modes, MSI mutual exclusion, compression, SAS refresh, max list results, and rate limits, while live block-blob tests validate defaults and endpoint behavior against Azure.

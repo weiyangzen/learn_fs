@@ -1,0 +1,112 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/parisc/include/asm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 98
+- Recursive researched files: 98
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/Kbuild`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/alternative.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/asm-offsets.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/asmregs.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/assembly.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/atomic.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/barrier.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/bitops.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/bug.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/cache.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/cacheflush.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/cachetype.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/checksum.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/cmpxchg.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/compat.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/compat_ucontext.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/current.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/delay.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/dma-mapping.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/dma.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/dwarf.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/eisa_bus.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/eisa_eeprom.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/elf.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/extable.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/fixmap.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/floppy.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/ftrace.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/futex.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/grfioctl.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/hardirq.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/hardware.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/hash.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/hugetlb.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/io.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/irq.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/irqflags.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/jump_label.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/kbdleds.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/kexec.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/kfence.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/kgdb.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/kprobes.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/ldcw.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/led.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/linkage.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/mman.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/mmu.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/mmu_context.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/mmzone.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/module.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/page.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/parisc-device.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/parport.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/pci.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/pdc.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/pdc_chassis.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/pdcpat.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/perf.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/perf_event.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/pgalloc.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/pgtable.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/prefetch.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/processor.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/psw.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/ptrace.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/ropes.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/rt_sigframe.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/runway.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/seccomp.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/sections.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/serial.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/shmparam.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/signal.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/smp.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/socket.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/sparsemem.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/special_insns.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/spinlock.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/spinlock_types.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/string.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/superio.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/switch_to.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/syscall.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/text-patching.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/thread_info.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/timex.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/tlb.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/tlbflush.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/topology.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/traps.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/uaccess.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/ucontext.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/unistd.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/unwind.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/vdso.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/video.h`
+- `sources/distributed-fs/ceph-client/arch/parisc/include/asm/vmalloc.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

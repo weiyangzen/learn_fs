@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/StripedDataStreamer.java
+
+Purpose: `StripedDataStreamer` extends `DataStreamer` for erasure-coded striped writes. A `DFSStripedOutputStream` owns multiple streamers, one per internal block index, and a shared coordinator serializes NameNode interactions and pipeline recovery decisions across those streamers.
+
+Important APIs/types/functions: constructor passes normal streamer dependencies to `DataStreamer` and stores a `Coordinator` plus stripe index. `getIndex()`, `isHealthy()`, `endBlock()`, `peekFollowingBlock()`, `setExternalError()`, and `toString()` expose state. `setupPipelineForCreate()` and `setupPipelineInternal()` implement striped block allocation and recovery behavior.
+
+Control flow: on block creation, `getFollowingBlock()` polls the coordinator's per-index following-block queue, sets current block, resets counters, installs the block token, and creates a block output stream to the assigned DataNode/storage. If creation fails, the bad node is excluded and an `IOException` is thrown. `endBlock()` offers the completed internal block to the coordinator before normal streamer cleanup. During recovery, `setupPipelineInternal()` loops while the client is running, handles restarting and bad DataNodes, takes a new block with fresh generation stamp/token from the coordinator, reconnects the pipeline, reports success/failure to the coordinator, waits for all streamers' aggregate result, and updates generation stamp or closes/restarts as needed.
+
+State and persistence behavior: mutable state is inherited streamer block, access token, bytes sent, queues, error state, excluded nodes, and closed state. Persistent HDFS effects happen indirectly through DataNode block writes and NameNode block generation stamps coordinated by `DFSStripedOutputStream`.
+
+Dependencies and integration points: tightly coupled with `DFSStripedOutputStream.Coordinator`, `DataStreamer`, `LocatedBlock`, `DatanodeInfo`, storage metadata arrays, `DataChecksum`, `CachingStrategy`, `ByteArrayManager`, and test hooks such as `failPacket4Testing`.
+
+Risks: recovery is coordinated across streamers; one streamer's premature close or stale update can affect the whole block group. Unlike replicated writes, DataNode error handling closes the striped streamer rather than replacing the node locally. Tests should cover block group allocation ordering, bad-node exclusion, external error notification waking `dataQueue`, generation-stamp synchronization, coordinator timeouts, and partial streamer failure during recovery.

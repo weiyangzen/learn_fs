@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/crypto/sig.c
+
+`sig.c` implements the Crypto API public-key signature algorithm type. It provides allocation, registration, template instance registration, spawn grabbing, transform init/exit, default unsupported operations, and user/proc reporting for `CRYPTO_ALG_TYPE_SIG`.
+
+Main exports are `crypto_alloc_sig()`, `crypto_register_sig()`, `crypto_unregister_sig()`, `sig_register_instance()`, and `crypto_grab_sig()`. `crypto_sig_type` binds allocation sizes and frontend matching. `sig_prepare_alg()` validates `struct sig_alg`, installs default `-ENOSYS` stubs for absent `sign`, `verify`, and private-key setup, requires `set_pub_key` and `key_size`, and derives default `max_size`/`digest_size` from key size when not supplied.
+
+Registration normalizes the algorithm then calls `crypto_register_alg()`. Transform initialization installs `crypto_sig_exit_tfm()` when an `exit` hook exists and delegates to optional `alg->init()`. State is only the per-transform state owned by the concrete signature provider; this file does not serialize keys or manage request buffers. Dependencies are `<crypto/internal/sig.h>`, common Crypto API internals, template/spawn helpers, procfs, and cryptouser netlink. Risks are accepting underspecified algorithms, callers hitting default unsupported operations, and size defaults being wrong for algorithms with encoded signatures. Test signals include registration rejection cases, init/exit pairing, allocation/spawn paths, reporting output, and `-ENOSYS` behavior.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/accept/accept01.c
+
+Purpose: verifies `accept()` returns expected errno values for invalid descriptors, invalid address/length arguments, no queued connections, and datagram sockets. Setup creates and binds an IPv4 stream socket and UDP socket; `tcases` drive EBADF, EINVAL, and EOPNOTSUPP expectations through `TST_EXP_FAIL2`. Important APIs are `socket`, `bind`, `accept`, `SAFE_SOCKET`, and `SAFE_BIND`. State consists of two bound sockets and sockaddr buffers. Dependencies are IPv4 sockets. Risks include expected errno variation for bad userspace address on some architectures; the file encodes LTP's current expected behavior. Test signal is exact errno match per testcase.

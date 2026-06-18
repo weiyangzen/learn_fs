@@ -1,0 +1,7 @@
+# sources/storage-engines/badger/backup.go
+
+Purpose: implements Badger backup and restore over a length-prefixed protobuf stream of `pb.KVList` records.
+
+Important APIs and flow: `DB.Backup` creates a `Stream`, sets `SinceTs`, and delegates to `Stream.Backup`. `Stream.Backup` defines `KeyToList` to collect versions for a logical key, copy values through the iterator allocator, clear transaction bits, preserve metadata/version/expiry, synthesize a delete marker for `DiscardEarlierVersions`, and stop at deleted or expired entries. `Send` decodes each buffer, tracks maximum version, removes `StreamDone` markers, and writes via `writeTo`. Restore uses `DB.Load`, which reads `uint64` little-endian record sizes, unmarshals `pb.KVList`, and feeds each `pb.KV` to `KVLoader`. `KVLoader` batches into async `batchSetAsync` writes with throttling and threshold-based flushing.
+
+State and persistence: backup writes to any `io.Writer`; restore persists entries into the target DB and advances `orc.nextTxnTs` and `txnMark`. Dependencies include protobuf, Badger stream APIs, `y.Throttle`, and `z.Buffer`. Risks: corrupt or malicious size prefixes can force large allocations; `DB.Load` assumes no concurrent transactions; restore manipulates oracle timestamps directly. Test signals are in `backup_test.go` for full, incremental, deletion/expiry/discard, metadata-bit, and timestamp restoration behavior.

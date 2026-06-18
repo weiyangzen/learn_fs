@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/capset/capset04.c
+
+Purpose: verifies `capset()` cannot modify another process's capabilities. Setup fills current capability data with `capget`; run forks a child that pauses, sets header pid to child pid, expects raw `capset` to fail with `EPERM`, then terminates and waits for the child. Important APIs are `SAFE_FORK`, `pause`, `SAFE_KILL`, `SAFE_WAIT`, `capget`, and `capset`. State includes a live child process and current capability data. Dependencies are fork and Linux capabilities. Risks are cleanup if the assertion path exits early, mitigated by explicit kill/wait in normal flow. Test signal is `EPERM` for different-process capset.

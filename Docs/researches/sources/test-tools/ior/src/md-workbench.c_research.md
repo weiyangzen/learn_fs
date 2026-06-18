@@ -1,0 +1,15 @@
+# sources/test-tools/ior/src/md-workbench.c
+
+Purpose: implements the md-workbench metadata benchmark variant that drives filesystem-like dataset and object operations through the AIORI backend interface. It measures precreate, benchmark, and cleanup phases over MPI ranks and returns an `mdworkbench_results_t` API result.
+
+Important APIs and functions: `md_workbench_run()` is the public entry point. `init_options()` seeds defaults in the file-global `struct benchmark_options o`. `run_precreate()` creates per-rank dataset directories and initial objects. `run_benchmark()` repeatedly stats, reads, optionally deletes, and creates objects in a FIFO rank-shifted pattern. `run_cleanup()` removes remaining objects and directories. `end_phase()` performs MPI reductions, gathers per-operation timers, computes quantiles, prints reports, and copies summary fields into `o.results`. Helper functions build path names, implement adaptive waiting, compute statistics, write latency CSVs, and persist restart position.
+
+Control flow: `md_workbench_run()` initializes MPI timing, parses global and backend module options, selects and initializes an AIORI backend, initializes CUDA when requested, computes the current object index from restart state or `--start-item`, allocates the result array, then conditionally runs precreate, one or more benchmark iterations, adaptive waiting sub-iterations, and cleanup. Each phase allocates `phase_stat_t` timers, synchronizes ranks, runs operations, and calls `end_phase()`.
+
+State and persistence: state is intentionally file-global in `o`, which makes the implementation simple but non-reentrant. Persistent outputs include the optional restart/status file `run_info_file`, optional latency CSV files, and created benchmark objects under `prefix`. Result memory is returned to the caller and must be freed by the caller. Phase timer arrays are freed in `end_phase()`.
+
+Dependencies and integration: depends on MPI, AIORI backend methods (`mkdir`, `create`, `open`, `xfer`, `stat`, `remove`, `rmdir`, `xfer_hints`, `initialize`, `finalize`), `option.c`, `utilities.c`, and optional CUDA/GPU Direct support. It uses IOR memory-pattern utilities to generate and verify object payloads.
+
+Risks: path construction uses fixed `MAX_PATHLEN` buffers and `sprintf`; long prefixes or rank/object counts can overflow. Several statistics helpers ignore their `count` argument and use `o.size`, making them tightly coupled to global state. `MPI_Reduce(&p->dset_create, ..., 2*(2+4), MPI_INT, ...)` relies on contiguous `op_stat_t` layout. `compute_histogram()` assumes `repeats > 0`. `return_position()` can broadcast an uninitialized `position` if non-root reaches the call after root exits on failure. Non-cleanup runs persist restart state and benchmark data.
+
+Test signals: exercised indirectly through md-workbench CLI/API runs. Useful validation should cover POSIX/DUMMY backends, read-only benchmark mode, restart without precreate, latency output, stonewall modes, GPU buffer options, and error aggregation across ranks.

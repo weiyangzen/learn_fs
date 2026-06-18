@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/mac80211/rc80211_minstrel_ht.c
+
+Purpose: implements the Minstrel HT/VHT software rate-control algorithm for mac80211, including rate grouping, probability/throughput estimation, sampling, retry table construction, capability updates, and registration as `minstrel_ht`.
+
+Important APIs and functions: the `rate_control_ops mac80211_minstrel_ht` hooks are `minstrel_ht_tx_status()`, `minstrel_ht_get_rate()`, `minstrel_ht_rate_init()`, `minstrel_ht_rate_update()`, `minstrel_ht_alloc_sta()`, `minstrel_ht_free_sta()`, `minstrel_ht_alloc()`, `minstrel_ht_free()`, optional debugfs hooks, and `minstrel_ht_get_expected_throughput()`. Module entry/exit are `rc80211_minstrel_init()` and `rc80211_minstrel_exit()`. Core internals include `minstrel_ht_update_caps()`, `minstrel_ht_update_stats()`, `minstrel_ht_refill_sample_rates()`, `minstrel_ht_update_rates()`, `minstrel_ht_set_rate()`, `minstrel_calc_retransmit()`, and `minstrel_ht_get_tp_avg()`.
+
+Control flow: allocation initializes contention/retry defaults, CCK/OFDM lookup tables, update interval, and randomized sample table. Capability updates rebuild supported HT/VHT/legacy groups from station bandwidth, SGI, SMPS, LDPC/STBC, VHT MCS map, and configured `minstrel_vht_only`. TX status accumulates per-rate attempts/successes, AMPDU length, and sample counters; periodically it recalculates filtered probabilities, sorted throughput/probability winners, sample buckets, retry counts, AMSDU limit, and publishes a new `ieee80211_sta_rates` table. `get_rate` injects one probe rate at `MINSTREL_SAMPLE_INTERVAL` when appropriate.
+
+State and persistence: per-hw `minstrel_priv` stores hardware pointer, retry/segment parameters, legacy rate indexes, update interval, and optional fixed debugfs index. Per-station `minstrel_ht_sta` stores supported bitmaps, per-group stats, best rate indexes, sample queues, AMPDU averages, overheads, flags, and packet counters. State is in-memory and reset on capability updates or station recreation.
+
+Dependencies and integration points: depends on rate framework callbacks, station capabilities, aggregation recalculation, RCU rate table publication via `rate_control_set_rates()`, random bytes for sampling, module parameters, debugfs, and mac80211 duration helpers.
+
+Risks: this code is performance-sensitive and statistics-driven; subtle arithmetic or indexing errors can degrade throughput rather than fail loudly. VHT/HT group indexing, invalid VHT MCS filtering, legacy fallback, SMPS downgrades, and sample bucket maintenance all depend on consistent encoded `MI_RATE()` values. Debugfs fixed rate can override adaptive behavior.
+
+Test signals: VHT/HT/legacy capability matrices, static/dynamic SMPS, short preamble CCK, bandwidth and SGI combinations, TX status with legacy status arrays and `rate_info` arrays, AMPDU and non-AMPDU feedback, sample scheduling, retry-count bounds, expected throughput, fixed-rate debugfs override, and rate table publication.

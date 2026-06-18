@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/virtio/common.h
+
+This header defines the private data model for the virtio VFIO PCI variant. It extends `vfio_pci_core_device` with optional legacy BAR0 emulation state and live migration state, and declares cross-file functions implemented by `main.c`, `legacy_io.c`, and `migrate.c`.
+
+Important types include migration file state enums, resume-load state enums, `struct virtiovf_data_buffer` for scatter-gather backed migration chunks, `struct virtiovf_migration_header` for stream records, `struct virtiovf_migration_file` for anonymous migration fd state, and `struct virtiovf_pci_core_device` as the driver-specific container. The device struct embeds `vfio_pci_core_device`, optional `bar0_virtual_buf`, BAR mutex, notify address metadata, shadow PCI command/BAR0 fields, migration capability flag, deferred reset flag, migration state mutex, reset spinlock, and active save/resume migration files.
+
+State is split by feature. Legacy I/O state persists across device init/release and open/close for notify mapping. Migration state persists while the VFIO device exists and active migration files exist; reset paths can mark deferred cleanup. Function declarations provide a stable internal ABI for setting migratable ops, opening/closing migration, reset notification, legacy I/O region overrides, and config/BAR read-write wrappers.
+
+Dependencies include Linux virtio, virtio PCI, VFIO PCI core, and optional `CONFIG_VIRTIO_VFIO_PCI_ADMIN_LEGACY`. Risks include struct layout assumptions through `container_of`, lock ordering between `state_mutex`, `reset_lock`, file locks, and VFIO/core reset locks, and conditional compilation mismatches. Test signals include build coverage with legacy enabled/disabled, migration state transitions, reset during active migration fd use, and legacy BAR0 read/write wrappers.

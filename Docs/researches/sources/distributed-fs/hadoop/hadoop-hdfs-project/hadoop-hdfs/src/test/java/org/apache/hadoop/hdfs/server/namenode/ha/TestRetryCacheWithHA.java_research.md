@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/ha/TestRetryCacheWithHA.java
+
+Purpose: validates HA retry-cache replication and at-most-once semantics when a client operation succeeds on one NameNode but the response is lost and the client retries after failover.
+
+Important APIs and types: `RetryCache`, `LightWeightCache<CacheEntry, CacheEntry>`, `DFSClient`, `NameNodeProxiesClient`, `RetryInvocationHandler`, `FailoverProxyProvider`, `AtMostOnceOp`, `SubjectInheritingThread`, and many `ClientProtocol` operations including snapshot, create, append, rename, concat, delete, symlink, updatePipeline, cache directive/pool, and xattr operations. It also tests `RemoteIterator` behavior for cache pools/directives across active changes.
+
+Control flow: setup starts a two-NN HA cluster with enough DNs for the default erasure coding policy, configures failover, enables ACLs and xattrs, and tunes cache listing response sizes. `testRetryCacheOnStandbyNN` runs a standard operation suite, captures retry-cache entries on NN0, rolls/tails edits, shuts down NN0, activates NN1, and verifies the same 39 entries exist. `genClientWithDummyHandler` wraps the failover proxy in `DummyRetryInvocationHandler`, which can throw after the server has processed the operation. Each `AtMostOnceOp` prepares state, invokes an RPC, checks the NameNode has applied the mutation before the client receives success, then failover is forced and the handler is unblocked. The common verifier waits for a result, cache hits, and cache updates on both NNs, checking operation-specific update counts where tracked. Listing tests iterate cache pools/directives while alternating active NNs mid-iteration.
+
+State and persistence behavior: retry cache entries are persisted through edit logs and replayed on standby. The tested namespace state spans snapshots, files, blocks, cache manager state, and xattrs. Client retry state is intentionally desynchronized from server mutation state.
+
+Dependencies and integration points: covers client failover, retry policy, NameNode edit tailing, cache manager pagination, EC-aware DN counts, ACL/xattr configuration, and internal retry cache metrics.
+
+Risks and test signals: risks include duplicate non-idempotent mutations, lost retry-cache entries after failover, wrong cached responses, and iterator breakage when active changes. Signals include operation effect polling before failover, cache-hit/update metric assertions on both NameNodes, exact retry-cache size/entry checks, and pool/directive set reconciliation after failover during iteration.

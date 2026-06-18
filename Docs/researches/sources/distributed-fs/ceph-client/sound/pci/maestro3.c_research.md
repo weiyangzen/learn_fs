@@ -1,0 +1,34 @@
+# sources/distributed-fs/ceph-client/sound/pci/maestro3.c
+
+## Purpose
+This file is the complete ALSA PCI driver for ESS Maestro3, Allegro, and Canyon3D-2 audio controllers. It binds PCI IDs for the supported ESS devices, downloads ASSP firmware (`ess/maestro3_assp_kernel.fw` and `ess/maestro3_assp_minisrc.fw`), exposes one ALSA PCM device with two playback substreams and one capture substream, creates an AC97 mixer, handles hardware volume buttons, and implements suspend/resume by saving and restoring ASSP code/data memory.
+
+## Important APIs, types, and functions
+The core state is `struct snd_m3`, which owns the ALSA card, PCI device, I/O base, AC97 codec, PCM object, firmware handles, ASSP lists, stream array, interrupt lock, power-management save buffer, GPIO/quirk flags, and optional input-device or mixer-control references for hardware volume events. Per-stream state lives in `struct m3_dma`, including the ALSA substream pointer, ASSP code/data instance addresses, DMA buffer address/size, period accounting, and indices into ASSP mixer/minisrc/DMA lists.
+
+The low-level register helpers `snd_m3_inb/outb/inw/outw`, `snd_m3_assp_read`, and `snd_m3_assp_write` are the hardware access boundary. `snd_m3_assp_init` loads the firmware words into internal ASSP code/data memory and seeds the kernel task list and mixer/DMA list descriptors. `snd_m3_assp_client_init` allocates per-substream minisrc data windows. `snd_m3_chip_init`, `snd_m3_enable_ints`, `snd_m3_ac97_reset`, and `snd_m3_mixer` perform device, interrupt, codec, and mixer setup.
+
+The ALSA PCM callbacks are `snd_m3_substream_open`, `snd_m3_substream_close`, `snd_m3_pcm_hw_params`, `snd_m3_pcm_prepare`, `snd_m3_pcm_trigger`, and `snd_m3_pcm_pointer`. `snd_m3_pcm_setup1`, `snd_m3_playback_setup`, `snd_m3_capture_setup`, and `snd_m3_pcm_setup2` program the ASSP client instance for DMA pointers, sample format, channel mode, sample-rate conversion, and playback/capture direction.
+
+`snd_m3_interrupt` services ASSP timer and hardware-volume interrupts. `snd_m3_update_ptr` translates ASSP DMA pointers into ALSA period notifications. `snd_m3_update_hw_volume` maps hardware volume-counter deltas into AC97 mixer updates or Linux input key events when `CONFIG_SND_MAESTRO3_INPUT` is enabled. Probe and module binding are handled by `__snd_m3_probe`, `snd_m3_probe`, `snd_m3_create`, and the `m3_driver` PCI driver object.
+
+## Control flow
+Probe filters out non-audio functions, allocates a managed ALSA card, selects a card name from the PCI device ID, and calls `snd_m3_create`. Device creation enables the PCI function, restricts DMA to 28 bits, applies subsystem quirks for amp GPIO, IrDA, hardware volume, and OmniBook GPIO handling, requests both firmware images, requests PCI regions, initializes the ASSP and AC97 codec, enables the external amp, requests the IRQ, allocates an optional suspend memory image, creates the AC97 mixer, initializes all per-stream ASSP clients, creates the PCM device, optionally registers an input device, enables interrupts, and starts the ASSP.
+
+Opening a PCM substream reserves a free `m3_dma` slot under `reg_lock` and assigns it to playback mixer/minisrc/DMA lists or capture ADC/minisrc/DMA lists. `prepare` validates U8 or S16_LE format and 8-48 kHz rate, writes host DMA boundaries, DSP scratch buffer boundaries, playback/capture static parameters, and sample-rate conversion values. `trigger` flips the stream `running` flag and writes ASSP readiness bits; start increments timer users and either updates active DAC count or requests ADC capture, while stop reverses those changes. ASSP timer interrupts poll all running streams and call `snd_pcm_period_elapsed` when enough bytes have advanced.
+
+Suspend sets `in_suspend`, cancels pending hardware-volume work, suspends AC97, halts the ASSP, and copies all code and data memory into `suspend_mem`. Resume reinitializes PCI/ASSP/AC97, rewrites the saved ASSP image, clears DMA active state, resumes AC97, restarts ASSP and interrupts, re-enables amp/GPIO handling, and restores ALSA power state.
+
+## State and persistence behavior
+Persistent runtime state is held in kernel memory and device registers only; no filesystem state is written by the driver. Firmware images are requested at probe and released in card private cleanup. ASSP code/data memory is mutable runtime state, including packed task/client lists, DMA pointers, mixer task count, timer reload values, and per-stream instance data. The stream list model is fragile: ASSP lists are packed arrays, so close removes a stream by copying the last list entry into the removed slot and zeroing the tail.
+
+Power-management persistence is in `suspend_mem`, which snapshots ASSP memory across D3hot. Hardware-volume events are deferred to a work item so interrupt context only schedules processing. `in_suspend` suppresses interpreting spurious hardware-volume interrupts during suspend/resume.
+
+## Dependencies and integration points
+This driver integrates with the Linux PCI core, ALSA core, ALSA PCM, AC97 codec, firmware loader, optional input subsystem, IRQ handling, DMA mapping, and PM sleep callbacks. It depends on ESS-specific PCI config registers, legacy I/O BAR access, AC97 serial-bus protocol, GPIO-based amp and codec reset wiring, and two external firmware blobs. The source has disabled MIDI support behind `#if 0`, so MPU401 constants exist but are not exposed.
+
+## Risks and edge cases
+The hardware is programmed through many magic register and ASSP memory offsets; regressions are likely if offsets, firmware layout assumptions, or packed-list handling change. DMA is limited to 28 bits, so platforms without a suitable DMA mask fail probe. Firmware absence fails device creation. AC97 reset uses repeated timing-sensitive GPIO sequences and device-specific delays. Hardware-volume support relies on subsystem quirks and counter patterns; unknown systems can mis-handle buttons or amp GPIO polarity. The interrupt path drops `reg_lock` around `snd_pcm_period_elapsed`, so period accounting must remain consistent across concurrent stop/close paths. Resume depends on successful `suspend_mem` allocation; without it suspend/resume becomes a no-op for ASSP state.
+
+## Test signals
+Useful test signals include successful module probe with firmware present, ALSA card/PCM/mixer registration, playback and capture at U8 and S16_LE across 8-48 kHz, period interrupts advancing without underrun/overrun, AC97 mixer read/write behavior, hardware volume/mute button events on quirked laptops, amp GPIO audibility after probe/resume, suspend/resume while streams are idle and active, and negative tests for missing firmware or unsupported DMA masks. Kernel logs around `ac97 serial bus busy`, firmware request failure, ASSP memory allocation, IRQ request failure, and codec reset retries are high-value diagnostics.

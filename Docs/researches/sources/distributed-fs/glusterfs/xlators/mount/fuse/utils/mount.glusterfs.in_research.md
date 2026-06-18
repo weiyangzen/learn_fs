@@ -1,0 +1,16 @@
+# sources/distributed-fs/glusterfs/xlators/mount/fuse/utils/mount.glusterfs.in
+
+## Purpose
+Linux and NetBSD mount helper template for `mount -t glusterfs`. It parses mount arguments and `-o` options, validates server/volume and mountpoint inputs, prevents recursive brick mounts, updates `updatedb` pruning, translates mount options into `glusterfs` daemon arguments, and executes the daemon against the requested mount point.
+
+## APIs, Types, and Functions
+Shell functions are `warn()`, `_init()`, `is_valid_hostname()`, `parse_backup_volfile_servers()`, `parse_volfile_servers()`, `start_glusterfs()`, `print_usage()`, `check_recursive_mount()`, `with_options()`, `without_options()`, `parse_options()`, `update_updatedb()`, and `main()`. Option variables cover log level/file, transport, volume ID/name, volfile server and backups, timeout/cache controls, FUSE mount options, subdir mounts, ACL/SELinux/read-only flags, root-squash inversion, HA/halo xlator options, FUSE interrupt handling, copy-file-range handling, and process naming.
+
+## Control Flow, State, and Persistence
+`_init()` sets command paths, platform-specific `stat` commands, `/proc/mounts`, and `/etc/updatedb.conf`. `main()` parses Linux positional arguments first, processes `getopts`, detects whether the first argument is a local volfile or `server:volume[/subdir]`, extracts volume and optional subdir information, rejects invalid mountpoint or misplaced `-o`, checks for an existing `fuse.glusterfs` mount, marks snapshot volumes read-only, calls `check_recursive_mount()`, updates `updatedb.conf`, then calls `start_glusterfs()`. `parse_options()` splits comma-separated mount options into `with_options()` or `without_options()`. `start_glusterfs()` builds `cmd_line` by appending validated options, expands server lists including IPv6 backup syntax, adds volfile or volfile-server arguments, appends mount point, executes the command, and verifies the mountpoint can be statted after daemonization. Persistent effects are a GlusterFS FUSE mount, possible `/etc/updatedb.conf` modification, and daemon logs at the requested log file.
+
+## Dependencies and Integration
+Depends on generated configure substitutions such as `@sbindir@`, `@prefix@`, `@exec_prefix@`, and `@GLUSTERD_WORKDIR@`; shell utilities `sed`, `awk`, `grep`, `stat`, `uname`, `getfattr`, `umount`, and `mv`; the `glusterfs` binary; and Linux/NetBSD mount helper conventions. It integrates with glusterd brick metadata to reject mounting over bricks or brick parents and with FUSE daemon options consumed by the mount translator.
+
+## Risks and Test Signals
+Risks include fragile comma splitting for option values containing commas, shell word-splitting and quoting hazards in server names, mountpoints, SELinux contexts, xlator options, and log paths, duplicate `--fuse-mountopts` emission, and reliance on `getfattr` for part of recursive mount detection. The recursive brick loop also depends on local brick paths being listable. Test signals include Linux helper invocation through `/sbin/mount.glusterfs`, IPv4/IPv6 and backup-volfile-server parsing, snapshot read-only behavior, subdir mount extraction, invalid option rejection, duplicate mount exit code 32, recursive brick rejection, and successful daemon stat verification after mount.

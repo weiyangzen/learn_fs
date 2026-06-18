@@ -1,0 +1,115 @@
+# Folder Research: sources/security-integrity/selinux/libsemanage/src
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 101
+- Recursive researched files: 101
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/security-integrity/selinux/libsemanage/src/Makefile`
+- `sources/security-integrity/selinux/libsemanage/src/boolean_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/boolean_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/booleans_active.c`
+- `sources/security-integrity/selinux/libsemanage/src/booleans_activedb.c`
+- `sources/security-integrity/selinux/libsemanage/src/booleans_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/booleans_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/booleans_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/booleans_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/compressed_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/compressed_file.h`
+- `sources/security-integrity/selinux/libsemanage/src/conf-parse.y`
+- `sources/security-integrity/selinux/libsemanage/src/conf-scan.l`
+- `sources/security-integrity/selinux/libsemanage/src/context_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/database.c`
+- `sources/security-integrity/selinux/libsemanage/src/database.h`
+- `sources/security-integrity/selinux/libsemanage/src/database_activedb.c`
+- `sources/security-integrity/selinux/libsemanage/src/database_activedb.h`
+- `sources/security-integrity/selinux/libsemanage/src/database_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/database_file.h`
+- `sources/security-integrity/selinux/libsemanage/src/database_join.c`
+- `sources/security-integrity/selinux/libsemanage/src/database_join.h`
+- `sources/security-integrity/selinux/libsemanage/src/database_llist.c`
+- `sources/security-integrity/selinux/libsemanage/src/database_llist.h`
+- `sources/security-integrity/selinux/libsemanage/src/database_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/database_policydb.h`
+- `sources/security-integrity/selinux/libsemanage/src/debug.c`
+- `sources/security-integrity/selinux/libsemanage/src/debug.h`
+- `sources/security-integrity/selinux/libsemanage/src/direct_api.c`
+- `sources/security-integrity/selinux/libsemanage/src/direct_api.h`
+- `sources/security-integrity/selinux/libsemanage/src/exception.sh`
+- `sources/security-integrity/selinux/libsemanage/src/fcontext_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/fcontext_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/fcontexts_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/fcontexts_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/fcontexts_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/genhomedircon.c`
+- `sources/security-integrity/selinux/libsemanage/src/genhomedircon.h`
+- `sources/security-integrity/selinux/libsemanage/src/handle.c`
+- `sources/security-integrity/selinux/libsemanage/src/handle.h`
+- `sources/security-integrity/selinux/libsemanage/src/ibendport_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/ibendport_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibendports_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibendports_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibendports_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibendports_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibpkey_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/ibpkey_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibpkeys_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibpkeys_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibpkeys_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/ibpkeys_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/iface_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/iface_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/interfaces_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/interfaces_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/interfaces_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/interfaces_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/libsemanage.pc.in`
+- `sources/security-integrity/selinux/libsemanage/src/modules.c`
+- `sources/security-integrity/selinux/libsemanage/src/modules.h`
+- `sources/security-integrity/selinux/libsemanage/src/node_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/node_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/nodes_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/nodes_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/nodes_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/nodes_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/parse_utils.c`
+- `sources/security-integrity/selinux/libsemanage/src/parse_utils.h`
+- `sources/security-integrity/selinux/libsemanage/src/policy.h`
+- `sources/security-integrity/selinux/libsemanage/src/policy_components.c`
+- `sources/security-integrity/selinux/libsemanage/src/port_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/port_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/ports_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/ports_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/ports_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/ports_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/pywrap-test.py`
+- `sources/security-integrity/selinux/libsemanage/src/semanage.conf`
+- `sources/security-integrity/selinux/libsemanage/src/semanage_conf.h`
+- `sources/security-integrity/selinux/libsemanage/src/semanage_store.c`
+- `sources/security-integrity/selinux/libsemanage/src/semanage_store.h`
+- `sources/security-integrity/selinux/libsemanage/src/seuser_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/seuser_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/seusers_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/seusers_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/seusers_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/sha256.c`
+- `sources/security-integrity/selinux/libsemanage/src/sha256.h`
+- `sources/security-integrity/selinux/libsemanage/src/user_base_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/user_extra_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/user_internal.h`
+- `sources/security-integrity/selinux/libsemanage/src/user_record.c`
+- `sources/security-integrity/selinux/libsemanage/src/users_base_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/users_base_policydb.c`
+- `sources/security-integrity/selinux/libsemanage/src/users_extra_file.c`
+- `sources/security-integrity/selinux/libsemanage/src/users_join.c`
+- `sources/security-integrity/selinux/libsemanage/src/users_local.c`
+- `sources/security-integrity/selinux/libsemanage/src/users_policy.c`
+- `sources/security-integrity/selinux/libsemanage/src/utilities.c`
+- `sources/security-integrity/selinux/libsemanage/src/utilities.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

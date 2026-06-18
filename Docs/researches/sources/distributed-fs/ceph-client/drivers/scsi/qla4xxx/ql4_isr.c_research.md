@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/scsi/qla4xxx/ql4_isr.c -->
+# sources/distributed-fs/ceph-client/drivers/scsi/qla4xxx/ql4_isr.c
+
+Purpose: handles qla4xxx interrupts, response queue completions, mailbox completions, asynchronous firmware events, and IRQ allocation/freeing across legacy INTx, MSI, and MSI-X modes for 40xx/82xx/83xx adapters.
+
+Important APIs/types/functions: completion helpers include `qla4xxx_copy_sense()`, `qla4xxx_status_cont_entry()`, `qla4xxx_status_entry()`, `qla4xxx_passthru_status_entry()`, `qla4xxx_mbox_status_entry()`, and `qla4xxx_process_response_queue()`. Mailbox/AEN decoding is centralized in `qla4xxx_isr_decode_mailbox()`, with helpers for IP address/router updates and 83xx loopback state. ISR entry points include `qla4xxx_intr_handler()`, `qla4_82xx_intr_handler()`, `qla4_83xx_intr_handler()`, `qla4_8xxx_msi_handler()`, `qla4_8xxx_default_intr_handler()`, `qla4_8xxx_msix_rsp_q()`, and the 83xx mailbox IRQ handler. Lifecycle functions include `qla4xxx_request_irqs()`, `qla4xxx_free_irqs()`, and `qla4xxx_process_aen()`.
+
+Control flow: hardware handlers validate interrupt source, take `hardware_lock`, service bounded numbers of requests, dispatch to adapter-specific service routines, and clear/deassert interrupt registers. Response queue processing walks unprocessed entries until `RESPONSE_PROCESSED`, dispatches by entry type, marks entries processed, and updates the firmware consumer pointer. Status entries translate firmware completion codes into Linux SCSI results, copy sense data including continuation entries, mark missing sessions on transport disruption, and release SRB refs. Mailbox decode distinguishes command completions from AENs; command completions fill `ha->mbox_status` and wake polling or completion waiters, while AENs set flags, queue work, update link/IP state, or schedule resets.
+
+State and persistence: mutates ISR counters, spurious counters, response queue pointers, active SRB/MRB arrays, mailbox status arrays, AEN circular queues/logs, DPC flags, adapter/link/loopback flags, IP configuration state, IDC completion data, and libiscsi task/session state. Persistent firmware data is not directly written here, but reset and IDC flags cause later mailbox/config operations.
+
+Dependencies and integration: integrates with SCSI result semantics, libiscsi task lookup and session events, PCI IRQ vector APIs, adapter-family register layouts, DPC work scheduling, completion objects, and qla4xxx mailbox/session helpers.
+
+Risks and test signals: invalid handles trigger adapter resets, so active-array correctness is critical. AEN queue overflow loses DDB change notifications. Interrupt mode fallback and 83xx split mailbox/IOCB interrupts create race risk with mailbox polling. Test signals include check-condition sense continuations, queue-full retry, passthrough completion work, mailbox timeout recovery, link up/down events, DDB changed AEN processing, fatal/reset interrupts, MSI-X vector allocation/fallback, and adapter removal/AER races.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/scsi/qla4xxx/ql4_isr.c -->

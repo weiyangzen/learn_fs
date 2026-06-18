@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_sync.c
+
+Purpose: implements AMDGPU synchronization objects that collect DMA fences needed before command submission, deduplicate fences by context, filter implicit fences by owner/mode, transfer fences to DRM scheduler jobs, wait for them, and manage a slab cache for sync entries.
+
+Important APIs and functions: `amdgpu_sync_create()` initializes the hash table. `amdgpu_sync_fence()` adds a fence, keeping only the later fence per context. `amdgpu_sync_resv()` extracts relevant fences from a DMA reservation object. `amdgpu_sync_kfd()` extracts KFD bookkeeping fences. `amdgpu_sync_peek_fence()` returns the next unsignaled dependency, using scheduled fences for same-ring scheduler fences. `amdgpu_sync_get_fence()` removes and returns an unsignaled fence. `amdgpu_sync_clone()`, `amdgpu_sync_move()`, `amdgpu_sync_push_to_job()`, `amdgpu_sync_wait()`, and `amdgpu_sync_free()` manage sync contents. `amdgpu_sync_init/fini()` create/destroy the slab cache.
+
+Control flow: adding a fence first checks for null, then scans the bucket for signaled entries or matching contexts; signaled entries can be replaced, and matching contexts keep the later fence via `dma_fence_is_later()`. Reservation syncing iterates READ-usage fences, unwraps fence chains, filters by `amdgpu_sync_test_fence()`, adds one chain fence when any contained fence matters, and drops iterator references appropriately. Filtering always syncs undefined owners/moves, skips KFD eviction fences except for eviction/move owners, skips VM update fences for most non-VM/KFD owners, and applies ALWAYS/NE_OWNER/EQ_OWNER/EXPLICIT modes. Push-to-job adds unsignaled fences as DRM scheduler dependencies without removing them. Wait blocks on each fence and frees entries as they complete.
+
+State and persistence: `struct amdgpu_sync` owns a small hash table of `amdgpu_sync_entry` objects, each holding a fence reference. Global state is the `amdgpu_sync_slab` cache. No persistent storage.
+
+Dependencies and integration points: depends on DMA fences/chains/reservation objects, DRM scheduler fences/jobs, AMDGPU ring scheduler ownership, KFD fence type detection, trace header inclusion, and context owner sentinels from `amdgpu_ring.h`.
+
+Risks: fence reference ownership is subtle, especially in reservation chain iteration where the stored fence may be the chain fence while filtering inspects contained fences. Same-ring optimization returns the scheduled fence rather than finished fence, which is correct for ordering but can surprise users expecting completion. No locking is internal to `amdgpu_sync`; callers must serialize access. Owner filtering must remain aligned with VM/KFD eviction semantics to avoid deadlocks or missing dependencies.
+
+Test signals: implicit sync across reservation objects, explicit mode skipping, VM/KFD owner filtering, fence chain handling, same-ring scheduled-fence optimization, dependency push to scheduler jobs, interruptible/non-interruptible wait, and slab init/fini.

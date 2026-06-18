@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/mm/shuffle.c
+
+Purpose: implements optional randomization of buddy allocator free lists to reduce predictability of physical page allocation, especially after memory initialization and hotplug. It is controlled by a static key enabled through the `shuffle` module/kernel parameter and helpers in `shuffle.h`.
+
+Important APIs/types/functions: defines `page_alloc_shuffle_key`, the `shuffle` parameter handler `shuffle_param_set`, `shuffle_valid_page`, `__shuffle_zone`, `__shuffle_free_memory`, and `shuffle_pick_tail`. `SHUFFLE_RETRY` bounds attempts to find a valid random swap target.
+
+Control flow: setting the `shuffle` parameter to true enables the static branch. `__shuffle_free_memory` walks zones in a node and calls the guarded `shuffle_zone` wrapper. `__shuffle_zone` holds the zone lock, aligns to `SHUFFLE_ORDER`, walks free PFNs in the zone, validates the current page as online, in-zone, buddy, and same order, then tries up to ten random PFNs in the zone span for another valid page. If both pages are on the same migratetype list, it swaps their `lru` list positions. It periodically drops the zone lock and reschedules. `shuffle_pick_tail` consumes random bits from a cached `u64` to choose head/tail insertion behavior elsewhere in the page allocator.
+
+State and persistence behavior: state is minimal: a static branch key, the parsed boolean parameter, and the deliberately unsynchronized cached random bits in `shuffle_pick_tail`. Shuffling mutates zone free-area list order, not page contents or allocator metadata counts. The random-bit cache is racy by design; concurrent updates are allowed and only add nondeterminism.
+
+Dependencies and integration points: depends on buddy allocator zone state (`struct zone`, `PageBuddy`, `buddy_order`, `list_swap`, pageblock migratetype), online PFN lookup, kernel random number APIs, module parameter parsing, jump labels/static keys, and `shuffle.h` inline guards. Page allocator code can call `shuffle_free_memory`, `shuffle_zone`, `is_shuffle_order`, and `shuffle_pick_tail` only when `CONFIG_SHUFFLE_PAGE_ALLOCATOR` is enabled.
+
+Risks: the zone lock is held while scanning potentially large PFN spans, so periodic unlock/reschedule is important for latency. Random PFNs can land in holes, offline memory, wrong zones, wrong orders, or wrong migratetypes; validation prevents list corruption but introduces bias and skipped swaps. The shuffle is explicitly not cryptographically perfect; it raises allocation unpredictability but does not guarantee uniform permutation. Any migratetype mismatch bug would place pages on the wrong free list.
+
+Test signals: boot or enable with `shuffle=1`, verify static key-dependent paths run, confirm free-list integrity under page allocator debug checks, memory hotplug, and stress allocation/free cycles. Debug logs can show failed swap or migratetype mismatch events. Distribution tests can compare allocation PFN ordering with and without shuffle, but should not expect perfect Fisher-Yates uniformity.

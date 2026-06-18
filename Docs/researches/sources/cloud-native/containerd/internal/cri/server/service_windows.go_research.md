@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/service_windows.go
+
+This Windows build-tagged file provides platform initialization and CNI load options for the CRI service. It defines `windowsNetworkAttachCount` as one because Windows adds loopback by default and CRI only requires one non-host network attachment to obtain the pod IP.
+
+`criService.initPlatform` builds plugin configuration directories from the default CRI config and any runtime-specific `NetworkPluginConfDir` overrides. For each runtime name it chooses the runtime-specific `NetworkPluginMaxConfNum` when provided, otherwise the global value, and creates a `go-cni` plugin with min network count one, plugin config directory, max config count, and plugin binary directories. The result is stored in `c.netPlugin` by name.
+
+`cniLoadOptions` returns only `cni.WithDefaultConf`, unlike Linux where loopback may be explicitly loaded. State behavior is limited to the service's `netPlugin` map; there are no SELinux, capability, CDI, or kernel feature checks. Dependencies are go-cni and CRI config. Risks include CNI initialization errors aborting service creation, runtime-specific network directory divergence, and Windows networking behavior depending on CNI defaults. This file is indirectly covered by service initialization expectations and Windows stats/status behavior, but it has no direct test in the listed files.

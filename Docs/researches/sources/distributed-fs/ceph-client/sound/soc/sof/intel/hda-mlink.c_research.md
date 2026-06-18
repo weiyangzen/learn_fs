@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/sound/soc/sof/intel/hda-mlink.c
+
+Purpose: implements HDaudio multi-link and extended/alternate-link management for SOF HDA controllers when `CONFIG_SND_SOC_SOF_HDA_MLINK` is enabled. It discovers multi-link capability entries, models each as `struct hdac_ext2_link`, and exports helpers for SoundWire, SSP, DMIC, UAOL, and legacy HDA link power, synchronization, interrupt, stream mapping, offload, and microphone privacy handling.
+
+Important APIs/types/functions: `struct hdac_ext2_link` extends `struct hdac_ext_link` with alternate-link metadata, capability flags, per-sublink refcounts, MMIO offsets, a shared `eml_lock`, and mic privacy state. `hda_bus_ml_init()` enumerates ML links from `bus->mlcap`; `hda_bus_ml_free()` releases them. Public helpers include `hdac_bus_eml_get_count()`, interrupt enable/check helpers, SoundWire sync helpers, `hdac_bus_eml_power_up*()`/`power_down*()`, `hdac_bus_eml_sdw_get/set_lsdiid*()`, `hdac_bus_eml_sdw_map_stream_ch()`, `hda_bus_ml_resume()`/`suspend()`, `hdac_bus_eml_*_get_hlink()`, `hdac_bus_eml_enable_offload()`, and mic privacy state helpers.
+
+Control flow: enumeration reads `LCAP`/`LEPTR`, classifies regular versus alternate links, calculates SHIM/IP/vendor-specific offsets by `elid`, and adds links to `bus->hlink_list`. Power helpers locate a matching link, validate sublink range, adjust either the legacy link refcount or alternate sublink refcount, and only program SPA/CPA transitions on first get/last put. Synchronization helpers wrap LSYNCPRD/SYNCPU/CMDSYNC/SYNCGO registers and no-op when link sync is unsupported.
+
+State and persistence: state is runtime-only in `bus->hlink_list`, `ref_count`, `sublink_ref_count[]`, and `mic_privacy_mask`. Suspend/resume only powers regular links based on refcounts; alternate-link callers are expected to reapply their own state. No persistent storage exists.
+
+Dependencies and integration: depends on HDA register definitions and `sound/hda-mlink.h`; used by HDA probe, SoundWire, DAI, BPT, and LNL/ACE offload paths. Locking is split between locked and `_unlocked` exports so callers can batch operations with `hdac_bus_eml_get_mutex()`.
+
+Risks and test signals: risks include negative/imbalanced refcounts, missing locking around `_unlocked` calls, unsupported `elid`, sublink mask validation, timeout-sensitive CPA/SYNCPU polling, and mic privacy state only being checked for active sublinks. Test by probing ML-capable ACE systems, suspend/resume, SoundWire stream channel mapping, offload enable/disable, mic privacy events, and failure injection for unsupported links/timeouts.

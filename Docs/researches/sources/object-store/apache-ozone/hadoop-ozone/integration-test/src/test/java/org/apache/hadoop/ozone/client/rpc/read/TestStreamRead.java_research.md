@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/client/rpc/read/TestStreamRead.java
+
+Purpose: This integration test validates `StreamBlockInputStream` behavior against the older non-stream block read path and direct block-file reads. It writes a 128 MB key into a one-datanode MiniOzoneCluster, then checks that stream reads return the same bytes and MD5 digest as the local container block file across several checksum and buffer sizes.
+
+Important APIs and types: The test configures `OzoneClientConfig.setStreamReadBlock`, `ClientConfigForTesting`, `MiniOzoneCluster`, `TestBucket`, `OzoneBucket.createStreamKey`, `KeyInputStream.isStreamBlockInputStream`, `ClientProtocol.getKeyInfo`, `OmKeyInfo`, `OmKeyLocationInfo`, `BlockID`, `ContainerData`, and `ContainerLayoutVersion.FILE_PER_BLOCK.getChunkFile`. `SizeInBytes`, `CheckedBiConsumer`, `MessageDigest`, and `CodecBuffer` support sizing, repeated operations, and digest verification.
+
+Control flow: `newCluster` builds a quiet one-node cluster with fixed block, chunk, flush, max buffer, and checksum settings. Each test method calls `runTestReadKey` with a different bytes-per-checksum value. The runner starts the cluster, creates stream and non-stream clients from cloned configs, writes a dummy key to warm up the client path, then repeatedly creates the target key with different application write buffer sizes. For every key, it discovers the single OM location, resolves the backing block file from the datanode container set, computes an expected MD5 from the file, shuffles stream-read, non-stream-read, and file-read operations, and verifies full-length reads.
+
+State and persistence behavior: The durable state under test is the key's file-per-block chunk file on the datanode volume and the OM key-location metadata that maps the key to one block/container. The test asserts the block file exists and has `BLOCK_SIZE`, then reads the same persistent bytes through three independent surfaces. No SCM replication behavior is expected because the cluster has one datanode and replication factor one.
+
+Dependencies and integration points: It covers the client RPC read stack, OM key lookup, datanode container storage layout, checksum configuration, and client stream buffering. It also establishes a performance-style signal via throughput prints, although correctness comes from byte counts and MD5 equality.
+
+Risks: The key size and repeated reads make the test relatively expensive. It assumes one location, one block, file-per-block layout, and `BLOCK_SIZE == KEY_SIZE`, so future layout or multipart allocation changes would need test updates. The random write buffer is reused until the key is filled, which is fine for equality checks but not broad content diversity.
+
+Test signals: Strong signals are `KeyInputStream.isStreamBlockInputStream` true/false for the two client configs, exact key-size byte counts, block-file existence and size, and MD5 equality between streamed reads, non-stream reads, and file reads for checksum sizes 512 bytes, 16 KB, and 256 KB.

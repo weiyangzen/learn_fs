@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_GPFS/fsal_internal.h
+
+- **Purpose:** Declares internal GPFS FSAL module structures, private handle/FD/state types, supported attribute masks, ACL limits, helper prototypes, operation wrappers, pNFS hooks, statistics hooks, and upcall entry points.
+- **Important APIs/types/functions:** Defines `struct gpfs_fsal_module`, `struct gpfs_ds`, `struct gpfs_fd`, `struct gpfs_state_fd`, `gpfsfsal_xstat_t`, `GPFS_SUPPORTED_ATTRIBUTES`, `GPFS_MAX_FH_SIZE`, `GPFS_ACL_BUF_SIZE`, `GPFS_ACL_MAX_RETRY`, `GPFS_ACL_MAX_NACES`, `GPFS_FSID_TYPE`, and the prototypes for internal helpers and GPFSFSAL operation wrappers.
+- **Control flow:** This header has no runtime control flow. It shapes compile-time coupling by making GPFS helper and operation entry points visible across `handle.c`, file I/O code, export code, pNFS files, upcalls, and stats.
+- **State and persistence behavior:** Defines in-memory state layout for DS handles, global/shared file descriptors, open-state-associated GPFS fds, and combined stat/fsid/ACL buffers. The `GPFS_SUPPORTED_ATTRIBUTES` mask advertises POSIX, ACL, space reservation, fs_locations, and xattr support to the broader FSAL.
+- **Dependencies and integration points:** Includes GPFS NFS kernel headers, Ganesha FSAL common types, config/upcall headers, and list/config helpers. It is the main internal contract for the GPFS FSAL directory.
+- **Risks:** Struct layout matters: `gpfs_state_fd.state` must remain first for default state free behavior. ACL constants encode GPFS-specific limits. Prototype drift between this header and implementation files will break method table wiring or hide missing implementations at link time.
+- **Test signals:** Build/link coverage is the primary signal. Runtime coverage should verify advertised attributes, ACL buffer retry behavior, pNFS DS/MDS initialization, and regular-file fd lifecycle using `gpfs_fd` and `gpfs_state_fd`.

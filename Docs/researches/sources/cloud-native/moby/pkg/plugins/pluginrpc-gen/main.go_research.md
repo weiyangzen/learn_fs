@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/plugins/pluginrpc-gen/main.go -->
+# sources/cloud-native/moby/pkg/plugins/pluginrpc-gen/main.go
+
+Purpose: command-line generator entrypoint for producing plugin RPC proxy Go code from an interface. Important APIs are CLI flags `-type`, `-name`, `-i`, `-o`, repeated `-skip`, repeated `-tag`, plus helpers `stringSet`, `checkFlags`, `errorOut`, and `toLower`. Control flow parses flags, stores skip/build-tag sets, parses the requested interface, executes the generated template with interface/RPC metadata, formats Go source, and writes the output file. State is process-global flag variables and skip/build-tag maps. Dependencies include Go formatting, flags, filesystem writes, and parser/template files. Risks include default flag values referencing initial pointer values, fatal `os.Exit`, unsupported interface forms, and generated output overwrites. Test signal is mostly parser/template unit tests rather than full CLI execution.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/plugins/pluginrpc-gen/main.go -->

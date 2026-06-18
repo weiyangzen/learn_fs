@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs_common/Makefile
+
+Purpose: builds shared NFS client/server support objects selected by Kconfig. It defines `nfs_acl` from `nfsacl.o`, `nfs_localio` from `nfslocalio.o localio_trace.o`, and standalone/common objects for grace periods, SSC helper, and protocol common code.
+
+Control flow is build-time only: object inclusion follows `CONFIG_NFS_ACL_SUPPORT`, `CONFIG_NFS_COMMON_LOCALIO_SUPPORT`, `CONFIG_GRACE_PERIOD`, `CONFIG_NFS_V4_2_SSC_HELPER`, and `CONFIG_NFS_COMMON`. `CFLAGS_localio_trace.o += -I$(src)` ensures trace include resolution for the local header. State/persistence is kernel build metadata, not runtime state. Dependencies align with NFS client/server Kconfig selections; incorrect object grouping can create unresolved symbols for ACL, localio, grace-period, or SSC users. Risks include config combinations that need shared symbols but fail to select the right option, and trace header include path breakage. Test signals are allyesconfig/allmodconfig, NFS client-only/server-only builds, localio-enabled builds, and module symbol resolution.

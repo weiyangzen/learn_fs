@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_icside.c
+
+`pata_icside.c` supports ICS IDE expansion cards on ARM/Acorn-style systems. It maps unusual expansion-card memory layouts into libata SFF ports, installs card-specific IRQ operations, and optionally drives MWDMA through the RiscPC IOMD DMA controller rather than a PCI BMDMA engine.
+
+`struct portinfo` captures taskfile offsets and register spacing. `struct pata_icside_state` stores IRQ/IOC bases, card type, DMA channel, per-port selector/disabled state, and per-device DMA cycle timings. V5 and V6 cards have separate IRQ enable/disable/pending functions. `pata_icside_set_dmamode()` computes ATA timings and records an IOMD DMA cycle class. `pata_icside_bmdma_setup/start/stop/status()` route the shared DMA channel, program speed and SG lists, and report interrupt status. `pata_icside_postreset()` disables empty V6 ports to avoid floating interrupts.
+
+Probe requests expansion-card resources, reads identification bits, dispatches to V5 or V6 registration, maps MEMC/IOCFAST/EASI resources, configures IRQ ops, initializes DMA where available, allocates a libata host with `ATA_HOST_SIMPLEX`, fills each port's SFF addresses, and activates with `ata_bmdma_interrupt()`. Shutdown disables interrupts and resets IOC selection so the card ROM is readable after soft reboot; remove also frees the DMA channel.
+
+State persists in `pata_icside_state`, expansion-card IRQ hooks, selector registers, and IOMD DMA state. Dependencies are `ecard`, ARM DMA APIs, and libata SFF/BMDMA helpers. Risks include shared-DMA misuse, card type misdetection, V6 floating interrupts, and selector programming errors. Tests should cover V5 and V6 cards, unsupported A3 variants, no-DMA fallback, MWDMA timing choices, empty-port reset, shutdown, and remove with allocated DMA.

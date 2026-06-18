@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx5/core/en/xdp.c
+
+Purpose: implements mlx5e XDP RX actions, XDP TX/redirect transmit queues, AF_XDP TX metadata integration, XDP metadata callbacks, completion cleanup, and XDP-specific transmit mode selection.
+
+Important APIs and types: public functions include `mlx5e_xdp_max_mtu`, `mlx5e_xdp_handle`, `mlx5e_xdp_mpwqe_complete`, `mlx5e_xmit_xdp_frame_check_mpwqe`, `mlx5e_xmit_xdp_frame_mpwqe`, `mlx5e_xmit_xdp_frame_check`, `mlx5e_xmit_xdp_frame`, `mlx5e_poll_xdpsq_cq`, `mlx5e_free_xdpsq_descs`, `mlx5e_xdp_xmit`, `mlx5e_xdp_rx_poll_complete`, and `mlx5e_set_xmit_fp`. Metadata ops are `mlx5e_xdp_metadata_ops` for RX timestamp/hash/VLAN and `mlx5e_xsk_tx_metadata_ops` for AF_XDP TX timestamp/checksum.
+
+Control flow: RX XDP runs the BPF program and handles `PASS`, `TX`, `REDIRECT`, `DROP`, and abort paths. XDP_TX converts buffers to frames, handles XSK zero-copy special ownership, maps or syncs DMA, sends through either MPWQE or regular WQE, and records completion ownership in the XDP info FIFO. MPWQE mode batches single-buffer packets into enhanced multi-packet WQEs and falls back to regular WQEs for multi-frag packets. Regular mode builds inline and DMA data segments, including fragment segments. Completion polling walks CQEs to WQE info entries, pops FIFO records, unmaps DMA or recycles page-pool pages, completes AF_XDP frames and metadata, updates CQ DB, then advances SQ consumer counter. `mlx5e_xdp_xmit` handles ndo_xdp_xmit redirects from other devices and rings the doorbell on flush.
+
+State and persistence: per-XDPSQ state includes producer/consumer counters, MPWQE session, WQE info array, XDP info FIFO, doorbell control segment, XSK pool, stats, and selected indirect-call function pointers. RQ flags record pending XDP transmit and redirect flush. DMA/page ownership is persisted in FIFO records until completion.
+
+Dependencies and integration points: BPF/XDP core, AF_XDP sockets and metadata, page_pool, mlx5 CQ/WQ helpers from `txrx.h`, hardware timestamp conversion, RSS CQE bits, RX queue context, netdev XDP feature gating, and channel count to select per-CPU SQ.
+
+Risks and test signals: high-risk areas are DMA unmap/recycle ownership across regular page-pool, XSK, and redirected frames; MPWQE fallback for fragments; SQ full handling; missing redirect flush; metadata timestamp mode; and completion counter ordering. Test XDP_PASS/TX/DROP/REDIRECT, AF_XDP zero-copy TX with checksum/timestamp metadata, multi-buffer XDP frames, MTU boundary, SQ full, MPWQE on/off, ndo_xdp_xmit from multiple CPUs, RX hash/VLAN metadata, and teardown freeing outstanding descriptors.

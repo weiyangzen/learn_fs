@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbserver/tester/ConsistencyChecker.cpp
+
+Purpose: Implements tester-side consistency verification paths: storage audit triggering/waiting, normal `ConsistencyCheck` workload orchestration, and urgent consistency checks that divide key-server shards across testers.
+
+Important APIs/types/functions: `auditStorageCorrectness` triggers audit storage through the data distributor and polls `getAuditState`. `checkConsistency` builds a `TestSpec` for the `ConsistencyCheck` workload and retries with repair. `runUrgentConsistencyCheckWorkload` recruits tester workloads and triggers their start endpoints. `getConsistencyCheckShards` reads key-server metadata. `getTesters` recruits tester-class workers. `getKeyFromString` and `loadRangesToCheckFromKnob` parse knob-provided `\xNN` key ranges. `makeTaskAssignment` batches shards across testers with shuffled tester IDs. `runConsistencyCheckerUrgentCore`, `runConsistencyCheckerUrgentHolder`, and `checkConsistencyUrgentSim` drive the urgent checker.
+
+Control flow: Normal consistency checks optionally disable simulated connection failures, run a generated workload, retry until success or soft time limit, and call `repairDeadDatacenter` between failures. Audits wait for recovery/distributor readiness, trigger an audit, then poll until complete/error/failure or bounded retries. Urgent checks build an in-memory `KeyRangeMap<bool>` of incomplete ranges, recruit testers, map ranges to actual shards, assign shard batches, run tester workloads, mark completed clients' assigned ranges done, and repeat with backoff until no incomplete ranges remain.
+
+State and persistence behavior: Urgent progress is in-memory only and resets if the actor restarts. It reads key-server metadata under system-key, immediate-priority, lock-aware transactions. Simulation state is mutated by disabling/restoring connection failures and setting `fdbSimulationPolicyState().isConsistencyChecked`. Audit state is persisted in cluster audit metadata owned by the management/audit subsystem.
+
+Dependencies and integration points: Uses Flow coroutines, simulator APIs, FDB management/native APIs, system key ranges, data distributor audit endpoints, worker recruitment, `TesterInterface`, `WorkloadRequest`, `runWorkload`, `quietDatabase`, and knobs under `SERVER_KNOBS`/`CLIENT_KNOBS`.
+
+Risks: Urgent checker progress is not durable; repeated actor failures can restart all work. Knob range parsing is strict and logs errors for malformed `\xNN` strings. If no testers can be recruited for a day, it escalates with severe trace. Task assignment intentionally randomizes tester selection to avoid retrying the same failing tester edge cases. Audit polling breaks after a retry cap even if still running, so callers rely on trace state and timeout wrappers.
+
+Test signals: Trace events cover every phase (`AuditStorageCorrectness*`, `ConsistencyCheckUrgent_*`). Simulation injects random operation failures to validate retry behavior. `checkConsistencyUrgentSim` is called from the main test orchestrator before regular consistency checks when quiescent.

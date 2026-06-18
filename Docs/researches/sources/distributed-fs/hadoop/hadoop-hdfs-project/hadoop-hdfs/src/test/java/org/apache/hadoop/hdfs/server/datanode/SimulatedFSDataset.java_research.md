@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/SimulatedFSDataset.java
+
+Purpose: this test-scope `FsDatasetSpi` implementation simulates DataNode storage without storing block bytes. It records block metadata, returns deterministic synthetic bytes on reads, tracks capacity/usage per simulated storage and block pool, and supports enough replica lifecycle behavior for MiniDFSCluster tests that prefer fast in-memory storage.
+
+Important APIs and types: `FsDatasetSpi`, `FsVolumeSpi`, `ReplicaInPipeline`, `ReplicaHandler`, `ReplicaState`, `Block`, `ExtendedBlock`, `BlockListAsLongs`, `DatanodeStorage`, `StorageReport`, `VolumeFailureSummary`, `DataNodeVolumeMetrics`, `FSDatasetMBean`, `MBeans`, `DataChecksum`, and `DataNodeLockManager`. Nested types include `Factory`, `TestUtilsFactory`, `BInfo`, `SimulatedBPStorage`, `SimulatedStorage`, `SimulatedVolume`, `SimulatedInputStream`, and `SimulatedOutputStream`.
+
+Control flow: `setFactory` installs the simulated dataset factory and matching test-utils factory in configuration. Construction determines storage count from `DataStorage` or configured storage locations, creates simulated storages with capacity/state/non-DFS-used values, and registers an FSDataset MBean. Blocks are assigned to storages by `blockId mod storageCount`. `injectBlocks`, `createTemporary`, `createRbw`, `append`, `recoverAppend`, `recoverClose`, `recoverRbw`, and `finalizeBlock` manipulate `BInfo` records in per-block-pool maps. Reads use `SimulatedInputStream`, whose bytes are derived from block ID and offset; metadata reads return a null-checksum header. Block reports include only finalized replicas. Invalidation frees capacity, removes block metadata, and optionally notifies the DataNode.
+
+State and persistence: all block maps and usage counters are in memory and are explicitly not remembered across restarts. Capacity accounting is persistent only for the life of the dataset object. MBean registration is process-global and must be unregistered in `shutdown`.
+
+Dependencies and integration points: this dataset integrates with DataNode storage, block reports, recovery, volume references, metrics, storage reports, cache API stubs, and pinning. Many advanced features are unsupported or no-op, such as trash, lazy persist, local path info, cache operations, volume add/remove, and scanner check/update.
+
+Risks: synchronization is coarse and not universal across nested storage structures. Several interface methods return null or throw `UnsupportedOperationException`, so tests must stay within the supported subset. It does not persist across restart, which is intentional but can invalidate tests expecting real disk semantics. Capacity accounting depends on correct finalize/unfinalize/invalidate paths.
+
+Test signals: tests using simulated storage validate DataNode protocol and block-management logic without physical block files. Failures usually indicate lifecycle incompatibility with `FsDatasetSpi`, incorrect usage accounting, unsupported method reachability, or replica-state mismatch.

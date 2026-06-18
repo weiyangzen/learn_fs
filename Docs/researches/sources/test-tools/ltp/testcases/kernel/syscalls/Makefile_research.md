@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/Makefile
+
+Purpose: trunk Makefile that integrates syscall subdirectories into the LTP build. It sets `top_srcdir`, includes `env_pre.mk`, filters out `profil` on uClibc, and filters many unsupported syscall directories on Android before including `generic_trunk_target.mk`. Important variables are `FILTER_OUT_DIRS`, `UCLIBC`, and `ANDROID`. State is build traversal configuration only; no runtime test state exists here. Dependencies are the LTP make framework and platform detection variables. Risks are platform-specific coverage gaps if filters are stale; test signal is correct recursive build selection for syscall suites.

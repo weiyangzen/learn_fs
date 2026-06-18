@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/nls/nls_cp437.c
+
+Purpose: Implements the Linux NLS single-byte translation module for DOS codepage 437, described in the module metadata as United States/Canada. It provides exact byte-to-Unicode and Unicode-to-byte mappings for filesystems that mount with `iocharset=cp437` or otherwise request this NLS table.
+
+Important APIs/types/functions: The file defines `charset2uni[256]` for byte-to-`wchar_t` conversion, Unicode reverse pages `page00`, `page01`, `page03`, `page20`, `page22`, `page23`, and `page25`, `page_uni2charset[256]` as the high-byte dispatch table, byte folding tables `charset2lower[256]` and `charset2upper[256]`, callbacks `uni2char()` and `char2uni()`, and a `struct nls_table` named `table` with `.charset = "cp437"`. Module lifecycle is `init_nls_cp437()` calling `register_nls(&table)` and `exit_nls_cp437()` calling `unregister_nls(&table)`.
+
+Control flow: `uni2char()` rejects zero output space with `-ENAMETOOLONG`, splits the Unicode scalar into high and low bytes, indexes `page_uni2charset[ch]`, and writes one output byte only when a nonzero reverse-table entry exists; otherwise it returns `-EINVAL`. `char2uni()` indexes `charset2uni[*rawstring]`, rejects `0x0000` as unmapped, and returns one consumed byte. Initialization only registers the static table; exit unregisters it.
+
+State and persistence behavior: All conversion data is static read-only module data. Runtime state is limited to registration in the kernel NLS registry while the module is loaded. There is no persistent storage, allocation, locking, or mutable per-mount state in the file.
+
+Dependencies and integration points: Depends on `<linux/module.h>`, `<linux/kernel.h>`, `<linux/string.h>`, `<linux/nls.h>`, and `<linux/errno.h>`. It integrates with the VFS/filesystem NLS layer through `struct nls_table`, `register_nls()`, `unregister_nls()`, `module_init()`, and `module_exit()`. The table provides byte-level case folding for callers that perform case-insensitive legacy-name handling.
+
+Risks: Reverse mappings use `0x00` as the sentinel for "unmapped", so U+0000 and any byte whose forward mapping is zero cannot round-trip through these callbacks. The file trusts callers to pass at least one input byte to `char2uni()`; `boundlen` is not checked there because this is a fixed-width single-byte table. Because mappings are exact only, Unicode compatibility variants, decomposition, and best-fit conversions are intentionally unsupported. Test changes must preserve reciprocal table entries, especially for CP437 box drawing, math, Greek, and Latin-1 symbols.
+
+Test signals: Build the NLS module, load it, and request `cp437` through a filesystem or direct NLS lookup. Table tests should iterate all nonzero `charset2uni` entries, confirm `uni2char(charset2uni[b]) == b` where the reverse table defines an exact mapping, confirm unmapped Unicode returns `-EINVAL`, and check `boundlen <= 0` returns `-ENAMETOOLONG`. Case-fold tests should verify ASCII A-Z/a-z and notable CP437 accented pairs in `charset2lower`/`charset2upper`.

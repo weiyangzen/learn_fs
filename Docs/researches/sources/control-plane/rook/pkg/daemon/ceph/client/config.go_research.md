@@ -1,0 +1,11 @@
+# sources/control-plane/rook/pkg/daemon/ceph/client/config.go
+
+Purpose: generates Ceph configuration and keyring files for daemons and command-line clients, including default monitor host entries and optional user override merging from the Rook config override ConfigMap.
+
+Important APIs/types: `GlobalConfig` and `CephConfig` model INI sections. `DefaultConfigFilePath()`, `getConfFilePath()`, `GenerateConnectionConfig()`, `GenerateConnectionConfigWithSettings()`, `generateConfigFile()`, `CreateDefaultCephConfig()`, `PopulateMonHostMembers()`, and `WriteCephConfig()` form the main API. Helpers include `mergeDefaultConfigWithRookConfigOverride()`, `getQualifiedUser()`, `createGlobalConfigFileSection()`, and `addClientConfigFileSection()`.
+
+Control flow and persistence: `GenerateConnectionConfigWithSettings()` writes the user's keyring, builds a config directory under `context.ConfigDir/<namespace>`, creates a global INI section, merges ConfigMap overrides, adds a client section with keyring path and optional settings, then saves `<namespace>.config`. `WriteCephConfig()` regenerates a config and copies it to the process default `/etc/ceph/ceph.conf` path, using 0600 permissions for the destination. `CreateDefaultCephConfig()` may derive `clusterInfo.CephVersion` from `ROOK_CEPH_VERSION`, then populates `fsid`, `mon initial members`, and `mon host`. `PopulateMonHostMembers()` skips monitors marked out of quorum and emits v2-only or v2+v1 address vectors based on the existing endpoint port.
+
+Dependencies and integration: depends on `go-ini`, Kubernetes ConfigMaps, `k8sutil.ConfigOverrideName`, Ceph version extraction, Ceph endpoint parsing, keyring helpers, and `ClusterInfo.AllMonitors()`. The output is consumed by `command.go` and Ceph daemons.
+
+Risks: monitor order comes from maps and is nondeterministic; tests account for membership rather than exact order. Config override `Append()` can alter arbitrary INI sections; debug keys are explicitly removed from global to keep CLI JSON parseable. `WriteCephConfig()` writes a process-global default config, so permission and filesystem failures are operationally important. Test signals cover default monitor formatting and ConfigMap override merging.

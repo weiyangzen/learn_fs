@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/virtio/Kconfig
+
+This Kconfig file defines the virtio-specific VFIO PCI variant. `VIRTIO_VFIO_PCI` is a tristate depending on `VIRTIO_PCI` and selecting `VFIO_PCI_CORE`; it targets virtio-net and virtio-block PCI VF devices and adds VFIO migration support when the SR-IOV PF supports the required virtio admin extensions. `VIRTIO_VFIO_PCI_ADMIN_LEGACY` is a boolean depending on both `VIRTIO_VFIO_PCI` and `VIRTIO_PCI_ADMIN_LEGACY`, defaulting to enabled, and adds legacy I/O access for virtio-net VFs.
+
+The file integrates the virtio VFIO driver with the kernel build configuration. It documents that migration relies on dirty page tracking from IOMMU hardware exposed through IOMMUFD, and that unsupported PFs fall back to generic vfio-pci behavior. The legacy option enables transitional/legacy guest driver compatibility through PF-admin-mediated emulated BAR0 I/O.
+
+State and persistence are build-time only. Selecting these options determines whether `main.o`, `migrate.o`, and optionally `legacy_io.o` are compiled. Risks include enabling migration without hardware/IOMMUFD dirty tracking support, users expecting functionality beyond VFIO generic passthrough when PF admin capabilities are missing, and legacy I/O being available only for currently supported virtio-net device IDs. Test signals include Kconfig dependency resolution, modular and built-in builds, configs without admin legacy support, and runtime probing on virtio VFs with and without migration/legacy admin capabilities.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/isa/wss/wss_lib.c
+
+Purpose: Provides the shared ALSA low-level library for CS4231/CS4232/CS4236/AD1848/AD1845/InterWave/OPTi WSS-compatible ISA codecs. It handles codec detection, register image management, MCE calibration sequencing, ISA DMA playback/capture, timer support, mixer controls, suspend/resume, and exported construction helpers.
+
+Important APIs/types/functions: Exported APIs include `snd_wss_out()`, `snd_wss_in()`, `snd_cs4236_ext_out()`, `snd_cs4236_ext_in()`, `snd_wss_mce_up()`, `snd_wss_mce_down()`, `snd_wss_interrupt()`, `snd_wss_create()`, `snd_wss_pcm()`, `snd_wss_timer()`, `snd_wss_mixer()`, `snd_wss_chip_id()`, control helpers, and PCM ops access. Internal control centers are `snd_wss_probe()`, `snd_wss_init()`, `snd_wss_trigger()`, `snd_wss_playback_prepare()`, and `snd_wss_capture_prepare()`.
+
+Control flow: Creation allocates a managed `struct snd_wss`, requests I/O regions/IRQ/DMA, detects hardware by probing codec registers, initializes the register image, and runs calibration. PCM open limits formats by hardware quirks and claims DMA, hw_params programs format/rate under MCE, prepare programs ISA DMA and period counts, trigger toggles playback/capture enable bits, and the IRQ handler acknowledges timer/playback/record interrupts and reports period elapsed.
+
+State and persistence: `struct snd_wss` persists register mirrors in `image[]`/`eimage[]`, hardware type, port/IRQ/DMA resources, open mode, substream pointers, timer pointer, DMA sizes, callbacks, and PM hooks. Hardware registers are restored on resume from the image cache.
+
+Dependencies/integration: Uses ALSA PCM/timer/control core, ISA DMA helpers, port I/O, IRQs, `sound/wss.h`, and devm resource management. Risks include hardware-specific calibration timing, shared/single DMA half-duplex constraints, register-image drift if direct I/O bypasses helpers, interrupt status quirks for AD1848, and many chip-specific format/rate limitations. Test signals include codec detection logs, PCM open/prepare/trigger/pointer behavior, timer ticks, mixer control read/write parity with image registers, suspend/resume restore, and simultaneous playback/capture on dual-DMA devices.

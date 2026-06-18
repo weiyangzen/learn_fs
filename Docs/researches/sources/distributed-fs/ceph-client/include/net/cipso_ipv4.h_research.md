@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/include/net/cipso_ipv4.h
+
+Read `sources/distributed-fs/ceph-client/include/net/cipso_ipv4.h` completely for this pass (308 lines, 7597 bytes). Final split target: `Docs/researches/sources/distributed-fs/ceph-client/include/net/cipso_ipv4.h_research.md`.
+
+Purpose: declares the IPv4 CIPSO/NetLabel interface for Commercial IP Security Option labels, including DOI mapping objects, standard level/category translation tables, cache/sysctl knobs, socket/request/skbuff label operations, and option validation.
+
+Important APIs/types/functions: constants define DOI/tag/map types and local/remote level/category limits. `struct cipso_v4_doi` stores a DOI number, map type, standard mapping table pointer, accepted tag list, refcount, DOI list node, and RCU callback. `struct cipso_v4_std_map_tbl` maps CIPSO remote levels/categories to local LSM values and marks invalid entries with the high bit. With `CONFIG_NETLABEL`, exported APIs include `cipso_v4_doi_add/free/remove/getdef/putdef/walk`, `cipso_v4_cache_invalidate()`, `cipso_v4_cache_add()`, `cipso_v4_error()`, `cipso_v4_getattr()`, socket/request/skbuff set/delete/get helpers, `cipso_v4_optptr()`, and `cipso_v4_validate()`. Without NetLabel, most operations return `-ENOSYS`, `NULL`, or no-op values while the fallback validator still performs basic wire-format checks.
+
+Control flow: NetLabel management creates DOI definitions and mapping tables, registers them in an RCU/refcounted DOI list, and caches decoded option-to-security-attribute mappings. Socket/request/skbuff paths attach, remove, or read CIPSO options by converting between NetLabel LSM security attributes and CIPSO option tags. Incoming IPv4 option processing validates option length, nonzero DOI, and tag lengths before extracting attributes. Error paths can send CIPSO-related IPv4 errors when enabled.
+
+State and persistence: DOI definitions and mapping tables are runtime kernel state protected by refcounts, lists, and RCU. The label cache is runtime state controlled by sysctl variables such as cache enabled/bucket size and RBM formatting/validation flags. Socket/request/skbuff labels live with those objects and are not durable across reloads.
+
+Dependencies and integration points: depends on NetLabel, LSM security attributes, request sockets, skbuffs, IPv4 options, RCU, refcounting, unaligned big-endian reads, and audit metadata. It integrates labeled networking with SELinux/LSM policy, IPv4 socket setup, request sockets for connection establishment, and packet receive/transmit option handling.
+
+Risks: DOI and mapping lifetimes are security-sensitive; stale RCU objects or bad refcounts can expose wrong labels. Level/category translation must handle invalid sentinel bits and table bounds. Fallback behavior differs when `CONFIG_NETLABEL` is disabled, so callers must tolerate `-ENOSYS`. Option validation only checks structural format and must not be mistaken for policy acceptance. Incorrect socket locking in `cipso_v4_sock_setattr()` callers can race label changes.
+
+Test signals: build with and without NetLabel; add/remove/walk DOI definitions; validate pass-through/translated/local mappings; parse valid and malformed options with short length, zero DOI, truncated tag, and zero tag length; exercise socket/request/skbuff label set/get/delete; invalidate and populate cache; run LSM/NetLabel interoperability tests and audit/error paths.

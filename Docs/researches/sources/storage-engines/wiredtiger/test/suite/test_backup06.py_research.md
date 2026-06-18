@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup06.py
+
+Purpose: verifies backup cursor opening does not unnecessarily open data handles, while backup schema protection still prevents dropping backed-up objects. It also checks backup cursor reset iteration.
+
+Important APIs are `resource.getrlimit/setrlimit`, `populate_many`, connection reopen, `statistics:` cursor on `stat.conn.dh_conn_handle_count`, `session.open_cursor('backup:')`, schema `create/drop`, and `WT_NOTFOUND`. Control flow populates many file/table objects, reopens to clear handles, compares open handle count before and after opening backup, then separately opens a backup cursor and asserts existing objects cannot be dropped while creating a new schema object is allowed. State behavior is handle-cache and schema protection state, not copied backup content. Dependencies are `backup_base`, datasets, statistics, and Unix resource limits; Windows skips handle-limit test. Risks include handle-count statistic drift and platform limits. Test signals are equal handle counts, expected drop failures, and reset count doubling.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/staging/media/ipu7/ipu7.h
+
+Purpose: this header is the central public contract for the Intel IPU7 PCI driver and its internal ISYS/PSYS auxiliary devices. It defines device names, firmware filenames, PCI IDs, hardware-version helpers, DMA/MMU sizing constants, firmware code region layout, and platform-data structures that are populated in `ipu7.c` and consumed by bus, MMU, ISYS, PSYS, buttress, and firmware-loading code.
+
+Important APIs and types: `enum ipu_version` encodes IPU7, IPU7P5, and IPU8 hardware revisions, with inline helpers `is_ipu7()`, `is_ipu7p5()`, and `is_ipu8()`. `struct ipu7_device` is the top-level PCI driver state containing PCI device, auxiliary ISYS/PSYS devices, buttress state, CPD firmware, BAR mappings, hardware revision, firmware boot mode flags, and bus readiness. `struct ipu7_mmu_hw`, `struct ipu7_hw_variants`, `struct ipu_isys_internal_pdata`, and `struct ipu_psys_internal_pdata` express the per-generation MMU, ZLX, UAO, CDC FIFO, DMEM, and SPC configuration tables used at probe time. `struct ipu7_isys_pdata` and `struct ipu7_psys_pdata` are passed to child auxiliary devices.
+
+Control flow and integration: this header does not implement control flow, but it constrains the flow in `ipu7.c`: the probe selects firmware filename constants, fills `struct ipu7_device`, chooses one `struct ipu7_hw_variants` tree, and passes ISYS/PSYS platform data to `ipu7_bus_initialize_device()` and `ipu7_mmu_init()`. Exported declarations include `request_cpd_fw()`, `ipu_internal_pdata_init()`, and `ipu7_dump_fw_error_log()`.
+
+State and persistence behavior: constants such as `IPU_FW_CODE_REGION_START`, `IPU_FW_CODE_REGION_SIZE`, and `IPU_FW_CODE_REGION_END` document the non-secure firmware virtual address window. MMU sizing limits (`IPU_MMU_MAX_NUM`, stream limits, ZLX/UAO maxima, MMUV2 trash ranges) bound arrays embedded in platform data, so changing them affects static table size and hardware programming loops elsewhere. `struct ipu7_device` state persists for the PCI device lifetime, while pdata structures are shared static tables referenced by subsystem devices.
+
+Dependencies: includes Linux list, PCI, and types headers plus `ipu7-buttress.h`. Consumers also depend on register headers for field values placed into these structures. The constants interact with DMA API restrictions and firmware CPD image layout.
+
+Risks: array-bound changes are high risk because the large static tables in `ipu7.c` assume the maxima here. The declared `IPU8_PCI_ID` and `IPU8_FIRMWARE_NAME` need consistency with the actual PCI match table. Because this header exposes mutable internal platform data structs rather than const-only opaque descriptors, consumers can accidentally mutate shared hardware variant data.
+
+Test signals: compile-time coverage should catch most struct/member drift across IPU7 modules. Runtime validation should confirm selected hardware revision helpers, firmware filenames, MMU counts, stream counts, and DMA mask constants match real silicon and firmware expectations. Static analysis should focus on array initializers versus declared maxima.

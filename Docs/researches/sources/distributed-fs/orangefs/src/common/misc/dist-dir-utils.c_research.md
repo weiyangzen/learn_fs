@@ -1,0 +1,11 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/orangefs/src/common/misc/dist-dir-utils.c -->
+# sources/distributed-fs/orangefs/src/common/misc/dist-dir-utils.c
+
+Purpose: implements distributed-directory placement utilities. It maintains a bitmap tree of active directory-data buckets, computes split targets, maps hashes to buckets, and hashes directory entry names.
+
+Important helpers: `my_log2()` wraps natural-log conversion. `dist_dir_calc_branch_level()` computes a server's next split level by checking bitmap bits above the server number. `PINT_init_dist_dir_state()` initializes `PVFS_dist_dir_attr`, allocates and seeds the bitmap, computes tree height/bitmap size/branch level, and records split size. `PINT_is_dist_dir_bucket_active()` checks bounds and bitmap. `PINT_find_dist_dir_bucket()` uses the low bits of a hash and progressively shorter prefixes until it finds an active bucket. `PINT_find_dist_dir_split_node()` marks and returns the next split node for a server. `PINT_update_dist_dir_bitmap_from_bitmap()` ORs another bitmap into the local one and recalculates branch level. `PINT_encrypt_dirdata()` computes an MD5 digest of a name and uses the last 64 bits in host byte order. `PINT_dist_dir_set_serverno()` changes server identity and recalculates branch level.
+
+State is caller-owned `PVFS_dist_dir_attr` plus allocated bitmap memory. Persistent effects occur only when callers store these attrs/bitmaps in OrangeFS metadata. Dependencies include `math`, `assert`, `dist-dir-utils.h`, local `md5`, and BMI byte-swap helpers.
+
+Risks: bitmap sizing assumes 32-bit base words and uses shifts like `1l << tree_height`, which need bounds coverage. `PINT_dist_dir_set_serverno(-1, ...)` calls branch-level calculation despite that helper asserting nonnegative server numbers. `PINT_encrypt_dirdata()` casts digest bytes to a 64-bit pointer, which may be unaligned on strict architectures. Tests should cover non-power-of-two server counts, meta-server `server_no=-1`, split exhaustion, bitmap merge, active checks, and deterministic hashing across endian/alignment-sensitive platforms.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/orangefs/src/common/misc/dist-dir-utils.c -->

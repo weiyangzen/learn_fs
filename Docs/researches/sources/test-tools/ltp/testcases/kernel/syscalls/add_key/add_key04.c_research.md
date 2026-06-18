@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/add_key/add_key04.c
+
+Purpose: CVE-2017-12193 regression test for associative-array node splitting in keyrings. It joins a new session keyring, forks a child, fills the keyring with 16 child keyrings to occupy the fan-out, then adds one `user` key; parent interprets normal child exit as pass and SIGKILL as likely kernel oops. Important APIs are `keyctl(KEYCTL_JOIN_SESSION_KEYRING)`, `add_key`, fork/wait macros, and generated descriptions. State is a session keyring populated with crafted entries. Dependencies are keyring support and fork. Risks are crash-oriented behavior on vulnerable kernels; test signal is child survival without verifier/kernel fatal signal.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/dvb-usb-v2/rtl28xxu.c
+
+Purpose: dvb-usbv2 bridge driver for Realtek RTL2831U/RTL2832U/RTL2832P USB receivers. It implements vendor control transfers, a multi-method I2C adapter, chip/tuner/slave-demod detection, dynamic I2C/platform child device attachment, tuner attachment, SDR side-device registration, power/endpoint control, frontend control, PID filter delegation, RC handling, and a large USB ID table.
+
+Important APIs/types/functions: `rtl28xxu_ctrl_msg()` is the locked USB control transport. Register helpers choose USB/SYS/IR command spaces. `rtl28xxu_i2c_xfer()` supports integrated demod page access, old I2C access, and newer direct-address access. `rtl2831u_read_config()` and `rtl2832u_read_config()` probe tuner/slave-demod hardware. Attach/detach functions create `rtl2830`/`rtl2832`, slave demod, tuner, and SDR child devices. Power and RC paths are split by chip generation.
+
+Control flow: `identify_state()` distinguishes RTL2831U from RTL2832U using a zero-length direct-address I2C read, marks the device warm, and tunes adapter retries/timeouts. `read_config()` configures GPIOs and probes tuner IDs, with RTL2832U also resetting/probing slave demods for R828D/Si2157 designs. Frontend attach creates the demod I2C client and receives a DVB frontend and demod I2C adapter; optional slave demods populate `adap->fe[1]`. Tuner attach binds legacy `dvb_attach()` tuners or I2C-client tuners and may register `rtl2832_sdr`. Stream data comes through bulk endpoint 0x81.
+
+State and persistence: `struct rtl28xxu_dev` persists the USB control buffer, chip ID, tuner ID/name, cached demod register page, demod I2C adapter, RC active flag, direct-I2C-write preference, child I2C clients, SDR platform device, slave-demod enum, and demod platform data. Hardware state includes GPIO power/reset, demod/tuner I2C gates, USB endpoint DMA/FIFO, RC registers, and PID filters delegated to demod platform data.
+
+Dependencies and integration: depends on dvb-usbv2, USB control APIs, I2C core, RC core when enabled, RTL2830/RTL2832 demod drivers, many tuner drivers, optional slave demods, and `rtl2832_sdr`. It integrates V4L2 subdev pointers for some tuners and platform-device SDR registration.
+
+Risks: tuner detection is heuristic and order-dependent; identical ID values such as R820T/R828D are disambiguated only by probe request/address ordering. Some `i2c_new_client_device()` failure paths call `i2c_client_has_driver(client)` without an explicit `IS_ERR_OR_NULL()` check. Reduced-mode fallback hides slave-demod attach failures. RC raw decoding can consume USB bandwidth; `disable_rc` exists partly to avoid SDR sample loss. The I2C adapter has strict message shape/length limits and maps `-EPIPE` to retry.
+
+Test signals: probe RTL2831U, RTL2832U, and RTL2832P devices; exercise each tuner path and slave-demod fallback; stream DVB-T and DVB-T2/C when slave demod exists; attach/detach child I2C clients and SDR platform device; PID filter delegation; power off/on and endpoint halt clearing; RC NEC/raw events with and without `disable_rc`; suspend/resume/reset-resume.

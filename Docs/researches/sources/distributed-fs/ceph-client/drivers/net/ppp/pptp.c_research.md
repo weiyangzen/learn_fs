@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ppp/pptp.c
+
+Purpose: implements the Point-to-Point Tunneling Protocol data plane as a PPPoX protocol over IPv4 GRE. It creates PX_PROTO_PPTP sockets, maps local call IDs to sockets, registers a GRE protocol handler, and encapsulates/decapsulates PPP frames in PPTP GRE headers.
+
+Important APIs and functions: `pptp_bind()` allocates or reserves a local call ID through `add_chan()`. `pptp_connect()` validates destination call/IP, routes the GRE flow, sets PPP MTU/hdrlen, and registers the PPP channel. `pptp_xmit()` builds GRE and IPv4 headers, handles PPP AC/protocol compression flags, sends ACKs, and routes via `ip_local_out()`. `pptp_rcv()` validates incoming GRE fields and finds a socket with `lookup_chan()`. `pptp_rcv_core()` updates ACK/sequence state, reconstructs PPP payloads, and feeds `ppp_input()`. `pptp_ppp_ioctl()` exposes PPP compression flag get/set.
+
+Control flow: module init allocates the call-id array, registers the GRE handler for PPTP, registers the socket proto, then registers PX_PROTO_PPTP with PPPoX. Userspace binds a source call ID first, connects to a peer call ID and IPv4 address, then PPP traffic flows through direct channel transmit. RX enters from GRE, looks up by destination call ID and source address, then socket backlog processing validates sequencing and payload before passing data to PPP.
+
+State and persistence: global state includes `callid_bitmap`, RCU-protected `callid_sock[]`, and `chan_lock`. Per-socket state in `struct pptp_opt` stores source/destination addresses, sent/received sequence and ACK counters, and PPP flags. Route capabilities are cached in the socket, and release/destruct paths delete call IDs and synchronize RCU. No durable state is written.
+
+Dependencies and integration: integrates with generic PPPoX, PPP channel core, IPv4 routing, GRE protocol registration, network security flow classification, socket capabilities, netfilter connection tracking reset, and IP output. It is IPv4-only and depends on GRE/PPTP header definitions from networking headers.
+
+Risks and test signals: risks include call-id collisions, wrap-around sequence comparisons, skb headroom reallocation ownership, route lifetime handling, unregistering channels while transmit is active, and acceptance of duplicate destination call IDs. Test signals include bind with explicit and auto call IDs, duplicate local and remote call rejection, GRE field validation drops, LCP echo handling out of order, compression flag ioctl behavior, route failure, module unload after open sockets, and packet capture confirming GRE/IP header fields and ACK behavior.

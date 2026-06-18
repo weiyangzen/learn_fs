@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/sound/soc/sof/intel/hda-dsp.c
+
+Purpose: `hda-dsp.c` is the core HDA DSP control and power-management implementation for SOF HDA platforms. It covers interface capability masks, chain-DMA support policy, DSP core reset/power/run, IPC interrupt enablement, D0I3/D3 power transitions, system and runtime suspend/resume, SoundWire interrupt helpers, shutdown recovery, secondary-core get, and ROM/FW debug dumps.
+
+Important APIs: exported functions include `hda_get_interface_mask()`, `hda_is_chain_dma_supported()`, `hda_dsp_core_stall_reset()`, `hda_dsp_core_is_enabled()`, `hda_dsp_core_run()`, `hda_dsp_core_power_up()`, `hda_dsp_enable_core()`, `hda_dsp_core_reset_power_down()`, IPC interrupt enable/disable, IPC3/IPC4 power-state setters, suspend/resume/runtime PM functions, shutdown helpers, D0I3 work, secondary core get, SoundWire helpers, `hda_dsp_disable_interrupts()`, `hda_dsp_get_state()`, ROM-status dump, and `hda_dsp_dump()`.
+
+Control flow: core control manipulates ADSPCS SPA/CPA/CRST/CSTALL bits with polling and post-read verification. Power-state changes validate allowed transitions, update D0I3C after CIP clears, send PM_GATE IPC flags, and revert the register on IPC failure. Suspend disables interrupts, synchronizes IRQs, enables jack wake, suspends multi-links, powers down DSP cores, disables PP capability interrupts, stops the HDA chip, sets low-power retention, resets the controller, and releases i915 display power. Resume powers display first, reinitializes the controller, restores links or boots from D3, and sets D0/D0I0 state.
+
+State and persistence behavior: state spans `sdev->dsp_power_state`, `enabled_cores_mask`, per-core refcounts, `system_suspend_target`, `fw_state`, delayed D0I3 work, mic privacy work, `hda->skip_imr_boot`, SoundWire context, codec command state, PCI saved state for S0ix, and hardware registers. ROM status decoding maps FSR module, state, wait state, and error code tables for diagnostics.
+
+Dependencies and integration: it depends on HDA controller helpers, IPC PM ops, codec helpers, SoundWire helpers, tracepoints, MTL/HDA register definitions, and Xtensa dump support.
+
+Risks and test signals: this is high-risk power sequencing code. Watch for illegal state transitions, CIP timeouts, incomplete interrupt disable before suspend, IMR boot after memory loss, active DMA at shutdown, SoundWire wake floods, and secondary-core IPC rollback. Test runtime suspend/resume, S3 and S0ix, D0I3 streaming, firmware crash recovery, shutdown DMA flush, SoundWire lcount validation, core power refcounts, and readable ROM/FW state dumps on boot failure.

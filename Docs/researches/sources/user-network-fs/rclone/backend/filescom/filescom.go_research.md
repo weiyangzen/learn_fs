@@ -1,0 +1,15 @@
+# sources/user-network-fs/rclone/backend/filescom/filescom.go
+
+Purpose: This is rclone's Files.com backend. It registers configuration, builds Files.com SDK clients, maps rclone filesystem operations to file/folder/migration/bundle APIs, supports API-key or username/password sessions, and implements listing, upload/download, mkdir/rmdir/purge, server-side copy/move, public links, hashes, modtime, and MIME metadata.
+
+Important APIs and types: `Options` stores site, username, password, API key, and encoding. `Fs` stores file, folder, migration, and bundle SDK clients plus pacer. `Object` stores remote path, size, CRC32, MD5, MIME type, and modtime. Key functions include `NewFs`, `newClientConfig`, `readMetaDataForPath`, `List`, `createObject`, `Put`, `PutStream`, `mkdir`, `mkParentDir`, `Mkdir`, `DirSetModTime`, `purgeCheck`, `Copy`, `waitForAction`, `Move`, `DirMove`, `PublicLink`, `Hashes`, `Object.Hash`, `Object.readMetaData`, `Object.SetModTime`, `Object.Open`, `Object.Update`, and `Object.Remove`.
+
+Control flow: `newClientConfig` validates a site subdomain/custom domain, configures the SDK HTTP client, uses API key if present, or reveals the password and creates a session. `NewFs` trims root, builds clients, fills features, and detects file roots by reading metadata at the root. `List` obtains a folder iterator, converts display names through the encoder, and creates directory or object entries. Uploads use the SDK upload helper with destination path and provided mtime, then refresh metadata. Downloads build a Range header from rclone range/seek options and capture the SDK response body through `ResponseBodyOption`. Copy/move operations start SDK actions and wait for file migrations to complete. Public links create bundles with optional expiry.
+
+State and persistence behavior: Local state is the SDK config/session ID, root, feature set, and cached object metadata. Remote state includes folder creation, recursive or checked deletion, uploads, copy/move migrations, bundle links, file modtime updates, and object removals. `purgeCheck` can retry folder-not-empty errors to handle eventual consistency during child deletion.
+
+Dependencies and integration points: It depends on `github.com/Files-com/files-sdk-go/v3` clients for file, folder, file migration, bundle, and session APIs; rclone `fs` interfaces; `fshttp`; `obscure`; `encoder`; and `pacer`. It advertises `Purger`, `PutStreamer`, `Copier`, `Mover`, `DirMover`, `PublicLinker`, `MimeTyper`, CRC32, and MD5.
+
+Risks: SDK `ResponseError` retry matching is type-dependent. CRC32 formatting uses `%08s`, padding with spaces rather than zeros if the SDK returns short strings. `Object.Open` always sets a Range header; if count is zero, the computed end can be `offset-1`. Copy rejects case-only equal paths because the backend is case-insensitive. `PublicLink` ignores the `unlink` parameter. Session creation requires password reveal and stores the session only in memory.
+
+Test signals: The integration test runs `fstests` against `TestFilesCom:`. No local unit tests cover SDK config validation, migration wait failures, Range header construction, or CRC32 formatting.

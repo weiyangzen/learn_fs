@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-smaller -->
+# sources/sync-backup/bup/test/ext/test-save-smaller
+
+Purpose: tests `bup save --smaller`, which saves only files smaller than a configured threshold. Important APIs are `bup random`, `index`, `save --smaller`, `restore`, `join`/checksums through `dev/checksum`, and `index --fake-valid`. Control flow creates files of different sizes, saves with thresholds, verifies only qualifying files appear in the backup, then marks index entries fake-valid to ensure size filtering still behaves under cached index metadata. State is the source tree, bup index, branch contents, and checksum files. Dependencies include deterministic random data generation and checksum helper. Risks are boundary handling around exact size thresholds and stale index metadata. Test signals are expected branch listings, restored content equality for included files, and excluded large files remaining absent.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-smaller -->

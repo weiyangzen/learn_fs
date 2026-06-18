@@ -1,0 +1,13 @@
+## sources/distributed-fs/openafs/src/kauth/user_nt.c
+
+Purpose: `user_nt.c` is the Windows implementation of high-level kauth authentication. Instead of relying on the Unix KA helper stack, it discovers cell servers, performs a Kerberos v4 UDP ticket request directly, validates/decrypts the reply with either Andrew or MIT string-to-key, and installs the returned AFS token through Windows KTC/RPC paths.
+
+Important APIs and functions: `ka_UserAuthenticateGeneral` delegates to `ka_UserAuthenticateGeneral2`, which resolves cell servers through registry, CellServDB, or DNS; uppercases the realm; derives two candidate keys; sets the Kerberos UDP port from services; calls `krb_get_in_tkt_ext`; maps errors to user-readable reasons; and fills `ktc_principal`/`ktc_token` before `ktc_SetToken`. `ka_AddHostProc`, `krb_add_host`, and `krb_set_port` maintain the server list. `krb_get_in_tkt_ext` constructs the `AUTH_MSG_KDC_REQUEST`, sends it with `send_to_kdc`, validates version/type/byte order, maps kaserver error replies, decrypts and verifies the cipher with `check_response`, extracts session key/ticket/kvno/expiration, checks KDC clock skew, and returns token material. `send_to_kdc`/`send_recv` handle UDP retry/select logic. `pkt_cipher`/`pkt_clen` parse reply cipher offsets. `Andrew_StringToKey` and `StringToKey` implement historical key algorithms.
+
+State and persistence: process-global state includes the linked list of Kerberos hosts, host count, UDP port, swap-bytes flag, debug flag, and static reason buffers. Successful authentication persists an AFS token in the Windows cache-manager/RPC token store. Host list entries are allocated and not freed in this file.
+
+Dependencies and integration points: tightly integrated with Windows headers/RPC, cache-manager cell search (`cm_SearchCellRegistry`, `cm_SearchCellFile`, `cm_SearchCellByDNS`), Kerberos v4 packet constants, DES, crypt, rxkad token definitions, and KTC token installation. It interoperates with `krb_udp.c` server replies.
+
+Risks: uses legacy Kerberos v4 and DES/crypt algorithms. Packet parsing relies on unbounded string macros from Kerberos headers and fixed-size buffers. `krb_nhosts * CLIENT_KRB_TIMEOUT` can be zero if no hosts are recorded, though earlier discovery should add hosts. The server list is global and can accumulate across calls. Error strings use static buffers, so concurrent calls are unsafe.
+
+Test signals: not covered by Unix `kauth/test/Makefile.in`. Best signals are Windows authentication integration tests against kaserver/CellServDB/DNS discovery and cross-checks with server-side `krb_udp.c` behavior.

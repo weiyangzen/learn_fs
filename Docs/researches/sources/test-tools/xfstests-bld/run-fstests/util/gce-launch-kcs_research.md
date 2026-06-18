@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/run-fstests/util/gce-launch-kcs
+
+- Purpose: Kernel Compile Server launcher; it creates the persistent KCS GCE VM, records its endpoint and password locally, and passes metadata that starts the server in the appliance. The file is 219 lines/5586 bytes and is researched as source path `sources/test-tools/xfstests-bld/run-fstests/util/gce-launch-kcs`.
+- Important APIs/types/functions: shell variables include XFSTESTS_FLAVOR, INSTANCE, NO_ACTION, DESCRIBE, GS_RW, LOG_WR, COMPUTE_RW, SCOPES, PREEMPTIBLE, ARG, LAUNCH_KCS_EXIT_STATUS; functions include wait_for_command.
+- Control flow: loads `util/get-config` or `/usr/local/lib/gce-funcs`, validates required GCE/GCS inputs, composes gcloud/gcloud-storage commands or metadata, performs the cloud action, and records local marker/state files when a long-running service is launched.
+- State and persistence: uses local marker files, GCS objects, result directories, generated configs, temporary disks/images, schroot entries, or mounted filesystems depending on the helper; cleanup is generally explicit and failure paths may leave debug artifacts.
+- Dependencies/integration: integrates with xfstests-bld frontends, `get-config`, `arch-funcs`, `/root/runtests_utils`, gcloud/gcloud storage, systemd services, Debian tooling, QEMU/KVM, and filesystem utilities as applicable.
+- Risks and test signals: most failures come from missing credentials/tools, stale cloud resources, command-line validation gaps, destructive device operations, or partial cleanup; validate with `--no-action` where available, smoke selftests, GCS artifact checks, systemd logs, and generated xUnit summaries.

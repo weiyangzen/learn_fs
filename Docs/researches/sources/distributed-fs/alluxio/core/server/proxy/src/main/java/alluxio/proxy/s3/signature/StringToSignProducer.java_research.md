@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/core/server/proxy/src/main/java/alluxio/proxy/s3/signature/StringToSignProducer.java
+
+Purpose: `StringToSignProducer` builds the AWS V4 canonical request and string-to-sign for header-authenticated and presigned S3 requests.
+
+Important APIs are `createSignatureBase` overloads for Jersey and servlet requests, the lower-level `createSignatureBase(SignatureInfo, scheme, method, uri, headers, queryParams)`, `hash`, `buildCanonicalRequest`, and `validateSignedHeader`. Control flow normalizes empty paths to `/`, constructs `algorithm\ndatetime\ncredentialScope\nhash(canonicalRequest)`, and builds the canonical request from method, encoded URI, sorted query string without `X-Amz-Signature`, canonical signed headers, signed-header names, and either `UNSIGNED-PAYLOAD` or `x-amz-content-sha256`.
+
+State and persistence are absent. Dependencies include `S3RestUtils`, request APIs, Kerby `Hex`, Java crypto, URL encoding, DNS/date validation, and S3 constants. Integration is central to `AwsSignatureProcessor.getAuthInfo` and downstream `AuthorizationV4Validator`. Risks include no trimming/collapsing of signed header whitespace, DNS lookup in host validation during request processing, local-clock timestamp validation allowing only one week around now, use of `Collectors.toMap` that would fail duplicate servlet parameters if not already grouped by servlet API, and only first parameter values being signed. Test coverage is indirect through authenticator and parser tests; no direct canonical-request vectors are in this subset.

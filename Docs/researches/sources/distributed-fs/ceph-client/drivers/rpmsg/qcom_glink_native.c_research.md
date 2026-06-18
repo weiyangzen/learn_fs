@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/rpmsg/qcom_glink_native.c
+
+Purpose: core Qualcomm GLINK native RPMsg transport implementation, handling version negotiation, channel open/close, intent-based and intentless data transfer, flow control, RPMsg device creation, and teardown.
+
+Important APIs/types/functions: `qcom_glink` owns RX/TX pipes, work queues, IDRs for local/remote channel IDs, feature flags, and TX abort state. `glink_channel` owns an RPMsg endpoint, local/remote IDs, intent IDRs, completions, receive callback lock, and intent request state. Key functions include `qcom_glink_tx()`, `qcom_glink_native_rx()`, `qcom_glink_work()`, `qcom_glink_rx_data()`, `qcom_glink_rx_open()/close()`, `__qcom_glink_send()`, `qcom_glink_create_ept()`, `qcom_glink_native_probe()`, and `qcom_glink_native_remove()`.
+
+Control flow: probe initializes locks/IDRs/work, reads the edge label, adds sysfs groups, sends version negotiation, and creates the rpmsg control device. RX interrupt callers invoke `qcom_glink_native_rx()`, which handles simple data/status commands inline and defers channel-control commands to workqueue context. Local or remote opens perform a two-sided open/open-ack handshake before endpoints become usable. Transmit selects a remote intent or requests one, chunks large payloads, writes GLINK data headers/payloads to the TX pipe, and kicks the transport. Removal cancels RX work, aborts writers, unregisters child devices, releases channels, and destroys IDRs.
+
+State and persistence: all state is in-memory per edge and per channel. IDRs persist channel/intent mappings until close or remove. Reusable intents stay advertised; non-reuse intents are freed after RX_DONE. Hardware/shared-memory pipe state is owned by the transport-specific pipe provider.
+
+Dependencies and integration: RPMsg core and ctrl-dev, GLINK SSR companion object, transport-specific `qcom_glink_pipe` providers, workqueues, wait queues, completions, IDR, tracepoints, OF child matching by `qcom,glink-channels`, and optional intentless operation.
+
+Risks and test signals: concurrency is high risk: RX, deferred work, endpoint destroy, close-ack, and remove all mutate channel state. `qcom_glink_cancel_rx_work()` frees queued commands without `list_del`, acceptable only because the queue is discarded after cancellation. Timeout paths in open and intent request must release the right references. Test version negotiation, local and remote open races, close during send, remove while TX waits, intent request timeout/denial, fragmented messages, intentless mode, flow-control callback delivery, and lockdep/KASAN under SSR restarts.

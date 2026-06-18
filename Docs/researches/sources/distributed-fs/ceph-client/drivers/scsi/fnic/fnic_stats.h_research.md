@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/fnic/fnic_stats.h
+
+Purpose: this header defines the statistics schema exported through debugfs and updated throughout the fnic driver. It groups I/O, abort, terminate, reset, firmware, VLAN, miscellaneous, FC-host, and iport/fabric-discovery counters.
+
+Important types: `struct stats_timestamps` records last reset/read times. `struct io_path_stats` tracks active/max active I/O, completions, failures, null request/scsi cases, allocation failures, not-found events, total I/Os, latency buckets, current max I/O time, and per-hardware-queue I/O counters for up to `FNIC_MQ_MAX_QUEUES` 64 queues. `struct abort_stats`, `terminate_stats`, and `reset_stats` record SCSI EH outcomes and timeout classes. `struct fw_stats` tracks active/max firmware requests and firmware resource/errors. `struct vlan_stats` tracks FIP VLAN discovery outcomes. `struct misc_stats` holds ISR/ACK timing, CQ/ACK anomalies, protocol status counters, frame errors, readiness failures, dummy INTx interrupts, and port speed. `struct fnic_iport_stats` tracks link, RSCN, fabric login/name-server, FDMI, and target login counters. `struct fnic_stats` aggregates most runtime stats plus `fc_host_statistics`.
+
+Control flow and integration: `fnic_main.c` initializes and resets FC-host statistics; `fnic_debugfs.c` formats `struct fnic_stats` through `fnic_get_stats_data()` and zeros most counters on reset; `fnic_isr.c` updates ISR counters; `fnic_fcs.c` updates frame errors and discovery-related stats; `fnic_scsi.c` updates I/O, abort, terminate, firmware, and reset counters. `fnic_iport_stats` is embedded in `struct fnic_iport_s`, not in the top-level `struct fnic_stats` aggregate.
+
+State and persistence: counters are `atomic64_t` where frequently updated across IRQ/workqueue/EH contexts, while timestamps and FC host statistics are regular fields. The stats are volatile and resettable via debugfs; there is no persistence across driver reload.
+
+Dependencies: the header includes SCSI FC transport definitions for `struct fc_host_statistics`. It declares `fnic_get_stats_data()` for debugfs formatting and `fnic_role_to_str()` for role reporting.
+
+Risks: readers may observe non-transactional snapshots across multiple atomic counters. Resetting stats by `memset` can race with concurrent increments and should be treated as best-effort diagnostics rather than strict accounting. Adding new counters requires updating debug formatting and reset logic. Test signals include debugfs stats content under normal I/O, abort/reset workloads, link/fabric discovery, stats reset behavior with active I/O, per-queue counter coverage when copy-WQ count changes, and absence of overflow or formatting truncation in the 2-page debug buffer.

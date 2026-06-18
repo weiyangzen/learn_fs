@@ -1,0 +1,12 @@
+
+# sources/distributed-fs/openafs/src/update/server.c
+
+`server.c` implements `upserver`, the authenticated Rx file-export service consumed by `upclient`. It exposes configured directories, enforces superuser and security-level authorization, streams file contents, and generates directory manifest files.
+
+Important functions are `main`, `AuthOkay`, `PathInDirectory`, `UPDATE_FetchFile`, `UPDATE_FetchInfo`, `update_SendFile`, `update_SendDirInfo`, `AddObject`, `Quit`, and `update_rxstat_userok`. `main` parses exported directories interleaved with security-level options (`-crypt`, `-clear`, `-auth`) and `-rxbind`, localizes each export path through `AddObject`, opens server config, optionally binds Rx to a configured address, builds server security objects, creates the UPDATE service, and starts the Rx server.
+
+Authorization combines AFS superuser status with export-directory matching. `AuthOkay` first requires `afsconf_SuperUser`, derives rxkad level for authenticated connections, checks whether the requested local path is inside any configured export root via `PathInDirectory`, and rejects access when a matched subtree requires a stronger security level than the connection provides. Later matching entries can be more restrictive, so all entries are scanned.
+
+Persistence behavior is read-only export except for a temporary manifest. `UPDATE_FetchFile` localizes the requested path, validates authorization, opens the file, and calls `update_SendFile`, which sends network-order length and file bytes in block-size chunks. `UPDATE_FetchInfo` verifies the requested path is a directory and calls `update_SendDirInfo`; that function scans direct children, writes non-directory entries and metadata to `gettmpdir()/upserver.tmp`, streams that temp file, then unlinks it.
+
+Dependencies include Rx/rxkad, afsconf server security, authcon, path localization/normalization, generated `update.h`, and OpenAFS dirpath/network binding helpers. Risks include fixed global temp manifest name shared across calls, fixed-size path buffers with concatenation, direct-child-only manifest behavior, race windows between stat/open/read, and strict reliance on SuperUser configuration. Test signals include auth matrix by security level, path traversal/localization rejection, concurrent manifest requests, exported subtree restriction precedence, `-rxbind` host selection, and streaming error handling.

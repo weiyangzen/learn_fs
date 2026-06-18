@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/dvm/tt.c
+
+Purpose: Implements DVM thermal throttling, including legacy power-index throttling, advanced thermal-index state transitions, CT-kill entry/exit, mac80211 queue stop/wake, and temperature-triggered HT/TX-stream restrictions.
+
+Important APIs and functions: `iwl_tt_is_low_power_state()`, `iwl_tt_current_power_mode()`, `iwl_ht_enabled()`, `iwl_check_for_ct_kill()`, `iwl_tx_ant_restriction()`, `iwl_tt_enter_ct_kill()`, `iwl_tt_exit_ct_kill()`, `iwl_tt_handler()`, `iwl_tt_initialize()`, and `iwl_tt_exit()` are the public entry points. Static handlers include legacy and advanced state machines, CT-kill timers, and workqueue callbacks.
+
+Control flow: Temperature updates queue `tt_work`, which dispatches to the legacy or advanced handler. Legacy mode maps temperature bands to `IWL_TI_0`, `IWL_TI_1`, `IWL_TI_2`, or `IWL_TI_CT_KILL` and updates the power mode. Advanced mode consults per-state transition tables, applies restriction-table effects such as HT disable, and then updates firmware power mode. CT-kill can be entered immediately for forced firmware card-state notifications or delayed through a 300 ms waiting timer; while in CT-kill a 5 second timer toggles `CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT` to wake firmware for temperature checks. Exit notifications cancel the timer, clear critical state, and wake queues.
+
+State and persistence: Mutates `priv->thermal_throttle` state, `advanced_tt`, `tt_power_mode`, dynamic restriction/transition tables, CT-kill toggle, and two timers. It also sets/clears `STATUS_CT_KILL`, stops/wakes mac80211 queues, updates `priv->temperature`, and touches RXON staging flags for HT mode. State is runtime-only and rebuilt by `iwl_tt_initialize()`.
+
+Dependencies and integration points: Depends on DVM private state in `dev.h`, command constants in `commands.h`, mac80211 queue APIs, transport MMIO access, power-management updates through `iwl_power_update_mode()`, statistics requests, RXON HT helpers, and driver workqueues/timers. It integrates with firmware card-state notifications and temperature statistics handling.
+
+Risks: CT-kill state changes cross workqueue, timer, and mutex contexts, so teardown must cancel timers/work before freeing advanced tables. The advanced transition indexing assumes `IWL_TI_STATE_MAX` table geometry matches allocations. Failing `iwl_power_update_mode()` rolls back state and status bits. HT flag edits happen before the mutex-protected firmware update and must remain consistent with RXON commit paths. Temperature thresholds differ between legacy and advanced modes.
+
+Test signals: Exercise legacy and advanced throttling across every threshold, CT-kill forced entry/exit notifications, delayed CT-kill timer entry, CT-kill exit polling, failed power update rollback, HT disable/restore in advanced state 2, queue stop/wake with mac80211 registered, teardown while timers/work are pending, and allocation failure fallback to legacy throttling.

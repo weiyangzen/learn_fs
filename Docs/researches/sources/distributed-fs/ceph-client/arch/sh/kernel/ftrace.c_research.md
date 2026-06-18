@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/ftrace.c
+
+Purpose: SH dynamic ftrace and function-graph tracing support, including runtime text patching of `_mcount` call sites.
+
+Important APIs and control flow: dynamic ftrace builds replacement memory-table words through `ftrace_nop_replace()` and `ftrace_call_replace()`. `ftrace_modify_code()` reads existing text, verifies expected bytes, writes new bytes through an NMI-aware modification protocol, and flushes icache. `ftrace_make_nop()`, `ftrace_make_call()`, and `ftrace_update_ftrace_func()` patch call sites and the global ftrace call target. Function graph support patches `ftrace_graph_call` between `skip_trace` and `ftrace_graph_caller`, and `prepare_ftrace_return()` replaces a saved return address with `return_to_handler` while recording the real return address.
+
+State, dependencies, and risks: state includes replacement buffers, `nmi_running` modification flag, patch target pointers, and per-task graph ret-stacks. Dependencies include stop-machine/ftrace core sequencing, NMI entry hooks, SH icache flushing, nofault kernel text access, and exception table fixups. Risks include text corruption if expected bytes do not match, NMI races, and graph tracing faults on bad return-address storage. Test signals are dynamic ftrace enable/disable, graph tracer recursion, NMI during patching, and syscall tracepoint registration.

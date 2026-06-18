@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/rust/kernel/sync/poll.rs
+
+## sources/distributed-fs/ceph-client/rust/kernel/sync/poll.rs
+
+Purpose: connects Rust condition variables to Linux `poll_table` wait registration. Important APIs/types are `new_poll_condvar!`, `PollTable::from_raw`, `PollTable::register_wait`, and pinned `PollCondVar`.
+
+Control flow: `PollTable` wraps a possibly null raw `poll_table` with a lifetime. `register_wait` calls `poll_wait(file, cv.wait_queue_head, table)`. `PollCondVar` derefs to `CondVar`, so normal notification methods wake poll waiters. On pinned drop it calls `__wake_up_pollfree` and then `synchronize_rcu` so epoll/poll users stop referencing the wait queue before storage is invalidated. State is the inner condvar wait queue and borrowed poll table pointer. Dependencies include `File`, `CondVar`, RCU synchronization, pin-init, and C poll bindings. Integration points are file operation `poll` implementations and epoll teardown. Risks include constructing `PollTable` from an invalid pointer, dropping a condvar without pollfree/RCU semantics, registering waiters against unpinned storage, and misunderstanding null poll tables. Test signals: file poll implementations that register and receive notifications, teardown under epoll, RCU grace-period behavior, and Miri-style lifetime checks are not available because the core safety relies on kernel C contracts.

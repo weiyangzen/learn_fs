@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/vce_v1_0.c
+
+Purpose: Implements first-generation AMDGPU VCE encode support. It initializes two VCE rings, loads and validates a firmware signature for supported SI ASICs, ensures the VCPU BO is mapped below 4 GiB, starts/stops the VCE ECPU, manages MGCG, and routes trap interrupts to ring fences.
+
+Important APIs and functions: `vce_v1_0_ip_block` exports the IP descriptor. Major helpers include `vce_v1_0_load_fw_signature`, `wait_for_fw_validation`, `ensure_vcpu_bo_32bit_addr`, `mc_resume`, `start`, `stop`, `firmware_loaded`, `lmi_clean`, and `enable_mgcg`. Lifecycle hooks are `early_init`, `sw_init`, `hw_init`, `hw_fini`, `suspend`, `resume`, idle/wait, clock/power gating. Ring functions are mostly generic VCE helpers with generation-specific read/write pointer callbacks.
+
+Control flow: early init runs shared VCE early setup, sets two rings, and installs funcs/IRQs. SW init registers legacy IRQ 167, allocates shared VCE firmware/stack/data memory, resumes the firmware BO, copies the firmware signature into the VCPU BO, reserves low GART entries for a 32-bit VCPU mapping, and initializes both rings with VCE priorities. HW init enables VCE DPM/clocks and tests both rings; ring begin-use powers and starts the block as needed through shared VCE helpers. Start programs MC windows, validates firmware keyselect, programs both ring buffers, enables VCPU clock, resets/releases ECPU/FME, waits for firmware loaded, and clears status.
+
+State and persistence: Persistent state includes `adev->vce.fw`, `cpu_addr`, `gpu_addr`, `vcpu_bo`, `gart_node`, `keyselect`, `ring[]`, IRQ, idle work, and DPM/CG flags. Firmware signature state is copied into the VCPU BO and keyselect stored in `adev->vce.keyselect`. Hardware state includes VCE cache offsets/sizes, LMI controls, ring bases/pointers, clock-gating registers, VCPU control, soft reset, firmware status, and system interrupt enable/status.
+
+Dependencies and integration points: Depends on shared VCE helpers (`amdgpu_vce_sw_init`, `resume`, `suspend`, parse/test/emit helpers, ring begin/end), GART/GTT manager, firmware headers, SI/VCE/OSS register definitions, DPM clock hooks, and fence processing. Interrupt data `src_data[0]` selects ring 0 or 1.
+
+Risks: Only TAHITI/VERDE/PITCAIRN chip IDs are accepted for signature selection. Firmware validation appears one-shot; `mc_resume` avoids revalidating when keyselect is already set. Low-32-bit GART placement can fail and must be freed on SW fini. Stop warns rather than hard-failing on some idle failures, which can mask hardware still busy. Ring pointer register selection depends on `ring->me` values set during init.
+
+Test signals: Firmware signature selection and validation pass, low-GART mapping success, ring test helper for both rings, VCE firmware loaded status bit, IRQ enable/trap fence processing, and `"VCE initialized successfully."` logs. Failure signals include chip ID not found, validation timeout/fail/busy timeout, low address allocation errors, firmware loaded timeout, and unhandled interrupt source data.

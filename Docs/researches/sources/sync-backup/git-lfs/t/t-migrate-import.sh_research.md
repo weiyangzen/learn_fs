@@ -1,0 +1,13 @@
+# sources/sync-backup/git-lfs/t/t-migrate-import.sh
+
+Purpose: broad integration coverage for `git lfs migrate import`, the destructive history-rewrite command that converts selected Git blobs into LFS pointer files and populates `.git/lfs/objects`. It checks default-branch behavior, explicit refs, bare repositories, `--everything`, include/exclude path filters, ref include/exclude filters, `--skip-fetch`, tags, `--above`, `--object-map`, dirty worktrees, nonstandard refs, copied files, symlinks, and special-character paths.
+
+Important APIs/functions: sources `fixtures/migrate.sh` plus `testlib.sh`; uses fixture builders such as `setup_multiple_local_branches`, `setup_multiple_remote_branches`, `setup_single_local_branch_untracked`, `setup_local_branch_with_gitattrs`, `setup_local_branch_with_symlink`, and remote/multiple-remote setup helpers. Assertions are mostly `assert_pointer`, `refute_pointer`, `assert_local_object`, `refute_local_object`, `assert_ref_unmoved`, `git cat-file`, `git rev-parse`, `git check-attr`, `git ls-tree`, and `diff`.
+
+Control flow: each `begin_test` creates an isolated repository, captures original blob OIDs and ref positions, runs `git lfs migrate import` with a specific option set, then validates rewritten refs, pointer contents, generated `.gitattributes`, local LFS object presence, hook installation, object maps, and command failures for invalid option combinations or refs. Several tests rerun the same migration or loop across path filter cache sizes to assert idempotency and cache-independent behavior.
+
+State/persistence behavior: this suite intentionally mutates Git history, branch/tag refs, `.gitattributes`, the LFS object cache, hooks under `.git/hooks`, and optionally an object-map file. It also verifies state that must not change: untouched remote refs, excluded branches, symlinked `.gitattributes`, empty commits, multi-remote branch tips, and denied dirty-copy migrations.
+
+Dependencies/integration points: integrates with Git revision walking, ref selection, fast-import rewriting, Git attributes, LFS clean/pointer generation, filesystem mode bits, symlink handling, Windows path conversion guards, and fixture-created bare/local/remote repositories.
+
+Risks/test signals: failures indicate history rewrite data loss, wrong path/ref selection, missing LFS objects, broken `.gitattributes` synthesis, unintended ref movement, unsafe dirty-worktree overwrites, or platform-specific path/mode regressions. Many assertions depend on exact command output and exact pointer size/OID values, so formatting changes can produce noisy failures even when core migration behavior is intact.

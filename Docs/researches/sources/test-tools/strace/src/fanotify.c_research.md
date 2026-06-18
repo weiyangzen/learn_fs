@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fanotify.c
+
+Fanotify syscall decoder. `fanotify_init` prints class/init flags with special class-bit grouping and event fd flags; `fanotify_mark` prints fanotify fd, mark flags, mask/event flags, dirfd, and path. It has no private persistent state. Dependencies are fanotify xlat tables, path/dirfd printers, and fd formatting helpers. Risks include overlapping flag domains, class-bit defaults, `FAN_NOFD`/`AT_FDCWD` handling, and path pointers that are optional depending on flags. Tests should cover init classes, close-on-exec/nonblock flags, mark add/remove/flush, mount/filesystem marks, ignored masks, and null paths.

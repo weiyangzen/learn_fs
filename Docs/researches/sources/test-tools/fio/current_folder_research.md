@@ -1,0 +1,142 @@
+# Folder Research: sources/test-tools/fio
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 128
+- Recursive researched files: 433
+- Direct child folders represented: 16
+
+## Direct Files
+
+- `sources/test-tools/fio/.readthedocs.yaml`
+- `sources/test-tools/fio/FIO-VERSION-GEN`
+- `sources/test-tools/fio/Makefile`
+- `sources/test-tools/fio/backend.c`
+- `sources/test-tools/fio/blktrace.c`
+- `sources/test-tools/fio/blktrace.h`
+- `sources/test-tools/fio/blktrace_api.h`
+- `sources/test-tools/fio/cairo_text_helpers.c`
+- `sources/test-tools/fio/cairo_text_helpers.h`
+- `sources/test-tools/fio/cconv.c`
+- `sources/test-tools/fio/cgroup.c`
+- `sources/test-tools/fio/cgroup.h`
+- `sources/test-tools/fio/client.c`
+- `sources/test-tools/fio/client.h`
+- `sources/test-tools/fio/configure`
+- `sources/test-tools/fio/dataplacement.c`
+- `sources/test-tools/fio/dataplacement.h`
+- `sources/test-tools/fio/debug.c`
+- `sources/test-tools/fio/debug.h`
+- `sources/test-tools/fio/dedupe.c`
+- `sources/test-tools/fio/dedupe.h`
+- `sources/test-tools/fio/diskutil.c`
+- `sources/test-tools/fio/diskutil.h`
+- `sources/test-tools/fio/err.h`
+- `sources/test-tools/fio/eta.c`
+- `sources/test-tools/fio/fifo.c`
+- `sources/test-tools/fio/fifo.h`
+- `sources/test-tools/fio/file.h`
+- `sources/test-tools/fio/filehash.c`
+- `sources/test-tools/fio/filehash.h`
+- `sources/test-tools/fio/filelock.c`
+- `sources/test-tools/fio/filelock.h`
+- `sources/test-tools/fio/filesetup.c`
+- `sources/test-tools/fio/fio.c`
+- `sources/test-tools/fio/fio.h`
+- `sources/test-tools/fio/fio_sem.c`
+- `sources/test-tools/fio/fio_sem.h`
+- `sources/test-tools/fio/fio_shared_sem.c`
+- `sources/test-tools/fio/fio_time.h`
+- `sources/test-tools/fio/flist.h`
+- `sources/test-tools/fio/flow.c`
+- `sources/test-tools/fio/flow.h`
+- `sources/test-tools/fio/gclient.c`
+- `sources/test-tools/fio/gclient.h`
+- `sources/test-tools/fio/gcompat.c`
+- `sources/test-tools/fio/gcompat.h`
+- `sources/test-tools/fio/gerror.c`
+- `sources/test-tools/fio/gerror.h`
+- `sources/test-tools/fio/gettime-thread.c`
+- `sources/test-tools/fio/gettime.c`
+- `sources/test-tools/fio/gettime.h`
+- `sources/test-tools/fio/gfio.c`
+- `sources/test-tools/fio/gfio.h`
+- `sources/test-tools/fio/ghelpers.c`
+- `sources/test-tools/fio/ghelpers.h`
+- `sources/test-tools/fio/goptions.c`
+- `sources/test-tools/fio/goptions.h`
+- `sources/test-tools/fio/graph.c`
+- `sources/test-tools/fio/graph.h`
+- `sources/test-tools/fio/hash.h`
+- `sources/test-tools/fio/helper_thread.c`
+- `sources/test-tools/fio/helper_thread.h`
+- `sources/test-tools/fio/helpers.c`
+- `sources/test-tools/fio/helpers.h`
+- `sources/test-tools/fio/idletime.c`
+- `sources/test-tools/fio/idletime.h`
+- `sources/test-tools/fio/init.c`
+- `sources/test-tools/fio/io_ddir.h`
+- `sources/test-tools/fio/io_u.c`
+- `sources/test-tools/fio/io_u.h`
+- `sources/test-tools/fio/io_u_queue.c`
+- `sources/test-tools/fio/io_u_queue.h`
+- `sources/test-tools/fio/ioengines.c`
+- `sources/test-tools/fio/ioengines.h`
+- `sources/test-tools/fio/iolog.c`
+- `sources/test-tools/fio/iolog.h`
+- `sources/test-tools/fio/json.c`
+- `sources/test-tools/fio/json.h`
+- `sources/test-tools/fio/libfio.c`
+- `sources/test-tools/fio/log.c`
+- `sources/test-tools/fio/log.h`
+- `sources/test-tools/fio/memory.c`
+- `sources/test-tools/fio/minmax.h`
+- `sources/test-tools/fio/optgroup.c`
+- `sources/test-tools/fio/optgroup.h`
+- `sources/test-tools/fio/options.c`
+- `sources/test-tools/fio/options.h`
+- `sources/test-tools/fio/parse.c`
+- `sources/test-tools/fio/parse.h`
+- `sources/test-tools/fio/pcbuf.h`
+- `sources/test-tools/fio/printing.c`
+- `sources/test-tools/fio/printing.h`
+- `sources/test-tools/fio/profile.c`
+- `sources/test-tools/fio/profile.h`
+- `sources/test-tools/fio/pshared.c`
+- `sources/test-tools/fio/pshared.h`
+- `sources/test-tools/fio/rate-submit.c`
+- `sources/test-tools/fio/rate-submit.h`
+- `sources/test-tools/fio/rwlock.c`
+- `sources/test-tools/fio/rwlock.h`
+- `sources/test-tools/fio/server.c`
+- `sources/test-tools/fio/server.h`
+- `sources/test-tools/fio/smalloc.c`
+- `sources/test-tools/fio/smalloc.h`
+- `sources/test-tools/fio/sprandom.c`
+- `sources/test-tools/fio/sprandom.h`
+- `sources/test-tools/fio/stat.c`
+- `sources/test-tools/fio/stat.h`
+- `sources/test-tools/fio/steadystate.c`
+- `sources/test-tools/fio/steadystate.h`
+- `sources/test-tools/fio/td_error.c`
+- `sources/test-tools/fio/td_error.h`
+- `sources/test-tools/fio/thread_options.h`
+- `sources/test-tools/fio/tickmarks.c`
+- `sources/test-tools/fio/tickmarks.h`
+- `sources/test-tools/fio/time.c`
+- `sources/test-tools/fio/trim.c`
+- `sources/test-tools/fio/trim.h`
+- `sources/test-tools/fio/verify-state.h`
+- `sources/test-tools/fio/verify.c`
+- `sources/test-tools/fio/verify.h`
+- `sources/test-tools/fio/workqueue.c`
+- `sources/test-tools/fio/workqueue.h`
+- `sources/test-tools/fio/zbd.c`
+- `sources/test-tools/fio/zbd.h`
+- `sources/test-tools/fio/zbd_types.h`
+- `sources/test-tools/fio/zone-dist.c`
+- `sources/test-tools/fio/zone-dist.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

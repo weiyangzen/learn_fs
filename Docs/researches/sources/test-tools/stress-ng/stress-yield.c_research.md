@@ -1,0 +1,13 @@
+# sources/test-tools/stress-ng/stress-yield.c
+
+Purpose: implements the `yield` scheduler stressor, creating child yielder processes that repeatedly call `sched_yield()` and optionally run under selected scheduler policies to measure yield latency and drive context switching.
+
+Important APIs/types/functions: `stress_yield`, `stress_yield_sched_policy`, `stress_yield_sched`, `stress_yield_info`, `stress_sched_types`, `sched_getaffinity`, `sched_setscheduler`, `sched_get_priority_min`, `sched_get_priority_max`, optional `sched_rr_get_interval`, optional `shim_sched_setattr` for `SCHED_DEADLINE`, `shim_sched_yield`, `shim_rseq_slice_yield`, `stress_kill_and_wait_many`, `stress_metrics_t`, and settings `yield-procs` and `yield-sched`.
+
+Control flow: option parsing chooses an explicit yielder count or computes roughly two yielders per available CPU divided across stressor instances, with affinity masks reducing the CPU count when available. The parent allocates a child pid array and shared anonymous metrics mapping, synchronizes with other workers, then forks the yielder children. Each child applies normal stress-ng child setup, optional scheduler policy changes, repeatedly times `shim_sched_yield`, accumulates count and duration in its metrics slot, optionally reports verify failures, calls the rseq slice yield shim, and exits when the global stop or per-child bogo limit is reached. The parent sleeps/yields while the stressor runs, kills and waits for children, aggregates metrics, adds bogo operations, publishes nanoseconds per `sched_yield`, unmaps shared metrics, and frees pids.
+
+State and persistence behavior: state is entirely process-local or shared anonymous memory: child pid slots and per-child metrics. Scheduler policy changes affect only participating processes and do not persist after exit. No files or external persistent state are created.
+
+Dependencies and integration points: compiled only with scheduler/affinity support and at least one known scheduling policy on supported operating systems. It uses stress-ng setting lookup, synchronization, child failure injection, parent-death alarms, scheduler settings, metrics publication, kill/wait helpers, and registers as `CLASS_SCHEDULER | CLASS_OS` with optional verification.
+
+Risks and test signals: scheduler policy application can fail for privilege or kernel support reasons and is mostly diagnostic. Fork or mapping failures skip with no-resource status. Verification reports unexpected `sched_yield` errors. High `yield-procs` can create many children, stress scheduler fairness, and interact with CPU affinity or realtime/deadline policies.

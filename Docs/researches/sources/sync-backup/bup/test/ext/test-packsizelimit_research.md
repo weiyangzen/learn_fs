@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-packsizelimit -->
+# sources/sync-backup/bup/test/ext/test-packsizelimit
+
+Purpose: verifies bup respects Git `pack.packSizeLimit` in local, remote, and `bup on` write paths. Important APIs are `git config pack.packSizeLimit`, `bup split -n`, `bup -d ... init`, remote `-r "-:$repo"` writes, and `bup on - split`. Control flow compares an unlimited 50k split against limited repositories, checks local versus remote config precedence, then validates `bup on` behavior where stdin mode fails under the limit but pathname mode succeeds and can be joined back. State is held in multiple temp repositories and generated pack files. Dependencies are Git config parsing, pack writer rollover, bup remote local transport, and random data generation. Risks include pack-size limits being advisory in Git, object count/size variance from chunking, and a known behavioral difference between `on` stdin and file argument modes. Test signals are successful or failed WvTest commands and byte-for-byte join output.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-packsizelimit -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_lvds.c
+
+Purpose: implements integrated LVDS connector/encoder support for older Intel platforms, including panel discovery, fixed-mode selection, PPS preservation/programming, LVDS port enable/disable, mode validation/configuration, backlight integration, DMI quirks, and dual-link detection.
+
+Important APIs/types/functions: `intel_lvds_init()` creates and initializes the LVDS connector/encoder. `intel_lvds_port_enabled()` reads LVDS enable and pipe selection. `intel_get_lvds_encoder()` and `intel_is_dual_link_lvds()` query LVDS presence/configuration. Encoder hooks include `intel_lvds_get_hw_state()`, `intel_lvds_get_config()`, `intel_pre_enable_lvds()`, `intel_enable_lvds()`, `gmch_disable_lvds()`, `pch_disable_lvds()`, `pch_post_disable_lvds()`, `intel_lvds_shutdown()`, and `intel_lvds_compute_config()`. Connector hooks include `intel_lvds_get_modes()` and `intel_lvds_mode_valid()`.
+
+Control flow: init rejects known false-LVDS DMI systems, checks VBT internal LVDS support, selects `LVDS` or `PCH_LVDS`, checks PCH detect bits and VBT/DDC pin presence, allocates connector/encoder objects, wires hooks, reads PPS and initial LVDS register state, then discovers the fixed mode by EDID, VBT LFP mode, or live encoder state. If no fixed mode exists, it cleans up and disables LVDS. Compute config enforces pipe restrictions, PCH encoder state, link bpp limits, LVDS 18/24 bpp, RGB formats, fixed panel timing, and panel fitter state. Enable programs preserved PPS and LVDS bits before powering the panel and backlight; disable powers down backlight/panel with GMCH versus PCH split sequencing.
+
+State and persistence behavior: runtime state is stored in `struct intel_lvds_encoder`: dual-link flag, LVDS register address, A3 power bits, initial PPS snapshot, initial LVDS register value, and attached connector. Connector panel state stores fixed modes, VBT data, EDID, and backlight state. Hardware state persists in LVDS and panel power sequencing registers.
+
+Dependencies and integration points: depends on DRM connector/encoder helpers, EDID/DDC including VGA switcheroo DDC, VBT panel data, DMI tables, GMBUS, panel/backlight helpers, panel fitter, FDI/link bandwidth helpers, DPLL assertions, PPS registers, and LVDS register definitions.
+
+Risks: many systems falsely report LVDS, so DMI/VBT filtering is essential. Failure to preserve PPS and LVDS power bits can break panel power sequencing. Dual-link detection uses module params, fixed-mode clock, DMI quirks, BIOS/VBT register values, and can be wrong when BIOS leaves registers uninitialized. Gen2/3/4 have special pipe, dither, and fitter constraints. Cleanup on failed init must unwind partially registered DRM objects.
+
+Test signals: LVDS panel detection by EDID, VBT, and live register fallback; false-LVDS DMI systems; dual-link quirks and `lvds_channel_mode`; PCH split versus GMCH enable/disable ordering; PPS timing preservation/defaults; fixed mode validation and panel fitter behavior; backlight enable/disable; suspend/resume readout; and no-mode failure cleanup.

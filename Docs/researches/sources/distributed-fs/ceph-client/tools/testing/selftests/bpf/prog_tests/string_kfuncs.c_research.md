@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/string_kfuncs.c
+
+Purpose: validates BPF string kfunc success, verifier/runtime failure, and too-long string handling for strcmp-like and search/length functions. It uses `string_kfuncs_success`, `string_kfuncs_failure1`, and `string_kfuncs_failure2` skeletons.
+
+Control flow first runs generated success and failure suites through `RUN_TESTS`. `run_too_long_tests` loads the second failure skeleton, fills BSS `long_str` with `a`, then for each test case constructs `test_<name>_too_long`, finds that program, runs it with `bpf_prog_test_run_opts`, and expects return `-E2BIG`. State is skeleton BSS long string and per-program test-run opts. Dependencies are generated BPF programs for each string kfunc case and test harness program lookup by name. Risks are name drift between `test_cases` and BPF program sections, error-code changes, and long-string size assumptions. Test signals are all RUN_TESTS results plus each too-long subtest returning exactly `-E2BIG`.

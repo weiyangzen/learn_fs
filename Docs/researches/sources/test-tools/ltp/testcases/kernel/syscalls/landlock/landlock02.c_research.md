@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/landlock/landlock02.c
+
+Purpose: negative errno coverage for `landlock_add_rule`. Setup detects current ABI, allocates ABI-specific ruleset attrs, creates a ruleset fd with filesystem execute handled, and allocates path and network rule buffers. Test cases cover invalid flags, invalid rule type, empty access, invalid ruleset fd, invalid parent fd, bad rule pointer, network rule with filesystem access, and invalid port, gating net cases on ABI >= 4. State is one ruleset fd and mutable rule attribute buffers. Dependencies are Landlock enabled, root/CAP_SYS_ADMIN, ABI 4 for network cases. Risks are validation-order differences across ABI versions. Test signal is expected `EINVAL`, `ENOMSG`, `EBADF`, or `EFAULT`.

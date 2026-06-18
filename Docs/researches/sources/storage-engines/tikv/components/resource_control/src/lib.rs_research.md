@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resource_control/src/lib.rs
+
+`lib.rs` is the public facade and periodic-task bootstrap for the `resource_control` crate. It re-exports resource-group types such as `AdmissionDecision`, `DelaySlotGuard`, `ResourceConsumeType`, `ResourceController`, and `ResourceGroupManager`, plus `tikv_util::resource_control::*`, `ControlledFuture`, `with_resource_limiter`, `ResourceManagerService`, `ResourceMetered`, `Config`, and `ResourceLimiter`. It exposes `channel`, `config`, and `worker` modules, while keeping `resource_group`, `service`, `resource_limiter`, and `metrics` internal.
+
+`start_periodic_tasks` wires runtime background behavior. It creates a `ResourceManagerService`, schedules periodic advancement of minimal virtual time across resource groups, spawns an async watch for PD resource-group updates, starts `GroupQuotaAdjustWorker` to adjust background quota and priority quota limiters using IO bandwidth and compaction pressure, and spawns periodic RU metric reporting to PD. A priority adjust worker is intentionally disabled by comment because the algorithm is described as buggy.
+
+State lives in the shared `ResourceGroupManager`, PD service watch, worker intervals, and atomic compaction pressure ratio. This module is an integration point between PD, TiKV worker scheduling, quota adjustment, and resource metrics. Risks include long-running async tasks tied to background worker lifetime, disabled priority adjustment leaving only background quota adjustment active, and facade stability due to broad re-exports.

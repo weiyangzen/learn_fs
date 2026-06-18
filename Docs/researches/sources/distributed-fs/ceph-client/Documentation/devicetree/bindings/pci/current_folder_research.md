@@ -1,0 +1,126 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 112
+- Recursive researched files: 112
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/amazon,al-alpine-v3-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/amd,versal2-mdb-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/amlogic,axg-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/apm,xgene-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/apple,pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/aspeed,ast2600-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/cdns-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/eswin,pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/faraday,ftpci100.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/fsl,layerscape-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/fsl,layerscape-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/fsl,mpc8xxx-pci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/host-generic-pci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/loongson.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/marvell,armada-3700-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/marvell,armada8k-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/marvell,kirkwood-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/mediatek,mt7621-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/mediatek-pcie-cfg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/mediatek-pcie-mt7623.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/mediatek-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/nxp,s32g-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/pci-ep-bus.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/pci-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-apq8064.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-apq8084.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-ipq4019.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-ipq5018.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-ipq6018.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-ipq8074.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-ipq9574.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-msm8996.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-qcs404.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sa8255p.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sa8775p.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sc7280.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sc8280xp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sdm845.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sdx55.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sm8150.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sm8250.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sm8350.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,pcie-x1e80100.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/qcom,sa8255p-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rcar-pci-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rcar-pci-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/renesas,pci-rcar-gen2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/sophgo,sg2042-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/sophgo,sg2044-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/spacemit,k1-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/st,spear1340-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/toshiba,tc9563.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/v3,v360epc-pci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/versatile.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pci/xlnx,xdma-host.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

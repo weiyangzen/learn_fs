@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/hwprobe/hwprobe.h
+
+Purpose: local declaration point for the RISC-V hwprobe syscall wrapper. It includes the Linux hwprobe UAPI types and declares `long riscv_hwprobe(struct riscv_hwprobe *pairs, size_t pair_count, size_t cpusetsize, unsigned long *cpus, unsigned int flags)`. There is no runtime state. Integration is all hwprobe/vector tests needing a libc-independent syscall wrapper. Dependencies are compatible UAPI headers and `sys_hwprobe.S`. Risks are signature drift from kernel UAPI and include-order conflicts with system headers. Test signals are successful compilation and correct syscall return values in `hwprobe.c`, `cbo.c`, and `which-cpus.c`.

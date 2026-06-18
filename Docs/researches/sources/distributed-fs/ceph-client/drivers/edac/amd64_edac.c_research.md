@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/drivers/edac/amd64_edac.c Research
+
+## Purpose
+This is the AMD64/Hygon memory-controller EDAC driver. It discovers AMD northbridge/data-fabric memory controllers, reads DCT/UMC/GPU HBM topology registers, exposes EDAC memory-controller instances, decodes AMD MCE ECC events, maps reported addresses to chip-select/channel/page information, optionally controls hardware scrub rate, and exposes debug-only ECC injection on older supported families.
+
+## Important APIs, Types, and Functions
+Global state includes `pci_ctl`, `ecc_enable_override`, per-CPU `msrs`, per-node `ecc_stngs`, and `pci_ctl_dev`. Register-access helpers are `__amd64_read_pci_cfg_dword()`, `__amd64_write_pci_cfg_dword()`, `amd64_read_dct_pci_cfg()`, and SMN reads through AMD NB APIs. Hardware-data collection is organized through `struct low_ops` implementations `dct_ops`, `umc_ops`, and `gpu_ops`. Major helpers include scrub functions `set_scrub_rate()`/`get_scrub_rate()`, address translators `find_mc_by_sys_addr()`, `sys_addr_to_dram_addr()`, `dram_addr_to_input_addr()`, `f1x_translate_sysaddr_to_cs()`, `k8_map_sysaddr_to_csrow()`, and `f1x_map_sysaddr_to_csrow()`, syndrome decoding via `decode_syndrome()` and `get_channel_from_ecc_syndrome()`, and MCE decoders `decode_bus_error()` and `decode_umc_error()`.
+
+Initialization and lifecycle are handled by `per_family_init()`, `probe_one_instance()`, `init_one_instance()`, `remove_one_instance()`, `setup_pci_device()`, `amd64_edac_init()`, and `amd64_edac_exit()`. Debug-only injection sysfs attributes are `inject_section`, `inject_word`, `inject_ecc_vector`, `inject_read`, and `inject_write`.
+
+## Control Flow
+Module init first refuses to bind if GHES firmware-first devices exist, if another EDAC owner is active, if the CPU family is unsupported, or if AMD northbridge enumeration is absent. It initializes EDAC opstate, allocates per-node ECC settings and MSR buffers, then probes each AMD NB node. Per-node probe selects DCT/UMC/GPU ops based on CPU family/model, reads hardware registers, skips nodes with no enabled chip selects, verifies ECC enablement or optionally attempts legacy force-enable through `ecc_enable_override`, allocates an EDAC MC with chip-select/channel layers, registers it, and dumps debug register state.
+
+For pre-family-17h systems, MCE registration uses `decode_bus_error()`: it filters observed/non-ECC events, extracts an error address, maps system address to node/channel/csrow through DCT rules, decodes chipkill syndrome when needed, and calls `edac_mc_handle_error()`. For family 17h and newer systems, `decode_umc_error()` handles UMC-style MCA banks, fixes up GPU node IDs, extracts channel/csrow from MCA IPID/SYND fields, converts normalized UMC MCA address to system address using `amd_convert_umc_mca_addr_to_sys_addr()`, and reports EDAC errors. Exit unregisters the decoder, removes all MC instances, restores legacy ECC reporting state, releases generic PCI EDAC state, and frees allocations.
+
+## State and Persistence
+Per-node `struct amd64_pvt` stores family/model, PCI functions, register snapshots, chip-select bases/masks, DRAM ranges, UMC data, ECC symbol size, controller name, and debug injection parameters. `struct ecc_settings` records original NBCTL and ECC/MCE-enable state so forced legacy changes can be restored. Hardware state includes PCI config registers, SMN UMC registers, MSRs, scrub-control registers, and MCE banks. EDAC core persists MC devices, DIMM metadata, counters, and optional debug/sysfs attributes.
+
+## Dependencies and Integration Points
+The driver depends on AMD NB and node topology APIs, x86 MCE infrastructure, AMD SMCA/MCA helpers from `mce_amd.h`, `amd_register_ecc_decoder()`, AMD ATL address conversion, PCI config space, MSR helpers, EDAC MC/PCI APIs, RAS/GHES ownership checks, and x86 CPU matching. It integrates with Kconfig through `EDAC_AMD64`, `EDAC_DECODE_MCE`, `AMD_NB`, `AMD_NODE`, and optional `CONFIG_EDAC_DEBUG`.
+
+## Risks and Edge Cases
+Address decoding is highly family/model-specific and includes special handling for K8, F10h, F15h model 30h/60h, F16h, Zen UMC generations, MI200/MI300 GPU or APU HBM nodes, DRAM holes, node/channel interleaving, swapped interleaved regions, online spare rows, and normalized-address conversion. A register-layout mistake can misattribute a hardware error to the wrong DIMM. `ecc_enable_override` can mutate legacy ECC reporting state and is intentionally blocked for newer families. Debug injection disables CPU caches briefly and writes NB injection registers, so it is available only for older families and only under `CONFIG_EDAC_DEBUG`. GHES ownership blocks native binding to avoid races with firmware-first reporting.
+
+## Test Signals
+Build on supported x86 configs with AMD/Hygon CPU matching. Runtime smoke signals are successful EDAC MC registration per AMD NB node, correct DIMM sizes/types in sysfs, MCE decoder registration, and no binding when GHES owns EDAC. Hardware or firmware injection should validate CE, UE, and deferred event reporting; older debug builds can use injection sysfs. Regression tests should include family/model coverage for DCT, UMC, DDR5 register v2, and GPU HBM paths, plus unload/reload to ensure ECC settings and decoder registration unwind correctly.

@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_mdb.sh
+
+## Purpose
+`bridge_mdb.sh` is a Linux networking kselftest for bridge multicast database (MDB) configuration and forwarding behavior. It builds a two-host, two-port VLAN-aware bridge topology with host VLAN devices on VID 10 and VID 20, enables bridge multicast snooping with IGMPv3 and MLDv2, and verifies host entries, port entries, source-specific multicast entries, dumps, flush filters, data-plane forwarding, control-packet learning, and snooping-disable cleanup.
+
+## Important APIs, Functions, and Control Flow
+The script is driven by `ALL_TESTS="cfg_test fwd_test ctrl_test disable_test"`, `tests_run`, and `trap cleanup EXIT` from `lib.sh`. Topology setup is in `h1_create`, `h2_create`, `switch_create`, `setup_prepare`, and `cleanup`; it uses `simple_if_init`, `vlan_create`, `vrf_prepare`, `forwarding_enable`, tc `clsact`, and `bridge vlan` commands.
+
+Configuration coverage is split by entry class. `cfg_test_host_common` validates host MDB entries on `port br0` for IPv4, IPv6, and L2 multicast. `cfg_test_port_common` validates basic add/replace/delete, protocol attributes, VLAN omission semantics, port-down behavior, disabled-snooping errors, and invalid VLAN rejection. `__cfg_test_port_ip_star_g` covers `(*,G)` source-list behavior, permanent/temp timers, include/exclude filter modes, protocol replacement, source-list replacement, star-exclude auto-added `(S,G)` entries, invalid group/source cases, and a 31-source limit. `__cfg_test_port_ip_sg` covers explicit `(S,G)` entries. `cfg_test_dump_common` stress-creates two bridge devices with 32 dummy ports and 256 groups each through `bridge -b`. `cfg_test_flush` exercises `bridge mdb flush` with no filters, `port`, `vid`, `permanent`, `nopermanent`, `proto`, and unsupported VXLAN-style filters.
+
+Forwarding tests use tc flower counters. Host-entry tests attach an ingress filter on `br0` and expect local reception only with a matching host MDB. Port-entry tests disable multicast flooding on `$swp2`, then verify that include/exclude source lists determine whether mausezahn traffic reaches `$h2`. `ctrl_igmpv3_is_in_test` and `ctrl_mldv2_is_in_test` send crafted IGMPv3/MLDv2 MODE_IS_INCLUDE reports using helper packet builders, proving temporary entries learn additional sources while permanent entries are immune. `disable_test` toggles `mcast_snooping` off for both 802.1q and 802.1d modes and verifies only temporary multicast entries are flushed.
+
+## State, Dependencies, Integration Points, and Risks
+State is kernel-resident: bridge devices, VLAN membership, MDB records, timers, tc filters, VRF routes, multicast snooping flags, and sysctl forwarding state. Cleanup reverses topology and forwarding, but the large dump subtest creates additional bridges/dummy devices and relies on its own cleanup path. External dependencies include `ip`, `bridge`, `tc`, `jq`, mausezahn `$MZ`, `tc_common.sh`, and recent iproute2 MDB `flush` support. Timing-sensitive sections use `sleep 10` around querier startup and snooping re-enable; failures can be caused by slow multicast timer convergence, unsupported bridge JSON fields, or missing packet generators.
+
+## Test Signals
+Pass/fail signals come from `check_err`, `check_fail`, `check_err_fail`, tc packet counters, `bridge mdb get/show`, `bridge -d -s mdb` timer text, JSON parsing with `jq`, and the final kselftest `$EXIT_STATUS`. A skip occurs if `bridge mdb help` lacks `flush`.

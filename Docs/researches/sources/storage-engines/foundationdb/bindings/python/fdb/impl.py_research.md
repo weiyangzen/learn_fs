@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/bindings/python/fdb/impl.py
+
+Purpose: This is the main Python binding implementation for FoundationDB. It loads `libfdb_c` with `ctypes`, selects and initializes C API signatures, starts the network thread, exposes database and transaction objects, and adapts native futures into Python-friendly lazy values, ranges, callbacks, and transactional helpers.
+
+Important APIs and types: Key public surfaces are `transactional`, `open`, `open_v609`, `open_v13`, `create_database`, `create_cluster`, `Database`, `Cluster`, `Transaction`, `TransactionRead`, `FDBRange`, `Future` subclasses, `KeySelector`, `KeyValue`, `options`, `predicates`, `StreamingMode`, `ConflictRangeType`, and `strinc`. Dynamic option and mutation methods are generated from `fdboptions` through `fill_options` and `fill_operations`, so API coverage depends on the generated option metadata.
+
+Control flow: Import-time code builds option/predicate wrappers, resolves the platform C library, assigns `_FDBBase.capi`, and defines `ctypes` structs. `init_c_api` binds every C function's argument and return types and errcheck behavior. `open` lazily calls `init`, which configures optional event models, calls `fdb_setup_network`, and starts a daemon network thread running `fdb_run_network`. `transactional` detects whether its argument is already a transaction; otherwise it creates a transaction, invokes the wrapped function, commits, and retries through `on_error`.
+
+State and persistence behavior: Persistent database state is owned by FoundationDB through C API calls; this module holds process-local state such as `_network_thread`, cached `open_databases`, thread-local future semaphores, pinned callbacks, and Python wrapper lifetimes. Destructors destroy native database, transaction, and future pointers. `open_tenant` is a compatibility stub that loads tenant symbols but intentionally returns `None`.
+
+Dependencies and integration points: It depends on `fdb.__version__/api_version` selection, generated `fdboptions`, `fdb.tuple.pack`, platform dynamic-library lookup, Python threading/multiprocessing, optional `gevent` or `asyncio`, and native `libfdb_c`. `locality.py`, directory layers, subspaces, tests, and user code all route through this module.
+
+Risks: The FFI boundary is sensitive to incorrect signatures, pointer lifetime, callback pinning, and platform library loading. `transactional` may rerun user code and rejects generators only for API versions at or after 630. Async support mutates class methods globally. Future blocking avoids native blocking for signal handling but depends on callback delivery. Database caching is keyed only by cluster file.
+
+Test signals: `unit_tests.py`, `tester.py`, `cancellation_timeout_tests.py`, and `size_limit_tests.py` exercise options, watches, retry/timeout/cancel semantics, range reads, atomic ops, conflict ranges, client status, approximate transaction size, and future handling. Cross-language binding testers stress stack-machine operations and error encoding.

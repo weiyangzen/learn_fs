@@ -1,0 +1,5 @@
+# sources/test-tools/strace/bundled/linux/include/uapi/linux/if_addrlabel.h
+
+Purpose: defines the netlink ABI for IPv6 address-label configuration used by source/destination address selection policy. Important APIs/types/functions: `struct ifaddrlblmsg`, `IFAL_ADDRESS`, `IFAL_LABEL`, and `IFAL_MAX`.
+
+Control flow: userspace exchanges rtnetlink messages containing `ifaddrlblmsg` and attributes for prefix address and label; the kernel applies label rules by family, prefix length, interface index, and sequence. State/persistence behavior: address-label rules are network-namespace routing/address-selection state and remain until changed or namespace teardown. Dependencies/integration: includes `linux/types.h`; integrates with IPv6 policy routing/address selection and tools such as `ip addrlabel`. Risks/test signals: the header is small, but reserved fields, prefix lengths, sequence values, and attribute IDs must be decoded accurately. Tests should verify netlink message rendering for add/delete/dump address-label entries and unknown future flags.

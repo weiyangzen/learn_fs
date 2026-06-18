@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/brk/brk02.c
+
+Purpose: regression-style test that shrinking `brk()` can munmap multiple VMAs after an intervening `mprotect`. It records the initial break, expands by one page and two pages, mprotects the new page read-only to split VMA state, expands again, then restores the original break. Important APIs are `brk`, `sbrk`, raw `__NR_brk`, `mprotect`, and page-size arithmetic. State is process heap VMA layout and protection attributes. Dependencies are libc/raw brk variants and mmap VMA behavior. Risks include address arithmetic on `void *` as a GNU extension and process heap side effects. Test signal is all expansions/protection/restoration succeed.

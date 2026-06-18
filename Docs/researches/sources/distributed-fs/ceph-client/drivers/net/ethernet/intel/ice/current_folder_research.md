@@ -1,0 +1,125 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 111
+- Recursive researched files: 127
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_adapter.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_adapter.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_adminq_cmd.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_arfs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_arfs.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_base.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_base.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_common.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_common.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_controlq.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_controlq.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dcb.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dcb.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dcb_lib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dcb_lib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dcb_nl.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dcb_nl.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ddp.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ddp.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_debugfs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_devids.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dpll.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_dpll.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_eswitch.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_eswitch.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_eswitch_br.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_eswitch_br.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ethtool.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ethtool.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ethtool_fdir.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_fdir.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_fdir.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_flex_pipe.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_flex_pipe.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_flex_type.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_flow.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_flow.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_fltr.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_fltr.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_fw_update.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_fw_update.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_gnss.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_gnss.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_hw_autogen.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_hwmon.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_hwmon.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_idc.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_idc_int.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_irq.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_irq.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_lag.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_lag.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_lan_tx_rx.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_lib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_lib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_main.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_nvm.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_nvm.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_osdep.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_parser.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_parser.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_parser_rt.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_pf_vsi_vlan_ops.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_pf_vsi_vlan_ops.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_protocol_type.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ptp.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ptp.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ptp_consts.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ptp_hw.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_ptp_hw.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_repr.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_repr.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sbq_cmd.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sched.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sched.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sf_eth.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sf_eth.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sf_vsi_vlan_ops.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sf_vsi_vlan_ops.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sriov.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_sriov.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_switch.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_switch.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_tc_lib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_tc_lib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_trace.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_tspll.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_tspll.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_txrx.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_txrx.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_txrx_lib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_txrx_lib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_type.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_lib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_lib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_lib_private.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_mbx.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_mbx.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_vsi_vlan_ops.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vf_vsi_vlan_ops.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vlan.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vlan_mode.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vlan_mode.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vsi_vlan_lib.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vsi_vlan_lib.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vsi_vlan_ops.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_vsi_vlan_ops.h`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_xsk.c`
+- `sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_xsk.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

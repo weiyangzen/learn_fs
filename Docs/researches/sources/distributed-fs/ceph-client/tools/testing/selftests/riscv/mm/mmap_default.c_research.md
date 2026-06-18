@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/mm/mmap_default.c
+
+Purpose: verifies default RISC-V mmap layout is top-down under the normal stack limit. It contains one kselftest harness test `default_rlimit` expecting `memory_layout()` to return `TOP_DOWN`. State is limited to two anonymous mappings. Integration is `run_mmap.sh`, which runs this before changing stack ulimit. Dependencies are kernel architecture mmap policy and the helper header. Risks include direct execution under an already unlimited stack, ASLR/layout changes, and no `munmap` before process exit. Test signals are one harness pass/fail result.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/venus/worker.h
+
+`worker.h` declares the Venus worker subsystem. It defines defaults for maximum workers and prefetchers, declares kernel message entry and worker types, and exports the kernel downcall/upcall and worker lifecycle functions used across Venus.
+
+`class msgent` is an intrusive-list entry wrapping a `VC_MAXMSGSIZE` message buffer and a `return_fd`. It is shared across free, queued, and active message lists; friend declarations allow dispatch, kernel purge helpers, `fsobj`, `vproc`, and worker internals to access the buffer directly. `msg_iterator` iterates an arbitrary message list. `class worker` derives from `vproc`, adds static mux/queue/counter state, tracks whether a reply has already been returned, stores the active message, opcode, and `StoreFid`, and declares inline handlers for each Coda kernel opcode.
+
+The worker public API consists of construction, `AwaitRequest`, `Resign`, `Return`, and `isReady`, while `main` is the overridden vproc entry point. The exported free functions include message lookup, kernel purge and replace downcalls, VFS mount/unmount, worker initialization, idle worker lookup, dispatch, mux callback, idle-time query, diagnostics, and kernel module version access.
+
+State is mostly process-local but mediates all kernel/Venus communication. Integration points include `vproc.h`, `fso.h`, `vice.h`, `venusioctl.h`, kernel Coda message structures, and FSDB operations reached from opcode handlers. Risks include broad friend access, intrusive list lifetime, static global state initialized by `WorkerInit`, and ABI sensitivity to kernel message layouts. Tests should verify worker initialization under configured limits, message pool reuse, dispatch and queueing, downcall helper behavior when not ready, all opcode handler marshalling, prefetch limits, and clean close of mux fd during unmount or shutdown.

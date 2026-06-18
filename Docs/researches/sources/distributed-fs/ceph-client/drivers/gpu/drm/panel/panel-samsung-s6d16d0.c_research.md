@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6d16d0.c
+
+Purpose: S6D16D0 is an 864x480 command-only MIPI DSI AMOLED panel driver. Because the panel uses command mode, its timing values mainly satisfy DRM mode plumbing rather than video-stream timing.
+
+Important APIs, control flow, and state: probe allocates `struct s6d16d0`, sets two DSI lanes, RGB888, explicit HS/LP rates, non-continuous clock, `vdd1` supply, and optional reset GPIO defaulting asserted. `prepare()` enables the regulator, pulses reset, waits 120 ms, enables TE at vblank, and exits sleep. `enable()` sets display on; `disable()` sets display off; `unprepare()` enters sleep, asserts reset, and disables supply. `get_modes()` duplicates a fixed 864x480 mode and sets physical dimensions. Persistent software state is only resource pointers; no prepared flag or brightness/backlight is managed here.
+
+Dependencies, integration, risks, and tests: dependencies are DRM panel, MIPI DSI DCS helpers, regulator/GPIO APIs, and compatible `samsung,s6d16d0`. Risks include command-mode timing assumptions, no cleanup if TE or sleep-out fails after regulator enable, and no backlight integration despite AMOLED brightness likely being external or fixed. Tests should cover TE enable success, sleep/display transitions, HS/LP rate compatibility with the host, mode enumeration, and regulator/reset behavior on error paths.

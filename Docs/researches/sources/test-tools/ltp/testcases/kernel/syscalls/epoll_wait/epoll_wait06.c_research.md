@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/ltp/testcases/kernel/syscalls/epoll_wait/epoll_wait06.c -->
+# sources/test-tools/ltp/testcases/kernel/syscalls/epoll_wait/epoll_wait06.c
+
+Purpose: LTP regression coverage for `epoll_wait` behavior. Source intent: Copyright (C) 2023 SUSE LLC Andrea Cervesato <andrea.cervesato@suse.com> \ Verify that edge triggering is correctly handled by epoll, for both EPOLLIN and EPOLLOUT. [Algorithm] - The file descriptors for non-blocking pipe are registered on an epoll instance. - A call to epoll_wait() is done that will return a EPOLLIN event. The file was read in full for this report (106 lines, 2758 bytes).
+
+Important APIs/types/functions: Primary functions are `setup`, `cleanup`, `run`. Important call/API signals are `epoll_wait`, `SAFE_PIPE2`, `SAFE_FCNTL`, `SAFE_CLOSE`, `tst_res`, `SAFE_EPOLL_CREATE1`, `SAFE_EPOLL_CTL`, `SAFE_WRITE`, `TST_EXP_FAIL`, `write`, `TST_EXP_EQ_LI`, `SAFE_EPOLL_WAIT`, `SAFE_READ`, `read`. Defined constants/macros include `_GNU_SOURCE`. Relevant structs/types include `struct epoll_event`. Harness metadata uses `.test_all`, `.setup`, `.cleanup`.
+
+Control flow: The test is organized around setup-oriented functions `setup`; run-oriented functions `run`; cleanup-oriented functions `cleanup`. Setup prepares the descriptors, credentials, clocks, modules, sockets, or buffers needed by the case table; the run/verify path invokes the target syscall or wrapper; cleanup closes descriptors and restores temporary state.
+
+State and persistence behavior: The test manipulates file descriptors and temporary filesystem objects, pollable descriptor readiness state. Persistent host changes are intended to be limited to temporary files, temporary descriptors, child processes, or explicitly restored kernel state.
+
+Dependencies and integration points: It depends on headers `<fcntl.h>`, `"tst_test.h"`, `"tst_epoll.h"`; the modern LTP `struct tst_test` harness. It integrates with the sibling `epoll_wait` syscall suite and the LTP result model (`TPASS`, `TFAIL`, `TBROK`, `TCONF`).
+
+Risks: readiness results depend on descriptor lifetime, nonblocking mode, and timing
+
+Test signals: explicit TFAIL/TST_EXP_FAIL failure paths; case/errno constants `EPOLLIN, EPOLLOUT, EPOLLET, EAGAIN, O_NONBLOCK, F_SETPIPE_SZ, EPOLL_CTL_ADD`; harness fields `.test_all, .setup, .cleanup`.
+<!-- END_FILE_RESEARCH: sources/test-tools/ltp/testcases/kernel/syscalls/epoll_wait/epoll_wait06.c -->

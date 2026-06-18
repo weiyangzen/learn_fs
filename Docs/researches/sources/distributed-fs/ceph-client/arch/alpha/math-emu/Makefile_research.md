@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/alpha/math-emu/Makefile
+
+Purpose: builds Alpha floating-point software emulation support. Important APIs/types/functions: sets `ccflags-y := -w`, adds `math-emu.o` under `CONFIG_MATHEMU`, and maps `math-emu-objs := math.o`. Control flow: kbuild-only conditional object inclusion. State and persistence: no runtime state. Dependencies/integration: ties `math.c` into the Alpha kernel or module build when math emulation is enabled. Risks: suppressing warnings can hide emulator issues; object naming must match module-init behavior in `math.c`. Test signals: `CONFIG_MATHEMU=y/m/n` builds and module load/unload when built as a module.

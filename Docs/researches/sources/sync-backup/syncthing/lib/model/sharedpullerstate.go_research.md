@@ -1,0 +1,15 @@
+## sources/sync-backup/syncthing/lib/model/sharedpullerstate.go
+
+Purpose: per-file state object used by pullers while syncing a file. It coordinates temporary file creation, concurrent block writes/copies, progress counters, available-block discovery, encrypted trailer finalization, sparse-file sizing, and final close.
+
+Important types and functions: `sharedPullerState` holds immutable file/fs/folder/temp metadata plus mutable counters and writer state protected by an RW mutex. `newSharedPullerState` builds current-file block lookup, initializes reused/available blocks, and timestamps. `lockedWriterAt` serializes close against concurrent `WriteAt`; `SyncClose` optionally fsyncs. `tempFile`, `addWriterLocked`, and `tempFileInWritableDir` create or reopen temp files with permissions, hiding, sparse truncation, and reuse handling. Progress APIs include `copyDone`, `copiedFromOrigin`, `copiedFromElsewhere`, `skippedSparseBlock`, `pullStarted`, `pullDone`, `Progress`, `Updated`, `AvailableUpdated`, and `Available`. `finalClose`, `finalizeEncrypted`, `writeEncryptionTrailer`, and `encryptionTrailerSize` finish the file and append metadata for encrypted files.
+
+Control flow and state: pull work starts with `copyTotal/copyNeeded` set to candidate local blocks and `reused` blocks available. A block that must be fetched calls `pullStarted`, moving work from copy to pull, then `pullDone` appends its block index to `available`. Local copies call `copyDone`. `finalClose` returns `(false,nil)` while work remains and no error exists; once all work is done or an error exists it ensures a writer exists, writes an encrypted trailer when needed, closes and un-hides the temp file, and returns the first error. Failures are sticky through `failLocked`.
+
+Persistence and filesystem behavior: temp files are opened through the folder `fs.Filesystem`, created exclusive when not reusing, chmodded before reuse when permissions are enforced, hidden while active, and unhidden at close. Sparse mode truncates to final size plus encrypted trailer; if truncation fails on a reused larger temp file, the temp file is removed to avoid stale tail data. Final encrypted files append serialized native `FileInfo` in wire-name form plus a four-byte length.
+
+Dependencies and integration points: uses `fs`, `osutil.NormalizedFilename`, protocol `FileInfo`/`BlockInfo`, protobuf sizing, `protoutil.MarshalTo`, and model metrics `metricFolderProcessedBytesTotal`. It feeds download progress through `Available` and integrates with request/puller finalization.
+
+Risks: concurrency depends on correct mutex discipline and the append-only `available` invariant. `Available` returns the backing slice, so callers must treat it as read-only. Sparse truncation failures have nuanced cleanup behavior. Encryption trailer sizing uses `proto.Size` then marshals again; metadata changes must keep size calculations aligned. Permissions and hidden-file behavior are platform/filesystem dependent.
+
+Test signals: `sharedpullerstate_test.go` covers read-only directory temp-file creation in the fake filesystem. Request tests indirectly cover progress and encrypted receive behavior.

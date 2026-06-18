@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/feature/registry.go
+
+Purpose: declares restic's global feature flag registry. APIs: package variable `Flag = New()` and named constants for known feature flags such as snapshot compression, safe pack operations, and upgrade repository. Control flow in `init` calls `Flag.SetFlags` with descriptors containing phase and description. State is global mutable feature flag state shared by the process. Dependencies are only the local feature package types. Integration points are CLI feature application and code paths gated by `feature.Flag.Enabled`. Risks: descriptors are applied at init, invalid phases panic, and global mutation in tests/CLI affects all callers. Test helper `TestSetFlag` exists to restore values in tests.

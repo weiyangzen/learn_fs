@@ -1,0 +1,7 @@
+# sources/user-network-fs/rclone/backend/zoho/api/types.go
+
+Purpose: defines JSON models for the Zoho WorkDrive backend API. It includes `Time`, OAuth/user/team/workspace response structs, file/folder item models, cursor links, upload responses, and write-metadata request bodies used by create, rename, move, copy, and delete operations.
+
+Important APIs: `Time.UnmarshalJSON` accepts either numeric JSON or quoted numeric milliseconds since Unix epoch. `UploadInfo.GetUploadFileInfo` and `LargeUploadInfo.GetUploadFileInfo` decode Zoho's nested JSON string field into `UploadFileInfo`. `UploadFileInfo.GetModTime` chooses a usable timestamp from audit resource created time, status-change time, or current time fallback. The write types (`WriteMetadataRequest`, `WriteMultiMetadataRequest`, `WriteMetadata`, `WriteAttributes`) are the shared request shape for mutating WorkDrive records.
+
+State and dependencies: all types are transient JSON adapters; no persistence is owned here. The file depends only on Go JSON, formatting, string-to-int conversion, and time. Risks include brittle field names for Zoho's inconsistent upload JSON (`File INFO`, `file_info`, `notes.txt`, `RessourceID` spelling), silent use of current time when upload audit timestamps are missing, and integer millisecond parsing failures. Test signal comes indirectly through Zoho backend integration tests and upload paths; there are no direct unit tests for the custom time or embedded JSON decoding.

@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/net/dsa/realtek/rtl83xx.c
+
+Purpose: this is the common Realtek DSA support module for newer RTL83xx-style shared infrastructure. It provides regmap locking helpers, user-facing internal MDIO bus registration, common probe allocation and reset handling, DSA switch registration/unregistration, shutdown behavior, and reset-control/GPIO helpers used by Realtek SMI/MDIO front ends.
+
+Important APIs, types, and functions: exported symbols include `rtl83xx_lock()`, `rtl83xx_unlock()`, `rtl83xx_setup_user_mdio()`, `rtl83xx_probe()`, `rtl83xx_register_switch()`, `rtl83xx_unregister_switch()`, `rtl83xx_shutdown()`, `rtl83xx_remove()`, `rtl83xx_reset_assert()`, and `rtl83xx_reset_deassert()`. Internal MDIO callbacks `rtl83xx_user_mdio_read()` and `rtl83xx_user_mdio_write()` delegate to `priv->ops->phy_read` and `priv->ops->phy_write`.
+
+Control flow: common probe obtains the matched `realtek_variant`, allocates `struct realtek_priv` plus variant chip data, initializes a mutex-backed 16-bit big-endian regmap and a no-lock mirror regmap, stores variant ops and chip data pointers, reads `realtek,disable-leds`, obtains optional reset control and reset GPIO, stores driver data, and toggles reset if either reset mechanism exists. Registration calls the variant `detect()` method, fills DSA switch fields, and invokes `dsa_register_switch()`. Shutdown calls `dsa_switch_shutdown()` and clears drvdata so remove paths do not double-run.
+
+State and persistence: the main persistent state is `struct realtek_priv`, including `map`, `map_nolock`, `map_lock`, variant ops, device pointer, chip-specific storage, optional reset handles, `leds_disabled`, DSA switch, and optional user MDIO bus. The no-lock regmap is intentionally used inside explicitly locked register sequences, especially indirect PHY access in chip drivers. Reset helper state is external hardware reset line state only.
+
+Dependencies and integration points: the file depends on Linux regmap, OF MDIO, reset controls, GPIO descriptors, DSA, and `realtek_interface_info` transport callbacks supplied by SMI or MDIO bus wrappers. It exports namespace `REALTEK_DSA` for chip-specific modules.
+
+Risks: the regmap config uses custom read/write callbacks and big-endian 10-bit register formatting; transport implementations must match that contract. Probe resets hardware before chip detection, so reset timing constants must be adequate across boards. The user MDIO bus requires an `mdio` child node and chip-specific PHY ops; missing nodes fail setup in callers. `rtl83xx_remove()` is currently empty, so all cleanup must be devm, DSA unregister, or chip-specific teardown.
+
+Test signals: validate probe through both SMI and MDIO interface wrappers, check reset GPIO/control timing on boards with and without resets, verify locked versus no-lock regmap access with indirect PHY sequences, confirm internal MDIO bus registration under the switch `mdio` node, and ensure shutdown/remove do not double-unregister after bus-level shutdown.

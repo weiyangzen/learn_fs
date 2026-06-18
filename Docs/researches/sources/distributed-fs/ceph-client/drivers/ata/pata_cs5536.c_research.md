@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_cs5536.c
+
+Purpose: AMD CS5536 PATA driver that programs virtualized PCI IDE timing registers with dword accesses, with an optional 32-bit x86 `msr=1` parameter to bypass broken BIOS virtualization and use Geode MSRs directly.
+
+Important APIs and control flow: `cs5536_read` and `cs5536_write` abstract PCI config dword versus MSR access. `cs5536_cable_detect` reads IDE config cable bits. `cs5536_set_piomode` programs drive timing (`DTC`) and command/address timing (`CAST`), merging command timing across paired devices. `cs5536_set_dmamode` programs UDMA timing in `ETC`, or clears UDMA and programs MWDMA via `DTC`. `cs5536_init_one` checks a Bachmann OT200 DMI quirk that disables UDMA, validates channel enable, logs MSR mode if forced, exposes only the primary port, and registers BMDMA32 ops.
+
+State, dependencies, and risks: state is in PCI virtual registers or MSRs depending on `use_msr`; no heap private state is used. Dependencies are PCI IDs, DMI, optional 32-bit x86 MSR access, and libata BMDMA32. Risks are firmware register virtualization bugs, `msr` parameter unavailable on non-32-bit x86, single-channel support, DMI-based UDMA disablement, and dword-only writes required to avoid unaligned virtualization issues. Test signals are channel enable rejection when BIOS disables IDE, DMI OT200 falling back to no-UDMA port info, cable detection from config bits, MSR mode logging, and stable mode programming on systems with broken PCI virtualization.

@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/fs/nfsd/filecache.c
+
+## Purpose
+`filecache.c` implements NFSD's open-file cache. It lets NFSD reuse `struct file` objects keyed by inode, credential, namespace, access mode, and GC policy, while still closing cached files when leases, unlink/rename, export flush, namespace shutdown, memory pressure, or writeback-error handling require it.
+
+## Important APIs, types, and functions
+The primary object is `struct nfsd_file`, allocated from `nfsd_file_slab` and indexed in `nfsd_file_rhltable`. Public APIs include `nfsd_file_cache_init()`, `nfsd_file_cache_start_net()`, `nfsd_file_cache_purge()`, `nfsd_file_cache_shutdown_net()`, `nfsd_file_cache_shutdown()`, `nfsd_file_acquire_gc()`, `nfsd_file_acquire()`, `nfsd_file_acquire_opened()`, `nfsd_file_acquire_local()`, `nfsd_file_acquire_dir()`, `nfsd_file_put()`, `nfsd_file_get()`, `nfsd_file_file()`, `nfsd_file_put_local()`, `nfsd_file_close_inode_sync()`, `nfsd_file_net_dispose()`, `nfsd_file_is_cached()`, and `nfsd_file_cache_stats_show()`. Key internals include `nfsd_file_do_acquire()`, `nfsd_file_lookup_locked()`, `nfsd_file_cond_queue()`, LRU callbacks, the laundrette worker, fsnotify marks, and the lease notifier.
+
+## Control flow
+Global initialization creates the rhashtable, slabs, LRU, shrinker, lease notifier, fsnotify group, and delayed laundrette work. Per-net startup allocates a disposal queue. Acquisition verifies the filehandle, looks for a matching cached object under RCU, allocates and inserts a pending object on miss, opens or attaches a backing file, records direct-I/O alignment, installs fsnotify marks for regular files, then clears the pending bit to wake waiters. Garbage-collected acquisitions add an extra LRU reference and linger after callers drop their references. The laundrette and shrinker scan the LRU, skip active/writeback-pending objects, unhash evicted objects, and queue them to per-net disposal lists. Fsnotify, lease break notifications, unlink/rename, and purge paths unhash matching inode entries and close them synchronously or through per-net delayed disposal.
+
+## State and persistence
+State is all in-memory. Each `nfsd_file` stores the open file, captured credential, net namespace, inode key pointer, flags (`HASHED`, `PENDING`, `REFERENCED`, `GC`, `RECENT`), refcount, access mask, optional fsnotify mark, LRU/GC links, birth time, and DIO alignment fields. The hash table is global, while disposal queues are per `nfsd_net`. Per-CPU counters track hits, acquisitions, allocations, releases, aggregate age, and evictions. Shutdown purges hash contents, destroys LRU and marks after RCU/fsnotify synchronization, and resets counters.
+
+## Dependencies and integration points
+The file integrates VFS open/close helpers, `fh_verify()` and local filehandle verification, export flush paths, file leases, fsnotify, `list_lru`, shrinker infrastructure, rhashtable, RCU, per-net NFSD state, `nfslocalio`, write verifier reset logic, and tracepoints. NFSv3 COMMIT and normal read/write paths acquire cached objects; LOCALIO uses `nfsd_file_acquire_local()` and `nfsd_file_put_local()`.
+
+## Risks and test signals
+The main risks are concurrency and lifetime bugs: pending-object wait races, duplicate insertion around inode locking, refcount/LRU reference imbalance, freeing objects still linked on LRU, use of `nf_inode` as a comparison-only pointer, fsnotify mark destruction races, writeback error verifier resets, export flush while cache users are active, and LOCALIO net reference leaks. Test signals include concurrent read/write acquisition for the same inode and credential, failed opens followed by retry, `-EOPENSTALE` retry, GC under memory pressure, lease break and `FS_DELETE_SELF`/last-link events, NFS reexport unlink/rename silly-rename avoidance, per-net purge, module shutdown, LOCALIO cached pointer replacement races, and stats output after cache churn.

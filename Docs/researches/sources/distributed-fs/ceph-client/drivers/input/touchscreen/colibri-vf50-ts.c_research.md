@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/input/touchscreen/colibri-vf50-ts.c
+
+Purpose: `colibri-vf50-ts.c` is a platform driver for the Toradex Colibri VF50 4-wire resistive touchscreen. It drives the four touchscreen plates through GPIOs, samples four IIO ADC channels, computes X/Y and pressure, and exposes a single-touch `input_dev` with `ABS_X`, `ABS_Y`, `ABS_PRESSURE`, and `BTN_TOUCH`.
+
+Important APIs, types, and functions: `struct vf50_touch_device` owns the platform device, input device, IIO channel array, four plate GPIOs, IRQ number, pressure threshold, and stop flag. `adc_ts_measure()` energizes a positive/negative plate pair, waits for settling, averages five raw IIO samples, then de-energizes the plates. `vf50_ts_enable_touch_detection()` grounds YM and switches pinctrl to idle so XM can be used as the pull-up based pen-detect input. `vf50_ts_irq_bh()` is the threaded IRQ worker and performs the repeated sampling loop. `vf50_ts_open()` and `vf50_ts_close()` arm and disarm touch detection for input users. Probe uses `iio_channel_get_all()`, `devm_add_action()`, named GPIO descriptors, `platform_get_irq()`, and `devm_request_threaded_irq()`.
+
+Control flow: probe validates exactly four ADC channels, reads the `vf50-ts-min-pressure` DT property, allocates/registers input, obtains `xp`, `xm`, `yp`, and `ym` GPIOs, then requests a oneshot threaded IRQ. Open clears `stop_touchscreen`, configures idle pinctrl, enables YM, and waits for the pull-up to settle. The IRQ handler disables detection, switches pins to ADC mode, loops until stop or low pressure, measures X, Y, Z1, and Z2, computes a pressure-like value, drops the first sample after a pen-down, reports subsequent samples, and finally reports release and re-enables detection.
+
+State and persistence: runtime state is only in memory: last measurement is local to the IRQ worker, and `stop_touchscreen` gates the sampling loop. There is no firmware, sysfs, NVM, or persistent calibration. Close uses a memory barrier plus `synchronize_irq()` so the threaded loop stops before GPIO/pinctrl cleanup.
+
+Dependencies and integration points: the driver depends on IIO ADC channels, GPIO descriptor names, pinctrl default/idle states, a platform IRQ, and OF compatible `toradex,vf50-touchscreen`. It integrates with the input subsystem through open/close callbacks and with power/cleanup through devm-managed resources.
+
+Risks: pressure calculation can divide by noisy small Z1 values, although the code guards Z1 and X above 64. Long `usleep_range()` calls occur inside the IRQ thread while a finger is held. Correct DT wiring is critical because the plate GPIO and ADC channel order are positional. If `vf50-ts-min-pressure` is mis-tuned, touches may be missed or releases delayed.
+
+Test signals: useful checks include probing with exactly four ADC channels, verifying open/close pinctrl transitions, confirming pen-down IRQ triggers repeated reports, validating first-sample discard behavior, checking pressure threshold release, and testing close while a touch is active to confirm the IRQ thread exits.

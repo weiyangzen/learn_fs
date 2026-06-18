@@ -1,0 +1,3 @@
+# sources/storage-engines/tikv/tests/failpoints/cases/test_transaction.rs
+
+See the grouped report section in `Docs/researches/groups/subset-b-008947_research.md` for the full source-aligned research. Summary: this file targets transaction failpoint invariants around async-commit max-ts ordering, memory locks, prewrite lock lifetime, pessimistic lock epoch checks, read-index with max timestamp, GC last-change lookup, proposal/conf-change/leader-transfer races, and forwarded proposal prevention. It integrates MVCC helpers, `ConcurrencyManager`, `MockLockManager`, gRPC KV RPCs, raftstore filters, and direct engine writes.

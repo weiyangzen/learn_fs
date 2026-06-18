@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/test-appliance/files/usr/local/lib/combine-xfs-mkfs-opts
+
+- Purpose: XFS mkfs option combiner library; it parses xfsprogs sectioned mkfs options/config files and emits a de-duplicated command line. The file is 141 lines/2750 bytes and is researched as source path `sources/test-tools/xfstests-bld/test-appliance/files/usr/local/lib/combine-xfs-mkfs-opts`.
+- Important APIs/types/functions: shell variables include mostly positional/environment inputs; functions include xfs_combine_reset, xfs_combine_sect_map, xfs_combine_keys, xfs_combine_opt_string, xfs_combine_config_file, xfs_combine_output_opts.
+- Control flow: executes top-level shell logic in order, using environment variables/positional arguments to select external commands and produce appliance/cloud side effects.
+- State and persistence: uses local marker files, GCS objects, result directories, generated configs, temporary disks/images, schroot entries, or mounted filesystems depending on the helper; cleanup is generally explicit and failure paths may leave debug artifacts.
+- Dependencies/integration: integrates with xfstests-bld frontends, `get-config`, `arch-funcs`, `/root/runtests_utils`, gcloud/gcloud storage, systemd services, Debian tooling, QEMU/KVM, and filesystem utilities as applicable.
+- Risks and test signals: most failures come from missing credentials/tools, stale cloud resources, command-line validation gaps, destructive device operations, or partial cleanup; validate with `--no-action` where available, smoke selftests, GCS artifact checks, systemd logs, and generated xUnit summaries.

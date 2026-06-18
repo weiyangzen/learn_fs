@@ -1,0 +1,11 @@
+# sources/control-plane/ceph-csi/e2e/staticpvc.go
+
+Purpose: constructs and validates statically provisioned RBD and CephFS PV/PVC objects, including migration-style RBD volumes and static resize behavior.
+
+Important APIs and flow: `getStaticPV` builds a CSI PV with driver name, volume handle, volume attributes, node-stage secret, reclaim policy, volume mode, optional annotations, and storage class. `getStaticPVC` binds a PVC directly to that PV. `validateRBDStaticPV` creates a backend RBD image, constructs a static RBD PV/PVC, starts an app or expects a missing `imageFeatures` failure, validates static resize by resizing the backend image and remounting, then deletes PV/PVC and the image. `validateRBDStaticMigrationPVC` creates an in-tree migration-like volume handle from monitors and image name, annotates the PV as provisioned by RBD CSI, mounts it, then deletes through CSI. `validateCephFsStaticPV` creates a CephFS subvolume group and subvolume, discovers root path, creates a secret with admin key, binds a static CephFS PV/PVC, mounts it, then deletes pod, PVC, PV, secret, subvolume, and group. `validateRBDStaticResize` exercises backend resize visibility after remount.
+
+State and persistence: creates real backend RBD images or CephFS subvolumes, Kubernetes PV/PVC/Secret objects, and app pods. Static RBD PVs use Retain for normal static tests and Delete for migration tests; cleanup explicitly removes retained backend images or CephFS objects.
+
+Dependencies and integration: uses Ceph toolbox commands, Kubernetes core APIs, RBD namespace helpers, monitor discovery, migration volume ID composition, CephFS secret templates, static volume CSI attributes, and shared app/PVC lifecycle helpers.
+
+Risks and test signals: static provisioning depends on exact CSI volume attributes such as `staticVolume`, `imageFeatures`, `rootPath`, `pool`, `clusterID`, and optional `radosNamespace`. Cleanup is multi-step and can leak backend resources if an early error returns. CephFS static validation uses admin credentials from the toolbox and fixed names, which can collide if tests run concurrently in the same cluster. Passing tests prove NodeStage/NodePublish can consume pre-existing backend volumes and migration handles.

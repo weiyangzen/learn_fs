@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/dibs/dibs_main.c
+
+Purpose: implements the DIBS class module: client registration, device allocation/add/remove, sysfs attributes, and forwarding of DIBS device events to registered clients.
+
+Important APIs/types/functions: exports `dibs_register_client()`, `dibs_unregister_client()`, `dibs_dev_alloc()`, `dibs_dev_add()`, and `dibs_dev_del()`. It owns the `dibs` class, `clients[MAX_DIBS_CLIENTS]`, `max_client`, `clients_lock`, and a mutex-protected global DIBS device list. Sysfs exposes `gid` and `fabric_id`.
+
+Control flow: init registers the class and then initializes optional loopback. Client registration reserves the first free client id under `clients_lock`, then while the device list mutex is held calls the client's `add_dev()` for every existing device and installs the client into each device's `subs[]` forwarding slot. Unregistration refuses to remove a client with registered DMBs by scanning each device's `dmb_clientid_arr`, clears forwarding slots, calls `del_dev()`, and clears client private state. Device add initializes the device lock and DMB owner array, adds the device, creates sysfs attributes, calls all existing client `add_dev()` callbacks, then adds the device to the global list. Device delete removes sysfs, clears subscribers, calls client `del_dev()`, removes the list node, deletes the device, and frees the DMB owner array.
+
+State and persistence behavior: DIBS device and client state is kernel-resident. `struct dibs_dev` lifetime is tied to `device_initialize()`/`put_device()` and `dibs_dev_release()`. The client array is a fast id-to-client map and persists until module exit. Sysfs attributes reflect the current UUID and fabric id callback.
+
+Dependencies and integration points: depends on Linux device/class/sysfs APIs and public DIBS structures from `include/linux/dibs.h`. Loopback is integrated through `dibs_loopback_init/exit()`. DIBS clients must implement `add_dev`, `del_dev`, and interrupt/event handlers expected by the device subscriber table.
+
+Risks and test signals: client `add_dev()` return values are ignored, so partial client-device setup failures must be handled internally by clients. `max_client` is only decremented by one on last-id removal and may stay above the actual highest occupied id after sparse removals. Unregister scans DMB ownership under each device lock and fails with `-EBUSY` if any DMB remains. Test signals include sysfs `gid`/`fabric_id`, correct client id allocation/reuse, rejection of unregister with active DMBs, balanced add/del callbacks across existing and future devices, and clean class/loopback teardown.

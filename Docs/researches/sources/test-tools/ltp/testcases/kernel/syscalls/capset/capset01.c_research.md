@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/capset/capset01.c
+
+Purpose: positive `capset()` test for Linux capability ABI versions 1, 2, and 3. Setup records current pid; each testcase calls `capget` to fill current data for that version and then calls `capset` with the same data, expecting success. Important APIs are raw `__NR_capget`, raw `__NR_capset`, and capability structs. State is current process capability sets, which should be unchanged because the same data is written back. Dependencies are Linux capabilities. Risks are environment-specific capability restrictions. Test signal is successful capset for all supported ABI version constants.

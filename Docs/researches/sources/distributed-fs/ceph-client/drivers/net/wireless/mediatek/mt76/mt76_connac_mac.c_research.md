@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+
+Purpose: Shared Connac MAC/PM implementation for PPE thresholds, power-save queuing, TXP setup/unmap, TX queue init, TXWI writing, TX status parsing, HE radiotap decoding, RX header translation repair, RX rate fill, aggregation checks, and token cleanup.
+
+Important APIs and functions: `mt76_connac_gen_ppe_thresh()` generates HE PPE thresholds. PM functions `mt76_connac_pm_wake()`, `mt76_connac_power_save_sched()`, `mt76_connac_pm_queue_skb()`, `mt76_connac_pm_dequeue_skbs()`, and `mt76_connac_free_pending_tx_skbs()` coordinate non-USB low-power transitions and pending TX. TX functions `mt76_connac_write_hw_txp()`, `mt76_connac_txp_skb_unmap()`, `mt76_connac_init_tx_queues()`, and `mt76_connac2_mac_write_txwi()` implement descriptor setup. Status/RX functions `mt76_connac2_mac_fill_txs()`, `mt76_connac2_mac_add_txs_skb()`, `mt76_connac2_mac_decode_he_radiotap()`, `mt76_connac2_reverse_frag0_hdr_trans()`, and `mt76_connac2_mac_fill_rx_rate()` parse hardware reports. Cleanup helpers `mt76_connac2_tx_check_aggr()`, `mt76_connac2_txwi_free()`, and `mt76_connac2_tx_token_put()` complete and release TX resources.
+
+Control flow: TX descriptor writing chooses queue and packet format from qid, beacon/discovery state, bus type, WMM index, and VIF/phy indexes; then fills 802.3 or 802.11 descriptor fields and optional fixed-rate fields. TX status maps TXS reports into mac80211 ACK/rate/stat state. RX decoding converts PRXV/CRXV vectors into `mt76_rx_status` and radiotap headers. PM wake queues work and waits for `MT76_STATE_PM` to clear; sleep scheduling defers firmware PM control until idle. Token cleanup unmaps DMA TXP buffers, completes skb status, checks BA aggregation, and resets pending management counters.
+
+State and persistence: Mutates PM wake counters/stats/pending queues, TXWI cache and token IDR, wcid rate/statistics/aggregation state, skb data/headroom, rx status cb, mac80211 TX status queues, and mt76 TX queues. No disk persistence.
+
+Dependencies: `mt76_connac.h`, Connac2 MAC bitfields, mt76 DMA/queue/status APIs, mac80211 radiotap/rate/aggregation APIs, skb manipulation, DMA unmap APIs, and chip predicates.
+
+Risks: PM ref accounting and queued skb handling can deadlock queues or drop packets if imbalanced. TXWI bitfields vary by chip and bus; wrong packet format, qid, WLAN index, PN/protection bits, or fixed-rate fields cause firmware/hardware TX failures. TXP unmap must match firmware vs hardware TXP layout and last-buffer flags. RX/radiotap decoding trusts rxv indexes and skb headroom. `mt76_connac2_mac_decode_he_mu_radiotap()` mutates a static `mu_known` template for Connac2-specific flags, so changes should consider cross-call behavior.
+
+Test signals: Traffic on Connac v1/v2 devices, suspend/power-save wake under TX, TX status ACK/rate updates, BA session auto-start, token drain on reset/unload, monitor-mode HE radiotap correctness, mesh header translation, and DMA debug checks for unmap balance.

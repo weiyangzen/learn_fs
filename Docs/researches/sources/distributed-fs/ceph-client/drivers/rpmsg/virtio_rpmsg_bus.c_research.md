@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/rpmsg/virtio_rpmsg_bus.c
+
+Purpose: virtio transport backend for rpmsg. It owns the virtqueues, coherent TX/RX buffer pool, endpoint IDR, name-service/control devices, channel creation, message send/receive, and virtio driver registration for `VIRTIO_ID_RPMSG`.
+
+Important APIs, types, and functions: `struct virtproc_info` tracks the virtio device, RX/TX virtqueues, buffers, DMA handle, TX lock, endpoint IDR, and sender waitqueue. `struct rpmsg_hdr` is the wire header. `struct virtio_rpmsg_channel` embeds `struct rpmsg_device`. Endpoint ops are implemented by `virtio_rpmsg_send*()`, `virtio_rpmsg_trysend*()`, `virtio_rpmsg_poll()`, `virtio_rpmsg_get_mtu()`, and `virtio_rpmsg_destroy_ept()`. Channel ops are `virtio_rpmsg_create_channel()`, `virtio_rpmsg_release_channel()`, `virtio_rpmsg_create_ept()`, and announce hooks.
+
+Control flow: probe allocates `virtproc_info`, initializes IDR/locks/waitqueue, finds input/output virtqueues, sizes a 512-byte buffer pool up to 512 buffers, allocates coherent DMA memory, posts half the buffers to the RX virtqueue, registers an rpmsg control device, optionally registers the name-service device when feature bit 0 is present, prepares an RX kick, marks the virtio device ready, and notifies the remote. TX gets an unused or recycled send buffer, optionally waits up to 15 seconds, validates addresses and MTU, fills `rpmsg_hdr`, adds an outbuf, and kicks the TX virtqueue. RX callback drains used RX buffers, validates payload length, looks up endpoint by destination address under the IDR lock, pins it by kref, calls its callback under `cb_lock`, reposts the buffer, and kicks the RX virtqueue after processing messages.
+
+State and persistence: runtime state includes endpoint IDR allocations, `last_sbuf` simple allocator state, coherent buffers, virtqueue state, and child rpmsg devices. No state persists beyond virtio device lifetime. Local dynamic endpoint addresses start at 1024 to reserve low addresses for predefined services.
+
+Dependencies and integration points: depends on virtio core, DMA coherent memory, scatterlists, rpmsg core/internal APIs, rpmsg name service, and rpmsg control device. It exports user-facing dynamic behavior through rpmsg devices created from NS announcements and `/dev/rpmsg_ctrlN`.
+
+Risks: the TX allocator is intentionally simple; a failed `virtqueue_add_outbuf()` can lose a TX buffer until broader buffer management is changed. Blocking sends use a fixed 15-second timeout and return `-ERESTARTSYS` on timeout. RX length validation is critical because the remote controls headers. Endpoint lifetime uses IDR plus kref plus callback mutex; regressions here risk use-after-free. Remove destroys child devices after virtio reset, then destroys IDR and frees coherent memory.
+
+Test signals: virtio probe/remove, vring size variations, NS feature on/off, control-device registration, channel duplicate detection, dynamic endpoint address allocation, MTU enforcement, blocking and nonblocking send exhaustion, TX completion wakeups, malformed RX headers, no-recipient RX, endian conversions, and hot-unplug while endpoints are open.

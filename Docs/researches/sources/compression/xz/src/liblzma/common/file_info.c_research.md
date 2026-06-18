@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/compression/xz/src/liblzma/common/file_info.c -->
+# sources/compression/xz/src/liblzma/common/file_info.c
+
+Purpose: Implements `lzma_file_info_decoder()`, a seek-aware decoder that reads `.xz` container metadata without decompressing Blocks and returns a combined `lzma_index`. It walks the file from both ends: it first verifies the first Stream Header, then scans backward from the end to parse Stream Padding, Stream Footers, Index fields, and matching Stream Headers for all concatenated Streams.
+
+Important APIs and types: `lzma_file_info_coder` owns the state machine, file position tracking, `lzma_next_coder index_decoder`, temporary backward-read buffer, decoded per-Stream index, accumulated `combined_index`, destination index pointer, external `seek_pos`, memory limit, and cached `lzma_stream_flags`. Public entry is `lzma_file_info_decoder()`, backed by internal `lzma_file_info_decoder_init()`, `file_info_decode()`, `file_info_decoder_memconfig()`, and `file_info_decoder_end()`.
+
+Control flow: `SEQ_MAGIC_BYTES` reads and validates the first Stream Header and file size constraints. `SEQ_PADDING_SEEK` and `SEQ_PADDING_DECODE` use `reverse_seek()` and `get_padding_size()` to locate trailing Stream Padding. `SEQ_FOOTER` decodes the Stream Footer and Backward Size. `SEQ_INDEX_INIT` initializes the Index decoder with a remaining memory budget, and `SEQ_INDEX_DECODE` decodes exactly the Backward Size. `SEQ_HEADER_DECODE` and `SEQ_HEADER_COMPARE` validate Header/Footer flag consistency, attach flags and padding to the index, concatenate it with earlier Streams, then either finish or continue backward.
+
+State and persistence: `file_cur_pos` and `file_target_pos` are the core invariants; all input consumption updates them so `seek_to_pos()` can decide whether to adjust `*in_pos` internally or return `LZMA_SEEK_NEEDED` via `strm->seek_pos`. `this_index` is transient until a Stream is validated; `combined_index` owns the progressively concatenated result and is transferred to `*dest_index` only on `LZMA_STREAM_END`.
+
+Dependencies and integration: Depends on `index_decoder.h`, Stream Header/Footer decoders, `lzma_index_*` aggregation APIs, VLI limits, and the liblzma `lzma_next_coder` interface. It integrates with applications that can seek and with liblzma memory limit APIs through `memconfig`.
+
+Risks: Position arithmetic is security-sensitive; malformed Backward Size, odd file size, non-multiple-of-four Stream Padding, or inconsistent Header/Footer flags must produce `LZMA_DATA_ERROR`. Memory accounting is subtle because multiple temporary Indexes can use more memory than the final combined index. The function intentionally hides interior `LZMA_FORMAT_ERROR` as data corruption after the first header. Tests should cover tiny files, whole-file single-buffer operation, external seek paths, multi-Stream padding, corrupt Backward Size, low memory limits, and changing the memory limit during `SEQ_INDEX_DECODE`.
+<!-- END_FILE_RESEARCH: sources/compression/xz/src/liblzma/common/file_info.c -->

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-treesplit -->
+# sources/sync-backup/bup/test/ext/test-treesplit
+
+Purpose: validates tree-splitting saves with deterministic custom record boundaries and correct `.bupm` placement. Important APIs are Git config `bup.split.trees=true`, `bup save`, `bup ls`, Git `ls-tree`, and an imported Python replacement for `_helpers.RecordHashSplitter`. Control flow creates a source tree, configures tree splitting, injects a custom splitter that records boundaries, saves the tree, then verifies VFS listing, file-type suffixes, long listing timestamps, and recursive Git tree layout where `.bupm` metadata appears at expected split boundaries. State is the saved branch, split subtrees, `.bupm` entries, and custom module path. Dependencies include Python import override, Git tree inspection, and WvTest. Risks are splitter internals changing, hidden metadata ordering, and `.bupm` placement becoming inconsistent with VFS listing. Test signals are exact `bup ls` output and normalized `git ls-tree` paths.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-treesplit -->

@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/control-plane/rook/tests/integration/object/user/keys/keys.go -->
+# sources/control-plane/rook/tests/integration/object/user/keys/keys.go
+
+Purpose: integration test for explicit and generated key handling on `CephObjectStoreUser`. It validates that Secret-referenced S3 keys are reconciled into RGW user keys and exposed in CR status, and that transitions between explicit keys and operator-generated keys behave correctly.
+
+Important APIs and control flow: `generateObjectStoreUserSecretName` mirrors the operator-generated Secret naming convention. `findUserKeySpec` searches RGW key specs by access key. `checkStatusKeys` compares `status.keys` with live Secret references including UID and ResourceVersion. `checkRgwUserKeys` polls RGW admin `GetUser` until each expected key is present and asserts no extra keys. `TestObjectStoreUserKeys` creates five Secrets, creates a user with three explicit key refs, updates to two refs, removes all refs to trigger one generated key, re-adds five explicit refs, mutates a referenced Secret, deletes a referenced Secret to force `ReconcileFailed`, and verifies deletion still succeeds.
+
+State, persistence, and integration: state spans Kubernetes Secrets, `CephObjectStoreUser.status.keys`, the generated operator Secret, and RGW user key material. Dependencies include go-ceph RGW admin APIs, Rook clientsets, and shared object-store setup. Risks include hard-coded key material in test fixtures, reliance on exact generated Secret key names (`AccessKey`/`SecretKey` versus AWS-style keys), and eventual reconciliation latency. Test signals are broad: status reference fidelity, RGW key equality, generated-secret transition, missing-secret failure, final RGW user absence, and Secret retention after CR deletion.
+<!-- END_FILE_RESEARCH: sources/control-plane/rook/tests/integration/object/user/keys/keys.go -->

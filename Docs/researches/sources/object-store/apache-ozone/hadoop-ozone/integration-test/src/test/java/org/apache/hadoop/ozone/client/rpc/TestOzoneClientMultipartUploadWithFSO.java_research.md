@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/client/rpc/TestOzoneClientMultipartUploadWithFSO.java -->
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/client/rpc/TestOzoneClientMultipartUploadWithFSO.java
+
+Purpose: This abstract non-HA integration test covers S3-style multipart upload behavior in Ozone's file-system-optimized path mode. It validates initiation, part upload/overwrite, completion, abort, listing, pagination, EC quota accounting, part-name metadata, parent-directory namespace effects, and S3 part-specific key-detail lookup.
+
+Important APIs/types/functions: The test uses `NonHATests.TestCase.cluster`, `ObjectStore`, `OzoneVolume`, `OzoneBucket`, `OmMultipartInfo`, `OmMultipartCommitUploadPartInfo`, `OmMultipartUploadCompleteInfo`, `OzoneMultipartUploadPartListParts`, `OzoneMultipartUploadList`, `OzoneMultipartUpload`, `OMMetadataManager`, `OmBucketInfo`, `OmMultipartKeyInfo`, `OmKeyInfo`, `BucketLayout`, `OzoneFSUtils`, `QuotaUtil`, `DefaultReplicationConfig`, and `ECReplicationConfig`. Helpers `initiateMultipartUploadWithAsserts`, `uploadPart`, `completeMultipartUpload`, `verifyUploadedPart`, `verifyPartNamesInDB`, and `generateData` centralize protocol and metadata checks.
+
+Control flow: `init` enables OM filesystem path handling for the cluster and creates a client. Each test creates a fresh volume/bucket/key. Initiation tests confirm upload IDs are non-null and unique. Upload tests write parts with MD5 ETags and verify part names/ETags, including deterministic part-name reuse for overwrites. Completion tests validate minimum part-size rules, invalid part maps, missing parts, and commit after complete. Abort tests cover invalid upload IDs, abort with in-progress streams, empty uploads, uploads with parts, and missing parent directories. Listing tests check `listParts` continuation, invalid marker/max inputs, marker beyond part count, invalid upload ID, `listMultipartUploads` prefix behavior, and key/upload marker pagination. S3 lookup tests call `getS3KeyDetails` for all parts, a specific part, and a missing part.
+
+State and persistence behavior: The tests directly read OM open key and multipart info tables, compare FSO multipart keys, assert part protobuf records hold expected part names, and validate quota counters (`usedBytes`, `usedNamespace`) after overwrite, abort, EC upload, and unused-part discard. They check aborted uploads remove open-key and multipart-info rows.
+
+Dependencies and integration points: Integrates FSO namespace semantics, S3 MPU client APIs, OM metadata layout, bucket quota accounting, EC and RATIS replication configs, part-list pagination contracts, and S3 gateway key-detail semantics.
+
+Risks: The file is large and covers many protocol edges; regressions may be data-layout-specific. It depends on OM path mode being restored after tests. Some assertions use exact quota multiplication and part-count expectations that can change if default block size or EC replicated-size accounting changes.
+
+Test signals: Passing means FSO multipart uploads preserve S3-compatible behavior, correctly maintain OM tables and quotas, clean up aborted state, and expose part metadata through both Ozone and S3-facing client APIs.
+<!-- END_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/client/rpc/TestOzoneClientMultipartUploadWithFSO.java -->

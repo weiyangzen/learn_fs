@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/hook_test.go
+
+Purpose: tests hook removal behavior. It creates a fresh logrus logger, adds `FilterHook` and `FileNameHook`, removes by type name, and checks hook map length; it also verifies a remove-then-add scenario. State is a local logger and hook instances. Dependencies are Ginkgo/Gomega, logrus, and CRI-O log hooks. Risks are assertions based on logrus level-hook map lengths, which can be brittle because hooks register across levels differently. Test signals confirm `RemoveHook` filters by concrete CRI-O hook name and that replacement does not corrupt logrus hook registration.

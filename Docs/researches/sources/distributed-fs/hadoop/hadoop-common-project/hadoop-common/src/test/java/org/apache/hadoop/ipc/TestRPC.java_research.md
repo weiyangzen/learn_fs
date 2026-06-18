@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/ipc/TestRPC.java
+
+Purpose: broad high-level RPC facade test suite, primarily around protobuf RPC services through `RPC`, `RPC.Builder`, server/client lifecycle, authorization, metrics, interruption, backoff, slow connections, external calls, protocol engine selection, and request-kind validation.
+
+Important APIs/types/functions: `TestProtocol`/`TestImpl`, `StoppedProtocol`, `StoppedRpcEngine`, `StoppedInvocationHandler`, `Transactions`, `SlowRPC`, `MockOutputStream`, `ExternalCall`, `RPC.getProxy()`, `RPC.stopProxy()`, `RPC.Builder`, `ProtobufRpcEngine2`, `RpcMetrics`, `DecayRpcScheduler`, `CallQueueManager`, and generated `TestRpcService` protobuf calls inherited from `TestRpcBase`.
+
+Control flow: tests construct in-process RPC servers with varying builder settings, obtain proxies, and issue protobuf calls. Basic call tests verify ping/echo/add/error and multi-threaded data exchange. Authorization tests refresh service ACLs and assert success/failure counters. Interruption/slow-connection tests use barriers, mock sockets/streams, async mode, and future cancellation to verify only intended calls fail. Metrics tests perform large numbers of calls and inspect aggregate, detailed, quantile, per-user, lock-wait, success, processing-time, total-request, and nanos-unit metrics. Backoff tests fill call queues or exceed decay scheduler response-time thresholds and assert retriable exceptions.
+
+State and persistence behavior: state is local to RPC server/client instances, connection caches, metrics registries, thread pools, and test configuration. Several tests mutate static/global RPC engine mapping or client async mode and restore where needed. No durable state is written. Metrics are the main observable stateful integration surface.
+
+Dependencies and integration points: central integration point for `RPC`, protobuf engine registration, Hadoop security/authorization (`PolicyProvider`, `AccessControlException`, `AuthorizationException`), metrics2 assertions, retry policies, socket factories, schedulers, UGI, and server queue internals. It also validates `serverNameFromClass()` naming behavior for nested/anonymous classes.
+
+Risks and test signals: many tests are concurrency and timing sensitive, particularly slow connection, interruption, backoff, scheduler metrics, and total requests per second. Strong signals include no leaked reader threads after stop, correct proxy close behavior even under retry wrappers, insecure-client error code `FATAL_UNAUTHORIZED`, fatal reader exceptions closing connections while nonfatal ones keep them alive, and protobuf-only servers rejecting unregistered `RpcKind` without deserializing payloads.

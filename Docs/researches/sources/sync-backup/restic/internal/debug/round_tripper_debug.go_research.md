@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/debug/round_tripper_debug.go
+
+Purpose: debug-build implementation of `RoundTripper`. API: `RoundTripper(upstream http.RoundTripper) http.RoundTripper`. Control flow wraps the upstream transport with response body EOF detection and HTTP request/response logging, enabling diagnostics for leaking or partially consumed bodies. State is wrapper state from `round_tripper.go`; no persistence. Dependencies are `net/http` and internal debug transport types. Integration point is build-tag-controlled HTTP transport setup. Risks: debug instrumentation can alter timing and output volume; it should not be used as release behavior. Test coverage is shared through redaction tests and build-tag behavior.

@@ -1,0 +1,9 @@
+# sources/control-plane/rook/tests/integration/ceph_object_test.go
+
+Main RGW/Object integration suite. It validates object stores with and without TLS, OBC lifecycle, S3 operations, quotas, bucket policy/lifecycle management, deletion blocking, shared-store subpackages, bucket notifications, and COSI.
+
+`ObjectSuite` installs `object-ns` and runs TLS/non-TLS variants. `runObjectE2ETest` creates the primary store, checks RGW `zone.json` pool-field coverage, creates/deletes a second store, runs `testObjectStoreOperations`, sets up non-TLS shared-store subpackage tests, creates a bucket-notification store, and runs COSI for non-TLS. `testObjectStoreOperations` creates user/OBC, performs S3 put/get/delete and quota checks, exercises direct OBC bucket quota/policy/lifecycle create-update-remove behavior, validates deletion blocking by OBC/user, deletes dependents, and verifies final object-store deletion.
+
+State includes CephObjectStores, RGW deployments/services/realms/zones/pools, TLS Secret, CephObjectStoreUsers/secrets, OBCs/ObjectBuckets, StorageClasses, S3 objects, policies, lifecycle configs, quotas, shared stores, notification resources, and COSI resources. Dependencies include AWS SDK v2, smithy errors, go-cmp, lib-bucket-provisioner APIs, Rook object/client packages, shared object helpers, object subpackages, and Kubernetes clients.
+
+Risks: broad long-running surface can leave many resources after partial failure; global `objectStoreServicePrefix` is mutated; exact RGW/AWS error codes and Ceph version quirks matter; lifecycle removal skips Ceph `19.2.3`; direct S3 endpoint assumes ClusterIP `:80`; fixed names can collide. Signals include store readiness, zone mapping coverage, OBC/OB bound, S3 read/write/delete, quota enforcement, policy/lifecycle equality/removal errors, deletion-blocked condition contents, user secret deletion, mgr pod state, notification delivery, and COSI readiness.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/rdma/Makefile
+
+Purpose: registers four RDMA RXE shell tests with kselftest: namespace rping, IPv6 RXE, socket lifetime, and NETDEV_UNREGISTER cleanup. It uses `TEST_PROGS` and includes `../lib.mk`; no binaries are built. State is the generated kselftest run/install metadata, not runtime RDMA resources. Dependencies are shell, root privileges, `ip`, `rdma`, `ss`, `rping`, and kernel modules listed in `config`. Integration is the Linux selftests harness. Risks are scripts suppress stdout with `exec > /dev/null`, so failures rely on exit status and stderr; tests are destructive to fixed interface/netns names. Test signals are kselftest pass/fail status for each script.

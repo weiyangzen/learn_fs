@@ -1,0 +1,28 @@
+# sources/distributed-fs/eos/mgm/ofs/XrdMgmOfs.cc
+
+## Purpose
+`XrdMgmOfs.cc` is the core implementation file for the EOS MGM XRootD OFS plugin. It exports the XRootD filesystem factory functions, constructs and tears down the MGM singleton, starts major service objects, applies Prometheus monitoring configuration, implements common OFS helpers, handles prepare requests, manages redirection/stalling responses, sends FST queries, emits deletion records, and provides audit-decision helpers.
+
+## Important APIs, Types, And Functions
+Key exported entry points are `XrdSfsGetFileSystem()` and `XrdSfsGetFileSystem2()`, with `XrdVERSIONINFO` metadata for both. Core implemented methods include the `XrdMgmOfs` constructor/destructor, `OrderlyShutdown()`, `Init()`, `newDir()`, `newFile()`, `Disc()`, `ApplyMonitoringConfig()`, `GetMonitoringConfig()`, `HasStall()`, `HasRedirect()`, `getVersion()`, `prepare()`, `_prepare()`, `_prepare_query()`, `truncate()`, `Emsg()`, `Stall()`, `Redirect()`, `ArchiveSubmitterThread()`, `SubmitBackupJob()`, `GetPendingBkps()`, `DiscoverPlatformServices()`, FUSEX cast helpers, `IsNsBooted()`, `WriteRmRecord()`, `WriteRecycleRecord()`, `Tried()`, namespace boot wait helpers, `prepareOptsToString()`, `SetRedirectionInfo()`, `SendQuery()`, `BroadcastQuery()`, `QueryResync()`, `RemoveDetached()`, `IsMaster()`, and audit allow helpers.
+
+## Control Flow
+Plugin loading enters through `XrdSfsGetFileSystem()`. It creates a static `XrdMgmOfs`, initializes logging, calls `Init()` and `Configure()`, sets global `gOFS`, enables default stall/redirection behavior, stores the config filename, and loads the MGM authorization plugin through `XrdAccAuthorizeObject()`. `XrdSfsGetFileSystem2()` delegates to the first factory and advertises prepare-handler support to XRootD through `XRD_PrepHandler`.
+
+The constructor initializes default configuration, reads selected environment overrides for HTTP/FUSEX/gRPC/WNC/REST ports, parses audit environment mode and read suffixes, creates service objects such as REST API manager, ZMQ context, IO stats, HTTP/gRPC servers, egroup refresh, recycler, device tracker, tape GC, and filesystem scheduler. Command implementations from `ofs/cmds/*.inc` are included after core helpers, making this file a compilation hub for many OFS operations.
+
+`ApplyMonitoringConfig()` reads global config keys for Prometheus enabled, port, and cache TTL, falls back to `EOS_MGM_PROMETHEUS_*` environment values, validates values, stops the exporter when disabled, and recreates `PrometheusExporter` when bind address or TTL changes. The exporter is master-gated through `[this]() { return mMaster && mMaster->IsMaster(); }`.
+
+Shutdown flows through `OrderlyShutdown()`: it adds a global stall rule, blocks new in-flight requests, joins/cleans service threads, disables config autosave, clears config references, stops routing, auth workers, converter/drain/geotree/io/fuse/fsck/messaging/recycler/WFE/LRU/egroup/http/Prometheus/WNC/quota/FsView/master, and finally stops the traffic-shaping engine.
+
+## State And Persistence Behavior
+Most persistent MGM state is owned through members declared in the header and initialized here. This file directly manages runtime singleton state (`gOFS`), boot timestamps, audit environment flags, service lifetimes, Prometheus runtime state, pending backup queue state, and shutdown state. It writes report records to `mIoStats` for final deletion and recycle deletion, including encoded paths, file ids, timestamps, owner ids, and sizes. `RemoveDetached()` mutates namespace metadata by removing detached containers/files or re-triggering unlink-location deletion behavior.
+
+## Dependencies And Integration Points
+The file is heavily integrated with EOS common utilities, namespace services, FsView, QuarkDB-backed namespace machinery, traffic shaping, monitoring, bulk prepare, tape GC, FUSEX, HTTP/gRPC servers, ZMQ messaging, auth plugins, proc commands, quota, recycle, LRU, WFE, fsck, converter, drainer, geotree, XRootD OFS/SFS APIs, and XrdCl query APIs. `NamespaceStats` and `PrometheusExporter` connect this core object to stats and monitoring.
+
+## Risks And Edge Cases
+Singleton lifetime is a major risk: many helpers dereference `gOFS` and expect initialized services. `OrderlyShutdown()` assumes several threads and pointers are valid and joinable; partial startup failure paths must avoid double-stop or null dereference. Monitoring reconfiguration binds sockets and may fail due to bad config or port conflicts. `BroadcastQuery()` waits until `responses.size() == endpoints.size()`, so send failures and duplicate/invalid endpoints need careful accounting to avoid waits. `_prepare_query()` allocates a JSON buffer with exact `length()` bytes and copies with `strncpy()` without a terminator; this is acceptable for `XrdOucBuffer` length-delimited data but unsafe if treated as a C string elsewhere. Audit attribute-only mode catches all exceptions and returns false, so namespace lookup failures silently disable auditing for that decision.
+
+## Test Signals
+High-value tests include plugin factory initialization, configure failure cleanup, monitoring enable/disable/reconfigure paths, invalid Prometheus config values, master-only scrape behavior, orderly shutdown idempotence, stall and redirect rule behavior, prepare/query JSON response handling, backup queue de-duplication and submitter flow, `SetRedirectionInfo()` under and over 2 KiB, `SendQuery()` and `BroadcastQuery()` success/error/invalid URL paths, `RemoveDetached()` for attached/detached files and containers, namespace boot waits, and audit decisions for global and `sys.audit` attribute modes.

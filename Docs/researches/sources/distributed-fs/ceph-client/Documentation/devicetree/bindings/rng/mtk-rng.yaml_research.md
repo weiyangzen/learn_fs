@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rng/mtk-rng.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rng/mtk-rng.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rng/mtk-rng.yaml` is a Linux devicetree YAML schema for the `MediaTek Random number generator` hardware random-number generator binding. It is not executable Ceph or kernel logic; it is a hardware-description ABI used by DTS authors, dt-schema, and Linux subsystem drivers so that board descriptions match what the driver will parse at probe or early boot.
+
+## Important APIs, Types, and Functions
+The public API surface is the schema's accepted node shape. `compatible` uses `oneOf` with 2 accepted compatible forms and covers 6 compatible tokens: `mediatek,mt7623-rng`, `mediatek,mt7622-rng`, `mediatek,mt7629-rng`, `mediatek,mt7986-rng`, `mediatek,mt8365-rng`, `mediatek,mt8516-rng`. Top-level properties are `$nodename`, `compatible`, `reg`, `clocks`, `clock-names`. Across nested schemas and child nodes this file mentions 5 distinct property names; required properties observed at all levels include `clock-names`, `clocks`, `compatible`, `reg`. Node naming is constrained by {'pattern': '^rng@[0-9a-f]+$'}. RNG properties declare entropy-provider resources: register ranges {join_code(groups['addressing'], 8)}, clock/reset/power controls `clocks`, `clock-names`, interrupts none, and RNG tuning keys `reg`, `clocks`. Required properties are `compatible`, `reg`, `clocks`, `clock-names`; runtime consumers are hwrng/crypto drivers that turn these resources into entropy devices.
+
+## Control Flow, State, and Persistence
+Control flow is declarative JSON-schema evaluation. `dt-doc-validate`, `dt_binding_check`, and `dtbs_check` load the YAML, expand `$ref` links, match nodes by `compatible` or referenced common-schema use, enforce required properties, evaluate composition/conditional keywords, and validate inline DTS examples. At runtime, hwrng or crypto drivers bind to the node, map registers, enable clocks or resets, and feed entropy to the kernel random subsystem. The YAML itself stores no mutable runtime state and writes no persistent data; persistence is the source-controlled devicetree ABI and the DTB blobs built from DTS. External references used in evaluation are none; schema composition/conditional keywords present are `oneOf`.
+
+## Dependencies and Integration Points
+Maintainers: Sean Wang <sean.wang@mediatek.com>. Integration points include the Linux devicetree core meta-schema, any referenced common binding schemas, in-tree DTS/DTSI users under the Ceph-client kernel source, and driver `of_match_table` entries for the compatible strings. `$ref` dependencies are none; pattern-property child-node APIs are none. The file provides 1 example block that should stay aligned with the schema and driver expectations.
+
+## Risks
+Risks are ABI and integration risks. Changing compatible ordering, required keys, resource names, child-node patterns, cell counts, or strictness can reject existing DTS files or let invalid hardware descriptions reach runtime probe. This schema has 5 top-level properties, 5 distinct property names across nested schemas, and this strictness profile: unknown top-level properties are rejected. Conditional branches and shared `$ref` schemas should be checked against all in-tree users because schema-only edits can still break board builds or driver binding.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/rng/mtk-rng.yaml` for targeted schema and example validation, then `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/rng/mtk-rng.yaml` against representative DTS users using `mediatek,mt7623-rng`, `mediatek,mt7622-rng`, `mediatek,mt7629-rng`, `mediatek,mt7986-rng`, `mediatek,mt8365-rng`, `mediatek,mt8516-rng`. The file contains 1 inline example, so example compilation should be part of the signal. Integration signals include hwrng device registration, entropy reads through `/dev/hwrng` or kernel hwrng tests, clock/reset enablement, and absence of probe-time register/IRQ failures.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/rng/mtk-rng.yaml -->

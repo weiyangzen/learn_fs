@@ -1,0 +1,7 @@
+# sources/distributed-fs/openafs/src/export/export.c
+
+This AIX kernel extension stores a kernel symbol table and exposes import helpers for kernel functions and variables missing from the normal exports list. Its entry point `export` handles `CFG_INIT` by calling `config` and `CFG_TERM` by calling `export_cleanup` under `kernel_lock`.
+
+Important functions are `config`, `export_cleanup`, `import_kfunc`, `import_kvar`, optional `osetgroups`, and `okioctl`/`okioctl32`. `config` copies in a `struct k_conf`, validates symbol table size and 1 MiB total bound, allocates kernel memory, copies symbol and string tables from userspace, and rewrites string offsets to pointers. `import_kfunc` looks up `g_toc`/`ktoc` and the requested function, constructs an AIX function descriptor, and writes it through the caller's function pointer. `import_kvar` scans a caller TOC for a surrogate variable pointer and replaces it with the real kernel variable address under interrupt disable.
+
+State is global `toc_syms`, `toc_nsyms`, `toc_strs`, `toc_size`, and cached `myg_toc`. Dependencies are AIX kernel APIs, `sym_lookup`, and cfgexport-provided tables. Risks are kernel-memory corruption from bad symbol data, TOC scanning without explicit bound, global state lifetime, and platform ABI assumptions. Test signals are module load/unload, importing known functions/variables, and OpenAFS kernel extension startup on AIX.

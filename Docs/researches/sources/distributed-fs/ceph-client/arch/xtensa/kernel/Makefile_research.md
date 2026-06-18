@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/Makefile -->
+# sources/distributed-fs/ceph-client/arch/xtensa/kernel/Makefile
+
+Purpose: controls Xtensa kernel object composition and custom linker-script preprocessing. It always builds core objects such as `head.o`, `align.o`, `coprocessor.o`, `entry.o`, `irq.o`, `platform.o`, `process.o`, `ptrace.o`, `setup.o`, `signal.o`, `stacktrace.o`, `syscall.o`, `time.o`, `traps.o`, and `vectors.o`, with config-gated objects for MMU DMA, PCI, modules, ftrace, SMP, secondary reset vector, perf, hardware breakpoints, S32C1I selftest, jump labels, and hibernation.
+
+Control flow is Kbuild-driven. The notable custom rule preprocesses `vmlinux.lds.S` and runs sed substitutions so Xtensa `.literal` sections are grouped before matching `.text` sections, satisfying L32R's limited relative range. Persistent state is build artifacts and generated `vmlinux.lds`. Dependencies include Kbuild variables, CPP, sed, linker script layout, and Xtensa literal constraints. Integration points are kernel image linking, conditional feature objects, and module/perf/SMP support. Risks are sed expression fragility, missing object for enabled feature, and literal/text separation causing link/runtime failures. Test signals include full kernel builds across config matrix, linker map inspection, and booting images with large text/literal placement.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/Makefile -->

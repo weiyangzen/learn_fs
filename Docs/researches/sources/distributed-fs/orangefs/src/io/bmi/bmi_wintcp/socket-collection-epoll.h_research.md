@@ -1,0 +1,15 @@
+# sources/distributed-fs/orangefs/src/io/bmi/bmi_wintcp/socket-collection-epoll.h
+
+Purpose: declares the epoll-backed socket collection interface and embeds the fast-path add/remove/write-interest operations as macros for the TCP BMI method.
+
+Important APIs/types/macros: `struct socket_collection` contains `epfd`, `event_array[BMI_EPOLL_MAX_PER_CYCLE]`, and `server_socket`. `SC_READ_BIT`, `SC_WRITE_BIT`, and `SC_ERROR_BIT` are the backend-neutral readiness flags returned to `bmi-wintcp.c`. `BMI_socket_collection_init`, `BMI_socket_collection_finalize`, and `BMI_socket_collection_testglobal` are implemented by the matching `.c` file. `BMI_socket_collection_add` registers a connected peer socket for `EPOLLIN|EPOLLERR|EPOLLHUP`; `BMI_socket_collection_remove` clears `write_ref_count` and deletes the socket from epoll; `BMI_socket_collection_add_write_bit` increments `write_ref_count` and modifies the socket to include `EPOLLOUT`; `BMI_socket_collection_remove_write_bit` decrements the counter and removes `EPOLLOUT` only when it reaches zero.
+
+Control flow support: read interest is implicit and always present for registered peer sockets. Write interest is reference-counted because multiple queued sends to the same method address can require one socket to remain writable until all send operations complete or cancel. The listen socket is added by initialization, not by macros. The macro implementation stores `tcp_data->map` in `event.data.ptr`, which is the value later returned as a ready address by `BMI_socket_collection_testglobal`.
+
+State and persistence behavior: there is no persistence. Per-address poll state is split between the kernel epoll set and `struct tcp_addr.write_ref_count`; unlike the WinSock poll backend, this header does not maintain `sc_index` or queued add/remove lists.
+
+Dependencies and integration: includes `<sys/epoll.h>`, `bmi-method-support.h`, `bmi-tcp-addressing.h`, `quicklist.h`, and `gen-locks.h`. `quicklist`/`gen-locks` are included for interface compatibility with the non-epoll header but are not central to this backend. The macros assume `method_data` points to a valid `struct tcp_addr` with a valid socket and map pointer.
+
+Risks: macros call `epoll_ctl` without checking return codes, so duplicate adds, missing registrations, closed sockets, and failed modifications are silent. `BMI_socket_collection_remove` calls `EPOLL_CTL_DEL` even if `tcp_data->socket` is invalid; there is no guard matching the add macro. `BMI_socket_collection_add_write_bit` asserts the socket is valid, but assertions may be compiled out. Because these are macros, each argument can be evaluated in macro context and side effects would be hazardous. The header assumes epoll semantics and is not portable to Windows despite living under `bmi_wintcp`.
+
+Test signals: compile coverage with `__PVFS2_USE_EPOLL__`, add/remove idempotency behavior, write reference-count increment/decrement balance, failed `epoll_ctl` diagnostics if added, and integration tests that prove queued sends keep `EPOLLOUT` armed until the last send completes.

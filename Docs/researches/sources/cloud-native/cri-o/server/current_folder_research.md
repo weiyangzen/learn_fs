@@ -1,0 +1,126 @@
+# Folder Research: sources/cloud-native/cri-o/server
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 112
+- Recursive researched files: 121
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/cloud-native/cri-o/server/artifacts_test.go`
+- `sources/cloud-native/cri-o/server/container_attach.go`
+- `sources/cloud-native/cri-o/server/container_attach_test.go`
+- `sources/cloud-native/cri-o/server/container_checkpoint.go`
+- `sources/cloud-native/cri-o/server/container_checkpoint_test.go`
+- `sources/cloud-native/cri-o/server/container_create.go`
+- `sources/cloud-native/cri-o/server/container_create_freebsd.go`
+- `sources/cloud-native/cri-o/server/container_create_generic.go`
+- `sources/cloud-native/cri-o/server/container_create_linux.go`
+- `sources/cloud-native/cri-o/server/container_create_linux_test.go`
+- `sources/cloud-native/cri-o/server/container_create_test.go`
+- `sources/cloud-native/cri-o/server/container_create_unsupported.go`
+- `sources/cloud-native/cri-o/server/container_events.go`
+- `sources/cloud-native/cri-o/server/container_events_test.go`
+- `sources/cloud-native/cri-o/server/container_exec.go`
+- `sources/cloud-native/cri-o/server/container_exec_test.go`
+- `sources/cloud-native/cri-o/server/container_execsync.go`
+- `sources/cloud-native/cri-o/server/container_execsync_test.go`
+- `sources/cloud-native/cri-o/server/container_list.go`
+- `sources/cloud-native/cri-o/server/container_list_test.go`
+- `sources/cloud-native/cri-o/server/container_portforward.go`
+- `sources/cloud-native/cri-o/server/container_portforward_test.go`
+- `sources/cloud-native/cri-o/server/container_remove.go`
+- `sources/cloud-native/cri-o/server/container_remove_linux.go`
+- `sources/cloud-native/cri-o/server/container_remove_test.go`
+- `sources/cloud-native/cri-o/server/container_remove_unsupported.go`
+- `sources/cloud-native/cri-o/server/container_reopen_log.go`
+- `sources/cloud-native/cri-o/server/container_reopen_log_test.go`
+- `sources/cloud-native/cri-o/server/container_restore.go`
+- `sources/cloud-native/cri-o/server/container_restore_test.go`
+- `sources/cloud-native/cri-o/server/container_start.go`
+- `sources/cloud-native/cri-o/server/container_start_test.go`
+- `sources/cloud-native/cri-o/server/container_stats.go`
+- `sources/cloud-native/cri-o/server/container_stats_list.go`
+- `sources/cloud-native/cri-o/server/container_stats_test.go`
+- `sources/cloud-native/cri-o/server/container_status.go`
+- `sources/cloud-native/cri-o/server/container_status_test.go`
+- `sources/cloud-native/cri-o/server/container_stop.go`
+- `sources/cloud-native/cri-o/server/container_stop_test.go`
+- `sources/cloud-native/cri-o/server/container_update_resources.go`
+- `sources/cloud-native/cri-o/server/container_update_resources_linux.go`
+- `sources/cloud-native/cri-o/server/container_update_resources_test.go`
+- `sources/cloud-native/cri-o/server/container_update_resources_unsupported.go`
+- `sources/cloud-native/cri-o/server/health.go`
+- `sources/cloud-native/cri-o/server/image_fs_info.go`
+- `sources/cloud-native/cri-o/server/image_fs_info_test.go`
+- `sources/cloud-native/cri-o/server/image_list.go`
+- `sources/cloud-native/cri-o/server/image_list_test.go`
+- `sources/cloud-native/cri-o/server/image_pull.go`
+- `sources/cloud-native/cri-o/server/image_pull_test.go`
+- `sources/cloud-native/cri-o/server/image_remove.go`
+- `sources/cloud-native/cri-o/server/image_remove_test.go`
+- `sources/cloud-native/cri-o/server/image_status.go`
+- `sources/cloud-native/cri-o/server/image_status_test.go`
+- `sources/cloud-native/cri-o/server/inspect.go`
+- `sources/cloud-native/cri-o/server/inspect_ginkgo_test.go`
+- `sources/cloud-native/cri-o/server/inspect_test.go`
+- `sources/cloud-native/cri-o/server/label_linux.go`
+- `sources/cloud-native/cri-o/server/label_unsupported.go`
+- `sources/cloud-native/cri-o/server/listen_unix.go`
+- `sources/cloud-native/cri-o/server/listen_unix_test.go`
+- `sources/cloud-native/cri-o/server/listen_windows.go`
+- `sources/cloud-native/cri-o/server/masked_paths.go`
+- `sources/cloud-native/cri-o/server/metric_descriptors_list.go`
+- `sources/cloud-native/cri-o/server/naming.go`
+- `sources/cloud-native/cri-o/server/naming_test.go`
+- `sources/cloud-native/cri-o/server/nri-api.go`
+- `sources/cloud-native/cri-o/server/rootless_linux.go`
+- `sources/cloud-native/cri-o/server/rootless_unsupported.go`
+- `sources/cloud-native/cri-o/server/runtime_config.go`
+- `sources/cloud-native/cri-o/server/runtime_status.go`
+- `sources/cloud-native/cri-o/server/runtime_status_test.go`
+- `sources/cloud-native/cri-o/server/safemount_freebsd.go`
+- `sources/cloud-native/cri-o/server/safemount_linux.go`
+- `sources/cloud-native/cri-o/server/sandbox_list.go`
+- `sources/cloud-native/cri-o/server/sandbox_list_test.go`
+- `sources/cloud-native/cri-o/server/sandbox_metrics_list.go`
+- `sources/cloud-native/cri-o/server/sandbox_network.go`
+- `sources/cloud-native/cri-o/server/sandbox_network_freebsd.go`
+- `sources/cloud-native/cri-o/server/sandbox_network_linux.go`
+- `sources/cloud-native/cri-o/server/sandbox_network_unsupported.go`
+- `sources/cloud-native/cri-o/server/sandbox_remove.go`
+- `sources/cloud-native/cri-o/server/sandbox_remove_test.go`
+- `sources/cloud-native/cri-o/server/sandbox_run.go`
+- `sources/cloud-native/cri-o/server/sandbox_run_freebsd.go`
+- `sources/cloud-native/cri-o/server/sandbox_run_linux.go`
+- `sources/cloud-native/cri-o/server/sandbox_run_test.go`
+- `sources/cloud-native/cri-o/server/sandbox_run_unsupported.go`
+- `sources/cloud-native/cri-o/server/sandbox_stats.go`
+- `sources/cloud-native/cri-o/server/sandbox_stats_list.go`
+- `sources/cloud-native/cri-o/server/sandbox_status.go`
+- `sources/cloud-native/cri-o/server/sandbox_status_test.go`
+- `sources/cloud-native/cri-o/server/sandbox_stop.go`
+- `sources/cloud-native/cri-o/server/sandbox_stop_freebsd.go`
+- `sources/cloud-native/cri-o/server/sandbox_stop_linux.go`
+- `sources/cloud-native/cri-o/server/sandbox_stop_test.go`
+- `sources/cloud-native/cri-o/server/sandbox_stop_unsupported.go`
+- `sources/cloud-native/cri-o/server/sandbox_update_resources.go`
+- `sources/cloud-native/cri-o/server/sandbox_update_resources_test.go`
+- `sources/cloud-native/cri-o/server/selinux.go`
+- `sources/cloud-native/cri-o/server/server.go`
+- `sources/cloud-native/cri-o/server/server_freebsd.go`
+- `sources/cloud-native/cri-o/server/server_linux.go`
+- `sources/cloud-native/cri-o/server/server_test.go`
+- `sources/cloud-native/cri-o/server/server_test_inject.go`
+- `sources/cloud-native/cri-o/server/server_unsupported.go`
+- `sources/cloud-native/cri-o/server/suite_test.go`
+- `sources/cloud-native/cri-o/server/update_runtime_config.go`
+- `sources/cloud-native/cri-o/server/utils.go`
+- `sources/cloud-native/cri-o/server/utils_test.go`
+- `sources/cloud-native/cri-o/server/version.go`
+- `sources/cloud-native/cri-o/server/version_test.go`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

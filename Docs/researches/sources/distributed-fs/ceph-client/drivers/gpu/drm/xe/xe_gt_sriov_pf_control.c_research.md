@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/xe_gt_sriov_pf_control.c
+
+Purpose: implements the PF-side GT SR-IOV VF control state machine. It drives pause, resume, stop, FLR, and migration save/restore sequencing for each VF by sending GuC control commands and reacting to GuC-to-PF event messages.
+
+Important APIs and functions: exported entry points include `xe_gt_sriov_pf_control_init`, `xe_gt_sriov_pf_control_restart`, `xe_gt_sriov_pf_control_pause_vf`, `xe_gt_sriov_pf_control_resume_vf`, save/restore trigger/process/finish helpers, `xe_gt_sriov_pf_control_stop_vf`, FLR prepare/trigger/sync/wait helpers, and `xe_gt_sriov_pf_control_process_guc2pf`. Internal GuC command helpers wrap `GUC_ACTION_PF2GUC_VF_CONTROL` for PAUSE, RESUME, STOP, FLR_START, and FLR_FINISH.
+
+Control flow: each VF owns a bitmap of `XE_GT_SRIOV_STATE_*` bits plus a completion. Top-level operations set a WIP bit and enqueue the VF on `gt->sriov.pf.control.list`; `control_worker_func` dispatches one queued VF at a time through `pf_process_vf_state_machine`. GuC `-EBUSY` responses requeue the same send state, `-EIO` is treated as command rejection/mismatch, and success advances the state machine. Pause and FLR wait for asynchronous GuC DONE events before completing. Stop and resume complete after accepted GuC control command responses. FLR progresses through start, GuC done, optional multi-GT sync, config/data/MMIO reset, finish command, and ready state.
+
+State and persistence: state is volatile GT memory in `gt->sriov.pf.vfs[vfid].control.state`. `WIP` gates overlapping operations and `done` completes blocked callers. Restart after GT reset cancels the worker and returns all VFs to ready, clearing paused/stopped/saved/restored/mismatch and WIP-derived states. Save/restore state also owns and frees the migration packet ring through migration helpers.
+
+Dependencies and integration: depends on GuC CT send/blocking APIs, GuC SR-IOV ABI definitions, PF config sanitization, PF migration packet helpers, monitor FLR reset, tile/device SR-IOV service synchronization, and PF migration waitqueues. It is called from debugfs control files, PCI SR-IOV control paths, migration uAPI orchestration, and GuC G2H dispatch.
+
+Risks: the state machine is sensitive to out-of-order GuC events and races between command response and DONE notification, handled by entering WAIT_GUC before sending commands. Timeout constants are short for pause/FLR wait and longer for restore/config reset; slow firmware or heavy VRAM migration can surface as `-ETIMEDOUT` or `-EIO`. Mismatch bits are diagnostic but also mask failed states until a clean transition. Save/restore uses a small ring, so userspace must drain/fill promptly.
+
+Test signals: exercise debugfs `control` commands, forced GuC busy/reject paths, FLR notification ordering, GT reset during WIP operations, migration save/restore with empty/full rings, and PVC multi-GT FLR dispatch. Logs from `xe_gt_sriov_dbg_verbose`, notices on FLR/save/restore failure, and completion timeout paths are key diagnostics.

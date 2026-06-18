@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/test-appliance/files/root/fs/local/config
+
+- Purpose: local filesystem test configuration; it local pseudo-filesystem config that points tests at local directories without destructive block formatting.. The file is 47 lines/379 bytes and is researched as source path `sources/test-tools/xfstests-bld/test-appliance/files/root/fs/local/config`.
+- Important APIs/types/functions: sourced shell config exports `DEFAULT_MKFS_OPTIONS` and implements hooks check_filesystem, format_filesystem, setup_mount_opts, get_mkfs_opts, show_mkfs_opts, show_mount_opts, test_name_alias, reset_vars; assignments include DEFAULT_MKFS_OPTIONS="".
+- Control flow: `runtests.sh` sources this via `get_fs_config`, calls `reset_vars`, derives aliases with `test_name_alias`, formats/checks devices through `format_filesystem`/`check_filesystem`, and records mkfs/mount options for each `local` test config.
+- State and persistence: changes mounted test/scratch filesystems, loop/UBI/export directories where applicable, and per-config result metadata; variables are reset between configs to avoid cross-test leakage.
+- Dependencies/integration: integrates with `/root/runtests.sh`, xfstests `local.config`, mkfs/fsck/mount tools for the target filesystem, exclude/config lists, and optional GCE/KVM device inventories.
+- Risks and test signals: wrong mkfs/check commands can destroy the wrong device or skip valid tests; validate with smoke config selection, generated config files, fsck output, and xUnit result creation for this filesystem.

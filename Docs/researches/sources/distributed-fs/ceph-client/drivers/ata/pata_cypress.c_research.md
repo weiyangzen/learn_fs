@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_cypress.c
+
+Purpose: Cypress/Contaq CY82C693 PCI PATA driver for the primary ATA function. It provides PIO timing and optional MWDMA programming using both PCI config registers and legacy indexed I/O ports.
+
+Important APIs and control flow: module parameter `enable_dma` controls whether MWDMA modes are advertised. `cy82c693_set_piomode` computes libata timings, encodes 16-bit and 8-bit active/recovery values, and writes master/slave setup and timing registers. `cy82c693_set_dmamode` writes the DMA mode through magic indexed ports `0x22/0x23` and sets timeout index `0x32` to `0x50`. `cy82c693_init_one` only accepts PCI function 1, leaves secondary magic function unhandled, and registers primary plus dummy secondary with BMDMA.
+
+State, dependencies, and risks: state is PCI config timing registers, global indexed I/O ports, and static mutable `ata_port_info` updated by the DMA parameter. Dependencies are PCI function layout, libata BMDMA, and low I/O port access. Risks include only primary-channel support, global legacy index/data ports that can conflict on unusual systems, mutable static port info across probes, optional DMA whose reliability is parameter-controlled, and 40-wire-only cable policy. Test signals are function 1 binding only, `enable_dma=0` suppressing MWDMA, correct indexed DMA writes, primary port enumeration, and suspend/resume through generic PCI paths.

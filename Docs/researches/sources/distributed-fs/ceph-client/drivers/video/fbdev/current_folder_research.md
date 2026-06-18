@@ -1,0 +1,146 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/video/fbdev
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 132
+- Recursive researched files: 433
+- Direct child folders represented: 15
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/68328fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/acornfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/acornfb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/amifb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/arcfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/arkfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/asiliantfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb_iplan2p2.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb_iplan2p4.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb_iplan2p8.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb_mfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atafb_utils.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/atmel_lcdfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/au1100fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/au1200fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/au1200fb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/broadsheetfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/bt431.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/bt455.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/bw2.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/c2p.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/c2p_core.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/c2p_iplan2.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/c2p_planar.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/carminefb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/carminefb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/carminefb_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cg14.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cg3.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cg6.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/chipsfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cirrusfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/clps711x-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cobalt_lcdfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/controlfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/controlfb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cyber2000fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/cyber2000fb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/dnfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/edid.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/efifb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/ep93xx-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/ffb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/fm2fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/fsl-diu-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/g364fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/gbefb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/goldfishfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/grvga.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/gxt4500.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/hecubafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/hgafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/hitfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/hpfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/i740_reg.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/i740fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/imsttfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/imxfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/leo.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/macfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/macmodes.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/macmodes.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/maxinefb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/metronomefb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/n411.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/neofb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/ocfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/offb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/p9100.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/platinumfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/platinumfb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pm2fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pm3fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pmag-aa-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pmag-ba-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pmagb-b-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/ps3fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pvr2fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxa168fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxa168fb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxa3xx-gcu.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxa3xx-gcu.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxa3xx-regs.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/pxafb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/q40fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/s1d13xxxfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/s3c-fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/s3fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sa1100fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sa1100fb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sbuslib.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sbuslib.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sh7760fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sh_mobile_lcdcfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sh_mobile_lcdcfb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/simplefb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/skeletonfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sm501fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sm712.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sm712fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/smscufx.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/ssd1307fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sstfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/stifb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sunxvr1000.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sunxvr2500.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/sunxvr500.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/tcx.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/tdfxfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/tgafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/tridentfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/udlfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/uvesafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/valkyriefb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/valkyriefb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/vesafb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/vfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/vga16fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/vt8500lcdfb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/vt8500lcdfb.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/vt8623fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/wm8505fb.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/wm8505fb_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/wmt_ge_rops.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/wmt_ge_rops.h`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/xen-fbfront.c`
+- `sources/distributed-fs/ceph-client/drivers/video/fbdev/xilinxfb.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

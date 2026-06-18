@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/error_prints.h
+
+Header declaring strace diagnostic APIs and printf-format attributes for the implementations in `error_prints.c`. It exposes nonfatal and fatal variants for plain and errno-backed messages, with `_and_die` functions marked noreturn through compiler compatibility macros. It has no runtime state, but its attributes are an integration contract with the compiler and callers. Dependencies are `gcc_compat.h`-style attributes pulled through project headers. Risks are mismatched prototypes causing lost format checking or wrong noreturn assumptions. Test signals are successful compilation with `-Wformat` diagnostics, callers using these helpers, and fatal-path tests that observe exit.

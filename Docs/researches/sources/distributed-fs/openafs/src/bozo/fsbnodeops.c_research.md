@@ -1,0 +1,11 @@
+# sources/distributed-fs/openafs/src/bozo/fsbnodeops.c
+
+`fsbnodeops.c` implements `fs` and `dafs` bnode types, coordinating the multi-process OpenAFS file service: fileserver, volserver, salvager, optional scanner, and for DAFS the salvageserver. It encodes startup ordering, shutdown ordering, salvage-after-crash behavior, binary-change restart detection, status strings, pid files, and core detection.
+
+Important APIs are `fsbnode_ops`, `dafsbnode_ops`, `fs_create`, `dafs_create`, `NudgeProcs`, `SetSalFlag`, `RestoreSalFlag`, `SetNeedsClock`, `fs_timeout`, `fs_procexit`, `fs_restartp`, `fs_getstat`, `fs_getstring`, `fs_getparm`, and `dafs_getparm`. `struct fsbnode` stores command strings, process pointers, last starts, running/shutdown/kill flags, `needsSalvage`, and clock scheduling state.
+
+Control flow validates and translates all command paths at creation, checks that binaries exist, restores `needsSalvage` from `AFSDIR_SERVER_LOCAL_DIRPATH/SALVAGE.<instance>` for non-DAFS, and sets a poll timeout. `NudgeProcs` is the state machine: when goal is normal it starts file/vol/scanner/salvageserver if safe, or stops file/vol/scanner and runs salvager if `needsSalvage` is set. On shutdown it SIGQUITs fileserver and SIGTERMs the other processes, with `fs_timeout` escalating to SIGKILL after grace periods. `fs_procexit` clears process state, updates salvage flags when fileserver exits cleanly or salvager completes, and re-enters `NudgeProcs`.
+
+State and persistence are split between in-memory process flags, optional pid files, `BosConfig` command persistence, and the salvage flag file that survives host crashes. Dependencies include bnode APIs, path translation, server dirpath constants, procmgmt signals, LWP/Rx includes, pid-file helpers, and file stat metadata for restart detection.
+
+Risks include a complex hand-written lifecycle state machine, crash-safety dependence on correct `SALVAGE.*` creation/removal, DAFS differences where salvage flags are ignored, fixed shutdown windows, emergency shutdown if salvager and fileserver run together, command-token parsing for ctime checks, and optional scanner/salvageserver branches. Test signals should cover clean vs killed fileserver exit, salvager completion clearing flags, DAFS startup, scanner optionality, status strings, ctime restart detection, pid-file cleanup, and timeout escalation.

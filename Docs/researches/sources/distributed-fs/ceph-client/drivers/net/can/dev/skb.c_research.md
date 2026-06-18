@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/dev/skb.c
+
+Purpose: common SocketCAN SKB allocation, validation, local echo, echo completion/freeing, and error-frame allocation.
+
+Important APIs and functions: `alloc_can_skb()`, `alloc_canfd_skb()`, `alloc_canxl_skb()`, and `alloc_can_err_skb()` allocate protocol-specific frames, attach CAN skb extensions, initialize checksum/pkt type, and populate default frame flags. `can_put_echo_skb()` clones and stores an outgoing skb for later local echo. `__can_get_echo_skb()`, `can_get_echo_skb()`, and `can_free_echo_skb()` complete or discard echo slots and handle timestamps/stat lengths. `can_dropped_invalid_skb()` validates outgoing CAN/CAN FD/CAN XL SKBs and initializes AF_PACKET-originated SKBs.
+
+Control flow and state: echo state persists in the `can_priv::echo_skb[]` array created by `alloc_candev*()`. Drivers call put during TX submission and get/free during TX completion or failure. Dependencies include `can_skb_ext`, netdevice stats, `IFF_ECHO`, PF_CAN fallback behavior, and frame length helpers. Risks are echo slot out-of-bounds or already-occupied bugs, dropped SKBs when devices lack local echo, extension allocation failure, and correct initialization for raw packet injection. Test signals include echo loopback delivery, hardware timestamp completion, tx_dropped/tx_aborted counters on flush, invalid skb drops, and CAN XL length validation.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+
+Purpose: Adds optional debugfs support for DWC PCIe controllers: RAS-DES lane/debug state, RAS-DES error injection, RAS-DES event counters, LTSSM status, and PTM debug controls/clock reads. It is shared by RC and EP mode via `dwc_pcie_debugfs_init()` and `dwc_pcie_debugfs_deinit()`.
+
+Important APIs and types: `struct dwc_pcie_rasdes_info` stores the RAS-DES VSEC offset and event-register mutex. `struct dwc_pcie_rasdes_priv` stores per-file PCI pointer and table index. Static tables `err_inj_list[]` and `event_list[]` enumerate supported injections and counters. Main functions are `dwc_pcie_rasdes_debugfs_init()`, `err_inj_write()`, `counter_*_{read,write}()`, `ltssm_status_show()`, PTM callbacks in `dw_pcie_ptm_ops`, `dwc_pcie_debugfs_init()`, and `dwc_pcie_debugfs_deinit()`.
+
+Control flow: Debugfs init creates `dwc_pcie_<devname>`, tries to locate the RAS-DES VSEC, skips RAS-DES gracefully if absent, creates lane debug files, one write-only file per error injection, one directory per event counter with enable/value and optional lane-select files, then adds LTSSM status and PTM debugfs through the generic PTM helper. RAS-DES counter operations serialize on `reg_event_lock` because group/event/lane/value share shadow registers. Error injection parses counter/value-difference/VC arguments based on injection group, writes the group-specific register, then enables that injection group.
+
+State and persistence: Debugfs state is devm-allocated and referenced from `pci->debugfs`. Hardware-visible state includes RAS-DES lane select, error injection registers, event counter enable/lane selection, PTM context update/valid bits, and PTM timestamps/clocks. `pci->mode` gates PTM file visibility for RC versus EP.
+
+Dependencies and integration points: Depends on Linux debugfs, seq_file, DWC DBI accessors, VSEC discovery helpers from `pcie-designware.c`, generic PCIe PTM debugfs helpers, and DWC LTSSM helpers. Host and EP init call it after controller setup; cleanup is called from host deinit and EP cleanup.
+
+Risks: `dwc_pcie_debugfs_deinit()` unconditionally calls RAS-DES deinit when `pci->debugfs` exists; if RAS-DES capability was absent, `rasdes_info` may be NULL unless callers avoid that path or the implementation is hardened. Error injection is powerful and can intentionally corrupt PCIe traffic; file permissions are debugfs-only but still dangerous. Input validation checks ranges for some groups but does not validate every hardware-supported lane/event combination. Timestamp reads loop until MSB is stable, which assumes registers make progress.
+
+Test signals: Mount debugfs and verify directory creation with and without RAS-DES VSEC, read LTSSM status, exercise lane detect/RX valid lane selection, enable/read counters for representative groups, inject controlled errors on a test link, verify mutex-protected counter selection under concurrent reads, create/destroy PTM files in RC and EP modes, and unload/deinit without NULL dereferences.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/ntb/hw/idt/ntb_hw_idt.h
+
+Purpose: Defines the IDT NTB driver's hardware contract: PCI IDs, local NT-function and global switch register offsets, bitfield masks, helper macros, resource limits, temperature constants, and driver-private data structures.
+
+Important APIs, types, and functions: `IDT_PCI_DEVICE_IDS()` builds PCI match entries with IDT vendor, bridge class, and model config data. The register sections cover NT config space, global switch port/partition/event/message/SMBus/temperature registers, and common fields such as `PCIELCAP_PORTNUM`, `BARSETUP_*`, `NTMTBLDATA_*`, `SWPORTxSTS_*`, and temperature fields. `GET_FIELD`, `SET_FIELD`, and `IS_FLD_SET` are central macros used by the C file for packed register fields. Core types include `enum idt_temp_val`, `enum idt_mw_type`, `struct idt_89hpes_cfg`, `struct idt_mw_cfg`, `struct idt_ntb_peer`, `struct idt_ntb_dev`, and descriptor tables for bars, messages, NT registers, ports, and partitions.
+
+Control flow: The header has no runtime control flow, but it drives C-file control paths by encoding valid register offsets and field meanings. Port scanning depends on switch port and partition status fields; link setup depends on `NTCTL`, `NTMTBLDATA`, `SE*`, and global-signal constants; MW scanning and translation depend on `BARSETUP`, `LUTOFFSET`, and `LUTUDATA`; message routing depends on `SWPxMSGCTL`; temperature sysfs depends on `TMPSTS`, `TMPALARM`, and `TMPADJ`.
+
+State and persistence behavior: The state layout in `struct idt_ntb_dev` captures all per-device runtime state: NTB core handle, model config, local port/partition, peer descriptors, peer lookup maps, mapping/LUT/message/doorbell/GASA locks, local BAR0 mapping, hwmon mutex, and debugfs node. Constants like `IDT_MAX_NR_PORTS`, `IDT_MAX_NR_PEERS`, and `IDT_MAX_NR_MWS` bound allocations and array scans. Hardware persistence is implied by register definitions and shared switch-global registers.
+
+Dependencies and integration points: It includes Linux `types`, `pci`, `pci_ids`, `interrupt`, `spinlock`, `mutex`, and `ntb`. It is consumed directly by `ntb_hw_idt.c`, and its PCI ID macro is the integration point between model-specific configs and Linux PCI matching.
+
+Risks and edge cases: The `SET_FIELD` macro does not mask the input `value` before shifting, so callers must pass bounded values. `struct idt_89hpes_cfg` uses a flexible `ports[]` member and is instantiated with static initializers in the C file, so size assumptions must remain aligned with model `port_cnt`. Many register offsets for unsupported port numbers are absent in tables rather than derivable by formula; table mistakes would cause global register access to the wrong switch state. Constants such as `IDT_DIR_SIZE_ALIGN` intentionally encode hardware quirks and can surprise generic NTB client assumptions.
+
+Test signals: Header validation comes from compile coverage, sparse/build checks against all macro users, boot/probe on every listed IDT device ID, and register dumps comparing debugfs output with vendor documentation for BAR, partition, event, message, and temperature fields.

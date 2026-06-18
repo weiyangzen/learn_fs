@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/BuddyMirrorPattern.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/striping/BuddyMirrorPattern.h
+
+**Purpose:** Declares and inline-constructs the buddy mirror stripe-pattern subclass. **APIs/types:** `BuddyMirrorPattern` embeds `StripePattern`, `UInt16Vec mirrorBuddyGroupIDs`, and `defaultNumTargets`; inline init/construct/uninit and virtual-function assignment configure deserialize/index/ID/min/default methods. **Control flow/state:** normal construction copies supplied IDs and defaults default target count to 4 when zero; deserialization construction initializes an empty vector for later fill. **Dependencies/integration:** uses `Serialization`, `StripePattern`, `UInt16Vec`, and `ListTk_copyUInt16ListToVec`. **Risks/tests:** inline casts through `StripePattern*` rely on embedding as first field; tests should cover destruct freeing vectors and constructor default behavior.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/BuddyMirrorPattern.h -->

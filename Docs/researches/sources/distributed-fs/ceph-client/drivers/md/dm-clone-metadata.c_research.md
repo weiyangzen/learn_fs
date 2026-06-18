@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/drivers/md/dm-clone-metadata.c
+
+## Purpose
+`dm-clone-metadata.c` implements the persistent metadata layer for the device-mapper `clone` target. It stores and retrieves a region hydration bitmap on a metadata device, tracks in-memory dirty updates for the current metadata transaction, validates and writes the metadata superblock, and exposes nonblocking update APIs that the target can call from I/O completion context.
+
+## Important APIs, Types, And Functions
+The on-disk format is `struct superblock_disk`, containing checksum, block number, magic, version, metadata space-map root, `region_size`, `target_size`, and `bitset_root`. `struct dm_clone_metadata` owns the metadata block device, region geometry, two dirty maps, the active and committing dirty-map pointers, the in-core `region_map`, block manager, space map, transaction manager, disk bitset metadata, locks, and terminal flags (`hydration_done`, `fail_io`, `read_only`). `struct dirty_map` has `dirty_words`, `dirty_regions`, and a `changed` flag.
+
+Public functions implement the header contract: `dm_clone_metadata_open`, `dm_clone_metadata_close`, `dm_clone_set_region_hydrated`, `dm_clone_cond_set_range`, `dm_clone_metadata_pre_commit`, `dm_clone_metadata_commit`, `dm_clone_reload_in_core_bitset`, `dm_clone_changed_this_transaction`, `dm_clone_metadata_abort`, read-only/read-write mode setters, hydration query helpers, `dm_clone_find_next_unhydrated_region`, and metadata-space accounting helpers. Internal superblock and transaction helpers include `sb_prepare_for_write`, `sb_check`, `__superblock_all_zeroes`, `__open_metadata`, `__format_metadata`, `__copy_sm_root`, `__prepare_superblock`, `__load_bitset_in_core`, `__flush_dmap`, and `__metadata_commit`.
+
+## Control Flow
+Open allocates `struct dm_clone_metadata`, computes `nr_regions` and `nr_words`, allocates the in-core region bitmap, creates a persistent block manager, then either formats an all-zero metadata device or opens existing metadata. Formatting creates a transaction manager and metadata space map, creates and resizes an empty disk bitset to `nr_regions`, pre-commits metadata blocks, copies the space-map root, writes the superblock, and commits it. Opening validates the superblock, checks that target and region sizes match the table, opens the transaction manager from the stored space-map root, initializes disk-bitset access, and records the bitset root.
+
+After open, `__load_bitset_in_core` flushes the disk-bitset cache and walks all region bits into `region_map`; dirty maps are allocated and initialized. Hydration updates call `dm_clone_set_region_hydrated` for one region or `dm_clone_cond_set_range` for a range. Both update `region_map`, set the corresponding dirty region bits, set dirty word bits, and mark the active dirty map changed under `bitmap_lock`; the single-region variant uses irqsave and is documented as interrupt-context safe.
+
+Commits are two phase. `dm_clone_metadata_pre_commit` takes the write semaphore, rejects read-only/fail state, swaps `current_dmap` to the clean inactive map under the bitmap spinlock, and marks the old map as `committing_dmap`. New hydration updates now land in the next transaction. `dm_clone_metadata_commit` flushes only the bits recorded in `committing_dmap`, flushes disk-bitset and transaction-manager state, writes a fresh superblock with updated roots, clears the dirty map's changed flag, and releases `committing_dmap`.
+
+## State And Persistence Behavior
+The persistent source of truth is the disk bitset referenced by the superblock. `region_map` is a fast in-core copy used by I/O path queries and background hydration scanning. The two dirty maps are the crash-consistency bridge: one map is active for new completions while the other is being committed. The target is expected to flush destination data after `pre_commit` and before `commit`, so persisted hydration bits only describe regions whose destination contents reached stable storage.
+
+`dm_clone_metadata_abort` destroys and recreates persistent data structures from the last committed superblock without formatting. If that fails, `fail_io` is set, after which queries that need the space map fail and close avoids destroying invalid persistent structures. `dm_clone_reload_in_core_bitset` reloads the disk bitmap after abort/read-only transition; it deliberately does not take `bitmap_lock` because it can block, and the header documents that callers must prevent concurrent bitmap writers by setting read-only first.
+
+## Dependencies And Integration Points
+This file depends on persistent-data primitives: `dm-block-manager`, `dm-transaction-manager`, `dm-space-map`, and `dm-bitset`. It is consumed by `dm-clone-target.c`, which uses the nonblocking hydration update calls from kcopyd and bio completion paths and wraps commits with destination-device flushes. It also integrates with device-mapper logging through `DMERR` and exposes metadata block accounting for target status.
+
+## Risks And Edge Cases
+The dirty-map swap assumes the inactive map is clean and that no commit is already in progress; violations return errors and trigger target-level failure handling. The commit path must not persist bits before destination data is durable. `dm_clone_cond_set_range` is not safe in interrupt-disabled contexts because it uses `spin_lock_irq`, while `dm_clone_set_region_hydrated` is irqsave-safe. Range overflow checks and the `2^31` region limit in the target protect bitmap operations. If reload is called while updates can still occur, `region_map` can diverge from dirty maps; the API comments make this a caller responsibility.
+
+## Test Signals
+Metadata tests should cover formatting an all-zero device, opening existing metadata, rejecting changed target or region sizes, superblock checksum/magic/version failures, setting single and range hydration bits, two-phase commit with updates arriving between pre-commit and commit, abort/reload behavior, read-only failures, free/total metadata block status, all-regions-hydrated detection, and fault injection in block-manager, bitset, and transaction-manager calls.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/mm/book3s64/hash_utils.c
+
+Purpose: Central hash-MMU implementation for Book3S64. It discovers page and segment capabilities, initializes the hash page table and direct map, routes hash faults, preloads HPTEs after page faults, implements HPTE flag conversion and flush helpers, supports debug pagealloc/KFENCE, memory hotplug, HPT resizing/debugfs, and hash stress modes.
+
+Important APIs and functions: Boot/setup APIs include `hash__early_init_devtree()`, `hash__early_init_mmu()`, `hash__early_init_mmu_secondary()`, `hash__setup_initial_memory_limit()`, and `print_system_hash_info()`. Mapping APIs include `htab_bolt_mapping()`, `htab_remove_mapping()`, `hash__create_section_mapping()`, `hash__remove_section_mapping()`, and `hash__kernel_map_pages()`. Fault APIs include `hash_page_mm()`, `hash_page()`, `do_hash_fault`, `__update_mmu_cache()`, and `hash_preload()`. Flush helpers include `pte_get_hash_gslot()`, `flush_hash_page()`, `flush_hash_hugepage()`, `flush_hash_range()`, and `hpte_insert_repeating()`.
+
+Control flow: Early devtree scanning fills segment and page-size tables. Early MMU init selects a backend, configures page-table geometry, allocates or registers the HPT, bolts the linear map, optionally maps TCE/KFENCE regions, sets SLB state, and flushes local TLBs. Fault handling classifies the effective address region, derives VSID/segment/page size, finds the Linux PTE, handles huge pages or standard PTEs, demotes incompatible 64K segments, checks subpage protection, then calls the 4K/64K/THP/hugetlb hash insertion helpers. Cache update preload hashes young user PTEs after generic faults when safe. Flush helpers decode stored hash slot metadata and call backend invalidation.
+
+State and persistence: Global runtime state includes `mmu_psize_defs`, `hpte_page_sizes`, `htab_address`, `htab_size_bytes`, `htab_hash_mask`, selected linear/virtual/vmalloc/io/vmemmap page sizes, segment size choices, `mmu_hash_ops`, stress static keys, debug-pagealloc/KFENCE slot arrays, and direct-map counts. This state persists for the boot lifetime.
+
+Dependencies and integration: Integrates with firmware device tree, memblock, SLB, pseries/native/PS3 hash backends, sparsemem, hugetlb, THP, pkeys, transactional memory, SPU, EEH/TCE allocation, debugfs, and generic fault handling.
+
+Risks: This file has high blast radius. Firmware page-size parsing drives HPTE encoding correctness. HPT sizing and bolted mapping failures can panic boot. Fault paths must avoid deadlocks by disabling interrupts/PMI around busy-bit manipulation. Segment demotion changes process slice state and requires SLB/PACA refresh. Stale HPTE slot metadata can corrupt future flushes.
+
+Test signals: Boot on LPAR, native, and emulator paths; device-tree page-size permutations; 4K and 64K kernels; hugetlb/THP/subpage protection; memory hotplug and HPT resize; debug_pagealloc/KFENCE; transactional memory TLB abort behavior; and `stress_hpt` collision testing.

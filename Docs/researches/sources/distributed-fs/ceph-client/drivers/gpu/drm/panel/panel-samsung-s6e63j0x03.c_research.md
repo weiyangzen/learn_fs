@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63j0x03.c
+
+Purpose: S6E63J0X03 is a 1.63 inch 320x320 MIPI DSI AMOLED panel driver. It manages two supplies, reset, a custom gamma-table backlight, MTP keys, and a one-lane DSI link.
+
+Important APIs, control flow, and state: probe allocates `struct s6e63j0x03`, sets one-lane RGB888 DSI video flags without porch/sync packets, gets `vdd3`/`vci`, reset GPIO, registers a backlight named `s6e63j0x03`, sets max/default brightness, and attaches. `prepare()` powers on, resets, unlocks level-2/MTP, programs porch/frame frequency, column/page window with `FIRST_COLUMN`, LTPS timing, TE edge, exits sleep, and marks backlight reduced. `enable()` waits, applies MTP key, writes ELVSS/address mode/default DBV/control display/power save/TE, locks MTP, sets display on, and marks backlight on. `disable()` display-offs, marks reduced, enters sleep, waits 120 ms; `unprepare()` disables supplies and marks off. Brightness maps 0-100 into 9 gamma rows, writes under MTP key, and stores the requested brightness.
+
+Dependencies, integration, risks, and tests: dependencies are MIPI DSI DCS helpers, regulator/GPIO/backlight APIs, and compatible `samsung,s6e63j0x03`. Risks are coarse brightness quantization, no range validation in backlight update, command ordering around MTP key off on errors, and unusual column offset. Test signals include 320x320 visible scanout, brightness index boundaries, sleep/resume recovery, reset polarity, and one-lane host compatibility.

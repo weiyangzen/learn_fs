@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/net/ipv4/tcp_fastopen.c
+
+## Purpose
+`tcp_fastopen.c` implements TCP Fast Open server and client support: cookie key management, cookie generation and validation, child socket creation from SYN data, SYN payload queuing, listener fastopen queue accounting, active-side deferred connect, and global blackhole detection/backoff for broken middleboxes.
+
+## Important APIs, Types, And Functions
+Public functions include `reqsk_fastopen_remove()`, `tcp_fastopen_init_key_once()`, `tcp_fastopen_destroy_cipher()`, `tcp_fastopen_ctx_destroy()`, `tcp_fastopen_reset_cipher()`, `tcp_fastopen_get_cipher()`, `tcp_fastopen_add_skb()`, `tcp_try_fastopen()`, `tcp_fastopen_cookie_check()`, `tcp_fastopen_defer_connect()`, `tcp_fastopen_active_disable()`, `tcp_fastopen_active_should_disable()`, `tcp_fastopen_active_disable_ofo_check()`, and `tcp_fastopen_active_detect_blackhole()`. Internal helpers cover RCU context freeing, SipHash cookie generation, cookie match checks against primary/backup keys, child creation, queue overflow checks, and no-cookie policy.
+
+## Control Flow
+Server-side SYN handling calls `tcp_try_fastopen()`. It checks sysctl enablement, SYN data or cookie request presence, and listener queue capacity. If no-cookie policy permits, or a presented cookie validates against primary/backup keys, `tcp_fastopen_create_child()` builds a full child socket before the handshake completes, links the request via `fastopen_rsk`, starts SYNACK retransmission, initializes TCP transfer state, and queues SYN payload with `tcp_fastopen_add_skb()`. Cookie requests or failed validation return a generated cookie without creating a child. Client-side connect calls `tcp_fastopen_cookie_check()` and `tcp_fastopen_defer_connect()` to decide whether SYN should wait for first write. Blackhole functions disable active TFO for exponential timeout periods when FIN/RST/ofo or timeout patterns indicate middlebox failure.
+
+## State, Persistence, Dependencies, And Integration
+TFO key contexts are RCU-published globally per netns or per listener queue and freed with `kfree_sensitive()`. Listener fastopen queues track `qlen`, maximum queue length, reset request list, and per-listener context under `fastopenq->lock`. Child sockets track `fastopen_rsk`, `syn_fastopen_child`, receive sequence adjustments, and SYN data flags. Active blackhole state persists in per-net IPv4 fields `tfo_active_disable_stamp` and `tfo_active_disable_times`. The file depends on request sockets, accept queues, RCU, SipHash, TCP metrics/cache helpers, route metrics, NAPI marking, and MIB counters.
+
+## Risks And Test Signals
+Risks include request-socket lifetime races between listener and child, queue accounting errors around reset-defense entries, RCU key replacement races, accepting invalid cookies, SYN payload sequence mistakes, backup-key rotation bugs, and overbroad active TFO disablement. Tests should cover cookie request, valid primary and backup cookies, invalid cookie fallback, no-cookie sysctl and route-metric paths, SYN data and SYN FIN queuing, accept and listener-close lifetime cases, max queue overflow and reset timeout recycling, key reset/get/destroy, deferred connect, and blackhole timeout escalation/reset.

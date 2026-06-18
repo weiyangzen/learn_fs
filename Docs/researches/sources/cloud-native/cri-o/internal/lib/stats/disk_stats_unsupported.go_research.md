@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/stats/disk_stats_unsupported.go
+
+Purpose: fallback disk stats API for platforms other than Linux and FreeBSD. It preserves `DiskStats`, `FilesystemStats`, and `GetDiskUsageForPath` signatures but always returns an unsupported error. There is no runtime state beyond the returned error. Integration allows callers to compile while platform-specific statsserver paths avoid real disk collection. Risks are callers treating unsupported as fatal in generic code and missing filesystem metrics on these platforms. Test signals are compile-time and any platform tests that expect the explicit "disk usage statistics not supported" error.

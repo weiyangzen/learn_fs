@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/ansible_cfg/defaults/main.yml
+
+This defaults file defines values used to render the repository's `ansible.cfg`. It controls deprecation warnings, the dense callback plugin behavior, stderr and skipped-host display settings, per-host start display, task path reporting, Python interpreter discovery (`auto_silent`), and fork count.
+
+The file is declarative and has no runtime control flow. Its important integration surface is the `ansible_cfg` task template `ansible.cfg.j2`, which consumes these variables to configure local Ansible execution behavior for kdevops workflows. Persistent state is created only when the task role writes the generated config. Risks are mostly operational: callback settings can hide or show large amounts of output, fork count affects concurrency and load, and `auto_silent` may obscure interpreter discovery problems. Test signals should render the template with defaults and verify expected keys in the generated `ansible.cfg`.

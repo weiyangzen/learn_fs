@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/stacktrace_map.c
+
+Purpose: tests basic stack map collection and map consistency using `stacktrace_map` skeleton. It verifies that stack ID hash map keys match stack map keys, address stack maps match, and lookup-and-delete removes a collected stack.
+
+Control flow opens/loads skeleton, gets map fds, attaches, sleeps to allow events, disables collection via `control_map`, compares keys both directions, compares stack IP arrays, then uses BSS `stack_id` to `bpf_map_lookup_and_delete_elem` and confirms a subsequent lookup returns `-ENOENT`. State is held in BPF maps `control_map`, `stackid_hmap`, `stackmap`, `stack_amap`, and BSS `stack_id`. Dependencies are stack trace helpers from `test_progs.h` and periodic event generation by the attached BPF program. Risks include timing, empty stack maps, and errno handling around lookup/delete. Test signals are successful map comparisons, address stack comparison, lookup-delete success, and deleted-key absence.

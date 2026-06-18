@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/include/asm/unistd.h -->
+# sources/distributed-fs/ceph-client/arch/parisc/include/asm/unistd.h
+
+Source read size: 151 lines, 4895 bytes.
+
+Purpose: connects PA-RISC syscall numbers to kernel code and defines the architecture's inline syscall calling convention. Important APIs/macros: includes UAPI `unistd.h`, `__NR_Linux_syscalls`, `SYS_ify`, `K_INLINE_SYSCALL`, `K_LOAD_ARGS_0..6`, `K_ASM_ARGS_*`, `K_CLOB_ARGS_*`, `syscall0..5`, and `__ARCH_WANT_*` feature selectors. Control flow: inline syscalls load arguments into PA-RISC ABI registers r26..r21, place the syscall number in r20, branch through the gateway at `0x100(%sr2,%r0)`, and preserve PIC register r19 via r4 when needed. State and persistence: no owned state; it defines ABI register effects and generic syscall table inclusion. Dependencies and integration points: used by kernel code that performs internal syscalls and by syscall table generation; paired with `entry.S` gateway/syscall exit behavior. Risks: register clobber lists, PIC save/restore, and `__ARCH_WANT_*` selections are ABI-sensitive; wrong constraints can silently corrupt caller state. Test signals: syscall ABI tests, seccomp/audit syscall classification, 32-bit and 64-bit syscall table builds, and inline syscall smoke tests.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/include/asm/unistd.h -->

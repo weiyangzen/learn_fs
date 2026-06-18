@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/sound/firewire/iso-resources.h
+
+Purpose: public interface for shared FireWire isochronous resource management. It defines `struct fw_iso_resources` and prototypes for init, destroy, allocate, update, and free.
+
+State model: callers may adjust `channels_mask` after init; the rest is private state recording the target unit, mutex, allocated channel, bandwidth without overhead, current overhead, valid generation, and allocation flag. Integration requires callers to allocate before starting ISO streams, call `fw_iso_resources_update()` from FireWire `.update` after bus reset, and call `fw_iso_resources_free()` before destroy. Dependencies are Linux mutex/types and forward-declared `fw_unit`. Risks are API misuse: using `channel` without successful allocation, destroying while allocated, failing to update after reset, or relying on private fields across modules. Test signals: compile coverage for all FireWire audio drivers, lockdep around resource mutex, channel-mask-limited allocation, and WARN_ON in destroy when cleanup paths are incomplete.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup01.py
+
+Purpose: foundational backup cursor and `wt backup` command coverage for full database backup, selective object backup, cursor reset, and checkpoint deletion while hot backup is active. It extends `wtbackup.backup_base`.
+
+Key APIs include `session.open_cursor('backup:')`, `runWt(['backup'])`, `runWt(['list'])`, `compare_backups`, `confirmPathDoesNotExist`, `session.checkpoint`, and named checkpoint cursors. Control flow populates files and simple/complex tables, backs up the full database and selected subsets, validates list equality and content, iterates backup cursor twice after `reset`, and asserts named checkpoints pinned by an open backup cursor cannot be dropped. State behavior spans copied files, metadata, checkpoints, and backup cursor pinning. Risks include object index lists referencing eight entries although six are visible in `objs`, filesystem cleanup, and timing around checkpoint timestamps. Test signals are content comparisons, missing-object assertions, WT_NOTFOUND, and expected checkpoint-drop errors.

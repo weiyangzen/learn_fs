@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/sandbox/sandbox_freebsd.go
+
+Purpose: FreeBSD-specific sandbox stubs and policy. It defines a noop `NetNs` type with unsupported initialization/get functions, no-op symlink/close/remove methods, `hostNetNsPath` returning unsupported, `UnmountShm` as no-op, and `NeedsInfra` based on whether server drops infra and network namespace mode is POD. State is intentionally absent for network namespace operations. Dependencies are CRI namespace mode types and context. Risks are feature gaps hidden by no-op methods, callers assuming Linux netns behavior, and broad unsupported errors. Tests in generic sandbox tests exercise `NeedsInfra` on supported builds; FreeBSD-specific netns behavior relies mainly on compile-time separation.

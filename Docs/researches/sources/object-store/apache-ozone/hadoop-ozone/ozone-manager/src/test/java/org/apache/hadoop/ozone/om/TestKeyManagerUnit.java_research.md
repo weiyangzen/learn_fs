@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/test/java/org/apache/hadoop/ozone/om/TestKeyManagerUnit.java
+
+Purpose: Unit coverage for `KeyManagerImpl` behavior around multipart upload listing/parts, key lookup pipeline hydration, datanode failure refresh, and list-status SCM caching. The test boots an `OmTestManagers` instance with mocked SCM block/location protocols and a real OM metadata manager backed by a temp metadata directory.
+
+Important APIs and types: `KeyManagerImpl`, `OzoneManagerProtocol`, `OMMetadataManager`, `OmMultipartInfo`, `OmMultipartKeyInfo`, `OmMultipartUploadList`, `OmMultipartUploadListParts`, `OmKeyArgs`, `OmKeyInfo`, `OmKeyLocationInfo`, `ResolvedBucket`, `OzoneFileStatus`, `StorageContainerLocationProtocol`, `ScmBlockLocationProtocol`, `Pipeline`, `ContainerWithPipeline`, and `OMRequestTestUtils`.
+
+Control flow: setup creates an OM with mocked SCM clients, disables Ratis system exits, and resets mocks before each test. MPU tests create volumes/buckets through metadata helpers, initiate uploads through the write client, optionally insert cache tombstones or cache-only MPU rows, and call `keyManager.listMultipartUploads` or `listParts`. Key lookup tests seed key table entries with block IDs and verify SCM batch lookups only when needed or when forced. `lookupFile` starts with stale pipeline metadata and expects SCM replacement. `listStatus` inserts ten keys with containers, lists the bucket, and verifies a single SCM batch fetch is reused on the second call.
+
+State and persistence: this test exercises real OM tables plus table cache entries. It explicitly adds `multipartInfoTable` cache entries, deletion-style cache values, volume/bucket/key table rows, and container-location cache state inside `KeyManagerImpl`/`ScmClient`. Creation times are compared against a per-test `startDate` to catch missing MPU timestamp propagation.
+
+Dependencies and integration points: depends on OM request test utilities, current UGI owner names, `RatisReplicationConfig`, SCM pipeline/container APIs, and `OmTestManagers` wiring. It bridges metadata tables to service-level key-manager reads, so failures often indicate a contract drift between request handlers, metadata key formats, cache overlay semantics, and SCM location hydration.
+
+Risks and edge cases: duplicate cache entries must collapse into correct MPU listing results; cache tombstones must hide deleted DB/cache uploads; prefix and marker pagination must preserve sorted ordering and truncation markers; backward-compatible MPU part listing must tolerate parts without eTags; stale or null pipelines must be refreshed without repeated SCM calls; list-status sorting and datanode pipeline population rely on SCM cache reuse.
+
+Test signals: assertions cover zero-part MPU listing, five committed parts without eTags, MPU listing by bucket/prefix/cache/DB, 25-entry pagination with markers, SCM call counts for `getKeyInfo` and `listStatus`, pipeline replacement on DN failure, and stable result ordering.

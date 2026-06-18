@@ -1,0 +1,115 @@
+# Folder Research: sources/storage-engines/rocksdb/java/rocksjni
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 101
+- Recursive researched files: 101
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/storage-engines/rocksdb/java/rocksjni/backup_engine_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/backupenginejni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/cache.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/cassandra_compactionfilterjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/cassandra_value_operator.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/checkpoint.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/clock_cache.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/columnfamilyhandle.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compact_range_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_filter.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_filter_factory.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_filter_factory_jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_filter_factory_jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_job_info.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_job_stats.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_options_fifo.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/compaction_options_universal.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/comparator.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/comparatorjnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/comparatorjnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/compression_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/concurrent_task_limiter.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/config_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/cplusplus_to_java_convert.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/env.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/env_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/event_listener.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/event_listener_jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/event_listener_jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/export_import_files_metadatajni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/filter.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/hyper_clock_cache.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/import_column_family_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/ingest_external_file_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/iterator.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/jni_multiget_helpers.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/jni_multiget_helpers.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/jni_perf_context.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/kv_helper.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/loggerjnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/loggerjnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/lru_cache.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/memory_util.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/memtablejni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/merge_operator.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/native_comparator_wrapper_test.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/optimistic_transaction_db.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/optimistic_transaction_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/options_util.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/persistent_cache.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/portal.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/ratelimiterjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/remove_emptyvalue_compactionfilterjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/restorejni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/rocks_callback_object.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/rocksdb_exception_test.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/rocksjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/slice.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/snapshot.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/sst_file_manager.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/sst_file_reader_iterator.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/sst_file_readerjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/sst_file_writerjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/sst_partitioner.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/statistics.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/statisticsjni.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/statisticsjni.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/stderr_logger.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/table.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/table_filter.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/table_filter_jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/table_filter_jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/table_properties_collector_factory.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/table_properties_collector_factory.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/testable_event_listener.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/thread_status.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/trace_writer.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/trace_writer_jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/trace_writer_jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_db.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_db_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_log.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_notifier.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_notifier_jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_notifier_jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/transaction_options.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/ttl.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/wal_filter.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/wal_filter_jnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/wal_filter_jnicallback.h`
+- `sources/storage-engines/rocksdb/java/rocksjni/write_batch.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/write_batch_test.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/write_batch_with_index.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/write_buffer_manager.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/writebatchhandlerjnicallback.cc`
+- `sources/storage-engines/rocksdb/java/rocksjni/writebatchhandlerjnicallback.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

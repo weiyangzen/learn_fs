@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/mm/book3s64/slice.c
+
+Purpose: implements hash-MMU address-space slices, which assign page-size properties to low and high virtual-address meta-segments and steer mmap placement for normal and hugetlb mappings.
+
+Important APIs and control flow: `slice_get_unmapped_area()` validates alignment, expands the SLB address limit when required, computes masks of already-good, compatible, and free slices, searches bottom-up or top-down through available ranges, allocates extended contexts if high addresses require them, converts empty slices to the requested MMU page size, and flushes SLBs for affected CPUs. `arch_get_unmapped_area*()` delegates here unless radix is enabled. `get_slice_psize()`, `slice_init_new_context_exec()`, `slice_setup_new_exec()`, and `slice_set_range_psize()` expose page-size lookup and initialization.
+
+State and dependencies: state is packed in `mm->context` low/high slice arrays, per-page-size slice masks, SLB address limits, and a global `slice_convert_lock`. It depends on VMA gap lookup, hugetlb hstates, SPU SLB flushing, extended context allocation, and hash-only SLB flushing. Risks are incorrect MAP_FIXED failure semantics, races during 64K-to-4K demotion, stale SLB entries after conversion, and high-limit mistakes around `DEFAULT_MAP_WINDOW`/`TASK_SIZE`. Test signals include mmap hint/fixed/topdown cases, hugepage-only ranges, 32-bit exec setup, and mixed 4K/64K kernels.

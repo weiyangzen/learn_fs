@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/alarm/alarm02.c
+
+Purpose: verifies `alarm()` accepts large second values and returns the previous scheduled value when canceled. Setup installs a `SIGALRM` handler; each testcase schedules `INT_MAX`, `UINT_MAX/2`, or `UINT_MAX/4`, immediately calls `alarm(0)`, expects the same value, and checks no signal fired. Important APIs are `alarm`, `SAFE_SIGNAL`, and volatile signal counter state. State is per-process alarm timer. Dependencies are signal delivery semantics. Risks include platforms limiting alarm seconds differently. Test signal is returned remaining time equals requested large value and no premature `SIGALRM`.

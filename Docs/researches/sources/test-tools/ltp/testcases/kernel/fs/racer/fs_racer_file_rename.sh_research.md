@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/racer/fs_racer_file_rename.sh
+
+Purpose: repeated rename/replacement mutator. It takes `DIR` and `MAX`, chooses a random numeric name, computes the next numeric name as destination, and runs `mv -f $DIR/$file $DIR/$new_file` forever. Dependencies are Bash and `mv`; integration is with creator/remover/linker scripts sharing the same name pool. State changes are namespace-level renames that may overwrite or move files, directories, and links. Errors are suppressed because missing paths and incompatible file types are expected under race. Risks are unquoted paths and infinite operation; the meaningful signal is filesystem correctness under concurrent rename with reads, writes, links, and recursive listing.

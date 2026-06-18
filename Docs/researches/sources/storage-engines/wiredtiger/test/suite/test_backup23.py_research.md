@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup23.py
+
+Purpose: verifies opening a backup restore with `verify_metadata=true` fails with a clear error, and that the same backup remains usable afterward with the correct configuration.
+
+Important APIs are transaction writes, checkpoint, `take_full_backup`, `wiredtiger_open`, `assertRaisesWithMessage`, and cursor materialization into lists. Control flow creates a file, writes and checkpoints initial data, writes additional logged data after the checkpoint, captures original cursor contents, takes a full backup, closes the source, asserts opening the backup with metadata verification enabled raises “restoring a backup is incompatible,” then opens with normal config and verifies backed-up data equals original data. State behavior is backup recovery plus metadata verification mode gating. Risks include config-specific behavior and exact error message. Test signals are expected open failure and data equality after subsequent successful open.

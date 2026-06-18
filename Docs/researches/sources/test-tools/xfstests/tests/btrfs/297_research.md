@@ -1,0 +1,22 @@
+# sources/test-tools/xfstests/tests/btrfs/297
+
+## Purpose
+Make sure btrfs scrub can fix parity stripe corruption We need to ensure a fixed extent size and we corrupt by writing directly to the device, so skip if compression is enabled. If neither raid5 or raid6 are supported do _notrun. In this subset it primarily covers multi-device, RAID, seed/sprout, or device-management paths, scrub detection and repair paths.
+
+## Important APIs, Types, and Functions
+The fstest declaration is `auto quick raid scrub`. Requirement and capability gates: line 14: `_require_odirect`; line 15: `_require_non_zoned_device "${SCRATCH_DEV}"`; line 16: `_require_scratch_dev_pool 3`; line 19: `_require_no_compress`. Local helper surface: `workload()` (line 29). Important command/API calls include line 10: `_begin_fstest auto quick raid scrub`; line 15: `_require_non_zoned_device "${SCRATCH_DEV}"`; line 21: `_fixed_by_kernel_commit 486c737f7fdc "btrfs: raid56: always verify the P/Q contents for scrub"`; line 25: `if ! _check_btrfs_raid_type raid5 && ! _check_btrfs_raid_type raid6; then`; line 34: `if ! _check_btrfs_raid_type $profile; then`; line 39: `echo "=== Testing $nr_devs devices $profile ===" >> $seqres.full`; line 45: `_scratch_mount -o space_cache=v2`; line 48: `$XFS_IO_PROG -f -d -c "pwrite -S 0xaa -b 64K 0 64K" "$SCRATCH_MNT/foobar" > /dev/null`; line 57: `devpath_p=$(_btrfs_get_device_path ${logical} 2)`; line 63: `$XFS_IO_PROG -d -c "pwrite -S 0xff -b 64K $physical_p 64K" $devpath_p > /dev/null`; line 68: `$BTRFS_UTIL_PROG scrub start -BdR $SCRATCH_MNT >> $seqres.full 2>&1`; line 75: `echo "The first 16 bytes of parity stripe after scrub:" >> $seqres.full`; line 86: `$BTRFS_UTIL_PROG check --check-data-csum $SCRATCH_DEV >> $seqres.full 2>&1`; line 88: `echo "Error detected after the scrub"`. It documents fixed kernel commit context at line 21: `_fixed_by_kernel_commit 486c737f7fdc \`.
+
+## Control Flow
+The control flow follows the xfstests pattern: source the common preamble, declare `_begin_fstest auto quick raid scrub`, install cleanup if needed, enforce requirements, then mounts the test filesystem, runs scrub or checks scrub reports, runs btrfs check or xfstests scratch checks, cycles mounts to force persistence. The script then performs its focused state transition and relies on explicit command failures, `_fail`, filtered stdout, content comparisons, filesystem checks, or expected output matching to detect regressions. Cleanup hooks remove temporary send streams, loop devices, scratch pool devices, or `$tmp.*` artifacts when the test defines them.
+
+## State and Persistence Behavior
+The script owns scratch filesystem state and normally reformats, mounts, unmounts, or checks it through xfstests helpers. Multi-device tests allocate scratch pool devices and leave correctness evidence in chunk maps, device registry state, degraded mounts, and btrfs check results. Corruption is injected below the filesystem and then validated after scrub, remount, or direct device reads. Sync, remount, unmount, receive, or device-scan boundaries are used to separate in-memory success from on-disk or kernel-global persistence.
+
+## Dependencies and Integration Points
+This file integrates with xfstests `common/preamble`, Btrfs common helpers, scratch-device lifecycle helpers, output filters, and the Btrfs kernel interfaces reached through btrfs-progs, xfs_io. It also depends on the adjacent expected-output file for stable golden-output comparison: `QA output created by 297 | Silence is golden`.
+
+## Risks and Edge Cases
+device topology tests can expose races in device scan state, degraded mounts, stripe geometry, replacement, and cleanup of scratch device pools; scrub repair signals depend on precise logical-to-physical mapping and can miss corruption if checksum, parity, or duplicate-copy selection regresses. Test reliability can also depend on mkfs defaults, sector size, nodesize, mount options, compression settings, discard support, device size, and whether helper commands support the specific subcommands used by the script.
+
+## Test Signals
+Primary pass signals are successful command completion, no unexpected stderr after filtering, expected `.out` text, clean `btrfs check` or `_check_scratch_fs` results when present, and matching file digests/fssum/byte dumps after replay or remount. Any mismatch in expected output, missing qgroup/device/snapshot state, uncorrected corruption, unexpected swapon success/failure, or receive/check failure indicates a regression for this source.

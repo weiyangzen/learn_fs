@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/misc/ocxl.h
+
+Purpose: This header defines the in-kernel OpenCAPI library API used by OCXL-aware drivers. It abstracts PCI function discovery, AFU enumeration and reference management, context allocation/attachment, AFU IRQs, global MMIO access, and compatibility configuration/link helpers.
+
+Important APIs, types, and functions: Configuration structs are `ocxl_afu_config` and `ocxl_fn_config`. Opaque objects are `ocxl_afu`, `ocxl_fn`, and `ocxl_context`. Device lifecycle includes `ocxl_function_open()`, `ocxl_function_close()`, `ocxl_function_afu_list()`, `ocxl_function_fetch_afu()`, `ocxl_afu_get()`, and `ocxl_afu_put()`. Context APIs include `ocxl_context_alloc()`, `ocxl_context_free()`, `ocxl_context_attach()`, and `ocxl_context_detach()`. IRQ APIs allocate/free IRQ IDs, get trigger page addresses, and install handlers. AFU metadata APIs expose config and private data. Global MMIO helpers read, write, set, and clear 32/64-bit registers with selected endian handling. Compatibility helpers read config space, set PASID/actag/AFU state/TL, terminate PASIDs, set up and release links, add/remove process elements, and allocate/free link IRQs.
+
+Control flow: A driver opens an OCXL PCI function, enumerates or fetches AFUs, reads config, allocates a context for an AFU, attaches an `mm_struct` and AMR to grant process access, allocates AFU IRQs and handlers, programs AFU global MMIO, then detaches/frees context and closes the function during teardown. Compatibility flows perform lower-level PCI config and link setup for drivers that still manage function state directly.
+
+State and persistence behavior: The API manages references for AFUs, opaque function/context lifetime, PASID and actag hardware allocation, link process elements, and IRQ registrations. `ocxl_function_close()` frees AFUs retrieved from the function and detaches associated contexts, but callers still free contexts. Hardware config persists in PCI/OpenCAPI device state until changed or reset.
+
+Dependencies and integration points: It depends on PCI, MM, IRQ handling, address spaces, keys of process address space state, and OpenCAPI platform link services. It integrates with cxlflash compatibility paths and hardware drivers that need shared OCXL services.
+
+Risks: The termination API documents that hardware can terminate only one PASID at a time, so callers must serialize. Context attach/detach must match process lifetime and MM ownership. IRQ private-data callbacks must not use freed memory. Endian selection for MMIO must match AFU registers. Closing a function while external references or contexts remain can lead to use-after-free if reference discipline is wrong.
+
+Test signals: AFU enumeration and refcounting, function open/close error paths, context attach/detach under process exit, IRQ allocation/handler/free, MMIO endian read/write/set/clear, PASID and actag programming, link setup/add/remove PE, PASID termination timeout, and compatibility with cxlflash-style direct config flows.

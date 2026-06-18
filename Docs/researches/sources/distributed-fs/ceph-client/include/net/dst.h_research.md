@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/include/net/dst.h
+
+Read `sources/distributed-fs/ceph-client/include/net/dst.h` completely for this pass (621 lines, 16177 bytes). Final split target: `Docs/researches/sources/distributed-fs/ceph-client/include/net/dst.h_research.md`.
+
+Purpose: defines the protocol-independent destination cache entry (`dst_entry`) and inline helpers for metrics, references, skb dst ownership, tunnel receive scrubbing, neighbor lookup, output/input dispatch, XFRM lookup integration, PMTU updates, and blackhole routes.
+
+Important APIs/types/functions: `struct dst_entry` stores output device, `dst_ops`, metrics pointer with low-bit flags, expiry, optional XFRM state, input/output callbacks, flags, obsolete state, header/trailer lengths, `rcuref`, use/lastuse, RCU callback, error, traffic class ID, lwtunnel state, device tracker, and uncached route links. `struct dst_metrics` holds RTAX metrics plus refcount. Helpers manage metrics (`dst_metrics_read_only`, `dst_metrics_write_ptr`, `dst_init_metrics`, `dst_copy_metrics`, `dst_metric_raw`, `dst_metric`, `dst_metric_advmss`, `dst_metric_set`, `dst_feature`, `dst_mtu`, `dst4_mtu`, `dst_metric_rtt`, `dst_metric_locked`), references (`dst_hold`, `dst_clone`, `dst_release`, `skb_dst_drop/copy/force`, `dst_hold_safe`), tunnel RX cleanup, `dst_tclassid`, allocation/init/device put, neighbor lookup/confirm/link failure, expiry, device overhead, `dst_output`, `dst_input`, `dst_check`, XFRM lookup wrappers, PMTU update helpers, device/net accessors, and blackhole dst operations.
+
+Control flow: route lookup returns a `dst_entry` and attaches it to an skb. Transmit calls `dst_output()` which indirect-calls the route's output function; receive delivery can call `dst_input()`. Users clone/hold/release dst references as skbs are copied or consumed. If `obsolete` is set, `dst_check()` invokes the protocol check callback. Tunnel receive helpers reset skb metadata before reinjection. XFRM lookup may wrap/replace dsts when IPsec policy applies. PMTU and neighbor operations delegate through `dst_ops`.
+
+State and persistence: dst entries are runtime route cache objects with reference-counted lifetimes, per-entry metrics, expiry, last-use counters, device trackers, lwtunnel/XFRM attachments, and uncached-route links. They are not durable, but are performance-critical shared state.
+
+Dependencies and integration points: depends on `dst_ops`, netdevice, rtnetlink, RCU/refcount/rcuref, jiffies, neighbor subsystem, lwtunnels, XFRM, skb dst encoding, indirect call wrappers, IPv4/IPv6 route functions, and tunnel/PMTU code.
+
+Risks: reference semantics are subtle: skb dst may be no-ref and `skb_dst_force()` requires RCU read lock. `__rcuref` cacheline placement is enforced for performance. Metrics pointer low bits encode flags and require aligned storage. Output/input indirect calls assume a valid skb dst. Device/lwtunnel access under RCU must use RCU accessors. XFRM-disabled stubs bypass policy entirely. PMTU updates and neighbor callbacks are protocol-specific and may be absent.
+
+Test signals: route lookup/clone/release stress, no-ref skb dst forcing under RCU, metrics copy-on-write/read-only/refcounted behavior, IPv4/IPv6 MTU/advmss metrics, obsolete route checking, tunnel receive scrubbing/accounting, output/input dispatch, PMTU update with and without confirmation, neighbor lookup/confirm/link failure, XFRM enabled/disabled builds, blackhole route behavior, and KASAN/KCSAN checks around teardown.

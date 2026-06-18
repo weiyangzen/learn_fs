@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/xfs/xfs_qm_syscalls.c
+
+Purpose: Implements XFS-internal quota syscall operations used by quotactl wrappers: turn enforcement on/off, truncate inactive quota files, set quota limits/timers, and fetch one or next quota record.
+
+Important APIs and functions: `xfs_qm_scall_quotaoff` disables enforcement flags but intentionally no longer disables quota accounting. `xfs_qm_scall_quotaon` enables enforcement after verifying accounting is present. `xfs_qm_scall_trunc_qfiles` truncates selected quota inodes when quota is fully off. `xfs_qm_scall_setqlim` updates hard/soft limits and grace timers for a dquot, with id zero updating default limits. `xfs_qm_scall_getquota` and `xfs_qm_scall_getquota_next` report quota usage/limits.
+
+Control flow: Quotaoff validates existing flags, strips accounting bits from the request, serializes through `qi_quotaofflock`, updates `m_qflags` and `sb_qflags`, and syncs the superblock. Quotaon accepts enforcement bits only, verifies matching accounting in `sb_qflags`, updates `sb_qflags`, syncs the superblock, and then updates in-core `m_qflags` if quota accounting is also live. Setqlim obtains or allocates the target dquot, starts a quota-limit transaction, joins and locks the dquot, validates hard >= soft per resource, writes limits/timers/defaults, adjusts timers for nonzero ids, marks dirty, logs the dquot, and commits. Getquota pushes inodegc at scan start, gets a dquot without allocation, optionally returns configured defaults for missing nonzero dquots, and suppresses timers when enforcement is off.
+
+State and persistence: Persists enforcement flags in the superblock, limit/timer updates in dquot buffers via transactions, and quota file truncation through inode extent truncation. Default limits are cached in `xfs_quotainfo` and backed by id-zero dquots. Reporting converts internal fsblock counts to byte counts and uses reserved usage.
+
+Dependencies and integration: Called by `xfs_quotaops.c`, depends on dquot get/next, quota inode loading, transaction reservations, inode truncation, dquot logging, superblock sync, inodegc, and quota conversion macros. It enforces XFS behavior expected by quota utilities, including `-EEXIST` for no-op quotaoff/quotaon.
+
+Risks and invariants: Accounting cannot be switched on/off here; mount-time is authoritative. Hard limits lower than soft limits are rejected per resource without rolling back unrelated accepted fields in the same call, so callers should inspect field masks carefully. Missing dquots can report defaults as zero-usage limits, which affects unprivileged visibility. Root filesystem accounting can exist on disk before `m_qflags` knows about it.
+
+Test signals: quotactl enable/disable enforcement with and without accounting, setqlim for block/inode/realtime resources and id-zero defaults, invalid hard/soft pairs, getquota missing dquot with/without defaults, get_nextdqblk id advancement, truncation of user/group/project quota files only when quota is off, and superblock sync failure handling.

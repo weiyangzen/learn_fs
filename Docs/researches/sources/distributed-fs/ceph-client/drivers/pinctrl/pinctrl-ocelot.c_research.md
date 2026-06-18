@@ -1,0 +1,27 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/pinctrl-ocelot.c
+
+## Purpose
+This driver provides pinctrl, pinmux, pin configuration, GPIO, and optional GPIO IRQ support for Microchip/Microsemi Ocelot-family switch SoCs and descendants: Luton, Serval, Ocelot, Jaguar2, ServalT, Sparx5, LAN966x, LAN969x, and LAN9645xF. Most of the file is SoC-specific pin capability data; the executable logic converts those tables into Linux pinctrl function groups, writes ALT mode registers, exposes GPIO lines, and configures per-pin electrical settings where the matched SoC has a pinconf register block.
+
+## Important APIs, Types, And Functions
+`struct ocelot_pin_caps` records each pin number plus normal and alternate function selectors. `struct ocelot_pinctrl` is the live controller state: device, pinctrl descriptor copy, regmaps for GPIO/pinmux and optional pinconf, calculated stride values, GPIO chip, function-to-group map, workqueue, and pinconf bit layout. `struct ocelot_match_data` binds a compatible string to a `pinctrl_desc`, pinconf bit definitions, and alternate-mode count.
+
+The pinctrl ops are `ocelot_pctl_get_groups_count()`, `ocelot_pctl_get_group_name()`, and `ocelot_pctl_get_group_pins()`, with one group per pin. The pinmux core is `ocelot_pin_function_idx()`, `ocelot_pinmux_set_mux()` for two-bit ALT encodings, and `lan966x_pinmux_set_mux()` for three-bit encodings. GPIO integration uses `ocelot_gpio_request_enable()`, `lan966x_gpio_request_enable()`, `ocelot_gpio_set_direction()`, and the `ocelot_gpiolib_chip` callbacks. Pinconf support is implemented by `ocelot_hw_get_value()`, `ocelot_hw_set_value()`, `ocelot_pinconf_get()`, and `ocelot_pinconf_set()`. IRQ support is in `ocelot_irq_handler()`, `ocelot_irq_set_type()`, `ocelot_irq_mask()`, `ocelot_irq_ack()`, `ocelot_irq_unmask()`, and the level-specific `ocelot_irq_unmask_level()`.
+
+## Control Flow
+Probe copies the matched descriptor, creates an ordered workqueue for deferred level IRQ replay, obtains and resets the optional shared `switch` reset control, computes GPIO bank stride and alternate-mode stride, creates the main MMIO regmap, optionally maps a second pinconf resource, builds function group lists from every pin's capability table, registers pinctrl, and then registers the GPIO chip. If a parent IRQ is present, `ocelot_gpiochip_register()` attaches an immutable irqchip and chained parent handler.
+
+Function selection validates that the requested function is supported by the selected pin group, then writes the encoded mux value bit-by-bit into ALT registers. Older variants write ALT0 and ALT1; LAN966x/LAN969x/LAN9645x-compatible mux ops write ALT0 through ALT2. GPIO requests force mux bits back to GPIO on most variants, while LAN9645xF uses a no-op request path because its GPIO function is represented differently in the table. Pinconf reads and writes use optional per-pin registers for bias, drive strength, and Schmitt trigger, while output/input/level configs operate on GPIO OUT and OE registers.
+
+GPIO IRQ handling reads interrupt-identification registers across all GPIO banks and dispatches child IRQs in the GPIO irqdomain. Edge IRQs use the normal irqchip. Level IRQs switch to `ocelot_level_irqchip`; unmask checks whether the line is still active, acknowledges stale latched edges when possible, reenables the line, and queues ordered work to re-enter the chained handler if an active level was missed while masked.
+
+## State And Persistence
+Runtime state is in `struct ocelot_pinctrl` and devm-managed allocations. The generated `info->func[]` group map persists for the lifetime of the device. Hardware mux, GPIO direction/value, interrupt enable/status, and pinconf registers persist until reset or later writes. There is no file-backed persistence. The ordered workqueue is destroyed by a devm action, and the GPIO/pinctrl registrations are devm-managed.
+
+## Dependencies And Integration Points
+The driver integrates with the Linux pinctrl, pinmux, pinconf-generic, GPIO, gpio-irqchip, regmap-mmio, reset-controller, platform-device, OF match, IRQ, and workqueue APIs. It depends on `ocelot_regmap_from_resource()` from the Ocelot platform support and on device tree compatible strings in `ocelot_pinctrl_of_match`. Consumers use standard pinctrl states, GPIO descriptors, and optional GPIO IRQs. A second MMIO resource enables extended pin configuration on variants whose descriptors include `confops`.
+
+## Risks And Test Signals
+The mux update writes multiple ALT registers independently, and the code documents the operation as racy because the encoded bits cannot be changed atomically. Pin tables are large and variant-specific; incorrect table entries can silently select the wrong hardware signal. Optional pinconf mapping returns `NULL` when the resource is absent, but pinconf ops still return `-EOPNOTSUPP` for unsupported hardware paths. Level IRQ replay depends on GFP_ATOMIC allocation and the ordered workqueue, so allocation failure can drop the synthetic retrigger. A likely code-review signal is the need to verify `REG_ALT()`/`altm_stride` calculations for high pin counts and LAN9645xF's `n_alt_modes`.
+
+Useful tests include probe on each compatible, pinctrl state application for representative functions on low and high pins, GPIO request fallback to GPIO mode, bias/drive/Schmitt reads and writes on variants with pinconf resources, GPIO direction/value operations across bank boundaries, IRQ edge and level triggering, and removal/unbind paths that exercise devm cleanup and workqueue destruction.

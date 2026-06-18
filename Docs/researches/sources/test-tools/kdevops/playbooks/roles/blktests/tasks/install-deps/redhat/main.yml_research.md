@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/blktests/tasks/install-deps/redhat/main.yml
+
+This Red Hat dependency file installs blktests build and runtime packages with DNF. The package list covers compilers, filesystem tools, quota, lvm, fio, dbench, multipath, PCI utilities, development headers, and block/storage utilities.
+
+Important APIs are `ansible.builtin.dnf` with `become`, retry settings inherited by the module task, and a local `packages` variable. Control flow is a single package installation task. Persistent state is the RPM database and installed toolchain. Integration points are Fedora/RHEL/CentOS package availability, EPEL or base repositories configured elsewhere, and the main blktests build tasks. Risks include package differences across RHEL major versions, requiring `dbench` from repositories that may not provide it, and no explicit retries unlike the bootlinux Red Hat dependency role. Test signals should run package resolution on supported Red Hat family releases and confirm `make`, `fio`, `dbench`, and `multipathd` availability.

@@ -1,0 +1,15 @@
+# sources/control-plane/rook/pkg/operator/ceph/object/topic/controller.go
+
+Purpose: this file implements the controller-runtime reconciler for `CephBucketTopic`, which provisions and deletes RGW/SNS notification topics for object bucket notifications.
+
+Important APIs, types, and functions: `ReconcileBucketTopic` stores the controller client, cluster context/info/spec, and operator manager context. `Add` and `add` register the controller, CR watch, Kafka Secret field index, and reverse Secret watch. `Reconcile` wraps `reconcile` with panic recovery and failure status updates. `reconcile` is the main lifecycle method. `createCephBucketTopic`, `deleteCephBucketTopic`, and `updateStatus` bridge to the provisioner and CR status.
+
+Control flow: controller setup watches `CephBucketTopic` objects and indexes `spec.endpoint.kafka.secretNames` from `UserSecretRef` and `PasswordSecretRef`, compacting duplicate secret names. Secret changes or deletions enqueue all topics in the same namespace that reference the secret. Reconcile fetches the topic, adds a finalizer, waits for a ready `CephCluster` in `Spec.ObjectStoreNamespace`, loads cluster info, handles deletion by deleting the remote topic and removing the finalizer, validates the topic spec, marks status reconciling, calls the provisioner to create the topic, then records Ready with observed generation, ARN, and referenced secret status.
+
+State and persistence behavior: Kubernetes state includes the `CephBucketTopic` finalizer and status fields `ARN`, `Phase`, `ObservedGeneration`, and referenced Secrets. Remote state is the RGW/SNS topic created/deleted by `provisioner.go`. Status update reads the latest CR, sorts referenced secrets by name for deterministic status, and writes through `reporting.UpdateStatus`. If reconcile returns an error, `Reconcile` sets failure status with unknown observed generation.
+
+Dependencies and integration points: the controller integrates with controller-runtime manager/controller/source/handler/predicate APIs, Rook operator readiness helpers, Ceph cluster info loading, `cephv1.CephBucketTopic` validation, Kubernetes Secrets, Rook reporting, and the package-level `createTopicFunc`/`deleteTopicFunc` hooks used by tests.
+
+Risks: the Secret field index only tracks secret names, not keys; namespace scoping is enforced in the list. Type asserting `r.(*ReconcileBucketTopic)` in the Secret watch assumes the registered reconciler is this concrete type. Status failures are logged and swallowed in `updateStatus`, so reconcile can complete even if status write fails. Deletion skips remote delete if the provisioner sees no ARN. Deleting a CR while its CephCluster is gone removes the finalizer without remote cleanup.
+
+Test signals: `controller_test.go` covers no-cluster requeue, cluster-not-ready requeue, and successful create with a mocked provisioner/ARN. It does not cover Secret watch behavior, deletion/finalizer paths, invalid spec handling, failed provisioner status, referenced secret status sorting, or real SNS client creation.

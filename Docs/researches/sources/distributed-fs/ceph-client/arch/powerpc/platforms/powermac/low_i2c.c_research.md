@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/powermac/low_i2c.c
+
+Purpose: provides a synchronous low-level PowerMac I2C abstraction that is available earlier and with different semantics than the generic Linux I2C layer. It supports KeyWest, PMU, and SMU I2C controllers and binds selected I2C devices into the platform-function engine for firmware-described init, sleep, wake, and on-demand operations.
+
+Important APIs/types/functions: core types are `pmac_i2c_bus`, `pmac_i2c_host_kw`, `pmu_i2c_hdr`, and `pmac_i2c_pf_inst`. Exported APIs include `pmac_i2c_find_bus`, `pmac_i2c_get_dev_addr`, `pmac_i2c_get_controller`, `pmac_i2c_get_bus_node`, `pmac_i2c_get_type`, `pmac_i2c_get_flags`, `pmac_i2c_get_channel`, `pmac_i2c_get_adapter`, `pmac_i2c_adapter_to_bus`, `pmac_i2c_match_adapter`, `pmac_i2c_open`, `pmac_i2c_close`, `pmac_i2c_setmode`, and `pmac_i2c_xfer`. Init and PM hooks are `pmac_i2c_init`, `pmac_pfunc_i2c_suspend`, and `pmac_pfunc_i2c_resume`.
+
+Control flow: initialization probes KeyWest controllers, then PMU and SMU controllers when configured, creates `pmac_i2c_bus` objects, and registers PMF handlers for whitelisted devices such as hardware clocks, voltage controllers, and monitors. KeyWest transfers program mode, address, subaddress, and state, then either wait through interrupts/completions or poll the ISR state machine until `state_idle`. PMU transfers queue ADB requests and poll status until completion. SMU transfers queue `smu_i2c_cmd` objects and wait on a completion. PMF handlers open the bus, perform read/write/RMW/subaddress/mode commands, and close the bus at the end of each platform function.
+
+State and persistence: all bus state is in the global `pmac_i2c_busses` list. Each bus has a mutex, current mode, open/polled flags, channel, platform device pointer, and host-specific state. KeyWest hosts have a transfer state machine, lock, timer, completion, and result fields. There is no disk persistence; the meaningful state is device register state changed by I2C writes and platform functions.
+
+Dependencies/integration: integrates with ADB PMU, SMU, KeyLargo/UniNorth registers, OF device tree bus layout, platform devices named `i2c-powermac`, generic `i2c_adapter` exposure, and the PMF parser through `pmf_register_driver` and `pmf_do_functions`.
+
+Risks: `pmac_i2c_force_poll` forces polling until platform devices are registered, and polling includes busy loops for timebase-frozen contexts. KeyWest uses a timer and interrupt path but is intentionally slow. PMU transfers are capped at 16 bytes and use repeated sleeps. Device-tree multibus matching depends on `reg` high bits and can skip hidden or malformed buses. RMW semantics include a device-specific inverted-mask quirk, so incorrect whitelist entries can change the wrong bits.
+
+Test signals: probe KeyWest multibus and child-bus layouts; run standard, standard-subaddress, and combined transfers; force polled and interrupt modes; simulate NAK, timeout, and short PMU read replies; verify PMF on-init/on-sleep/on-wake for whitelisted devices; confirm platform devices expose the correct bus data and adapters match OF child devices.

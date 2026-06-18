@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/memcpy_64.S
+
+This file exports the generic 64-bit `memcpy` implementation with KASAN aliases. It is feature-routed: when `CPU_FTR_VMX_COPY` is absent on Book3S 64, the patched entry can branch to `memcpy_power7`; on little endian there is a simple byte-copy placeholder expected to be replaced at runtime.
+
+The big-endian scalar path saves the original destination for return, handles short copies, aligns the destination to eight bytes, optionally bypasses the unaligned-destination branch on CPUs with unaligned load/store support and without cache-block zero use, then runs aligned or source-unaligned doubleword copy loops. Source-unaligned copies combine adjacent loads with shifts to form destination doublewords. Tails handle word, halfword, and byte pieces, and every path restores the original destination pointer in `r3`.
+
+State is only destination memory and stack-saved return pointer. Dependencies include feature-fixup macros, `memcpy_power7`, KASAN wrappers, endian configuration, and CPU feature bits. There are no exception handlers because kernel `memcpy` is not a fault-tolerant uaccess primitive. Risks include runtime feature patching on little endian, unaligned shift/or correctness, overlap misuse by callers that should use `memmove`, and return pointer preservation. Test signals include lib/string tests, BE/LE boot, KASAN builds, and comparison against generic `memcpy` under randomized alignment/length inputs.

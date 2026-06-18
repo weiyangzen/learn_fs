@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/sfc/efx_common.c
+
+Purpose: Implements shared SFC lifecycle utilities: reset workqueue, MAC reconfiguration, netdev feature changes, link status, MTU/XDP constraints, datapath start/stop, port start/stop, stats, reset down/up/work scheduling, common struct and IO setup, MCDI logging sysfs, PCI error recovery, encapsulated offload feature checks, physical port naming, and representor attach/detach.
+
+Important APIs and functions: Public functions include `efx_create_reset_workqueue()`, `efx_mac_reconfigure()`, `efx_set_mac_address()`, `efx_set_rx_mode()`, `efx_set_features()`, `efx_link_status_changed()`, `efx_xdp_max_mtu()`, `efx_change_mtu()`, `efx_start_all()`, `efx_stop_all()`, `efx_net_stats()`, `__efx_reconfigure_port()`, `efx_reset_down()`, `efx_reset_up()`, `efx_reset()`, `efx_schedule_reset()`, `efx_init_struct()`, `efx_init_io()`, PCI error handlers, `efx_features_check()`, and representor attach/detach helpers.
+
+Control flow: `efx_start_all()` checks state and reset flags, enables port/MAC, sizes RX buffers, starts channels/PTP/queues, starts monitor/selftest/stats, and polls link. `efx_stop_all()` updates stats, stops monitor/MAC work, disables TX queues, stops PTP/channels, and leaves link state controlled by callers. Reset scheduling sets a bit in `reset_pending`, switches MCDI to polled mode, and queues a single-threaded reset worker. Reset execution detaches netdev, tears down datapath/interrupts/hardware state, calls NIC-type reset/init, restores interrupts, vswitching, RSS/filter state, and restarts datapath or disables the NIC.
+
+State and persistence: Manages global `reset_workqueue`; NIC state fields including `state`, `reset_pending`, `port_enabled`, `port_initialized`, `phy_mode`, RX buffer sizing/scatter, queue thresholds, workqueues, locks, RSS context ID, vport ID, stats locks, representor list, and IO BAR mappings. PCI BAR mapping and sysfs attributes persist until finalization.
+
+Dependencies and integration points: Uses NIC type callbacks extensively, `efx_channels.c`, RX/TX common code, MCDI, port/PHY, filters, PTP, selftests, devlink-adjacent reflash mutex initialization, PCI EEH/error handlers, netdev feature APIs, GRE/UDP tunnel parsing, and EF100 representor helpers.
+
+Risks: Reset lock ordering (`mac_lock`, `filter_sem`, RSS lock) must match down/up paths. EF100 reset is special-cased because its NIC-type reset handles locking differently. MTU changes with XDP must enforce page-size limits. Feature changes are asynchronous through MAC work. IO cleanup avoids disabling PCI while VFs are assigned. Encapsulation feature checks are conservative and can disable offloads unexpectedly for unsupported GRE/UDP tunnel shapes.
+
+Test signals: Reset reasons and mapping, TX watchdog reset, MCDI timeout FLR path, probe/remove workqueue cleanup, MTU changes with/without XDP, RX buffer scatter sizing, feature toggles for RX VLAN/RXFCS/ntuple, PCI EEH recovery, encap offload filtering, sysfs MCDI logging, representor detach/attach during resets, and IO map/unmap failure paths.

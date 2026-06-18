@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/vdpa/mlx5/net/mlx5_vnet.c
+
+Purpose: full mlx5 virtio-net vDPA implementation. It registers an auxiliary mlx5 vnet management device, provisions vDPA net devices, manages virtqueues in firmware, handles control virtqueue commands, RX steering, memory map changes, suspend/resume, reset, notifications, stats, and lifecycle.
+
+Important APIs/types/functions: `struct mlx5_vdpa_net` extends `mlx5_vdpa_dev` with net config, virtqueues, event callbacks, resource lock, steering tables, IRQ pool, CVQ work, and UMEM parameters. Virtqueue setup spans CQ/QP/UMEM/counter/MSI-X allocation, `create_virtqueue()`, `modify_virtqueues()`, suspend/resume/query, and teardown. CVQ handling uses `vringh` in `mlx5_cvq_kick_handler()` for MAC, MQ, and VLAN commands. `mlx5_vdpa_ops` implements the vDPA config interface. `mlx5_vdpa_dev_add()` provisions and registers a device; `mlx5v_probe()` registers the mgmt device on the auxiliary bus.
+
+Control flow: auxiliary probe registers a `vdpa_mgmt_dev` with supported features. `dev_add` validates minimum `VERSION_1` and `ACCESS_PLATFORM`, queue capacity, MAC/MTU features, allocates `mlx5_vdpa_net`, initializes resources/MR/fixed transport resources/workqueue, registers vDPA, then sets up initial non-ready vq resources. When guest sets `DRIVER_OK`, status handling initializes CVQ vring, registers link notifier, resumes existing queues or fully sets resources. Kicks either queue CVQ work or write the queue index to the kick BAR. Map changes suspend queues, swap MR, mark mkey fields dirty, optionally teardown/rebuild queues, then resume.
+
+State and persistence: persistent runtime state includes negotiated `actual_features`, exposed `mlx_features`, status/generation/suspended flags, `cur_num_vqs`, per-vq addresses/readiness/indexes/fw state/modified fields/MR refs/MSI maps, net config (MAC/MTU/status), steering hash table, IRQ pool, resource setup flags, and CVQ descriptor counters. State is protected mainly by `reslock`, MR mutexes, and CVQ IOTLB spinlock.
+
+Dependencies and integration: uses mlx5 core commands, auxiliary bus, vDPA mgmt/core, vhost IOTLB, vringh, PCI MSI-X dynamic allocation, mlx5 flow steering/MPFS/vport notifier, debugfs helpers, and core resource/MR files. Exposes vendor stats through netlink attributes.
+
+Risks: the file has many cross-state transitions; queue resources can be initialized while not ready, ready while suspended, or torn down for feature/map changes. Control VQ parsing is serialized with `reslock` but requeues one descriptor at a time. Feature dependencies are security-relevant: MQ without CTRL_VQ is rejected to protect index assumptions. Error paths in `dev_add` rely on `put_device()` invoking `.free` for cleanup of partially initialized resources.
+
+Test signals: mgmt add/delete, feature provisioning validation, DRIVER_OK setup, reset with and without `VDPA_RESET_F_CLEAN_MAP`, set_map/reset_map while queues run, CVQ MAC/MQ/VLAN commands, link notifier updates, suspend/resume, MSI-X and QP notification modes, multiqueue RQT resize, vendor stats, and teardown after partial setup failure.

@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/bootlinux/tasks/update-grub/install.yml
+
+This file configures GRUB to boot the newly installed kernel by default. It sets `GRUB_DEFAULT=saved`, disables submenus with `GRUB_DISABLE_SUBMENU=y`, refreshes GRUB, derives the kernel release from either the source tree's `include/config/kernel.release` or packaged `bootlinux_artifacts_dir/kernel.release`, builds an awk/grep pipeline to find the flat menu entry number on Debian, runs `grub-set-default`, and prints the selected entry.
+
+Important APIs are `lineinfile`, imported update-grub tasks, `stat`, `slurp`, `lookup('file')`, `set_fact`, privileged `shell`, privileged `command`, and `debug`. Persistent state includes `/etc/default/grub`, regenerated GRUB config, and saved default entry. Integration depends on Debian GRUB menu format, package/source build outputs, and prior kernel install. Risks include grep matching multiple releases, only implementing entry selection for Debian, shell quoting around `kernelrelease`, and silently leaving `kernelrelease: unknown`. Test signals should parse representative GRUB configs, validate saved default, and reboot-check `uname -r`.

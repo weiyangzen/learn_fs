@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rohm,bd72720-pmic.yaml
+
+Purpose: Schema for ROHM BD72720 and BD73900 PMIC families, capturing regulator, LED, GPIO, clock, charger, interrupt, and pin function configuration for automotive or safety-oriented power systems.
+
+Important schema surface and control flow: compatible values distinguish supported PMIC variants; `reg`, `interrupts`, and `regulators` are required. The schema allows GPIO controller cells, clock output control, charger sense resistor configuration, optional LEDs, and `rohm,pin-fault_b` to select FAULT_B pin behavior from enumerated functions. Top-level pattern properties model PMIC pin configuration nodes with constrained pin and function enumerations. Regulator and LED subtrees are delegated to dedicated ROHM schemas.
+
+State, dependencies, and integration: DT state drives MFD cell creation for regulators, LEDs, GPIOs, clock output, charger calibration, and fault pin behavior. Dependencies include ROHM regulator/LED schemas, common GPIO/clock/interrupt and pinctrl concepts, and the PMIC drivers. Risks include misprogramming FAULT_B behavior, invalid pin-function combinations, charger sense resistor mismatch, and variant-specific regulator assumptions hidden in delegated schemas. Test signals are binding validation, pin function enum coverage, regulator/LED child schema checks, and runtime verification of fault, GPIO, regulator, and LED registration.

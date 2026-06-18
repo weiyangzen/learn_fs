@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/sgi/ioc3-eth.c
+
+Purpose: SGI IOC3 Ethernet platform driver for IOC3 ASIC-based Ethernet cards. It manages IOC3 RX/TX rings, MII PHY, NVMEM MAC retrieval, multicast filtering, checksum assist, interrupts, and netdev/ethtool operations.
+
+Important types/functions: `struct ioc3_private` stores MMIO registers, DMA device, SSRAM, RX/TX rings and DMA addresses, skb arrays, producer/consumer indices, cached EMCR/multicast registers, lock, MII state, and media timer. `ioc3eth_probe()` allocates the netdev, maps resources, reads MAC from one-wire NVMEM, requests IRQ, allocates coherent rings, initializes MII and SSRAM, and registers the netdev. `ioc3_open()`/`ioc3_close()` initialize, allocate/free RX buffers, start/stop hardware, and manage the timer. `ioc3_start_xmit()`, `ioc3_rx()`, `ioc3_tx()`, and `ioc3_interrupt()` are the datapath.
+
+Control flow: RX uses a fixed hardware RX ring with a smaller active buffer pool; valid descriptors are converted to SKBs, optionally marked checksum-unnecessary for IPv4 TCP/UDP, replaced with fresh mapped buffers, and the hardware producer pointer is armed. TX either copies short packets into descriptors or DMA maps one/two buffers for larger packets, handles the IOC3 16K split constraint, updates producer pointer, and stops the queue near full. Interrupts acknowledge status, run fatal-error recovery, then RX and TX cleanup. Error/timeout paths stop hardware, free RX buffers, clean TX ring, reinitialize, and wake the queue.
+
+State and dependencies: runtime state is in coherent rings, mapped RX SKBs, pending TX SKBs, MII timer, and hardware registers. Dependencies include SGI IOC3 headers, PCI bridge mapping attributes, NVMEM consumer API, MII helpers, CRC16/CRC32, DMA APIs, and platform-device resources.
+
+Risks and test signals: notable risks include NVMEM probe deferral, DMA address mapping on PCI-Xtalk bridges, ring pointer alignment, a likely-sensitive TX split path, timer/remove ordering, and recovery after fatal IOC3 errors. Test probe/remove, NVMEM absent/deferred/invalid CRC, RX checksum on/off, multicast/promiscuous filters, MII ethtool changes, TX timeout reset, and interrupt storms/fatal error recovery.

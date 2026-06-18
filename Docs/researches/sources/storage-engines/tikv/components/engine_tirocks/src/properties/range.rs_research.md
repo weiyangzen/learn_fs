@@ -1,0 +1,9 @@
+# sources/storage-engines/tikv/components/engine_tirocks/src/properties/range.rs
+
+Purpose: Implements TiRocks table-property collection and range-estimation support for TiKV split checks, approximate size/key accounting, and MVCC fallback estimates.
+
+Important APIs and control flow: `SizeProperties`, `RangeOffsets`, `RangeProperties`, `RangePropertiesCollector`, and `RangePropertiesCollectorFactory` encode per-SST user properties under `tikv.total_size`, `tikv.size_index`, and `tikv.range_index`. Collector `add` accounts put entries and Titan blob indexes, advances cumulative size/key offsets, and inserts range points at configured size/key distances. `RangePropertiesExt for RocksEngine` reads memtable stats plus SST user properties to implement approximate keys, sizes, and split-key sampling; if write-CF range properties fail, key estimation falls back to MVCC properties via `get_range_entries_and_versions`.
+
+State, persistence, and dependencies: State is persisted as RocksDB/TiRocks user-collected table properties inside SSTs, with backward decode support for older v2 `SizeProperties`. Dependencies include `codec`, `engine_traits`, TiRocks table-property APIs, Titan blob index decoding, TiKV key wrappers, and the MVCC property decoder.
+
+Integration points, risks, and test signals: Integrated by CF options that install the collector factory and by split/check logic through `RangePropertiesExt`. Risks include malformed property bytes, unsorted or sparse offset points, inaccurate Titan blob size accounting, old CFs lacking range properties, large split-key sampling bias, and panics from invalid range ordering or UTF-8 file-name assumptions in logging. Tests exercise offset math, excluded range extraction, Titan blob index sizing, and MVCC fallback entry/version aggregation after flush.

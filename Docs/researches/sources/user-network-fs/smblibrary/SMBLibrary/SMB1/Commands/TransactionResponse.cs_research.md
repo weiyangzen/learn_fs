@@ -1,0 +1,12 @@
+# Research: sources/user-network-fs/smblibrary/SMBLibrary/SMB1/Commands/TransactionResponse.cs
+
+- **Purpose:** SMB_COM_TRANSACTION Response. It is part of the SMB1 command packet surface under `SMBLibrary.SMB1`.
+- **Source facts:** Read in full: 126 lines, 5960 bytes. Namespace `SMBLibrary.SMB1`. Primary type `TransactionResponse`.
+- **Important APIs/types/functions:** Types: class TransactionResponse : SMB1Command. Constructors: TransactionResponse. Constants/static metadata: FixedSMBParametersLength. Fields/properties: TotalParameterCount, TotalDataCount, Reserved1, ParameterDisplacement, DataDisplacement, Reserved2, Setup, TransParameters, TransData. Methods/overrides: GetBytes, CalculateMessageSize. Protocol discriminator returns: CommandName.SMB_COM_TRANSACTION.
+- **Control flow:** Serialization recalculates parameter/data counts, four-byte padding, and absolute offsets before delegating to the base SMB command frame writer. Outbound control flow builds SMBParameters and SMBData from public fields, then calls the base serializer to add WordCount and ByteCount.
+- **State and persistence behavior:** State is held in public protocol fields until serialized; no durable storage or process-wide mutation is performed. The important transient buffers are SMBParameters and SMBData, which mirror SMB_Parameters and SMB_Data on the wire. Constants are static protocol metadata and do not change at runtime.
+- **Dependencies:** Usings: System, System.Collections.Generic, System.Text, Utilities. Local dependencies and referenced protocol types: SMB1Command, SMB1Header, TransactionResponse. Wire helpers observed: ByteReader.ReadBytes, ByteReader.ReadByte, LittleEndianConverter.ToUInt16, ByteWriter.WriteBytes, ByteWriter.WriteByte, LittleEndianWriter.WriteUInt16.
+- **Integration points:** Instantiated through SMB1Command.ReadCommand based on SMB1Header.Command and the reply flag, then serialized by SMB1Message. Advertises CommandName.SMB_COM_TRANSACTION to the message layer.
+- **Risks:** Most parsers trust advertised wire offsets and lengths; malformed packets can surface as range/format exceptions unless callers validate packet size first. Unicode alignment and null-termination rules are easy regression points. Large payloads must fit SMB1 16-bit count/offset fields unless explicitly split or handled with high-length fields.
+- **Test signals:** round-trip parse/serialize byte equality, Unicode and OEM string alignment fixtures.
+- **Explicit failure paths:** ArgumentException(Invalid Trans_Data length).

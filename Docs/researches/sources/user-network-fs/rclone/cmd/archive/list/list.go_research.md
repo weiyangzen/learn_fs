@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/cmd/archive/list/list.go
+
+Purpose: implements `rclone archive list`, opening an archive object, auto-identifying its format, and printing entries in size/name, long timestamp, or plain modes with optional files-only/dirs-only filtering.
+
+Important APIs: command flags (`--long`, `--plain`, `--files-only`, `--dirs-only`), `listFile`, and `ArchiveList`. `ArchiveList` opens the source object with accounting and download headers, obtains a read-at seeker, identifies the archive with `archives.Identify`, requires `archives.Extraction`, and calls `Extract` with a file handler for listing. `listFile` applies rclone filters, normalizes directory display with trailing slash, and writes synchronized output. State is read-only remote access plus accounting transfer. Dependencies include `mholt/archives`, filters, operations, and Cobra. Risks include using extraction interface for listing, full/partial buffering for read-at seeker, unsupported formats, and global flag state. Archive integration tests exercise listing after create.

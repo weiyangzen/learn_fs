@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/tools/include/uapi/linux/kvm.h
+
+Purpose: defines the main `/dev/kvm`, VM fd, vCPU fd, and device fd ABI for Kernel-based Virtual Machine userspace VMMs. It covers VM creation, memory slots, vCPU run exits, interrupts, dirty logging, capabilities, devices, registers, stats, private guest memory, and architecture hooks.
+
+Important APIs/types: foundational structures include `kvm_userspace_memory_region`, `kvm_userspace_memory_region2`, `kvm_irq_level`, `kvm_irqchip`, `kvm_run`, `kvm_dirty_log`, `kvm_clear_dirty_log`, `kvm_guest_debug`, `kvm_ioeventfd`, `kvm_enable_cap`, IRQ routing entries, `kvm_irqfd`, clock data, one-reg types, device attributes, stats headers/descriptors, memory attributes, guest memfd creation, and pre-fault requests. Exit reasons range from IO/MMIO/hypercall/debug/system events through Hyper-V/Xen/RISC-V/TDX/SNP/ARM exits. Ioctls are grouped for system fd, VM fd, vCPU fd, and device fd. Capability constants enumerate feature discovery up to memory attributes, guest memfd, VM types, and architecture-specific features.
+
+Control flow, state, and persistence: VMMs query API/capabilities, create a VM, configure memory/irq/devices, create vCPUs, mmap `struct kvm_run`, and loop on `KVM_RUN`, handling exit-specific union payloads before re-entering. VM/vCPU/device/memory-slot state persists in kernel objects until fds close; dirty logs, stats fds, and guest private memory expose ongoing state.
+
+Dependencies and integration points: depends on const/types/compiler/ioctl and `<asm/kvm.h>` for architecture-specific register/device layouts. It integrates QEMU, crosvm, cloud hypervisors, VFIO, irqfd/ioeventfd, guest memory backends, confidential-computing flows, and live migration.
+
+Risks and test signals: risks include TOCTOU on `kvm_run`, architecture-specific struct assumptions, capability-gated ioctl misuse, dirty-log state-machine mistakes, guest_memfd/private-memory alignment, and ABI breakage from changing ioctl numbers or struct layout. Tests should boot smoke VMs, exercise all enabled caps, IO/MMIO exits, irqfd/ioeventfd, dirty logging/rings, migration save/restore paths, stats fds, memory attributes, and private-memory flows.

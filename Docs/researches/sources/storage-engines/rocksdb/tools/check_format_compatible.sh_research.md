@@ -1,0 +1,32 @@
+<!-- BEGIN_FILE_RESEARCH: sources/storage-engines/rocksdb/tools/check_format_compatible.sh -->
+# sources/storage-engines/rocksdb/tools/check_format_compatible.sh
+
+## Purpose
+This Bash harness builds multiple RocksDB release branches and checks expected storage-format compatibility with a chosen current revision. It covers DB open/verify, compaction, external SST ingestion, backup/restore, and remote compaction service wire-format compatibility across current and historical `*.fb` refs.
+
+## Important APIs, Types, and Functions
+The script is configured by command-line argument `ref_for_current` (default `HEAD`) and environment variables `SANITY_CHECK`, `SHORT_TEST`, `LONG_TEST`, `USE_SSH`, `TEST_TMPDIR`, and `J`. It uses Git (`diff-index`, `rev-parse`, `remote`, `fetch`, `checkout`, `reset`, branch deletion), Make (`make clean`, `make ldb`), Docker-independent helper scripts copied from `tools` (`generate_random_db.sh`, `verify_random_db.sh`, `compact_db.sh`, `write_external_sst.sh`, `ingest_external_sst.sh`, `backup_db.sh`, `restore_db.sh`), Python for deterministic input generation, and the built `./ldb` binary.
+
+Key shell functions are `cleanup`, `validate_release_refs`, `invoke_make`, `generate_db`, `compare_db`, `compact_db`, `write_external_sst`, `ingest_external_sst`, `backup_db`, `restore_db`, `member_of_array`, `run_cs_compat_test`, `force_no_fbcode`, and `save_cs_current_ldb`. The release-ref arrays partition compatibility expectations: DB backward-only refs, DB forward-with-options refs, DB forward-no-options refs, external SST backward/forward refs, backup backward/forward refs, and the deduplicated sampled `checkout_refs` list.
+
+## Control Flow
+The script first refuses to run with uncommitted changes, resolves the current ref to a hash, records the original branch, sets up a temporary remote pointing at facebook/rocksdb, fetches refs, and installs an EXIT trap that hard-resets, checks out the original branch, deletes the temporary branch, and removes the temporary remote. It creates a test directory under `${TEST_TMPDIR:-/tmp}`, copies current helper scripts into a stable directory so branch checkouts cannot change the harness helpers, and generates deterministic random, sorted, and uniform input data files.
+
+After validating release-ref naming, `SHORT_TEST` truncates each list to its first entry. The script always includes the first release of each list, then either samples or fully includes additional refs depending on `SHORT_TEST` and `LONG_TEST`. It builds the selected current revision on a temporary branch, saves the current `ldb` binary and shared libraries for remote compaction tests, runs a current/current remote compaction smoke test, generates current external SST ingestion data, generates a current DB, and creates a current backup.
+
+For each sampled historical ref, it hard-resets to the fetched ref, patches build detection through `force_no_fbcode`, builds `ldb`, generates an old DB, optionally writes external SSTs, optionally tests old-version ingestion of old and current SSTs, optionally tests opening and compacting current DBs with old binaries, optionally verifies current DBs with options loaded, optionally creates old backups, optionally restores current backups with old binaries, and optionally runs bidirectional remote compaction compatibility between the saved current `ldb` and the old `ldb`.
+
+Finally it rebuilds the current revision, then for each historical ref verifies current can open and compact old DBs, ingest old external SSTs, and restore old backups. It prints a pass message specific to `SANITY_CHECK` or full compatibility mode.
+
+## State and Persistence Behavior
+This script intentionally mutates the working copy by checking out and resetting many refs; the initial clean-worktree guard and EXIT cleanup are central to its safety model. It creates all test data under a throwaway test directory and removes any prior instance. It also removes and recreates `$PWD/tmp/cs` as a fallback executable directory if the main temp directory is mounted `noexec`. It saves a copy of the current `ldb` plus nearby shared libraries so current and old binaries can run simultaneously during remote compaction tests. Generated DBs, backups, external SST files, dumps, and compaction-service job directories are transient validation artifacts.
+
+## Dependencies and Integration Points
+The harness is tightly integrated with RocksDB's release branch naming scheme, `ldb` command surface, Makefile targets, helper scripts in `tools`, format-version policy, and remote compaction commands (`remote_compaction_primary` and `remote_compaction_worker`). It assumes fetched refs are available from `facebook/rocksdb` over HTTPS or SSH, and that old branches can still be patched enough to build in the current environment. `compact_db.sh` is invoked through the copied helper directory to compact DBs while toggling `try_load_options` and `ignore_unknown_options`.
+
+## Risks and Edge Cases
+The script is intentionally destructive to the local checkout during execution; failure of cleanup can leave the repository on a temporary branch or old ref. The clean-worktree guard does not protect untracked files. `git reset --hard`, branch deletion, remote removal, and test-directory `rm -rf` are expected operations, so running this in the wrong repository or with important untracked temp files is risky. Random sampling means default runs may not cover every release; `LONG_TEST=1` is needed for exhaustive coverage, while `SHORT_TEST=1` greatly narrows the matrix. Ancient branches may fail to build due to toolchain drift despite `force_no_fbcode`. Remote compaction tests depend on executable temp storage, shared-library loading, command availability, and background worker cleanup. Helper script semantics are frozen by copying current helpers before checkout, which is useful for stability but can hide old-helper behavior changes.
+
+## Test Signals
+A zero exit and `Compatibility Test PASSED` indicate the sampled cross-version matrix passed. `SANITY_CHECK=1` skips builds and helper execution while still exercising syntax, ref validation, checkout flow, and control structure, ending with `check_format_compatible.sh sanity check PASSED`. Failures emit specific `==== Error ... ====` messages from wrapper functions or remote compaction checks, making the failing compatibility lane visible.
+<!-- END_FILE_RESEARCH: sources/storage-engines/rocksdb/tools/check_format_compatible.sh -->

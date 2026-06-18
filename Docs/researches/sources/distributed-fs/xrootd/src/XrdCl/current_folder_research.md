@@ -1,0 +1,152 @@
+# Folder Research: sources/distributed-fs/xrootd/src/XrdCl
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 138
+- Recursive researched files: 138
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/xrootd/src/XrdCl/CMakeLists.txt`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAnyObject.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClApply.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClArg.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncDiscardReader.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncHSReader.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncHSWriter.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncMsgReader.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncMsgWriter.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncPageReader.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncRawReader.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncRawReaderIntfc.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncSocketHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncSocketHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClAsyncVectorReader.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClBuffer.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClChannel.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClChannel.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClChannelHandlerList.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClChannelHandlerList.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCheckSumHelper.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCheckSumManager.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCheckSumManager.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCheckpointOperation.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClClassicCopyJob.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClClassicCopyJob.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClConstants.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCopy.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCopyJob.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCopyProcess.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCopyProcess.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClCtx.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClDefaultEnv.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClDefaultEnv.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClDlgEnv.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClEcHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClEcHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClEnv.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClEnv.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFS.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFSExecutor.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFSExecutor.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFile.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFile.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileOperations.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileStateHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileStateHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileSystem.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileSystem.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileSystemOperations.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileSystemUtils.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileSystemUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileTimer.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFileTimer.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFinalOperation.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClForkHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClForkHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClFwd.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClInQueue.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClInQueue.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClJobManager.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClJobManager.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClLocalFileHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClLocalFileHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClLocalFileTask.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClLocalFileTask.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClLog.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClLog.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClMessage.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClMessageUtils.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClMessageUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClMetalinkRedirector.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClMetalinkRedirector.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClMonitor.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOperationHandlers.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOperationTimeout.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOperations.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOperations.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOptimizers.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOptional.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOutQueue.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClOutQueue.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClParallelOperation.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPlugInInterface.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPlugInManager.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPlugInManager.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPoller.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPollerBuiltIn.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPollerBuiltIn.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPollerFactory.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPollerFactory.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPostMaster.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPostMaster.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPostMasterInterfaces.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClPropertyList.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClRedirectorRegistry.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClRedirectorRegistry.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClRequestSync.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClResponseJob.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClSIDManager.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClSIDManager.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClSocket.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClSocket.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClStatus.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClStatus.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClStream.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClStream.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClSyncQueue.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTPFallBackCopyJob.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTPFallBackCopyJob.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTaskManager.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTaskManager.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClThirdPartyCopyJob.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClThirdPartyCopyJob.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTls.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTls.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTransportManager.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClTransportManager.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClURL.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClURL.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClUtils.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXCpCtx.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXCpCtx.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXCpSrc.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXCpSrc.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXRootDMsgHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXRootDMsgHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXRootDResponses.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXRootDResponses.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXRootDTransport.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClXRootDTransport.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClZipArchive.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClZipArchive.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClZipCache.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClZipListHandler.cc`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClZipListHandler.hh`
+- `sources/distributed-fs/xrootd/src/XrdCl/XrdClZipOperations.hh`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

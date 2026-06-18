@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/mt6363-regulator.c
+
+Purpose: implements the MediaTek MT6363 PMIC regulator driver over SPMI, covering seven main bucks, VS rails, many calibrated LDOs, SRAM rails, mode/load control, and optional over-current protection interrupts.
+
+Important APIs/types/functions: `struct mt6363_regulator_info` extends descriptors with LP/FCCM registers, hardware-voted LP registers, load-threshold data, original operation-mode backups, delayed OCP work, and IRQ mapping. Macros `MT6363_BUCK`, `MT6363_LDO_LINEAR_OPS`, `MT6363_LDO_LINEAR_CAL_OPS`, and variants build the rail table. Key functions are set/clear enable helpers, `mt6363_regulator_get_mode()`, `mt6363_regulator_set_mode()`, `mt6363_regulator_set_load()`, `mt6363_vemc_set/get_voltage_sel()`, `mt6363_va15_set_voltage_sel()`, `mt6363_set_ocp()`, `mt6363_spmi_register_regmap()`, and `mt6363_regulator_probe()`.
+
+Control flow: probe creates a child SPMI device/regmap using the `reg` base property, performs a dummy wake read, finds the IRQ parent domain, maps each hardware OCP interrupt to a virtual IRQ, initializes delayed work, registers every regulator, and backs up operation-mode registers where DRMS/load control is supported. Mode control sets FCCM through a BUCK_TOP unlock sequence, toggles LP bits for idle, and rejects FAST on rails without `modeset_reg`. OCP setup requests the mapped IRQ only when a consumer enables regulator over-current protection; the ISR disables the IRQ, notifies if the rail is enabled, and re-enables after 10 ms.
+
+State and persistence: persistent PMIC state includes enable registers, LP/FCCM mode bits, calibrated voltage range/selector registers, trap-selected VEMC registers, and operation enable/config bytes. The driver caches original operation settings for load-based mode restoration and stores IRQ mappings in the static rail table.
+
+Dependencies and integration: depends on SPMI, regmap SPMI extended access, OF IRQ domains, MediaTek MT6363 register definitions, regulator DT mode mapping, delayed work, and parent SPMI identity. Supply names encode internal dependencies such as `vsys-vbuck1` and `vs2-ldo1`.
+
+Risks and test signals: this driver has several protected-write paths that must lock/unlock even on errors. VEMC trap handling chooses a different selector mask/register interpretation and `mt6363_vemc_get_voltage_sel()` has delicate range-selector math. OCP IRQ mappings are created for all rails even if a rail later never enables OCP. Test SPMI regmap creation, sleep-mode wake behavior, IRQ-domain mapping, buck unlock failures, mode transitions, load threshold behavior, VA15 efuse mirror writes, VEMC trap 0/1/>1, delayed OCP re-enable, and probe cleanup actions.

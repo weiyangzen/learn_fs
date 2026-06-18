@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/isci/request.h
+
+Purpose: declares the ISCI request object, protocol-specific request storage, request state machine states, public request APIs, and small helpers used by controller, task, and remote-device code.
+
+Important APIs/types: `struct isci_stp_request` tracks PIO length, ending status, and current SGL position for STP PIO/ATAPI handling. `struct isci_request` stores request flags (`IREQ_COMPLETE_IN_TARGET`, `IREQ_TERMINATED`, `IREQ_TMF`, `IREQ_ACTIVE`, `IREQ_PENDING_ABORT`, `IREQ_TC_ABORT_POSTED`, `IREQ_ABORT_PATH_ACTIVE`, `IREQ_NO_AUTO_FREE_TAG`), task or TMF pointer, host pointers, DMA addresses, request completion, state machine, target device, IO tag, protocol, SCU/SCI status, post context, task context pointer, local SGL overflow table, saved unsolicited frame index, and SSP/STP command/response unions. `REQUEST_STATES` enumerates initial/constructed/started protocol substates, completed, aborting, and final states. Public functions cover start, terminate, frame/TC completion, task construction, tag lookup, and execution.
+
+Control flow: callers obtain a request object from a tag via `isci_io_request_from_tag()` or `isci_tmf_request_from_tag()`, attach task/TMF state, build and execute it, then route hardware completions into `sci_io_request_tc_completion()` and unsolicited frames into `sci_io_request_frame_handler()`. `sci_io_request_get_dma_addr()` computes a DMA address for embedded buffers by offsetting from the request's DMA base, and `to_ireq()` converts embedded STP state back to the enclosing request.
+
+State and persistence behavior: the request struct is a controller-lifetime pool object reused by tag. Each use clears flags/status and reinitializes the state machine. The request owns embedded protocol buffers and SGL-pair overflow memory for hardware DMA. `saved_rx_frame_index` persists a controller frame-buffer reference until completion releases it.
+
+Dependencies/integration: includes `isci.h`, `host.h`, and `scu_task_context.h`; uses libsas `sas_task`, TMF structures, SCSI/ATA protocol fields, controller tag encoding, and hardware task-context definitions.
+
+Risks: the union of IO task and TMF task is manually discriminated by `IREQ_TMF`; misuse can corrupt completion handling. `sci_io_request_get_dma_addr()` assumes the target virtual address is inside `struct isci_request`. State additions must remain synchronized with `request.c`'s state table and handlers. Test signals include tag reuse clearing all per-use fields, TMF versus normal completion, embedded-buffer DMA address bounds, NCQ recovery detection, and no stale saved frame index across reused requests.

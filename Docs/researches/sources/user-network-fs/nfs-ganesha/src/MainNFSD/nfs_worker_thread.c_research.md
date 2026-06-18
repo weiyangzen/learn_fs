@@ -1,0 +1,9 @@
+## sources/user-network-fs/nfs-ganesha/src/MainNFSD/nfs_worker_thread.c
+
+Purpose: this file is the central ONC RPC dispatch lane for NFS-Ganesha. It defines `nfs_function_desc_t` descriptor tables for NFSv3, NFSv4, MOUNT, NLM, RQUOTA, and NFSACL procedures and uses those descriptors to select XDR decode/encode functions, service functions, cleanup functions, and dispatch behavior flags.
+
+Important APIs and control flow: `nfs_rpc_valid_NFS`, `nfs_rpc_valid_MNT`, `nfs_rpc_valid_NLM`, `nfs_rpc_valid_RQUOTA`, `nfs_rpc_valid_NFSACL`, and `nfs_rpc_valid_NFS_RDMA` validate program/version/procedure and call `nfs_rpc_process_request`. The request pipeline authenticates with `svc_auth_authenticate`, decodes via descriptor XDR hooks, initializes `op_ctx`, resolves clients/exports, starts duplicate-request cache handling, enforces export access/security/transport/privileged-port/read-write policy, calls the protocol service function, sends replies through `complete_request`, and releases args/context through `free_args`. Async and duplicate paths are handled by `nfs_rpc_complete_async_request`, `drc_resume`, and `process_dupreq`.
+
+State and integration: persistent runtime state is external: duplicate request cache entries, export/client references, per-thread `op_ctx`, request stats, tracepoints, metrics, and transport lifecycle. The file integrates tightly with ntirpc `SVCXPRT`, GSS/RPCSEC auth, HAProxy address validation, FSAL export permissions, server stats, LTTng tracepoints, and NFS metrics.
+
+Risks and test signals: this is high-blast-radius dispatcher code. Bugs in cleanup can leave stale `op_ctx`, leaked client/export refs, duplicate-request cache corruption, or dropped replies. Important tests are duplicate replay/suspend/resume, GSS no-dispatch handling, RDMA policy rejection, export permission matrix, read-only/metadata-only behavior, and per-program invalid version/procedure errors.

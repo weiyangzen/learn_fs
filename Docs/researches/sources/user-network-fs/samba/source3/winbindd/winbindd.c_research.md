@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source3/winbindd/winbindd.c
+
+Purpose: main winbindd daemon entry point and client event loop. It initializes Samba/winbind services, opens public and privileged sockets, dispatches client protocol commands to sync or async handlers, manages client lifecycle, registers messaging/signal handlers, and runs the tevent loop.
+
+Important APIs and types: `main`; `winbindd_setup_stdin_handler`; dispatch tables `bool_dispatch_table`, `async_nonpriv_table`, and `async_priv_table`; `process_request_send/recv` and callbacks; client callbacks `new_connection`, `winbind_client_request_read`, `winbind_client_activity`, `winbind_client_processed`; lifecycle helpers `remove_client`, `client_is_idle`, `remove_idle_client`, `remove_timed_out_clients`; listener setup; message handlers for shutdown and cache validation; address-change watcher.
+
+Control flow: startup parses command-line options, disables recursive winbind calls, validates ADS configuration and socket path lengths, initializes messaging, passdb, secrets, idmap/locator children, domain list, DCE/RPC endpoints, address-change monitoring, and listener sockets. Accepted clients get a `winbindd_cli_state`, an output queue, and an async request read. Each request allocates per-request memory and response, selects an async handler from nonprivileged or privileged tables, or a bool handler, then writes the response and returns to read another request. Concurrent unexpected client input while a request is active removes the client. A scrub timer periodically removes idle or timed-out clients. The main loop repeatedly calls `tevent_loop_once`.
+
+State and persistence: maintains in-memory client list, per-client enumeration cursors, request memory contexts, child process state, messaging registrations, domain/cache/idmap initialization, pid file, Unix sockets, and daemon status. It touches persistent/runtime state through lock/pid directories, sockets, logs, secrets, gencache/cache initialization, and child processes.
+
+Dependencies and integration points: core Samba command-line, messaging, DCE/RPC endpoint server, idmap, locator, domain list/cache, netlogon creds, passdb, nscd flushing, varlink optional support, address-change API, generated winbind request protocol, and all command-specific `winbindd_*_send/recv` handlers including the files in this subset.
+
+Risks: dispatch table permissions are the command security boundary; privileged commands must stay only in `async_priv_table`. Client removal intentionally frees pending I/O before closing sockets to avoid epoll/fork descriptor races. Long-running request profiling is only logged after completion; timed-out active requests are forcibly removed by scrubber. Startup has many fatal configuration gates. Socket path length and permissions directly affect NSS/PAM integration.
+
+Test signals: startup with valid/invalid ADS config, public vs privileged command access, max-client idle eviction, active request timeout, client sends extra data during processing, SIGUSR2 status, SIGCHLD child cleanup, cache-validation message fork path, address-drop message path, and listener socket permission checks.

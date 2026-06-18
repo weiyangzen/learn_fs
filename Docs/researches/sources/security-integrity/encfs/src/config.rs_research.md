@@ -1,0 +1,9 @@
+## sources/security-integrity/encfs/src/config.rs
+
+Purpose: Central EncFS configuration module. It loads legacy V4/V5 binary configs, V6 XML configs, and V7 protobuf configs; validates cryptographic and filesystem parameters; derives configured ciphers from passwords; and saves V6/V7 configs.
+
+Important APIs and types: `ConfigType`, `KdfAlgorithm`, `BoostSerialization`, `EncfsConfig`, `Interface`, `EncfsConfig::standard_v7`, `load`, `validate`, `load_v4`, `load_v5`, `decode_v7_proto`, `load_v7_proto`, `load_v7`, `get_cipher`, `header_size`, `file_codec_params`, `block_mode`, `block_overhead_bytes`, `test_default`, `save`, `save_xml`, `set_v7_key`, `save_v7`, `encfs_config_to_proto_v7`, `v7_config_hash_from_proto`, XML serialization helpers, and `SslCipher::iv_len`.
+
+Control flow: `load` reads bytes, detects V7 magic/name, rejects V3, tries V6 XML, falls back to V4 by name or V5 binary. Validation rejects unsupported `plainData`, invalid sizes, unsupported block MAC random bytes, invalid V7 AES-GCM-SIV combinations, and incomplete Argon2 params. `get_cipher` validates, constructs `SslCipher`, derives user keys with PBKDF2/legacy/Argon2id, decrypts wrapped volume key, zeroizes derived blobs, and configures name encoding. V7 additionally authenticates `key_data` with AES-GCM using `config_hash` as AAD.
+
+State and persistence: Persistent config files include `.encfs4`, `.encfs5`, `.encfs6.xml`, and `.encfs7`; in-memory config stores salts, encrypted key data, KDF params, block mode flags, and optional V7 hash. Dependencies include quick-xml, serde, base64, prost, sha2, zeroize, rust-i18n, config_binary, config_proto, crypto/aead, crypto/block, and crypto/ssl. Risks: compatibility across legacy formats is complex; V7 block mode is inferred partly by `block_mac_bytes == 16`, so sentinel semantics must stay stable. Tests cover fixture load/save, V7 round trips, hash mismatch, KDF and validation paths.

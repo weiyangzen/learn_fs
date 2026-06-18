@@ -1,0 +1,19 @@
+# sources/user-network-fs/samba/source3/smbd/smb2_oplock.c
+
+## Purpose
+This file implements smbd oplock and SMB2 lease coordination. It grants, downgrades, removes, breaks, times out, and waits for oplocks and leases across local `files_struct` state, shared share-mode records, the lease database, kernel oplock backends, and inter-process messaging. It also handles directory lease contention and handle lease break delays before operations such as rename or open can proceed.
+
+## Important APIs, Types, And Functions
+Public entry points include `set_file_oplock()`, `release_file_oplock()`, `remove_oplock()`, `downgrade_oplock()`, `downgrade_lease()`, `contend_dirleases()`, `smbd_contend_level2_oplocks_begin()`, `init_oplocks()`, `init_kernel_oplocks()`, `delay_for_handle_lease_break_send()`, `delay_for_handle_lease_break_recv()`, and `fsp_get_smb2_lease()`. Key state lives in `files_struct` fields such as `oplock_type`, `sent_oplock_break`, `oplock_timeout`, and `lease`; in `struct fsp_lease`; in `struct share_mode_entry`; and in `leases_db` records keyed by client GUID, lease key, and file id. Internal callbacks include `process_oplock_break_message()`, `process_kernel_oplock_break()`, `lease_timeout_handler()`, `oplock_timeout_handler()`, and recursive handle-lease wait callbacks.
+
+## Control Flow
+Granting an oplock optionally asks the kernel backend to set an oplock, refuses level II with kernel oplocks, initializes break state, and updates per-connection counters. Releasing or downgrading updates the kernel backend, share-mode entry, local counters, local oplock type, and timers. Break messages are received through Samba messaging, decoded from `oplock_break_message`, resolved to the current `files_struct`, normalized for client capabilities and configuration, and then sent to the client as SMB2 or SMB1 breaks. Lease breaks additionally update `leases_db`, epoch, break flags, requested and required target states, and local fsp lease mirrors. If clients do not answer, lease and oplock timeout handlers force downgrade/removal and wake waiters.
+
+## State And Persistence
+The durable cross-process state is the share-mode database and `leases_db`; local process state is held in open file objects, timers, pending tevent requests, connection oplock counters, and queued break records. `share_mode_wakeup_waiters()` is used to release blocked opens after state changes. Recursive handle-lease waiting may hold or reacquire share-mode locks while watching records for changes. Kernel oplock state is external to Samba and is accessed through `kernel_oplocks`.
+
+## Dependencies And Integration Points
+The file depends on Samba messaging, share-mode lock helpers, `leases_db`, file table traversal, kernel oplock implementations, SMB1/SMB2 break senders, directory helpers, tevent timers and watchers, and server configuration such as kernel oplocks, level II oplocks, directory leases, strict rename, and oplock break wait time. It is on the critical path for create/open conflict handling, write and lock contention, directory notifications, and lease-aware rename/delete behavior.
+
+## Risks And Test Signals
+This is high-risk concurrency code. Tests should cover exclusive-to-level-II downgrade, level-II/read lease break-to-none, async read-only breaks that require no ACK, timeout-forced removal, kernel break races after close, stale PID filtering, repeated break messages, lease epoch changes, multistep handle/write lease breaks, dynamic-share multi-file-id lease updates, directory lease parent breaks, and recursive handle lease waits below directories. Important failure signals include leaked share-mode locks, negative open counters, `leases_db_get()` failures on live entries, waits that never complete, clients being disconnected by failed break sends, and incorrect `NT_STATUS_ACCESS_DENIED` versus timeout mapping.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/restart_table.c
+
+This file implements linear searches over linker-defined PowerPC interrupt restart metadata. It provides `search_kernel_soft_mask_table(unsigned long addr)` and `search_kernel_restart_table(unsigned long addr)`, both marked `NOKPROBE_SYMBOL` because they can run in fragile interrupt/NMI paths.
+
+`search_kernel_soft_mask_table()` walks `__start___soft_mask_table` to `__stop___soft_mask_table`, comparing the supplied address against each `[start, end)` range and returning true when the address lies in soft-masked interrupt code. `search_kernel_restart_table()` similarly walks `__start___restart_table` to `__stop___restart_table` and returns the `fixup` address for the matching range, or zero if there is no restart entry. The Makefile disables KASAN for this object because these functions may be called in real mode or NMI interrupt paths.
+
+State is read-only linker table contents; there is no mutation or persistence. Dependencies include `asm/interrupt.h`, linker section symbols, and low-level interrupt code that emits table entries. Integration appears in interrupt handling code that decides whether an interrupted instruction can restart at a fixup. Risks are table ordering/coverage mistakes, linear search cost in interrupt context, sanitizer/probe recursion, and invalid virtual accesses in real mode. Test signals include interrupt/NMI stress, soft-mask/restart exception tests, and objdump/linker validation of table ranges.

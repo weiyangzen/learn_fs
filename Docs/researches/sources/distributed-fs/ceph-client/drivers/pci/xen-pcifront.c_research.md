@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pci/xen-pcifront.c
+
+Purpose: Provides the Xen PV PCI frontend for passthrough PCI devices in non-initial Xen domains. It registers a XenBus frontend named `pcifront`, creates guest PCI root buses backed by pciback operations, mediates config-space and MSI/MSI-X operations through a shared page and event channel, and handles backend-driven reconfiguration and AER callbacks.
+
+Important APIs and types: Core state is `struct pcifront_device`, containing the xenbus device, root bus list, event channel, grant reference, IRQ, shared info page, work item, and flags. `struct pcifront_sd` extends `pci_sysdata` with a frontend pointer. Key functions are `do_pci_op()`, `pcifront_bus_read()`, `pcifront_bus_write()`, MSI/MSI-X frontend ops, `pcifront_scan_root()`, `pcifront_rescan_root()`, `pcifront_free_roots()`, `pcifront_do_aer()`, `alloc_pdev()`, `pcifront_publish_info()`, and XenBus state handlers.
+
+Control flow: Module init refuses non-PV, dom0, or no-PV-device environments, registers MSI frontend ops, then registers with XenBus. Probe allocates a shared info ring, grants it to the backend, binds an event-channel IRQ, publishes `pci-op-ref`, `event-channel`, and magic in XenStore, and switches to Initialised. When the backend reaches Connected, the frontend scans roots from XenStore or defaults to `0000:00`, creates PCI root buses with `pcifront_bus_ops`, scans all devfns, claims backend-owned resources, and adds devices. Config access serializes via `sh_info_lock`, copies a `xen_pci_op`, marks it active, notifies the backend, polls for completion with a two-second guest timeout, and maps Xen PCI errors to PCIBIOS errors.
+
+State and persistence: State is runtime-only: a global `pcifront_dev`, root bus list, XenBus state, shared op page, event channel/IRQ, AER work flag, and per-root `pcifront_sd`. Device enumeration persists in Linux PCI core until backend detach, frontend removal, or reconfiguration. Backend-provided PCI resources are claimed as-is rather than rebalanced.
+
+Dependencies and integration points: Integrates with XenBus, grant tables, event channels, Xen shared PCI ABI, Linux PCI scanning/resource APIs, MSI frontend hooks, PCI AER error handlers, and Xen SWIOTLB/platform support. It is explicitly a frontend for a Xen pciback-style backend.
+
+Risks: Shared-page operation ordering depends on barriers and flag discipline. Lost event-channel notifications are mitigated by polling but can still delay or fail config operations. Backend unresponsiveness is treated like device-not-found after timeout. Reconfiguration races with PCI device removal, AER work, and root-bus teardown need careful locking through PCI rescan/remove locks. Only one frontend is accepted globally.
+
+Test signals: Boot a Xen PV guest with PCI passthrough, verify XenBus state transitions, config reads/writes, PCI device enumeration, resource claiming, MSI and MSI-X vector assignment, backend reconfiguration add/remove, AER callback propagation, and cleanup on backend Closing/Closed and module unload.

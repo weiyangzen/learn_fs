@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/amazon/ena/ena_devlink.c
+
+Purpose: this file adds devlink support for ENA. It exposes the generic `enable_phc` driver-init parameter, validates PHC support, manages a physical devlink port, and implements driver reinitialization through devlink reload.
+
+Important APIs, types, and functions: `ena_devlink_enable_phc_validate()` rejects enabling PHC on devices without PHC support. `ena_devlink_params` registers `DEVLINK_PARAM_GENERIC_ID_ENABLE_PHC` in driver-init mode. `ena_devlink_params_get()` reads the driver-init value and calls `ena_phc_enable()`. `ena_devlink_disable_phc_param()` forces the parameter false under devlink lock. `ena_devlink_port_register()` and `ena_devlink_port_unregister()` manage a physical devlink port. `ena_devlink_reload_down()` destroys the ENA device under RTNL after rejecting namespace changes. `ena_devlink_reload_up()` restores the device if not already running and reports `DRIVER_REINIT`. Public lifecycle functions allocate, free, register, and unregister the devlink instance.
+
+Control flow: allocation creates a devlink with `ena_devlink_ops`, stores the `ena_adapter *` in devlink private storage, and registers parameters with the current PHC enabled value. Register acquires the devlink lock, registers the port, then registers devlink. Reload down unregisters the port and calls `ena_destroy_device(adapter, false)` under RTNL. Reload up calls `ena_restore_device()` under RTNL if `ENA_FLAG_DEVICE_RUNNING` is clear, then registers the port and reports the performed action on success. Unregister and free reverse registration and parameter setup.
+
+State and persistence: devlink private data stores the adapter pointer. Runtime state includes `adapter->devlink`, `adapter->devlink_port`, and the driver-init `enable_phc` parameter value. The parameter is not a firmware-persistent value; it affects subsequent driver initialization and PHC activation.
+
+Dependencies and integration points: the file depends on net/devlink, PCI device context, `ena_netdev.h` via `ena_devlink.h`, and PHC helpers from `ena_phc.h`. It calls core ENA device teardown/restore functions and checks `ENA_FLAG_DEVICE_RUNNING`.
+
+Risks: reload paths interact with asynchronous reset/recovery; `reload_up()` specifically checks whether another path already initialized the device. Port unregister/register order must remain paired or devlink users can see stale ports. `enable_phc` validation depends on feature discovery having populated PHC support. Namespace reload is explicitly unsupported. Failing parameter registration aborts devlink allocation.
+
+Test signals: `devlink dev show` should show the ENA instance after probe, `devlink port show` should expose a physical port, `devlink dev param show` should show `enable_phc`, enabling PHC should fail with `-EOPNOTSUPP` on unsupported devices, devlink reload should destroy and restore the adapter with `DRIVER_REINIT`, namespace reload should fail, and unregister/remove should leave no devlink port.

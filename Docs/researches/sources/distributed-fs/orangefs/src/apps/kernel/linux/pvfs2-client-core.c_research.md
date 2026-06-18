@@ -1,0 +1,70 @@
+# sources/distributed-fs/orangefs/src/apps/kernel/linux/pvfs2-client-core.c
+
+## Purpose
+`pvfs2-client-core.c` is the OrangeFS/PVFS2 userspace client daemon that services Linux kernel-module upcalls from `/dev/pvfs2-req`. It owns daemon startup, logging, cache configuration, mapped kernel/userspace buffer setup, credential generation and caching, remount recovery, request dispatch, asynchronous system-interface completion, and downcall response packaging back to the kernel.
+
+The file is the bridge between kernel VFS operation records (`pvfs2_upcall_t`) and OrangeFS system-interface operations (`PVFS_isys_*` and selected `PVFS_sys_*` calls). Most filesystem operations are posted asynchronously, tracked by kernel tag in an in-progress hash table, completed through `PVFS_sys_testany()`, converted into `pvfs2_downcall_t`, and written back through the device job layer. A smaller set of control operations are serviced inline.
+
+## Important APIs, types, and functions
+Core local types are `options_t`, the command-line/runtime configuration carrier for cache timeouts, cache limits, perf history, logging, buffer-map sizes, event hints, key path, BMI options, and optional readahead settings; and `vfs_request_t`, the per-upcall state object containing the incoming upcall, outgoing downcall, `job_status_s`, unexpected-device info, hints, one or more system-interface op ids, operation responses, mapped I/O buffer pointers, xattr/iox scratch allocations, mount entries, cancellation flags, hash linkage, and optional readahead state.
+
+Global process state includes `s_opts`, `s_client_dev_context`, `s_client_is_processing`, `s_client_signal`, mapped buffer descriptors `s_io_desc` and `s_desc_params`, the fixed pool `s_vfs_request_array[MAX_NUM_OPS]`, `credential_cache`, and `s_ops_in_progress_table`. Remount state is coordinated by `remount_thread`, `remount_mutex`, and `remount_complete`.
+
+The dispatch surface is split into posting helpers for VFS operations: `post_lookup_request()`, `post_create_request()`, `post_symlink_request()`, `post_getattr_request()`, `post_setattr_request()`, `post_remove_request()`, `post_mkdir_request()`, `post_readdir_request()`, `post_readdirplus_request()`, `post_rename_request()`, `post_truncate_request()`, `post_getxattr_request()`, `post_setxattr_request()`, `post_removexattr_request()`, `post_listxattr_request()`, `post_statfs_request()`, `post_io_request()`, `post_iox_request()`, and `post_fsync_request()`. Each fills hints, obtains a credential through `lookup_credential()`, converts kernel handles to PVFS handles, and posts a corresponding `PVFS_isys_*` call.
+
+Inline service helpers include `service_fs_umount_request()`, `service_perf_count_request()`, `service_param_request()`, `service_fs_key_request()`, `service_operation_cancellation()`, optional `service_mmap_ra_flush_request()`, and feature probing in `handle_unexp_vfs_request()`. Mount setup is handled by `generate_upcall_mntent()` and `post_fs_mount_request()`.
+
+Completion and transport helpers are `process_vfs_requests()`, `handle_unexp_vfs_request()`, `package_downcall_members()`, `write_downcall()`, `write_device_response()`, and `repost_unexp_vfs_request()`. Request tracking uses `initialize_ops_in_progress_table()`, `add_op_to_ops_in_progress_table()`, `is_op_in_progress()`, `remove_op_from_ops_in_progress_table()`, `cancel_op_in_progress()`, and `finalize_ops_in_progress_table()`.
+
+Credential helpers are `setup_credential_cache()`, `generate_credential()`, `lookup_credential()`, `remove_credential()`, and the tcache callbacks `credential_compare_fn()`, `ckey_hash_fn()`, and `credential_free_fn()`. Configuration helpers include `parse_args()`, `set_acache_parameters()`, `set_ncache_parameters()`, `set_ccache_parameters()`, `set_capcache_parameters()`, `reset_acache_timeout()`, `reset_ncache_timeout()`, `set_device_parameters()`, `fill_hints()`, and `get_mac()`.
+
+## Control flow
+`main()` parses options, installs signal and crash handlers, initializes the PVFS system interface, enables file or syslog gossip logging, detaches standard streams to `/dev/null`, initializes optional mmap readahead, sets up credential/attribute/name/capability cache parameters, configures perf counter history and rollover, initializes the in-progress table, opens `/dev/pvfs2-req`, maps kernel buffer regions, opens a job context, creates the remount thread, and enters `process_vfs_requests()`.
+
+`process_vfs_requests()` allocates `MAX_NUM_OPS` reusable `vfs_request_t` objects and posts each as an unexpected device read via `PINT_sys_dev_unexp()`. It then unlocks the remount mutex so `exec_remount()` can call `PINT_dev_remount()` while the main loop is ready to service resulting mount upcalls. The loop calls `PVFS_sys_testany()` with a short timeout, classifies completions as new unexpected upcalls or completed async sysint operations, and either dispatches new work or packages completed responses.
+
+`handle_unexp_vfs_request()` copies the kernel upcall from the device buffer, rejects most non-mount operations while remount is pending, drops duplicate retry upcalls already present in the in-progress table, records timing, and dispatches by `in_upcall.type`. If a helper returns with `op_id == -1`, the operation completed inline and is immediately packaged, written to the device, and reposted for another unexpected request. If an asynchronous post succeeded, the request is marked non-unexpected and inserted into the in-progress hash table keyed by the kernel tag.
+
+For asynchronous completions, `process_vfs_requests()` decrements `num_incomplete_ops`, waits for all split IOX sub-ops when needed, removes the request or readahead waiters from the in-progress table, calls `package_downcall_members()`, writes a downcall unless the I/O was cancelled, then reposts the request object as an unexpected device read. `write_device_response()` uses `job_dev_write_list()` and may synchronously `job_test()` the device write when it is not immediately complete.
+
+`package_downcall_members()` translates each sysint response into kernel ABI fields. It converts PVFS handles to `PVFS_khandle`, copies `getattr` attributes and symlink targets, encodes `readdir` and `readdirplus` trailers into mapped read-directory buffers, converts `statfs` byte totals into block counts based on the mapped I/O buffer size, resolves root handles after mount, computes I/O completion byte counts, folds IOX split completions, copies xattr values/lists, and normalizes `-PVFS_ECANCEL` into kernel-facing timeout or interrupt-style errors. Permission failures evict the affected credential from cache.
+
+## State and persistence behavior
+The daemon persists process-wide runtime state in global caches and tables rather than on-disk files. It writes logs to `/tmp/pvfs2-client.log` by default or syslog, opens and services `/dev/pvfs2-req`, maps device buffer regions for I/O and directory trailers, and uses `/dev/null` for standard streams after startup. The credential path option is passed to `PVFS_util_gen_credential()` but credential results are stored only in the in-process tcache.
+
+Cache state includes acache, ncache, capability cache, credential tcache, optional mmap readahead buffers, and perf counter history. Mount and unmount reset acache and ncache timeouts to respect the minimum handle recycle time from active server configurations. Dynamic mount ids are assigned monotonically by `dynamic_mount_id` and returned to the kernel for later unmount matching.
+
+Each pooled `vfs_request_t` is reused indefinitely: after completion, `repost_unexp_vfs_request()` releases the previous unexpected buffer and sys op, frees hints, zeroes the struct, marks it as an unexpected device request, and reposts it. Speculative readahead requests are heap-allocated outside the fixed pool and are not inserted into the in-progress table.
+
+I/O data itself moves through mapped kernel/userspace buffers selected by `buf_index`; normal reads and writes post contiguous memory/file requests against that mapping. `readdir` and `readdirplus` encode variable-sized trailers into the mapped readdir buffer. Xattr and IOX operations allocate per-request scratch arrays and free them in the completion path.
+
+## Dependencies and integration points
+This file integrates with the OrangeFS system interface (`PVFS_sys_initialize/finalize`, `PVFS_isys_*`, `PVFS_sys_testany`, `PVFS_sys_fs_remove`, `PVFS_sys_ref_lookup`), the kernel device protocol (`pvfs2_upcall_t`, `pvfs2_downcall_t`, `PINT_dev_initialize`, `PINT_sys_dev_unexp`, `PINT_dev_get_mapped_regions`, `PINT_dev_get_mapped_buffer`, `PINT_dev_remount`, `job_dev_write_list`), and the kernel handle compatibility helpers in `khandle.h`/`khandle-util.h`.
+
+It depends on cache libraries for attribute, name, credential, capability, and optional mmap readahead caches; server configuration and cached config helpers for mount resolution and filesystem keys; BMI for forceful cancellation mode on mount; gossip logging and debug masks; perf counters and client perf rollover; event hints; PVFS request constructors for contiguous and hindexed I/O; and POSIX process APIs for signals, pthreads, rlimits, sockets, and network interface queries.
+
+Kernel ABI integration points are especially tight: `MAX_NUM_OPS`, buffer-map descriptor counts/sizes, trailer encoding layouts, `PVFS_khandle` conversion, operation tags, and status values must match kernel-module expectations. Command-line parameter handling also maps kernel param upcalls onto live cache settings and debug masks.
+
+## Risks and edge cases
+The request lifecycle is highly stateful. A missed free or stale field in `vfs_request_t` can leak hints, request objects, xattr arrays, IOX arrays, mount entries, or device buffers across reuse. Many paths rely on `assert()` for kernel-provided indices, request construction, and pointer validity, so production behavior depends on build flags and input trust.
+
+Cancellation is intentionally limited to file I/O. `cancel_op_in_progress()` asserts the target upcall is `PVFS2_VFS_OP_FILE_IO`, calls `PINT_client_io_cancel()`, and suppresses the downcall for cancelled I/O. Retry and duplicate handling depend on the kernel tag hash table; a lost remove or duplicate tag can cause ignored work or repost churn.
+
+Mount/remount ordering is delicate. Most operations are discarded and reposted while `remount_complete` is still pending, which relies on kernel timeout/retry behavior. If remount fails, the main loop returns `-PVFS_EAGAIN` so the parent can restart the client core. `generate_upcall_mntent()` mutates the config-server string by replacing the final slash with `'\0'`, rejects comma-separated multihome forms, and may leak partially allocated mount-entry members on early error until outer cleanup runs.
+
+The optional readahead path is complex. It creates phantom speculative requests outside the normal pool, shares buffer waiter lists across multiple kernel requests, bypasses the in-progress table for speculative work, copies cache hits inline, and must free or repost waiters in several completion and cancellation paths. Writes, truncates, removes, fsync, and umount flush the readahead cache for consistency, but the implementation is deliberately broad rather than overlap-aware.
+
+IOX splits a trailer of `(offset,length)` records into hindexed groups of `IOX_HINDEXED_COUNT`; it posts multiple sysint I/O operations that share the same mapped buffer and only completes after all are done. Partial posting failure cancels already-posted sub-ops and frees local arrays, so tests should cover both successful split completion and mid-post allocation/request errors.
+
+Credential caching has security-sensitive behavior. `lookup_credential()` returns a duplicate on cache hit, generates a fresh credential on miss, caches signed credentials until shortly before timeout, and evicts cache entries on `-PVFS_EPERM` or `-PVFS_EACCES`. It has an allocation failure path where `cpayload` allocation failure returns `NULL` without freeing the freshly generated credential, which is a leak candidate.
+
+Other edge cases include non-errno PVFS status normalization before returning to the kernel, `get_mac()` assuming `eth0` and constructing a client id from hardware address bytes, `listxattr` printing to stdout even though stdout is normally `/dev/null`, `write_device_response()` rejecting `list_size >= MAX_LIST_SIZE`, and many parameter setters accepting unsigned values even though some code compares them with `< 0`.
+
+## Test signals
+High-value integration tests exercise daemon startup with file and syslog logging, `/dev/pvfs2-req` initialization failure, mapped buffer count/size overrides, clean signal shutdown, remount success, remount failure returning `-PVFS_EAGAIN`, and remount-pending behavior for non-mount upcalls.
+
+Filesystem operation tests should cover lookup, create, create-after-`EEXIST` lookup recovery, symlink, getattr with symlink target, setattr, remove, mkdir, readdir trailer encoding, readdirplus stat/link-target encoding and cleanup, rename, truncate, fsync, statfs block conversion, dynamic mount id/root handle response, umount cache reset, fs key retrieval with missing and present keys, feature probing with and without `USE_RA_CACHE`, and unknown operation handling.
+
+I/O tests should cover normal read/write mapped-buffer selection, invalid buffer indices, cancellation while in progress, completion after cancellation, `-PVFS_ECANCEL` normalization, IOX trailer absence, invalid trailer size, split IOX completion across more than `IOX_HINDEXED_COUNT` records, and cleanup after partial IOX posting failure.
+
+Cache and parameter tests should cover runtime get/set of acache, ncache, credential cache, capability cache, perf history, perf reset, debug masks including the two-mask compatibility op, credential cache hit/miss/expiry/permission eviction, timeout reset after mount/umount, and optional readahead cache hit, wait, read, speculative fill, flush, cancellation, resize/free-buffer completion, and disabled-feature behavior.

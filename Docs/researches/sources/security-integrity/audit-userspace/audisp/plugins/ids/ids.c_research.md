@@ -1,0 +1,5 @@
+## sources/security-integrity/audit-userspace/audisp/plugins/ids/ids.c
+
+Purpose: main process for experimental audit IDS plugin.
+
+It configures signals, loads IDS config, opens an audit connection for reaction logging, initializes origin/account/session models, starts `auplugin_event_feed` with a timer callback, normalizes each complete event, and dispatches it to bad-event and behavior models. State includes global debug/mode, log file, stop/HUP/dump flags, current auparse state for metrics, audit fd, config, model indexes, and timer services. SIGUSR1 writes state to `AUDIT_RUN_DIR/ids-state`; SIGHUP reloads config; parent-origin SIGTERM stops auplugin. Dependencies are auparse normalization, libaudit logging, auplugin, IDS model modules, timer services, and config/reaction code outside this subset. Risks include debug default enabled, global singleton state, audit connection failure exits, no locking around signal flags, config reload while models are live, and incomplete reaction code in adjacent modules. Tests should cover config load failure, signal handling, state dump, normalized event model dispatch, and timer cleanup.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/gpio/dce60/hw_factory_dce60.h
+
+Purpose: DCE 6.x factory declaration header. Important API is `dal_hw_factory_dce60_init(struct hw_factory *factory)`. There is no executable control flow or persistence. Dependencies are the forward visibility of `struct hw_factory` from surrounding includes. Integration is through `hw_factory.c` when SI support is enabled. Risks are header inclusion without the common factory type and signature mismatch with the implementation. Test signals are SI-enabled kernel builds and service creation for DCE 6.0, 6.1, and 6.4.

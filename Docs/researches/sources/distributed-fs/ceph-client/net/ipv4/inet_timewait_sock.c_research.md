@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/ipv4/inet_timewait_sock.c
+
+Purpose: manages generic INET TIME_WAIT sockets: allocation from protocol slabs, transition from full sockets to timewait entries, timer scheduling/descheduling, bind/ehash removal, freeing, and purging non-full sockets during network namespace teardown.
+
+Important APIs/functions: exports `inet_twsk_bind_unhash`, `inet_twsk_put`, `inet_twsk_deschedule_put`, `__inet_twsk_schedule`, and provides `inet_twsk_alloc`, `inet_twsk_hashdance_schedule`, `inet_twsk_free`, and `inet_twsk_purge`. Key types are `struct inet_timewait_sock`, `struct inet_timewait_death_row`, `struct inet_hashinfo`, `struct inet_bind_bucket`, and `struct inet_bind2_bucket`.
+
+Control flow: `inet_twsk_alloc()` checks the death-row bucket limit, allocates a timewait object, copies identity and policy fields from the full socket, initializes the timer and zero refcount, takes a protocol module reference, and initializes protocol-specific PSP state. `inet_twsk_hashdance_schedule()` links the timewait socket into the bind hash while the original socket remains bound, sets a three-reference model for bind, ehash, and timer, publishes it by replacing the full socket in ehash under the ehash lock, decrements protocol in-use accounting for the full socket, and arms the timer. Timer expiry calls `inet_twsk_kill()`, which removes from ehash, unhashes bind buckets, decrements death-row accounting, and drops refs. Early descheduling synchronizes with hashdance via the ehash lock before shutting down the timer, then kills if the timer was active. Purge scans all ehash slots for `TCP_TIME_WAIT` and `TCP_NEW_SYN_RECV` sockets belonging to dead netns and removes them safely.
+
+State and persistence: timewait sockets persist in ehash and bind hash until timer expiry, early recycle, or namespace purge. Refcounts encode published ownership and are deliberately zero until fully initialized. The death row keeps aggregate `tw_refcount` and `sysctl_max_tw_buckets` limit state. Timer state is synchronized with ehash locks to avoid races where a purger shuts down a timer before hashdance arms it.
+
+Dependencies and integration: works with `inet_hashtables` for ehash/bhash locks and bucket destruction, TCP timewait destructor and uniqueness logic, request-socket drop helpers for purging SYN_RECV entries, protocol module ownership, PSP initialization, and net namespace lifetime checks.
+
+Risks: callers must not touch `tw` after `inet_twsk_hashdance_schedule()` because ownership is transferred to hash/timer refs. Refcount and timer ordering are critical; a missed synchronization can leak a timer ref or free a published object. Bind unhash requires bind hash locks held by callers. Purge must restart RCU walks when nulls markers change and must recheck netns after taking a ref.
+
+Test signals: TCP close/timewait stress tests, timewait bucket limit tests, net namespace teardown while sockets are in TIME_WAIT/SYN_RECV, timewait recycle/connect tests, lockdep around ehash and bhash lock ordering, KASAN/KCSAN timer race reports, and `ss`/inet_diag visibility checks for timewait sockets.

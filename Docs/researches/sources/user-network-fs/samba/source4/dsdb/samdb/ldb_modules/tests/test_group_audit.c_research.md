@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source4/dsdb/samdb/ldb_modules/tests/test_group_audit.c
+
+Purpose: This cmocka file directly includes `../group_audit.c` and validates group membership audit event construction and diffing. It covers JSON and human-readable group-change output, transaction/session metadata, binary DN parsing/comparison, primary-group lookup, member add/remove detection, replication metadata delete flags, group-type to event-ID mapping, and failure audit generation.
+
+Important APIs, types, and functions: The tests exercise `get_transaction_id`, `audit_group_human_readable`, `audit_group_json`, `get_parsed_dns`, `dn_compare`, `get_primary_group_dn`, `log_membership_changes`, `get_add_member_event`, `get_remove_member_event`, and `log_group_membership_changes`. The file mocks `dsdb_search_one`, `dsdb_module_search_dn`, and `audit_message_send`, recording generated JSON messages for inspection.
+
+Control flow: Setup helpers create minimal LDB/module state, register Samba DN handlers, set `remoteAddress`, install session SID/GUID data, and attach an `audit_context` with event sending enabled. JSON tests check the `groupChange` wrapper, timestamps, version, status, user, group, action, and optional event ID. Diff tests construct old and new `member` elements containing extended binary DNs; `log_membership_changes` compares parsed GUID/DN values and emits Added or Removed events. RMD flag tests cover logical deletion and undeletion transitions. `log_group_membership_changes` tests simulate post-operation readback of the new object, including groupType, and failure cases when the operation or readback fails.
+
+State and persistence behavior: The test state is in memory. Global mock variables capture the latest search base, scope, attributes, flags, format string, status, and result. `messages` and `messages_sent` hold deep-copied JSON audit messages. No real database records or messaging server state are persisted.
+
+Dependencies and integration points: The file depends on group audit internals, audit utility/session helpers, LDB extended DN parsing, Samba group type constants, security event IDs, JSON messaging, and DSDB search helpers. It integrates with the same audit-message path production code uses to send events through Samba messaging.
+
+Risks: Membership diffing is sensitive to extended DN parsing, GUID comparison, and RMD flag semantics; small changes can duplicate or suppress security audit events. The mock `audit_message_send` has a fixed capacity of 16 messages, which is enough for current cases but not a general stress test. Some tests use manually assembled `ldb_message_element` structures, so malformed real-world DNs require separate coverage.
+
+Test signals: Passing tests show group membership additions/removals produce correct event IDs for local/global/universal and security/distribution groups, unchanged members are ignored, RMD flag transitions are interpreted correctly, and failure paths emit a `Failure` audit message instead of silently dropping context.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/e_powersaver.c
+
+Purpose: implements a legacy x86 CPUFreq driver for VIA/Centaur C7 Enhanced PowerSaver processors using MSR multiplier/voltage controls and optional ACPI BIOS-limit checks.
+
+Important APIs and control flow: `eps_get()` reads `MSR_IA32_PERF_STATUS` and returns FSB times current multiplier. `eps_set_state()` waits for transition-busy bits to clear, writes the low 16 bits of the destination multiplier/voltage to `MSR_IA32_PERF_CTL`, and polls for completion. `eps_target()` selects the encoded table state. `eps_cpu_init()` detects supported brand/model, enables Enhanced SpeedStep/PowerSaver in `MSR_IA32_MISC_ENABLE`, validates current/max/min multipliers and voltages, enforces failsafe checks unless module parameters disable them, derives FSB from `cpu_khz`, optionally checks ACPI BIOS limit, constructs a two-state or multi-state frequency table, and attaches it to the policy. Module init gates on Centaur family 6 EST-capable CPUs.
+
+State and persistence behavior: per-CPU pointer `eps_cpu[NR_CPUS]` stores FSB, optional BIOS limit, and a flexible frequency table. Module parameters persist failsafe behavior and optional maximum voltage override. Hardware MSR state persists after transitions; comments explicitly warn about overclock/change-after-unload scenarios.
+
+Dependencies and integration points: depends on x86 CPU identification, MSR access, TSC/cpu_khz, optional ACPI processor performance registration, cpufreq generic frequency-table helpers, and CPU0-only policy assumptions.
+
+Risks and test signals: risks include direct voltage programming with limited platform validation, CPU0-only support despite `NR_CPUS` array, failsafe module parameters enabling unsafe operation, ACPI helper minimalism, polling timeouts returning `-ENODEV`, FSB derivation from current multiplier accuracy, and no transition notifier wrapping in the driver itself because core target-index path handles notifications. Test signals include matching only supported VIA C7 systems, successful MSR feature enable, generated frequency table matching min/max multipliers, ACPI limit rejection when applicable, target transitions completing within polls, and cleanup freeing `eps_cpu[0]`.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/ptrace_32.c
+
+Purpose: implements 32-bit SH ptrace, user regsets, hardware single-step via UBC, and syscall trace hooks.
+
+Important APIs and control flow: stack helpers read/write child `pt_regs`. `ptrace_triggered()` disables one-shot ptrace breakpoints. `set_single_step()`, `user_enable_single_step()`, and `user_disable_single_step()` use a UBC breakpoint on the child PC to implement single-step. General, FPU, and DSP regset callbacks expose `pt_regs`, xstate, and DSP state. `arch_ptrace()` handles legacy PEEK/POKEUSR, register get/set requests, FPU/DSP requests, and delegates unknown operations to `ptrace_request()`. `do_syscall_trace_enter()` runs ptrace entry, seccomp, tracepoint, and audit entry logic; `do_syscall_trace_leave()` runs audit, tracepoint exit, and ptrace syscall-exit/step reporting.
+
+State, dependencies, and risks: state includes child thread ptrace breakpoints, xstate used-math flags, regset view metadata, and syscall trace flags. Dependencies include `entry-common.S` syscall frame layout, perf/hw_breakpoint, audit, seccomp, trace events, FPU/DSP helpers, and `struct user` ABI offsets. Risks include unrestricted POKEUSR corruption of sensitive saved registers, single-step depending on UBC availability, and ABI breakage if `pt_regs` changes. Test signals are gdb ptrace register access, syscall tracing/rewrite, seccomp deny, FPU regsets, and single-step over syscalls.

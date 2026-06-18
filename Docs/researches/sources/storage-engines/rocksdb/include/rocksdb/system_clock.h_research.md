@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/include/rocksdb/system_clock.h
+
+- **Purpose:** Declares the customizable `SystemClock` abstraction used by RocksDB for wall-clock time, monotonic deltas, CPU-time accounting, sleeps, and timed condition-variable waits.
+- **Important APIs/types/functions:** `SystemClock::Default()`, `NowMicros()`, `NowNanos()`, `CPUMicros()`, `CPUNanos()`, `SleepForMicroseconds()`, `TimedWait()`, `GetCurrentTime()`, and `TimeToString()` are the core operations. `SystemClock::CreateFromString()` and `Type()` integrate with options customization. `SystemClockWrapper` forwards calls to an inner clock and exposes `Inner()`, `PrepareOptions()`, and `SerializeOptions()`.
+- **Control flow:** Internal timing code calls the configured clock. Default `NowNanos()` and `CPUNanos()` derive from microsecond methods; platform implementations can override monotonic nanosecond timing. `TimedWait()` waits until a deadline and reports timeout versus wakeup.
+- **State and persistence:** The clock interface usually has no durable state. `GetCurrentTime()` returns epoch seconds and only overwrites the output on success. `SystemClockWrapper` owns a shared target clock.
+- **Dependencies:** Depends on `Customizable`, `Status`, `port::CondVar`, and chrono types. Used by rate limiting, statistics, backup timestamps, cache dump deadlines, and other time-sensitive paths.
+- **Integration points:** Test clocks and wrappers can be installed through configurable objects. The `kDefaultName()` identifier lets code detect the platform default.
+- **Risks:** `NowMicros()` is described as system time in some paths, while `NowNanos()` should be monotonic; substituting a non-monotonic custom clock can break timeout and latency logic. `CPUMicros()` returning zero means unsupported and must be handled by callers.
+- **Test signals:** Tests should validate default clock availability, wrapper forwarding, timeout behavior, serialization/config creation, and custom clock edge cases such as unsupported CPU time.

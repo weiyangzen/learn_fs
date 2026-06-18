@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/arch/alpha/include/asm/core_t2.h
+
+This header models the T2/Gamma core logic used by Sable-style systems. It defines Gamma bias, config/I/O/sparse/dense memory spaces, T2 IOCSR/error/HAE/window/TLB registers, CPU and memory CSR bases, and detailed T2 machine-check/corrected-error frame structures.
+
+Important APIs include low-level `t2_inb/outb/inw/outw/inl/outl/inq/outq`, `t2_readb/readw/readl/readq`, `t2_writeb/writew/writel/writeq`, `t2_ioportmap`, `t2_ioremap`, `t2_is_ioaddr`, `t2_is_mmio`, and macro-generated `t2_ioread*`/`t2_iowrite*`. The code has explicit HAE update logic (`t2_set_hae`) around sparse accesses and uses non-trivial I/O flags so `asm/io.h` does not replace it with simple loads/stores.
+
+State includes T2 HAE registers, Gamma bias via `alpha_mv.sys.t2.gamma_bias` for generic cases, PCI windows, and machine-check logout frames. Integration is with Alpha I/O dispatch, platform error handling, and DMA/PCI setup. Risks are HAE synchronization, sparse address encoding, CPU/memory bank register interpretation, and machine-check frame layout. Useful test signals are Alpha defconfig or cross-build coverage, sparse/header dependency checks, and targeted boot-image build checks. Runtime validation normally requires Alpha SRM/QEMU or real hardware because many paths depend on PALcode, HWRPB data, chipset registers, or old ISA/PCI behavior.

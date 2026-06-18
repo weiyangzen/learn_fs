@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/lchown/lchown01.c
+
+Purpose: positive root test for `lchown()` on a symbolic link itself, not the target. Setup creates `testfile` and symlink `slink_file`. Each table row supplies owner/group numeric values or `-1` to leave a field unchanged; the test lstat's the symlink, computes expected UID/GID, calls `SAFE_LCHOWN`, then lstat's again and compares fields. State is one file, one symlink, and symlink metadata. Dependencies are root privilege and filesystem support for symlink ownership. Risks are filesystems that do not preserve symlink ownership or map IDs. Test signals are UID/GID equality for owner-only, group-only, both, and no-op cases.

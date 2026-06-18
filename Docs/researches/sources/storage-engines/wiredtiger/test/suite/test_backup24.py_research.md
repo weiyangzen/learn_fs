@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup24.py
+
+Purpose: tests recovering a selective backup containing some logged and non-logged tables while additional logged/non-logged tables are created after backup cursor open. It validates partial restore metadata cleanup.
+
+Important APIs are custom `add_data/check_data`, `session.open_cursor('backup:')`, `take_selective_backup`, `take_log_backup`, `session.log_flush`, `wiredtiger_open(... backup_restore_target=...)`, metadata cursor searches, and `debug_mode=(table_logging=true)`. Control flow creates logged and non-logged tables, writes until log 2, checkpoints, writes post-checkpoint data, opens a backup cursor, creates new logged/non-logged tables, flushes logs, takes a selective backup excluding one non-logged table, copies logs, restores with target URIs, and asserts excluded/new non-logged tables are absent from files and metadata while included tables are readable. State behavior spans selective file copying, logs, and partial recovery metadata pruning. Risks include log filename timing and target list formatting. Test signals are file absence, metadata WT_NOTFOUND, and data checks.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/ras/rascore/ras_process.c
+
+Purpose: this file implements asynchronous RAS event processing. It queues poison/non-UMC events in a FIFO, counts UMC interrupt requests atomically, wakes a kernel thread, updates ECC data, handles bad-page/RMA reset flow, and notifies the host system.
+
+Important functions: `ras_process_init()` allocates the event FIFO, initializes spinlock/waitqueue, and starts `ras_process_thread`. `ras_process_add_interrupt_req()` rejects uninitialized cores, then either increments UMC counters or queues non-UMC requests. `ras_process_handle_ras_event()` emits begin/end notifications, clears fatal flags, replays pending UMC banks, drains UMC event counts through `ras_process_umc_event()`, then drains non-UMC FIFO through `ras_process_non_umc_event()`. `ras_process_umc_event()` polls ACA ECC data until detected deferred-error count reaches interrupt count or timeout. `ras_process_non_umc_event()` notifies poison consumption and aggregates reset flags.
+
+Control flow and state: `ras_process_thread()` waits for explicit interrupts or a 300 ms polling timeout, skips when not initialized or in reset, and delegates to a system async handler if provided. FIFO operations use spinlocked kfifo; UMC counts use atomics. Reset-caused mode1/RMA paths clear pending work.
+
+Dependencies and risks: depends on core notifier callbacks, ACA ECC update/query, UMC pending-bank logging, reset status, and GPU reset notifications. Risks include event FIFO overflow, polling races between atomic count and ACA data readiness, losing events when mode1 reset clears state, and mixing timeout polling with explicit interrupts. Test signals should exercise UMC event bursts, non-UMC poison events with reset flags, RMA reset cause, GPU-in-reset skip, FIFO full, thread shutdown, async handler delegation, and begin/end notifier ordering.

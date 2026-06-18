@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/fs/ufs/util.c
+
+`util.c` implements shared UFS helpers for multi-fragment buffer I/O, metadata dirty/sync state, special inode device encoding, and pagecache folio access.
+
+`_ubh_bread_()` allocates a `struct ufs_buffer_head`, validates fragment-aligned size and `UFS_MAXFRAG`, and reads contiguous fragments with `sb_bread()`, unwinding on partial failure. `ubh_bread_uspi()` performs similar reads into the embedded `USPI_UBH()` buffer. `ubh_brelse()`, `ubh_brelse_uspi()`, `ubh_mark_buffer_dirty()`, `ubh_sync_block()`, `ubh_bforget()`, and `ubh_buffer_dirty()` manage buffer lifetime and writeback state. `ufs_get_inode_dev()` and `ufs_set_inode_dev()` translate on-disk special-device encodings, including Sun/Sunx86 sysv-style values. `ufs_get_locked_folio()` tries `filemap_lock_folio()`, falls back to `read_mapping_folio()`, handles truncate races, and ensures buffer_heads exist.
+
+Persistent effects include pinned/dirty metadata blocks and encoded device numbers in inode data fields. Folio state is transient but used by directory and block modification paths. Dependencies include Linux buffer-head/folio APIs, device encoding helpers, UFS endian conversion, and UFS private structs. Risks are partial-read cleanup, embedded buffer reuse, fragment validation, truncate races, and device compatibility. Tests should inject read failures, vary fragment sizes, create device nodes across variants, and exercise directory operations under pressure.

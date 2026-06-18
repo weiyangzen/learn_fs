@@ -1,0 +1,11 @@
+## sources/sync-backup/restic/internal/repository/checker.go
+
+Purpose: repository pack/index consistency checking and pack data verification.
+
+Important APIs/types: error types model specific repository damage: `ErrIncompletePackEntry`, `ErrDuplicatePacks`, `ErrMixedPack`, `ErrPackMetadata`, and `ErrPackData`. `Checker` wraps a repository. `computePackTypes` detects packs containing mixed blob types. `LoadIndex` loads indexes with callback error collection and reports duplicate/incomplete/mixed pack hints. `Packs` compares index-derived pack sizes with backend pack files to find missing, truncated, and orphaned packs. `ReadPacks` streams selected packs concurrently and validates contents. `checkPack` retries once after cache eviction. `checkPackInner` verifies index continuity, streams pack bytes while hashing, validates blob decrypt/decompress via pack iterator, reads and parses pack header, compares content-addressed pack ID, header size, and index membership. `bufReader` reuses buffers for iterator reads.
+
+Control flow and state: `ReadPacks` computes pack sizes from indexes, filters them, sets progress max, spawns one worker per repository connection, and feeds pack tasks from `listPacksFromIndex`. `checkPackInner` separates complete backend download failures from partial read failures; partial reads return `ErrPackData` so repair tooling can act on the pack, while full download errors remain plain errors. On any check failure, cache entries for the pack are forgotten before a retry.
+
+Dependencies and integration points: depends on repository internals (`loadIndexWithCallback`, `idx`, `listPacksFromIndex`, `Key`, backend), `pack`, `index`, `hashing.Reader`, zstd decoder, backend handles, and progress counters. It is used by check/repair commands to classify repository health.
+
+Risks and test signals: correctness is critical because false negatives hide corruption and false positives can prompt destructive repairs. Risks include index gaps/overlaps, stale cache data, duplicate split-pack index entries from old restic versions, context cancellation during streaming, and memory boundedness while grouping by pack. Tests cover index gaps, pack hash mismatch, complete download errors, and partial/truncated reads.

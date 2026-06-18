@@ -1,0 +1,11 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/api/rfi.h -->
+## sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/api/rfi.h
+
+`rfi.h` defines the radio-frequency interference mitigation table ABI. It is small but operationally important for avoiding platform self-interference, likely tied to DVFS or other platform frequency changes. It defines table sizes, a LUT entry type, a full configuration command, a firmware-installed table response, and a deactivation notification.
+
+`iwl_rfi_lut_entry` maps one frequency to up to `IWL_RFI_LUT_ENTRY_CHANNELS_NUM` affected Wi-Fi channels and corresponding bands. `iwl_rfi_config_cmd` sends a full table of `IWL_RFI_LUT_SIZE` entries plus an `oem` flag that distinguishes default versus OEM-provided data. `enum iwl_rfi_freq_table_status` reports whether the table can be used, DVFS is not ready and the host should retry later, or the firmware disabled the feature. `iwl_rfi_freq_table_resp_cmd` returns the currently installed compact table of `IWL_RFI_LUT_INSTALLED_SIZE` entries and status. `iwl_rfi_deactivate_notif` carries a reason used for logging when firmware disables RFI mitigation.
+
+Control flow is table provisioning and feedback: driver or platform code sends an OEM/default RFI mapping, may query or receive the installed table, handles a DVFS-not-ready status by retrying later, and logs/adjusts state if firmware deactivates the feature. State is external: platform/OEM frequency data, retry scheduling, active RFI status, and firmware's installed subset. Dependencies are only standard packed integer types and little-endian frequency/status fields.
+
+Risks are accepting malformed table dimensions, mismatching channel and band arrays, failing to retry on `RFI_FREQ_TABLE_DVFS_NOT_READY`, silently ignoring `RFI_FREQ_TABLE_DISABLED`, and treating the installed compact table as if it had the full configured size. Test signals include default and OEM table programming, DVFS-not-ready retry behavior, firmware-disabled notification handling, table boundary validation, and channel/band mapping checks for known interference frequencies.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/api/rfi.h -->

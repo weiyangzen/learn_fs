@@ -1,0 +1,111 @@
+# Research: subset-b-000864
+
+Grouped research for x86 perf event core support plus AMD LBR, AMD power, AMD uncore, Intel event build wiring, and Intel BTS tracing. Each section is keyed by exact source path for reconciliation into source-tree-aligned per-file reports.
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/amd/lbr.c -->
+# sources/distributed-fs/ceph-client/arch/x86/events/amd/lbr.c
+
+Purpose: implements AMD Last Branch Record v2 support for the x86 perf PMU. It configures branch filters, resets and enables hardware LBR capture, reads branch records from AMD sample branch MSRs, converts hardware bitfields into perf branch stack entries, and hooks LBR lifetime into perf event add/delete and task scheduling.
+
+Important APIs/types/functions: `struct branch_entry` mirrors AMD LBR From/To MSR layouts, including source IP, target IP, mispredict, valid, speculation, and reserved bits. MSR access helpers `amd_pmu_lbr_set_from()`, `amd_pmu_lbr_set_to()`, `amd_pmu_lbr_get_from()`, and `amd_pmu_lbr_get_to()` operate on `MSR_AMD_SAMP_BR_FROM + idx * 2`. `sign_ext_branch_ip()` restores canonical IPs using `boot_cpu_data.x86_virt_bits`. Public integration functions are `amd_pmu_lbr_hw_config()`, `amd_pmu_lbr_read()`, `amd_pmu_lbr_reset()`, `amd_pmu_lbr_add()`, `amd_pmu_lbr_del()`, `amd_pmu_lbr_sched_task()`, `amd_pmu_lbr_enable_all()`, `amd_pmu_lbr_disable_all()`, and `amd_pmu_lbr_init()`.
+
+Control flow: event setup enters `amd_pmu_lbr_hw_config()`, which calls `amd_pmu_lbr_setup_filter()`. That function rejects missing LBR hardware or unsupported branch sample bits, translates perf branch sample type bits into the software `X86_BR_*` selection in `event->hw.branch_reg.reg`, and translates the same request into AMD suppress-mode `MSR_AMD64_LBR_SELECT` bits in `event->hw.branch_reg.config`. Adding an event copies the prepared filter into the per-CPU `cpu_hw_events` fields, increments perf sched callbacks, and resets LBRs for the first user. Enabling writes optional branch-select MSR state, sets `DEBUGCTLMSR_FREEZE_LBRS_ON_PMI` when supported, and turns on `DBG_EXTN_CFG_LBRV2EN`. Reading walks `x86_pmu.lbr_nr` hardware entries, skips empty or erratum-flagged records, sign-extends IPs, maps valid/spec bits through `lbr_spec_map`, then runs `amd_pmu_lbr_filter()` for software type filtering and branch-fusion correction.
+
+State and persistence: all state is runtime-only and per CPU through `cpu_hw_events`: `lbr_users`, `lbr_select`, `lbr_sel`, `br_sel`, `lbr_entries`, `lbr_stack`, `last_task_ctx`, and `last_log_id`. Hardware state lives in AMD LBR MSRs, `MSR_AMD64_LBR_SELECT`, `MSR_IA32_DEBUGCTLMSR`, and `MSR_AMD_DBG_EXTN_CFG`. There is no filesystem persistence.
+
+Dependencies and integration points: depends on x86 perf core structures from `../perf_event.h`, generic perf branch sample flags, AMD MSR definitions, `branch_type_fused()`, `common_branch_type()`, perf sched callbacks, and CPU feature bits `X86_FEATURE_AMD_LBR_V2` and `X86_FEATURE_AMD_LBR_PMC_FREEZE`. `amd_pmu_lbr_init()` derives stack depth from CPUID leaf `EXT_PERFMON_DEBUG_FEATURES`.
+
+Risks: AMD filter bits are suppress-mode, so incorrect inversion in `reg->config = mask ^ LBR_SELECT_MASK` would trace the wrong branches. Context switches reset LBRs because entries are not address-space tagged; missing this would expose stale or unresolvable branch IPs. Erratum 1452 handling skips records with the reserved bit set. Branch fusion adjustment mutates source IPs and can change which entries survive filtering. `cpuc->lbr_users` accounting must balance with perf sched callback accounting.
+
+Test signals: useful checks include `perf record -j any`, user-only and kernel-only branch filters, conditional/call/return/indirect filters, branch type save, context switch heavy workloads, PMI freeze behavior, AMD systems with and without LBR v2, and validation that reserved-bit records are skipped while valid/spec combinations produce expected `perf_branch_entry.spec` values.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/amd/lbr.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/amd/power.c -->
+# sources/distributed-fs/ceph-client/arch/x86/events/amd/power.c
+
+Purpose: registers the AMD family 15h Processor Power Reporting Mechanism as a perf PMU named `power`. It exposes a package power event, samples accumulated compute-unit power MSRs, converts deltas into perf counts in micro-Watts, and publishes sysfs format/event/cpumask attributes.
+
+Important APIs/types/functions: the PMU callbacks are `pmu_event_init()`, `pmu_event_add()`, `pmu_event_del()`, `pmu_event_start()`, `pmu_event_stop()`, and `pmu_event_read()`. `event_update()` is the core accounting routine. CPU hotplug handlers `power_cpu_init()` and `power_cpu_exit()` maintain one representative CPU per compute unit in `cpu_mask` and migrate perf contexts with `perf_pmu_migrate_context()`. Module lifecycle is `amd_power_pmu_init()` and `amd_power_pmu_exit()`. Sysfs exports include `cpumask`, `events/power-pkg`, `events/power-pkg.unit`, `events/power-pkg.scale`, and `format/event`.
+
+Control flow: module init first matches AMD family 0x15 and the `X86_FEATURE_ACC_POWER` feature, reads `cpu_pwr_sample_ratio` from CPUID `0x80000007`, and reads `max_cu_acc_power` from `MSR_F15H_CU_MAX_PWR_ACCUMULATOR`. It installs CPU hotplug state and registers the PMU. Event init accepts only this PMU type, rejects sampling (`sample_period`), and only supports config `0x01` for package power. Add initializes stopped/up-to-date state and optionally starts. Start snapshots `MSR_F15H_PTSC` and `MSR_F15H_CU_PWR_ACCUMULATOR`. Stop optionally calls `event_update()` before marking the software count current. Read also calls `event_update()`.
+
+State and persistence: global runtime state includes `cpu_pwr_sample_ratio`, `max_cu_acc_power`, the static `pmu_class`, and `cpu_mask`. Per-event state is stored in `event->hw.ptsc`, `event->hw.pwr_acc`, `event->hw.state`, and `event->count`. No state survives reboot or is written to disk.
+
+Dependencies and integration points: depends on perf PMU registration, CPU hotplug, topology sibling masks, AMD family 15h power MSRs (`MSR_F15H_CU_PWR_ACCUMULATOR`, `MSR_F15H_PTSC`, `MSR_F15H_CU_MAX_PWR_ACCUMULATOR`), CPUID, and `../perf_event.h` event attribute macros. The PMU is system-wide only through `perf_invalid_context` and sets `PERF_PMU_CAP_NO_EXCLUDE`.
+
+Risks: `event_update()` divides by PTSC delta; a zero or unexpectedly small time delta would be hazardous even though normal start/read sequencing should produce elapsed time. Accumulator wrap handling depends on `max_cu_acc_power`. Hotplug migration assumes topology sibling masks represent compute units correctly. The unit and scale expose micro-Watt accounting as milli-Watts to user space, so conversion errors affect user-visible power numbers.
+
+Test signals: verify `/sys/bus/event_source/devices/power/` appears only on supported AMD family 15h systems, `perf stat -a -e power/power-pkg/` produces plausible values, CPU online/offline migrates contexts within compute units, unsupported event configs and sampling requests return `-EINVAL`, and MSR read failure during init suppresses registration.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/amd/power.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/amd/uncore.c -->
+# sources/distributed-fs/ceph-client/arch/x86/events/amd/uncore.c
+
+Purpose: implements AMD and Hygon uncore perf PMUs for Northbridge/Data Fabric, L2/L3 cache, and PerfMonV2 UMC counters. It discovers counter topology per CPU, registers one or more system-wide PMUs, assigns shared counter contexts to representative CPUs, maintains hotplug migration, and periodically reads non-interrupting uncore counters.
+
+Important APIs/types/functions: central types are `struct amd_uncore_ctx` for shared runtime counter context, `struct amd_uncore_pmu` for each registered PMU instance, `union amd_uncore_info` for per-CPU discovery data, and `struct amd_uncore` for each uncore class. Generic callbacks include `amd_uncore_event_init()`, `amd_uncore_add()`, `amd_uncore_del()`, `amd_uncore_start()`, `amd_uncore_stop()`, `amd_uncore_read()`, and the hrtimer helpers. Type-specific paths include `amd_uncore_df_*`, `amd_uncore_l3_*`, and `amd_uncore_umc_*`. Lifecycle is `amd_uncore_init()` and `amd_uncore_exit()`.
+
+Control flow: init accepts only AMD/Hygon systems with topology extensions, detects PerfMonV2, allocates per-CPU discovery storage for DF, L3, and UMC classes, then installs three CPU hotplug states. On CPU starting, each class scans hardware/topology into `uncore->info`. On CPU online, the class-specific init routine runs once to allocate PMU descriptors, select names and format attributes, register perf PMUs, and then calls `amd_uncore_ctx_init()` to bind the CPU to an existing shared context or allocate a new one. Event init rejects per-task events by requiring `event->cpu >= 0`, masks raw config bits according to DF/L3/UMC format rules, and remaps `event->cpu` to the representative context CPU. Add reserves an available counter slot with `try_cmpxchg()`, computes control/counter MSR addresses, and starts if requested. Start programs the event-select MSR and arms the context hrtimer; stop disables and optionally updates; delete frees the slot.
+
+State and persistence: state is runtime-only. Each shared `amd_uncore_ctx` has a refcount, representative CPU, `events[]` slot table, `active_mask`, active count, and pinned hrtimer. Each `amd_uncore_pmu` tracks counter count, MSR base, RDPMC base, group id, active CPU mask, perf PMU object, and per-CPU context pointer. Discovery data in `uncore->info` records group id, context id, number of counters, and UMC active masks. There is no persistent storage.
+
+Dependencies and integration points: depends on perf PMU callbacks, hrtimers, CPU hotplug, topology helpers (`topology_logical_package_id()`, `per_cpu_llc_id()`), CPUID `EXT_PERFMON_DEBUG_FEATURES`, feature bits `PERFCTR_NB`, `PERFCTR_LLC`, `PERFMON_V2`, AMD uncore MSRs, RDPMC, sysfs format attributes, and event mask constants from x86 perf headers. PMUs are registered as `amd_nb` or `amd_df`, `amd_l2` or `amd_l3`, and multiple `amd_umc_N` PMUs.
+
+Risks: uncore counters are shared by package/cache/memory-controller domains, so representative CPU selection and hotplug migration must avoid orphaning active events. The hrtimer is needed because these PMUs set `PERF_PMU_CAP_NO_INTERRUPT`; long update intervals can lose precision or overflow behavior. UMC counters saturate instead of rolling over, requiring proactive reset when the high monitored bit is set. Format attribute arrays are modified at init based on family and PerfMonV2, so ordering and visibility must remain compatible with sysfs users.
+
+Test signals: boot on pre-family-17h, family 17h/19h, Hygon, and PerfMonV2 systems; confirm expected PMU names and `format/` files; run `perf stat -a -C <cpu> -e amd_df/.../`, `amd_l3/.../`, and `amd_umc_N/.../`; hotplug CPUs that own active contexts; verify counter slot exhaustion returns `-EBUSY`; check UMC saturation/reset by high-rate memory workloads; and confirm unsupported vendors or missing topology extensions skip registration.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/amd/uncore.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/core.c -->
+# sources/distributed-fs/ceph-client/arch/x86/events/core.c
+
+Purpose: provides the architecture core of x86 hardware perf events. It owns the generic x86 PMU object, dispatches vendor-specific PMU operations through static calls, validates and schedules events onto hardware counters, programs counter periods and enable/disable state, handles PMIs, exposes sysfs event/format/capability files, manages RDPMC user access, integrates with CPU hotplug and KVM guest PMU state, and supplies x86 perf callchain and sample metadata helpers.
+
+Important APIs/types/functions: global state includes `struct x86_pmu x86_pmu`, the static `pmu`, per-CPU `cpu_hw_events`, RDPMC static keys, and many `DEFINE_STATIC_CALL_*` dispatch slots. Core event functions include `x86_pmu_event_init()`, `x86_pmu_hw_config()`, `x86_setup_perfctr()`, `x86_pmu_add()`, `x86_pmu_del()`, `x86_pmu_start()`, `x86_pmu_stop()`, `x86_pmu_enable()`, `x86_pmu_disable()`, `x86_perf_event_update()`, `x86_perf_event_set_period()`, and `x86_pmu_handle_irq()`. Scheduling is handled by `collect_events()`, `perf_assign_events()`, `x86_schedule_events()`, `validate_event()`, and `validate_group()`. Initialization is `init_hw_perf_events()`. Exported integration includes `perf_guest_get_msrs()`, `perf_get_x86_pmu_capability()`, `perf_get_hw_event_config()`, `perf_arch_instruction_pointer()`, `perf_arch_misc_flags()`, `perf_callchain_kernel()`, and `perf_callchain_user()`.
+
+Control flow: early init selects the vendor PMU implementation (`intel_pmu_init()`, `amd_pmu_init()`, `zhaoxin_pmu_init()`), verifies APIC/PMU hardware, applies quirks, fills defaults, updates static calls, installs CPU hotplug callbacks and the local NMI PMI handler, then registers either a single `cpu` PMU or hybrid PMUs. Event init filters supported event types, checks hybrid CPU affinity, reserves hardware, initializes `hw_perf_event`, builds the event-select config, validates PEBS/precise/LBR/register constraints, maps generic hardware/cache events to raw configs, and runs single-event or group schedulability tests with a fake `cpu_hw_events`. Add collects active events, schedules constraints unless inside a transaction, stores assignments, and lets vendor add hooks run. Enable assigns counters, reuses prior assignments when safe, reloads periods, and then calls vendor enable-all. PMIs update active counters, detect overflow by sign bit, reload the period, attach branch stack data, and deliver `perf_event_overflow()`.
+
+State and persistence: state is in per-CPU `cpu_hw_events` lists, active masks, constraints, assignments, tags, dirty masks, transaction counters, PEBS output mode, and vendor-private per-CPU data. Global atomic state tracks active events and reserved hardware. RDPMC access is controlled by `x86_pmu.attr_rdpmc`, static branches, and per-mm `perf_rdpmc_allowed`. PMU state is hardware MSRs plus runtime kernel memory only; no filesystem persistence exists beyond sysfs control files.
+
+Dependencies and integration points: depends on generic perf PMU APIs, x86 APIC/NMI handling, MSR and RDPMC access, CPU hotplug, vendor PMU modules, PEBS/LBR/Intel PT/BTS support, KVM exports for guest PMU MSRs and capability discovery, topology and hybrid PMU masks, stack unwinding, user memory access under NMI constraints, uprobe frame handling, CR4.PCE updates, and sysfs event attribute macros.
+
+Risks: counter scheduling must honor fixed/generic counter constraints, counter-pair events, metric events, HT workarounds, dynamic constraints, and hybrid PMU boundaries; mistakes cause invalid multiplexing or failed group semantics. PMI handling runs in NMI context and must not race with disable paths or guest-mediated PMI routing. RDPMC policy changes affect user-visible security and require CR4.PCE synchronization across CPUs. Precise event and LBR compatibility logic can silently change branch sample requests for PEBS fixups. `perf_callchain_user()` reads user frame pointers with page faults disabled and must stay bounded and NMI-safe.
+
+Test signals: run `perf stat`, `perf record`, grouped events, raw events, hardware cache events, fixed counters, PEBS precise events, LBR branch stacks, metric events, and hybrid PMU CPU targeting. Exercise `sysfs` `rdpmc` values 0/1/2, PMU hotplug, virtualized PMU availability, KVM guest PMU capability queries, APIC/no-APIC paths, counter overflow PMIs, callchain collection for kernel/user/32-bit compat frames, and invalid group scheduling cases.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/core.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/intel/Makefile -->
+# sources/distributed-fs/ceph-client/arch/x86/events/intel/Makefile
+
+Purpose: defines Kbuild object selection for Intel x86 perf event support. It wires Intel core PMU support, BTS, PEBS/DS, LBR, model-specific support, Intel PT, uncore, and C-state PMUs into the kernel build according to configuration symbols.
+
+Important APIs/types/functions: this file has no C functions or types. Its build targets are `obj-$(CONFIG_CPU_SUP_INTEL)`, `obj-$(CONFIG_PERF_EVENTS_INTEL_UNCORE)`, `intel-uncore-objs`, `obj-$(CONFIG_PERF_EVENTS_INTEL_CSTATE)`, and `intel-cstate-objs`.
+
+Control flow: when `CONFIG_CPU_SUP_INTEL` is enabled, Kbuild compiles `core.o`, `bts.o`, `ds.o`, `knc.o`, `lbr.o`, `p4.o`, `p6.o`, and `pt.o` into the architecture perf events build. When `CONFIG_PERF_EVENTS_INTEL_UNCORE` is enabled, Kbuild builds a composite `intel-uncore.o` from `uncore.o`, `uncore_nhmex.o`, `uncore_snb.o`, `uncore_snbep.o`, and `uncore_discovery.o`. When `CONFIG_PERF_EVENTS_INTEL_CSTATE` is enabled, Kbuild builds `intel-cstate.o` from `cstate.o`.
+
+State and persistence: no runtime state is stored here. Its only persistent effect is build graph composition at compile time.
+
+Dependencies and integration points: depends on kernel Kconfig symbols for Intel CPU support, Intel uncore perf events, and Intel C-state perf events. It integrates the Intel files under `arch/x86/events/intel/` with the parent x86 perf events Makefile and determines which object files can provide symbols consumed by `events/core.c` and other vendor paths.
+
+Risks: missing an object under `CONFIG_CPU_SUP_INTEL` can produce unresolved symbols or silently disable a PMU feature such as BTS, DS/PEBS, LBR, model-specific P4/P6/KNC behavior, or Intel PT. Incorrect composite object membership for uncore or cstate support can break module linkage or leave platform-specific uncore discovery unavailable.
+
+Test signals: validate relevant config combinations with `CONFIG_CPU_SUP_INTEL=y`, `CONFIG_PERF_EVENTS_INTEL_UNCORE=y/m`, and `CONFIG_PERF_EVENTS_INTEL_CSTATE=y/m`; check that `intel-uncore.o` and `intel-cstate.o` link their member objects; and boot Intel systems to confirm expected PMUs such as `cpu`, `intel_bts`, `intel_pt`, uncore devices, and cstate devices are present when configured.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/intel/Makefile -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/intel/bts.c -->
+# sources/distributed-fs/ceph-client/arch/x86/events/intel/bts.c
+
+Purpose: implements the Intel Branch Trace Store perf PMU `intel_bts`. It uses the debug store BTS hardware to write branch trace records into perf AUX buffers, handles buffer setup across physical pages, starts/stops BTS tracing, services BTS PMIs, and enforces exclusivity with other LBR-style tracing facilities.
+
+Important APIs/types/functions: `struct bts_ctx` stores the per-CPU AUX output handle, saved debug-store BTS registers, and state. `struct bts_buffer` describes the perf AUX buffer, physical page fragments, snapshot mode, head, data size, and current fragment. Buffer helpers include `bts_buffer_setup_aux()`, `bts_buffer_free_aux()`, `bts_config_buffer()`, `bts_update()`, and `bts_buffer_reset()`. PMU callbacks are `bts_event_init()`, `bts_event_add()`, `bts_event_del()`, `bts_event_start()`, `bts_event_stop()`, and `bts_event_read()`. External local control and interrupt hooks are `intel_bts_enable_local()`, `intel_bts_disable_local()`, and `intel_bts_interrupt()`.
+
+Control flow: early init requires `X86_FEATURE_DTES64` and `X86_FEATURE_BTS`, rejects PTI systems, allocates per-CPU `bts_ctx`, fills the PMU callbacks/capabilities, and registers `intel_bts`. Event init checks permissions because BTS can leak kernel addresses, reserves LBR exclusivity with `x86_add_exclusive(x86_lbr_exclusive_bts)`, reserves x86 PMU hardware, and installs a destroy callback. AUX setup builds `bts_buffer` metadata from perf-provided pages, aligns usable space to 24-byte BTS records, and restricts overwrite mode to one physical segment. Start begins perf AUX output, resets buffer placement, saves existing debug-store BTS pointers, marks instruction tracing started, configures DS registers, and enables BTS. Stop disables BTS, updates buffer head/data size, ends AUX output, and restores DS state.
+
+State and persistence: per-CPU runtime state is in `bts_ctx` and the CPU debug-store area. Per-event AUX buffer metadata is in `bts_buffer`, allocated by setup and freed by perf. State transitions are `BTS_STATE_STOPPED`, `BTS_STATE_INACTIVE`, and `BTS_STATE_ACTIVE`, ordered with compiler barriers against the perf output handle. No persistent storage is used.
+
+Dependencies and integration points: depends on Intel debug-store structures in `cpu_hw_events.ds`, `intel_pmu_enable_bts()` and `intel_pmu_disable_bts()`, generic perf AUX output APIs, x86 PMU reservation/exclusivity helpers, feature bits DTES64/BTS/PTI, page metadata for high-order buffers, and PMI routing through Intel PMU interrupt handling.
+
+Risks: BTS writes through virtual mappings; PTI disables the driver because neither kernel nor user mappings are reliably available in all tracing contexts. Buffer math must preserve 24-byte record alignment across fragmented pages and leave a safety margin before interrupt thresholds. State transitions may race with PMIs, so `bts->state` and `bts->handle.event` ordering is critical. Permission checks are security-sensitive because BTS may expose kernel addresses even with kernel tracing excluded.
+
+Test signals: confirm `intel_bts` registers only on DTES64/BTS systems without PTI, run `perf record -e intel_bts// --per-thread` and per-CPU modes, test normal and overwrite AUX buffers, force small buffers to exercise threshold interrupts/truncation, verify exclusivity with LBR/PT users, check unprivileged denial on paranoid systems, and validate branch records are aligned and AUX head/data sizes advance correctly.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/x86/events/intel/bts.c -->

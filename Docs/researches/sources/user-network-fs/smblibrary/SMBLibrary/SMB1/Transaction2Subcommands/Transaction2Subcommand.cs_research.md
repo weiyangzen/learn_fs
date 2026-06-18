@@ -1,0 +1,12 @@
+# Research: sources/user-network-fs/smblibrary/SMBLibrary/SMB1/Transaction2Subcommands/Transaction2Subcommand.cs
+
+- **Purpose:** Defines Transaction2Subcommand for the Transaction2 subcommand layer. It is part of the Transaction2 subcommand surface under `SMBLibrary.SMB1`.
+- **Source facts:** Read in full: 74 lines, 3373 bytes. Namespace `SMBLibrary.SMB1`. Primary type `Transaction2Subcommand`.
+- **Important APIs/types/functions:** Types: class Transaction2Subcommand. Constructors: Transaction2Subcommand. Constants/static metadata: none. Fields/properties: none detected. Methods/overrides: GetSetup, GetParameters, GetData, GetSubcommandRequest. Dispatch cases: Transaction2SubcommandName.TRANS2_OPEN2, Transaction2SubcommandName.TRANS2_FIND_FIRST2, Transaction2SubcommandName.TRANS2_FIND_NEXT2, Transaction2SubcommandName.TRANS2_QUERY_FS_INFORMATION, Transaction2SubcommandName.TRANS2_SET_FS_INFORMATION, Transaction2SubcommandName.TRANS2_QUERY_PATH_INFORMATION, Transaction2SubcommandName.TRANS2_SET_PATH_INFORMATION, Transaction2SubcommandName.TRANS2_QUERY_FILE_INFORMATION, Transaction2SubcommandName.TRANS2_SET_FILE_INFORMATION, Transaction2SubcommandName.TRANS2_CREATE_DIRECTORY, Transaction2SubcommandName.TRANS2_GET_DFS_REFERRAL.
+- **Control flow:** A static dispatcher validates setup length or subcommand id and instantiates the concrete request parser, otherwise raising InvalidDataException. Subcommand serialization is split into setup, parameter, and data byte arrays consumed by the enclosing transaction command.
+- **State and persistence behavior:** State is held in public protocol fields until serialized; no durable storage or process-wide mutation is performed.
+- **Dependencies:** Usings: System, System.Collections.Generic, System.IO, Utilities. Local dependencies and referenced protocol types: Transaction2Subcommand. Wire helpers observed: LittleEndianConverter.ToUInt16.
+- **Integration points:** Used inside SMB_COM_TRANSACTION2 requests/responses; setup bytes carry Transaction2SubcommandName and the enclosing Transaction2Request/Response carries the byte arrays.
+- **Risks:** Correctness depends on exact WordCount/setup length handling. Unicode alignment and null-termination rules are easy regression points. Large payloads must fit SMB1 16-bit count/offset fields unless explicitly split or handled with high-length fields.
+- **Test signals:** invalid setup or command values raising InvalidDataException, Unicode and OEM string alignment fixtures.
+- **Explicit failure paths:** InvalidDataException.

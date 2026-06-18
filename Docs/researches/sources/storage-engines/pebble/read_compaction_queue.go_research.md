@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/pebble/read_compaction_queue.go
+
+- **Purpose:** Maintains a tiny bounded queue of candidate read compactions while enforcing non-overlap among queued key ranges.
+- **Important APIs/types/functions:** `readCompactionMaxQueueSize` is fixed at 5. `readCompactionQueue` stores a contiguous prefix of `*readCompaction` entries and the current `size`. `combine` appends a newer queue into an older queue through `add`. `add` removes any existing overlapping ranges, compacts holes through `shiftLeft`, and either appends or evicts the oldest entry if full. `remove` pops the oldest queued compaction.
+- **Control flow:** Insertion compares starts and ends with `base.Compare`, treats `right.start <= left.end` as overlap, clears overlaps, compacts nil holes, and preserves insertion order for remaining entries. A full queue drops the first entry by shifting left before writing the new candidate at the tail.
+- **State and persistence behavior:** In-memory only. It affects scheduling decisions for read compactions but does not persist queue state. The bounded array avoids allocations and limits attention to recently read ranges.
+- **Dependencies:** Depends on `internal/base.Compare` and the package-local `readCompaction` type with `start` and `end` byte slices.
+- **Integration points:** Used by DB read-compaction machinery to accumulate small numbers of recent ranges before compaction scheduling. `combine` supports merging older/newer queue views without allowing overlapping work items to coexist.
+- **Risks:** The overlap predicate uses inclusive comparison against `left.end`; if `readCompaction.end` is intended as exclusive, adjacent ranges may be coalesced as overlapping. Because old entries are discarded on overlap rather than merged, range detail can be lost. The fixed capacity favors recency and can starve older candidates under heavy read churn.
+- **Test signals:** No dedicated tests in this file. Behavior is indirectly exercised by read-compaction scheduling tests and by any compaction tests that assert read-triggered compaction behavior under overlapping read ranges.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/pci/ngene/ngene-cards.c
+
+Purpose: Provides nGene card-specific metadata, frontend/tuner probing and attachment, EEPROM helpers, PCI ID matching, and module registration. It is the board database that tells the generic nGene core how each supported PCI subsystem ID should be initialized.
+
+Important APIs, types, and functions: `struct ngene_info` instances such as `ngene_info_cineS2`, `ngene_info_satixS2v2`, `ngene_info_duoFlex`, `ngene_info_m780`, and `ngene_info_terratec` describe stream IO types, firmware version, MSI support, demod/tuner callbacks, configs, LNB addresses, and TS feature selectors. Attachment helpers include `demod_attach_stv0900()`, `demod_attach_stv0910()`, `demod_attach_stv0367()`, `demod_attach_cxd28xx()`, `demod_attach_drxk()`, `demod_attach_lg330x()`, `demod_attach_drxd()`, and tuner attach variants. Probe helpers include `port_has_xo2()`, `init_xo2()`, `port_has_stv0900()`, `port_has_drxk()`, `port_has_stv0367()`, and exported `ngene_port_has_cxd2099()`.
+
+Control flow: The PCI table maps `(vendor, device, subvendor, subdevice)` to an `ngene_info` pointer. `ngene_probe()` in the core consumes that pointer to load firmware, configure buffers, and initialize channels. Per-channel initialization calls the selected `demod_attach[n]` and `tuner_attach[n]`. DuoFlex-style ports are detected dynamically by probing XO2, STV0900, DRXK, or STV0367 hardware, then selecting the right attach path and tuner. Module init registers the PCI driver and PCI error handlers.
+
+State and persistence: Most data is static const board configuration. EEPROM helper functions read and write board calibration tags, notably oscillator deviation for DRXD-based boards. Dynamic state is written into `chan->fe`, `chan->demod_type`, `chan->gate_ctrl`, `chan->i2c_client[0]`, and frontend config callbacks.
+
+Dependencies and integration points: Integrates with many DVB frontend/tuner/LNB modules through `dvb_attach()` and `dvb_module_probe()`. It depends on nGene firmware I2C adapters from `ngene-i2c.c`, channel state from `ngene.h`, and core lifecycle from `ngene-core.c`. PCI error callbacks log and request reset/disconnect outcomes.
+
+Risks: The probing matrix is hardware-specific and order-sensitive; false-positive I2C responses can select the wrong demod path. Several attach failures detach partial frontends locally, but callers must still release module-probed I2C clients during channel cleanup. XO2 support rejects CI modules, so attached DuoFlex CI hardware is intentionally unsupported. EEPROM writes are byte-at-a-time with polling and could block probe-time paths if misused. Some attach helper return values are ignored in dynamic probe branches after logging.
+
+Test signals: Validate every PCI ID selects the intended `ngene_info`; simulate I2C probes for STV0900, DRXK, STV0367, XO2 Sony/STV0910 modules, and CXD2099 CI; verify tuner attach dispatch by `demod_type`; check EEPROM read/write tag bounds and polling; and test failure cleanup for demod attach, tuner attach, and module-probed tuner clients.

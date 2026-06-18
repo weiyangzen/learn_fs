@@ -1,0 +1,15 @@
+## sources/cloud-native/stargz-snapshotter/estargz/externaltoc/externaltoc.go
+
+Purpose: implements an `estargz.Compression` variant where the compressed layer footer declares that the TOC is external, while the compressor stores the compressed TOC separately for callers to publish or provide out of band. This keeps the TOC out of the layer data and therefore out of DiffID calculation.
+
+Important APIs/types/functions: `GzipCompression` embeds `GzipCompressor` and `GzipDecompressor`. `NewGzipCompressionWithLevel` wires a compressor and decompressor around a caller-provided `provideTOC` function. `GzipCompressor.Writer` returns a gzip writer for layer chunks; `WriteTOCAndFooter` marshals `estargz.JTOC`, gzip-compresses a tar entry named `estargz.TOCTarName` into an internal buffer, writes only the external-TOC footer to the layer, and returns the digest of raw TOC JSON. `WriteTOCTo` later writes the stored compressed TOC. `GzipDecompressor.ParseFooter` recognizes a 46-byte footer with `SG` extra subfield `STARGZEXTERNALTOC` and returns negative payload/toc offsets to signal external TOC. `ParseTOC` and `DecompressTOC` reject non-nil readers and call `provideTOCFunc` once through `sync.Once`.
+
+Control flow: compression writes normal gzip streams for payload chunks, then finalizes TOC into `gc.buf`, appends a marker footer, and leaves external storage to `WriteTOCTo`. Decompression parses the footer first; the negative TOC offset causes callers to pass nil into `ParseTOC`, which retrieves, validates, decompresses, and JSON-decodes the external TOC.
+
+State and persistence: `GzipCompressor.buf` persists the most recently generated compressed TOC in memory. `GzipDecompressor.rawTOC` caches the provided TOC bytes, and `sync.Once` prevents repeated provider calls after a successful population. No disk persistence is implemented here.
+
+Dependencies and integration points: relies on `archive/tar`, `compress/gzip`, `encoding/json`, `digest`, and the `estargz` compression/decompression interfaces. `estargz.Open`/metadata readers interpret negative TOC offsets according to the `Decompressor` contract. The layer test utilities include this compressor as one source compression mode.
+
+Risks: `ParseFooter` indexes `extra[0:4]` without checking `len(extra)`, unlike the safer gzip parser in `estargz/gzip.go`; malformed short extra fields can panic. `getTOC` uses `sync.Once` but only stores successful bytes; if the provider returns an error, later calls will not retry and may surface "no TOC is provided" instead of the original error. `WriteTOCTo` errors before `WriteTOCAndFooter` has registered a buffer. The error message for invalid subfield length mentions the internal-TOC wanted length, which is misleading for external TOC.
+
+Test signals: `externaltoc_test.go` runs the shared compression suite across gzip levels and checks footer size/negative TOC offset, but does not directly exercise provider retry, short-extra malformed footer handling, or concurrent decompressor access.

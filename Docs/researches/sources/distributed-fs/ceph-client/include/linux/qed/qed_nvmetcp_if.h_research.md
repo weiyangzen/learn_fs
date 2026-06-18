@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/linux/qed/qed_nvmetcp_if.h
+
+Purpose: declares the public QED NVMe/TCP offload interface for starting firmware resources, offloading/updating TCP/NVMe connections, configuring TCP port filters, initializing I/O task contexts, and handling async events.
+
+Important APIs/types/functions: constants define max I/O size and NVMe/TCP header sizes using Linux NVMe/TCP PDU structures. `nvmetcp_event_cb_t` is the async event callback. `qed_dev_nvmetcp_info`, `qed_nvmetcp_tid`, and `qed_nvmetcp_id_params` describe device, task blocks, and endpoints. `qed_nvmetcp_params_offload` carries SQ PBL, CCCID-to-iTID table address/range, default CQ, endpoint identities, TCP keepalive/timer/congestion/window/MSS/VLAN/TOS settings, and feature booleans. `qed_nvmetcp_params_update` carries max I/O/PDU lengths plus digest enablement. `nvmetcp_sge`, `storage_sgl_task_params`, and `nvmetcp_task_params` are used by I/O initialization helpers. `qed_nvmetcp_ops` exposes common/LL2 ops, lifecycle/connection operations, source/destination TCP port filters, `clear_all_filters`, `init_read_io`, `init_write_io`, `init_icreq_exchange`, and `init_task_cleanup`. Entry points are `qed_get_nvmetcp_ops()` and `qed_put_nvmetcp_ops()`.
+
+Control flow: the NVMe/TCP client starts firmware with task blocks and an async event callback, adds TCP port filters, acquires/offloads a connection with endpoint/TCP state and CCCID mapping, updates negotiated PDU/digest limits, calls task-init helpers to fill firmware WQEs/contexts for read, write, ICReq, or cleanup, rings queue doorbells through the returned doorbell path, handles completions/events, destroys/releases the connection, clears filters, and stops the protocol.
+
+State and persistence: active state includes task blocks, SGLs, opaque task context pointers, CCCID mapping table, firmware connection ID/handle, port filters, digest/PDU limits, and async callback context. These are runtime and must be rebuilt after reset. SGL and task context memory must remain valid until firmware completion.
+
+Dependencies and integration points: includes `qed_if.h`, `storage_common.h`, `nvmetcp_common.h`, and Linux NVMe/TCP definitions. It integrates QED firmware with the Linux NVMe/TCP host path, TCP offload state, storage SGL handling, LL2 filtering/control, and async event delivery.
+
+Risks: task-init helpers write firmware contexts through caller-provided pointers, so uninitialized `task_params`, wrong SGL counts, or invalid physical addresses cause firmware-visible corruption. Digest/PDU settings must match NVMe/TCP negotiation. Port filters can affect traffic steering for multiple connections. CCCID range and table lifetime are critical for completion mapping.
+
+Test signals: connection start/offload/update/destroy, source/destination port filter add/remove/clear, ICReq exchange, read and write I/O task initialization, cleanup initialization, digest enabled/disabled I/O, max I/O boundary at `0x800000`, async TCP/NVMe error events, and SGL edge cases including small middle SGE.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/authorization/plugin.go -->
+# sources/cloud-native/moby/pkg/authorization/plugin.go
+
+Purpose: adapts Docker plugin clients to the authorization `Plugin` interface. Important APIs are `Plugin`, `newPlugins`, `SetPluginGetter`, `GetPluginGetter`, `authorizationPlugin.AuthZRequest`, `AuthZResponse`, and `initPlugin`. Control flow deduplicates configured plugin names, lazily resolves each plugin once through a daemon plugin getter or legacy `plugins.Get`, updates the remote name for managed plugins, caches initialization errors, and calls `AuthZPlugin.AuthZReq`/`AuthZRes` methods. State includes global plugin getter and per-plugin `sync.Once`, client pointer, name, and init error. Dependencies include `plugingetter` and legacy plugin client package. Risks include global getter races, nil plugin from failed getter before `SetName`, lazy failures persisting for process lifetime, and legacy/v2 plugin compatibility. Test signal comes through middleware and authz plugin tests.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/authorization/plugin.go -->

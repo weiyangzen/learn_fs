@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/include/rocksdb/trace_record.h
+
+- **Purpose:** Declares typed trace records for replayable RocksDB operations and a visitor-style handler interface for executing or processing them.
+- **Important APIs/types/functions:** `TraceType` identifies begin/end, write/get/iterator/MultiGet query traces, block-cache trace block kinds, and I/O traces. `TraceRecord` stores a timestamp and defines `GetTraceType()`, `GetTimestamp()`, `Accept()`, and `NewExecutionHandler(DB*, handles)`. Query subclasses include `WriteQueryTraceRecord`, `GetQueryTraceRecord`, `IteratorSeekQueryTraceRecord`, and `MultiGetQueryTraceRecord`; each exposes column-family IDs, keys, bounds, seek type, or write-batch representation.
+- **Control flow:** Trace decoding constructs a concrete record, then calls `Accept(handler, &result)`. The handler dispatches by concrete type and can execute against a DB using the provided execution handler, producing a `TraceRecordResult`.
+- **State and persistence:** Records hold timestamps and payloads in `PinnableSlice` or vectors. Serialized traces persist the operation inputs; execution results are separate. Iterator records can carry lower/upper bounds to recreate read options.
+- **Dependencies:** Depends on `Slice`, `PinnableSlice`, `Status`, DB/ColumnFamilyHandle forward declarations, and `trace_record_result.h` consumers.
+- **Integration points:** Used by trace readers, replayers, benchmarking, and diagnostics that need to capture and replay writes, Gets, MultiGets, and iterator seeks.
+- **Risks:** Column-family ID vectors must match available handles during replay. WriteBatch representations must remain compatible. Visitor handlers need to distinguish API-level handler success from the underlying operation's returned status.
+- **Test signals:** Tests should validate type dispatch, timestamp preservation, payload access, iterator bound replay, MultiGet CF/key vector handling, and execution handler behavior against a DB with multiple column families.

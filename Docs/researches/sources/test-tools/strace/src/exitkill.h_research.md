@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/exitkill.h
+
+Header for exit-kill cleanup support. It declares the functions used by strace lifecycle code to arrange or perform killing of tracees during shutdown. It has no local state, but it defines an integration boundary between tracing loop code and cleanup implementation. Dependencies are project base types from `defs.h` or surrounding includes. Risks are prototype drift causing cleanup code not to be called or not preserving expected pid semantics. Test signals are compilation of lifecycle code and integration tests where strace exits while tracees remain alive.

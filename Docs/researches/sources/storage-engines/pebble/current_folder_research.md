@@ -1,0 +1,122 @@
+# Folder Research: sources/storage-engines/pebble
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 108
+- Recursive researched files: 823
+- Direct child folders represented: 21
+
+## Direct Files
+
+- `sources/storage-engines/pebble/Makefile`
+- `sources/storage-engines/pebble/batch.go`
+- `sources/storage-engines/pebble/batch_test.go`
+- `sources/storage-engines/pebble/blob_rewrite.go`
+- `sources/storage-engines/pebble/blob_rewrite_test.go`
+- `sources/storage-engines/pebble/cache.go`
+- `sources/storage-engines/pebble/checkpoint.go`
+- `sources/storage-engines/pebble/checkpoint_test.go`
+- `sources/storage-engines/pebble/close_test.go`
+- `sources/storage-engines/pebble/commit.go`
+- `sources/storage-engines/pebble/commit_test.go`
+- `sources/storage-engines/pebble/compaction.go`
+- `sources/storage-engines/pebble/compaction_delete.go`
+- `sources/storage-engines/pebble/compaction_delete_test.go`
+- `sources/storage-engines/pebble/compaction_picker.go`
+- `sources/storage-engines/pebble/compaction_picker_test.go`
+- `sources/storage-engines/pebble/compaction_scheduler.go`
+- `sources/storage-engines/pebble/compaction_scheduler_test.go`
+- `sources/storage-engines/pebble/compaction_test.go`
+- `sources/storage-engines/pebble/compaction_value_separation.go`
+- `sources/storage-engines/pebble/compaction_value_separation_test.go`
+- `sources/storage-engines/pebble/comparer.go`
+- `sources/storage-engines/pebble/data_test.go`
+- `sources/storage-engines/pebble/db.go`
+- `sources/storage-engines/pebble/db_internals.go`
+- `sources/storage-engines/pebble/db_test.go`
+- `sources/storage-engines/pebble/disk_usage.go`
+- `sources/storage-engines/pebble/disk_usage_test.go`
+- `sources/storage-engines/pebble/download.go`
+- `sources/storage-engines/pebble/download_test.go`
+- `sources/storage-engines/pebble/error_iter.go`
+- `sources/storage-engines/pebble/error_test.go`
+- `sources/storage-engines/pebble/event.go`
+- `sources/storage-engines/pebble/event_listener_test.go`
+- `sources/storage-engines/pebble/event_test.go`
+- `sources/storage-engines/pebble/example_test.go`
+- `sources/storage-engines/pebble/excise.go`
+- `sources/storage-engines/pebble/excise_test.go`
+- `sources/storage-engines/pebble/external_iterator.go`
+- `sources/storage-engines/pebble/external_iterator_test.go`
+- `sources/storage-engines/pebble/external_test.go`
+- `sources/storage-engines/pebble/file_cache.go`
+- `sources/storage-engines/pebble/file_cache_test.go`
+- `sources/storage-engines/pebble/filenames_test.go`
+- `sources/storage-engines/pebble/flush_test.go`
+- `sources/storage-engines/pebble/flushable.go`
+- `sources/storage-engines/pebble/flushable_test.go`
+- `sources/storage-engines/pebble/format_major_version.go`
+- `sources/storage-engines/pebble/format_major_version_test.go`
+- `sources/storage-engines/pebble/get.go`
+- `sources/storage-engines/pebble/ingest.go`
+- `sources/storage-engines/pebble/ingest_test.go`
+- `sources/storage-engines/pebble/ingest_with_blobs.go`
+- `sources/storage-engines/pebble/internal.go`
+- `sources/storage-engines/pebble/iterator.go`
+- `sources/storage-engines/pebble/iterator_example_test.go`
+- `sources/storage-engines/pebble/iterator_histories_test.go`
+- `sources/storage-engines/pebble/iterator_test.go`
+- `sources/storage-engines/pebble/keyspan_probe_test.go`
+- `sources/storage-engines/pebble/level_checker.go`
+- `sources/storage-engines/pebble/level_checker_test.go`
+- `sources/storage-engines/pebble/level_iter.go`
+- `sources/storage-engines/pebble/level_iter_test.go`
+- `sources/storage-engines/pebble/level_iter_v2.go`
+- `sources/storage-engines/pebble/level_iter_v2_rand_test.go`
+- `sources/storage-engines/pebble/level_iter_v2_test.go`
+- `sources/storage-engines/pebble/logger.go`
+- `sources/storage-engines/pebble/lsm_view.go`
+- `sources/storage-engines/pebble/lsm_view_test.go`
+- `sources/storage-engines/pebble/mem_table.go`
+- `sources/storage-engines/pebble/mem_table_test.go`
+- `sources/storage-engines/pebble/merger.go`
+- `sources/storage-engines/pebble/merging_iter.go`
+- `sources/storage-engines/pebble/merging_iter_heap.go`
+- `sources/storage-engines/pebble/merging_iter_heap_test.go`
+- `sources/storage-engines/pebble/merging_iter_test.go`
+- `sources/storage-engines/pebble/merging_iter_v2.go`
+- `sources/storage-engines/pebble/merging_iter_v2_bench_test.go`
+- `sources/storage-engines/pebble/merging_iter_v2_rand_test.go`
+- `sources/storage-engines/pebble/merging_iter_v2_slab.go`
+- `sources/storage-engines/pebble/merging_iter_v2_test.go`
+- `sources/storage-engines/pebble/metrics.go`
+- `sources/storage-engines/pebble/metrics_test.go`
+- `sources/storage-engines/pebble/mid_key.go`
+- `sources/storage-engines/pebble/mid_key_test.go`
+- `sources/storage-engines/pebble/obsolete_files.go`
+- `sources/storage-engines/pebble/obsolete_files_test.go`
+- `sources/storage-engines/pebble/open.go`
+- `sources/storage-engines/pebble/open_test.go`
+- `sources/storage-engines/pebble/options.go`
+- `sources/storage-engines/pebble/options_test.go`
+- `sources/storage-engines/pebble/overlap.go`
+- `sources/storage-engines/pebble/range_del_test.go`
+- `sources/storage-engines/pebble/range_keys.go`
+- `sources/storage-engines/pebble/read_compaction_queue.go`
+- `sources/storage-engines/pebble/read_state.go`
+- `sources/storage-engines/pebble/read_state_test.go`
+- `sources/storage-engines/pebble/recovery.go`
+- `sources/storage-engines/pebble/scan_internal.go`
+- `sources/storage-engines/pebble/scan_internal_test.go`
+- `sources/storage-engines/pebble/snapshot.go`
+- `sources/storage-engines/pebble/snapshot_test.go`
+- `sources/storage-engines/pebble/table_stats.go`
+- `sources/storage-engines/pebble/table_stats_test.go`
+- `sources/storage-engines/pebble/treesteps_test.go`
+- `sources/storage-engines/pebble/version_set.go`
+- `sources/storage-engines/pebble/version_set_test.go`
+- `sources/storage-engines/pebble/wal_failover_identifier_test.go`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

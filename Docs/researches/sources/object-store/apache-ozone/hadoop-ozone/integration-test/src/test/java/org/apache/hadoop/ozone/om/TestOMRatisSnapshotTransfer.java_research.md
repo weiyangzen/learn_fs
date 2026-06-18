@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/om/TestOMRatisSnapshotTransfer.java
+
+Purpose: This parameterized HA suite validates OM Ratis snapshot installation paths that require checkpoint transfer from leader to follower. It runs under both legacy and inode-based checkpoint transfer formats and focuses on full snapshot installs, multi-tarball batching, incremental transfers, fallback after corruption, and post-install read/write viability.
+
+Important APIs and types: The tests use `MiniOzoneHAClusterImpl`, `OzoneManagerRatisServer`, `TransactionInfo`, Ratis `TermIndex`, `OMSnapshotProvider`, `DBCheckpointMetrics`, `FaultInjector`, `InodeMetadataRocksDBCheckpoint`, `HAUtils`, `RDB` checkpoint utilities, `AuditLogTestUtils`, and the helper methods shared from `TestOMRatisSnapshots`. `SnapshotMaxSizeInjector` inspects downloaded tarballs and changes `OZONE_OM_RATIS_SNAPSHOT_MAX_TOTAL_SST_SIZE_KEY` to force batching.
+
+Control flow: Setup builds a three-OM cluster with two active OMs, small Ratis segments, a low snapshot trigger threshold, and a bucket using `OBJECT_STORE` layout for direct RocksDB checks. `testInstallSnapshot` leaves one OM inactive, writes many keys and snapshots on the leader, starts the inactive OM, waits for snapshot install, verifies follower metadata, confirms audit/log signals, reads and writes after install, verifies snapshot hard-link behavior, and proves each tarball has a disjoint SST set. Incremental tests use a pausing fault injector to block installs, create later checkpoints, inspect incremental tarballs for non-duplication, then resume and validate metrics or corruption fallback.
+
+State and persistence behavior: Persistent state includes OM DB checkpoints, Ratis snapshot tarballs in the follower snapshot directory, follower candidate DB contents, snapshot DB directories, active key tables, transaction term/index metadata, audit logs, and DB checkpoint metrics. Failure tests delete candidate SST files to simulate corruption and then require a later full snapshot path plus cleanup.
+
+Dependencies and integration points: It integrates Ozone client writes, OM HA start/stop, Ratis log purge and snapshot auto-trigger settings, checkpoint provider transfer, follower checkpoint installation, snapshot lookup semantics, audit logging, and RocksDB archive inspection.
+
+Risks: Several tests are annotated unhealthy for known instability and depend on precise timing around log indexes, pauses, downloads, and purge thresholds. Direct tar and RocksDB file inspection makes the tests sensitive to checkpoint layout changes.
+
+Test signals: Signals include follower `lastAppliedTermIndex` reaching the leader snapshot index/term, log messages for DB reload and checkpoint completion, follower key-table entries for inactive-period writes, RPC server restart, audit log checkpoint install entries, non-overlapping SST entries across tarballs, incremental excluded-SST metrics, empty candidate directories, and snapshot lookup/hard-link validation.

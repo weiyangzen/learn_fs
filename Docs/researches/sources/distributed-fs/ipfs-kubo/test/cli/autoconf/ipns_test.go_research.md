@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/cli/autoconf/ipns_test.go
+
+Purpose: tests IPNS publishing with AutoConf-resolved delegated publisher endpoints and documents resilient publish semantics when endpoints fail.
+
+Important functions and types: `TestAutoConfIPNS`, `testIPNSPublishingWithWorkingEndpoint`, `testIPNSPublishingResilience`, `setupNodeWithAutoconf`, `createAutoconfJSON`, and `mockIPNSPublisher` with `handleIPNS`, `getPublishedKeys`, `getRecordPayload`, and `close`. The mock publisher implements `/routing/v1/ipns/{peerID}` for PUT and GET-like inspection state.
+
+Control flow creates an AutoConf server with a delegated endpoint supporting `/routing/v1/ipns`, starts a node with `Ipns.DelegatedPublishers=["auto"]`, publishes an IPNS record, waits for async HTTP PUT, compares the captured PUT payload with `ipfs routing get /ipns/<peer>`, and inspects the record. Resilience subtests force publisher HTTP 500 responses for `Routing.Type=auto` and `delegated` and require local publish commands to still succeed. State includes node key/IPNS records, delegated endpoint request payloads, and local repo storage. Dependencies include boxo AutoConf fallback bootstrappers, harness CLI commands, JSON, HTTP servers, and IPNS record tooling. Risks include asynchronous timing sleeps and subtle distinction between delegated failure and local publish success. Test signal validates both endpoint use and non-fatal delegated publish failures.

@@ -1,0 +1,13 @@
+# sources/test-tools/syzkaller/tools/syz-imagegen/imagegen.go
+
+Purpose: `syz-imagegen` generates syzkaller seed programs under `sys/linux/test/` for `syz_mount_image$...` and `syz_read_part_table` by creating filesystem images with many mkfs flag combinations, compressing/encoding them, and validating the resulting programs.
+
+Important APIs and flow: `FileSystem` describes name, syscall suffix, minimum size, read-only flag, fixed mkfs flags, combinatorial flag groups, max seeds, and optional custom mkfs function. `fileSystems` enumerates many filesystems and partition tables with custom command handling where needed. `main` handles list/debug/populate/keep/fs/from_json flags, loads Linux/AMD64 target, appends empty images for mount-image syscalls without configured mkfs support, enumerates images, creates a populated template dir, runs image generation across `runtime.NumCPU` workers, and prints results. `generateImages` filters filesystems and deletes old generated files. `enumerateFlags` uses `CoveringArray`. `Image.generate` doubles image size up to 128 MiB until `generateSize` works. `generateSize` creates/truncates disk, runs mkfs/custom mkfs, optionally re-execs under sudo to mount/populate, reads and hashes image data, writes a syzkaller program with base64-compressed image data, deserializes/serializes it for validation, and writes the generated seed file. `populate` uses loop devices and mount; `populateDir` creates files, links, symlinks, and xattrs.
+
+State and persistence: modifies `sys/linux/test/<prefix>_<index>` and optional `.img` files, creates temp template dirs, loop devices during population, and removes old generated seeds per filesystem. It may invoke sudo for writable filesystem population.
+
+Dependencies and integration: depends on many external mkfs tools, `fdisk`, `losetup`, `mount`, `sudo`, syzkaller `pkg/image` encoding, target descriptions, program deserialization, and OS utilities. Generated outputs become checked-in syzkaller test seeds.
+
+Risks: destructive removal of matching generated seed files; host-level sudo/mount/loop-device side effects; external tool availability and version-specific behavior; large disk usage; image duplicates; fixed max size may fail some combinations. Custom fdisk failure detection relies on ANSI red color markers. JSON-loaded filesystems can add arbitrary mkfs command behavior via default fields only, not functions.
+
+Test signals: `combinations_test.go` covers flag-space selection. Runtime validation deserializes generated programs and serializes for execution, providing a strong self-check during generation.

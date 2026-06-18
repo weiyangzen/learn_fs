@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/cxl/core/ras_rch.c
+
+Purpose: implements RAS/AER support specific to CXL devices attached to a Root Complex Host (RCH). These devices expose downstream-port AER and component registers through an RCRB rather than a normal PCIe downstream-port function, so the file maps RCRB AER, disables root command interrupts, snapshots AER state, and bridges RCH downstream-port errors into the common CXL RAS handlers.
+
+Important APIs and control flow: `cxl_dport_map_rch_aer()` uses `cxl_rcrb_to_aer()` to find the AER extended capability offset inside the dport RCRB and maps it with `devm_cxl_iomap_block()`. `cxl_disable_rch_root_ints()` clears correctable, nonfatal, and fatal interrupt enables in `PCI_ERR_ROOT_COMMAND`. `cxl_handle_rdport_errors()` looks up the dport for a PCI endpoint with `cxl_pci_find_port()`, copies the AER capability through `cxl_rch_get_aer_info()`, derives severity via `cxl_rch_get_aer_severity()`, prints the AER record with `pci_print_aer()`, and then calls correctable or uncorrectable CXL RAS handling using the dport's RAS register mapping.
+
+State and persistence behavior: persistent state is the mapped `dport->regs.dport_aer` pointer and `dport->rcrb.base` captured by port setup. Error state is transient: all AER capability registers are copied with 32-bit reads because the capability is MMIO-mapped, then uncorrectable and correctable status are cleared in the RCRB. No private allocation is retained by this file beyond devm mappings.
+
+Dependencies and integration points: depends on RCRB helpers from `regs.c`, common CXL RAS functions from `ras.c`, PCI AER structures and constants, `cxl_pci_find_port()` from `port.c`, and `struct cxl_dev_state`/`cxl_memdev` from `cxlmem.h`. It is invoked from `devm_cxl_dport_rch_ras_setup()` and from CXL PCI error handlers for RCD devices.
+
+Risks and invariants: RCRB AER access must use MMIO reads, not PCI config-space helpers. The severity check currently tests uncorrectable status first, then correctable status, and ignores masked bits; mask handling must match PCI AER semantics. Interrupt disabling is conservative because reset defaults may already disable these bits. Missing `dport_aer` mapping should be a no-op, not fatal, because some platforms may not expose a usable RCRB AER block.
+
+Test signals: RCD/RCH test platforms should show AER mapping from the RCRB, root command bits cleared, copied/cleared AER status, correct `pci_print_aer()` severity, and propagation into `trace_cxl_aer_correctable_error()` or `trace_cxl_aer_uncorrectable_error()` through the common RAS handlers. Fault injection should include no-AER and masked-status cases.

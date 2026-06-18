@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/slimbus/messaging.c
+
+Purpose: SLIMbus messaging transaction support. It allocates transaction IDs, sends controller messages, matches asynchronous responses, implements timeouts, and provides read/write helpers for SLIMbus value elements.
+
+Important APIs and functions: `slim_msg_response` is called by controllers when a response arrives; it finds the transaction by TID, copies reply bytes, completes waiters, frees TID, and drops runtime-PM vote. `slim_alloc_txn_tid` and `slim_free_txn_tid` manage TIDs through controller IDR. `slim_do_transfer` handles runtime PM, clock-pause exceptions, optional TID allocation, controller `xfer_msg`, synchronous wait, timeout cleanup, and error logging. `slim_xfer_msg` validates `slim_val_inf`, builds element-code and reply-length fields, and sends value/info messages. Convenience APIs `slim_read`, `slim_readb`, `slim_write`, and `slim_writeb` wrap common value operations.
+
+Control flow: client or framework builds a `slim_msg_txn`, `slim_do_transfer` ensures the controller is active unless in clock-pause reconfiguration, assigns TID when the message class requires a reply, transmits through controller ops, then waits or returns for asynchronous completion. Responses complete via `slim_msg_response`.
+
+State and dependencies: per-controller `tid_idr`, transaction spinlock, runtime PM vote, scheduler clock state, completions, and value buffers. Dependencies include controller `xfer_msg`, `slim_tid_txn`, SLIMbus message constants, runtime PM, and IDR. Risks include TID leak/double free on unusual controller errors, response length unchecked against caller buffer, runtime-PM imbalance, timeout races with late responses, and strict value length/address limits. Test signals are successful read/write byte and multi-byte transfers, timeout handling, async completion path, TID reuse, clock-pause messages, and PM autosuspend balance.

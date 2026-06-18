@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/fs/unicode/mkutf8data.c
+
+`mkutf8data.c` is a host generator that reads Unicode Character Database files and emits compact C trie data for kernel UTF-8 NFDI and NFDICF normalization. Its output, `utf8data.c`, must match `struct utf8data_table` in `utf8n.h`.
+
+Inputs default to UCD filenames and can be overridden with `-a`, `-c`, `-d`, `-f`, `-n`, `-p`, `-t`, and `-o`. `struct unicode_data` tracks code point, CCC, age generation, corrections, and UTF-32/UTF-8 decompositions. `struct tree` and `struct node` build packed lookup tries. `main()` initializes code points, parses ages/CCC/decomposition/casefold/ignorable/correction data, synthesizes Hangul decomposition cookies, fully expands NFDI and NFDICF mappings, converts them to UTF-8, builds versioned tries, prunes/marks/indexes/emits nodes until offset sizes stabilize, verifies all scalar lookups, runs `NormalizationTest.txt`, and writes C arrays plus `EXPORT_SYMBOL_GPL(utf8_data_table)`.
+
+State is host-process global/heap state; persistence is the generated C file with age tables, version offsets, and packed trie bytes. Dependencies are libc, UCD format stability, Kbuild host rules, and runtime trie ABI. Risks include fixed line/decomposition buffers, parser assumptions, correction-version logic, offset convergence, and ABI drift. Signals are successful regeneration, zero normalization-test failures, deterministic shipped-data diffs, and runtime KUnit success.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/samsung/s5p-mfc/s5p_mfc_opr_v5.c
+
+Purpose: implements the hardware operation table for first-generation MFC v5 hardware, using bank-relative register offsets and a firmware shared-memory block.
+
+Important APIs and functions: public entry is `s5p_mfc_init_hw_ops_v5`. Major local groups allocate/release decode descriptor, codec, instance, and shared buffers; calculate decoder DPB and encoder source sizes; program decode and encode stream/frame/reference buffers; write/read shared-memory offsets; configure common and codec-specific encoder parameters; issue decode/encode commands; run scheduler states in `s5p_mfc_try_run_v5`; clear interrupts; and expose status/error getters.
+
+Control flow: v5 scheduling starts in `s5p_mfc_try_run_v5`, which refuses suspend, locks hardware, chooses a ready context, enables the MFC clock, clears context interrupt flags, then dispatches by decoder/encoder type and context state. Decoder states open/close instances, parse headers, initialize DPB buffers, decode frames, send last-frame commands, and handle resolution changes. Encoder states open/close instances, initialize sequence headers, program reference buffers, and encode frames or null final frames. Commands are issued by writing v5 `S5P_FIMV_*` registers directly, especially `S5P_FIMV_SI_CH0_INST_ID`.
+
+State and persistence: per-context private buffers include descriptor (`dsc`), instance context (`ctx`), shared memory (`shm`), and codec banks (`bank1`, `bank2`). Shared memory stores firmware-visible fields such as crop info, frame tags, timestamps, P/B QP, extended encoder control, frame rate timing, and VBV changes. v5 maintains separate left/right memory banks and uses `OFFSETA`/`OFFSETB` to convert DMA addresses to firmware offsets. Hardware state persists in registers until overwritten or reset.
+
+Dependencies and integration points: depends on MFC command ops, interrupt helpers, power clock gating, v5 register definitions from common headers, vb2 DMA-contig addresses, coherent/private buffer allocation from `s5p_mfc_opr.c`, and V4L2 control values stored in `ctx->enc_params`. It is selected for non-v6-plus variants by `s5p_mfc_init_hw_ops`.
+
+Risks: address arithmetic depends on correct per-bank DMA bases and `MFC_OFFSET_SHIFT`; wrong bank placement will program invalid hardware offsets. Shared-memory writes use raw typed pointer casts with memory barriers, so structure size/alignment assumptions are implicit. There is a suspicious stray closing brace after `s5p_mfc_run_res_change`, which would be a compile-time issue in this snapshot unless hidden by context. Many failure paths convert scheduling misses to `-EAGAIN`, making diagnostics dependent on logs. v5 does not report encoder DPB count and returns `-1` for some unsupported getters.
+
+Test signals: v5 kernel build is mandatory; open/close instance smoke tests; H.264/MPEG4/H.263 encode and decode on v5 hardware; DPB allocation sizing under multiple resolutions; EOS/null-frame tests; resolution-change decode tests; and register trace comparison against known-good firmware command sequences.

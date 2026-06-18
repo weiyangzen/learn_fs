@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-bst.c
+
+Purpose: this is the Black Sesame Technologies C1200 SDHCI driver. It handles a Synopsys/BST controller with separate CRM registers, custom clock programming, eMMC reset handling, timeout and power hooks, delay-chain tuning, voltage-stable control, MBIU burst setup, and a reserved-memory SRAM bounce buffer for a 32-bit DMA-limited eMMC path.
+
+Important APIs, types, and functions: `struct sdhci_bst_priv` stores the CRM MMIO base. `union sdhci_bst_rx_ctrl` models RX clock control bitfields. `sdhci_bst_ops` hooks custom `.set_clock`, `.reset`, `.set_power`, `.set_timeout`, `.platform_execute_tuning`, and `.voltage_switch`. Helpers `sdhci_bst_crm_read/write()`, `sdhci_bst_enable_clk()`, `sdhci_bst_execute_tuning()`, and bounce-buffer allocation/free implement the core behavior.
+
+Control flow: probe initializes SDHCI with BST quirks, parses MMC DT properties, applies SDHCI OF properties, maps the second resource as CRM registers, allocates a 32 KiB coherent bounce buffer from reserved memory, then registers the host. Clock setting disables card/internal/PLL clock on zero rate; otherwise it computes a divider from a fixed 200 MHz maximum, programs timer and RX clock CRM fields, disables and reenables BCLK, writes the SDHCI divider bits, and enables PLL/card/internal clocks. Reset toggles eMMC reset via the vendor pointer-derived register when the host is eMMC-only, otherwise falls back to `sdhci_reset()`.
+
+State and persistence: driver-specific state is the CRM base and the coherent bounce buffer address/size stored on `sdhci_host`. Hardware state includes CRM timer/BCLK/RX/voltage registers, MBIU burst bits, delay-chain selection, and eMMC reset. Remove frees the bounce buffer, releases reserved memory, and removes the platform host.
+
+Dependencies and integration points: the driver uses SDHCI platform APIs, reserved-memory attachment, coherent DMA allocation, iopoll, bitfield helpers, and the `bst,c1200-sdhci` compatible. It relies on DT providing a second MMIO resource for CRM and a reserved-memory region suitable for the controller's 32-bit DMA limit.
+
+Risks: the divider calculation is integer and written into a 10-bit CRM field and 8-bit SDHCI field; extreme requested clocks need hardware validation. Tuning selects the midpoint of the longer pass window but does not explicitly handle all-pass/all-fail edge cases beyond clamping negative best to zero. Bounce buffer allocation is mandatory, so missing reserved memory prevents probe. Power-off disables burst, BCLK, RX update, and voltage-stable bits; resume behavior depends on generic SDHCI reconfiguration.
+
+Test signals: successful reserved-memory initialization and 32 KiB coherent allocation, correct clock rates and stable-clock polling, eMMC reset pulse during full reset on non-SD hosts, tuning pass-window selection over 32 delay-chain entries, voltage switch setting `BST_VOL_STABLE_ON`, MBIU burst enable/disable with power state, and DMA transfers constrained through the bounce buffer.

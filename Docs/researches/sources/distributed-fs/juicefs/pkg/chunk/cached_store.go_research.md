@@ -1,0 +1,13 @@
+## sources/distributed-fs/juicefs/pkg/chunk/cached_store.go
+
+Purpose: implements the public `ChunkStore` over object storage with read cache, disk/memory cache manager, compression, rate limiting, writeback staging, delayed upload, prefetch, singleflight read de-duplication, and Prometheus metrics.
+
+Important APIs/types/functions: `rSlice` maps a slice id/length to object keys and implements `ReadAt`. `wSlice` buffers pages, writes blocks, flushes block uploads, supports `SetWriteback`, `Finish`, and `Abort`. `Config` carries cache directories, sizes, checksum/eviction, upload/download limits, timeouts, writeback/delay/hour policy, block size, readahead, and prefetch settings; `SelfCheck` normalizes invalid combinations. `cachedStore` owns object storage, `CacheManager`, `prefetcher`, `Controller`, semaphores, pending staging queue, compressor, rate-limit buckets, and metrics. Public methods implement `NewReader`, `NewWriter`, `Remove`, `FillCache`, `EvictCache`, `CheckCache`, `UsedMemory`, `UpdateLimit`, and `BlobStorage`.
+
+Control flow: reads first try `bcache.load`; cache misses may do range reads for seekable storage/compression conditions, otherwise use singleflight full-block `load`, optionally caching the block. Writes buffer by block/page; `FlushTo` starts uploads for complete blocks; `Finish` waits for pending upload errors. `upload` compresses and retries object `Put`; synchronous writes may cache blocks locally. Writeback stages small blocks to disk, acknowledges success early, and queues background upload immediately or after delay/hour gates. `scanDelayedStaging` and `uploader` drain persisted staging files.
+
+State and persistence: object data persists in `object.ObjectStorage`. Cache state persists through `CacheManager`, disk raw/staging files, pending maps, and metrics. Writeback staging can survive process restart and is scanned by disk cache. `pendingKeys` protects staged blocks from being uploaded after deletion.
+
+Dependencies and integration points: integrates `compress`, `object.ObjectStorage`, `utils.WithTimeout`, `ratelimit`, Prometheus, `CacheManager`, `Page`, `prefetcher`, and `Controller`. Object request IDs/storage classes feed metrics/logging.
+
+Risks and test signals: complex concurrency around page refcounts, `currentUpload/currentDownload` semaphores, pending upload cancellation, and staging validity. Error paths must release pages exactly once. Writeback can acknowledge data before object-store persistence, so staging durability and forced upload cleanup are critical. Tests cover default/memory/compressed/limited/full/small-buffer stores, async and delayed writeback, force upload, fill/evict/check cache, retry behavior, cache file tier/checksum parsing, and benchmarks.

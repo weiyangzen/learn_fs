@@ -1,0 +1,18 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/qcom/dispcc-sc8280xp.c -->
+## sources/distributed-fs/ceph-client/drivers/clk/qcom/dispcc-sc8280xp.c
+
+### Purpose
+`dispcc-sc8280xp.c` implements the dual display clock controllers for SC8280XP, matching `qcom,sc8280xp-dispcc0` and `qcom,sc8280xp-dispcc1`. It models two nearly parallel DISP_CC instances with separate descriptor tables for display pipe 0 and display pipe 1, each exporting PLLs, MDP/AHB/rotator/vsync clocks, DSI byte/pixel/escape clocks, four DP TX clock sets, sleep/non-GDSC/RSCC clocks, resets, and two GDSCs.
+
+### Important APIs, Types, And Functions
+The driver defines per-instance Lucid 5LPE PLLs `disp0_cc_pll0/1/2` and `disp1_cc_pll0/1/2`, PLL1 even post-dividers, parent maps split between `disp0_cc_parent_data_*` and `disp1_cc_parent_data_*`, shared frequency tables for AHB, byte/AUX, MDP, rotator, and sleep, many `clk_rcg2` source clocks for DSI/DP/MDP/rot/vsync paths, read-write byte dividers, read-only DP link dividers, and large parallel `clk_branch` sets. `disp0_cc_sc8280xp_desc` and `disp1_cc_sc8280xp_desc` choose the correct clock and GDSC arrays while sharing reset and regmap config. `clkr_to_alpha_clk_pll()` converts descriptor clock entries back to PLL objects for generic per-instance PLL programming. `disp_cc_sc8280xp_probe()` is the main control function and includes runtime PM and `pm_clk` setup.
+
+### Control Flow, State, And Persistence
+Probe obtains the matched descriptor from OF `.data`, enables runtime PM, creates managed PM-clock storage, adds the unnamed AHB PM clock, resumes the device, maps the regmap, configures PLL0/PLL1/PLL2 through descriptor-indexed clock entries, registers clocks/resets/GDSCs through `qcom_cc_really_probe()`, force-enables `DISP_CC_XO_CLK` at `0x605c`, then drops the runtime PM reference on both success and handled failure. Persistent state is per-controller hardware register state, while the descriptor selected by the compatible string determines whether all later clock IDs operate on display controller 0 or 1. The two instance arrays intentionally reuse many symbolic binding IDs while pointing at instance-specific static clock objects.
+
+### Dependencies And Integration Points
+The file depends on common clock, platform/OF match data, regmap, runtime PM, `pm_clock`, `dt-bindings/clock/qcom,dispcc-sc8280xp.h`, QCOM alpha PLL, RCG, branch, divider, common CC, reset, and GDSC helpers. It integrates with two display controller DT nodes, their AHB PM clock, DSI/DP PHY parent clocks for each display instance, GCC/root parent clocks, MDSS/DRM display consumers, reset clients, and genpd users of `MDSS_GDSC` plus `MDSS_INT2_GDSC`.
+
+### Risks And Test Signals
+This file's size and dual-instance symmetry create copy/paste risk: a display-0 clock accidentally referencing display-1 parent data, wrong `.data` descriptor in the match table, or a shared reset/GDSC assumption can break only one controller. The probe path has extra failure points around `devm_pm_runtime_enable()`, `devm_pm_clk_create()`, `pm_clk_add()`, runtime resume, and regmap mapping; failure must release the runtime PM reference correctly. PLL programming uses descriptor indexes, so missing `DISP_CC_PLL0/1/2` entries would be serious. Test signals include independent probe of both compatibles, runtime PM resume/suspend behavior with AHB PM clock present, complete clk-summary for both instances, DSI/DP operation on each controller, four-DP link clock rate checks, reset operations, GDSC and INT2 GDSC power transitions, forced XO branch state, and error-injection around PM clock/regmap failures.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/qcom/dispcc-sc8280xp.c -->

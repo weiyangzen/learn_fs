@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_health.h
+
+Purpose: `xfs_health.h` defines incore metadata health state and helper APIs for XFS. It provides the flag taxonomy used by online scrub, online repair, geometry ioctls, health monitoring, and runtime corruption reporting.
+
+Important APIs and masks: health flags are grouped by filesystem (`XFS_SICK_FS_*`), realtime group (`XFS_SICK_RG_*`), allocation group (`XFS_SICK_AG_*`), and inode (`XFS_SICK_INO_*`). Each group defines primary, secondary, indirect, and all masks. AG flags include AGI, inobt, finobt, rmapbt, refcountbt, and bad-inodes indicators. Inode flags include core, bmap forks, directory, xattr, symlink, parent, directory tree, zapped forks, and `XFS_SICK_INO_FORGET`. The implementation-facing API declares `xfs_*_mark_sick`, `xfs_*_mark_corrupt`, `xfs_*_mark_healthy`, and `xfs_*_measure_sickness` for fs, group, and inode domains. It also declares mapper helpers for bmap, btree, dir/attr, health unmount, ioctl health export, and health monitor mask conversion.
+
+Control flow and semantics: the header documents the state machine for each health bit using separate `checked` and `sick` fields. `checked && sick` means repair is needed; `checked && !sick` means checked healthy; `!checked && sick` means runtime evidence of a problem without a full check; `!checked && !sick` means not examined since mount. Mark-sick sets sick without checked, mark-corrupt sets both, mark-healthy clears sick and sets checked, and measure returns both bitmaps. Inline helpers measure and test sickness for fs, group, rtgroup, and inode domains.
+
+State and persistence behavior: health state is incore and generally not persisted as metadata state, but it is externally visible through geometry, bulkstat, health-monitor, and log notices at unmount. Runtime metadata verifier failures feed these flags so administrators and repair tooling can react without necessarily forcing immediate shutdown.
+
+Dependencies and integration points: `xfs_ialloc.c` marks AGI and inobt/finobt problems through this interface. `xfs_ialloc_btree.c` sets `sick_mask` in btree ops so generic btree code can mark the appropriate AG metadata unhealthy. `xfs_fs.h` publishes related UAPI masks. Scrub/repair implementations are expected to set checked/sick state according to findings and fixes.
+
+Risks: incorrect classification can hide real corruption or over-report harmless secondary evidence. Confusing primary, secondary, and indirect flags can cause scrub/repair to clear symptoms while leaving root problems. Callers must not treat `!sick` as checked unless the checked bit is also set. Mask translations to UAPI must stay synchronized with `xfs_fs.h` and health monitor event definitions.
+
+Test signals: scrub and repair tests should verify all four checked/sick combinations, mark_sick vs mark_corrupt vs mark_healthy transitions, propagation from btree and buffer verifiers, unmount notices, geometry/bulkstat export masks, and health monitor event mask conversion. Fault injection should check that `-EFSCORRUPTED` and `-EFSBADCRC` paths map to sickness via `xfs_metadata_is_sick`.

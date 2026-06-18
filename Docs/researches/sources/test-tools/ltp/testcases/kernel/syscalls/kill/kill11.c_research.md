@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill11.c
+
+Purpose: verifies wait status for children killed by many signals, including whether the core-dump bit is set for signals that dump core by default. Setup raises `RLIMIT_CORE` to at least 512 KiB if possible. Each test forks a paused child, sends one signal, waits, checks `WTERMSIG(status)` and `WCOREDUMP(status)` against the table. State is one child per signal and process core-file resource limits in the test process. Dependencies include tmpdir for core output, signal defaults, and permissions to raise limits if needed. Risks are system core handling policy and non-root hard limits causing TCONF. Test signals are exact signal number and expected core bit per row.

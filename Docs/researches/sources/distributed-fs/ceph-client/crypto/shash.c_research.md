@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/crypto/shash.c
+
+`shash.c` implements the Linux Crypto API synchronous hash frontend. It owns transform allocation and registration for `struct shash_alg`, key state enforcement, default digest/finup behavior, state import/export, reporting, cloning, and template instance registration.
+
+Important exported APIs are `crypto_alloc_shash()`, `crypto_has_shash()`, `crypto_clone_shash()`, `crypto_shash_setkey()`, `crypto_shash_init()`, `crypto_shash_finup()`, `crypto_shash_digest()`, `crypto_shash_export*()`, `crypto_shash_import*()`, `crypto_register_shash(es)()`, `crypto_unregister_shash(es)()`, `crypto_grab_shash()`, and `shash_register_instance()`. The central type descriptor is `crypto_shash_type`.
+
+Control flow starts in `crypto_shash_init_tfm()`, which marks keyed algorithms with `CRYPTO_TFM_NEED_KEY`, installs an exit wrapper, and calls optional algorithm initialization. Operational calls reject missing keys. `shash_prepare_alg()` fills missing `finup`, `digest`, and `setkey` hooks, validates state sizes, and adjusts descriptor/state sizes for `CRYPTO_AHASH_ALG_BLOCK_ONLY`. `crypto_shash_finup()` contains the most delicate path: it buffers partial blocks, preserves a final nonzero block when required, sends full blocks to the algorithm, and zeroes descriptor context after finalization.
+
+State is per transform for key material and per descriptor for hash state. Export/import copies algorithm state and, for block-only algorithms, includes the buffered partial block plus length. Dependencies include `hash.h`, Crypto API spawn/instance infrastructure, scatterwalk, procfs, and cryptouser netlink reporting. Risks are descriptor layout drift, import validation, missing-key handling, and zeroization after error/final paths. Test signals include testmgr vectors, keyed-hash `-ENOKEY` checks, block-boundary streaming tests, import/export resume tests, and `tcrypt` hash modes.

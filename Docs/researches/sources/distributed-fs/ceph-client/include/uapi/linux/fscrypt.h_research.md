@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/fscrypt.h
+
+This UAPI header defines the filesystem encryption userspace ABI. It covers encryption policy versions, modes, flags, key specifiers, key management ioctls, key status reporting, nonce retrieval, and file encryption policy get/set operations.
+
+Important exports include policy structs such as `fscrypt_policy_v1`, `fscrypt_policy_v2`, and union wrappers, mode constants for AES/Adiantum variants, policy flags for padding, direct-key, IV_INO_LBLK_64, IV_INO_LBLK_32, and inlinecrypt optimization, key specifier types, `fscrypt_add_key_arg`, `fscrypt_remove_key_arg`, `fscrypt_get_key_status_arg`, and ioctls such as `FS_IOC_SET_ENCRYPTION_POLICY`, `GET_ENCRYPTION_POLICY`, `GET_ENCRYPTION_PWSALT`, `GET_ENCRYPTION_POLICY_EX`, `ADD_ENCRYPTION_KEY`, `REMOVE_ENCRYPTION_KEY`, `REMOVE_ENCRYPTION_KEY_ALL_USERS`, `GET_ENCRYPTION_KEY_STATUS`, and `GET_ENCRYPTION_NONCE`.
+
+Control flow is ioctl based: userspace configures an empty directory with an encryption policy, adds or removes keys to the filesystem keyring, queries key status, and obtains policy/nonce metadata. Kernel state includes fscrypt master keys, per-filesystem keyrings, policy metadata in inodes, prepared per-file encryption keys, and eviction state when keys are removed. Persistence includes encryption policy and nonce metadata on disk; raw key material should not persist in this ABI.
+
+Dependencies include `linux/types.h`, `linux/ioctl.h`, VFS, filesystem fscrypt hooks, kernel crypto API, keyrings, inline encryption hardware, and generic `fs.h` ioctl reservations. Integration points include ext4, F2FS, userspace key management, Android file-based encryption, backup/restore tools, and fsverity when combined with encrypted files.
+
+Risks include irreversible access loss if keys/policies are mishandled, policy version confusion, mode/flag incompatibility, key identifier collisions or leakage, incorrect zeroing of reserved fields, and cross-filesystem behavior differences. Test signals include fscrypt xfstests, key add/remove/status tests, v1/v2 policy compatibility, inlinecrypt tests, locked-directory access tests, nonce retrieval tests, and compat ioctl layout checks.

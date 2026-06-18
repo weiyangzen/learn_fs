@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-tools/hadoop-aws/src/main/java/org/apache/hadoop/fs/s3a/Constants.java
+
+Purpose: public/evolving constant catalog for S3A configuration keys, defaults, capability names, storage classes, retry knobs, encryption options, input stream modes, and compatibility settings. It is the main source-level contract between user configuration, `core-default.xml`, S3A implementation code, and downstream applications.
+
+Important APIs/types: final class with a private constructor and many `public static final` fields. Major groups include credentials (`ACCESS_KEY`, `SECRET_KEY`, provider keys, assumed-role settings), connection and HTTP tuning (`MAXIMUM_CONNECTIONS`, timeouts, proxy keys, SSL channel mode, requester pays), endpoints and regions (`ENDPOINT`, `CENTRAL_ENDPOINT`, `AWS_REGION`, cross-region access, FIPS), upload/delete/listing settings (`MULTIPART_SIZE`, thresholds, paging, bulk delete, fast upload buffers), encryption (`S3_ENCRYPTION_*` plus deprecated legacy SSE keys), custom signers and headers, S3A filesystem identity/prefixes, S3Guard deprecated keys, retry and throttle settings, change detection, directory marker capabilities, create performance/conditional create, vectored reads, input stream selection, prefetch controls, S3 Express, HTTP signer, checksum controls, classloader isolation, S3 Access Grants, IO rate limiting, analytics accelerator prefix, and `IF_NONE_MATCH_STAR`.
+
+Control flow: no executable control flow beyond class loading. Values are consumed throughout S3A to read Hadoop `Configuration`, set defaults, advertise path capabilities, construct clients, and maintain backward compatibility.
+
+State and persistence behavior: immutable constants only. The values influence persisted configuration files and user jobs, but this class itself stores no runtime state.
+
+Dependencies and integration points: imports Hadoop classification annotations, `Options`, checksum and stream integration helpers, SSL socket factory modes, `Duration`, `Locale`, `TimeUnit`, and size constants. It is referenced by S3A client construction, retry policy, filesystem operations, credential initialization, input stream factories, committers, tests, and documentation.
+
+Risks: this is a high-blast-radius compatibility surface. Renaming or changing default values can break deployed configurations. Deprecated S3Guard and legacy encryption constants must often remain even when ignored or rejected. Timeout defaults exist in both `Duration` and legacy numeric forms, so keeping them synchronized matters. Some defaults intentionally balance compatibility over ideal behavior, such as empty default endpoint, cross-region access enabled, and checksum validation disabled.
+
+Test signals: configuration tests should assert default values match `core-default.xml`, deprecated names still parse as intended, capability probes use the documented strings, endpoint/region and FIPS settings align with `DefaultS3ClientFactory`, retry constants align with `S3ARetryPolicy`, and stream/checksum/encryption settings are honored by their respective subsystems.

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/mfd/arizona-core.c -->
+# sources/distributed-fs/ceph-client/drivers/mfd/arizona-core.c
+
+Purpose: implements the shared core for Wolfson/Cirrus Arizona-class audio codec MFDs. It performs regulator and reset sequencing, chip identification, firmware/register patch application, 32 kHz clock management, runtime/system PM, IRQ initialization, GPIO/micbias defaults, and MFD child registration for codec, GPIO, haptics, PWM, microphone supply, and LDO children.
+
+Important APIs and functions: exported APIs are `arizona_dev_init`, `arizona_dev_exit`, `arizona_clk32k_enable`, `arizona_clk32k_disable`, and exported PM ops `arizona_pm_ops`. Important helpers include `arizona_poll_reg`, `arizona_wait_for_boot`, `arizona_enable_reset`, `arizona_disable_reset`, free-running SYSCLK helpers, `wm5102_apply_hardware_patch`, `wm5110_apply_sleep_patch`, DCVDD isolation/connect helpers, clock error IRQ handlers, and device-tree platform-data parsing.
+
+Control flow: `arizona_dev_init` stores driver data, reads platform data or OF GPIO defaults, gets optional MCLKs, sets regmap cache-only mode, chooses core supplies, adds early LDO1 child where applicable, gets regulators and reset GPIO, enables supplies, releases reset, verifies/reset/boots the chip, reads ID and revision, selects chip-specific patch function and child cell array, applies patches, writes GPIO and micbias defaults, enables runtime PM, initializes IRQs, requests core diagnostic IRQs, and adds main children. Failure paths unwind IRQs, runtime PM, 32 kHz clock, reset, regulators, DCVDD, and early children.
+
+State and persistence: `struct arizona` holds regmap, device type/revision, clocks, regulator handles, reset GPIO, platform data, clock reference count protected by `clk_lock`, IRQ state, runtime PM flags, and power state such as `external_dcvdd` and `has_fully_powered_off`. Regmap cache is used aggressively: cache-only during low-power/power-off states, dirty marking on suspend, and sync on resume.
+
+Dependencies and integration points: depends on codec-specific regmap/patch tables declared in `arizona.h`, regulator and clock frameworks, GPIO descriptors, runtime PM, MFD core, regmap, `arizona-irq.c`, and child drivers. Transport drivers (`arizona-i2c.c` and `arizona-spi.c`) allocate `struct arizona`, initialize bus regmap, set type/IRQ/dev, and call this core.
+
+Risks: power sequencing is complex and highly chip-variant dependent; mismatched type/compatible can be corrected after ID read but only when the needed Kconfig support is built. Runtime suspend may fully power off the chip when jack detection is inactive, so resume depends on reset, boot polling, patch reapplication, and regcache sync all succeeding. `arizona_clk32k_disable` warns on underflow but still decrements. Some `regmap_write` calls for defaults ignore return values. `arizona_dev_exit` disables IRQ before calling `arizona_irq_exit`, so ordering must stay compatible with nested IRQ teardown.
+
+Test signals: build across WM5102, WM5110/WM8280, WM8997, WM8998/WM1814, WM1831, and CS47L24 configurations; probe with I2C and SPI transports; boot-done timeout behavior; patch application and free-running SYSCLK restoration; runtime suspend/resume with external and internal DCVDD; jack-detect active and inactive paths; 32 kHz clock refcounting; diagnostic IRQ logging; and child-device enumeration.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/mfd/arizona-core.c -->

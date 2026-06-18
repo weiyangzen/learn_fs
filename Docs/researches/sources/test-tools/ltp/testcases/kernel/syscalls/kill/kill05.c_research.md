@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill05.c
+
+Purpose: verifies `kill()` returns `EPERM` when a process owned by one unprivileged UID signals a process owned by another. Setup creates a SysV shared-memory page used as a flag and obtains two test UIDs. A master child forks a target child that switches to user 0, then the master switches to user 1, waits for readiness through shared memory, calls `kill(pid1, SIGKILL)`, signals the target to exit, and checks `EPERM`. State is a shared flag segment, two forked children, and real/effective UID transitions. Dependencies are root, at least two test users, and newipc helpers. Risks are capability leakage or user namespace policy. Test signal is expected `EPERM`.

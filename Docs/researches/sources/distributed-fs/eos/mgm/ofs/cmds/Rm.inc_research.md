@@ -1,0 +1,19 @@
+## sources/distributed-fs/eos/mgm/ofs/cmds/Rm.inc
+
+Purpose: implements file deletion for the MGM namespace, including public XRootD authorization, ACL and sticky-bit enforcement, direct deletion, recycle-bin deletion, delete workflows, hardlink/COW handling, quota updates, version purge, FuseX notifications, and audit logging.
+
+Important APIs and types: `XrdMgmOfs::rem`, `XrdMgmOfs::_rem`, `XrdSfsFileExistence`, `IFileMD`, `IContainerMD`, `Acl`, `RecycleEntry`, `Workflow`, `Quota`, `XrdMgmOfsFile::create_cow`, `XrdMgmOfsFile::handleHardlinkDelete`, `WriteRmRecord`, `WriteRecycleRecord`, `PurgeVersion`, and `EOS_DTRACE_ATTR`.
+
+Control flow: public `rem()` maps namespace and identity, checks token scope and delete authorization, applies write access mode/stall/redirect macros, then calls `_rem()`. `_rem()` verifies the path is an existing file, prefetches metadata, takes the view write lock, loads file and parent container, evaluates immutable ACL/public access/write-once/delete-deny/sticky-bit rules, and decides whether deletion should go through recycle or be immediate. Recycle is enabled when the recycler is globally enforced or the parent has the recycle attribute and the path is not already under the recycle prefix.
+
+Direct deletion behavior: when not recycling and not simulating, it removes file quota from the parent quota node, optionally releases the namespace lock to trigger `sync::delete` workflow, creates COW state for delete, handles hardlink deletion, unlinks the file from the namespace, reloads the modified file record, drops tape unlinked location when needed, removes file metadata if no linked or unlinked locations remain, writes an rm record, updates parent mtime, persists parent metadata, releases the lock, and broadcasts FuseX deletion/refresh events.
+
+Recycle behavior: releases the namespace lock, reads recycle directory/id from attributes, checks responsible quota and available recycle space unless disabled, creates a `RecycleEntry`, triggers `sync::recycle`, moves the file to garbage, creates COW unlink state, records recycle metadata, stamps delete trace attributes on the recycled path as root, optionally records the version directory inode on the garbage file, and purges versions unless `keepversion` is set.
+
+State and persistence behavior: changes file/container namespace membership, unlinked-location state, quota accounting, file metadata removal, parent mtime, recycle metadata, workflow side effects, and audit/delete records. `simulate` performs permission and recycle decision checks without mutation. `keepversion`, `no_recycling`, `no_quota_enforcement`, `fusexcast`, and `no_workflow` allow callers to tune behavior.
+
+Dependencies and integration points: integrates with recycler configuration, ACL/public access, workflow engine, quota manager, copy-on-write support, hardlink semantics, tape location constants, versioning, Io/audit record writers, FuseX, and MGM stats/timing. Rename overwrite and version purge paths call `_rem()`.
+
+Risks: lock release around workflow and recycle operations allows concurrent namespace changes after validation. Recycle quota checks depend on the recycle path having responsible quota configured. Direct deletion has special tape/unlinked-location cleanup that can leak or prematurely remove metadata if location state is inconsistent. `fusexcast` is accepted but direct deletion always broadcasts in the shown path.
+
+Test signals: file-vs-directory errors, missing file errors, immutable/write-once/`!d` ACL denial, sticky-bit owner/container-owner permission, token permission behavior, direct delete with hardlinks and tape location, workflow failure propagation, recycle quota full and no-quota errors, enforced vs attribute-based recycling, version purge and keepversion, DTrace xattr stamping, parent mtime/FuseX updates, and audit `DELETE`.

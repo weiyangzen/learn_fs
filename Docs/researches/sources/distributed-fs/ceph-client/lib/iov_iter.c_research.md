@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/lib/iov_iter.c
+
+Purpose: implements the core `struct iov_iter` data-movement, import, fault-in, page extraction, and state-advance helpers used by VFS, networking, block, DAX, splice, and filesystem paths to treat user iovecs, kernel vecs, bvecs, xarrays, folio queues, ubufs, and discard sinks uniformly.
+
+Important APIs: iterator initialization (`iov_iter_init`, `iov_iter_kvec`, `iov_iter_bvec`, `iov_iter_xarray`, `iov_iter_folio_queue`, `iov_iter_discard`, `import_iovec`, `import_ubuf`), data movement (`_copy_to_iter`, `_copy_from_iter`, `_copy_from_iter_nocache`, `_copy_from_iter_flushcache`, `_copy_mc_to_iter`, `copy_page_to_iter`, `copy_page_from_iter`, `copy_folio_from_iter_atomic`, `iov_iter_zero`), positioning (`iov_iter_advance`, `iov_iter_revert`, `iov_iter_restore`, `iov_iter_single_seg_count`), layout (`iov_iter_alignment`, `iov_iter_gap_alignment`, `iov_iter_npages`), duplication (`dup_iter`), and page extraction (`iov_iter_get_pages2`, `iov_iter_get_pages_alloc2`, `iov_iter_extract_pages`, `iov_iter_extract_bvecs`).
+
+Control flow: copy helpers validate transfer direction through `data_source`, invoke `might_fault()` for user-backed iterators, and delegate to `iterate_and_advance()` with user-copy or memcpy callbacks. Advance/revert update `count`, `iov_offset`, segment pointers, xarray position, or folio-queue slot according to iterator type. Import paths copy user `iovec` arrays, validate lengths and `access_ok()`, cap total length to `MAX_RW_COUNT`, and optimize a single segment as `ITER_UBUF`. Page-get/extract paths select user GUP/pinning, bvec page references, folio queue walking, xarray RCU lookup, or kvec virtual-to-page conversion.
+
+State and persistence: the iterator itself is mutable cursor state: count, offset, current segment pointer, nr_segs, type, nofault flag, and backing object. Page extraction may acquire user pins or page refs that callers must release according to `iov_iter_extract_will_pin()`. Duplicated vectors allocate independent segment arrays.
+
+Dependencies and integration: depends on user access, fault injection, GUP/pinning, highmem kmap, folios, xarray, bvec, vmalloc, scatterlist, compat ABI, and instrumentation hooks. It is a high fan-out kernel API and is directly relevant to distributed filesystem clients because networked read/write paths commonly copy to and from iterators.
+
+Risks: direction inversions return zero after warnings; partial user-copy and machine-check paths can advance only part of an iterator; revert is illegal past the start for ubuf/xarray and can BUG; missing unpin/ref cleanup leaks pins; xarray/folio queue callers must stabilize pages externally; kvec extraction assumes virtual addresses can be mapped to pages; filter/cap logic must prevent overflow and negative lengths.
+
+Test signals: usercopy fault injection, compat iovec import tests, DAX copy_mc/flushcache coverage, bvec/xarray/folioq extraction tests, pin accounting, short-copy cases, `MAX_RW_COUNT` boundary tests, and filesystem/network integration exercising iterator save/restore.

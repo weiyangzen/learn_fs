@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/fnic/fnic_isr.c
+
+Purpose: this file selects, requests, frees, and services fnic interrupt modes. It bridges PCI INTx/MSI/MSI-X vectors to queue completion handlers, link notification, and queue error logging.
+
+Important APIs and functions: ISR handlers are split by mode: `fnic_isr_legacy()` decodes the legacy pending-bit array and handles notify, error, dummy, and combined WQ/RQ/copy-WQ events; `fnic_isr_msi()` services all queues through a single vector; `fnic_isr_msix_rq()`, `fnic_isr_msix_wq()`, `fnic_isr_msix_wq_copy()`, and `fnic_isr_msix_err_notify()` handle dedicated MSI-X vectors. `fnic_request_intr()` registers the selected handlers. `fnic_free_intr()` frees requested IRQs. `fnic_set_intr_mode_msix()`, `fnic_set_intr_mode()`, and `fnic_clear_intr_mode()` negotiate PCI vectors and record the chosen vNIC interrupt mode.
+
+Control flow: probe first reads firmware resource counts, then calls `fnic_set_intr_mode()`. The driver prefers MSI-X, falls back to MSI, then INTx. MSI-X attempts enough vectors for RQ, raw WQ, each copy WQ, and one error/notify vector, with a minimum that guarantees at least a copy-WQ vector. It adjusts `rq_count`, `raw_wq_count`, `copy_wq_base`, `wq_copy_count`, `wq_count`, `cq_count`, `intr_count`, and `err_intr_offset` to match allocated vectors. During interrupts, handlers update ISR stats, call the right CQ service routines, and return credits with unmask/timer-reset flags.
+
+State and persistence: interrupt mode and vector metadata are runtime PCI/vNIC state. Per-vector data lives in `fnic->msix[]`; counters such as `last_isr_time`, `isr_count`, and `intx_dummy` live in `fnic_stats.misc_stats`. No persistent state exists.
+
+Dependencies and integration: this file depends on Linux PCI IRQ vector APIs, vNIC interrupt helpers, SCSI/FCS CQ handlers from `fnic_scsi.c` and `fnic_fcs.c`, queue error logging from `fnic_main.c`, and link-event scheduling via `fnic_handle_link_event()`. Resource allocation in `fnic_res.c` uses the selected mode to initialize CQs and interrupt controls.
+
+Risks: MSI-X copy-WQ ISR derives vector index from IRQ number and has a fallback scan; bad vector bookkeeping can service the wrong CQ. Interrupt fallback changes queue counts, so all later resource allocation and blk-mq mapping must follow the adjusted counts. Error/notify sharing in MSI-X means queue errors and link events arrive through one vector. Test signals include boot/probe under MSI-X, MSI-only, and INTx environments; vector allocation shortfall; interrupt affinity mapping; queue completion progress; link event delivery; queue error logging; and clean IRQ free after partial request failure.

@@ -1,0 +1,32 @@
+# sources/distributed-fs/ceph-client/drivers/usb/fotg210/fotg210-udc.c
+
+## Purpose
+`fotg210-udc.c` implements the USB gadget/device-controller side of the Faraday FOTG210 OTG controller. The driver registers a `usb_gadget` with the gadget framework, exposes endpoint operations for EP0 and EP1-EP4, handles setup requests and endpoint FIFO interrupts, performs DMA transfers between system memory and controller FIFOs, and connects VBUS events to the shared FOTG210 core.
+
+## Important APIs, Types, and Functions
+Platform integration is through `fotg210_udc_probe()` and `fotg210_udc_remove()`. Gadget framework entry points are in `fotg210_gadget_ops`: `fotg210_udc_start()`, `fotg210_udc_stop()`, and `fotg210_vbus_session()`. Endpoint operations are in `fotg210_ep_ops`: enable, disable, allocate/free request, queue, dequeue, set halt, set wedge, and fifo flush. The IRQ handler is `fotg210_irq()`.
+
+Endpoint setup uses `fotg210_config_ep()`, `fotg210_fifo_ep_mapping()`, `fotg210_set_fifo_dir()`, `fotg210_set_tfrtype()`, and `fotg210_set_mps()`. Transfer execution uses `fotg210_ep_queue()`, `fotg210_ep0_queue()`, `fotg210_start_dma()`, `fotg210_enable_dma()`, `fotg210_wait_dma_done()`, `fotg210_disable_dma()`, `fotg210_in_fifo_handler()`, and `fotg210_out_fifo_handler()`. Control request handling includes `fotg210_rdsetupp()`, `fotg210_setup_packet()`, `fotg210_get_status()`, `fotg210_set_address()`, `fotg210_set_feature()`, `fotg210_clear_feature()`, `fotg210_ep0in()`, and `fotg210_ep0out()`.
+
+## Control Flow
+Probe obtains the IRQ, allocates the UDC and endpoint structures, optionally initializes a USB PHY from the `usb-phy` phandle, points `fotg210->reg` at the shared MMIO base, initializes the `usb_gadget`, creates EP0 plus four bidirectional data endpoints, allocates an internal EP0 request, resets/masks controller interrupts in `fotg210_init()`, disables PHY unplug detection, requests the IRQ, registers a PHY notifier, and calls `usb_add_gadget_udc()`.
+
+When a gadget function binds, `fotg210_udc_start()` stores the gadget driver, binds the PHY OTG peripheral if present, enables the chip, and enables device global interrupts. Endpoint enable programs FIFO direction/type/maxpacket and maps endpoint numbers to FIFO numbers. Queueing a request stores it on the endpoint list; EP0 may start DMA immediately for IN data or enable control OUT interrupts, while non-control endpoints enable FIFO interrupts when the queue transitions from empty to non-empty.
+
+The IRQ handler reads the group interrupt register and masks. Group 2 handles USB reset, suspend, resume, ISO sequence errors, zero-length packet notifications, and DMA errors. Group 0 handles control endpoint setup, IN, OUT, command abort, command end, and command failure; standard requests are handled locally, while unrecognized/class/vendor requests are forwarded to `driver->setup()`. Group 1 scans FIFO interrupts for EP1-EP4 and invokes IN or OUT FIFO handlers to perform DMA and complete requests.
+
+## State and Persistence Behavior
+UDC state is volatile and rooted in `struct fotg210_udc`: a spinlock, MMIO base, device/core pointers, optional PHY, `usb_gadget`, bound gadget driver, endpoint array, internal EP0 request/data, EP0 direction, and re-enumeration flag. Each `struct fotg210_ep` tracks queue, stall/wedge state, DMA use flag, endpoint number, type, direction, maxpacket, descriptor, and backpointer. Requests are wrapped in `struct fotg210_request` with a list node. Request completion removes list entries, updates status, drops the lock while calling `usb_gadget_giveback_request()`, and disables FIFO interrupts when queues empty.
+
+Hardware state is stored in device control, address, FIFO map/config, endpoint maxpacket/stall, DMA target/length/address, and interrupt mask/source registers. The driver does not persist state across remove; stop reinitializes the device block, clears the bound driver, and marks speed unknown. VBUS session changes are delegated to `fotg210_vbus()` in the shared core.
+
+## Dependencies and Integration Points
+The file depends on the Linux gadget framework, USB chapter 9 request definitions, DMA mapping API, platform IRQs, MMIO helpers, optional USB PHY/OTG APIs, and the shared FOTG210 wrapper in `fotg210.h`. It uses register definitions and local endpoint/request structures from `fotg210-udc.h`. It is selected through the broader FOTG210 core and gadget UDC Kconfig path, and it interoperates with composite/configfs or legacy gadget functions through standard `usb_gadget_driver` callbacks.
+
+## Risks
+The driver comments say bulk transfer support is the current focus, but endpoint capabilities advertise ISO, bulk, and interrupt for EP1-EP4. The DMA wait path busy-polls completion inside request handling, which can increase IRQ latency or deadlock if hardware fails to report completion; reset/error handling aborts DMA and resets FIFO, but the wait has no explicit timeout. `fotg210_start_dma()` unmaps every transfer with `DMA_TO_DEVICE` even when mapping OUT transfers with `DMA_FROM_DEVICE`, which is a suspicious direction mismatch. `fotg210_ep_release()` clears `ep->epnum` before calling `fotg210_reset_tseq()`, so reset sequencing for disabled nonzero endpoints should be reviewed. Several register updates OR new field values without clearing old field masks, risking stale FIFO/type/maxpacket configuration if endpoints are reconfigured.
+
+Control request handling is minimal and forwards many requests to the gadget driver; error paths stall CX. Queue and completion callbacks intentionally drop locks, so concurrent dequeue/disable/setup paths need stress coverage. The remove error path calls `iounmap(fotg210->reg)` even though probe assigns it from the shared `fotg->base`, so ownership of MMIO mapping must match the outer core.
+
+## Test Signals
+Build with `CONFIG_USB_FOTG210_UDC` and common gadget functions such as configfs loopback, serial, Ethernet, and mass storage. Runtime signals include clean `usb_add_gadget_udc()`, successful gadget binding/unbinding, VBUS connect/disconnect handling through the PHY notifier, EP0 enumeration, standard GET_STATUS/SET_ADDRESS/SET_CONFIGURATION behavior, data endpoint IN/OUT transfer completion, halt/wedge/clear-halt behavior, and clean unload. Stress tests should cover short OUT packets, zero-length packets, USB reset during DMA, request dequeue during IRQ handling, endpoint disable with pending requests, DMA mapping failures, and hardware that never raises DMA completion.

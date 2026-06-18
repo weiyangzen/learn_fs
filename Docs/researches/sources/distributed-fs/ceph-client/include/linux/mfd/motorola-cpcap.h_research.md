@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/motorola-cpcap.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/motorola-cpcap.h
+
+This Motorola CPCAP header is a regmap-oriented register definition file for the CPCAP PMIC/audio/USB/ADC/charger/RTC/LED/GPIO device. It defines vendor and revision constants/macros, then assigns real register offsets for interrupt banks, resource assignment, version, macro interrupts, power/clock/RTC, switchers and regulators, audio codec blocks, coulomb counter, ADC, USB/ULPI, GPIO, display/keypad/RGB/camera/BT/privacy LEDs, one-wire/GCAI, and test registers. It also provides inline helpers `cpcap_get_revision()` and `cpcap_get_vendor()` and declares `cpcap_sense_virq()`.
+
+Control flow is regmap based. Child drivers use these offsets with the shared regmap supplied by the MFD core. The inline helpers read `CPCAP_REG_VERSC1`, decode revision/vendor fields, and log via `dev_err()` on failure. `cpcap_sense_virq()` lets children query virtual IRQ sense state through the MFD/IRQ integration. State is hardware-resident across broad functional blocks, with no persistent software struct in this header.
+
+Dependencies include Linux device and regmap APIs, virtual IRQ mapping in the CPCAP core, and children for regulators, RTC, audio, power, ADC, USB, LEDs, and GPIO. Risks include broad register coverage with sparse offsets, historical comments noting undocumented revision/vendor bits, and direct child access needing correct register width/endian regmap configuration. Test signals include revision/vendor decode tests against known raw values, regmap read/write smoke tests for representative banks, IRQ sense tests, and child probe tests that verify offsets match hardware documentation.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/motorola-cpcap.h -->

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/dce/dce_i2c_hw.c
+
+Purpose: implements hardware-assisted I2C transactions for DCE/DCN DDC lines. It handles engine arbitration, GPIO DDC open/close, setup/reset/speed programming, transaction descriptor and circular-buffer programming, status polling, reply extraction, release workarounds, and generation-specific construction defaults.
+
+Important APIs and functions: `acquire_i2c_hw_engine()` maps a DDC line to `pool->hw_i2cs[]`, opens it in hardware mode, sets up the engine, and marks `pool->i2c_hw_buffer_in_use`. `dce_i2c_submit_command_hw()` sets speed, iterates payloads, submits each with MOT awareness, clears the pool flag, releases the engine, closes DDC, and nulls `ddc`. Static helpers include `execute_transaction()`, `get_channel_status()`, `process_transaction()`, `process_channel_reply()`, `set_speed()`, `setup_engine()`, `release_engine()`, and `cntl_stuck_hw_workaround()`. Constructors tune buffer size, default speed, setup limit, and send-reset length for DCE100/DCE112/DCN1/DCN2.
+
+Control flow: acquisition rejects null/unsupported DDC, out-of-range lines, global buffer contention, and DMCU/HW-owned engines. Setup deasserts reset, optionally powers I2C memory, enables clock fields, arbitrates SW access, selects the DDC line, programs time limit/reset length, and default speed. Payload submission checks buffer capacity, builds transaction registers, writes address/data bytes, starts the transaction when the last/MOT boundary is reached, waits until status changes from busy, and reads data for read payloads.
+
+State and persistence: persistent state includes `engine_keep_power_up_count`, `transaction_count`, `buffer_used_bytes`, `buffer_used_write`, `ddc`, speed/reference parameters, and resource-pool `i2c_hw_buffer_in_use`. Hardware register state controls arbitration, memory power, reset, speed, buffer indexes, and transaction count.
+
+Dependencies and integration: depends on resource pool, GPIO/DDC service, DC caps/debug flags, generated register metadata, and I2C command/payload structures. It is selected by `dce_i2c_submit_command()` when the DDC line advertises hardware support.
+
+Risks and test signals: risks include the global buffer flag not being cleared on unexpected paths, buffer accounting after read payloads, speed/prescale divide behavior, reset safety when the engine is not SW-owned, DMCU-only arbitration, low-power memory wake/sleep, and the stuck-control workaround. Test with multi-payload MOT reads/writes, payloads near buffer limit, HDCP speed restore, VBios/DDC contention, DCN reset-length debug flag, memory low-power enabled, and repeated hotplug EDID reads.

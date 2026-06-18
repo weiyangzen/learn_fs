@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/clk/tegra/clk-bpmp.c
+
+Exposes firmware-managed Tegra BPMP clocks through the Linux CCF. It discovers clock metadata from BPMP firmware, registers parent-aware clocks, and translates CCF operations into MRQ clock commands.
+
+`tegra_bpmp_clk_transfer()` constructs `MRQ_CLK` requests with command and clock ID encoded in `cmd_and_id`. Clock ops implement prepare/unprepare/is_prepared, recalc, determine/round, set_rate, and parent get/set using BPMP commands. Multiple `clk_ops` tables are selected based on firmware flags: gate-only, mux, rate, mux+rate, and read-only variants when BPMP denies state or rate/parent changes. Probe flow calls `CMD_CLK_GET_MAX_CLK_ID`, iterates IDs with `CMD_CLK_GET_ALL_INFO`, filters holes, recursively registers parents before children, and adds an OF hw provider with clock ID xlate.
+
+State is split between firmware and the Linux-side `struct tegra_bpmp_clk` records. Parent ID arrays map CCF parent indices to BPMP IDs. Registered clocks are devm-managed, while actual enable/rate/parent state persists in BPMP firmware/hardware. The driver depends on `soc/tegra/bpmp.h`, BPMP ABI structures, OF providers, and CCF hw registration. Device tree consumers request clocks by BPMP firmware ID. Firmware permission bits directly determine which operations Linux exposes.
+
+ABI packing is fragile because command payloads are copied into an anonymous union by offset. `tegra_bpmp_unregister_clocks()` assumes all `bpmp->clocks[i]` entries are valid, but registration may store error pointers. Parent discovery can leave NULL parent names if firmware references a missing parent. Test signals include BPMP clock enumeration logs, OF clock lookup by ID, rate/parent operation errors, and permission-bit behavior for read-only clocks.

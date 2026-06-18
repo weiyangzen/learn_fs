@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/rdma/config
+
+Purpose: declares kernel configuration dependencies for the RDMA RXE selftests: `CONFIG_TUN`, `CONFIG_VETH`, and `CONFIG_RDMA_RXE`. There is no control flow or persistence beyond kselftest config discovery. It integrates with build/test environments that use selftest `config` files to enable modules/features. Risks are incomplete dependency declaration for user-space tools such as `rdma`, `rping`, and `iproute2`, and module versus built-in availability differences. Test signals are the ability to load/use `rdma_rxe`, create TUN/veth devices, and run the four scripts without skip/failure due to missing kernel support.

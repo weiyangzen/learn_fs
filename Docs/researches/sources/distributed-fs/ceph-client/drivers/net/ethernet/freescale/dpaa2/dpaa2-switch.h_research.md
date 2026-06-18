@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/freescale/dpaa2/dpaa2-switch.h
+
+Purpose: Defines the private data model, constants, and cross-file interfaces for the DPAA2 Ethernet switch driver. It describes switch-wide state, per-port state, control-interface queues, FDB and ACL/mirror bookkeeping, buffer sizing, and exported helpers used by the main switch, ethtool, ACL, and mirror code.
+
+Important APIs, types, and functions: Key constants include `DPSW_IRQ_NUM`, VLAN state bits (`ETHSW_VLAN_MEMBER`, `ETHSW_VLAN_UNTAGGED`, `ETHSW_VLAN_PVID`, `ETHSW_VLAN_GLOBAL`), frame-size/headroom/buffer-pool sizing, store depth, ACL limits, and `ETHSW_FEATURE_MAC_ADDR`. Core structs are `dpaa2_switch_fq`, `dpaa2_switch_fdb`, `dpaa2_switch_acl_entry`, `dpaa2_switch_mirror_entry`, `dpaa2_switch_filter_block`, `ethsw_port_priv`, and `ethsw_core`. Inline helpers include `dpaa2_switch_acl_tbl_is_full()`, `dpaa2_switch_get_index()`, `dpaa2_switch_supports_cpu_traffic()`, `dpaa2_switch_port_is_type_phy()`, and `dpaa2_switch_port_has_mac()`. Declarations export port detection, VLAN add/delete, FDB iteration callback type, tc flower/matchall hooks, ACL entry add, and mirror offload/unoffload helpers.
+
+Control flow: The header has no standalone execution, but it shapes how the C files cooperate. `ethsw_core` is allocated once per DPSW object and owns MC/DPIO/DPBP resources and arrays of per-port objects. Each `ethsw_port_priv` is embedded in a netdev and points back to the core. Filter blocks can be private per port or shared by tc block binding; ACL entries and mirror entries are list-managed inside the block.
+
+State and persistence behavior: The declared state is volatile driver state only. VLAN bitmaps mirror hardware VLAN programming, `fdbs` and `filter_blocks` mirror hardware table allocation and sharing, `napi_users` gates shared control-interface NAPI, and `mac_lock` protects runtime updates to `port_priv->mac`. Nothing in the header defines persistent on-disk state.
+
+Dependencies and integration points: Includes Linux netdevice, bridge, VLAN, switchdev, packet classifier, FSL MC, DPAA2 IO, `dpaa2-mac.h`, and `dpsw.h`. It is the contract between `dpaa2-switch.c`, switch ethtool support, and tc ACL/mirror source files in the same directory.
+
+Risks: The per-port VLAN bitmap is sized to all VLAN IDs, so memory use scales with port count. `dpaa2_switch_supports_cpu_traffic()` enforces strict DPSW capabilities; newer firmware feature variants must continue to satisfy per-FDB flooding/broadcast and adequate FDB counts. `dpaa2_switch_port_is_type_phy()` calls into MAC helpers and assumes `port_priv->mac` is valid, so callers must respect setup/locking conditions. ACL capacity reserves `DPAA2_ETHSW_PORT_DEFAULT_TRAPS`; tc code must keep this reservation in sync with default trap installation.
+
+Test signals: Compile coverage across switch, ethtool, ACL, and mirror objects; probe with `DPSW_OPT_CTRL_IF_DIS`, non-per-FDB flooding/broadcast, and low `max_fdbs`; tc block sharing across ports; ACL table full behavior including default trap reservation; and runtime endpoint change while open/closed ports access `port_priv->mac`.

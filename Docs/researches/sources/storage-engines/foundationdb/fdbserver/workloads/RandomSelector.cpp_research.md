@@ -1,0 +1,11 @@
+## sources/storage-engines/foundationdb/fdbserver/workloads/RandomSelector.cpp
+
+`RandomSelectorWorkload` is a RYW correctness workload comparing a `ReadYourWritesTransaction` view against a regular transaction-maintained mirror. For each client it keeps two key prefixes: `b/` is mutated through RYW and `d/` is mutated through committed regular transactions. Reads and selector-based range reads from the RYW transaction are compared to reads from the mirror prefix.
+
+Important APIs are `ReadYourWritesTransaction`, `Transaction`, `KeySelectorRef`, `getRange` with forward/reverse selectors and limits, single-key get/set/clear, range clear, many atomic mutation types (`AddValue`, `AppendIfFits`, `And`, `Or`, `Xor`, `Max`, `Min`, `ByteMin`, `ByteMax`), and commit-unknown-result handling via random marker keys under `z/`.
+
+Setup seeds guard keys under `a/`, `c/`, and `e/` for each client. The main client loop first clears and repopulates both mutable prefixes with identical random values. It then runs a random number of operations against the RYW transaction while applying equivalent committed operations to the mirror. Operation types include sets, clears, range clears, gets, atomic ops, and random selector range reads with random equality flags, offsets, limits, byte-limit variable preparation, and direction. Mismatches log detailed `RanSelTestFailure` events and set `fail`. After committing the RYW transaction, it reads both prefixes and compares final values.
+
+State persists per-client prefixed test data. The mirror side commits throughout the operation sequence, while RYW changes are local until final commit, so commit errors and unknown results require careful handling. Risks include an apparent option typo where `maxOperationsPerTransaction` reads `"minOperationsPerTransaction"` instead of its own key, unused `randomByteLimit` in `getRange`, retries incrementing on successful transactions as written at the loop tail, and final key comparison focusing values rather than transformed key prefixes.
+
+Integration points are the RYW mutation overlay, key selectors, atomic mutation semantics, conflict/retry behavior, and transaction error handling. Test signals are the `fail` flag returned by `check`, transaction/retry metrics, and detailed trace logs for mismatched reads or final contents.

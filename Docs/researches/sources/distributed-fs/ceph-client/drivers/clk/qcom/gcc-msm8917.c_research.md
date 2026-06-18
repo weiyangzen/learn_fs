@@ -1,0 +1,31 @@
+# sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-msm8917.c
+
+## Purpose
+This file implements the Qualcomm GCC provider for MSM8917-family SoCs, with compatible data for `qcom,gcc-msm8917`, `qcom,gcc-qm215`, `qcom,gcc-msm8937`, `qcom,gcc-msm8940`, and `qcom,gcc-sdm439`. It publishes the family clock tree, resets, and GDSC power domains for APSS/bus, BLSP, camera, display, GPU, video, storage, crypto, USB, and related blocks, while applying per-SoC differences in available clock IDs, GPU parent choices, PLL ranges, and multimedia frequency tables.
+
+## Important APIs, Types, And Functions
+The driver uses qcom CCF building blocks: `struct clk_alpha_pll`, `struct clk_alpha_pll_postdiv`, `struct clk_pll`, `struct clk_regmap`, `struct clk_rcg2`, `struct clk_branch`, `struct gdsc`, `struct qcom_reset_map`, `struct qcom_cc_desc`, and parent/frequency map helpers. `gpll0_sleep_clk_src`, `gpll0_early`, `gpll0`, `gpll3_early`, `gpll3`, `gpll4_early`, `gpll4`, `gpll6_early`, and `gpll6` define the main PLL sources. `gpll3_early_config` is programmed explicitly at probe time with `clk_alpha_pll_configure()`.
+
+Most RCGs and branches mirror hardware domains: APSS AHB, BLSP1/2 I2C/SPI/UART, byte/esc/pixel/display clocks, camera GP/CCI/CPP/CSI/CSIPHY/CSIPHY timer/MCLK/VFE/JPEG clocks, crypto, GPU `gfx3d`, GP clocks, PDM, SDCC apps and SDCC1 ICE, USB HS system/PHY/AHB, Venus/Vcodec, and SMMU/TBU/DCC/QDSS support. `gcc_msm8917_clocks[]`, `gcc_msm8937_clocks[]`, and `gcc_msm8940_clocks[]` expose different sparse clock-ID sets from `dt-bindings/clock/qcom,gcc-msm8917.h`. `gcc_msm8917_resets[]` exposes a small reset set for CAMSS micro, MSS, USB/PHY, and MDSS.
+
+`msm8937_clock_override()` and `sdm439_clock_override()` mutate selected static descriptors before registration to match SoC-specific GPLL3, VFE, CPP, Vcodec, CSI PHY timer, USB, and GPU behavior. `gcc_msm8917_probe()` chooses the descriptor from OF match data, applies those overrides when needed, maps the register block with `qcom_cc_map()`, configures GPLL3, and finishes with `qcom_cc_really_probe()`.
+
+## Control Flow
+The platform driver registers at `core_initcall()` and matches one of five compatibles. Probe obtains `struct qcom_cc_desc` from `of_device_get_match_data()`. For QM215 it changes the GFX3D parent map to the QM215-specific map. For MSM8937 and MSM8940 it applies `msm8937_clock_override()` and then selects the correct GFX3D frequency table. For SDM439 it applies `sdm439_clock_override()`, including the SDM439 GFX3D table. MSM8917 uses the base descriptors without mutation.
+
+After compatibility adjustment, probe maps the GCC MMIO region through `qcom_cc_map()`. A mapping error returns immediately. The driver then configures `gpll3_early` from `gpll3_early_config`; the base configuration is a 1 GHz-class alpha PLL setup, while MSM8937/MSM8940 adjust GPLL3 to a 750 MHz configuration and narrower VCO table. Finally `qcom_cc_really_probe()` registers the clocks, resets, and GDSCs from the chosen descriptor. Runtime operations are generic CCF/qcom ops: alpha PLL ops handle dynamic PLL updates and postdividers, RCG2 ops select parents/dividers from rate tables, branch ops gate leaves and check halt bits, and GDSC ops manage power domains.
+
+## State And Persistence
+State is held in static descriptor objects until registration and then in GCC hardware registers. Probe-time overrides mutate global static tables, so the driver assumes one SoC-compatible instance per kernel boot; registering multiple different compatibles in one kernel instance would be unsafe because the mutations are not per-device copies. Hardware state includes PLL configuration and vote bits, RCG config/cmd registers, branch enable and halt bits, BCR reset lines, and GDSC power-domain registers.
+
+`gpll3_early` supports dynamic update and `gpll3` has `CLK_SET_RATE_PARENT`, making it a rate source for several multimedia clocks. Display byte/pixel sources and GFX3D also propagate rates to parents in selected paths. There is no explicit suspend/resume path; clock and power-domain persistence is delegated to the common clock framework, qcom PLL/branch/RCG helpers, GDSC support, firmware, and hardware retention.
+
+## Dependencies And Integration Points
+The driver depends on `dt-bindings/clock/qcom,gcc-msm8917.h`, device-tree compatibles for the five supported SoCs, indexed parent clocks for XO, sleep clock, and DSI PLL byte/output inputs, and the qcom common clock, alpha PLL, branch, RCG, reset, and GDSC helpers. Unlike the MSM8916 driver, the parent data uses DT parent indexes for external inputs rather than registering fixed board clock names locally.
+
+Consumers are the platform's APSS/bus fabric, BLSP1/2 controllers, CAMSS, MDSS, Adreno/Oxili, Venus, SDCC/eMMC/SD plus inline crypto, USB HS/QUSB2 PHY, crypto/prng, MSS, SMMU/TBU, QDSS/DCC, PDM, and miscellaneous GP clocks. Descriptor selection controls both what clock IDs exist and which GDSCs are exported: MSM8917/QM215 use the base GDSC set, while MSM8937/MSM8940/SDM439 add the Oxili CX domain and use the MSM8937-flavored Oxili GX domain.
+
+## Risks And Test Signals
+The highest-risk behavior is probe-time mutation of shared static descriptors. A missed override can use an invalid rate table or parent map for a derivative SoC; an unintended override can affect later registration if the driver were ever instantiated for more than one compatible. Sparse clock tables are also risky because MSM8937/MSM8940-only IDs, dual DSI clocks, CSI2/VFE1 clocks, Oxili AON/timer clocks, IPA TBU, and extra BLSP2 QUP4 entries must match the binding exactly. PLL risk centers on GPLL3 configuration and VCO limits; wrong values can destabilize camera, display, video, or GPU rates.
+
+Useful test signals include clean probe for each compatible, GPLL3 rate matching the selected SoC configuration, `clk_summary` showing only the expected ID set for the matched descriptor, BLSP1/2 UART/I2C/SPI operation, SDCC1/2 and SDCC1 ICE operation, USB HS enumeration, MDSS byte/pixel/esc clocks with DSI parents, CAMSS with CSI0/1/2 and VFE0/1 where supported, Venus and GPU power-domain transitions, reset controls for MSS/USB/MDSS/CAMSS micro, and rate-change tests for GFX3D/VFE/CPP/Vcodec confirming the compatible-specific tables are active.

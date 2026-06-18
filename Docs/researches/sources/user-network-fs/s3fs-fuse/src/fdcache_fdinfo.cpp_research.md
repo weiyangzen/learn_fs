@@ -1,0 +1,15 @@
+# sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.cpp
+
+Purpose: Implements `PseudoFdInfo`, the per-pseudo-fd state holder for open flags and multipart upload bookkeeping. It tracks upload id, duplicated upload fd, uploaded part list, ETag storage, async upload instruction count, last thread result, and completion semaphore.
+
+Important APIs and functions: Descriptor helpers include constructor/destructor, `Set`, `Writable`, `Readable`, `OpenUploadFd`, and `CloseUploadFd`. Upload state helpers include `ClearUploadInfo`, `InitialUploadInfo`, `PreMultipartUploadRequest`, `GetUploadId`, `GetEtaglist`, `AppendUploadPart`, `InsertUploadPart`, `ParallelMultipartUpload`, `ParallelMultipartUploadAll`, `WaitAllThreadsExit`, and `CancelAllThreads`. Stream/mixed planning helpers are `UploadBoundaryLastUntreatedArea`, `ExtractUploadPartsFromUntreatedArea`, and `ExtractUploadPartsFromAllArea`.
+
+Control flow: Construction obtains a pseudo-fd from `PseudoFdManager` if a physical fd is supplied. Multipart starts with `PreMultipartUploadRequest`, which obtains an upload id and stores it. Parts are appended sequentially for no-cache upload or inserted by part number for parallel mixed/copy upload. `ParallelMultipartUpload` duplicates the fd, creates ETag entities that remain stable for worker threads, schedules upload/copy part requests, increments `instruct_count`, and later `WaitAllThreadsExit` drains semaphore completions. Stream upload aligns the last untreated area to multipart boundaries, cancels overlapping previously uploaded parts, uploads full boundary parts, and leaves remainders untreated.
+
+State and persistence behavior: State is in-memory and protected by `upload_list_lock`. `upload_id` means a multipart upload is active. `upload_list` stores `filepart` records with ETag pointers owned by `etag_entities`. No disk persistence is written here, but remote S3 multipart state is created and must be completed or aborted by `FdEntity`.
+
+Dependencies and integration points: Uses `PseudoFdManager`, `FdEntity`, `UntreatedParts`, `types.h` multipart structs, `Semaphore`, `ThreadPoolMan`, and `s3fs_threadreqs` request functions. It is tightly coupled to `FdEntity` stream and flush paths.
+
+Risks: Multipart correctness depends on continuous part ranges, stable ETag pointers, correct part-number ordering, and waiting when re-uploading an in-flight part. `CancelAllThreads` relies on worker cooperation through `last_result = -ECANCELED`. `CloseUploadFd` does not reset `upload_fd` after close, so callers must avoid reusing the object in a way that assumes it is `-1` unless `ResetUploadInfo` semantics remain sufficient. Boundary math must respect S3 minimum part sizes and 10,000-part limits handled higher up.
+
+Test signals: Integration coverage comes from multipart upload/copy/mix, streamupload, non-boundary writes, and skipped-write tests. Direct unit coverage for `ExtractUploadPartsFromAllArea` and cancellation ordering would be valuable because most failures appear only under multipart race/error conditions.

@@ -1,0 +1,11 @@
+# sources/cloud-native/nydus/storage/src/device.rs
+
+Purpose: exposes public blob storage APIs used by RAFS callers: blob metadata (`BlobInfo`), chunk metadata traits, IO descriptors/vectors/ranges, prefetch requests, direct blob-object access, and `BlobDevice`, the wrapper that routes reads and prefetches to per-blob `BlobCache` objects.
+
+Important APIs and control flow: `BlobFeatures` and `BlobChunkFlags` define compatibility, compression, encryption, tar/toc, zran, batch, and checksum flags. `BlobInfo` stores blob ids, sizes, chunk counts, compression/digest/cipher info, v6 metadata locations, ToC/meta digests, fscache file handles, and special inlined-meta path handling. `compressed_data_size` interprets layout differences across separated blobs, tar/toc, RAFS v5/v6, and tar headers. `BlobChunkInfo` abstracts chunk layout and integrity fields; `BlobIoChunk` erases concrete chunk types. `BlobIoDesc`, `BlobIoVec`, `BlobIoMerge`, and `BlobIoRange` describe and merge user/internal IO. `BlobDevice::new` asks `BLOB_FACTORY` for caches, `update` swaps cache vectors through `ArcSwap`, `read_to` wraps a `BlobIoVec` as `FileReadWriteVolatile`, `prefetch` dispatches configured and IO-derived prefetches, `fetch_range_synchronous` uses direct `BlobObject`, and `all_chunks_ready` checks cache maps.
+
+State and persistence behavior: `BlobDevice` holds an atomically swappable `Arc<Vec<Arc<dyn BlobCache>>>` and a fixed `blob_count`. Persistent cache state is delegated to each cache. `BlobInfo` can store an fscache `File`, mutable meta path under `Mutex`, and cipher context.
+
+Dependencies and integration points: integrates with `ConfigV2`, `BLOB_FACTORY`, FUSE zero-copy writer traits, volatile file buffers, Nydus compression/crypto/digest types, and RAFS v5 chunk extension trait.
+
+Risks and test signals: `BlobIoVec::append` only asserts blob id equality, so tests document that same id with different index can merge. `set_prefetch_info` truncates offsets/sizes to `u32`. `read_to` assumes all descriptors target one blob. Tests cover feature validation, tarfs detection, blob info setters/layout helpers, IO chunk delegation, continuity/gap logic, large vector append, meta-id extraction, digest/toc getters, and raw id trimming.

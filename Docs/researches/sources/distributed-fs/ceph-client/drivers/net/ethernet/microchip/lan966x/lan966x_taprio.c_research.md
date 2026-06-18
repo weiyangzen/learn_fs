@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/drivers/net/ethernet/microchip/lan966x/lan966x_taprio.c
+
+Purpose: this file offloads TAPRIO time-aware shaper schedules to the LAN966x TAS hardware. It validates tc-taprio schedules, manages per-port hardware lists, allocates global gate-control-list entries, computes safe base times from the PHC, and initializes/deinitializes TAS state.
+
+Important APIs and functions: `lan966x_taprio_add()` validates and installs a schedule. `lan966x_taprio_del()` shuts schedules down. `lan966x_taprio_speed_set()` updates the TAS profile link-speed field used for guard band calculations. `lan966x_taprio_init()` configures TAS state-machine revisit delay, list count, always-guard-band mode, and per-port profile numbers. `lan966x_taprio_deinit()` tears schedules down for all ports.
+
+Control flow: each port owns two list slots, allowing pending/admin/operating transitions. `lan966x_taprio_find_list()` prefers replacing a pending list, then an admin list, while tracking the currently operating list as obsolete target. `lan966x_taprio_check()` rejects unsupported cycle extensions, too many GCL entries, invalid intervals, unsupported commands, total interval overflow, and cycle times shorter than interval sum. `lan966x_taprio_gcl_free_get()` scans all non-admin lists to mark globally used GCL entries. `lan966x_taprio_gcl_setup()` links free entries into a circular list. `lan966x_taprio_new_base_time()` uses the PTP clock to move base time safely into the future before programming TAS start registers.
+
+State and persistence: state is mostly in QSYS TAS registers: list state, selected list/GCL entry, list base, GCL command/time/next pointer, base time, cycle time, obsolete list, profile link speed, and gate state. No durable software copy of the schedule is kept here. Shutdown restores all queues open if an operating list is stopped with gates closed.
+
+Dependencies and integration: integrates with tc TAPRIO offload via `lan966x_tc.c`, PTP PHC time for scheduling, port link-up speed updates, and generated QSYS TAS register macros.
+
+Risks: list-state reads are selected by writing `QSYS_TAS_CFG_CTRL_LIST_NUM`, so concurrent TAS operations would need serialization by higher-level context. GCL allocation is global and depends on accurately walking circular lists. Time arithmetic mixes `ktime_t`, u32 cycle times, and current PHC time; bad base-time calculation can miss the hardware activation window. Test signals include valid/invalid schedule replacement, pending-to-operating transitions, deletion while gates are closed, GCL exhaustion across ports, link speed changes, base times in past/near future/far future, and packet gating observations with PTP-synchronized traffic.

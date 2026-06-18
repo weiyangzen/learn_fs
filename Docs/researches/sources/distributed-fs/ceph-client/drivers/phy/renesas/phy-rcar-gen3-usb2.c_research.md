@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+
+## Purpose
+This driver exposes the Renesas R-Car Gen3 and related RZ USB2 PHY block as up to four generic PHY instances for combined host, OHCI, EHCI, and HSUSB consumers. It also owns OTG role switching for channels with a valid `dr_mode`, VBUS control through either an external regulator or an internally registered regulator, optional extcon publication, reset/runtime PM handling, and SoC-specific register quirks for RZ/G2L, RZ/G3S, RZ/T2H, and RZ/V2H.
+
+## Important APIs, Types, And Functions
+`struct rcar_gen3_chan` is the channel-level state: MMIO base, match data, reset, regulator, extcon, four `struct rcar_gen3_phy` children, OTG flags, `dr_mode`, work item, and a spinlock. `struct rcar_gen3_phy_drv_data` selects PHY ops and variant booleans such as `no_adp_ctrl`, `init_bus`, `utmi_ctrl`, and `vblvl_ctrl`. `rcar_gen3_phy_usb2_xlate()` maps DT phandle args to one of the four PHYs and keeps old zero-argument bindings working. The generic PHY callbacks are `rcar_gen3_phy_usb2_init()`, `exit()`, `power_on()`, and `power_off()`, with `rz_g1c_phy_usb2_ops` omitting power callbacks. OTG role helpers include `rcar_gen3_init_otg()`, `rcar_gen3_device_recognition()`, `role_show()`, `role_store()`, and `rcar_gen3_phy_usb2_irq()`.
+
+## Control Flow
+Probe maps registers, detects a unified `dr_mode` across the four PHY phandles, allocates/registers an extcon if OTG role handling is active, deasserts optional shared resets, enables runtime PM, initializes bus settings for variants that need it, creates four PHY instances, optionally selects a mux state, configures VBUS supply behavior, requests an optional shared IRQ, registers the PHY provider, and creates the `role` sysfs attribute for OTG channels. PHY init enables USB host/common interrupts, programs timing registers once per channel, initializes OTG only for PHYs with host interrupt bits, and applies variant-specific SIDDQ/UTMI setup. Power-on enables VBUS when external, toggles PLL reset only for the first powered PHY, and marks the child powered; power-off reverses this when the last child powers down. IRQ handling checks OBINT status under the spinlock, clears the appropriate bits, reruns device recognition, and updates VBUS level control.
+
+## State And Persistence
+State is in memory only: initialized/powered flags per PHY, channel OTG mode, extcon host state, and regulator/reset ownership. Hardware state persists in USB2 registers until reset or suspend. The `role` sysfs file is transient and removed in `remove()`. Delayed or asynchronous behavior is limited to a work item used to publish extcon state outside the spinlocked path.
+
+## Dependencies And Integration Points
+The driver integrates with generic PHY, DT OF matching, `of_usb_get_dr_mode_by_phy()`, extcon provider APIs, regulator consumer and regulator driver APIs, reset controls, optional mux consumer support, runtime PM, platform IRQs, and USB controller PHY consumers. Compatible strings bind SoC-specific data for `renesas,rcar-gen3-usb2-phy`, several R-Car/RZ part numbers, and `renesas,rzg2l-usb2-phy`.
+
+## Risks And Test Signals
+Risk concentrates around OTG pin availability, VBUS ownership, and shared multi-PHY state. Invalid or conflicting `dr_mode` values disable OTG behavior. IRQ status clearing differs for `vblvl_ctrl` variants, so regressions can break cable changes only on specific SoCs. Runtime PM calls inside regulator and IRQ paths require clocks/resets to be active. Test signals include successful probe with four PHYs, correct phandle translation, host/device role changes through extcon and `role`, VBUS enable/disable behavior with both external and internal regulators, suspend/resume reset restoration, and multi-consumer power sequencing where only the first/last PHY toggles PLL reset.

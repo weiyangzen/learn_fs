@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/cpupower/bindings/python/test_raw_pylibcpupower.py -->
+# sources/distributed-fs/ceph-client/tools/power/cpupower/bindings/python/test_raw_pylibcpupower.py
+
+## Purpose
+Smoke-test script for the raw Python libcpupower bindings. It calls cpuidle state count, attempts to disable CPU0 C-state 0, checks whether it is disabled, and exercises pointer-style topology allocation/access.
+
+## Important APIs, Types, And Functions
+Control flow imports `raw_pylibcpupower`, prints results for each call, and uses Python `match` to decode documented return values. State may be changed by `cpuidle_state_disable(0, 0, 1)`, which can disable an idle state if run with permission. Dependencies are Python 3.10+ for `match`, installed raw bindings, sysfs cpuidle support, and possibly root. Risks include mutating CPU idle policy without restoring it, assuming CPU0/state0 exists, virtual machine failures, and no assertions/exit status for automated testing. Test signals are successful import, expected negative returns without privilege, topology count greater than zero, and manual restoration of C-state when needed.
+
+## Control Flow
+Control flow imports `raw_pylibcpupower`, prints results for each call, and uses Python `match` to decode documented return values. State may be changed by `cpuidle_state_disable(0, 0, 1)`, which can disable an idle state if run with permission. Dependencies are Python 3.10+ for `match`, installed raw bindings, sysfs cpuidle support, and possibly root. Risks include mutating CPU idle policy without restoring it, assuming CPU0/state0 exists, virtual machine failures, and no assertions/exit status for automated testing. Test signals are successful import, expected negative returns without privilege, topology count greater than zero, and manual restoration of C-state when needed.
+
+## State And Persistence
+Control flow imports `raw_pylibcpupower`, prints results for each call, and uses Python `match` to decode documented return values. State may be changed by `cpuidle_state_disable(0, 0, 1)`, which can disable an idle state if run with permission. Dependencies are Python 3.10+ for `match`, installed raw bindings, sysfs cpuidle support, and possibly root. Risks include mutating CPU idle policy without restoring it, assuming CPU0/state0 exists, virtual machine failures, and no assertions/exit status for automated testing. Test signals are successful import, expected negative returns without privilege, topology count greater than zero, and manual restoration of C-state when needed.
+
+## Dependencies And Integration Points
+Control flow imports `raw_pylibcpupower`, prints results for each call, and uses Python `match` to decode documented return values. State may be changed by `cpuidle_state_disable(0, 0, 1)`, which can disable an idle state if run with permission. Dependencies are Python 3.10+ for `match`, installed raw bindings, sysfs cpuidle support, and possibly root. Risks include mutating CPU idle policy without restoring it, assuming CPU0/state0 exists, virtual machine failures, and no assertions/exit status for automated testing. Test signals are successful import, expected negative returns without privilege, topology count greater than zero, and manual restoration of C-state when needed.
+
+## Risks And Edge Cases
+Control flow imports `raw_pylibcpupower`, prints results for each call, and uses Python `match` to decode documented return values. State may be changed by `cpuidle_state_disable(0, 0, 1)`, which can disable an idle state if run with permission. Dependencies are Python 3.10+ for `match`, installed raw bindings, sysfs cpuidle support, and possibly root. Risks include mutating CPU idle policy without restoring it, assuming CPU0/state0 exists, virtual machine failures, and no assertions/exit status for automated testing. Test signals are successful import, expected negative returns without privilege, topology count greater than zero, and manual restoration of C-state when needed.
+
+## Test Signals
+Control flow imports `raw_pylibcpupower`, prints results for each call, and uses Python `match` to decode documented return values. State may be changed by `cpuidle_state_disable(0, 0, 1)`, which can disable an idle state if run with permission. Dependencies are Python 3.10+ for `match`, installed raw bindings, sysfs cpuidle support, and possibly root. Risks include mutating CPU idle policy without restoring it, assuming CPU0/state0 exists, virtual machine failures, and no assertions/exit status for automated testing. Test signals are successful import, expected negative returns without privilege, topology count greater than zero, and manual restoration of C-state when needed.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/cpupower/bindings/python/test_raw_pylibcpupower.py -->

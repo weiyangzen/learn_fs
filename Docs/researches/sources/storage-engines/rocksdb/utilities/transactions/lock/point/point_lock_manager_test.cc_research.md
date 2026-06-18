@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/utilities/transactions/lock/point/point_lock_manager_test.cc
+
+- **Purpose:** Main targeted unit test suite for `PointLockManager` and `PerKeyPointLockManager`, covering diagnostics, wait ordering, upgrade/downgrade behavior, expiration, and race conditions.
+- **Important APIs/types/functions:** Defines `SpotLockManagerTestParam`, `SpotLockManagerTest`, and `PerKeyPointLockManagerTest`. Uses `BlockUntilWaitingTxn`, `TryBlockUntilWaitingTxn`, sync point dependencies/callbacks, `TryLock`, `UnLock`, `GetPointLockStatus`, and `GetDeadlockInfoBuffer`.
+- **Control flow:** Parameterized spot tests run both managers with selected deadlock timeouts. Per-key-specific tests set up precise waiter queues and use sync points to stop threads between wakeup and lock acquisition, creating deterministic race windows.
+- **State and persistence behavior:** Tests in-memory manager state and transaction waiting/deadlock metadata; the fixture opens a temporary TransactionDB but does not validate persisted data.
+- **Dependencies:** Includes `point_lock_manager_test.h` and `any_lock_manager_test.h`, plus sync point/test harness threading utilities.
+- **Integration points:** Instantiates common `AnyLockManagerTest` for base and per-key managers, and a larger `PointLockCorrectnessCheckTestSuite` for combinations of per-key flag and deadlock timeout.
+- **Risks:** Several tests intentionally depend on implementation-specific sync point names and thread scheduling. Retry loops reduce flakiness around lock expiration. The file assumes `joinable()` is a meaningful proxy for blocked test threads after controlled sync points.
+- **Test signals:** Covers missing CF errors, status inspection, unlock/relock, depth-exceeded deadlocks, upgrade prioritization with exclusive/shared waiters, multiple-upgrade deadlocks, per-key FIFO/fairness/efficiency, lock timeout, expiration stealing, waiter deadlocks, shared-lock and upgrade race conditions, catch-22 overhead, upgrade ordering, and downgrade wakeups.

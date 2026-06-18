@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/usb/asix.h
+
+Purpose: Provides the shared register definitions, data structures, and function declarations for ASIX AX8817x/AX88772/AX88178/AX88172A USB Ethernet drivers. It is consumed by `asix_common.c`, `asix_devices.c`, and `ax88172a.c`.
+
+Important APIs, types, and constants: Register command constants cover MII access, EEPROM read/write, RX control, node ID, PHY ID, medium mode, monitor mode, GPIO, software reset, PHY selection, and QCT control. Bit definitions cover chip codes, PHY selection, WoL monitor bits, medium mode flags, RX control flags and maximum frame buffer sizes, GPIO pins, EEPROM magic/length, embedded PHY address, and ASIX software reset modes. `struct asix_data` is a compact legacy per-device storage area overlaid on `usbnet->data`. `struct asix_rx_fixup_info` stores cross-URB RX framing state. `struct asix_common_private` holds common AX88772 state including reset/suspend/resume callbacks, saved PHY registers, RX fixup state, MDIO bus, PHY devices, phylink handle/config, PHY address, embedded-PHY flag, and chip code.
+
+Control flow: This header does not execute code. It defines the command and state vocabulary used by shared helpers and device-specific bind/reset/link operations. TX/RX framing helpers use the RX fixup structure and headroom/tailroom assumptions. MDIO, EEPROM, WoL, multicast, and MAC-address helpers exported from `asix_common.c` are declared here for reuse by the ASIX device variants.
+
+State and persistence: `asix_data` persists in the fixed usbnet `data` field for older device-specific state such as multicast filter bytes, MAC address shadow, PHY mode, and LED mode. `asix_common_private` or AX88172A private state persists via `driver_priv` for newer devices and owns resources that must be released on unbind. `asix_rx_fixup_info` can hold a partially assembled skb across URBs and must be reset/freed when framing loses synchronization or the device is unbound.
+
+Dependencies and integration: Includes module, netdevice, ethtool, MII, USB, usbnet, PHY, phylink, CRC32, VLAN, workqueue, and net selftest headers. Declares the externally defined `ax88172a_info` so `asix_devices.c` can include AX88172A products in the same `asix` module.
+
+Risks and test signals: Risks include the explicit size constraint on `struct asix_data`, mismatch between header prototypes and helper implementations, chip/reset bit confusion across similar ASIX variants, and partial-frame state leaks. Test compile coverage for all ASIX objects, static size expectations for `asix_data`, RX fixup reset/free behavior, MDIO/EEPROM/WoL helper calls from each device family, and module builds where `ax88172a_info` is linked into `asix.o`.

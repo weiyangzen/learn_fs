@@ -1,0 +1,18 @@
+# sources/object-store/apache-ozone/hadoop-hdds/common/src/main/resources/ozone-default.xml
+
+## Purpose
+`ozone-default.xml` is the shipped Hadoop-style default configuration catalog for Ozone and HDDS. It declares about 535 properties with names, values, tags, and descriptions. The file explicitly tells operators not to edit it directly and to override values in `ozone-site.xml`. It is loaded as a classpath resource by Ozone/Hadoop configuration objects and acts as the default contract for datanode, SCM, OM, S3 Gateway, Recon, security, HTTP, Ratis, RocksDB, snapshot, and client behavior.
+
+## Important configuration surface
+The file is organized by operational areas rather than code APIs. Important groups include container and datanode storage settings such as `ozone.container.cache.size`, `hdds.datanode.dir`, `hdds.datanode.container.db.dir`, container IPC and Ratis ports, datastream toggles, chunk write sync, and datanode volume choosing policy. SCM defaults cover block and chunk sizes, container layout and size, pipeline limits, heartbeat timeouts, safe mode thresholds, placement policies, HA service ids, Ratis ports, gRPC ports, and admin monitor intervals. OM defaults cover HA node maps, DB directories, HTTP and HTTPS endpoints, handler pools, Ratis settings, open key and MPU cleanup, compaction, snapshot and snapshot diff services, bucket layout, quota upgrade recalculation, multitenancy, key provider cache behavior, and hierarchical resource lock limits.
+
+Security and integration defaults include Kerberos principal and keytab paths, HTTP auth type defaults, ACL toggles, crypto compliance mode, X.509 key and certificate names, certificate rotation timing, block/container token switches, TLS providers, HTTPS keystore resources, secret key rotation properties, and protocol ACL allowlists. Client, S3G, Recon, OzoneFS, Freon, metrics, network topology, and performance properties provide the rest of the integration surface.
+
+## Control flow and state behavior
+The XML itself is declarative. Control flow appears when `OzoneConfiguration`, `LegacyHadoopConfigurationSource`, or Hadoop `Configuration` loads `ozone-default.xml`, merges user resources, and resolves typed values for callers. State is persisted by consumers: directory properties determine where OM, SCM, Recon, datanode metadata, RocksDB databases, Ratis logs, snapshots, certificates, and secret key files live. Time and size strings are parsed later by configuration readers, so units such as `ms`, `s`, `m`, `h`, `d`, `MB`, and `GB` are part of the runtime contract.
+
+## Dependencies and integration points
+This resource depends on Hadoop configuration XML conventions and tag values defined by `org.apache.hadoop.hdds.conf.ConfigTag`. Many values name Java implementation classes, including placement policies, deletion choosing policies, Ozone transport factories, DNSToSwitchMapping, ACL authorizer, and trash policy. Ratis properties integrate with Apache Ratis, security properties integrate with Kerberos, TLS, X.509, and SCM secret key services, and Recon properties integrate with OM and SCM snapshot/delta APIs.
+
+## Risks and test signals
+The largest risks are invalid XML, stale key names, unsafe defaults, unit mismatches, misspelled implementation class names, and defaults that conflict with generated configuration metadata. The companion tests in this subset exercise tag lookup and override behavior, compliance-mode whitelisting, annotated object defaults, and resilience when generated default XML is absent. Changes here should be validated with configuration loading tests and targeted daemon or integration tests for the affected subsystem.

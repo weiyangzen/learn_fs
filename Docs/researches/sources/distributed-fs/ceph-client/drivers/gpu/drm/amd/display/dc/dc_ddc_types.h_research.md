@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/dc_ddc_types.h
+
+Purpose: this header defines the DDC, I2C, and AUX transaction data model used by DC link detection, EDID reads, DPCD access, and dongle classification. It is a pure type contract without executable code.
+
+Important APIs, types, and functions: `enum aux_transaction_type` distinguishes native DP AUX from I2C-over-AUX. `enum i2caux_transaction_action` encodes read/write/status actions, MOT variants, and DP read/write opcodes. `aux_request_transaction_data`, `aux_reply_transaction_data`, and `aux_payload` describe low-level AUX transfers, including address, length, data pointer, reply pointer, MOT/write flags, status-update writes, and defer delay. I2C is described by `i2c_payload`, `i2c_command_engine`, and `i2c_command`, with `DDC_I2C_COMMAND_ENGINE` defaulting to software I2C. `ddc`, `ddc_service`, `ddc_flags`, `ddc_wa`, `ddc_transaction_type`, and `display_dongle_type` hold GPIO pins, transaction mode, cached EDID buffer, link context, workaround flags, and dongle category.
+
+Control flow: callers build one or more I2C payloads or a single AUX payload, then pass them into DDC/link helpers declared elsewhere. Reply status is returned through `aux_reply_transaction_data` or `aux_payload.reply`; EDID reads cache into `ddc_service.edid_buf` up to `DC_MAX_EDID_BUFFER_SIZE`. Transaction type records whether the service is using native I2C, I2C-over-AUX, defer-aware I2C-over-AUX, or retry-defer behavior.
+
+State and persistence: state is runtime only. `ddc_service` persists link-local DDC state across detection operations: flags such as `EDID_QUERY_DONE_ONCE`, internal-display classification, repeated-start forcing, stress-read mode, workaround bits, dongle type, current address, and the EDID cache. No disk persistence exists.
+
+Dependencies and integration points: depends on GPIO abstractions, `dc_context`, `dc_link`, and link/DDC implementations that perform actual AUX/I2C transactions. It is consumed by DC public APIs such as `dc_submit_i2c()`, `dc_link_aux_transfer_raw()`, link detection, EDID parsing, DPCD reads, and DP/HDMI dongle handling.
+
+Risks and test signals: transfer payloads store raw data pointers, so lifetime and buffer length validation are caller responsibilities. AUX data size defaults to 16 bytes, but DPCD/EDID flows must segment larger operations correctly. Reply enums combine AUX and I2C-over-AUX status bits, so decode mistakes can break retry/defer behavior. Test signals include EDID block reads, DPCD native reads/writes, I2C-over-AUX defer retries, HPD disconnect replies, software I2C fallback, repeated-start devices, and dongle type detection.

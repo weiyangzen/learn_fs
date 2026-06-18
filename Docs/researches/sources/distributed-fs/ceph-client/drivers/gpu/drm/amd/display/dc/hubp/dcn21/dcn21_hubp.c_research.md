@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/hubp/dcn21/dcn21_hubp.c
+
+Purpose: implements DCN2.1 HUBP specialization. It adds host-VM deadline workaround logic, DCN21 requestor field mapping, DCN21 aperture programming, a DMCUB-assisted video flip workaround path, expanded DML validation, viewport programming, init chicken-bit setup, and a DCN21 `hubp_funcs` table.
+
+Important APIs and functions: exported functions include `apply_DEDCN21_142_wa_for_hostvm_deadline`, `hubp21_program_deadline`, `hubp21_program_requestor`, and `hubp21_construct`. Private functions include `hubp21_setup`, `hubp21_set_viewport`, `hubp21_set_vm_system_aperture_settings`, `hubp21_validate_dml_output`, `program_surface_flip_and_addr`, `dmcub_PLAT_54186_wa`, `hubp21_program_surface_flip_and_addr`, and `hubp21_init`.
+
+Control flow: setup calls DCN2 vready logic, DCN21 requestor programming, then DCN21 deadline programming. The deadline path delegates common DCN2 programming and then applies DEDCN21-142 by only lowering host-VM deadline registers when the new value is more aggressive or the hardware value is uninitialized; chroma flip PTE/meta fields are always written. Requestor programming maps luma MPTE group size into `VM_GROUP_SIZE` and omits chroma MPTE group. Surface flip first stages desired register values in `surface_flip_registers`, then either sends a DMUB command for video progressive flips when `enable_dmcub_surface_flip` is set, or writes registers directly in order.
+
+State and persistence behavior: the constructor initializes common object state. Flip paths cache `hubp->request_address`. `hubp21_init` writes `HUBPREQ_DEBUG` bit 26 for DEDCN21-133 before resetting software HUBP state. The workaround reads current host-VM deadline registers and preserves more aggressive existing values, so hardware state intentionally persists across mode switches rather than being blindly overwritten.
+
+Dependencies and integration points: depends on DCN10/DCN20 helpers, `dc_dmub_srv.h`, `union dmub_rb_cmd`, and `dc_wake_and_execute_dmub_cmd` for firmware-mediated flips. Uses `ctx->dc->debug.enable_dmcub_surface_flip` as an integration switch. Shares DML structures and DM logger validation patterns with DCN20.
+
+Risks: host-VM deadline workaround depends on comparing unsigned register values correctly; overly conservative values can underflow at transitions. DMUB video flip path only sends selected primary surface fields and relies on firmware implementation. Direct flip programming writes many meta/surface registers even when staged values are zero, unlike older per-address conditional writes. DML validation duplicates large DCN20 logic and can drift. The debug init write overwrites `HUBPREQ_DEBUG` with bit 26 rather than preserving other bits.
+
+Test signals: test mode switches involving host VM and flips for underflow/corruption, validate DEDCN21-142 register behavior across increasing/decreasing deadline values, exercise direct and DMUB video flip paths, verify stereo/video/graphics flips, run DML validation logging, and confirm init chicken bit plus cursor/DMDATA inherited paths.

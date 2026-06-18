@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/rockchip/rockchip,dw-mipi-dsi.yaml
+
+Purpose: validates devicetree nodes for Rockchip specific extensions to the Synopsys Designware MIPI DSI, including SoC-specific integration resources and graph links.
+
+Important APIs/types/functions: this is a YAML devicetree binding, so the important interfaces are schema keywords rather than executable functions. compatible selector(s): `rockchip,px30-mipi-dsi`, `rockchip,rk3128-mipi-dsi`, `rockchip,rk3288-mipi-dsi`, `rockchip,rk3368-mipi-dsi`, `rockchip,rk3399-mipi-dsi`, `rockchip,rk3506-mipi-dsi`, and 3 more. required properties: `compatible`, `clocks`, `clock-names`, `rockchip,grf`, `phys`, `phy-names`. declared properties: `compatible`, `interrupts`, `clocks`, `clock-names`, `rockchip,grf`, `phys`, `phy-names`, `#phy-cells`, `power-domains`. referenced schemas: standard devicetree scalar/phandle type definitions, /schemas/display/bridge/snps,dw-mipi-dsi.yaml#.
+
+Control flow: dt-schema evaluates `$id`/`$schema`, applies referenced schemas through `allOf`, validates the `compatible` choice, checks required resources, and then applies property constraints such as `maxItems`, `items`, `enum`, `const`, `patternProperties`, and strict `additionalProperties` or `unevaluatedProperties` handling. 3 conditional schema branches tune clocks, resets, interrupts, ports, or allowed properties by compatible. nested graph `port@N` nodes define display pipeline links.
+
+State and persistence behavior: The schema has no mutable runtime state; it validates persistent hardware description fields `clocks`, `clock-names`, `interrupts`, `power-domains`, `phys` that platform drivers map to registers, clocks, interrupts, resets, power domains, and graph endpoints.
+
+Dependencies and integration points: depends on dt-schema core meta-schema; standard devicetree scalar/phandle type definitions, /schemas/display/bridge/snps,dw-mipi-dsi.yaml#; clock provider bindings; power-domain provider bindings; interrupt-controller bindings; PHY provider bindings. It integrates with Linux devicetree validation, board DTS files, and the corresponding DRM panel, bridge, or display controller drivers through compatible strings and OF graph endpoints.
+
+Risks: strict unknown-property rejection can break DTS users when a legitimate board property is omitted from the schema; driver and DTS compatibility depends on keeping the compatible list aligned with kernel panel/display driver match tables; conditional `allOf` rules must stay synchronized with SoC or panel-specific hardware differences.
+
+Test signals: `make dt_binding_check` validates the YAML schema itself; inline examples are compiled and checked by dt-schema; downstream signal comes from DTS files using the declared compatible and graph topology; DRM/KMS platform driver probe and display pipeline tests are the practical runtime signal. Includes devicetree examples that exercise the intended node shape and are compiled by dt-schema checks.

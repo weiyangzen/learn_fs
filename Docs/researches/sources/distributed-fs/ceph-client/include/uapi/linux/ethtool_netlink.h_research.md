@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/ethtool_netlink.h
+
+This UAPI header provides hand-maintained ethtool netlink constants that complement the generated ethtool netlink command and attribute header. It is a user/kernel ABI contract for cable-test notifications, Time Domain Reflectometry result nesting, and standardized Ethernet/PHY statistics group IDs.
+
+Important exports are `ETHTOOL_FLAG_ALL`, cable result codes such as `ETHTOOL_A_CABLE_RESULT_CODE_OK`, `OPEN`, `SAME_SHORT`, `CROSS_SHORT`, `IMPEDANCE_MISMATCH`, `NOISE`, and `RESOLUTION_NOT_POSSIBLE`, pair IDs `ETHTOOL_A_CABLE_PAIR_A` through `D`, source IDs `ETHTOOL_A_CABLE_INF_SRC_TDR` and `ALCD`, and notification statuses `STARTED` and `COMPLETED`. TDR payload attributes are split into nested amplitude, pulse, step, and TDR nest enums. Statistics exports include `ETHTOOL_STATS_ETH_PHY`, `ETH_MAC`, `ETH_CTRL`, `RMON`, and `PHY`, plus individual IEEE 802.3 and RMON counter attribute IDs.
+
+Control flow is encoded as generic-netlink message layout rather than functions: ethtool emits notifications and replies whose nested attributes use these numeric IDs, while userspace decoders walk the nested netlink attributes according to the max/count constants. The header itself stores no state; operational state is in net devices, PHY drivers, ethtool netlink handlers, cable-test work, and counter providers. Persistence is ABI persistence: assigned numeric values and append-only enum ordering must remain stable for existing `ethtool` and monitoring binaries.
+
+Dependencies include `linux/ethtool.h` for base flags and `linux/ethtool_netlink_generated.h` for the generated family command/attribute surface. Integration points are the kernel ethtool netlink family, PHY cable diagnostics, ALCD/TDR hardware support, and userspace tools parsing cable-test notifications and grouped statistics.
+
+Risks are ABI drift between the hand-written and generated headers, incorrect nested attribute type assumptions, counter name/value mismatches with IEEE clauses, and breaking older tools by reusing or renumbering enum slots. Test signals include UAPI header selftests, `tools/net/ynl` schema checks where applicable, ethtool netlink cable-test decode tests, statistics dump tests on drivers with PHY/MAC/RMON counters, and build checks for userspace inclusion.

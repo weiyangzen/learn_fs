@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/openstack-swift/swift/common/middleware/s3api/s3request.py -->
+# sources/object-store/openstack-swift/swift/common/middleware/s3api/s3request.py
+
+## Purpose
+Implements the S3-facing request object used by Swift's `s3api` middleware. It detects SigV2 versus SigV4 requests, parses virtual-host and path-style bucket/key addressing, validates S3 headers and request bodies, converts S3 operations into internal Swift `Request` objects, and translates Swift responses/errors back into S3 response classes. It is the central adapter between S3 protocol semantics and Swift proxy semantics.
+
+## Important APIs, types, and functions
+`get_request_class(env, s3_acl)` chooses `S3Request`, `SigV4Request`, `S3AclRequest`, or `SigV4S3AclRequest`. `S3Request.__init__` parses auth, bucket/key, validates headers, installs body wrappers, and publishes `environ['s3api.auth_details']` for auth middleware. `SigV4Mixin`, `SigCheckerV2`, and `SigCheckerV4` build canonical strings and validate signatures. `StreamingInput`, `ChunkReader`, `HashingInput`, and `ChecksummingInput` enforce aws-chunked framing, chunk signatures, `x-amz-content-sha256`, and S3 checksum headers/trailers. `to_swift_req`, `_get_response`, `get_response`, `get_container_info`, and `gen_multipart_manifest_delete_query` are the main Swift integration methods. `S3AclRequest` adds pre-authentication and ACL handler dispatch.
+
+## Control flow
+Construction first parses credentials from query/header auth, resolves `bucket_in_host` and path components, then validates content length, copy-source, storage class, SSE, MD5, SHA256, checksum, and unsupported headers. For PUT/POST it wraps `wsgi.input` before downstream Swift reads so body validation happens during streaming. The selected signature checker's string-to-sign is frozen before request mutation. Controllers are chosen from subresources such as `acl`, `delete`, `uploadId`, `uploads`, `partNumber`, `tagging`, and `object-lock`. `to_swift_req` rewrites metadata, copy-source headers, path, query, method, and logging/source environ entries. `_get_response` calls the downstream app, records backend path and policy index, builds an `S3Response`, accepts only operation-specific success codes, and maps known Swift status codes to S3 errors.
+
+## State and persistence behavior
+The object keeps per-request state: account, user id, policy index, signing timestamp, signature checker, bucket/object names, and ACL handler. It mutates the WSGI environ with `s3api.auth_details`, `swift.access_logging`, `swift.leave_relative_location`, `swift.source`, `s3api.backend_path`, and sometimes auth override fields. Persistent storage is indirect: encoded ACL sysmeta can be attached through `bucket_acl` and `object_acl`; multipart/SLO delete decisions depend on stored object sysmeta and headers. Body wrappers are stateful stream validators and close the underlying input on protocol errors.
+
+## Dependencies and integration points
+Depends on Swift `swob`, request helpers, container info, registry info, checksum helpers, and S3 API controllers/exceptions. It integrates with `s3token` via `s3api.auth_details`, with Keystone/tempauth through downstream TEST/HEAD calls, with SLO via `MULTIUPLOAD_SUFFIX` and multipart manifest delete query generation, with ACL handlers through `handle_acl_header` and `decode_acl`, and with proxy logging via mutable `swift.access_logging`.
+
+## Risks and test signals
+High-risk paths are SigV4 canonicalization, duplicated raw header handling, old boto host-port compatibility, aws-chunked trailer parsing, checksum header/trailer cardinality, query mutation after signing, and Swift-to-S3 error translation. Tests should cover SigV2/SigV4 header and query auth, clock skew and expiry errors, chunk signature mismatch, trailer checksum mismatch, malformed content length/MD5/SHA256, virtual-host bucket parsing, metadata underscore preservation, copy-source version handling, ACL pre-authentication, multipart part-number range behavior, and all Swift status mappings including 429/503/409/404 variants.
+<!-- END_FILE_RESEARCH: sources/object-store/openstack-swift/swift/common/middleware/s3api/s3request.py -->

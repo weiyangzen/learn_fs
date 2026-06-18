@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source3/smbd/smb2_negprot.c
+
+Purpose: implements SMB2 negotiation: SMB1 handoff to SMB2, dialect selection, SMB 3.1.1 negotiate contexts, signing/encryption/preauth capability selection, POSIX extension negotiation, max I/O sizing, multichannel client GUID handling, and SPNEGO blob generation.
+
+Important APIs and types: `reply_smb2002()` and `reply_smb20ff()` create synthetic SMB2 negotiate requests from SMB1 negotiation. `smbd_smb2_protocol_dialect_match()` chooses the highest allowed dialect. `smbd_smb2_request_process_negprot()` is the main handler. `smb2_negotiate_context_process_posix()` processes POSIX contexts. `smbd_smb2_request_process_negprot_mc_done()` completes multichannel negotiation. `negprot_spnego()` builds server GUID/name plus SPNEGO OIDs. `smb2_multi_protocol_reply_negprot()` parses SMB1 dialect strings.
+
+Control flow: the handler verifies body size, dialect count/list, client GUID, and dialect support. SMB 3.1.1 validates negotiate-context offset/alignment, parses contexts, requires preauth, and processes POSIX. It records remote protocol, reloads services, creates SPNEGO data, computes capabilities (DFS, leasing, encryption, directory leasing, large MTU, multichannel), clamps max trans/read/write, selects preauth SHA512, cipher, signing algorithm, and QUIC transport-level security, builds output contexts, emits the `0x40` response, initializes SMB2 tables, records client/server negotiation state, and optionally runs multichannel client-guid negotiation that may pass the connection to another process. SMB1 multi-protocol negotiation chooses `SMB 2.???` or `SMB 2.002` and calls the synthetic SMB2 path.
+
+State and persistence: writes live `xconn` SMB2 state: protocol, client capabilities/security/GUID/dialects, server capabilities/security/GUID/dialect/max sizes/signing/cipher, preauth pointer, POSIX flag, multicredit, trusted QUIC, and multichannel client GUID. It may update remote architecture cache and multichannel client database.
+
+Dependencies and integration: depends on negotiate-context helpers, signing/encryption capability parsing, auth/gensec SPNEGO, loadparm protocol settings, service reload, remote architecture tracking, multichannel tables, QUIC transport state, and SMB1 negotiation compatibility. Later create, lock, ioctl, and getinfo paths depend on capabilities set here.
+
+Risks: SMB 3.1.1 context parsing and preauth selection are security-sensitive. Capability bits depend on config, dialect, client bits, and transport; wrong bits enable unsupported behavior. Validate-negotiate-info relies on exact state recorded here. Multichannel handoff intentionally terminates or passes the process. SPNEGO blob callers assume the first 16 bytes carry server identity.
+
+Test signals: cover `SMB2-NEGPROT`, SMB2_02/SMB2_10 basics, dialect min/max, SMB 2.??? handoff, malformed SMB3.1.1 contexts, missing preauth/no hash overlap, cipher/signing preferences, encryption disabled/required, QUIC transport caps, NBT vs direct max sizes, client GUID handling, multichannel enabled/disabled, POSIX extension negotiation, and SPNEGO failure.

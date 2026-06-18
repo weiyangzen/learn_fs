@@ -1,0 +1,128 @@
+# Folder Research: sources/user-network-fs/samba/source3/winbindd
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 114
+- Recursive researched files: 117
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/user-network-fs/samba/source3/winbindd/idmap.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_ad.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_ad_nss.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_autorid.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_autorid_tdb.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_ldap.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_nss.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_passdb.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_proto.h`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_rfc2307.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_rid.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_rw.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_rw.h`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_script.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_tdb.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_tdb2.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_tdb_common.c`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_tdb_common.h`
+- `sources/user-network-fs/samba/source3/winbindd/idmap_util.c`
+- `sources/user-network-fs/samba/source3/winbindd/nss_info.c`
+- `sources/user-network-fs/samba/source3/winbindd/nss_info_template.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_alias_members.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_dsgetdcname.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_getgrsid.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_getpwsid.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_gettoken.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_group_members.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_lookupname.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_lookupsid.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_lookupsids.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_lookupuseraliases.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_lookupusergroups.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_next_grent.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_next_pwent.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_query_group_list.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_query_user_list.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_queryuser.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_sids2xids.c`
+- `sources/user-network-fs/samba/source3/winbindd/wb_xids2sids.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd.h`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_ads.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_ads.h`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_allocate_gid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_allocate_uid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_cache.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_ccache_access.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_change_machine_acct.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_check_machine_acct.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_cm.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_cred_cache.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_creds.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_domain.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_domain_info.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_dsgetdcname.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_dual.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_dual_ndr.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_dual_srv.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_endgrent.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_endpwent.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getdcname.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getgrent.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getgrgid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getgrnam.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getgroups.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getpwent.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getpwnam.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getpwsid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getpwuid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getsidaliases.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getuserdomgroups.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_getusersids.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_gpupdate.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_group.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_idmap.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_irpc.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_list_groups.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_list_users.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_locator.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_lookupname.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_lookuprids.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_lookupsid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_lookupsids.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_misc.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_msrpc.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_ndr.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_pam.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_pam_auth.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_pam_auth_crap.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_pam_chauthtok.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_pam_chng_pswd_auth_crap.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_pam_logoff.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_ping_dc.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_proto.h`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_reconnect.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_reconnect_ads.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_rpc.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_rpc.h`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_samr.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_setgrent.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_setpwent.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_sids_to_xids.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_traceid.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_traceid.h`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_util.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_varlink.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_varlink.h`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_varlink_getgrouprecord.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_varlink_getmemberships.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_varlink_getuserrecord.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_wins_byip.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_wins_byname.c`
+- `sources/user-network-fs/samba/source3/winbindd/winbindd_xids_to_sids.c`
+- `sources/user-network-fs/samba/source3/winbindd/wscript_build`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

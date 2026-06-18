@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chown/chown05.c
+
+Purpose: verifies root can set owner and group to arbitrary numeric ids and can use `-1` to preserve previous uid or gid. Setup creates `testfile`; cases change owner/group, owner only, group only, and no change, then stats and compares expected carried-forward values. Important APIs are `CHOWN`, `SAFE_STAT`, and LTP table-driven execution. State is one tmpdir file whose uid/gid changes across testcase order. Dependencies are root and uid/gid compatibility wrapper. Risks are using arbitrary ids that may not exist but should still be accepted numerically. Test signal is successful chown and expected persisted uid/gid after each case.

@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/sandbox_update_resources_test.go
+
+This test file verifies `UpdatePodSandboxResources` using a fake containerd core sandbox store and a recording sandbox service. `fakeSandboxStore` implements `Get` and `Update`, can inject errors, and captures the updated sandbox. `recordSandboxService` records the sandbox ID passed to `UpdateSandbox` and can return configured errors.
+
+The table-style subtests cover local sandbox lookup failure, core sandbox store get failure, core store update failure, successful local status mutation plus core extension persistence, success when the sandbox controller does not implement update, success when it does, and failure when controller update returns a non-`ErrNotImplemented` error. The successful extraction test checks both state channels: local `sandboxStore` status contains `runtime.ContainerResources` wrappers with the expected Linux memory and CPU values, and core sandbox extensions contain a `podsandbox.UpdatedResources` decoded from typeurl data.
+
+The tests establish that persistence must reach both the local store and core store, and that old controllers remain compatible. They do not exercise NRI error paths directly, post-update notification logging, or later `PodSandboxStatus` surfacing of the updated resources. A notable risk exposed by sequencing is that the local status can be mutated before core-store update failure is returned.

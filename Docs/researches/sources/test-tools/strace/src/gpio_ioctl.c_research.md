@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/gpio_ioctl.c
+
+GPIO ioctl decoder for v1 and v2 character-device APIs. It decodes chip info, line info/watch/unwatch, handle/event requests, get/set values, v1 config, v2 line attributes/config/request/value operations, and returned fds. Control flow is direction-sensitive with value-changed output on successful exits. State is tracee memory and syscall phase. Dependencies include `<linux/gpio.h>`, v1/v2 GPIO xlat tables, fd printers, array printers, and ioctl return flags. Risks are `num_lines`/`num_attrs` bounds, nonzero padding, ABI evolution in v2 attributes, and output-only fd fields. Tests should cover all ioctl cases, v2 attr ids, bad pointers, failed exits, padding, and unknown commands.

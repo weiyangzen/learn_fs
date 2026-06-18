@@ -1,0 +1,16 @@
+# Folder Research: sources/object-store/apache-ozone/hadoop-ozone/cli-admin/src/main/java/org/apache/hadoop/ozone/admin
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 2
+- Recursive researched files: 45
+- Direct child folders represented: 4
+
+## Direct Files
+
+- `sources/object-store/apache-ozone/hadoop-ozone/cli-admin/src/main/java/org/apache/hadoop/ozone/admin/OzoneAdmin.java`
+- `sources/object-store/apache-ozone/hadoop-ozone/cli-admin/src/main/java/org/apache/hadoop/ozone/admin/package-info.java`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

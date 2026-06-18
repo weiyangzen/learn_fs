@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/net/bluetooth/qcom,bluetooth-common.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/net/bluetooth/qcom,bluetooth-common.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/net/bluetooth/qcom,bluetooth-common.yaml` defines the Bluetooth controller binding titled `Qualcomm Bluetooth Common Properties`. It constrains compatible strings, required resources, common schema references, and optional child nodes before Linux network, Bluetooth, CAN, MDIO, Ethernet, or DSA drivers consume the node at probe time.
+
+## Important APIs, Types, and Functions
+The public interface is the YAML/dt-schema ABI, not C-callable functions. `compatible` uses a composed compatible schema with 0 tokens: no directly declared compatible constants. Top-level properties are `firmware-name`, `qcom,local-bd-address-broken`. Top-level required properties are none declared; required keys found in nested schemas include none. Pattern properties are none. Collected numeric/item constraints include `minItems=1`. The highest-risk API details are compatible strings, wake/shutdown GPIO polarity, required power rails, clock names, transport-specific properties, and whether common Qualcomm/Broadcom/Realtek fragments stay aligned with chip-specific bindings. Important property roles: resource roles are expressed through the listed dt-schema properties.
+
+## Control Flow
+Control flow is declarative schema evaluation. During `make dt_binding_check` or `make dtbs_check`, dt-schema loads the YAML, resolves `$ref` entries, matches by `$id`, `$nodename`, `compatible`, or fragment inclusion, checks required properties, evaluates no top-level conditionals, validates examples, and enforces `additionalProperties` or `unevaluatedProperties`. At runtime the YAML itself does not execute. Firmware provides a DTB node for the Bluetooth controller binding; Linux driver core or bus code matches a driver, then subsystem helpers consume the validated resources. Child schemas such as `ports`, `ethernet-ports`, MDIO children, or CAN transceiver links guide later parsing by DSA, phylink, PHYLIB, Bluetooth, or SocketCAN drivers.
+
+## State and Persistence Behavior
+The schema stores no mutable kernel state and writes no persistent data. Persistence is the Devicetree ABI: compatible strings, property names, array order, phandle cell counts, child-node names, and example layouts are contracts carried by DTS sources and deployed DTBs. Runtime state is owned by drivers after probe, including HCI registration, firmware download, controller power state, wake signaling, runtime PM, and Bluetooth stack state; this file only constrains how hardware and board wiring are represented.
+
+## Dependencies and Integration Points
+Maintainers listed: Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>. Direct schema dependencies are dt-schema core/meta schemas only. Integration points include Bluetooth HCI, serdev/UART or SDIO probing, regulator and clock providers, GPIO wake/reset lines, board DTS nodes, and the Linux Bluetooth stack. The binding participates in schema example extraction, Linux OF matching, and board DTS validation. Compatible scan found driver-side files: no direct in-tree driver match found by compatible scan. In-tree DTS users found by compatible scan: no in-tree DTS user found by compatible scan. The file contains 0 embedded examples.
+
+## Risks
+Primary risks are incompatible ABI changes to compatible strings, wake/shutdown GPIO polarity, required power rails, clock names, transport-specific properties, and whether common Qualcomm/Broadcom/Realtek fragments stay aligned with chip-specific bindings, mismatches between documented compatibles and driver OF match tables, resource-order changes that pass schema review but break probe, and stale examples. This schema permits extra top-level properties. Additional risk signals: the main regression mode is DTS ABI drift.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/net/bluetooth/qcom,bluetooth-common.yaml` for targeted schema validation and `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/net/bluetooth/qcom,bluetooth-common.yaml` against affected board DTS files. The schema has 0 example blocks, so example compilation is part of the signal. Review every compatible against driver `of_match_table` entries and exercise negative schema cases for missing required resources, bad child names, wrong `reg` values, and misspelled vendor properties. Runtime signals are HCI device registration, firmware load where required, suspend/resume wake tests, and GPIO/regulator sequencing.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/net/bluetooth/qcom,bluetooth-common.yaml -->

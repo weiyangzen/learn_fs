@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/rsi/rsi_mgmt.h
+
+Purpose: Defines the Redpine/RSI WLAN firmware management ABI and the public management/data helpers used by the RSI mac80211 core. It is a dense contract header for descriptor formats, command frame IDs, rates, channel/radio settings, VAP/peer/key operations, power-save requests, WoWLAN, background scan, EEPROM access, and firmware feature frames.
+
+Important APIs and types: Key constants include headroom/buffer sizes, standard and hardware rate encodings, descriptor flags, receive message types, rx filter bits, power-save flags, WoWLAN flags, aggregation limits, and scan limits. Important enums include `opmode`, `vap_status`, `peer_type`, `sta_notify_events`, and `cmd_frame_type`. Important packed structures are `rsi_cmd_desc`, boot parameter frames, peer notification, aggregation parameters, BB/RF programming, channel config, VAP capabilities, antenna selection, dynamic rate update, key programming, auto-rate, radio capabilities, common device config, EEPROM read, power-save request, WoWLAN request, background scan config/probe, and 9116 feature enable. Inline helpers decode/encode firmware descriptors: `rsi_get_queueno()`, `rsi_get_length()`, `rsi_get_extended_desc()`, `rsi_get_rssi()`, `rsi_get_channel()`, and `rsi_set_len_qno()`.
+
+Control flow and integration: The implementation files use these definitions to build command SKBs for management queue transmission, parse firmware receive descriptors, report RX/TX status to mac80211, configure VAPs and peers during association/AP setup, update rates and radio parameters, install encryption keys, and request power-save or wake-on-wireless behavior. The public prototypes connect this ABI to firmware-ready handling, management packet receive, channel setting, aggregation, station notify, BSS status, QoS processing, TX data/mgmt paths, antenna selection, background scan, and WoWLAN.
+
+State and persistence: No storage is owned by the header, but the packed structures encode persistent firmware state: per-VAP identity, peer/link state, key table contents, auto-rate table, RF/channel mode, rx filtering, GPIO usage, power-save intervals, background scan parameters, and feature enablement. Fields are explicitly little-endian where firmware expects LE wire format.
+
+Dependencies: Includes `rsi_boot_params.h`, `rsi_main.h`, Linux sort and mac80211-facing constants. It depends on firmware descriptor layout, queue numbering, `FRAME_DESC_SZ`, `MAX_HW_QUEUES`, and background scan/channel constants from adjacent RSI headers.
+
+Risks and test signals: The high-risk surface is ABI drift: packed layout, descriptor bit positions, endian conversion, and hardware rate mappings must match firmware. Tests should cover descriptor length/queue decoding, card-ready parsing, VAP add/delete/update, AP/STA/P2P modes, key install for WEP/TKIP/CCMP, aggregation start/stop, channel/radio updates, rx filter flags, EEPROM reads, background scan, WoWLAN request/wakeup reason, and 9116 feature enable frames.
+
+Test signals: Source read size: 758 lines, 21583 bytes.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/glusterfs/xlators/cluster/ec/src/ec-code-intel.c
+
+Purpose: implements a small x86/x86-64 instruction encoder used by EC dynamic-code generators. It emits raw bytes for general-purpose, SSE, and AVX moves, XORs, arithmetic, tests, conditional branches, stack operations, and returns.
+
+Important APIs and types: public emitters include `ec_code_intel_op_push_r`, `pop_r`, `ret`, `mov_r2r`, `mov_r2m`, `mov_m2r`, `xor_r2r`, `xor_m2r`, `add_i2r`, `test_i2r`, `jne`, SSE `mov/xor` variants, and AVX `mov/xor` variants. Internals build `ec_code_intel_t` with prefix/opcode/offset/immediate buffers plus REX, VEX, ModRM, and SIB state.
+
+Control flow: each public helper initializes an encoder object, sets addressing/opcode/immediate fields, computes REX or VEX metadata, and calls `ec_code_intel_emit()`, which serializes prefixes, VEX/REX, opcodes, ModRM/SIB, displacement, and immediate bytes into a 15-byte local buffer before passing them to `ec_code_emit()`. `ec_code_intel_modrm_mem()` validates illegal addressing such as SP as an index and invalid scales, and marks the instruction invalid for `ec_code_error()`.
+
+State and persistence: no disk persistence; emitted bytes are appended to the active `ec_code_builder_t`, which later writes into mmap-backed executable storage. Dependencies are `ec-code-intel.h`, `ec-code.h`, Gluster boolean/error conventions, and the builder error path. Risks include instruction-length overflow if a new encoding exceeds 15 bytes, incorrect VEX inverted-bit handling, branch displacement miscalculation in `jne`, and unsupported addressing combinations. Test signals are byte-level encoder tests, generated-function execution tests across low and high registers, SSE/AVX feature-gated tests, and fallback tests when invalid operands set builder errors.

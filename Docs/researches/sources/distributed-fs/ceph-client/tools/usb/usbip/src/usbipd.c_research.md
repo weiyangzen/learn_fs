@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/usb/usbip/src/usbipd.c
+
+Purpose: `usbipd.c` is the usbip daemon. It listens on TCP, enumerates exportable devices through a selected backend, serves devlist requests, and hands accepted sockets to kernel usbip drivers for import requests.
+
+Important functions: `recv_request_import()` receives an import busid, finds the exported device, writes the accepted socket fd to `usbip_sockfd`, replies with status, and sends device metadata. `send_reply_devlist()` counts non-used devices and sends device/interface records. `recv_pdu()` receives the common header, refreshes the device list, and dispatches opcodes. `do_accept()` accepts TCP connections and optionally applies libwrap. `process_request()` forks a child per accepted connection. `listen_all_addrinfo()` opens sockets. `do_standalone_mode()` opens the selected backend, daemonizes if requested, writes PID file, polls listening fds, and handles shutdown. `main()` parses IPv4/IPv6, daemon, debug, device-mode, pid, port, help, and version options.
+
+Control flow and integration: default mode exports physical `usbip-host` devices; `--device` exports `usbip-vudc` gadgets. Each request is handled in a child process, with the parent keeping listening sockets open.
+
+State and dependencies: persistent state may include a PID file; kernel state changes when sockets are exported. Dependencies are root privileges, libudev, kernel usbip modules, TCP sockets, optional libwrap, and protocol helpers. Risks include fork-per-request scaling, ignored SIGCHLD to reap children, device-list refresh per request under hotplug races, no authentication unless libwrap is enabled, duplicate longopt entry for daemon, and accepted socket lifetime relying on kernel handoff. Test signals are daemon listening logs, `usbip list -r`, successful attach/import, PID file lifecycle, and device-mode operation.

@@ -1,0 +1,9 @@
+# Research: sources/storage-engines/rocksdb/db_stress_tool/db_stress_driver.cc
+
+- **Purpose:** Runs a configured `StressTest` instance: initializes DBs, launches worker/background threads, coordinates operation and verification phases, reports stats, and shuts down helper threads.
+- **Important APIs/types/functions:** Implements `ThreadBody`, `RunStressTestImpl`, and `RunStressTest`.
+- **Control flow:** Worker threads optionally verify crash-recovery state, signal initialization, wait for start, run `OperateDb`, wait for verification start, verify DB, and signal done. The driver initializes DB/options, starts background verification, remote compaction, pool-size, and compressed-cache threads as needed, coordinates condition-variable barriers, reports results, and stops background threads.
+- **State and persistence behavior:** Mutates `SharedState` phase counters/flags. Initializes and destroys `unverified` subdirs when preserving unverified changes. Configures fault injection before operations and prints statistics after completion.
+- **Dependencies and integration points:** Depends on `db_stress_shared_state.h`, `db_stress_common.h`, fault injection, raw env threading, and `StressTest` virtual methods. Called by the top-level db_stress tool after flags/options are set.
+- **Risks:** Barrier correctness depends on all worker/background threads updating `SharedState` counters. Some background thread state objects are stack-allocated and must outlive their threads; shutdown waits enforce that. `std::call_once` means some global background threads are tied to the first DB's shared state.
+- **Test signals:** Initialization/operation/verification phase log lines, merged stats, verification failure flag, crash-recovery pass/fail messages, and background-thread-finished message.

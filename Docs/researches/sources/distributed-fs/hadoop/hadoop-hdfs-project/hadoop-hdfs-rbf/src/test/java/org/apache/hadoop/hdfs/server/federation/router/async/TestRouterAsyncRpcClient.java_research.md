@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/async/TestRouterAsyncRpcClient.java
+
+Purpose: directly tests `RouterAsyncRpcClient` invocation paths, metrics, failover/error behavior, and sequential remote-location lookup.
+
+Important APIs/types/functions: `MiniRouterDFSCluster`, `RouterAsyncRpcClient`, `RouterRpcServer`, `RouterRpcMetrics`, `RemoteMethod`, `RemoteParam`, `FederationNamenodeContext`, `NamenodeProtocol`, `LocatedBlocks`, `MockResolver`, `NetUtils`, `CallerContext`, `RetriableException`, `StandbyException`, `LambdaTestUtils`, and `syncReturn`. The cluster has two nameservices and three HA NNs per nameservice: active, standby, and observer.
+
+Control flow: setup installs mock locations for `/` and `/multDes` to both namespaces, initializes async thread pools, creates an async client, and writes `/testdir/testAsyncRpcClient.file`. `testInvokeSingle()` invokes `getTransactionID` on one namespace and verifies proxy metrics. `testInvokeAll()` invokes `mkdirs` over multi-destination locations, first expecting parent-not-found then success. `testInvokeMethod()` verifies normal file info retrieval, empty namenode list, standby-only list, no-active-namenodes, and bad protocol/connection failures with metric counters. `testInvokeSequential()` resolves block locations sequentially.
+
+State and persistence behavior: filesystem paths, mock resolver entries, HA state transitions, active namenode resolver cache, and RPC metrics are mutated. Teardown restores `ns0` active, updates the resolver, deletes the test file, and closes FS. Risks are metrics counter coupling, HA transition timing, and async failure propagation. Test signals include returned transaction IDs/status/blocks, exact exceptions, queue-independent metric increments, and proxy failure counters.

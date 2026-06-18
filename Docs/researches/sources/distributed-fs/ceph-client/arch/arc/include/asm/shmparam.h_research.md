@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/shmparam.h
+
+Shared-memory alignment policy for ARC. It sets SHMLBA to 2 * PAGE_SIZE and forces shmat() to honor it, accommodating up to two VIPT cache alias bins. Control flow is generic SysV shared-memory attach logic consulting SHMLBA and __ARCH_FORCE_SHMLBA before mapping. State is purely ABI/configuration; no runtime data is stored. Dependencies are PAGE_SIZE and cache alias behavior. Risks are either too-small alignment causing D-cache aliases for shared mappings or unnecessarily large alignment reducing attach address flexibility. Test signals include SysV shm attach tests, alias-sensitive shared memory workloads, and page-size variants.

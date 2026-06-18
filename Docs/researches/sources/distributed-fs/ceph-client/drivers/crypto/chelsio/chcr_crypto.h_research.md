@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/crypto/chelsio/chcr_crypto.h
+
+Purpose: defines Chelsio crypto algorithm constants, Crypto API context layouts, per-request state structures, SG walker state, algorithm template union, and prototypes shared by `chcr_algo.c`.
+
+Important APIs and control flow: constants encode Chelsio SCMD cipher modes, auth modes, HMAC truncation controls, key context sizes, AEAD subtype bits, priority values, maximum IV/key/scratch/hash sizes, and SG chunk limits. Context helpers `a_ctx()`, `c_ctx()`, and `h_ctx()` recover `struct chcr_context` from AEAD, skcipher, and ahash TFMs. `struct ablk_ctx`, `chcr_aead_ctx`, `chcr_gcm_ctx`, `chcr_authenc_ctx`, and `hmac_ctx` hold per-TFM key and auth material. `struct chcr_aead_reqctx`, `chcr_skcipher_req_ctx`, and `chcr_ahash_req_ctx` hold per-request DMA, SG, IV, completion, and partial-hash state. Prototypes expose DMA map/unmap and SGL population helpers for AEAD, cipher, and hash paths.
+
+State and persistence behavior: per-TFM state persists fallback transforms, hardware key headers, key bytes, salts/nonces, GHASH subkey, HMAC pads, queue geometry, and CBC completion state. Per-request state persists mapped IV/B0 buffers, immediate mode decisions, TX/RX queue indices, SG offsets, partial progress, and fallback subrequests. The flexible `struct chcr_context` ends in a union that is sized by each registered algorithm's `cra_ctxsize`.
+
+Dependencies and integration points: depends on Linux Crypto API types, AES constants, scatterlists, `sk_buff`, `hwrng`-unrelated Chelsio core state, and the firmware field values consumed by `chcr_algo.h`. The subtype constants are embedded in `driver_algs` and drive request dispatch.
+
+Risks and test signals: risks include flexible-array context sizing mistakes, request contexts with fallback request objects that must remain last, stale key material unless TFM exit paths free/clear fallback state, small `MAX_DSGL_ENT` and SG chunk constants controlling fallback boundaries, and debug comments documenting assumptions about hardware AAD/IV dropping. Test signals include correct Crypto API reqsize for every algorithm, KASAN coverage for flexible context users, successful fallback subrequest execution, queue index propagation into WR cookies, and AEAD/cipher/hash DMA helper balance.

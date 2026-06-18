@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/arch/arm64/kernel/pi/patch-scs.c
+
+Purpose: this early position-independent helper converts PACIASP/AUTIASP return-address signing instructions into shadow-call-stack push/pop instructions when dynamic SCS is enabled. It does so before the normal kernel relocation environment exists, using a deliberately small DWARF `.eh_frame` parser to locate the instructions that are paired with `DW_CFA_negate_ra_state`.
+
+Important APIs and state: `dynamic_scs_is_enabled` is the exported boot-time state bit. `scs_patch()` is the public entry point declared by `pi.h`; it walks CIE/FDE records, validates the CIE augmentation is exactly `zR`, tracks `code_alignment_factor`, and supports pcrel `sdata4` and `sdata8` FDE encodings. `scs_handle_fde_frame()` advances a code location according to supported CFA opcodes and calls `scs_patch_loc()` on return-address-state toggles. `scs_patch_loc()` recognizes literal opcodes for `PACIASP`, `AUTIASP`, `SCS_PUSH`, and `SCS_POP`, writes little-endian AArch64 instructions, and performs data-cache maintenance using either `dc civac` or an IDC-aware alternative.
+
+Control flow: `scs_patch()` parses one frame at a time. CIE records set parser configuration; FDE records are parsed first as a dry run unless `skip_dry_run` requests direct patching, then parsed again to mutate instruction text. Within an FDE, augmentation payload length is treated as a single-byte ULEB128; frame opcodes that do not affect code location are skipped, location-advance opcodes update `loc`, and unsupported opcodes abort with `EDYNSCS_*` errors. The patch target is `loc - 4` because the CFI toggle follows the PAC instruction.
+
+Dependencies and integration: depends on ARM64 SCS definitions, early PI `offset_to_ptr()` behavior from included boot headers, Linux endian helpers, and alternative patching macros. It integrates with early kernel mapping and relocation code that can still safely patch kernel text before normal alternatives/ftrace machinery.
+
+Risks: malformed `.eh_frame` input could produce wrong patch addresses, so the parser is intentionally restrictive. The code assumes Linux-generated CFI layout and rejects unexpected CIE or CFA patterns. Cache maintenance is essential because patched instructions may execute soon after early boot mapping changes. The dry-run phase is a useful guard against partial text mutation.
+
+Test signals: build-time coverage comes from generated `.eh_frame` shape and config combinations for SCS, pointer authentication, and cache-IDC workarounds. Runtime failures would usually appear as early boot errors, invalid dynamic-SCS error codes, return-address corruption, or boot hangs after patched prologues/epilogues execute.

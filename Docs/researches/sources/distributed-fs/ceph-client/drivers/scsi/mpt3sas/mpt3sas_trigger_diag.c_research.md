@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+
+Purpose: implements MPT3SAS diagnostic trigger matching and notification. It watches master, firmware event, SCSI sense, and MPI status/loginfo conditions configured elsewhere in the adapter object, releases the trace diagnostic buffer when a trigger fires, records release metadata, and injects a synthetic diagnostic event into the driver's control-event log.
+
+Important APIs/types/functions: `mpt3sas_trigger_master()`, `mpt3sas_trigger_event()`, `mpt3sas_trigger_scsi()`, and `mpt3sas_trigger_mpi()` are the condition-specific matchers. `mpt3sas_process_trigger_data()` performs release bookkeeping for trigger-data events. `_mpt3sas_raise_sigio()` builds an `Mpi2EventNotificationReply_t` carrying `SL_WH_TRIGGERS_EVENT_DATA_T`, calls `mpt3sas_ctl_add_to_event_log()`, frees the temporary event, and clears `ioc->diag_trigger_active`.
+
+Control flow: each trigger path takes `diag_trigger_lock`, rejects events when the trace buffer is not registered, already released, or another trigger is active, then scans the configured trigger list for a match. Master triggers for firmware fault and adapter reset bypass normal trace-buffer checks so notification can still be raised during severe faults. Matching non-master or noncritical master triggers call `mpt3sas_send_trigger_data_event()`; later `mpt3sas_process_trigger_data()` releases the trace buffer via `mpt3sas_send_diag_release()` if needed and stores trigger details in `ioc->htb_rel`.
+
+State and persistence: uses runtime adapter fields: `diag_trigger_master`, `diag_trigger_event`, `diag_trigger_scsi`, `diag_trigger_mpi`, `diag_trigger_active`, `diag_buffer_status[]`, and `htb_rel`. Trigger definitions may originate from sysfs or persistent trigger pages, but this file only consumes in-memory copies and writes no durable storage itself.
+
+Dependencies and integration points: integrates with `mpt3sas_ctl.c` event logging/polling, diagnostic buffer registration/release paths, SCSI error handling and firmware event paths that call the trigger functions, and `mpt3sas_trigger_diag.h` structures. The synthetic event code is `MPI3_EVENT_DIAGNOSTIC_TRIGGER_FIRED`.
+
+Risks and test signals: active-trigger suppression relies on `_mpt3sas_raise_sigio()` always running after a match; failures before that can leave the flag set. Event and MPI matching allow wildcards only in selected fields, so sysfs encoding must be exact. Tests should cover no trace buffer, already released buffer, duplicate simultaneous triggers, master reset/fault bypass, SCSI ASC/ASCQ wildcard matching, MPI loginfo wildcard matching, event-log insertion, and release metadata visible in host trace-buffer status.

@@ -1,0 +1,11 @@
+# sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_SAUNAFS/handle.c
+
+This file is the primary SaunaFS object-handle implementation. It maps Ganesha object operations to SaunaFS client calls for lookup, readdir, attributes, filehandle encoding, open/create, read/write/commit/close, setattr, links, rename/unlink, symlink/readlink, locks, special nodes, fallocate, xattrs, share merging, and handle allocation.
+
+Important APIs include `handleOperationsInit`, `allocateHandle`, `deleteHandle`, `open2`, `openByHandle`, `openByName`, `reopen_func`, `read2`, `write2`, `commit2`, `setattr2`, `close2`, `lock_op2`, `fallocate_`, and the xattr functions. The key state types are `SaunaFSHandle` with embedded public handle, global `SaunaFSFd`, inode/key/export/share; and `SaunaFSStateFd`, which binds NFSv4 state to a per-state file descriptor.
+
+Control flow uses `context_wrap` wrappers for SaunaFS operations and Ganesha fd helpers for concurrency. Opens by name perform lookup or `saunafs_mknode` then open by handle. Opens by handle use `fsal_start_fd_work_no_reclaim`, share conflict checks, and `reopen_func`. I/O uses `fsal_start_io`/`fsal_complete_io`, choosing state, global, or temporary fds; stateless I/O releases temporary share counters afterward. Setattr maps FSAL masks to `SAU_SET_ATTR_*`; locks translate FSAL lock operations to SaunaFS lock info and set the lock owner on fileinfo. Fallocate emulates allocate by extending size and deallocate by writing zeroes then restoring size.
+
+State is in-memory per handle and state object; persistent changes are delegated to SaunaFS metadata/data services. Wire handles encode only `sau_inode_t`, while keys include module/export/inode.
+
+Dependencies include FSAL fd/share helpers, POSIX conversion, SaunaFS wrappers, ACL helpers, error conversion, and optional Linux fallocate constants. Risks include long and subtle cleanup paths, possible NULL misuse in new-handle error handling, fallback zero-writing deallocation cost, unsupported READ_PLUS, xattr error conversion using raw return values, and lock owner casting. Test signals should cover every create mode, stateless/stateful I/O, share denial, fd reopen/no-op paths, link/symlink/mknode, ACL/xattr builds, fallocate allocate/deallocate, lock conflict reporting, and handle merge.

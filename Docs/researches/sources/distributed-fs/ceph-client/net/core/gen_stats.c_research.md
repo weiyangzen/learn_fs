@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/core/gen_stats.c
+
+Purpose: Implements generic netlink statistics dumping helpers for traffic control and networking objects. It serializes basic counters, hardware counters, rate estimates, queue stats, and application-specific xstats into TLV attributes, while optionally filling legacy `tc_stats` compatibility structures.
+
+Important APIs, types, and functions: `gnet_stats_start_copy_compat()` and `gnet_stats_start_copy()` initialize a `struct gnet_dump`, optionally create a top-level nested stats attribute, and optionally acquire a stats spinlock. `gnet_stats_basic_sync_init()`, `gnet_stats_add_basic()`, and internal read helpers aggregate synchronized 64-bit counters from global or per-cpu sources. Copy APIs are `gnet_stats_copy_basic()`, `gnet_stats_copy_basic_hw()`, `gnet_stats_copy_rate_est()`, `gnet_stats_copy_queue()`, `gnet_stats_copy_app()`, and `gnet_stats_finish_copy()`.
+
+Control flow: Start-copy zeroes the dump handle, records compatibility attribute types, stores the skb and padding type, and takes the caller lock with bottom halves disabled. The copy helpers aggregate source stats, update compatibility fields when requested, and append netlink attributes when a top-level destination exists. Basic and rate copies emit 64-bit extension attributes only when legacy-width values would truncate. Application stats are duplicated into `d->xstats` for later compatibility output. Finish-copy patches the top-level attribute length, emits compatibility stats/xstats, releases the lock, and frees duplicated xstats. On any netlink append failure, `gnet_stats_copy()` releases the lock, frees xstats, resets the dump handle fields, and returns `-1`.
+
+State and persistence: State is per dump operation in `struct gnet_dump`; copied xstats may be temporarily allocated with `GFP_ATOMIC`. There is no persistent storage. Counter aggregation reads are lockless for per-cpu `u64_stats` with retry loops, or optionally protected by caller locks for running qdisc counters.
+
+Dependencies and integration points: Depends on rtnetlink/netlink attribute APIs, `linux/gen_stats.h`, qdisc generic stats structures, `gen_estimator.c` for rate samples, per-cpu stats, and tc legacy ABI attribute IDs. It is used by qdisc/class/action dump paths that need consistent stats under optional locks.
+
+Risks: Failure paths intentionally unlock the stats lock; callers must not unlock again after `-1`. Incorrect top-level tail adjustment around padding would corrupt nested attribute lengths. Running counter reads must not occur from hard IRQ when per-cpu/running paths are used. Truncation behavior must preserve legacy compatibility while exposing 64-bit counters.
+
+Test signals: Dump stats with and without a top-level container, with compatibility attributes enabled and disabled, with per-cpu and single-counter sources, and with forced small skb tailroom to exercise failure unlock/free behavior. Validate 64-bit packet/rate extension emission only when needed, xstats duplication and cleanup, and lockdep behavior for `gnet_stats_basic_sync_init()`.

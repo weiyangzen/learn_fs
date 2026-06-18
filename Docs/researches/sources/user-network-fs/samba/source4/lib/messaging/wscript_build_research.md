@@ -1,0 +1,5 @@
+# sources/user-network-fs/samba/source4/lib/messaging/wscript_build
+
+This build script defines the source4 messaging build targets. `MESSAGING_SEND` compiles `messaging_send.c` as a private library with dependencies kept small for auth-log users. `MESSAGING` compiles `messaging.c` and `messaging_handlers.c` with full NDR, DCERPC, clustering, server-id DB, and talloc-report dependencies. `python_messaging` builds `pymessaging.c` as `samba/messaging.so` with `MESSAGING`, events, pyparam, and pytalloc utilities.
+
+The dependency split is the important integration decision: send-only helpers can link without the heavier IRPC server implementation, reducing dependency loops. State and persistence behavior are build-time only, but target names define the linking surface consumed elsewhere in Samba. Risks include accidental dependency expansion in `MESSAGING_SEND`, missing generated NDR dependencies for IRPC, and Python module ABI drift if private headers change. Test signals are successful Waf configuration/build, import of `samba.messaging`, and local messaging/IRPC torture suites linked against these targets.

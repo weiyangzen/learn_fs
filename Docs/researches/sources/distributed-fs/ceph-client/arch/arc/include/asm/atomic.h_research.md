@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/atomic.h
+
+Purpose: ARC atomic API selection wrapper. Important APIs/types/functions: defines `arch_atomic_read`, includes `cmpxchg.h`, `barrier.h`, `smp.h`, then selects `atomic-llsc.h` or `atomic-spinlock.h`, and selects generic or ARCv2 64-bit atomics. Control flow: compile-time dispatch based on `CONFIG_ARC_HAS_LLSC` and `CONFIG_GENERIC_ATOMIC64`. State and persistence: no state itself. Dependencies/integration: public architecture implementation consumed by Linux atomic API. Risks: config selection must match hardware and ABI alignment requirements for `atomic64_t`. Test signals: full atomic API selftests across LLSC, non-LLSC, generic atomic64, and ARCv2 LL64 configs.

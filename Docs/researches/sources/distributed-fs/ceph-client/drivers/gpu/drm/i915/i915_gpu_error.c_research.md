@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/i915_gpu_error.c
+
+## Purpose
+`i915_gpu_error.c` captures, stores, formats, exposes, and frees i915 GPU error/coredump state. It records device, GT, engine, request, context, GuC, VMA, fence, display snapshot, and parameter data after hangs or on-demand debug capture, then serves it through debugfs and `/sys/class/drm/card*/error`.
+
+## Important APIs, Types, and Functions
+Public functions include `i915_error_printf()`, `i915_gpu_coredump_copy_to_buffer()`, `__i915_gpu_coredump_free()`, `intel_engine_coredump_alloc()`, `intel_engine_coredump_add_request()`, `intel_engine_coredump_add_vma()`, `i915_gpu_coredump_alloc()`, `intel_gt_coredump_alloc()`, `i915_vma_capture_prepare()`, `i915_vma_capture_finish()`, `i915_error_state_store()`, `i915_capture_error_state()`, `i915_reset_error_state()`, `i915_disable_error_state()`, optional `intel_klog_error_capture()`, `i915_gpu_error_debugfs_register()`, `i915_gpu_error_sysfs_setup()`, and `i915_gpu_error_sysfs_teardown()`. Internal helpers implement scatterlist-backed text buffers, emergency page pools, optional zlib compression, VMA snapshot/copy, register recording, GuC CTB/HW-state capture, formatted printing, and debugfs/sysfs file operations.
+
+## Control Flow
+Capture starts in `i915_capture_error_state()`, which serializes through a static mutex in `i915_gpu_coredump()`, allocates a top-level coredump if error capture is enabled, snapshots global device metadata, allocates a GT coredump, prepares VMA compression, optionally records GuC firmware/log/CTB state, records GT info and engines, captures display snapshot, stores the first non-simulated error with `cmpxchg`, logs an ecode string, and drops the local reference. Engine capture records registers unless GuC capture supplies them, finds the hung request/context, captures context metadata and ring/HW context/batch/user VMAs, optionally matches GuC capture nodes, appends HW status and workaround context dumps, and links non-simulated engine coredumps.
+
+VMA capture uses held `i915_vma_resource` snapshots, copies pages via a reserved GGTT error-capture slot, LMEM IO mapping, or shmem page kmap, compresses or stores pages into `i915_vma_coredump`, and later prints them as ASCII85 with a compression marker. Formatting lazily builds a scatterlist of text chunks on first read, printing kernel time, platform, PCI ID, IOMMU, runtime PM state, GT registers/fences/engines, GuC state, capabilities, params, and display snapshot. Reads copy from the cached scatterlist using `error->fit` as a cursor hint. Writes to debugfs/sysfs clear the stored first error.
+
+## State and Persistence Behavior
+The persistent device error slot is `i915->gpu_error.first_error`, protected by `gpu_error.lock` for reset/read and installed with `cmpxchg` so only the first error is saved. `ERR_PTR()` values can mark capture failure or disabled state. Coredumps are kref-managed and contain copied metadata, copied firmware path strings, VMA page lists, scatterlist text cache, display snapshot, and GT/engine linked lists. Captured data is a snapshot and does not hold live GEM objects, because VMA resources and pages are copied into anonymous memory.
+
+## Dependencies and Integration Points
+The file integrates GT reset/hang detection, engine register access, execlists, GuC capture and CT buffers, firmware metadata, GEM contexts and requests, VMA resources, GGTT error-capture aperture, LMEM and shmem memory access, zlib/ascii85, display snapshot capture, runtime PM, params/device-info printing, debugfs, sysfs, and optional debug GEM klog dumping.
+
+## Risks
+Capture often runs near reset/hang paths where memory allocation and locking are constrained; it uses `ALLOW_FAIL` and emergency page pools but can still fail. The GGTT error-capture slot must be serialized by `ggtt->error_mutex` and cleared after use. Compression and ASCII85 formatting can be large and slow; klog dumping chunks output to avoid huge lines but still risks console latency. Sysfs reads can be inconsistent if another client clears/replaces the dump mid-read, as noted by FIXME. GuC capture and non-GuC register capture have different ownership of register groups, so mixing flags can print stale/missing data. `intel_hdcp_gsc_context_free` is unrelated but double-release style bugs in similar VMA cleanup patterns would be severe here.
+
+## Test Signals
+IGT hang/error-state tests, forced engine resets, GuC and execlists submission coverage, error capture disabled mode, simulated no-error-capture contexts, sysfs/debugfs read/write clearing, large VMA compression/decompression parsing by userspace tools, LMEM and shmem VMA capture, display snapshot presence, klog capture under debug GEM, allocation failure injection, and lockdep around error capture mutexes.

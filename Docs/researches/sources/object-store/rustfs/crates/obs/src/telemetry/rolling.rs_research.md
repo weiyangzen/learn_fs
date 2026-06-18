@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/rustfs/crates/obs/src/telemetry/rolling.rs -->
+# sources/object-store/rustfs/crates/obs/src/telemetry/rolling.rs
+
+Purpose: Implements a custom `Write` appender for local JSON logs with both time-based and size-based rotation. It replaces plain `tracing_appender` rolling files where RustFS needs maximum active file size enforcement plus archive naming that matches the log cleaner.
+
+Important APIs/types/functions: `Rotation` supports `Minutely`, `Hourly`, `Daily`, and `Never`; `Rotation::check_should_roll` checks period boundaries, with daily boundaries aligned to the local offset. `RollingAppender::new`, `active_file_path`, `open_file`, `should_roll`, and `roll` manage file lifecycle. The `Write` impl rotates before writes that would exceed size or cross the time bucket. `ROLL_UNIQUIFIER` disambiguates archive names.
+
+Control flow: `new` rejects filenames that are absolute or contain path components, initializes state, creates the log directory, and opens the active file eagerly. `open_file` retries append-open three times with backoff, records current file size, and seeds `last_roll_ts` from the file mtime so restart can trigger time rotation correctly. `write` lazily opens if needed, checks rotation, attempts `roll`, then writes to the active file and updates metrics. `roll` flushes and drops the current handle, renames active file to an archive name with timestamp/counter in either suffix or prefix mode, opens a new active file, updates rotation metrics, and recovers to the existing active file if rename fails.
+
+State/persistence behavior: Persistent state is the active log file and archive files on disk. In-memory state tracks the current file handle, byte size, and last roll timestamp. Size is recovered from file metadata after restart, and time rotation state is approximated from mtime. Rotation failure intentionally favors continued logging over strict size limits, so the active file can grow past the configured maximum.
+
+Dependencies/integration: Uses RustFS cleaner `FileMatchMode`, log-cleaner metric constants, `metrics::{counter,gauge,histogram}`, `jiff::Zoned` for timestamps/local offsets, and standard file I/O. `otel.rs` and local telemetry use it through `tracing_appender::non_blocking`; cleanup tasks use matching archive naming.
+
+Risks/test signals: Daily rotation uses the current local offset, which may behave oddly across DST changes or if timezone settings change. On Unix, backslashes are accepted as filename characters because only platform path semantics are checked; on Windows they are rejected by path parsing. The rename retry handles permission/interrupted errors but not all race conditions. Tests cover eager file creation, invalid path rejection, basic writes, size rotation, archive-name uniqueness and prefix/suffix formats, and restart size recovery; no test covers time rotation or rename failure recovery.
+<!-- END_FILE_RESEARCH: sources/object-store/rustfs/crates/obs/src/telemetry/rolling.rs -->

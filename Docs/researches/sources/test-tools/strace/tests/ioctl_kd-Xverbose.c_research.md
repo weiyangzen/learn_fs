@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/strace/tests/ioctl_kd-Xverbose.c -->
+# sources/test-tools/strace/tests/ioctl_kd-Xverbose.c
+
+Purpose: `ioctl_kd-Xverbose.c` large keyboard/display KD/KDG/KDS ioctl decoder test covering console sound, LEDs, keyboard maps, strings, fonts, unicode maps, color maps, and font operations. Wrapper chain: ioctl_kd-Xverbose.c -> ioctl_kd.c. Variant effect: XLAT_VERBOSE selects numeric plus symbolic xlat rendering.
+
+Important APIs/types/functions: Primary APIs and data surfaces are KDGETLED/KDSETLED, KDGKBTYPE, KDADDIO/KDDELIO/KDENABIO/KDDISABIO, KDSETMODE/KDGETMODE, KDMAPDISP/KDUNMAPDISP, GIO/PIO_SCRNMAP, KDG/KDSKBMODE, KDG/KDSKBENT, KDG/KDSKBSENT, KDG/KDSKBDIACR, KDGET/SETKEYCODE, KDSIGACCEPT, KDKBDREP, GIO/PIO_FONT, KDG/KDSKBMETA, KDG/KDSKBLED, GIO/PIO_UNIMAP, PIO_UNIMAPCLR, GIO/PIO_UNISCRNMAP, GIO/PIO_FONTX, PIO_FONTRESET, GIO/PIO_CMAP, KDFONTOP, KDG/KDSKBDIACRUC. Local include directives/macros observed in this source are `ioctl_kd.c` and `XLAT_VERBOSE=1`. Locally visible function entry points include `none in wrapper; inherited main/control flow from included implementation`.
+
+Control flow: sys_ioctl wraps __NR_ioctl. Helper families check NULL/invalid pointers, screen maps, keyboard entries/strings/diacritics, keycodes, repeat settings, font buffers, unicode maps, screen maps, fontx, color maps, and unicode diacritics. main also tests scalar sound, tone, LED, mode, IO port, signal, meta, and font operation cases. For wrapper sources, preprocessing first applies the listed macros and then compiles the included base body; runtime control flow is therefore inherited from `ioctl_kd.c` with only the selected xlat, verbosity, injection, pid namespace, or string-length behavior changed.
+
+State and persistence behavior: no persistence; extensive tail-allocated buffers are filled with deterministic byte patterns. RETVAL_INJECTED changes failure expectations to = 42 (INJECTED); DEFAULT_STRLEN controls long string/map truncation; XLAT modes alter symbolic formatting. The tests intentionally avoid durable state; they rely on deterministic local buffers, tail-page allocation, raw syscall/ioctl return capture, and expected-output printing for the strace test harness.
+
+Dependencies and integration points: tests.h, scno.h, linux/kd.h, linux/keyboard.h, signal.h, tail_alloc/fill_memory/print_quoted helpers, xlat macros, ioctl-success-style injection for success variants. Integration is through strace's testsuite: the compiled binary prints the expected trace, the shell harness or test runner captures strace output, and reconciliation compares symbolic ioctl/syscall decoder output against these expectations.
+
+Risks: kernel keyboard header compatibility, missing kbdiacruc/kbdiacrsuc definitions, DEFAULT_STRLEN-dependent truncation, 32/64-bit argument formatting, and xlat table drift. Wrapper files add risk that the include chain, macro value, or test name drifts from the harness entry that invokes it, producing correct C but mismatched expected output.
+
+Test signals: Expected output validates a very broad KD surface, including pointer faults, known/unknown symbols, quoted strings/hex, map truncation, injected output-side fields, and s1024 string-length variants. This file has 3 source lines and 45 bytes; non-empty generated research at the mirrored `Docs/researches/sources/test-tools/strace/tests/ioctl_kd-Xverbose.c_research.md` path is the worker-produced signal for this source item.
+<!-- END_FILE_RESEARCH: sources/test-tools/strace/tests/ioctl_kd-Xverbose.c -->

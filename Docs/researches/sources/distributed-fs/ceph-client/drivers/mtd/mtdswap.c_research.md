@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/mtdswap.c
+
+Purpose: implements an `mtd_blktrans` block device that can be used as swap on raw MTD while doing log-structured page remapping, garbage collection, and eraseblock wear leveling.
+
+Important APIs and types: `struct mtdswap_dev` holds logical-to-physical `page_data`, reverse `revmap`, per-eraseblock `swap_eb` records, red-black trees for clean/used/dirty/fragmented/bitflip/failing blocks, counters, current write block, and I/O buffers. Module parameters select `partitions`, spare eraseblock percentage, and optional built-in swap header. The block translation callbacks are `mtdswap_readsect()`, `mtdswap_writesect()`, `mtdswap_discard()`, `mtdswap_flush()`, `mtdswap_background()`, `mtdswap_add_mtd()`, and `mtdswap_remove_dev()`.
+
+Control flow: add probes only configured MTD indexes, validates erase/write/OOB geometry, computes usable size and spare blocks, allocates maps, scans eraseblocks through OOB clean/dirty markers, and registers a blktrans disk. Writes invalidate any old physical page, trigger foreground GC when free pages are low, append data into the current clean eraseblock, and update both maps. Reads translate a logical page, return zeroes for unmapped pages, retry transient errors, mark bitflip/read-error eraseblocks, and expose an optional fake `SWAPSPACE2` header. Discard clears mappings and feeds affected eraseblocks back into the correct tree. GC picks dirty, fragmented, bitflip, failing, or low-wear blocks, moves active pages, erases, writes clean markers, and reinserts blocks.
+
+State and persistence: logical mappings are volatile and reconstructed from flash contents and OOB markers after attach. Persistent state is page data plus clean/dirty OOB markers carrying erase counts. Erase counts are recovered from markers, with median estimation for no-magic blocks after interrupted erase/header writes.
+
+Dependencies and integration points: depends on MTD read/write/OOB/erase/bad-block APIs, `mtd_blktrans`, Linux swap headers, rbtree ordering by erase count, debugfs statistics, and MTD OOB free bytes for markers.
+
+Risks and test signals: high-risk areas include crash recovery after interrupted marker writes, `spare_eblks` accounting, write-error bad-block transitions, current-write block races with background GC, OOB marker layout, and wear-leveling selection. Tests should simulate bitflips, ECC errors, bad-block marking, short reads/writes, discard after write, header mode page offsets, GC under low clean-block counts, median erase-count recovery, and debugfs counters under the blktrans lock.

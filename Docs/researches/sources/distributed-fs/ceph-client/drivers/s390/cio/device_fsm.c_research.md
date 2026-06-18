@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/s390/cio/device_fsm.c
+
+Purpose: implements the CCW device finite state machine for recognition, online/offline transitions, path verification, timeout recovery, disconnection, boxed devices, and interrupt delivery to upper drivers.
+
+Important APIs/types/functions: exports `ccw_device_set_timeout()` and provides core entry points `ccw_device_timeout()`, `ccw_device_recognition()`, `ccw_device_online()`, `ccw_device_offline()`, `ccw_device_verify_done()`, `ccw_device_notify()`, `ccw_device_trigger_reprobe()`, and `ccw_device_kill_io()`. `dev_jumptable[NR_DEV_STATES][NR_DEV_EVENTS]` maps `enum dev_state` and `enum dev_event` to action handlers. Helpers such as `ccw_device_call_handler()`, `ccw_device_irq()`, `ccw_device_w4sense()`, and `ccw_device_online_verify()` bridge accumulated IRBs, delayed SENSE, and path verification.
+
+Control flow: recognition enables the subchannel, starts SENSE ID, and finishes through `ccw_device_recog_done()` into offline, boxed, or not-operational states. Online setup enables the subchannel and starts PGID/NOOP path verification. Normal interrupts in `DEV_STATE_ONLINE` accumulate IRB status, optionally start basic sense, and call the driver handler only when the status policy permits. Timeouts stop the request with cancel/halt/clear and may move to `DEV_STATE_TIMEOUT_KILL` while waiting for completion. Path events can defer verification until current I/O has delivered final status.
+
+State and persistence behavior: mutable state lives in `struct ccw_device_private` flags, path masks, `intparm`, `async_kill_io_rc`, wait queue, timer, and DMA IRB buffer; `struct subchannel` contributes `lpm`, `opm`, `vpm`, and SCHIB configuration. No disk persistence exists. Hardware state is refreshed with `stsch()`/`cio_update_schib()` and committed through CIO helpers.
+
+Dependencies and integration points: depends on `device.h` states, request handling from the CCW request layer, `device_id.c`, `device_pgid.c`, `device_status.c`, CIO low-level operations, CSS work scheduling, channel-path registration, CMF retry helpers, and driver callbacks `notify`, `path_event`, and `handler`.
+
+Risks and test signals: high-risk behavior is around lost interrupts, fake IRB delivery while verification is active, timeout stop escalation, path mask drift, and notifier decisions for disconnected or boxed devices. Test signals include recognition success/failure/timeout, online/offline with and without path grouping, unit-check delayed sense, unsolicited interrupts, not-operational events, reprobe on disconnected devices, CMF transition states, and timeout logging via `ccw_timeout_log`.

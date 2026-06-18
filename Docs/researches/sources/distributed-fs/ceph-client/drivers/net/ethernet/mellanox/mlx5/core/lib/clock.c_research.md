@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c
+
+Purpose: Implements mlx5 PTP hardware clock support, timestamp conversion, PPS input/output, cross timestamping, real-time clock programming, and shared-clock registration across functions.
+
+Important APIs and flow: `mlx5_init_clock()` allocates per-device clock state, optionally registers a shared clock through devcom using firmware real-time clock identity, or allocates a per-function clock. `mlx5_init_clock_dev()` initializes the cyclecounter/timecounter, clock info page, overflow period, PPS pin config, and registers `ptp_clock_info`. PTP callbacks support get/set time, adjtime, adjfine, adjphase, max phase, auxiliary overflow work, external timestamp, periodic output, PPS, and optional PTM-based cross timestamp/cross cycles. `mlx5_clock_load()` registers PPS EQ notifications and arms PPS input; `mlx5_clock_unload()` unregisters and migrates shared event ownership; cleanup unregisters the PTP clock and frees shared/per-function state.
+
+State and dependencies: `struct mlx5_clock_priv` wraps `struct mlx5_clock`, owner `mdev`, mutex for shared clocks, and event-owner device. The implementation uses seqlocks for timecounter state, firmware registers `MTPPS`, `MTUTC`, `MTCTR`, `MTPTM`, `MRTCQ`, devcom shared clock components, EQ notifiers, PTP kernel APIs, and optional x86 ART/ARM arch timer cross timestamping.
+
+Risks and test signals: High-risk areas are shared-clock owner migration, PPS event delivery when `clock->ptp` registration fails, real-time versus free-running conversion, MTUTC range fallback to settime, overflow scheduling, pin capability verification, and concurrent load/unload. Tests should cover no device frequency fallback, real-time mode, cross timestamp availability, PPS in/out, NPPS duty cycle bounds, shared multi-function registration/unregistration, and internal error handling in overflow work.

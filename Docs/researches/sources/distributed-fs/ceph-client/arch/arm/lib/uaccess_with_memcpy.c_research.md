@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/lib/uaccess_with_memcpy.c
+
+Purpose: optional large-copy acceleration for `arm_copy_to_user` and `arm_clear_user` using direct `__memcpy`/`__memset` after pinning writable user pages, while keeping standard assembly helpers for small copies.
+
+Control flow: `pin_page_for_write` walks current mm page tables, handles huge/THP PMD leaves, locks the PTE or page-table lock, and verifies present/young/write/dirty status. Large copy/clear loops pin one page at a time, enable user access, call `__memcpy` or `__memset`, release the lock, and fault in pages with `__put_user` when pinning fails. State is page-table locks and destination user memory; no persistent globals. Dependencies include mm locks, PTE APIs, highmem/hugetlb awareness, uaccess enable/restore, and standard assembly fallbacks. Risks are races with page table changes, atomic-context mmap locking, huge page handling, threshold validity, and partial-copy accounting. Test signals include large user copies over page boundaries, COW/write-fault paths, huge/THP pages, atomic contexts, and comparison with standard uaccess behavior.

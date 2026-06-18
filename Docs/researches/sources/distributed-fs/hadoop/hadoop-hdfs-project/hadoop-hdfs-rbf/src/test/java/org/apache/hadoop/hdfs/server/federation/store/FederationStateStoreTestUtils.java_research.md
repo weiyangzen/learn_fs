@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/store/FederationStateStoreTestUtils.java
+
+Purpose: utility class for creating, configuring, clearing, and seeding Router Federation state-store services in tests.
+
+Important APIs/types/functions: `StateStoreService`, `StateStoreDriver`, `StateStoreFileImpl`, `StateStoreFileBaseImpl`, `HdfsConfiguration`, `Configuration`, `FileUtils`, `GenericTestUtils`, `Time`, `BaseRecord`, `MountTable`, `MembershipState`, `MembershipStats`, and `FederationNamenodeServiceState`. Constants define a file-backed test driver and test state-store directory.
+
+Control flow: `getStateStoreConfiguration()` creates base configuration; overloaded variant applies a specific driver class. `newStateStore()` deletes old file state, initializes a `StateStoreService`, and waits for readiness. `waitStateStore()` polls until the store becomes ready. `deleteStateStore()` removes the file-backed state directory. `setFileConfiguration()` points config at a unique local state-store directory. `clearAllRecords()` and `clearRecords()` remove persisted records by record type. `synchronizeRecords()` inserts/replaces a collection of records. `createMockMountTable()` and `createMockRegistrationForNamenode()` construct representative mount and membership records for tests.
+
+State and persistence behavior: primarily manipulates file-backed state-store directories under test data paths and record collections inside the driver. Integration points include state-store driver initialization, cache refresh paths, mount-table records, membership records, and test cleanup. Risks include deleting shared test directories if configuration is wrong, UUID/path uniqueness assumptions, and direct driver access bypassing service-level validation. Test signals are helper return booleans and readiness polling used by dependent tests.

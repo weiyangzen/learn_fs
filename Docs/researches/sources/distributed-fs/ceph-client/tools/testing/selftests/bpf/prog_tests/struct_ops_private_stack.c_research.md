@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/struct_ops_private_stack.c
+
+Purpose: architecture-gated struct_ops tests for BPF private stack use, invalid private stack programs, and recursive private stack behavior. It uses three skeletons: success, failure, and recursion.
+
+Control flow on x86_64/aarch64/powerpc64 runs `private_stack`, `private_stack_fail`, and `private_stack_recur`; otherwise it skips. Success loads and attaches struct_ops map `testmod_1`, triggers bpf_testmod read, and checks BSS `val_i=3` and `val_j=8`. Failure opens and expects skeleton load failure. Recursion loads/attaches another struct_ops program, triggers read, and expects `val_j=3`. State is struct_ops links and skeleton BSS outputs. Dependencies are architecture support for private stack, bpf_testmod read trigger, and generated skeletons. Risks are architecture coverage gaps and failing cleanup of struct_ops links on attach/trigger failure. Test signals are architecture skip, expected load error for fail skeleton, trigger success, and exact BSS value assertions.

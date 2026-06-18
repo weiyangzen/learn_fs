@@ -1,0 +1,7 @@
+# sources/user-network-fs/samba/source4/lib/messaging/pymessaging.c
+
+`pymessaging.c` exposes source4 messaging to Python as `samba.messaging.Messaging`. The type owns a talloc context and `imessaging_context`. Constructor arguments are optional `own_id` and `lp_ctx`; IDs can be Python tuples or `samba.dcerpc.server_id` objects. Methods include `send()`, `register()`, `deregister()`, `loop_once()`, `irpc_add_name()`, `irpc_remove_name()`, `irpc_servers_byname()`, `irpc_all_servers()`, and the `server_id` property.
+
+Control flow creates a private event context, then either initializes a listening context for explicit IDs or a discard-incoming client context. Registered Python callbacks are wrapped by `py_msg_callback_wrapper()`, which converts source server IDs to NDR Python objects and calls `(private, msg_type, server_id, bytes)`. Temporary registration returns the allocated message type.
+
+State persists in the Python object's talloc tree and in the shared messaging name database for IRPC names. Risks include callback reference handling: registration `Py_INCREF`s the tuple, but deregistration requires the exact same private-data pointer to release references. The wrapper ignores fd-bearing messages and does not propagate callback exceptions robustly. Test signals include Python send/register round trips, temporary IDs, name registration enumeration, and event-loop timeout behavior.

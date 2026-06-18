@@ -1,0 +1,144 @@
+# Folder Research: sources/storage-engines/rocksdb/util
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 130
+- Recursive researched files: 130
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/storage-engines/rocksdb/util/aligned_buffer.h`
+- `sources/storage-engines/rocksdb/util/aligned_storage.h`
+- `sources/storage-engines/rocksdb/util/async_file_reader.cc`
+- `sources/storage-engines/rocksdb/util/async_file_reader.h`
+- `sources/storage-engines/rocksdb/util/atomic.h`
+- `sources/storage-engines/rocksdb/util/auto_tune_compressor.cc`
+- `sources/storage-engines/rocksdb/util/auto_tune_compressor.h`
+- `sources/storage-engines/rocksdb/util/autovector.h`
+- `sources/storage-engines/rocksdb/util/autovector_test.cc`
+- `sources/storage-engines/rocksdb/util/bit_fields.h`
+- `sources/storage-engines/rocksdb/util/bloom_impl.h`
+- `sources/storage-engines/rocksdb/util/bloom_test.cc`
+- `sources/storage-engines/rocksdb/util/build_version.cc.in`
+- `sources/storage-engines/rocksdb/util/cast_util.h`
+- `sources/storage-engines/rocksdb/util/channel.h`
+- `sources/storage-engines/rocksdb/util/cleanable.cc`
+- `sources/storage-engines/rocksdb/util/coding.cc`
+- `sources/storage-engines/rocksdb/util/coding.h`
+- `sources/storage-engines/rocksdb/util/coding_lean.h`
+- `sources/storage-engines/rocksdb/util/coding_test.cc`
+- `sources/storage-engines/rocksdb/util/compaction_job_stats_impl.cc`
+- `sources/storage-engines/rocksdb/util/comparator.cc`
+- `sources/storage-engines/rocksdb/util/compression.cc`
+- `sources/storage-engines/rocksdb/util/compression.h`
+- `sources/storage-engines/rocksdb/util/compression_context_cache.cc`
+- `sources/storage-engines/rocksdb/util/compression_context_cache.h`
+- `sources/storage-engines/rocksdb/util/compression_test.cc`
+- `sources/storage-engines/rocksdb/util/concurrent_task_limiter_impl.cc`
+- `sources/storage-engines/rocksdb/util/concurrent_task_limiter_impl.h`
+- `sources/storage-engines/rocksdb/util/core_local.h`
+- `sources/storage-engines/rocksdb/util/coro_utils.h`
+- `sources/storage-engines/rocksdb/util/crc32c.cc`
+- `sources/storage-engines/rocksdb/util/crc32c.h`
+- `sources/storage-engines/rocksdb/util/crc32c_arm64.cc`
+- `sources/storage-engines/rocksdb/util/crc32c_arm64.h`
+- `sources/storage-engines/rocksdb/util/crc32c_ppc.c`
+- `sources/storage-engines/rocksdb/util/crc32c_ppc.h`
+- `sources/storage-engines/rocksdb/util/crc32c_ppc_asm.S`
+- `sources/storage-engines/rocksdb/util/crc32c_ppc_constants.h`
+- `sources/storage-engines/rocksdb/util/crc32c_test.cc`
+- `sources/storage-engines/rocksdb/util/data_structure.cc`
+- `sources/storage-engines/rocksdb/util/defer.h`
+- `sources/storage-engines/rocksdb/util/defer_test.cc`
+- `sources/storage-engines/rocksdb/util/dirty_tracked.h`
+- `sources/storage-engines/rocksdb/util/distributed_mutex.h`
+- `sources/storage-engines/rocksdb/util/duplicate_detector.h`
+- `sources/storage-engines/rocksdb/util/dynamic_bloom.cc`
+- `sources/storage-engines/rocksdb/util/dynamic_bloom.h`
+- `sources/storage-engines/rocksdb/util/dynamic_bloom_test.cc`
+- `sources/storage-engines/rocksdb/util/fastrange.h`
+- `sources/storage-engines/rocksdb/util/file_checksum_helper.cc`
+- `sources/storage-engines/rocksdb/util/file_checksum_helper.h`
+- `sources/storage-engines/rocksdb/util/file_reader_writer_test.cc`
+- `sources/storage-engines/rocksdb/util/filelock_test.cc`
+- `sources/storage-engines/rocksdb/util/filter_bench.cc`
+- `sources/storage-engines/rocksdb/util/gflags_compat.h`
+- `sources/storage-engines/rocksdb/util/hash.cc`
+- `sources/storage-engines/rocksdb/util/hash.h`
+- `sources/storage-engines/rocksdb/util/hash128.h`
+- `sources/storage-engines/rocksdb/util/hash_containers.h`
+- `sources/storage-engines/rocksdb/util/hash_map.h`
+- `sources/storage-engines/rocksdb/util/hash_test.cc`
+- `sources/storage-engines/rocksdb/util/heap.h`
+- `sources/storage-engines/rocksdb/util/heap_test.cc`
+- `sources/storage-engines/rocksdb/util/interval_test.cc`
+- `sources/storage-engines/rocksdb/util/io_dispatcher_imp.cc`
+- `sources/storage-engines/rocksdb/util/io_dispatcher_imp.h`
+- `sources/storage-engines/rocksdb/util/io_dispatcher_test.cc`
+- `sources/storage-engines/rocksdb/util/kv_map.h`
+- `sources/storage-engines/rocksdb/util/log_write_bench.cc`
+- `sources/storage-engines/rocksdb/util/math.h`
+- `sources/storage-engines/rocksdb/util/math128.h`
+- `sources/storage-engines/rocksdb/util/murmurhash.cc`
+- `sources/storage-engines/rocksdb/util/murmurhash.h`
+- `sources/storage-engines/rocksdb/util/mutexlock.h`
+- `sources/storage-engines/rocksdb/util/overload.h`
+- `sources/storage-engines/rocksdb/util/ppc-opcode.h`
+- `sources/storage-engines/rocksdb/util/prefix_varint.h`
+- `sources/storage-engines/rocksdb/util/random.cc`
+- `sources/storage-engines/rocksdb/util/random.h`
+- `sources/storage-engines/rocksdb/util/random_test.cc`
+- `sources/storage-engines/rocksdb/util/rate_limiter.cc`
+- `sources/storage-engines/rocksdb/util/rate_limiter_impl.h`
+- `sources/storage-engines/rocksdb/util/rate_limiter_test.cc`
+- `sources/storage-engines/rocksdb/util/repeatable_thread.h`
+- `sources/storage-engines/rocksdb/util/repeatable_thread_test.cc`
+- `sources/storage-engines/rocksdb/util/ribbon_alg.h`
+- `sources/storage-engines/rocksdb/util/ribbon_config.cc`
+- `sources/storage-engines/rocksdb/util/ribbon_config.h`
+- `sources/storage-engines/rocksdb/util/ribbon_impl.h`
+- `sources/storage-engines/rocksdb/util/ribbon_test.cc`
+- `sources/storage-engines/rocksdb/util/semaphore.h`
+- `sources/storage-engines/rocksdb/util/set_comparator.h`
+- `sources/storage-engines/rocksdb/util/simple_mixed_compressor.cc`
+- `sources/storage-engines/rocksdb/util/simple_mixed_compressor.h`
+- `sources/storage-engines/rocksdb/util/single_thread_executor.h`
+- `sources/storage-engines/rocksdb/util/slice.cc`
+- `sources/storage-engines/rocksdb/util/slice_test.cc`
+- `sources/storage-engines/rocksdb/util/slice_transform_test.cc`
+- `sources/storage-engines/rocksdb/util/status.cc`
+- `sources/storage-engines/rocksdb/util/stderr_logger.cc`
+- `sources/storage-engines/rocksdb/util/stderr_logger.h`
+- `sources/storage-engines/rocksdb/util/stop_watch.h`
+- `sources/storage-engines/rocksdb/util/string_util.cc`
+- `sources/storage-engines/rocksdb/util/string_util.h`
+- `sources/storage-engines/rocksdb/util/string_util_test.cc`
+- `sources/storage-engines/rocksdb/util/thread_guard.h`
+- `sources/storage-engines/rocksdb/util/thread_list_test.cc`
+- `sources/storage-engines/rocksdb/util/thread_local.cc`
+- `sources/storage-engines/rocksdb/util/thread_local.h`
+- `sources/storage-engines/rocksdb/util/thread_local_test.cc`
+- `sources/storage-engines/rocksdb/util/thread_operation.h`
+- `sources/storage-engines/rocksdb/util/threadpool_imp.cc`
+- `sources/storage-engines/rocksdb/util/threadpool_imp.h`
+- `sources/storage-engines/rocksdb/util/timer.h`
+- `sources/storage-engines/rocksdb/util/timer_queue.h`
+- `sources/storage-engines/rocksdb/util/timer_queue_test.cc`
+- `sources/storage-engines/rocksdb/util/timer_test.cc`
+- `sources/storage-engines/rocksdb/util/udt_util.cc`
+- `sources/storage-engines/rocksdb/util/udt_util.h`
+- `sources/storage-engines/rocksdb/util/udt_util_test.cc`
+- `sources/storage-engines/rocksdb/util/user_comparator_wrapper.h`
+- `sources/storage-engines/rocksdb/util/vector_iterator.h`
+- `sources/storage-engines/rocksdb/util/work_queue.h`
+- `sources/storage-engines/rocksdb/util/work_queue_test.cc`
+- `sources/storage-engines/rocksdb/util/write_batch_util.cc`
+- `sources/storage-engines/rocksdb/util/write_batch_util.h`
+- `sources/storage-engines/rocksdb/util/xxhash.cc`
+- `sources/storage-engines/rocksdb/util/xxhash.h`
+- `sources/storage-engines/rocksdb/util/xxph3.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

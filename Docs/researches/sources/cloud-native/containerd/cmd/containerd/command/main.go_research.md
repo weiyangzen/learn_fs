@@ -1,0 +1,15 @@
+# sources/cloud-native/containerd/cmd/containerd/command/main.go
+
+Purpose: builds the `containerd` daemon `urfave/cli` application and owns the default foreground daemon startup path. It defines global daemon flags, wires subcommands (`config`, `publish`, `oci-hook`), installs custom help/version behavior, loads and migrates configuration, applies CLI overrides, creates top-level directories, initializes signal/service handling, cleans temporary mounts, and starts the server.
+
+Important APIs/functions: `App()` returns the CLI app; `applyFlags()` overlays CLI values on `srvconfig.Config`; `setLogLevel()` and `setLogFormat()` configure global logging; `dumpStacks()` emits all goroutine stacks and optionally writes a temp log file. The action path uses `defaultConfig()`, `srvconfig.LoadConfigWithPlugins()`, `server.CreateTopLevelDirectories()`, `server.New()`, `server.Start()`, `notifyReady()`, `notifyStopping()` through platform helpers, and Windows service helpers through platform files.
+
+Control flow: if an unexpected positional argument is present, command help is shown. Otherwise the command starts with a default config, conditionally loads the configured TOML path only when it exists or `--config` was explicitly set, applies flags, creates root/state/temp directories, handles Windows service registration/unregistration, starts signal handling before initialization, configures temp mount cleanup, registers tracing log hooks, initializes `server.New()` in a goroutine so startup can be canceled, sends the initialized server to the signal goroutine, starts server listeners, waits for readiness registrations, sends ready notification, then blocks until shutdown.
+
+State and persistence: persistent state is rooted at `config.Root`; transient runtime state is `config.State`; temp mount state is `config.Root/tmpmounts`. CLI `--root` and `--state` are converted to absolute paths. Logging state is process-global logrus/containerd log configuration. Stack dumps are written under `os.TempDir()` when requested.
+
+Dependencies/integration: integrates containerd plugin registry graph for config migrations, server package, mount temp mount cleanup, systemd notification files, Windows service files, OS signals, tracing hooks, and gRPC log suppression. The `--address` flag writes into server plugin config maps for GRPC and default-derived TTRPC.
+
+Risks: startup intentionally runs server initialization asynchronously because backend locks can block; callers must handle early cancellation. `applyFlags()` assumes `config.Plugins` is initialized before address override. `--address` mutates generic `map[string]any` plugin config and returns invalid-argument errors if existing plugin config has the wrong shape. Signal ordering is important because termination can arrive before `serverC` receives the server.
+
+Test signals: behavior is indirectly covered by server/config tests for config loading/migration and directory creation. No direct unit test in this file exercises the full `App().Action` boot sequence, signal races, temp mount cleanup, or service integration.

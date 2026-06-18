@@ -1,0 +1,26 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sh/include/asm/futex-llsc.h -->
+# sources/distributed-fs/ceph-client/arch/sh/include/asm/futex-llsc.h
+
+## Purpose
+Implements SH futex compare-exchange using `movli.l`/`movco.l` load-linked/store-conditional loops and `synco` barriers.
+
+## Important APIs, Types, And Functions
+Key macros/constants include `__ASM_SH_FUTEX_LLSC_H`.
+
+## Control Flow
+Runtime flow is driven by traps, syscalls, context switches, futex atomics, IRQ entry, and scheduler transitions. These headers define register conventions, inline assembly, and selected backends that low-level SH assembly and generic kernel code call. Exception-table fixups are present, so faulting loads/stores must branch to the listed recovery labels and return `-EFAULT` or an equivalent safe result. MMU and NOMMU builds take different paths, usually replacing fault-tolerant or page-table behavior with direct stubs. Atomicity is implemented by CPU-specific primitives or by interrupt exclusion, so the selected backend must match the SMP and CPU configuration. Inline assembly and section directives mean compiler constraints, clobbers, branch-delay slots, and alignment are part of the interface.
+
+## State And Persistence
+State lives in `pt_regs`, `thread_info`, task thread structs, syscall registers, lock words, futex user words, IRQ flags, and status registers. Inline assembly must preserve those layouts exactly across entry and switch paths.
+
+## Dependencies And Integration Points
+Kconfig-sensitive paths mention `CONFIG_MMU`. Integration points are low-level entry assembly, scheduler context switching, syscall tracing, futex/locking code, and IRQ/trap handling.
+
+## Risks And Edge Cases
+Risks include register convention drift, clobbered `pt_regs`, incorrect syscall argument mapping, incomplete exception fixups, lock/futex atomicity loss, and SMP configurations selecting unsupported primitives.
+
+## Test Signals
+Useful signals are syscall tracing tests, ptrace/audit/seccomp checks, futex stress, lock torture, IRQ tracing, context-switch stress, and boot tests with SMP and non-SMP configs.
+
+Source read size: 42 lines, 870 bytes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sh/include/asm/futex-llsc.h -->

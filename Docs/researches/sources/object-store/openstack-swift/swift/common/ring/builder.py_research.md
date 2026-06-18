@@ -1,0 +1,21 @@
+# sources/object-store/openstack-swift/swift/common/ring/builder.py
+
+## Purpose
+`builder.py` implements Swift's ring-building algorithm. `RingBuilder` tracks devices, partition assignments, movement history, replica count, dispersion, balance, overload, and partition-power-increase state. It can rebalance assignments according to device weights and failure-domain tiers, validate the resulting ring, serialize/deserialize builder state, and produce `RingData` for runtime use.
+
+## Important APIs, types, and functions
+The central type is `RingBuilder(part_power, replicas, min_part_hours)`. Public mutation methods include `add_dev()`, `remove_dev()`, `set_dev_weight()`, `set_dev_region()`, `set_dev_zone()`, `set_replicas()`, `set_overload()`, and `change_min_part_hours()`. Operational methods include `rebalance(seed=None)`, `validate(stats=False)`, `get_balance()`, `get_required_overload()`, `pretend_min_part_hours_passed()`, `get_part_devices()`, `get_ring()`, `search_devs()`, and partition-power lifecycle methods `prepare_increase_partition_power()`, `increase_partition_power()`, `cancel_increase_partition_power()`, and `finish_increase_partition_power()`. Persistence is handled by `load()` and `save()`. Supporting internals build replica plans, gather partitions from failed/overweight/undispersed devices, reassign partitions, compute dispersion graphs, and maintain movement bitmaps.
+
+## Control flow and state behavior
+Initialization validates `part_power`, `replicas`, and `min_part_hours`, then creates device lists, version counters, movement arrays, dispersion data, and builder id storage. Device changes mark `devs_changed`, increment `version`, and invalidate cached ring data. `rebalance()` is the main flow: annotate devices with tiers, reject too few weighted devices, snapshot old assignments, update movement ages, build a tier replica plan, set per-device `parts_wanted`, adjust replica table sizes, gather assignments from removed devices and dispersion violations, remove failed devices, gather overweight parts over several attempts, reassign gathered partitions to the most appropriate weighted devices, compute dispersion/changed-parts, and clear temporary tier metadata.
+
+Builder persistence uses pickle protocol 2 over the builder dict. `save()` assigns a UUID builder id if absent and rolls it back on failed save. Runtime ring output is cached in `_ring` until state changes. Partition-power increase is staged through `next_part_power`: prepare records the future power, increase duplicates assignment and movement arrays, cancel records a cleanup state, and finish clears the transition marker.
+
+## Dependencies and integration points
+The builder depends on `swift.common.exceptions`, `swift.common.ring.ring.RingData`, and ring utility functions for tier construction, address normalization, replica validation, device id sizing, and array resizing. It is consumed by `swift-ring-builder`, composite-ring code, tests, and operational tooling. `RingData.save()` later writes the generated ring for runtime `Ring` instances.
+
+## Risks and edge cases
+This file contains the highest-risk algorithmic code in the batch. Rebalance must honor `min_part_hours`, avoid duplicate device assignments per partition, handle fractional replicas, drain removed/zero-weight devices, and avoid poor dispersion under constrained topologies. Pickle loading is unsafe for untrusted files and is intentionally marked nosec. Device id byte resizing must not corrupt existing assignments. `increase_partition_power()` converts `_last_part_moves` to a plain list, which code must continue to tolerate. Randomized sort keys affect determinism unless a seed is supplied. `get_required_overload()` can raise if zero-weight devices still want replicas.
+
+## Test signals
+Tests should cover constructor validation, device add/remove/update validation, rebalance initial and incremental behavior, fractional replica table lengths, min-part-hours enforcement, removed-device reassignment, dispersion graph correctness, duplicate assignment detection, balance calculations, overload planning, seed repeatability, builder id persistence and rollback, legacy builder loading, search filtering including IP normalization, device id byte grow/shrink, and each partition-power-increase lifecycle state.

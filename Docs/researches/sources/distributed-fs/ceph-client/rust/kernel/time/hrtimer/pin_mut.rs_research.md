@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/rust/kernel/time/hrtimer/pin_mut.rs
+
+## sources/distributed-fs/ceph-client/rust/kernel/time/hrtimer/pin_mut.rs
+
+Purpose: implements unsafe/scoped hrtimer support for mutably pinned borrowed objects, `Pin<&mut T>`. Important APIs are `PinMutHrTimerHandle<'a, T>`, `HrTimerHandle::cancel`, `Drop`, `UnsafeHrTimerPointer for Pin<&mut T>`, and `RawHrTimerCallback for Pin<&mut T>`.
+
+Control flow: unsafe `start` obtains a stable `NonNull<T>` from `Pin<&mut T>`, starts the timer, and returns a handle tying the mutable borrow lifetime to the running timer. The callback reconstructs `Pin<&mut T>` from the container pointer, builds context, and calls `T::run`. Drop cancels the timer. State is the non-null raw pointer plus `PhantomData<&'a mut T>`, preserving exclusive borrow semantics at the type level. Dependencies are `Pin`, `NonNull`, `UnsafeHrTimerPointer`, and core hrtimer traits. Integration points are stack-owned or uniquely borrowed timer objects that need mutable callback access. Risks are handle leaks, aliasing if unsafe code creates competing access, callback restart extending mutable borrow expectations, and sleeping/locking constraints inherited from timer mode. Test signals: scoped mutable stack timer example, cancellation before returning the mutable borrow, repeated restart callbacks mutating shared counters, and compile-time exclusion of concurrent borrows.

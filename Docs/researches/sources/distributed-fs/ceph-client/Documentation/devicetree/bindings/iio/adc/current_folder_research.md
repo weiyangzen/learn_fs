@@ -1,0 +1,150 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 136
+- Recursive researched files: 136
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4000.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4030.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4062.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4080.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4130.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4134.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4170-4.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4695.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad4851.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7091r5.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7124.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7173.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7191.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7192.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7280a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7291.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7292.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7298.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7380.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7405.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7476.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7606.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7625.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7768-1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7779.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7780.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7923.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7944.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad7949.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad799x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ad9467.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,ade9000.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,axi-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,max11410.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/adi,max14001.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/allwinner,sun20i-d1-gpadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/allwinner,sun8i-a33-ths.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/amlogic,meson-saradc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/aspeed,ast2400-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/aspeed,ast2600-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/atmel,sama5d2-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/atmel,sama9260-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/avia-hx711.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/brcm,iproc-static-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/cirrus,ep9301-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/cosmic,10001-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/dlg,da9150-gpadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/envelope-detector.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/fsl,imx25-gcq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/fsl,imx7d-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/fsl,vf610-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/gehc,pmc-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/holt,hi8435.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ingenic,adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/lltc,ltc2496.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/lltc,ltc2497.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/marvell,berlin2-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max1027.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max11100.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max1118.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max11205.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max1238.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max1241.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max1363.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max34408.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/maxim,max9611.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/mediatek,mt2701-auxadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/mediatek,mt6359-auxadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/mediatek,mt6360-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/microchip,mcp3201.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/microchip,mcp3564.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/microchip,mcp3911.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/microchip,pac1921.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/microchip,pac1934.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/motorola,cpcap-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nuvoton,nau7802.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nuvoton,nct7201.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nuvoton,npcm750-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nxp,imx8qxp-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nxp,imx93-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nxp,lpc1850-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nxp,lpc3220-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/nxp,s32g2-sar-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,pm8018-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-adc5-gen3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-iadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-rradc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-vadc-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-vadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/renesas,r9a09g077-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/renesas,rcar-gyroadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/renesas,rzg2l-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/renesas,rzn1-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/richtek,rtq6056.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/rockchip-saradc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/rohm,bd79104.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/rohm,bd79112.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/rohm,bd79124.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/samsung,exynos-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/sigma-delta-modulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/sophgo,cv1800b-saradc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/sprd,sc2720-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/st,spear600-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/st,stm32-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/st,stm32-dfsdm-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/st,stmpe-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc081c.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc0832.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc084s021.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc108s102.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc12138.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc128s052.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,adc161s626.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads1015.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads1018.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads1100.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads1119.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads124s08.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads1298.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads131e08.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads131m02.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads7138.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads7924.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads7950.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads8344.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,ads8688.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,am3359-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,lmp92064.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,palmas-gpadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,tlc4541.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,tsc2046.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,twl4030-madc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/ti,twl6030-gpadc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/x-powers,axp209-adc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/xlnx,zynqmp-ams.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

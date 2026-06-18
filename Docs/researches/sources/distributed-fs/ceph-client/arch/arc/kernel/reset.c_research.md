@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/kernel/reset.c
+
+Machine halt/restart/poweroff stubs for ARC. machine_halt() executes `flag 1` to halt; restart and poweroff print or fall through to halt; pm_power_off is exported and initialized NULL. Control flow is reboot/panic/poweroff paths invoking these hooks. State is pm_power_off function pointer. Dependencies are Linux reboot/PM infrastructure and platform-specific overrides that may replace these weak behaviors elsewhere. Risks are restart/poweroff not actually resetting or powering off hardware, leading to hangs in production unless platform handlers are added. Test signals are reboot, halt, poweroff, panic paths, and platform override registration.

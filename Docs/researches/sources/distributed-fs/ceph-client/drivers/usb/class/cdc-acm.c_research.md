@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/usb/class/cdc-acm.c
+
+Purpose: implements the USB CDC Abstract Control Model host driver, exposing compatible modems, serial adapters, and selected vendor devices as `/dev/ttyACM*` TTY devices.
+
+Important APIs and functions: global state includes the `acm_minors` IDR and `acm_tty_driver`. Probe (`acm_probe`) parses CDC descriptors, handles quirks, locates control/data interfaces and endpoints, allocates coherent buffers and URBs, creates sysfs attributes, claims the data interface, and registers a TTY device. TTY operations include install/open/close/hangup/write/write_room/throttle/unthrottle/break/ioctl/termios/modem-control and serial info handlers. URB callbacks include `acm_ctrl_irq` for CDC notifications, `acm_read_bulk_callback` for RX, and `acm_write_bulk` for TX. PM hooks are `acm_suspend`, `acm_resume`, and `acm_reset_resume`.
+
+Control flow: module init allocates/registers a TTY driver, then registers the USB driver. On open, `tty_port_open` activates the port, powers the interface, starts the interrupt notification URB unless the always-poll quirk already does so, configures line coding, clears throttle state, and submits read URBs. Writes allocate one of 16 write buffers, copy user data, take an async autosuspend reference, and either anchor during suspend or submit a bulk/interrupt URB. RX callbacks push data into the TTY flip buffer and resubmit unless throttled. Notification callbacks reassemble fragmented CDC notifications, update control-line counters, hang up on DCD drop when not CLOCAL, and wake waiters.
+
+State and persistence: state lives in `struct acm`: TTY port, USB interfaces/device, URBs, coherent buffers, minor, line coding, control line state, async counters, throttle/error flags, delayed work, suspend count, quirks, country-code sysfs data, and delayed write anchor. No persistent storage is used.
+
+Dependencies and integration points: depends on USB core, CDC descriptor parsing, TTY core, line disciplines, IDR, autosuspend, sysfs, and quirk IDs. It intentionally rejects or ignores devices better handled by other drivers.
+
+Risks: device descriptors are often broken, so probe heuristics and quirks are critical. Concurrency risks include disconnect versus open/write/work, suspended delayed writes, notification reassembly sizing, and unsynchronized `ctrlout` noted by a FIXME. Test signals include module load/unload, enumeration of normal and quirked CDC ACM devices, TTY open/close/hangup, termios and modem control ioctls, throttled RX, fragmented serial-state notifications, autosuspend/resume/reset, disconnect while open, and build coverage with optional conflicting drivers enabled.

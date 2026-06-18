@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs/sysctl.c
+
+Purpose: registers `/proc/sys/fs/nfs` tunables for client behavior. It exposes `nfs_mountpoint_timeout` backed by `nfs_mountpoint_expiry_timeout` with jiffies conversion and `nfs_congestion_kb` for writeback congestion control.
+
+Control flow is simple module lifecycle: `nfs_register_sysctl` calls `register_sysctl("fs/nfs", ...)`, and `nfs_unregister_sysctl` unregisters and clears the header pointer. State is persistent only while the NFS module is loaded and consists of the sysctl table header plus mutable global tunable values consumed by other NFS code, especially writeback congestion in `write.c`. Dependencies include the kernel sysctl API and exported NFS globals. Risks are invalid runtime tuning causing surprising mountpoint expiry or writeback throttling, and lifecycle ordering with filesystem registration. Test signals: sysctl file presence after module init, read/write permission mode 0644, jiffies conversion for timeout, congestion threshold effects, and clean removal on module unload.

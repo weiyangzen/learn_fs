@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/cacheflush/cacheflush01.c
+
+Purpose: simple syscall pass test for `cacheflush()` when `__NR_cacheflush` exists. Setup allocates one page; testcases call the raw syscall for `ICACHE`, `DCACHE`, and `BCACHE`, defining missing constants for m68k-style headers. Important APIs are `tst_syscall(__NR_cacheflush)`, `SAFE_MALLOC`, and architecture `asm/cachectl.h`. State is one allocated userspace page. Dependencies are architecture syscall support; otherwise the file declares `TST_TEST_TCONF`. Risks are architecture-specific cache flag semantics. Test signal is syscall success for each cache selector.

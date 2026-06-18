@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/samba/source4/dsdb/samdb/ldb_modules/audit_util.c -->
+# sources/user-network-fs/samba/source4/dsdb/samdb/ldb_modules/audit_util.c
+
+Purpose: `audit_util.c` is a utility companion for DSDB audit modules. It centralizes classification of secret/password/authentication attributes, caller/session/remote-address lookup, request operation/DN extraction, modify-action naming, and JSON rendering of ldb message attributes with redaction, truncation, and base64 metadata.
+
+Important APIs, types, and functions: public helpers include `dsdb_audit_redact_attribute()`, `dsdb_audit_is_password_attribute()`, `dsdb_audit_is_authentication_information()`, `dsdb_audit_get_remote_address()`, `dsdb_audit_get_actual_sid()`, `dsdb_audit_get_user_sid()`, `dsdb_audit_is_system_session()`, `dsdb_audit_get_unique_session_token()`, `dsdb_audit_get_actual_unique_session_token()`, `dsdb_audit_get_remote_host()`, `dsdb_audit_get_primary_dn()`, `dsdb_audit_get_message()`, `dsdb_audit_get_secondary_dn()`, `dsdb_audit_get_operation_name()`, `dsdb_audit_get_modification_action()`, and `dsdb_audit_attributes_json()`. Static `dsdb_audit_add_ldb_value()` converts one `ldb_val` into a JSON object/null value with optional `base64` and `truncated` flags.
+
+Control flow: callers pass request/module/context objects into focused extractors. Attribute JSON generation iterates all message elements, creates one action object per element, adds add/modify action text, redacts configured sensitive attributes, and otherwise serializes each value. Repeated attribute names are merged under an attribute object with an `actions` array. Zero-length values become JSON nulls; non-printable values are base64-encoded; long values are truncated before optional base64 encoding.
+
+State and persistence: this file has no module-private state and writes no persistent data. It reads opaque ldb context values such as `remoteAddress`, `DSDB_NETWORK_SESSION_INFO`, and `DSDB_SESSION_INFO`, and it reads ACL/session token state via `acl_user_token()`.
+
+Dependencies and integration points: secret/password/authentication lists come from `DSDB_SECRET_ATTRIBUTES`, `DSDB_PASSWORD_ATTRIBUTES`, and `DSDB_AUTHENTICATION_ATTRIBUTES`. The code uses ldb request structs, `tsocket_address`, Samba auth/session structures, security token/SID helpers, JSON audit helpers from `lib/audit_logging`, and base64/string heuristics from ldb.
+
+Risks and edge cases: redaction is name-based and case/list correctness is critical. `dsdb_audit_get_user_sid()` assumes `PRIMARY_USER_SID_INDEX` exists when a token is returned. Several getters return `NULL` for missing opaque values; consumers must tolerate null JSON fields and human-readable formatting of absent SIDs/DNs. Truncation happens before base64 encoding, so encoded output can exceed `MAX_LENGTH`. JSON object ownership is subtle: error paths free partially built objects and return invalid objects that callers must handle.
+
+Test signals: selftest registration includes `samba4.dsdb.samdb.ldb_modules.audit_util`, plus audit-log tests that consume these helpers. Good test cases include redaction of every configured secret/password attribute, base64 and truncation flags, repeated attributes in modify operations, add versus modify action names, missing session/remote opaque values, rename secondary DN extraction, and operation-name mapping for all ldb request types.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/samba/source4/dsdb/samdb/ldb_modules/audit_util.c -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/meson/pinctrl-meson-a1.c
+
+Purpose: Defines the pin controller data for the Amlogic Meson A1 peripheral GPIO banks. It maps A1 pins to GPIO names, peripheral pin groups, pinmux functions, GPIO control banks with drive strength, AXG-generation mux banks, and a platform driver compatible with `amlogic,meson-a1-periphs-pinctrl`.
+
+Important APIs and types: The main object is `meson_a1_periphs_pinctrl_data`, selected by `meson_a1_pinctrl_dt_match` and probed by `meson_pinctrl_probe()`. Static data arrays include `meson_a1_periphs_pins`, `meson_a1_periphs_groups`, `meson_a1_periphs_functions`, `meson_a1_periphs_banks`, `meson_a1_periphs_pmx_banks`, and `meson_a1_periphs_pmx_banks_data`. The file uses `GROUP()` and `GPIO_GROUP()` from the AXG PMX header, so each group carries a 4-bit mux function number in `struct meson_pmx_axg_data`.
+
+Control flow: Driver registration is standard `module_platform_driver()`. When the DT node matches, the common Meson pinctrl probe uses `meson_a1_periphs_pinctrl_data` to register pinctrl and GPIO services. Pinctrl state changes use `meson_axg_pmx_ops`: for each selected group, the AXG helper calculates the register/offset from `meson_a1_periphs_pmx_banks` and writes the group function selector. GPIO requests select function 0 for the pin.
+
+State and persistence: The file contributes immutable metadata only. Hardware-visible state is persistent in GPIO and mux registers until changed or reset. The bank table covers P, B, X, F, and A banks with pull-enable, pull, direction, output, input, and drive-strength registers. Because the data uses `meson_a1_parse_dt_extra`, runtime regmap assignment follows the A1-style common DT parsing path.
+
+Dependencies and integration points: Depends on `dt-bindings/gpio/meson-a1-gpio.h`, `pinctrl-meson.h`, and `pinctrl-meson-axg-pmx.h`. It integrates with storage and low-speed peripheral drivers through DT pinctrl group names. Functions include PSRAM, PWM A-F and high-impedance PWM variants, SPIF, SDCard, TDM A/B and VAD TDM, UART A/B/C, I2C0-3, SPI A, PDM, generated clocks, remote input/output, JTAG A, 32 kHz input, SPDIF input, SWD-like `sw`, 25 MHz clock, CEC A/B, mute key/enable, and test outputs.
+
+Risks: A1 pin groups often provide alternate placements for the same function across banks, so incorrect function numbers can make a legal group select the wrong hardware signal. The PSRAM pins occupy an entire bank and are timing-sensitive. Drive-strength offsets are board-signal-quality relevant; incorrect values may pass simple GPIO testing but fail under high-speed SDCard/SPIF/PSRAM operation. Group names are DT ABI and should not be churned casually.
+
+Test signals: Build and boot with `amlogic,meson-a1-periphs-pinctrl`. Verify pinctrl function/group enumeration, GPIO direction/input/output, GPIO IRQs, pull configuration, and drive-strength writes. Exercise PSRAM, SDCard/SPIF, UART, I2C, SPI, PWM and PWM high-Z modes, TDM/PDM/audio clocks, CEC, remote input/output, and mute pins on actual A1 hardware or board-level loopback tests.

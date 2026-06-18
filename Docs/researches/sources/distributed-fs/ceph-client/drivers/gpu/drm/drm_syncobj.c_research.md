@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_syncobj.c
+
+Purpose: implements DRM synchronization objects for binary and timeline GPU synchronization, including handle/fd lifetime, sync_file import/export, wait and eventfd notification ioctls, reset/signal/query operations, and timeline point transfer.
+
+Important APIs/types/functions: `struct syncobj_wait_entry` and `struct syncobj_eventfd_entry` track blocking waits and eventfd waits. Core APIs include `drm_syncobj_find()`, `drm_syncobj_add_point()`, `drm_syncobj_replace_fence()`, `drm_syncobj_find_fence()`, `drm_syncobj_create()`, `drm_syncobj_get_handle()`, `drm_syncobj_get_fd()`, `drm_syncobj_open()`, and `drm_syncobj_release()`. Ioctl handlers cover create, destroy, handle-to-fd, fd-to-handle, transfer, wait, timeline wait, eventfd, reset, signal, timeline signal, and query. Wait conversion uses `drm_timeout_abs_to_jiffies()`.
+
+Control flow: syncobjs are per-file xarray handles referencing refcounted objects. Binary replacement swaps the RCU fence pointer under spinlock and wakes wait/eventfd entries. Timeline signaling wraps fences in `dma_fence_chain` nodes and installs a new head. Wait paths resolve handles, copy optional timeline points, prevalidate missing fences unless wait-for-submit/available is set, register syncobj callbacks for future fence submission and dma-fence callbacks for signaling, sleep interruptibly until any/all conditions are met, timeout, or signal, then clean all callbacks and refs. FD export uses an anon-inode for whole syncobjs or sync_file for immutable fence snapshots; import reverses those paths.
+
+State and persistence behavior: each `drm_file` owns a `syncobj_xa` until release. Each syncobj stores a refcount, spinlock, RCU fence pointer, submit-wait list, and eventfd list. Timeline history persists through dma_fence_chain links until garbage collected by fence references.
+
+Dependencies and integration points: integrates dma-fence, dma-fence-chain, sync_file, eventfd, anon_inode, xarray, DRM driver feature flags `DRIVER_SYNCOBJ` and `DRIVER_SYNCOBJ_TIMELINE`, and user ioctls used by Vulkan/OpenGL synchronization stacks.
+
+Risks: callback lifetime is subtle: every wait path must remove syncobj callbacks and dma-fence callbacks on all exits. Wait-for-submit asserts no locks are held because it can sleep on userspace-driven submission. Timeline points can be added out of order, producing query ambiguity noted by debug messages. Eventfd callbacks free their own entries after signaling. Importing a sync_file to a timeline point has an allocation error path after finding the syncobj that must still drop references correctly.
+
+Test signals: create/destroy and fd import/export refcounts, sync_file import/export snapshots, binary wait for all/any/timeout/deadline, wait-for-submit across threads, timeline wait-available and signal points, eventfd signal-on-available/signal-on-fence, reset and signal arrays, transfer between binary/timeline syncobjs, query last submitted/signaled, lockdep sleep assertions, and KASAN/KCSAN callback cleanup stress.

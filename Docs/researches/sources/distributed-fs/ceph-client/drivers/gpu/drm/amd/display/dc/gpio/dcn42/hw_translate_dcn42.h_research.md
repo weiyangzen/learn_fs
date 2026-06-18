@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/gpio/dcn42/hw_translate_dcn42.h
+
+Purpose: DCN 4.2 translator declaration. Important APIs are `dal_hw_translate_dcn42_init(struct hw_translate *tr)` and, under `DAL_EMULATION_SUPPORTED`, `dal_emulated_hw_translate_dcn42_init(struct hw_translate *tr)`. The header has no runtime behavior. Integration is through the common translator dispatcher and optional emulation builds. Dependencies are caller-visible `struct hw_translate`. Risks include emulation prototype lacking an implementation in non-emulation objects, signature drift, and missing conditional-build coverage. Tests are compile/link for normal and emulation configurations plus service creation on DCN 4.2.

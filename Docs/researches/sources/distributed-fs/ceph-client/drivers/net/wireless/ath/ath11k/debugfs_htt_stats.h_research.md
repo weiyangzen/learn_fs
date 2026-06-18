@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath11k/debugfs_htt_stats.h
+
+Purpose: Defines the firmware-facing HTT extended-statistics TLV schema used by ath11k debugfs. It is a contract header, not a parser: it assigns TLV tag IDs, bit masks, fixed and variable-length packed structs, counter-array dimensions, peer-stat request modes, and the debugfs HTT stats entry points.
+
+Important APIs and types: `enum htt_tlv_tag_t` maps numeric firmware tags for TX pdev, TX HWQ, TQM, scheduler, ring interface, SRNG, peer, RX pdev/SOC, CCA, TWT, REO resource, sounding, OBSS PD, backpressure, PHY, and peer control-path stats. Key layouts include `htt_tx_pdev_stats_cmn_tlv`, `htt_tx_hwq_stats_cmn_tlv`, `htt_tx_tqm_*`, `htt_tx_de_*`, `htt_ring_if_stats_tlv`, `htt_sring_stats_tlv`, `htt_peer_*`, `htt_tx_peer_rate_stats_tlv`, `htt_rx_peer_rate_stats_tlv`, `htt_rx_pdev_rate_stats_tlv`, `htt_rx_pdev_fw_stats_tlv`, `htt_phy_*`, and `htt_peer_ctrl_path_txrx_stats_tlv`. The only exported routines are `ath11k_debugfs_htt_stats_init()`, `ath11k_debugfs_htt_ext_stats_handler()`, and `ath11k_debugfs_htt_stats_req()`, compiled to no-op stubs when `CONFIG_ATH11K_DEBUGFS` is disabled.
+
+Control flow: No executable control flow lives here beyond debugfs stubs. Runtime flow is driven by `debugfs_htt_stats.c`: users request a stats type, the driver sends an HTT ext-stats command, target-to-host `EXT_STATS_CONF` messages are decoded by tag/length, and the matching struct definitions here determine how bytes are interpreted and printed.
+
+State and persistence: The header owns no state. It defines transient firmware report formats and request constants such as `HTT_STATS_MAGIC_VALUE`, cookie bit masks, peer request selectors, and array bounds. Persistence is firmware-side counter accumulation and the debugfs request buffer maintained elsewhere.
+
+Dependencies and integration points: Depends on Linux bit helpers, packed/flexible array conventions, `ETH_ALEN`, and the HTT ext-stats message definitions in `dp.h`. It integrates with `debugfs_htt_stats.c`, per-peer debugfs in `debugfs_sta.c`, RX HTT message dispatch in `dp_rx.c`, and HTT request generation in `dp_tx.c`.
+
+Risks: Struct layout and tag IDs are firmware ABI. Incorrect array dimensions, missing `__packed`, or wrong masks corrupt parsing. Many TLVs are variable length and must be bounded by the incoming TLV length, not by assumed maximums. Duplicated names such as `HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS` appear in multiple contexts and can hide incompatible firmware evolution. Endianness comments on string/name fields matter for display code.
+
+Test signals: Build with and without `CONFIG_ATH11K_DEBUGFS`; request every supported HTT stat type through debugfs; validate peer-info and peer control-path stats; exercise multi-segment `EXT_STATS_CONF` with done-bit handling; fuzz TLV lengths around flexible arrays; compare printed counters against firmware logs for TX/RX rate, TQM, ring backpressure, PHY, TWT, and CCA reports.

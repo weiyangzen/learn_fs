@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/msm/disp/mdp5/mdp5_plane.c
+
+Purpose: Implements DRM plane support for MDP5, including plane properties, atomic state allocation/printing, framebuffer preparation, atomic validation, async cursor/position updates, hardware pipe programming, scaling, pixel extension, CSC, source addresses, supported formats, and plane construction.
+
+Important APIs/functions: `mdp5_plane_init()` creates DRM planes with MDP5 formats and helper callbacks. `mdp5_plane_atomic_check_with_state()` validates source bounds, scale limits, source split, caps, SMP block needs, and pipe allocation/release. `mdp5_plane_atomic_update()` and `mdp5_plane_atomic_async_update()` program active planes. `mdp5_plane_mode_set()` converts DRM source/destination rectangles to hardware fields, splits wide planes across two pipes, calculates scaling steps and pixel extension, and calls `mdp5_hwpipe_mode_set()`. `mdp5_plane_pipe()`, `mdp5_plane_right_pipe()`, and `mdp5_plane_get_flush()` expose committed pipe ids and flush masks.
+
+Control flow: Atomic check computes max LM dimensions from config, accepts up to 2x max width only when source split is supported, invokes `drm_atomic_helper_check_plane_state()`, derives needed pipe caps from YUV, scaling, rotation, and cursor type, recalculates SMP `blkcfg`, then assigns/release pipes in global state. Atomic update assumes check succeeded and writes registers. Async update is restricted to same CRTC, same FB, same dimensions, unchanged visibility, and already allocated pipe; it updates position registers, commits only the plane flush mask, then swaps private plane state.
+
+State and persistence: `struct mdp5_plane_state` carries assigned left/right pipes, blend stage, and dirtyfb needs across atomic states. Hardware register state is programmed in source pipe registers and committed via CTL flush. Framebuffer mappings are prepared/cleaned through MSM framebuffer helpers.
+
+Dependencies/integration: Uses DRM atomic/helpers, damage clips, GEM prepare helper, MDP5 pipe/SMP/KMS/CRTC/CTL interfaces, MSM framebuffer format/IOVA helpers, default CSC tables, and generated register macros.
+
+Risks and test signals: Scaling math uses fixed hardware limits and can overflow or reject edge cases. Source split assumes equal half-width programming. YUV always enables scale path for chroma upsampling. Async update manually copies private state and temporarily preserves old FB, so refcount and visibility regressions are important. Test RGB/YUV, all rotations/reflections, scaling up/down, cursor async movement, source split, SMP exhaustion, command-mode dirtyfb, and format rejection.

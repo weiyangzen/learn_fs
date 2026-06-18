@@ -1,0 +1,132 @@
+# Folder Research: sources/distributed-fs/openafs/src/WINNT/afsd
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 118
+- Recursive researched files: 121
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afscpcc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_eventlog.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_eventlog.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_flushvol.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_flushvol.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_init.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_init.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsd_service.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsdacl.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsdicon.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsicf.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsicf.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afskfw-int.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afskfw.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afskfw.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afslogon.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afslogon.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsrpc.idl`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/afsshare.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cklog.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_access.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_access.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_aclent.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_aclent.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_btree.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_btree.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_buf.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_buf.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_callback.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_callback.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_cell.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_cell.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_config.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_config.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_conn.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_conn.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_daemon.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_daemon.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dcache.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dcache.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dir.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dir.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_direct.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_direct.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dnlc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dnlc.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dns.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dns.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_dns_private.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_eacces.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_eacces.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_error.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_freelance.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_freelance.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_getaddrs.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_getaddrs.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_ioctl.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_ioctl.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_memmap.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_memmap.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_nls.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_nls.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_performance.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_performance.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_rdr.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_rpc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_rpc.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_scache.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_scache.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_server.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_server.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_user.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_user.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_utils.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_utils.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_vnodeops.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_vnodeops.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_volstat.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_volstat.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_volume.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cm_volume.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/ctokens.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/cunlog.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/fs.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/fs.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/fs_acl.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/fs_acl.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/fs_utils.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/fs_utils.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/krb.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/krb_prot.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/lanahelper.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/lanahelper.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/largeintdotnet.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/logon_ad.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/ms-srvsvc.idl`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/ms-wkssvc.idl`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/msrpc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/msrpc.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/parsemode.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/parsemode.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/rawops.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/rawops.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/rpc_srvsvc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/rpc_wkssvc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb3.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb3.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb_iocons.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb_ioctl.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb_ioctl.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb_rpc.c`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/smb_rpc.h`
+- `sources/distributed-fs/openafs/src/WINNT/afsd/symlink.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

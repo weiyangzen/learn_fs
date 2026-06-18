@@ -1,0 +1,14 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/ti/omap/omap_vout_vrfb.c
+
+
+Purpose: Provides the optional VRFB rotation/mirroring backend for the OMAP V4L2 output driver. It allocates VRFB contexts and shadow buffers, copies user output frames into VRFB-tiled memory with an interleaved DMA transfer, exposes the rotated physical address to DSS, and computes crop offsets compatible with VRFB alignment.
+
+Important APIs/functions: `omap_vout_setup_vrfb_bufs()` requests four VRFB contexts, sizes worst-case 1280x720 shadow buffers to 32-pixel tiles, requests an interleaved DMA channel, allocates a DMA template, initializes the wait queue, and optionally preallocates all buffers. `omap_vout_vrfb_buffer_setup()` caps buffer count to `VRFB_NUM_BUFS`, lazily allocates hidden buffers, and calls `omap_vrfb_setup()` with YUV awareness. `omap_vout_prepare_vrfb()` builds a `dma_interleaved_template` from the vb2 DMA-contig plane into the 0-degree VRFB address, waits for `omap_vout_vrfb_dma_tx_callback()`, checks `dma_async_is_tx_complete()`, and stores the address for the requested rotation view. `omap_vout_calculate_vrfb_offset()` derives `cropped_offset`, `ps`, `vr_ps`, and `line_length` for all rotation/mirror combinations.
+
+Control flow: The main driver calls setup during video device initialization when DSS generation supports VRFB. During queue setup, rotation/mirroring triggers allocation/setup of hidden buffers. Each buffer prepare copies the source frame into VRFB before it can be displayed. During streaming, the main ISR uses `queued_buf_addr[index] + cropped_offset`, where this file supplies both the rotated base address and the crop offset.
+
+State and persistence: State is stored in `struct omap_vout_device`: four `struct vrfb` contexts, `smsshado_*` virtual/physical shadow buffer arrays, `smsshado_size`, `vrfb_static_allocation`, `queued_buf_addr[]`, and `struct vid_vrfb_dma` channel/template/wait/status fields. No persistent storage exists.
+
+Dependencies/integration: Integrates with OMAP VRFB APIs, Linux DMAengine interleaved DMA, `vb2_dma_contig_plane_dma_addr()`, `omap_vout_alloc_buffer()`/`free_buffer()`, and rotation helpers from `omap_voutdef.h`. It is compiled only when `CONFIG_VIDEO_OMAP2_VOUT_VRFB` enables the header prototypes.
+
+Risks and test signals: `req_status` is only set to allocated if the request path sets it correctly; tests should verify behavior when no DMA channel is available, because `omap_vout_prepare_vrfb()` dereferences channel/template for rotated buffers. Timeouts terminate DMA and fail the buffer. Offset math is fragile for YUV virtual pixel size, mirroring, crop edges, and 90/270 rotations. Static allocation failures must release all contexts. Test rotated YUYV/UYVY/RGB565/RGB32 buffers, odd crop rejection upstream, partial mmap buffer allocation with `startindex`, DMA timeout/error injection, unload cleanup, and non-VRFB builds through the stub header.

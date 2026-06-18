@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill08.c
+
+Purpose: checks `kill(0, SIGKILL)` sends to the caller's current process group. The child creates a new process group, forks five paused children, calls `SAFE_KILL(0, SIGKILL)`, and pauses. The parent waits for the manager child and checks it died from `SIGKILL`. State is one isolated process group and paused child processes. Dependencies are `setpgrp`, signal broadcast semantics for PID zero, and LTP child cleanup. Risks are that descendant cleanup is implicit in the group kill; if a child escapes the group, it could leak until harness cleanup. Test signal is parent observing expected `SIGKILL` termination.

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/platform/x86/intel_ips.c -->
+# sources/distributed-fs/ceph-client/drivers/platform/x86/intel_ips.c
+
+Purpose: legacy Intel Intelligent Power Sharing driver for Ibex Peak/Westmere-era platforms. It coordinates CPU and integrated GPU turbo behavior within thermal and power budgets by monitoring PCH thermal registers, adjusting CPU turbo power MSRs, and optionally calling exported i915 turbo hooks.
+
+Important APIs/types/functions: `struct ips_driver` stores MMIO mapping, IRQ, monitor/adjust threads, timer, moving averages, limits, turbo flags, i915 function pointers, and original MSR state. `ips_probe()` initializes hardware and threads. `ips_monitor()` samples temperatures/power and updates averages. `ips_adjust()` periodically raises/lowers CPU and GPU clamps. `ips_irq_handler()` handles ME/EC thermal status updates. `ips_get_i915_syms()` dynamically obtains i915 hooks; `ips_link_to_i915_driver()` lets i915 trigger late symbol retry. Debugfs exposes current CPU/MCH temperature, power, and CPU clamp.
+
+Control flow: PCI probe rejects blacklisted systems, detects supported Westmere CPU/SKU, maps the thermal BAR, validates thermal enable/reporting bits, reads BIOS limits, optionally gets i915 hooks, verifies TDP override support, requests INTx IRQ, enables thermal interrupts, saves original turbo limit MSR, disables CPU turbo, creates an adjust thread, then starts the monitor thread. The monitor thread builds an initial 5-second sample window and wakes the adjust thread. The adjust thread every 5 seconds updates BIOS limits if needed, toggles turbo availability, lowers clamps on MCP limit exceedance, otherwise raises or lowers CPU/GPU according to load and budget. Remove stops threads, frees IRQs, releases i915 symbols, and restores turbo MSR state.
+
+State/persistence: live state is MMIO thermal registers, package MSRs, i915 turbo state, moving averages in memory, and debugfs entries. `orig_turbo_limit` is restored on unload. No persistent user configuration exists. Static `late_i915_load` allows late GPU integration after i915 loads.
+
+Dependencies/integration: depends on PCI thermal sensor ID `0x3b32`, x86 MSR access, boot CPU model data, DMI blacklist, kthreads/timers/IRQs, debugfs, and optional exported i915 symbols. The companion header declares the i915 callback entry point.
+
+Risks: the file notes unsupported dual MCP configs and TODO hotplug handling. CPU turbo is forcibly disabled in current logic because power figures are considered wrong. `get_cpu_power()` and `read_mgtv()` currently return 0 despite computing values, reducing effectiveness. MSR writes and thermal clamp changes are high-impact. Thread startup and error unwind must preserve IRQ/MSR cleanup. Dynamic symbol coupling to i915 can disable GPU turbo if any hook is missing.
+
+Test signals: supported Westmere hardware should initialize, create debugfs, start `ips-monitor` and `ips-adjust`, and log ME update stalls if sequence numbers stop. IRQ status writes should acknowledge EC updates and thermal trips. Removing the module should restore `TURBO_POWER_CURRENT_LIMIT`, stop threads, and release all i915 symbols. Unsupported CPU, disabled thermal device, missing TDP override, and DMI-blacklisted systems should fail probe.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/platform/x86/intel_ips.c -->

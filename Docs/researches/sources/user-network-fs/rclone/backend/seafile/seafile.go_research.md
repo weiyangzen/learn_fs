@@ -1,0 +1,13 @@
+# sources/user-network-fs/rclone/backend/seafile/seafile.go
+
+Purpose: implements the rclone `seafile` backend `fs.Fs` surface, mapping rclone operations onto Seafile libraries and paths. It registers config options for server URL, user/password or saved 2FA token, optional library scoping, encrypted library keys, library creation, and path encoding.
+
+Important APIs/types/functions: `Options` holds remote configuration; `Fs` stores root/library state, REST client, pacer, library cache, feature flags, auth locks, directory creation locks, and encrypted-library renewal. `NewFs` parses config, reveals obscured secrets, checks server version, authenticates, optionally creates/decrypts a selected library, configures feature availability, and handles file-root detection. `Config` is the 2FA state machine. Public rclone methods include `List`, `NewObject`, `Put`, `PutStream`, `Mkdir`, `Rmdir`, `ListR`, `Copy`, `Move`, `DirMove`, `Purge`, `CleanUp`, `About`, `UserInfo`, `PublicLink`, `Shutdown`, plus helpers such as `splitPath`, `buildDirEntries`, `getCachedLibraries`, and `mkMultiDir`.
+
+Control flow: all paths are interpreted as either `library/path` or as paths under the configured library/root directory. Listing root without a configured library returns libraries as directories; otherwise listing resolves a library ID and delegates to API v2/v2.1 helpers. Upload creates a library on demand when possible, then delegates to `Object.Update`. Server-side copy/move ensure destination directories, call Seafile copy/move APIs, then repair Seafile's conflict-renamed target via `adjustDestination`. Directory moves use direct rename when possible, otherwise a random temporary name around Seafile's cross-directory move behavior.
+
+State and persistence: library metadata is cached in `cache.Cache` under `librariesCacheKey`; `createLibraryMutex` serializes global library creation, and `librariesMutex` protects cache access. Encrypted libraries can start a `Renew` loop that periodically re-authorizes the library token. `Config` persists `auth_token` after successful 2FA and clears the password.
+
+Dependencies/integration: depends on rclone `fs`, `configstruct`, `obscure`, `bucket`, `encoder`, `rest`, `pacer`, Seafile API DTOs, and `go-semver`. Implements many optional rclone interfaces and disables unsupported features based on server version and library encryption.
+
+Risks/test signals: path splitting, library cache freshness, concurrent library/directory creation, encrypted library renewal, and Seafile conflict rename semantics are high-risk. Tests in `seafile_internal_test.go` cover path splitting and 2FA states; `seafile_test.go` delegates broad behavior to rclone integration tests.

@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/kernel/time.c
+
+Purpose: supplies ARM-specific time initialization and persistent-clock registration. It exports `rtc_lock` for legacy CMOS/NVRAM configurations, `profile_pc` on SMP, `read_persistent_clock64`, `register_persistent_clock`, and `time_init`.
+
+Control flow: `register_persistent_clock` installs exactly one platform read callback, otherwise the dummy clock returns zero. `time_init` either calls `machine_desc->init_time` or performs common clock DT initialization, timer probing, and hrtimer broadcast setup. `profile_pc` unwinds out of lock functions before returning a profiling PC. State is the registered persistent-clock function pointer and optional RTC spinlock. Dependencies include machine descriptors, common clock, clocksource/timer probe, stack unwinding, and scheduler profiling. Risks are double registration, missing DT timer setup, and unwind failure in profiling. Test signals include boot timer initialization, persistent clock nonzero values on platforms that register one, and profiler samples not stuck in lock helpers.

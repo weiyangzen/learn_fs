@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/cxl/core/hdm.c
+
+Purpose: implements core Host-managed Device Memory decoder and DPA resource management for CXL ports and endpoints. It maps HDM decoder registers, enumerates decoder devices, supports DVSEC range fallback, programs decoder commits/resets, and tracks endpoint DPA allocations across RAM/PMEM partitions.
+
+Important APIs, types, and functions: global `struct cxl_rwsem cxl_rwsem` provides `region` and `dpa` locks. Exported functions include `cxl_dpa_debug()`, `cxl_dpa_setup()`, `devm_cxl_dpa_reserve()`, `cxl_dpa_size()`, `cxl_dpa_resource_start()`, `cxl_resource_contains_addr()`, `cxl_dpa_free()`, `cxl_dpa_set_part()`, `cxl_dpa_alloc()`, `cxl_port_commit_reap()`, `devm_cxl_switch_port_decoders_setup()`, and `devm_cxl_endpoint_decoders_setup()`. Key internals include `devm_cxl_setup_hdm()`, `init_hdm_decoder()`, `cxl_decoder_commit()`, and `cxl_decoder_reset()`.
+
+Control flow: setup maps HDM component registers when present, parses decoder count/interleave/target capabilities, or falls back to DVSEC range emulation for endpoints. Enumeration allocates endpoint or switch decoder devices, initializes each from hardware registers or DVSEC cached ranges, reserves DPA for committed endpoint decoders, and adds devices to the CXL bus. Region construction later allocates DPA with `cxl_dpa_alloc()`, commits decoders in hardware instance order, and resets/reaps them in reverse order.
+
+State and persistence behavior: DPA state is held in `cxlds->dpa_res` and child partition resources. Endpoint decoders hold `dpa_res`, `skip`, `part`, state, and enable/lock flags. `port->hdm_end` tracks DPA reservation order, while `port->commit_end` tracks committed decoder order. Hardware decoder register programming persists until reset or firmware/device state changes; Linux resource reservations are devm-managed and released on port teardown.
+
+Dependencies and integration points: depends on CXL bus/device helpers, PCI/DVSEC decode information from `pci.c`, mailbox sanitize state from `mbox.c`/`memdev.c`, and region code that consumes decoder commit/reset hooks. Debug output integrates with seq_file. EDAC and memdev poison paths use the same DPA and region locks.
+
+Risks: DPA allocation is order-sensitive and uses `skip` reservations to account for sacrificed lower-partition capacity; incorrect skip release can corrupt the resource tree. Decoder commit must be in hardware order and waits only 20 ms for committed/error status. DVSEC fallback locks emulated decoders because runtime range-register updates are not supported. Resetting a decoder moves endpoint state to manual, so userspace must rebuild configuration.
+
+Test signals: enumerate switch and endpoint ports with real HDM registers, no HDM single-dport passthrough, DVSEC fallback, committed and uncommitted decoder registers, invalid interleave encodings, RAM/PMEM partition allocation with skip, out-of-order allocation/free/commit/reset rejection, sanitize-active commit rejection, and DPA resource debug output.

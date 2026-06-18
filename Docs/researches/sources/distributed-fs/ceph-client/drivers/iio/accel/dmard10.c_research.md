@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/iio/accel/dmard10.c
+
+Purpose: direct-mode I2C IIO driver for Domintech ARD10/DMARD10 accelerometer. It performs a multi-step reset/OTP/configuration sequence, exposes raw acceleration and fixed scale, and shuts the chip down on cleanup or suspend.
+
+Important APIs and flow: probe validates two power-on reset marker registers (`STADR` and `STAINT`), allocates an IIO device, calls `dmard10_reset()`, installs `dmard10_shutdown_cleanup()`, and registers. `dmard10_reset()` writes power reset, a multi-byte ACTR mode sequence, oscillator enable, AFE/clock/interrupt/tap parameters, and active mode. `dmard10_read_raw()` reads 8 bytes from `DMARD10_REG_STADR` because individual axes read as zero, selects a 16-bit little-endian slot, sign-extends bit 12, and returns fixed nanoscale. Suspend uses `dmard10_shutdown()`; resume reruns reset.
+
+State, dependencies, risks, and tests: persistent state is the I2C client pointer. Dependencies are SMBus byte/block operations, raw `i2c_master_send()` sequences, and IIO direct mode. Risks include vendor magic initialization, no chip ID beyond reset marker values, interpreting shutdown `i2c_master_send()` byte count as success even if partial positive counts occur, and no buffering/runtime PM. Test signals include marker register validation, reset sequence success, raw reads from the block path, fixed scale, cleanup shutdown, and suspend/resume reset behavior.

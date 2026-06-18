@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_cmd640.c
+
+Purpose: PCI CMD640 PIO-only PATA driver. It supports the PCI variant, disables unsafe prefetch/FIFO behavior, and handles the controller's awkward shared timing on the secondary channel.
+
+Important APIs and control flow: `struct cmd640_reg` stores the last secondary device and saved `DRWTIM23` active/recovery values. `cmd640_set_piomode` computes PIO timings, clamps them into CMD640 register encoding, writes primary-device timings directly, and stores secondary per-device data for command-time switching. `cmd640_qc_issue` reloads `DRWTIM23` when the active secondary device changes, then delegates to `ata_sff_qc_issue`. `cmd640_port_start` allocates timing state. `cmd640_sff_irq_check` reads CFR/ARTIM23 interrupt bits. `cmd640_hardware_init` clears prefetch-related state, sets command timing and burst size, and disables risky FIFOs before `ata_pci_sff_init_one` activates the device.
+
+State, dependencies, and risks: state is per-port timing cache and PCI config register programming. Dependencies are PCI SFF libata support, CMD640 config layout, and PIO32 data transfers. Risks include ancient hardware data-corruption errata, secondary channel shared timing requiring per-command updates, PCI-only coverage despite VLB hardware history, and 40-wire-only cable policy. Test signals are `port_start` private allocation, secondary master/slave switching writes `DRWTIM23`, IRQ status bits match channel interrupts, resume repeats hardware init, and PIO transfers avoid FIFO/prefetch corruption.

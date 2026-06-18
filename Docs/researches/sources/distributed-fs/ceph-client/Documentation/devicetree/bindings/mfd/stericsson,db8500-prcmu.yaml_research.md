@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/stericsson,db8500-prcmu.yaml
+
+Purpose: Binding for the ST-Ericsson DB8500 PRCMU, an always-on power/reset/control microcontroller that exposes syscon registers, regulators, clocks, reset, interrupt control, and nested AB8500 analog-baseband integration.
+
+Important schema surface and control flow: compatible must be `stericsson,db8500-prcmu`, then `syscon`. The node requires three register ranges with names `prcmu`, `prcmu-tcpm`, and `prcmu-tcdm`, one interrupt, address/size cells, `ranges`, interrupt-controller cells, and a `db8500-prcmu-regulators` child. The regulator child enumerates many SoC-internal voltage domains and references the common regulator schema. Pattern properties cover clock-controller, reset-controller, and AB8500 child nodes with their own required compatible/resource contracts.
+
+State, dependencies, and integration: DT state models the PRCMU as both syscon/regmap and MFD parent for power, clock, reset, interrupt, and AB8500 control paths. Dependencies include syscon, regulator, clock, reset, interrupt-controller, and AB8500 schemas. Risks include register range ordering mistakes, missing `ranges` for child translation, regulator child omissions that break platform power domains, and overbroad syscon access expectations. Test signals are binding validation, reg-name ordering checks, syscon lookup, regulator provider creation, and runtime child probe of PRCMU clock/reset/AB8500 devices.

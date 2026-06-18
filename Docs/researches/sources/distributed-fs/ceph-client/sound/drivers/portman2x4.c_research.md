@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/sound/drivers/portman2x4.c
+
+Purpose: implements an ALSA rawmidi driver for the Midiman Portman 2x4 parallel-port MIDI interface. It bridges parport interrupt and byte-clock handshakes to two MIDI inputs and four MIDI outputs.
+
+Important APIs, types, and functions: `struct portman` stores the `snd_card`, rawmidi object, parport device, spinlock, input modes, and input substream pointers. Hardware helpers wrap `parport_write_control()`, `parport_read_status()`, and `parport_write_data()`. `portman_write_midi()`, `portman_read_midi()`, `portman_data_avail()`, and `portman_flush_input()` implement the device protocol. ALSA integration is in rawmidi callbacks `snd_portman_midi_*`, parport callbacks `snd_portman_interrupt()`, `snd_portman_attach()`, and platform probe/remove functions.
+
+Control flow: module init registers the platform driver, then a parport driver. Parport match allocates a platform device, passes the parport through `platform_set_drvdata()`, and the platform probe claims the parport, creates the card/private data, probes hardware strobe and transmit-empty behavior, creates rawmidi ports, flushes inputs, and registers the card. Output trigger drains ALSA transmit bytes under `reg_lock` and writes each byte to the selected Portman output. The parport interrupt loops while `INT_REQ` is asserted, checks both input channels, reads MIDI bytes, and forwards them to triggered rawmidi input substreams.
+
+State and persistence: module parameters control card index/id/enable. Runtime state is in `struct portman`; no persistent storage exists. `mode[]` records whether each input is triggered. The global `platform_devices[]` and `device_count` track attached platform devices for unload.
+
+Dependencies and integration: relies on Linux parport exclusive claims, ALSA rawmidi, platform devices, and IRQ callbacks supplied through `pardev_cb`. Card cleanup releases and unregisters the parport device via `card->private_free`.
+
+Risks: hardware wait loops use `cpu_relax()` without explicit timeouts, so broken hardware or signal lines can spin. `snd_portman_attach()` increments `device_count` without a bound check before storing in `platform_devices[]`; the probe rejects device ids beyond `SNDRV_CARDS`, but the attach path should be watched if many parports exist. Interrupt and trigger paths share `reg_lock`, which is essential because the command/status/data lines are multiplexed. Test signals include successful parport claim/release, rawmidi substream naming, input trigger gating, transmit to all four outputs, detection failures for strobe/TX empty, and unload cleanup.

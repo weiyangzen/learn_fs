@@ -1,0 +1,29 @@
+# sources/test-tools/xfstests/tests/btrfs/198
+
+## Purpose
+
+`sources/test-tools/xfstests/tests/btrfs/198` is btrfs fstests case `198`. It targets multi-device or RAID volume behavior. Source comments describe the scenario as: Test outdated and foreign non-btrfs devices in the device listing. We require at least one raid setup, raid1 is the easiest, use this to gate on wether or not we run this test Make ${SCRATCH_DEV_NAME[1]} a free btrfs device for the raid created above by clearing its superblock don't test with the first device as auto fs check (_check_scratch_fs) picks the first device Check if missing device is reported as in the 196.out
+
+## Important APIs, Types, and Functions
+
+This is an executable bash test, not a library module. Key interfaces are: `_begin_fstest auto quick volume raid` declares tags `auto quick volume raid`; environment gates are expressed through `_require*` helpers; btrfs userspace operations are issued through `$BTRFS_UTIL_PROG` or `_btrfs`. sourced helpers: `./common/preamble`, `./common/filter`, `./common/filter.btrfs`; requirements: `_require_command "$WIPEFS_PROG" wipefs`, `_require_scratch`, `_require_scratch_dev_pool 4`, `_require_btrfs_raid_type raid1`; local shell helpers: `workout()`.
+
+## Control Flow
+
+The script follows the normal fstests lifecycle: source helpers, declare feature tags, gate the environment, create or mount scratch storage, run the btrfs workload, and leave verification to explicit checks plus fstests teardown. The main source-level command path is: `_require_scratch`; `_require_scratch_dev_pool 4`; `_require_btrfs_raid_type raid1`; `"btrfs: skip devices without magic signature when mounting"`; `raid=$1`; `device_nr=$2`; `_scratch_dev_pool_get $device_nr`; `_mount -o degraded ${SCRATCH_DEV_NAME[0]} $SCRATCH_MNT`; `grep -q "${SCRATCH_DEV_NAME[1]}" $tmp.output && _fail "found stale device"`; `_scratch_dev_pool_put`; `workout "raid1" "2"`; `workout "raid5" "3"`; `workout "raid6" "4"`; `workout "raid10" "4"`.
+
+## State and Persistence Behavior
+
+The durable state under test lives on `$SCRATCH_MNT` and, for device-pool tests, on the scratch block devices themselves. Device identity, missing-device state, degraded mounts, and balance/repair writes are part of the persistent test surface. Cleanup code removes temporary files, tears down dm targets or device-pool state when present, and returns control to fstests scratch checking.
+
+## Dependencies and Integration Points
+
+Integration is through xfstests common helpers, btrfs-progs, xfs_io helper commands, optional dm targets, optional loop/debugfs/sysfs facilities, and the scratch filesystem checker. The test is selected by tags `auto quick volume raid` and therefore participates in fstests quick/auto/dangerous/feature subsets according to those labels.
+
+## Risks and Edge Cases
+
+Multi-device tests need enough disposable devices and can leave device scans cached if cleanup does not run.
+
+## Test Signals
+
+A matching `.out` file provides the golden stdout contract for stable messages and filtered command output. Most success is absence of unexpected output, ending with `Silence is golden`.

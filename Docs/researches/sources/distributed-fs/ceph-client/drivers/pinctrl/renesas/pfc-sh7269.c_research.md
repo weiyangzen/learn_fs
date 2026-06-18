@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/renesas/pfc-sh7269.c
+
+## Purpose
+This file is the Renesas SH7269 pin function controller descriptor for the shared SuperH/R-Mobile `sh_pfc` pinctrl driver. It contains no platform probe code of its own; instead it exports `sh7269_pinmux_info`, a static `struct sh_pfc_soc_info` that tells the common driver which pins exist, which GPIO and alternate-function states are legal, and which MMIO registers control mode, direction, and data for the SH7269 ports.
+
+## Important APIs, Types, And Functions
+The large top-level `enum` defines the PFC vocabulary: data tokens for ports A, B, C, D, E, F, G, H, and J; input/output tokens; mode tokens such as `PB22MD_000`; and function marks such as IRQ/PINT, SD/MMC, PWM, IEBus, watchdog, DMAC, ADC, BSC, TMU, SCIF, RSPI, IIC, SSI/SIOF/SPDIF, NAND, CAN, VDC, and LCD signals. `pinmux_data[]` maps each legal mark to the mode bits and, for GPIOs, direction/data states accepted by the core. `pinmux_pins[]` exposes GPIO pins with `PINMUX_GPIO()`, deliberately skipping port I and not exposing port H as normal GPIO pins because the source notes that port H lacks a data register. `pinmux_func_gpios[]` publishes legacy function-GPIO names through `GPIO_FN()`. `pinmux_config_regs[]` describes 16-bit `P?CR` mode registers and `P?IOR` direction registers under `0xfffe38xx`/`0xfffe39xx`; `pinmux_data_regs[]` describes `P?DR` data registers. The exported `sh7269_pinmux_info` connects all of those arrays to the common driver and includes `FORCE_IN`/`FORCE_OUT` fallback tokens for direction selection.
+
+## Control Flow
+Board or SoC setup registers this SoC info with the shared `sh_pfc` implementation. When a consumer requests a GPIO or function, the common driver searches `pinmux_data[]` for a valid combination, then uses `pinmux_config_regs[]` to program the relevant mode and direction fields. GPIO value reads/writes are routed through `pinmux_data_regs[]`. There are no file-local callbacks; all runtime control flow is table-driven after `sh7269_pinmux_info` is selected.
+
+## State And Persistence
+The file's state is immutable descriptor data. Runtime state, locking, GPIO registration, and MMIO access live in the common `sh_pfc` core. Hardware state persists in SH7269 PFC registers until reset or later pinctrl/GPIO changes. Mode registers encode alternate-function selection, I/O registers encode input/output direction, and data registers encode GPIO levels. Port H is a special risk area because the enum contains PH data/function tokens, but the descriptor excludes PH data registers and normal GPIO pins to match the hardware limitation.
+
+## Dependencies And Integration Points
+It depends on `<cpu/sh7269.h>` for pin IDs and register context plus `sh_pfc.h` for the PFC table macros and data contracts. It integrates with the Renesas/SuperH pinctrl core, gpiolib through exported `PINMUX_GPIO()` pins, and legacy function-GPIO users through `GPIO_FN()` names. Peripheral integration covers external bus and memory pins, SD/MMC, SCIF ports 0-7, CAN routes, IIC channels, RSPI, timers/PWM, DMA request/acknowledge, SSI/SIOF/SPDIF audio, NAND, digital video input, and LCD data/control routes on both PG and PJ pin banks.
+
+## Risks
+The main risk is table accuracy: every `PINMUX_DATA()` entry must match the hardware manual's mode field, or the shared driver will program the wrong alternate function without compile-time detection. Several entries combine multiple peripheral choices on one mode value or reuse marks across banks, such as LCD and digital-video pins on PG/PJ, so copy/paste errors are easy to miss. `PINMUX_CFG_REG_VAR()` field widths and reserved gaps must stay aligned with 16-bit register layouts. Port H has nonstandard data behavior and port I is absent; treating either as ordinary GPIO would expose unusable lines. There is no explicit IRQ map in this file, so interrupt routing depends on function selection plus external INTC/platform configuration.
+
+## Test Signals
+Useful signals include successful SH7269 PFC registration, expected GPIO count excluding port H and port I, debugfs pinmux listings showing function-GPIO names, GPIO direction/value tests on representative ports A/B/C/D/F/G/J, pinctrl application for SCIF, SD/MMC, CAN, IIC, RSPI, audio, LCD/VDC, and BSC routes, and register readback of `P?CR`, `P?IOR`, and `P?DR` fields after mux and GPIO operations. Hardware tests should include alternate pins for shared functions such as LCD data on PG vs PJ and CAN/IRQ routes on PC/PJ.

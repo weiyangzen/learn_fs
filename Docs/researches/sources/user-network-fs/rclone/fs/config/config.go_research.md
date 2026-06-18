@@ -1,0 +1,15 @@
+# sources/user-network-fs/rclone/fs/config/config.go
+
+Purpose: owns configuration storage selection/loading/saving, remote creation/update helpers, config path/cache/temp path discovery, environment-precedence reads, and config dump/list helpers.
+
+Important APIs/types/functions: constants define config filenames and common backend keys. `Storage` is the persistent config interface. Globals include `Password`, `configPath`, `cacheDir`, `data`, and `dataLoaded`. Path helpers include `findFile`, `findHomeDir`, `findLocalConfig`, `findAppDataConfig`, `findXDGConfig`, `findDotConfigConfig`, `findOldHomeConfig`, and `makeConfigPath`. Public storage functions include `GetConfigPath`, `SetConfigPath`, `SetData`, `Data`, `LoadedData`, `SaveConfig`, `FileSections`, `FileGetValue`, `FileSetValue`, `FileDeleteKey`, `GetValue`, and `SetValueAndSave`. Remote APIs include `Remote`, `GetRemotes`, `GetRemoteNames`, `UpdateRemoteOpt`, `UpdateRemote`, `CreateRemote`, `PasswordRemote`, `JSONListProviders`, `DumpRcRemote`, `DumpRcBlob`, `Dump`, `GetCacheDir`, `SetCacheDir`, and `SetTempDir`.
+
+Control flow: `init` installs fs package function hooks, chooses initial config/cache dirs, and installs default storage. `makeConfigPath` searches executable-local, platform config dirs, XDG, home `.config`, and legacy home config, creating a new default config dir unless config was explicitly supplied. `LoadedData` lazily loads storage, sets `RCLONE_CONFIG_DIR`, treats missing config as defaults, and fatals on other load errors. `SaveConfig` retries storage save with random short sleeps. `updateRemote` validates options, finds backend type, determines password fields to obscure, builds a mapper, applies key-values and choices, runs interactive or noninteractive backend config, saves, and clears cached remotes for the name.
+
+State and persistence behavior: `configPath` controls storage; empty, OS null, or `/notfound` means memory-only behavior. `dataLoaded` gates lazy load. Remote updates write to config storage except ephemeral keys with `config_` prefix. Environment variables override file values in `GetValue` and are included first in `GetRemotes`.
+
+Dependencies and integration points: ties together `fs` hooks, `configmap`, `obscure`, `fspath`, `rc.Params`, backend registry, cache invalidation, path libraries, random sleeps, and OS environment. It is the core integration point for CLI, rc, backend config, and configfile storage.
+
+Risks: global mutable config state can make tests and concurrent operations order-dependent. `SetData` is ignored in memory-only mode. `SaveConfig` logs failure but does not return an error. `updateRemote` must avoid saving ephemeral keys and must handle obscure/no-obscure options correctly to avoid leaking passwords or double-obscuring.
+
+Test signals: `config_test.go` checks loading via configfile, while configfile, crypt, configmap, and configstruct tests cover major dependencies. Many path and update flows are tested elsewhere outside this subset.

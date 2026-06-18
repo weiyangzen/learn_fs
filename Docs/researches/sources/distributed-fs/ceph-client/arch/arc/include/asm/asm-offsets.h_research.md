@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/asm-offsets.h
+
+Purpose: forwarding header that exposes generated structure offsets to ARC assembly. Important APIs/types/functions: includes `<generated/asm-offsets.h>`. Control flow: no logic beyond include indirection. State and persistence: generated offsets are build artifacts, not runtime state. Dependencies/integration: used by ARC entry/linkage assembly macros for `pt_regs`, `thread_info`, and task offsets. Risks: stale generated offsets cause stack/register save corruption. Test signals: clean rebuilds and entry-path boot tests after structure layout changes.

@@ -1,0 +1,9 @@
+# sources/control-plane/rook/pkg/daemon/ceph/client/filesystem_mirror.go
+
+Purpose: wraps CephFS snapshot mirroring commands for enabling/disabling mirroring, managing peers, configuring snapshot schedules/retention, importing/exporting bootstrap tokens, and reading mirror daemon status.
+
+Important APIs/types: `BootstrapPeerToken` extracts the `token` field from bootstrap creation JSON. Public functions are `RemoveFilesystemMirrorPeer()`, `EnableFilesystemSnapshotMirror()`, `DisableFilesystemSnapshotMirror()`, `AddSnapshotSchedule()`, `AddSnapshotScheduleRetention()`, `GetSnapshotScheduleStatus()`, `ImportFSMirrorBootstrapPeer()`, `CreateFSMirrorBootstrapPeer()`, and `GetFSMirrorDaemonStatus()`.
+
+Control flow and state: enable/disable and peer removal directly mutate CephFS mirror state. Disable treats `ENOTSUP` as idempotent "already disabled." Schedule addition ignores `EEXIST`; retention addition logs an `ENOENT` case as already exists even though that errno usually means missing resource, so that branch deserves scrutiny. `GetSnapshotScheduleStatus()` removes newlines before JSON unmarshalling because the Ceph command may emit a leading newline. Bootstrap import trims token whitespace and enables combined output; bootstrap create unmarshals JSON and returns the raw token bytes.
+
+Dependencies and integration: uses `cephv1.FilesystemSnapshotSchedulesSpec` and `cephv1.FilesystemMirroringInfo`, shared command execution, errno extraction, and logger. It integrates with CephFilesystemMirror reconciliation and status checks. Risks include command behavior changing across Ceph versions, token handling in logs/errors, status command not filtering by filesystem even though `fsName` is accepted for context, and idempotency depending on exact errno extraction. Tests cover core command construction, token base64 validity, peer removal, and daemon status parsing.

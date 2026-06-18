@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/brocade/bna/bfa_cee.c
+
+Purpose: implements the BNA driver's CEE/DCBX/LLDP mailbox client. It allocates DMA-backed buffers for CEE attributes and statistics, sends firmware mailbox requests, converts firmware byte order, tracks pending operations, and notifies callers or registered modules when IOC failure cancels a request.
+
+Important APIs/types/functions: exported functions are `bfa_nw_cee_meminfo`, `bfa_nw_cee_mem_claim`, `bfa_nw_cee_get_attr`, and `bfa_nw_cee_attach`. Internal helpers include `bfa_cee_format_cee_cfg`, `bfa_cee_stats_swap`, `bfa_cee_format_lldp_cfg`, `bfa_cee_attr_meminfo`, `bfa_cee_stats_meminfo`, `bfa_cee_get_attr_isr`, `bfa_cee_get_stats_isr`, `bfa_cee_reset_stats_isr`, `bfa_cee_isr`, and `bfa_cee_notify`.
+
+Control flow: attach registers `bfa_cee_isr` for message class `BFI_MC_CEE` and registers IOC notifications. `bfa_nw_cee_get_attr` checks IOC operational state, rejects concurrent attribute requests with `BFA_STATUS_DEVBUSY`, stores caller buffers/callbacks, builds a `BFI_CEE_H2I_GET_CFG_REQ`, points firmware at `attr_dma.pa`, and queues the mailbox through `bfa_nw_ioc_mbox_queue`. Mailbox ISR dispatches firmware responses by message ID to attribute, stats, or reset-stats completion handlers. IOC disabled/failed notifications synthesize failed completions for any pending operation.
+
+State and persistence behavior: `struct bfa_cee` owns pending booleans, last statuses, callback pointers/arguments, DMA descriptors for attributes and stats, caller-visible `attr` and `stats` pointers, and mailbox command storage. The CEE state is runtime-only; persistent CEE configuration lives in firmware/hardware and is queried into DMA buffers. Firmware returns some fields in network/big-endian order, so completion paths copy and convert before invoking callbacks.
+
+Dependencies and integration points: depends on `bfa_cee.h`, CEE data definitions in `bfa_defs_cna.h`, BFI CEE message definitions in `bfi_cna.h`, and IOC services from `bfa_ioc.h`. It integrates with the BNA adapter via IOC mailbox registration and notification queues. Higher-level ethtool/debugfs code can request CEE attributes via the exported API.
+
+Risks: only `get_attr` is exported in the header although ISR paths for stats/reset exist; if other code later queues stats commands, pending flags and callbacks must be set consistently. The code uses `BUG_ON` for invalid state and unknown CEE response IDs, which can panic the kernel on malformed firmware behavior. Pending operations are not protected by local locks here, so callers must serialize access as implied by the IOC mailbox contract. Byte-order mistakes in CEE structs can surface as incorrect LLDP/DCBX state.
+
+Test signals: call `bfa_nw_cee_get_attr` when IOC is operational and verify callback status plus converted LLDP TTL/system-capability fields. Check `BFA_STATUS_IOC_FAILURE` when IOC is down, `BFA_STATUS_DEVBUSY` for overlapping requests, and failed callback completion on IOC disable/failure. Firmware response tests should cover unknown message IDs and non-OK statuses.

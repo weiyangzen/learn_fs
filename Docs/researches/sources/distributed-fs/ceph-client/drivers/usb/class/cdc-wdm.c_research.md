@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/usb/class/cdc-wdm.c
+
+Purpose: implements USB CDC WDM/WMC device-management support. It exposes management channels as `/dev/cdc-wdm*` character devices and can also register a WWAN control port for protocols such as MBIM or QMI when a parent driver registers it as a subdriver.
+
+Important APIs and functions: `struct wdm_device` owns command, response, and interrupt URBs; buffers; locks; flags; wait queue; work items; optional WWAN port; and a power-management callback. File operations are `wdm_open`, `wdm_release`, `wdm_read`, `wdm_write`, `wdm_poll`, `wdm_flush`, `wdm_fsync`, and `wdm_ioctl`. USB callbacks are `wdm_int_callback`, `wdm_in_callback`, and `wdm_out_callback`. Creation is shared by standalone probe and `usb_cdc_wdm_register`, which exports a subdriver registration API.
+
+Control flow: probe parses the CDC DMM descriptor for `wMaxCommand`, validates the interrupt IN endpoint, allocates the device, registers a USB class minor, and optionally creates a WWAN port. Open prevents concurrent legacy char-device and WWAN use, powers the interface, starts the notification URB on first opener, and increments open count. Writes submit `SEND_ENCAPSULATED_COMMAND` control URBs one at a time. Interrupt notifications for `RESPONSE_AVAILABLE` submit a `GET_ENCAPSULATED_RESPONSE` URB; completed responses append to the userspace buffer or forward to WWAN RX. Reads block or poll on `WDM_READ`, copy buffered data, compact remaining bytes, and service outstanding response notifications.
+
+State and persistence: all state is in memory. Important flags include in-use, disconnecting, read-ready, interrupt stall, poll running, responding, suspending, resetting, overflow, and WWAN-in-use. `resp_count` tracks outstanding response notifications. Buffers hold pending user data only until read.
+
+Dependencies and integration points: depends on USB core, CDC parsing, usb class device registration, wait queues, workqueues, autosuspend, sk_buffs, optional WWAN core, and `linux/usb/cdc-wdm.h` ioctl ABI. Parent drivers may call exported registration and then forward disconnect/PM/reset callbacks.
+
+Risks: races around response notification counts, reset/suspend/disconnect while URBs are active, buffer overflow handling, dual exposure via char device and WWAN, and cleanup deferral when file descriptors remain open. Test signals include WDM device enumeration, nonblocking and blocking read/write, `IOCTL_WDM_MAX_COMMAND`, poll/flush/fsync behavior, multiple response notifications, zero-length and overflow responses, WWAN start/stop exclusivity, autosuspend, reset recovery, and disconnect while open.

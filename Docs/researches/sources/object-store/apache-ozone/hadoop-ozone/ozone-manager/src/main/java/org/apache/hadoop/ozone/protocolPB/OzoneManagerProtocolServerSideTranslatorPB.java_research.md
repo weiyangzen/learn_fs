@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/protocolPB/OzoneManagerProtocolServerSideTranslatorPB.java -->
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/protocolPB/OzoneManagerProtocolServerSideTranslatorPB.java
+
+Purpose: Server-side protobuf translator for the OM RPC protocol. It accepts `OMRequest` messages from `OzoneManagerProtocolPB`, runs request/response feature validation, dispatches read and write paths, records protocol metrics, and converts leader/read-consistency decisions into normal responses or `ServiceException`s.
+
+Important APIs/types/functions: The class implements `OzoneManagerProtocolPB` and owns an `OzoneProtocolMessageDispatcher`, `RequestValidations`, `OzoneManagerRatisServer`, `RequestHandler`, and `OMPerformanceMetrics`. `submitRequest` is the RPC entry point. `processRequest` adds OM lock timing into Hadoop IPC `ProcessingDetails`. `internalProcessRequest` handles S3 auth, read/write routing, retry-cache lookup, and OM execution submission. `submitReadRequestToOM` and its helper methods implement default, local-lease, leader-only linearizable, and allow-follower linearizable read policies. `allowFollowerReadLocalLease` checks follower role info, leader RPC lease age, and commit-index lag.
+
+Control flow: Incoming requests are first validated by annotation-driven validators loaded from `org.apache.hadoop.ozone` with version and metadata context. The dispatcher then calls `processRequest`. Read-only requests bypass Ratis writes and choose either local handler execution or `omExecutionFlow.submit(request, false)` depending on hint, raft role, and linearizable-read configuration. Mutating requests verify S3 credentials when present, otherwise check leader status, consult the Ratis retry cache, remember `lastRequestToSubmit`, and submit to the OM execution flow as a write.
+
+State and persistence behavior: This translator does not persist OM metadata directly. It manipulates per-thread S3 auth context with `OzoneManager.setS3Auth`, updates metrics counters for read paths, stores the last submitted request for tests, and relies on Ratis/OM execution to persist writes. It warns when serialized `OMResponse` size exceeds half of `ipc.maximum.response.length`.
+
+Dependencies and integration points: Integrates Hadoop IPC, Ratis leader/read-index state, OM request validation aspects, S3 credential validation, retry-cache handling, OM metrics, and `OzoneManagerRequestHandler`. `PrepareStatus` is a special local read that is served regardless of leadership for compatibility.
+
+Risks: Read consistency is configuration-sensitive; local-lease reads can intentionally allow stale data if log or time limits are loose. S3 auth path skips a second leader check after credential validation, so `S3SecurityUtil` leader-error propagation is part of correctness. Large responses are only logged, not rejected. Unknown raft statuses map to internal errors.
+
+Test signals: Visible-for-testing methods expose `processRequest`, `logLargeResponseIfNeeded`, and `getLastRequestToSubmit`. Related tests should cover read-hint routing, follower local-lease metrics, leader-not-ready exceptions, S3-auth failures, retry-cache returns, response validation, and lock timing propagation.
+<!-- END_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/protocolPB/OzoneManagerProtocolServerSideTranslatorPB.java -->

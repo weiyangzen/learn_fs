@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+
+## Purpose
+`ar9003_phy.c` is the AR9003 PHY operation implementation for ath9k. It provides channel synthesis, PLL selection, INI programming, baseband activation, spur mitigation, ANI control, noise-floor reads, radar/DFS setup, antenna diversity, fast channel change, spectral scan, TX99 support, transmit-power rate table initialization, operation-table attachment, and baseband watchdog handling.
+
+## Important APIs, Types, and Functions
+The primary exported/externally used entry point is `ar9003_hw_attach_phy_ops()`, which fills `ath_hw_private_ops` and `ath_hw_ops`. Other non-static functions are `ar9003_hw_set_chain_masks()`, `ar9003_hw_init_rate_txpower()`, `ar9003_hw_bb_watchdog_check()`, `ar9003_hw_bb_watchdog_config()`, `ar9003_hw_bb_watchdog_read()`, `ar9003_hw_bb_watchdog_dbg_info()`, and `ar9003_hw_disable_phy_restart()`.
+
+Important static operation implementations include `ar9003_hw_set_channel()`, spur mitigation helpers for CCK/OFDM, `ar9003_hw_compute_pll_control*()`, `ar9003_hw_set_channel_regs()`, `ar9003_hw_init_bb()`, `ar9003_hw_process_ini()`, `ar9003_hw_set_rfmode()`, `ar9003_hw_set_delta_slope()`, `ar9003_hw_rfbus_req()`, `ar9003_hw_rfbus_done()`, `ar9003_hw_ani_control()`, `ar9003_hw_do_getnf()`, `ar9003_hw_ani_cache_ini_regs()`, `ar9003_hw_set_radar_params()`, antenna-diversity helpers, `ar9003_hw_fast_chan_change()`, spectral scan helpers, and TX99 helpers.
+
+## Control Flow
+Device attach calls `ar9003_hw_attach_phy_ops()`. That stores function pointers for channel programming, INI loading, baseband activation, RF bus access, ANI, noise floor, radar, fast channel change, spectral scan, antenna diversity, and TX99; it also initializes noise-floor limits, default radar config, and the CCA register list.
+
+On reset/channel setup, the core uses `process_ini`, `rf_set_freq`, `set_channel_regs`, `init_bb`, and related callbacks. `ar9003_hw_process_ini()` chooses a modal column from band and HT width, programs split SOC/MAC/BB/radio arrays, applies chip-specific post arrays, applies RX/TX gain arrays, handles fast-clock and Japan channel 2484 special cases, stores `ah->modes_index`, runs `ar9003_hw_override_ini()`, sets channel registers and chain masks, and reapplies transmit power. `ar9003_hw_set_channel()` computes synthesizer channel select values for 2 GHz/5 GHz and 25/40 MHz reference clocks, writes synth registers, toggles load, and updates `ah->curchan`.
+
+ANI control updates OFDM weak signal detection, first-step level, spur immunity, and MRC CCK according to `ath9k_ani_cmd` values while caching default INI values in `ah->ani.iniDef`. Spur mitigation reads eeprom spur channels and configures CCK/OFDM masks if a spur lies within the active channel range. Radar configuration writes FIR/RSSI/pulse thresholds and optional DFS INI. Spectral scan config writes count/period/FFT-period and handles the hardware convention that count zero means endless scans. The baseband watchdog path saves hardware status in interrupt context, decides whether a full chip reset is needed for known signatures, can patch DFS FIR power for one signature, logs decoded state-machine fields in bottom-half context, and disables PHY restart after the unsupported-rate RX state-machine hang signature.
+
+## State and Persistence Behavior
+State is held in `struct ath_hw`: current channel, `modes_index`, chain masks, enabled calibration bits, ANI state/defaults, noise-floor limits and register list, radar config, watchdog last status/timeout/hang flag, and per-rate `tx_power` arrays. Hardware state is mostly register programming. No persistent storage is written.
+
+## Dependencies and Integration Points
+The file depends on `ar9003_phy.h` for register maps, `ar9003_eeprom.h` for spur/eeprom helpers, common hw ops/macros, and revision predicates such as `AR_SREV_9462()`/`AR_SREV_9565()`. `ar9003_hw.c` calls `ar9003_hw_attach_phy_ops()` during hardware attach and configures watchdog timeout defaults. `ar9003_mac.c` reads watchdog status from ISR. Calibration, reset, spectral scan, DFS, tx99, and antenna-combining code call through the operation tables populated here. `ar9003_rtt.c` uses the `rfbus_req`/`rfbus_done` operations to safely restore radio retention tables.
+
+## Risks
+This file has high hardware-sequencing risk: wrong modal column, revision predicate, clock mode, or register delay can break channel bring-up. Fast channel change reloads only selected post arrays, so it relies on `modes_index` tracking being correct. Spur mitigation and spectral scan share radar/PHY registers and can interact with DFS behavior. ANI writes are range-checked for levels, but their effects are sensitive to cached INI defaults. Watchdog signature handling is intentionally heuristic and unknown signatures force full reset. `ar9003_hw_set_chain_masks()` has special handling for chainmask `5` and APM three-chain TX, so chainmask tests are important.
+
+## Test Signals
+Reset/channel-change tests should verify successful synth programming, baseband activation, correct `modes_index`, and no PHY hangs across 2 GHz/5 GHz/HT20/HT40/half/quarter-rate channels. ANI tests should confirm counter changes and register updates for each command. DFS/radar tests should check programmed thresholds and event behavior. Spectral scan tests should verify finite versus endless count behavior. Watchdog tests should inject or observe known signatures and confirm reset/no-reset decisions and debug output. TX power tests should verify CCK/OFDM/HT/STBC rate arrays from eeprom target powers.

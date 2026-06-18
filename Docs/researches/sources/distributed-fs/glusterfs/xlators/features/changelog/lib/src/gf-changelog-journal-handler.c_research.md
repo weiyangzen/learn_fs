@@ -1,0 +1,16 @@
+# sources/distributed-fs/glusterfs/xlators/features/changelog/lib/src/gf-changelog-journal-handler.c
+
+## Purpose
+Implements the legacy libgfchangelog journal API backend. It receives journal-path events from the changelog xlator, decodes raw `CHANGELOG.*` files into consumer-readable scratch files, manages `.current`, `.processing`, `.processed`, and `history` scratch directories, and tracks connection state for the API.
+
+## APIs, Types, and Functions
+Core entry points are `gf_changelog_journal_init()`, `gf_changelog_journal_fini()`, `gf_changelog_journal_connect()`, `gf_changelog_journal_disconnect()`, and `gf_changelog_handle_journal()`, matching callback typedefs from the helper API. `gf_changelog_consume()` opens a source changelog, writes decoded output in `.current`, and normally renames it into `.processing`; `gf_changelog_publish()` moves a decoded file from `.current` to `.processing` for history consumers. Decoders include `gf_changelog_decode()`, `gf_changelog_parse_binary()`, and `gf_changelog_parse_ascii()`, with version-specific `nr_gfids` and `nr_extra_recs` tables for v1.1/v1.2 entry records. Processor helpers include `gf_changelog_init_processor()`, `gf_changelog_process()`, `gf_changelog_queue_journal()`, `gf_changelog_open_dirs()`, and `gf_changelog_init_history()`.
+
+## Control Flow, State, and Persistence
+Initialization resolves the scratch directory, creates/cleans `.current` and `.processing`, preserves `.processed`, creates a tracker file, initializes RFC3986 encoding tables, creates a nested history journal, then starts a long-lived processor thread. Runtime journal events are converted into `gf_changelog_entry_t` records under a mutex/condition list; the processor thread consumes each path, decodes the source file after its `CHANGELOG_HEADER`, and writes a normalized line format. Empty changelogs are detected when the header length equals file size and are unlinked from `.current` instead of published. Binary parsing uses `mmap()` because binary GFIDs can contain newline bytes; ASCII parsing converts fop numbers to `gf_fop_list` names and URL-encodes space/newline/percent in entry path material.
+
+## Dependencies and Integration
+Depends on libglusterfs syscall wrappers, UUID helpers, `gf_changelog_write()`, changelog encoding constants from the xlator, memory types, and callback wiring from `gf-changelog-helpers.h`. It is installed as the journal-mode callback in `gf_changelog_register()` and is invoked from the reverse RPC callback path in `gf-changelog-reborp.c`. History APIs in `gf-history-changelog.c` reuse `hist_jnl` and the same consume/publish routines.
+
+## Risks and Test Signals
+Risks include parser fragility on malformed NUL-delimited records, fixed `LINE_BUFSIZE`, unchecked table lookup bounds for fop numbers, thread cancellation cleanup, and scratch-directory destructive cleanup of `.current`/`.processing` at initialization. The source as shown contains duplicated declarations/text fragments in places, which should be compile-checked in this snapshot. Test signals should cover v1.1/v1.2 ASCII and binary changelogs, empty changelog handling, rename/publish failures, disconnect state, queue wakeups, and malformed records that omit separators or contain unknown encodings.

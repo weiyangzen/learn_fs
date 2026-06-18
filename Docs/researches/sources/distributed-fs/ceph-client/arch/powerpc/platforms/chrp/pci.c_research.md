@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/chrp/pci.c
+
+Purpose: CHRP PCI host-bridge discovery and config-space access glue. It supports Golden Gate II LongTrail direct config windows, RTAS config calls, Python, Grackle, Pegasos, CPC710, Hydra Mac I/O enablement, and board-specific PCI fixups.
+
+Important APIs and control flow: `gg2_read_config`/`gg2_write_config` limit bus numbers to the GG2 512 KiB config aperture. `rtas_read_config`/`rtas_write_config` encode bus/devfn/offset/hose global number for RTAS. `setup_python`, `setup_peg2`, and `chrp_find_bridges` select controller ops from OF model data, allocate `pci_controller` structures, process OF ranges, and set `pci_dram_offset`. `hydra_init` maps `mac-io` and enables SCC/SCSI/MPIC feature bits. PCI fixups force Briq Winbond IDE native mode and Pegasos VIA IDE legacy mode.
+
+State, dependencies, and risks: persistent state is global MMIO mapping `gg2_pci_config_base`, `Hydra`, PCI hose configuration, and `pci_dram_offset`. Dependencies include Open Firmware properties, RTAS tokens, indirect PCI helpers, MPIC/Hydra registers, and PCI quirk registration. Risks are firmware-model heuristics, unchecked ioremap assumptions in some paths, host-bridge address quirks, and fixups that mutate class/BAR state before normal PCI enumeration. Test signals are mainly boot-time enumeration logs, PCI device visibility, working IDE interrupts, and platform boot on LongTrail, Briq, Pegasos, and CPC710 systems.

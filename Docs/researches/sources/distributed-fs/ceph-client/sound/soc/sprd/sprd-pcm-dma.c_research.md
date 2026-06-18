@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/soc/sprd/sprd-pcm-dma.c
+
+Purpose: implements the Spreadtrum ASoC PCM platform using dmaengine and Spreadtrum DMA link-list mode. It registers PCM component callbacks and wires in compressed-offload ops from `sprd-pcm-compress.c`.
+
+Important APIs and types: `struct sprd_pcm_dma_private` tracks a substream, DAI-provided DMA parameters, per-channel DMA state, hardware channel count, and per-channel buffer offset. `struct sprd_pcm_dma_data` holds dmaengine channel, descriptor, cookie, link-list coherent memory, and previous pointer. The component callbacks implement open, close, hw_params, hw_free, trigger, pointer, and pcm_new.
+
+Control flow: open sets fixed hardware constraints, period/buffer step constraints of 640 bytes, integer periods, allocates private state, and allocates coherent link-list memory for two channels. `hw_params()` retrieves `sprd_pcm_dma_params` from the CPU DAI, lazily requests as many slave DMA channels as the stream has audio channels, builds one scatterlist per period per channel, configures source/destination addresses depending on playback/capture, configures Spreadtrum DMA link-list mode, and assigns period callbacks unless no-period-wakeup is set. Trigger START submits and issues each prepared descriptor; PAUSE/RESUME call dmaengine pause/resume; STOP terminates channels asynchronously. Pointer queries each channel status and derives a combined interleaved frame position.
+
+State and persistence: per-open coherent link-list memory is freed on close. DMA channels are requested at first hw_params and released on hw_free/error. `pre_pointer` is used to detect wrap and combine positions across split channel buffers. Fixed PCM buffers are allocated by `snd_pcm_set_fixed_buffer_all()`.
+
+Dependencies and integration points: consumes CPU DAI DMA data containing device FIFO physical addresses, burst widths, fragment lengths, and DMA channel names. Depends on Spreadtrum DMA custom `SPRD_DMA_FLAGS()` and `struct sprd_dma_linklist`, dmaengine slave SG APIs, `of_reserved_mem_device_init_by_idx()`, and ASoC component registration for compatible `sprd,pcm-platform`.
+
+Risks: pointer math subtracts `runtime->dma_addr` from `state.residue`, although dmaengine residue is normally remaining bytes, not current DMA address; if this DMA driver returns residue conventionally the pointer will be wrong. A single `sg` allocation is reused for all channels before freeing; descriptors must copy it synchronously. The channel count is assumed to match audio channels and capped at two, so multichannel interleaving support is limited. `devm_kzalloc()` plus manual `devm_kfree()` in close works but ties allocations to device lifetime as well as stream lifetime.
+
+Test signals: playback and capture with one and two channels, 16/24-bit formats, periods at 640-byte multiples, no-period-wakeup mode, pause/resume/stop races, pointer monotonicity across wrap, and reserved-memory versus no-reserved-memory boot paths. Use DMAengine tracepoints to confirm link-list descriptors use intended source/destination addresses.

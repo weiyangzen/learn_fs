@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/hdds/upgrade/TestDNDataDistributionFinalization.java
+
+Purpose: integration tests for datanode-side behavior of the `STORAGE_SPACE_DISTRIBUTION` layout feature during upgrade finalization. It focuses on pending deletion statistics on `KeyValueContainerData` before and after the feature is finalized, plus metadata recalculation behavior when pending-delete fields are absent.
+
+Important APIs/types/functions: `TestDNDataDistributionFinalization`, `init`, `testDataDistributionUpgradeScenario`, `testMissingPendingDeleteMetadataRecalculation`, `validatePreDataDistributionFeatureState`, `validatePostDataDistributionFeatureState`, `validateContainerPendingDeletions`, `validateRecalculationScenario`. It uses `MiniOzoneHAClusterImpl`, `UniformDatanodesFactory`, `SCMConfigurator`, `StorageContainerLocationProtocol`, `OzoneBucket`, `KeyValueContainer`, `KeyValueContainerData`, and `VersionedDatanodeFeatures`.
+
+Control flow: `init` creates a 3-SCM/3-DN HA cluster initialized at `HBASE_SUPPORT`, with DNs explicitly starting at `INITIAL_VERSION`, short heartbeat/block-deletion intervals, no safe-mode wait, and an SCM finalization executor disabled through configurator. It creates a random volume/bucket. The main scenario writes two keys, deletes one to create pending deletion data, validates pre-finalization container statistics, launches `finalizeScmUpgrade` on a background executor, waits for finalization from the SCM client, confirms SCM metadata layout version reaches `STORAGE_SPACE_DISTRIBUTION`, writes/deletes more keys, and validates post-finalization statistics. The recalculation test writes and deletes one key, finalizes, then walks DN containers to confirm pending-delete statistics remain valid.
+
+State and persistence: state lives in the real mini-cluster SCM layout version, datanode layout version managers, OM key/delete operations, container sets on each DN, and `KeyValueContainerData` statistics. It does not directly mutate metadata tables; instead it creates natural pending delete state by writing/deleting keys.
+
+Dependencies and integration points: Ozone HA cluster builder, SCM upgrade finalization RPC, SCM and DN layout managers, block deleting service intervals, client volume/bucket/key APIs, datanode container controllers, and `TestHddsUpgradeUtils.waitForFinalizationFromClient`.
+
+Risks: assertions around `VersionedDatanodeFeatures.isFinalized` are partly guarded by a possible null DN layout version manager, which weakens signal in some test environments. Pending deletion byte-count assertions are broad (`>= 0`) except pre-finalization expecting zero bytes, so this is more smoke/regression coverage than precise accounting. The executor created for finalization is not explicitly shut down.
+
+Test signals: verifies initial SCM MLV, post-finalization MLV, valid container statistics, block pending deletion counts nonnegative, post-finalization pending deletion bytes nonnegative, and pre-finalization pending deletion bytes zero.

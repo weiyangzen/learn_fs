@@ -1,0 +1,15 @@
+## sources/cloud-native/stargz-snapshotter/fs/layer/node.go
+
+Purpose: maps verified layer metadata into a go-fuse node tree, implements directory lookup/read, file open/read, overlay whiteout/opaque semantics, xattrs, symlinks, statfs, passthrough fd support, and a hidden state directory for observability.
+
+Important APIs/types/functions: `OverlayOpaqueType` selects which overlay opaque xattrs are exposed. `newNode` builds the root node around a `reader.Reader`, remote blob, base inode, overlay xattr policy, passthrough config, and access logging flag. `fs` holds shared node state and inode calculators. `node` implements `Readdir`, `Lookup`, `Open`, `Getattr`, `Getxattr`, `Listxattr`, `Readlink`, and `Statfs`. `file` implements read/getattr/passthrough/release. `whiteout` exposes overlayfs char-device whiteouts. `state`, `statFile`, and `statJSON` expose `.stargz-snapshotter/<digest>.json` with error/fetch state. Attribute conversion helpers map metadata to FUSE attrs and system modes.
+
+Control flow: directory reads fetch children from metadata, hide root-level prefetch landmarks and `.wh.*` marker files, synthesize `.`/`..`, synthesize whiteout char entries where no normal sibling replaces them, sort entries, and cache the result. Lookup hides landmarks/whiteout markers, exposes the hidden state directory only by direct lookup, reuses child inodes when cached, resolves metadata children, or synthesizes whiteout nodes. File open creates a reader, logs first access once, and optionally enables passthrough fd using reader support. Reads call the reader and translate non-EOF errors to `EIO`. State file reads update fetched size and percent before marshaling JSON.
+
+State and persistence: nodes cache directory entries under `entsMu`. Each node has an atomic first-access flag. The state file stores last reported error in memory and queries blob fetched size on read. Inode numbers combine `baseInode` with reserved IDs for state/stat files and metadata IDs for source entries; no disk persistence is performed here.
+
+Dependencies and integration points: depends on go-fuse v2 interfaces, `reader.Reader`, metadata attributes, remote blob state, fs common metrics, OCI digest, Linux syscall/unix device helpers, and estargz landmark constants. It is constructed by `layer.RootNode` after verification.
+
+Risks: cached directory entries may go stale if metadata were mutable, though layer metadata is expected immutable. `Getxattr`/`Listxattr` return `ERANGE` based on buffer sizes and include opaque xattrs dynamically. `statJSON.FetchedPercent` divides by size; zero-size blobs would produce NaN/Inf risk. `Open` mutates shared `fs.passThrough.enable` to false on one passthrough failure, affecting later opens. The hidden state directory is not listed but is accessible by name, so callers must treat it as intentional observability surface.
+
+Test signals: layer test utilities cover root landmark hiding, whiteout and opaque xattr synthesis, state file read/report, mode bits, symlink size, directory dot entries, cached prereads, and file read offsets across compression modes and passthrough configurations.

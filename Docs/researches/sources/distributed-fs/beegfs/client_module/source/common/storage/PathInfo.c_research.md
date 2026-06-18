@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/PathInfo.c -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/PathInfo.c
+
+**Purpose:** Serializes/deserializes extra chunk-location path metadata for file inodes. **APIs/functions:** `PathInfo_serialize` and `PathInfo_deserialize`. **Control flow:** serialization writes flags and, only when `PATHINFO_FEATURE_ORIG` is set, writes original parent UID plus aligned original parent entry ID. Deserialization reads flags, conditionally reads those original fields, or defaults UID to 0 and entry ID to NULL, then calls `PathInfo_init`. **State/persistence:** this is an on-wire compatibility contract with common/server `PathInfo`; the ORIG feature controls whether legacy/minimal data is present. **Dependencies/integration:** used in open replies and lookup intent output. **Risks/tests:** callers must not read orig fields unless flags say they are valid; tests should cover ORIG, ORIG_UNKNOWN/no-ORIG, NULL entry IDs, and alignment.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/PathInfo.c -->

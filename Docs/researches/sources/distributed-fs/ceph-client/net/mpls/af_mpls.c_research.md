@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/net/mpls/af_mpls.c -->
+# sources/distributed-fs/ceph-client/net/mpls/af_mpls.c
+
+## Purpose
+Implements the MPLS address-family core for the kernel networking stack. It owns MPLS packet receive/forwarding, LFIB route storage, route netlink operations, MPLS per-device state, MPLS netconf/sysctl exposure, per-network-namespace MPLS platform-label tables, and module registration for packet handling, rtnetlink, rtnl address-family stats, netdevice events, and optional MPLS-over-GRE encap sizing.
+
+## Important APIs, Types, and Functions
+The main packet path is `mpls_forward()`, registered as a packet handler for `ETH_P_MPLS_UC`. `mpls_route_input_rcu()`, `mpls_platform_label_rcu()`, `mpls_select_multipath()`, `mpls_egress()`, and `mpls_multipath_hash()` implement route lookup, RCU-safe table reads, ECMP selection, penultimate-hop pop egress, and hash selection over labels or inner IP headers. Route construction and mutation flow through `rtm_to_route_config()`, `mpls_route_add()`, `mpls_route_del()`, `mpls_rt_alloc()`, `mpls_nh_build*()`, and `mpls_route_update()`. Netlink dump/get/notify paths use `mpls_dump_route()`, `mpls_dump_routes()`, `mpls_getroute()`, and `rtmsg_lfib()`. Device and namespace state is handled by `mpls_add_dev()`, `mpls_dev_notify()`, `resize_platform_label_table()`, `mpls_net_init()`, and `mpls_net_exit()`. Exported helpers include `mpls_output_possible()`, `mpls_dev_mtu()`, `mpls_pkt_too_big()`, `mpls_stats_inc_outucastpkts()`, `nla_put_labels()`, and `nla_get_labels()`.
+
+## Control Flow
+Incoming MPLS frames are accepted only on devices with an `mpls_dev` and enabled input. The packet path decodes the top shim, looks up the label under RCU, selects a live nexthop, pops the top label, rejects bad TTL/LRO/MTU/headroom cases, then either performs PHP egress to IPv4/IPv6 or pushes replacement labels before neighbor transmit. Route add netlink messages are parsed into `mpls_route_config`, validated against MPLS-specific rtmsg restrictions, allocated as one contiguous `mpls_route` plus nexthop/via blocks, then installed under `net->mpls.platform_mutex` using RCU pointer replacement. Netdevice events mark nexthops dead/linkdown, clone routes when unregistering one nexthop from multipath routes, delete routes with no remaining nexthops, and recreate per-device sysctl paths on rename. `platform_labels` sysctl resizes the LFIB table, populating explicit-null IPv4 and IPv6 labels to loopback when the table is large enough.
+
+## State and Persistence
+Persistent namespace state lives in `net->mpls`: platform-label RCU array, label count, seqcount, mutex, global TTL propagation/default TTL, and sysctl header. Per-device persistent state is `struct mpls_dev`, including input flag, stats, and device sysctl. Routes own references to output devices through `netdev_hold()` and release them from RCU callbacks. Per-CPU MPLS link counters are updated in forwarding paths and exported through rtnl AF stats. Route objects and label tables are volatile kernel state controlled by sysctl/netlink, not durable storage.
+
+## Dependencies and Integration Points
+Depends on core netdevice, rtnetlink, neighbor, IPv4/IPv6 route lookup, packet handlers, sysctl, netconf notifications, pernet operations, GSO helpers, MPLS UAPI, and optional IP tunnel encap APIs. It integrates with `mpls_iptunnel.c` through exported label and output helpers, with `mpls_gso.c` through MPLS GSO expectations, with user space via route netlink and `/proc/sys/net/mpls`, and with netdevice lifecycle events through the notifier.
+
+## Risks
+The forwarding path is RCU-sensitive while device events mutate nexthop flags under rtnl/mutex protection. Multipath alive counts and `READ_ONCE()` flag usage must stay consistent or traffic can select dead nexthops. LFIB resizing must preserve old entries, publish table pointer/count atomically with the seqcount, and free old tables after an RCU grace period. Netlink label parsing is strict about BOS, TTL, TC, and implicit-null labels; relaxing it can permit invalid encap. MTU calculations subtract pushed-label headroom and can underflow conceptually if changed without care. Device unregister route cloning must keep netdev references balanced. Netconf/sysctl table copies must free copied tables exactly once.
+
+## Test Signals
+Useful signals include `ip -f mpls route add/del/get/show`, multipath route dumps and hash selection, route replace/excl/create error paths, sysctl resize of `platform_labels`, explicit-null behavior for labels 0 and 2, per-interface `net/mpls/conf/*/input` notifications, device down/up/unregister/rename while routes reference the device, MPLS MTU/GSO oversized traffic, PHP to IPv4 and IPv6 with TTL propagation enabled and disabled, and rtnl group notifications for MPLS route/netconf changes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/net/mpls/af_mpls.c -->

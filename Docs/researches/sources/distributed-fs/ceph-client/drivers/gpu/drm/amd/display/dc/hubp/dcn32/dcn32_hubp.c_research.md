@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/hubp/dcn32/dcn32_hubp.c
+
+Purpose: implements DCN 3.2 HUBP behavior for pstate forcing, MALL selection, SubVP buffering, phantom pipe post-enable, cursor attribute programming with MALL cursor caching, initialization, and function table construction.
+
+Important APIs and functions: `hubp32_update_force_pstate_disallow()` and `hubp32_update_force_cursor_pstate_disallow()` program data and cursor UCLK pstate force bits. `hubp32_update_mall_sel()` writes `USE_MALL_SEL` and cursor caching. `hubp32_prepare_subvp_buffering()` toggles `FORCE_ONE_ROW_FOR_FRAME` and `CURSOR_REQ_MODE`. `hubp32_phantom_hubp_post_enable()` disables GSL, blanks HUBP, and waits for no outstanding requests when the block is live. `hubp32_cursor_set_attributes()` computes cursor pitch, lines per chunk, rounded memory size, and whether to use MALL for cursor. `hubp32_construct()` installs `dcn32_hubp_funcs`.
+
+Control flow: callers use function table hooks installed during construction. Pstate and MALL helpers are direct register updates. SubVP buffering also changes cursor fetch timing so cursor requests start early enough to avoid SubVP regions. Phantom post-enable reads back `DCHUBP_CNTL`; if the HUBP appears ungated, it waits for `HUBP_NO_OUTSTANDING_REQ`. Cursor attributes program address, size, control, settings, and cache mirrored software state unless cursor offload is active.
+
+State and persistence: the file persists pstate force, MALL select, cursor request mode, blank state, and cursor registers in hardware. It also updates `hubp->curs_attr`, `hubp->att`, `hubp->cur_rect`, and `hubp->use_mall_for_cursor`. Cursor MALL use is derived from a 16 KiB threshold after width rounding and format byte-depth calculation.
+
+Dependencies and integration points: includes `dcn32_hubp.h` and reuses DCN 3.1, DCN 3.0, and DCN 2.x helpers. It integrates with DCN 3.2 MALL/SubVP programming, clock manager pstate decisions, cursor programming, and phantom pipe enable flows used by display mode validation and commit paths.
+
+Risks and test signals: pstate force bits and SubVP/MALL programming are latency-sensitive; wrong sequencing can cause underflow, flicker, or memory-clock transition failures. Cursor size arithmetic and the MALL threshold must match hardware cache behavior. `hubp32_init()` writes `HUBPREQ_DEBUG_DB` but the function table uses `hubp3_init`, so init behavior should be checked in call sites. Useful signals include DCN 3.2 modeset, SubVP, MALL static screen, pstate switching, large cursor, cursor offload, phantom pipe, and underflow tests with register readback.

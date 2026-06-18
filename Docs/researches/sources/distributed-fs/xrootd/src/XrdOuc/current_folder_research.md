@@ -1,0 +1,125 @@
+# Folder Research: sources/distributed-fs/xrootd/src/XrdOuc
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 111
+- Recursive researched files: 111
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/xrootd/src/XrdOuc/CMakeLists.txt`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucArgs.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucArgs.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucBackTrace.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucBackTrace.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucBuffer.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucBuffer.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCRC.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCRC.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCRC32C.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCRC32C.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCache.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCache.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCacheCM.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCacheStats.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCallBack.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCallBack.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucChain.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucChkPnt.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCloneSeg.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucCompiler.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucDLlist.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucECMsg.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucECMsg.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucERoute.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucERoute.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucEnum.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucEnv.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucEnv.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucErrInfo.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucExport.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucExport.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucFileInfo.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucFileInfo.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucGMap.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucGMap.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucGatherConf.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucGatherConf.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucHash.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucHashVal.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucIOVec.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucJson.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucLock.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucLogging.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucLogging.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucMapP2X.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucMsubs.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucMsubs.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucN2NLoader.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucN2NLoader.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucN2No2p.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucNList.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucNList.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucNSWalk.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucNSWalk.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucName2Name.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucName2Name.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPList.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPgrwUtils.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPgrwUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPinKing.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPinLoader.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPinLoader.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPinObject.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPinPath.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPinPath.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPreload.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPreload.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPrivateUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucProg.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucProg.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPsx.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPsx.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPup.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucPup.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucRange.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucRash.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucReqID.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucReqID.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSFVec.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSHA3.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSHA3.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSid.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSid.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSiteName.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSiteName.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucStats.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucStream.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucStream.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucString.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucString.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSxeq.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucSxeq.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTList.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTPC.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTPC.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTable.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTokenizer.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTokenizer.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTrace.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucTrace.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucUri.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucUri.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucUtils.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucUtils.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucVerName.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucVerName.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOucXAttr.hh`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOuca2x.cc`
+- `sources/distributed-fs/xrootd/src/XrdOuc/XrdOuca2x.hh`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

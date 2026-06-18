@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/display/xe_display_wa.c
+
+Purpose: exposes display workaround query `intel_display_needs_wa_16023588340` for shared display code. Control flow converts `intel_display` to `xe_device`, selects the root MMIO GT, and checks the Xe GT workaround table for WA 16023588340. State is the generated/out-of-band workaround metadata, not local storage. Dependencies include Intel display workaround headers, Xe device and WA helpers, and generated `xe_wa_oob.h`. Integration points are display workaround programming paths. Risks include null root MMIO GT handling, generated WA table drift, and platform gating errors. Test signals include workaround table build generation and platform-specific display workaround checks.

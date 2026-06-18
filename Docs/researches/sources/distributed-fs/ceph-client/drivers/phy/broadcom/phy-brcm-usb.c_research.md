@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/phy/broadcom/phy-brcm-usb.c
+
+Purpose: Provides the Linux generic PHY platform driver for Broadcom STB USB PHY blocks. It binds device-tree compatibles to chip-specific init functions, creates USB2 and/or USB3 PHY instances, exposes DRD role sysfs controls, manages clocks and wake IRQs, and coordinates suspend/resume sequencing.
+
+Important APIs and types: `struct brcm_usb_phy_data` is the driver-private state with `brcm_usb_init_params`, PHY objects, clocks, wake IRQ, init count, PM notifier, and lock. `struct match_chip_info` binds an init function plus required/optional register-bank requirements to each compatible. Key callbacks are `brcm_usb_phy_probe()`, `brcm_usb_phy_init()`, `brcm_usb_phy_exit()`, `brcm_usb_phy_suspend()`, `brcm_usb_phy_resume()`, and `brcm_usb_phy_xlate()`. Sysfs attributes are `dr_mode` and optional `dual_select`.
+
+Control flow: Probe gets family/product IDs, applies match-data initialization, reads `brcm,ipp`, `brcm,ioc`, `dr_mode`, `brcm,has-xhci`, and `brcm,has-eohci`, maps required register banks by name or legacy index, obtains clocks, creates PHY objects, registers a wake IRQ if present, applies initial IPP/IOC setup, creates sysfs files, gets optional PIARB syscon, forces the hardware off, and registers the OF PHY provider. Consumer `.init()` calls share common setup through `init_count`: the first init enables clocks and runs `brcm_usb_init_common()`, then each PHY type runs USB2 or USB3-specific init. `.exit()` performs type-specific uninit and tears common state down when the last active PHY exits.
+
+State and persistence: `init_count` tracks shared hardware ownership across USB2 and USB3 consumers. Per-PHY `inited` bits let system resume restore only PHYs that were active. `pm_active` from a global PM notifier makes consumer init/exit no-ops during suspend transitions. `ini.port_mode`, `ini.supported_port_modes`, and `ini.wake_enabled` persist across sysfs and PM paths.
+
+Dependencies and integration points: Integrates Linux platform, PHY, OF, clock, interrupt, sysfs, syscon, suspend notifier, and Broadcom STB SoC ID APIs. It delegates all register-level hardware policy to `phy-brcm-usb-init.c`. PHY phandle translation accepts legacy args `0`/`1` and standard `PHY_TYPE_USB2`/`PHY_TYPE_USB3`.
+
+Risks: `brcm_usb_phy_attrs` is a global array mutated at probe to hide `dual_select`, which can be unsafe if multiple devices with different mode support are ever instantiated. Clock enable errors after earlier enables are not fully unwound in all probe subpaths. `init_count` assumes balanced consumer init/exit calls. Resource name `"crtl"` appears intentionally matching existing DT but is easy to mistype in bindings.
+
+Test signals: Device-tree probe for all compatibles, named and legacy resource mapping, module remove, USB2-only/USB3-only/dual configurations, concurrent PHY consumers, sysfs `dual_select` role changes, wake IRQ system suspend/resume, and clock/reset state after failed probe paths.

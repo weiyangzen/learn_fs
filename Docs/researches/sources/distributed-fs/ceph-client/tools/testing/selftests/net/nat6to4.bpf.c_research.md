@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/tools/testing/selftests/net/nat6to4.bpf.c
+
+Purpose: eBPF TC classifier program pair that translates selected Ethernet IPv6 ingress packets into IPv4 and selected Ethernet IPv4 egress packets into IPv6. It is a compact CLAT/NAT64-style selftest object used to exercise `bpf_skb_change_proto()`, checksum adjustment, and verifier-safe packet header mutation.
+
+Important APIs and types: uses BPF section annotations `SEC("schedcls/...")`, `struct __sk_buff`, Ethernet/IP/IPv6/UDP headers, TC actions `TC_ACT_OK` and `TC_ACT_SHOT`, `bpf_htons`, `bpf_ntohs`, `bpf_htonl`, `bpf_skb_change_proto`, `bpf_csum_update`, and `bpf_redirect`.
+
+Control flow: `sched_cls_ingress6_nat_6_prog()` accepts only host-bound Ethernet IPv6 frames with supported L4 protocols (TCP, UDP, GRE, ESP), checks bounds and length, constructs a fixed IPv4 header using hard-coded 192.168.1.2 to 192.168.1.1 addresses, computes header checksum, calls `bpf_skb_change_proto()` to shrink to IPv4, updates checksum state using the negative IPv6 header sum, reloads pointers, writes Ethernet and IPv4 headers, then redirects back to ingress. `sched_cls_egress4_snat4_prog()` validates IPv4, rejects IP options, fragments, bad checksums, and zero UDP checksums, constructs fixed 2001:db8::1 to ::2 IPv6 headers, grows the packet to IPv6, adjusts checksum state, rewrites headers, and lets the packet continue.
+
+State and persistence: there are no maps or persistent state; all behavior is packet-local. Dependencies are libbpf headers, TC direct-action loading, and verifier-friendly bounded parsing. Risks include hard-coded addresses, no extension-header support, no recalculation for zero UDP checksum, and fallback-to-OK behavior that depends on userspace/stack handling. Test signal is successful load/execution without verifier or packet mutation failures.

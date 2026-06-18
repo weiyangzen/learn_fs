@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/acpi/numa/hmat.c
+
+`hmat.c` parses ACPI HMAT and related SRAT entries to publish heterogeneous memory performance, cache attributes, hmem devices, CXL generic-port coordinates, and memory-tier abstract distance data.
+
+Important state includes global lists of `memory_target`, `memory_initiator`, and `memory_locality`, a `target_lock`, cached HMAT revision, per-target resource trees, cache lists, generic port handles, and access-coordinate arrays. Exported APIs are `disable_hmat()`, `hmat_get_extended_linear_cache_size()`, and `acpi_get_genport_coordinates()`. Parsing functions cover SRAT memory affinity, SRAT generic port affinity, HMAT proximity domains, locality matrices, and cache structures. Registration functions publish initiator links, node cache attributes, node performance attributes, DAX hmem resources, hotplug callbacks, default DRAM performance, and memory-tier distance algorithms.
+
+`hmat_init()` exits if SRAT or HMAT is disabled, parses SRAT to seed memory/generic-port targets, parses HMAT revision 1 or 2 subtables, normalizes locality values by revision/data type, stores locality matrices for best-initiator selection, registers targets, and keeps data for hotplug/exported lookups. On parse failure it frees allocated structures and releases the ACPI table.
+
+Dependencies include ACPI SRAT/HMAT parsing, PXM-node helpers from `srat.c`, node sysfs/cache/perf APIs, memregion, DAX hmem, CXL consumers, node hotplug, and memory tiers. Risks include variable-length matrix validation, PXM bitmap bounds, unsupported PCI generic-port handles, retained table/structure lifetime, and unit normalization mistakes. Test signals include absent/disabled HMAT, invalid revisions, malformed lengths, hotplug memory-only nodes, generic-port coordinate lookup, extended-linear cache lookup, hmem registration, and abstract-distance conversion.

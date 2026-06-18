@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/include/rocksdb/db_dump_tool.h
+
+- **Purpose:** Declares small object-oriented wrappers for dumping a RocksDB database to a file and loading a dump file back into a database.
+- **Important APIs/types/functions:** `DumpOptions` contains `db_path`, `dump_location`, and `anonymous` for suppressing DB information headers. `DbDumpTool::Run(const DumpOptions&, Options)` returns `bool`. `UndumpOptions` contains `db_path`, `dump_location`, and `compact_db`. `DbUndumpTool::Run(const UndumpOptions&, Options)` returns `bool`.
+- **Control flow:** The implementation opens the DB using supplied `Options`, scans or reads dump data, writes a dump file for dump mode, or reads the dump file and writes records into a DB for undump mode. `compact_db` requests post-load compaction; `anonymous` controls dump metadata output.
+- **State and persistence behavior:** Dump mode reads a DB path and writes a dump artifact. Undump mode writes to a DB path and can trigger compaction, changing SST layout. The option structs are value types with default booleans and no ownership complexity.
+- **Dependencies:** Includes `<string>` and `rocksdb/db.h`, which brings in `Options` and the DB API.
+- **Integration points:** Used by dump/undump command-line tools, tests for backup-like textual exports, and operational scripts that need a simple programmatic wrapper instead of invoking a separate process.
+- **Risks:** `bool` return loses detailed `Status` diagnostics unless the implementation logs them. Incorrect options can open the wrong DB mode or comparator, making dumps unreadable or undumps invalid. Dump files can expose user data unless `anonymous` only suppresses metadata, not key/value content. Loading into an existing DB path can overwrite or merge with existing data depending on implementation semantics.
+- **Test signals:** Tests should cover dump then undump round-trips, anonymous header suppression, missing path failures, comparator/options mismatches, `compact_db` effects, malformed dump input, and preservation of key ordering and values.

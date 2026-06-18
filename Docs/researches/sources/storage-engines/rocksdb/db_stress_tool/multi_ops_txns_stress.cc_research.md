@@ -1,0 +1,21 @@
+# sources/storage-engines/rocksdb/db_stress_tool/multi_ops_txns_stress.cc
+
+## Purpose
+`multi_ops_txns_stress.cc` implements a specialized db_stress workload for RocksDB `TransactionDB`. It models a simple table with primary index `(a)` and secondary index `(c,a)` and stresses multi-operation transactions that must keep both indexes mutually consistent.
+
+## Important APIs, types, and functions
+The file defines flags for key ranges, key-space persistence, snapshot-read delay, rollback probability, and write-prepared commit-cache eviction. It implements `KeyGenerator`, `Record` encode/decode helpers, `FinishInitDb()`, `ReopenAndPreloadDbIfNeeded()`, operation overrides (`TestGet`, `TestIterate`, `TestCustomOperations`, etc.), transaction bodies (`PrimaryKeyUpdateTxn`, `SecondaryKeyUpdateTxn`, `UpdatePrimaryIndexValueTxn`, `PointLookupTxn`, `RangeScanTxn`), verification (`VerifyDb`, `VerifyPkSkFast`), recovered prepared transaction handling, commit-time write batch injection, timestamped snapshot support, preload/scan routines, factory creation, and option validation.
+
+## Control flow
+Initialization processes recovered prepared transactions, checks whether the DB is empty, preloads fresh records or scans existing records, then finalizes per-thread key generators. Preload partitions `[lb_a,ub_a)` and `[lb_c,ub_c)` by thread, reserves one missing value per range, writes paired primary/secondary entries, and persists the key-space descriptor. Existing DB scan reads that descriptor, walks the primary index, reconstructs existing/missing key sets, and asserts the thread/key-space shape matches the prior run.
+
+Runtime operation dispatch maps normal db_stress percentages to transaction scenarios: `TestGet` performs point lookup by primary key, `TestIterate` performs range scan over a secondary key prefix, and `TestCustomOperations` randomly chooses primary-key update, secondary-key update, or primary value update. Write transactions create a `Transaction`, lock/read required primary rows with `GetForUpdate`, modify primary and secondary index entries, prepare, optionally simulate application rollback via `Status::Incomplete`, write metadata to the commit-time write batch, and commit. Cleanup lambdas update stats on success and roll back plus undo key allocation on failure.
+
+## State and persistence behavior
+The workload does not use the normal expected-state array (`IsStateTracked()` returns false). Its logical state is the DB itself plus per-thread `KeyGenerator` objects tracking existing and non-existing `a` and `c` values. The key-space descriptor is a 16-byte file containing four fixed32 bounds. Transactions also write a monotonic metadata value via `GetCommitTimeWriteBatch()` under a fixed metadata key. Optional timestamped snapshots are created at commit time and old ones are periodically released.
+
+## Dependencies and integration points
+The implementation depends on `multi_ops_txns_stress.h`, `db_stress_common.h`, `WriteBatchWithIndex`, `Defer`, fault-injection infrastructure, `WritePreparedTxnDB` test hook, TransactionDB APIs, iterators, snapshots, CRC32C, fixed-width encoding helpers, and `SharedState` error processing. It integrates with flush/compaction listeners through `VerifyPkSkFast()` and with the main tool through `CreateMultiOpsTxnsStressTest()` and `CheckAndSetOptionsForMultiOpsTxnStressTest()`.
+
+## Risks and test signals
+Correctness hinges on maintaining pk/sk bidirectional consistency under conflicts, rollbacks, prepared transaction recovery, snapshot reads, and background verification. Key-generator state is per thread and assumes stable thread count and key-space partitions across restarts. `SecondaryKeyUpdateTxn()` relies on snapshot plus conflict checking to ensure iterator-observed secondary entries match locked primary rows. Verification aborts on decode failures, missing counterpart entries, CRC mismatches, c-value mismatches, or count mismatches. Tests should exercise all three write transaction types, read-only transactions, rollback injection, recovered prepared transactions, timestamped snapshots, existing-DB scan, preload invariants, listener-triggered fast verification, and rejected option combinations.

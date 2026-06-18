@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/hook.go
+
+Purpose: removes logrus hooks by concrete type name. The single API `RemoveHook(logger, name)` rebuilds a `logrus.LevelHooks` map, retaining hooks whose `fmt.Sprintf("%T", hook)` is not `*log.<name>`, then replaces the logger hooks. State mutation is limited to the passed logger. Dependencies are logrus and fmt. Integration supports toggling CRI-O custom hooks such as `FilterHook` and `FileNameHook`. Risks include matching by stringified type name, package path assumptions, removing all hooks of that type across all levels, and not handling nil logger. Tests cover removing `FilterHook` while preserving `FileNameHook` and replacing hooks.

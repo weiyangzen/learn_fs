@@ -1,0 +1,15 @@
+# sources/object-store/rustfs/crates/ecstore/src/rpc/internode_data_transport.rs
+
+Purpose: This file defines the ecstore internode data-plane transport abstraction for remote disk streams. It keeps large read/write/walk-dir payload movement on HTTP streaming while control-plane metadata, lock, and admin calls remain on gRPC.
+
+Important APIs/types/functions: `InternodeDataTransportCapabilities` advertises streaming read/write/walk-dir support, ordered delivery, optional maximum transfer size, and fallback support. Request structs are `ReadStreamRequest`, `WriteStreamRequest`, and `WalkDirStreamRequest`. The `InternodeDataTransport` trait exposes `open_read`, `open_write`, `open_walk_dir`, `name`, and `capabilities`. `TcpHttpInternodeDataTransport` is the current implementation. URL builders create `/rustfs/rpc/read_file_stream`, `/rustfs/rpc/put_file_stream`, and `/rustfs/rpc/walk_dir` URLs with encoded query fields. `build_internode_data_transport` and `build_internode_data_transport_from_env` choose the backend.
+
+Control flow: A read request builds a signed GET URL with disk, volume, path, offset, and length, then returns a boxed `HttpReader`. A write request builds a signed PUT URL with disk, volume, path, append, and size, then returns a boxed `HttpWriter`. A walk-dir request signs a GET URL containing the disk reference and passes the serialized body plus optional stall timeout into `HttpReader::new_with_stall_timeout`. Backend selection trims the configured value, defaults blanks to `tcp-http`, accepts the configured default and `tcp` alias case-insensitively, and rejects unknown values with a message listing known backends.
+
+State and persistence behavior: The module writes no persistent data. In non-test builds, `build_internode_data_transport_from_env` caches the first resolved transport or configuration error in a `OnceLock`, so environment changes after first use do not affect the selected data transport. In tests, the cache is bypassed to allow per-test configuration.
+
+Dependencies and integration points: This module is re-exported by `rpc/mod.rs` and is used by remote disk code to open stream readers/writers. It depends on `rustfs_rio::HttpReader/HttpWriter`, `crate::disk::{FileReader, FileWriter}`, `crate::rpc::build_auth_headers`, `rustfs_config` transport constants, `http`, `urlencoding`, `async_trait`, and ecstore disk errors.
+
+Risks: Only the TCP/HTTP implementation is currently available, so the abstraction is future-facing but not yet multi-backend. URLs encode query values but trust `endpoint` as a complete base URL. The cached error behavior means a bad environment value at first access persists until process restart. Authentication uses the full URL for signing, while verification in tests demonstrates path/query canonicalization compatibility.
+
+Test signals: Tests verify capability flags, URL query encoding for disk/volume/path fields, default and blank transport behavior, accepted aliases, known-backend list expectations, rejection of unsupported backends, and raw cached error message shape. There are no live network streaming tests in this file.

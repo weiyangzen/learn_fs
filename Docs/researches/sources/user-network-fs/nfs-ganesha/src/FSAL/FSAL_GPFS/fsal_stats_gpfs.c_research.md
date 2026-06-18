@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_GPFS/fsal_stats_gpfs.c
+
+- **Purpose:** Provides GPFS FSAL operation statistics storage, initialization, optional DBus export, opcode naming, and reset support.
+- **Important APIs/types/functions:** Global `gpfs_op_stats`, global `gpfs_stats`, `prepare_for_stats`, `fsal_gpfs_extract_stats` under `USE_DBUS`, `fsal_gpfs_reset_stats`, and private `gpfs_opcode_to_name`.
+- **Control flow:** `prepare_for_stats` sets the module stats pointer and pre-fills each stats slot with its GPFS opcode using `gpfs_op2index`. When DBus is enabled, `fsal_gpfs_extract_stats` emits a GPFS stats structure, skipping placeholder indexes and zero-count ops, computing average/min/max response times in seconds from stored nanosecond/microsecond-scaled counters, and appending a dummy row if there are no stats. `fsal_gpfs_reset_stats` atomically zeros counters for all physical indexes.
+- **State and persistence behavior:** The file owns in-memory process-wide stats arrays. Stats are updated by `gpfs_ganesha` in `gpfsext.c` when FSAL stats are enabled; reset clears counters but not opcode mappings.
+- **Dependencies and integration points:** Integrated with the FSAL module stats pointer, `nfs_param.core_param.enable_FSALSTATS`, DBus status reporting, atomic helpers, and GPFS opcode constants from `gpfs_nfs.h`.
+- **Risks:** DBus extraction only compiles under `USE_DBUS`; non-DBus builds rely on reset/init only. Placeholder indexes must remain aligned with `gpfs_op2index`. Direct non-atomic comparisons of min/max update fields happen in `gpfsext.c`, so concurrent stats accuracy may be approximate.
+- **Test signals:** Verify stats initialization maps every opcode, ioctl calls increment counters when stats are enabled, DBus extraction emits named rows and dummy `None` row with zero operations, reset clears all counters, and placeholder indexes are skipped.

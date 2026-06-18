@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/power/supply/ab8500_bmdata.c
+
+Purpose: this file supplies default AB8500 battery-management data and helpers for filling missing device-tree battery information. It exports the global `ab8500_bm_data` consumed by the AB8500 battery temperature, charger, fuel gauge, and charging algorithm components.
+
+Important APIs, types, and functions: default tables include `ocv_cap_tbl`, `temp_to_batres_tbl_thermistor`, and two-phase `ab8500_maint_charg_table`. Default parameter structures include `cap_levels`, `fg`, `ab8500_maxi_params`, and `chg`. The exported `ab8500_bm_data` sets safety timers, temperature polling intervals, backup battery voltage/current register values, fuel-gauge resistor, capacity levels, charger limits, maximization parameters, and fuel-gauge parameters. `ab8500_bm_of_probe()` calls `power_supply_get_battery_info()` and fills defaults for missing capacity, voltage, current, maintenance charging, thermal alert, resistance, BTI, OCV, and temperature thresholds. `ab8500_bm_of_remove()` releases battery info.
+
+Control flow: a component with a registered power supply calls `ab8500_bm_of_probe()` during setup. The helper obtains DT battery info into `bm->bi`, applies safe defaults when fields are absent or sentinel-valued, and sets `bm->temp_hysteresis`. Later AB8500 components read `bm->bi` and the static defaults through the global `ab8500_bm_data`. Remove releases the `power_supply_battery_info` allocation/reference.
+
+State and persistence: `ab8500_bm_data` is global mutable state for the AB8500 BM subsystem. Its `bi` pointer is populated from device tree at runtime. The default OCV/resistance/maintenance tables are static data. No data is written to persistent storage in this file, but its defaults govern persistent hardware behavior such as fuel-gauge, power-cut, and maintenance charging in companion files.
+
+Dependencies and integration points: the file depends on Linux power supply battery-info helpers and OF battery bindings. It includes `ab8500-bm.h` for shared structures and constants. It directly affects `ab8500_btemp.c` battery identification/temperature behavior and `ab8500_chargalg.c` charge limits, safety timers, maintenance phases, and thermal thresholds.
+
+Risks: `if (bi->charge_term_current_ua) bi->charge_term_current_ua = 200000;` appears inverted relative to the surrounding "fill missing defaults" pattern and may overwrite valid nonzero termination currents while leaving zero unchanged. The global singleton makes multiple AB8500 instances unsafe. Defaults for unknown batteries enable conservative operation but can mask incomplete DT data. Unit mistakes in DT values would propagate to charger programming.
+
+Test signals: test DT with complete battery data and with each field omitted to verify defaults. Confirm maintenance table fallback, OCV table fallback, thermal threshold sentinels, and resistance table selection. Add focused tests or review for `charge_term_current_ua` semantics because it directly controls end-of-charge detection.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/glusterfs/xlators/cluster/ec/src/ec-dir-read.c
+
+Purpose: implements EC directory read operations: `opendir`, `readdir`, and `readdirp`.
+
+Important APIs: callbacks `ec_opendir_cbk()` and `ec_common_readdir_cbk()`, wind functions for each fop, managers `ec_manager_opendir()` and `ec_manager_readdir()`, entry points `ec_opendir()`, `ec_readdir()`, `ec_readdirp()`, plus helpers `ec_combine_opendir()`, `ec_deitransform()`, and `ec_adjust_readdirp()`.
+
+Control flow: `opendir` copies location/fd/xdata, locks the directory inode for query info, dispatches to all selected children, combines only matching fd answers, records the opened-child mask in fd ctx, reports, then reuses/unlocks the lock. `readdir`/`readdirp` require fd ctx `open != 0`; at offset zero they lock/query the fd and dispatch to one child by read policy, retrying recoverable failures on another child. At nonzero offsets, `ec_deitransform()` decodes the client id embedded by Gluster directory offsets and pins dispatch to that child because offsets are not portable across bricks.
+
+State and persistence: fd context `ctx->open` tracks children on which the directory fd is open. `readdirp` requests `EC_XATTR_SIZE` and `ec_adjust_readdirp()` rebuilds regular-file stats from EC size xattrs, dropping inode references when size data is absent. Dependencies include Gluster dirent lists, offset transform mapping `leaf_to_subvolid`, EC locks, combine/common helpers, and child fops. Risks include invalid offset-to-child mapping, readdirp returning unusable inode/stat data without EC size, stale fd open masks after brick failure, and missing callback validation for dict refs. Test signals should cover opendir partial success, readdir after unopened fd, nonzero offsets from invalid/valid children, recoverable retry on ENOTCONN/ESTALE/ENOENT/EBADFD/EIO, and readdirp entries with and without EC size xattrs.

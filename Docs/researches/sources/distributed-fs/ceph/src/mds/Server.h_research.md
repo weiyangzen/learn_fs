@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph/src/mds/Server.h
+
+Purpose: Declares the central CephFS MDS `Server` class that dispatches client, peer, session, reconnect, metadata mutation, xattr, snapshot, and recall operations for an `MDSRank`.
+
+Important APIs and types: `Server::dispatch`, `handle_client_request`, `dispatch_client_request`, `respond_to_request`, `journal_and_reply`, and `submit_mdlog_entry` form the request/journal/reply surface. Session recovery APIs include `handle_client_session`, `reconnect_clients`, `handle_client_reconnect`, `prepare_force_open_sessions`, `finish_force_open_sessions`, `flush_client_sessions`, reclaim helpers, `recall_client_state`, and `force_clients_readonly`. Namespace mutation APIs cover open/create/truncate, mkdir/mknod/symlink, link/unlink/rmdir, rename, snapshot operations, snapdiff, and blockdiff. `RecallFlags` is a bitmask enum for steady recall, max enforcement, trimming, and liveness enforcement.
+
+Control flow: Incoming `Message` objects are categorized into client session, client request/reply, peer request/reply, reclaim, reconnect, and OSD-map update paths. Client operations resolve and lock paths through helpers such as `rdlock_path_pin_ref`, `rdlock_path_xlock_dentry`, `rdlock_two_paths_xlock_destdn`, and `try_open_auth_dirfrag`, then use operation-specific handlers. Mutating operations build `EMetaBlob`/`EUpdate` journal payloads and only reply once the journal context is safe.
+
+State and persistence behavior: The header owns pointers to `MDSRank`, `MDCache`, `MDLog`, `PerfCounters`, and `MetricsHandler`; reconnect state (`client_reconnect_gather`, denied set, timers), feature bitsets, throttles, and laggy-client state are in-memory control state. Durable changes are delegated to mdlog events, session map versions, inode table versions, and snapshot/table events. The xattr handler table centralizes validation and mutation of projected xattr maps before journaling.
+
+Dependencies and integration points: Integrates with MDS cache objects (`CInode`, `CDentry`, `CDir`), client messages (`MClientRequest`, `MClientSession`, `MClientReconnect`, `MClientReclaim`), peer messages (`MMDSPeerRequest`), journal events (`EMetaBlob`, `EUpdate`), `SessionMap`, `SnapRealm`, `OSDMap`, `MetricsHandler`, and perf counters.
+
+Risks: The class is a high-blast-radius coordinator: lock ordering, peer prepare/commit/rollback sequencing, projected inode/xattr state, and reconnect/session state must stay consistent. Xattr validation has policy risk because it distinguishes Ceph virtual xattrs from allowed user-settable Ceph-prefixed xattrs. Feature gating is critical for layout namespace support, vxattrs, charmap, and snapshot trace formats.
+
+Test signals: Exercise client request families, replay of peer updates, forced session open/close, reconnect denial/finish, xattr validation paths, cap recall throttling, old/new client feature negotiation, and OSD-full handling. Regression tests should include rename/link/rmdir rollback and snapshot operations crossing multiple MDS ranks.

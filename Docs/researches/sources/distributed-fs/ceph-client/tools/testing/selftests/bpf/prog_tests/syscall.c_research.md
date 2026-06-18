@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/syscall.c
+
+Purpose: tests `BPF_PROG_TYPE_SYSCALL` style helpers embedded in `syscall` skeleton, including dynamically loading a program/map from BPF and updating an outer map.
+
+Control flow `load_prog` subtest fills `struct args` with verifier log buffer, max entries, and zero fds, runs skeleton program `load_prog` with context through `bpf_prog_test_run_opts`, then checks returned fds, verifier log prefix, and map lookup key `12` value `34`. It closes all fds captured in context. `update_outer_map` simply runs the skeleton program and expects retval `1`. State includes context struct passed to BPF test run, dynamically created map/prog/BTF fds, verifier log buffer, and map contents. Dependencies are generated syscall BPF object, BPF test-run context support, and kernel ability to create BPF objects from a syscall program. Risks are fd cleanup leaks on partial failures and verifier log expectation fragility. Test signals are `retval == 1`, positive fd fields, verifier log processed marker, map value `34`, and successful outer-map update run.

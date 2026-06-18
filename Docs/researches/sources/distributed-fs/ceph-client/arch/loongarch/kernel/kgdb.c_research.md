@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/loongarch/kernel/kgdb.c -->
+# sources/distributed-fs/ceph-client/arch/loongarch/kernel/kgdb.c
+
+Purpose: implements LoongArch KGDB register access, breakpoints, single-step emulation, exception notification, and hardware breakpoint integration.
+Important APIs and types: defines `dbg_reg_def`, `dbg_get_reg`, `dbg_set_reg`, `sleeping_thread_to_gdb_regs`, `kgdb_arch_set_pc`, `arch_kgdb_breakpoint`, `kgdb_breakpoint_handler`, `kgdb_arch_handle_exception`, `arch_kgdb_ops`, `kgdb_arch_init`, `kgdb_arch_late`, and `kgdb_arch_exit`; maintains `kgdb_watch_activated`, `stepped_opcode`, `stepped_address`, and `breakinfo[]`.
+Control flow: die notifications route kernel traps into KGDB; remote commands update PC, continue, detach, kill, or single-step. Single-step computes the next PC for LoongArch branch forms, plants a temporary break instruction, flushes icache, and restores the original opcode after the trap. Hardware breakpoint commands reserve wide perf breakpoints per CPU, install/uninstall arch breakpoints, and disable/correct them while KGDB owns control.
+State and persistence: KGDB stores temporary patched instruction state, per-slot hardware breakpoint attributes/per-CPU perf events, and debugger-visible register mappings. It saves/restores current task FPU state when accessing FP registers.
+Dependencies and integration: depends on KGDB core, die notifiers, perf hardware breakpoints, LoongArch instruction decoder, FPU helpers, cache flush, SMP, ptrace/register ABI, and break immediate `BRK_KDB`.
+Risks and test signals: single-step branch decoding and text patch restoration are high risk; hardware breakpoints share scarce resources with perf/ptrace. Signals include KGDB over serial, software and hardware breakpoints, single-step over branches, FPU register read/write in GDB, SMP KGDB callbacks, and detach/continue paths.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/loongarch/kernel/kgdb.c -->

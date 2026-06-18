@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/dce112/dce112_compressor.c
+
+Purpose: DCE11.2 frame-buffer compression and low-power tiling implementation. It powers and configures FBC, enables/disables compression, programs compressed surface address/pitch, configures LPT memory layout, sets invalidation triggers, and constructs/destroys compressor objects.
+
+Important APIs: `dce112_compressor_create`, `dce112_compressor_construct`, `dce112_compressor_destroy`, `dce112_compressor_power_up_fbc`, `dce112_compressor_enable_fbc`, `dce112_compressor_disable_fbc`, `dce112_compressor_program_compressed_surface_address_and_pitch`, `dce112_compressor_program_lpt_control`, `dce112_compressor_enable_lpt`, `dce112_compressor_disable_lpt`, `dce112_compressor_is_fbc_enabled_in_hw`, and `dce112_compressor_set_fbc_invalidation_triggers`.
+
+Control flow: construction initializes support flags, memory/bus properties, and embedded-panel limits from BIOS. Power-up enables FBC engines and default 1:1 minimum compression. Enable verifies support, backend, current state, and panel size; optionally enables LPT; selects source pipe; toggles compression due to a hardware bug; and waits for status. Disable clears compression, state, and LPT. Address programming aligns for LPT and writes high-before-low.
+
+State and dependencies: persistent state spans compressor fields, attached instance, FBC/LPT registers, DCP/DMIF offsets, BIOS panel info, and memory-configuration fields. Risks include constructor ordering where LPT support checks `memory_bus_width` before assigning it, limited polling, only three pipe offsets, invalid memory-config warnings without failure, and reliance on caller-filled DRAM fields. Test signals are FBC enable/disable, LPT on single/multi-channel memory, compressed-surface alignment, panel-size gating, and FBC invalidation after register or memory writes.

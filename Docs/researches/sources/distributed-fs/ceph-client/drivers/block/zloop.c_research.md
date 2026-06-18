@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/block/zloop.c
+
+Purpose: zoned loop block driver that exposes a zoned block device backed by one file per zone under a configured directory. A misc control device accepts add/remove commands and each created `zloopN` disk implements conventional and sequential zones.
+
+Important APIs/types/functions: `struct zloop_options` holds parsed control options. `struct zloop_device` owns blk-mq state, disk, workqueue, base directory, per-zone files, zone geometry, open-zone LRU, and behavior flags. `struct zloop_zone` tracks file, locks, flags, condition, start, write pointer, and original GFP mask. Key functions are `zloop_ctl_write()`, `zloop_parse_options()`, `zloop_ctl_add()`, `zloop_ctl_remove()`, `zloop_init_zone()`, `zloop_queue_rq()`, `zloop_rw()`, zone management helpers, `zloop_report_zones()`, and cache safety helpers using `user.zloop.wp`.
+
+Control flow: users write `add` or `remove` to `/dev/zloop-control`. Add parses geometry and behavior, allocates an id, opens the data directory, creates/restores per-zone files, determines block size, allocates blk-mq/gendisk, validates zones, and publishes `zloopN`. I/O is queued to a per-device workqueue. Reads/writes call file `read_iter`/`write_iter`; sequential writes enforce write-pointer placement, implicit open, full transitions, and optional ordered zone append. Zone operations open, close, reset, finish, or reset all sequential zones.
+
+State and persistence: backing data persists in zone files. Sequential zone state is inferred from file size and in-memory write pointers; `ZLOOP_ZONE_SEQ_ERROR` forces stat-based repair on next operation. Optional discard-write-cache records safe write pointers in xattrs during flush and truncates back to those on remove. Open zones are tracked in an LRU list for max-open-zone enforcement.
+
+Dependencies and integration: depends on blk-mq, zoned block APIs, VFS file I/O, truncate/stat/xattr, miscdevice control, parser helpers, workqueues, and filesystem sync. It integrates with block zoned reporting and queue limits including zone append and max open zones.
+
+Risks: correctness depends on backing filesystem support for direct I/O alignment, xattrs, truncation, and durable sync. Ordered zone append advances the write pointer before work execution; failed writes rely on later recovery. `zloop_finish_zone()` truncates to `zone_size` although sequential capacity may be smaller, which should be checked against intended semantics. Deletion races are guarded by state checks but queued work must drain through gendisk teardown. Restore validation must match existing files to requested geometry.
+
+Test signals: add/remove parsing, invalid capacities/zone sizes, restore from existing files, conventional and sequential I/O, short read zero-fill, partial write failure, zone reset/open/close/finish/report, max-open-zones LRU behavior, ordered vs unordered append, buffered vs direct I/O, xattr cache discard, filesystem sync failure, and remove while device is open or I/O is queued.

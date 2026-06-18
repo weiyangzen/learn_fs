@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/ctucanfd/ctucanfd_pci.c
+
+Purpose: PCI/PCIe wrapper for CTU CAN FD FPGA implementations, including multi-core cards.
+
+Important APIs and functions: `ctucan_pci_probe()` enables the PCI device, requests regions, optionally enables MSI, maps BAR1 for CAN core memory and BAR0 for control registers, detects core count from CTU ID when available, allocates board data, calls `ctucan_probe_common()` for each core, and enables the Avalon-MM to PCIe interrupt bit. `ctucan_pci_remove()` disables card interrupts, walks `peers_on_pdev`, unregisters each candev, removes NAPI, frees netdevs, unmaps BARs, disables MSI, and releases PCI resources. `ctucan_pci_set_drvdata()` links each netdev private structure into board state and selects shared IRQ flags.
+
+Control flow and state: probe treats the first common-core registration as required and later cores as best effort. Persistent board state stores BAR pointers, per-device netdev list, and MSI status. Dependencies include PCI, CTU common exports, shared IRQ/MSI handling, and runtime PM ops. Risks include pointer arithmetic on `void __iomem *`, cleanup asymmetry around `cra_addr` versus `bar0_base`, shared IRQ behavior across multiple cores, and partial multi-core initialization. Test signals include PCI ID match, BAR logging, CTU ID core count, common probe success per core, interrupt enable register writes, and remove-time list drain.

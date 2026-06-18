@@ -1,0 +1,22 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/main/java/org/apache/hadoop/hdfs/server/federation/router/async/RouterAsyncRpcClient.java
+
+## Purpose
+`RouterAsyncRpcClient` is the asynchronous `RouterRpcClient` implementation used by the HDFS Router-Based Federation router to proxy client protocol calls to NameNodes without tying router handler threads to blocking downstream RPCs. It keeps the base router routing semantics, including active/standby/observer selection and fairness permits, but composes operations through the router async utilities and Hadoop IPC asynchronous mode.
+
+## Important APIs, Types, And Functions
+The class overrides `invokeAll`, `invokeMethod`, `invokeSequential`, `invokeConcurrent`, `getRemoteResults`, and both `invokeSingle` forms. `invokeMethod` schedules the real work on the namespace async executor, transfers `ThreadLocalContext`, acquires a `RouterRpcFairnessPolicyController` permit, and releases it in `asyncFinally`. `invokeMethodAsync` iterates ordered `FederationNamenodeContext` entries and drives failover. `invoke` flips `Client.setAsynchronousMode(true)`, invokes the reflected protocol method, and attaches an async catch for downstream failures. It depends heavily on `AsyncUtil` functions such as `asyncTry`, `asyncForEach`, `asyncApply`, `asyncCatch`, `asyncFinally`, `asyncCompleteWith`, and `asyncReturn`.
+
+## Control Flow
+Simple multi-location calls start a base-style concurrent or sequential invocation, then transform the current future into the desired return shape. `invokeMethod` validates NameNode availability, creates an initial completed future, then submits an `AsyncApplyFunction` to `router.getRpcServer().getAsyncExecutorForNamespace(nsid)`. Inside the executor, `invokeMethodAsync` adds caller context, emits monitor signals, skips observers unless observer reads are requested, opens a `ConnectionContext`, invokes the proxy method, post-processes success, breaks the loop, and releases the connection in `asyncFinally`. On `IOException`, it records the per-NameNode error and asks inherited logic whether to retry, fail over, or continue. If all NameNodes fail, it delegates to inherited `handlerAllNamenodeFail`. Concurrent calls collect futures from the base callables and complete with `CompletableFuture.allOf(...).handle(...)`, then process all per-location results.
+
+## State, Persistence, And Dependencies
+This class does not persist records itself. Its state is transient: references to `Router`, `ActiveNamenodeResolver`, `RouterRpcMonitor`, per-call `ExecutionStatus`, per-call exception maps, current connections, and futures in `Async.CUR_COMPLETABLE_FUTURE`. It depends on resolver-provided NameNode metadata, router RPC server namespace executors, Hadoop IPC async client behavior, fairness controllers, and the inherited connection pool.
+
+## Integration Points
+The async protocol modules call this client through the same `RouterRpcClient` API used by synchronous router modules. It integrates with `RouterRpcServer` for remote user lookup, namespace executor selection, location resolution, and operation checks; with `ActiveNamenodeResolver` for HA state; with `RouterRpcMonitor` for proxy operation accounting; and with inherited `RouterRpcClient` logic for exception localization, observer eligibility, result post-processing, and NameNode ordering.
+
+## Risks
+The implementation relies on a thread-local current future, so missed `asyncComplete`/`asyncCompleteWith` updates or thread hops without context transfer can silently corrupt async chains. `Client.setAsynchronousMode` is toggled around reflection and must remain balanced on exceptions. A shared single-element `ConnectionContext[]` is used inside iteration to allow finally cleanup, which is safe only because the foreach chain is sequential. Executor saturation is converted to a `StandbyException`, so operational diagnosis depends on the message. Generic casts around `RemoteResult`, `List`, and `Map` are unchecked and rely on callers passing the correct class token.
+
+## Test Signals
+Useful tests cover observer-read routing, standby failover, connection release on success and failure, namespace executor rejection, fairness permit release after downstream exceptions, `invokeSequential` first-success semantics, and concurrent result aggregation where some locations fail. Integration tests should assert that async callers observe real results through the router async response path despite Java methods returning placeholder values.

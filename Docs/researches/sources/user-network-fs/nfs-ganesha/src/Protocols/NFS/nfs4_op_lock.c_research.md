@@ -1,0 +1,15 @@
+# sources/user-network-fs/nfs-ganesha/src/Protocols/NFS/nfs4_op_lock.c
+
+Purpose: implements NFSv4 `LOCK`, including new lock owner creation, existing lock owner requests, blocking lock callbacks, replay handling, grace-period handling, and conflict responses.
+
+Important APIs and types: key functions are `nfs4_op_lock`, `nfsv4_granted_callback`, `notify_granted_completion`, `nfs4_op_lock_Free`, and `nfs4_op_lock_CopyRes`. It uses `LOCK4args/res`, `state_t`, `state_owner_t`, `nfs_client_id_t`, `fsal_lock_param_t`, `state_block_data_t`, `state_refer`, SAL functions `state_add_impl`, `state_lock`, `state_del_locked`, and conflict helpers `Process_nfs4_conflict`/`Copy_nfs4_denied`.
+
+Control flow: the operation first reserves response room for a successful stateid result, validates a regular-file FH, converts lock type into FSAL read/write lock and blocking/nonblocking mode, and normalizes EOF length. For new lock owners it validates the open stateid, gets the open owner and clientid, verifies the open state is a share state, and converts the lock owner name. For existing lock owners it validates the lock stateid under the state lock, checks object/export consistency, requires a lock state, retrieves the related open owner and open state. NFSv4.0 paths check owner seqids and use replay caches. It validates nonzero length, overflow, maxfilesize, and open share access versus requested lock type. Grace logic rejects invalid reclaim/non-reclaim timing unless FSAL handles grace. New lock owners are created and may create a new lock state tied to the open state. The open state is rechecked under state lock to avoid CLOSE races. Blocking locks allocate block data and register `nfsv4_granted_callback`, then `state_lock` performs SAL/FSAL locking. Conflicts become denied replies; success updates the lock stateid and caches responses for v4.0.
+
+State and persistence: creates lock owners and lock stateids, adds lock states to share state's lock list, records byte-range locks in SAL/FSAL, may leave blocked locks with callback metadata, updates current stateid, and uses replay cache for v4.0.
+
+Dependencies and integration: depends on clientid leases/grace, stateid validation, FSAL lock support and max file size, callback RPC for `CB_NOTIFY_LOCK`, export refs, and compound context `op_ctx->clientid`.
+
+Risks: this is concurrency-sensitive. New lock state cleanup differs for blocked locks versus failed locks. `state_open` is decremented before state creation but later reused, so lifetime depends on SAL references and comments deserve scrutiny. Response caching must not cache unrecoverable resource/bad-state errors incorrectly. Blocking callback allocation and freeing must match `state_lock` ownership.
+
+Test signals: new and existing owners, v4.0 seqid replay, bad open/lock stateids, wrong export, read/write openmode mismatch, zero/overflow length, grace and reclaim cases, conflict denied deep-copy/free, blocked lock callback, CLOSE racing LOCK, and maxfilesize normalization.

@@ -1,0 +1,13 @@
+# `sources/test-tools/filebench/vars.c`
+
+Purpose: Implements Filebench variables and attribute value descriptors. It supports delayed binding from workload parser references to variable values that may be assigned later, including random and custom variables.
+
+Important APIs and functions: Public AVD APIs are `avd_bool_alloc()`, `avd_int_alloc()`, `avd_dbl_alloc()`, `avd_str_alloc()`, `avd_var_alloc()`, and typed getters `avd_get_bool()`, `avd_get_int()`, `avd_get_dbl()`, `avd_get_str()`. Public variable assignment APIs are `var_assign_boolean()`, `var_assign_integer()`, `var_assign_double()`, `var_assign_string()`, `var_assign_random()`, and `var_assign_custom()`. String/introspection helpers include `var_to_string()` and `var_randvar_to_string()`. Local-variable helpers include `var_lvar_alloc_local()` and type-specific `var_lvar_assign_*()` functions.
+
+Control flow: Parser allocation functions create static AVDs or variable-backed AVDs. `avd_var_alloc()` finds or creates a `var_t`, then `set_avd_type_by_var()` maps its current type to a direct pointer or leaves it as `AVD_VARVAL_UNKNOWN`. Getters resolve unknown variables lazily, optionally erroring and shutting down if the variable is still uninitialized. Assignment functions find or allocate variables on `shm_var_list` and set typed union values. Local variable assignment can copy values from global or local lists and component update can copy prototype values into new component-local variables.
+
+State and persistence: Variables, AVDs, and strings are allocated with Filebench IPC allocators and stored in `filebench_shm->shm_var_list` or `shm_var_loc_list`. Random/custom values store pointers to distribution/custom-variable objects. Values persist for the loaded workload/run until shared memory cleanup.
+
+Dependencies and integration: Depends on `ipc_malloc()`, `ipc_stralloc()`, `filebench_log()`, `filebench_shutdown()`, `fb_random` distribution interfaces, custom variables via `get_cvar_value()`, and parser modules that build workload attribute descriptors.
+
+Risks and test signals: Several paths call `filebench_shutdown(1)` for invalid or unknown types, so late variable errors are fatal. String assignment allocates new strings without freeing previous values, acceptable for workload lifetime but not for repeated mutation stress. `var_lvar_assign_var()` stores a double source with `VAR_SET_INT`, likely a type bug. `avd_update()` is a stub, indicating local variable substitution may be incomplete or legacy. Tests should cover delayed binding, unknown variable errors, random/custom getters, string rendering, local variable inheritance, and reassignment behavior.

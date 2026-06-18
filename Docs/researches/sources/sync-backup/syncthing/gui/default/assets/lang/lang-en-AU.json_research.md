@@ -1,0 +1,15 @@
+# sources/sync-backup/syncthing/gui/default/assets/lang/lang-en-AU.json
+
+Purpose: Australian English localization catalog for the Syncthing AngularJS web GUI. It preserves most upstream English wording and overrides a small set of regional spellings/terms such as "synchronised", "bin", and "fewer full scans".
+
+Important APIs/types/functions: this is a static angular-translate JSON catalog. Its externally consumed API is the key/value map of UI strings plus the nested `theme.name` values. Placeholder-bearing keys use source tokens like `{%count%}`, `{%path%}`, `{%url%}`, `{%version%}`, and `{%receiveEncrypted%}` while values use angular-translate interpolation tokens like `{{count}}`, `{{path}}`, `{{url}}`, `{{version}}`, and `{{receiveEncrypted}}`.
+
+Control flow: the Syncthing GUI loader derives this file from locale code `en-AU` using the static-file prefix/suffix in `syncthing/app.js`. If a key is absent, `$translateProvider.fallbackLanguage('en')` supplies the base English value. Interpolated values are escaped before insertion, so translations may safely display user-controlled device names, paths, folder labels, URLs, and version strings when placeholders are preserved.
+
+State and persistence behavior: the catalog is immutable runtime data. It does not read or write application configuration, but it shapes visible text for persisted settings such as GUI authentication, folder defaults, device limits, file versioning, ignored devices/folders, and usage-reporting choices. I parsed the complete JSON: it contains 522 top-level entries and 525 scalar leaf translations, with one nested `theme.name` object.
+
+Dependencies and integration points: depends on angular-translate, the generated `validLangs` list, and the base English catalog for fallback coverage. It integrates with translated strings in `index.html`, modal partials, settings views, folder/device editors, restore-version views, and tooltip expressions such as `{{'Copy' | translate}}`. Compared with `lang-en.json`, it intentionally changes five values: fewer scans, "synchronised" in two strings, "bin" for trash retention text, and "Bin File Versioning".
+
+Risks: this catalog is significantly less complete than base English, missing 36 top-level keys from `lang-en.json`. Missing entries include login/authentication labels, debug/info/startup labels, connection count and QUIC status strings, block-indexing text, group fields, LAN bandwidth limiting, and several validation messages. Because fallback is English, runtime remains functional but the locale experience is inconsistent. Placeholder risk is low in the current file: 23 placeholder-bearing entries were found and none had mismatched variable names.
+
+Test signals: `jq` should parse the file; a key diff against `lang-en.json` should identify the current 36 missing keys and zero extras; placeholder validation should remain clean. Browser checks should select Australian English and inspect authentication, settings, folder defaults, device defaults, versioning, and transfer-error views, because several missing keys are concentrated in newer settings and login surfaces.

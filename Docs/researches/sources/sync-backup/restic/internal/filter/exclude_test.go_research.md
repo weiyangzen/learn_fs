@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/filter/exclude_test.go
+
+Purpose: tests exclude predicate behavior. APIs under test are `RejectByPattern` and `RejectByInsensitivePattern`. Control flow creates predicate functions with simple patterns and a warning callback, then table-tests matching and non-matching paths for case-sensitive and case-insensitive behavior. State is predicate closures over parsed patterns. Dependencies are testing and filter package functions. Risks covered: exclusion is true on match, false otherwise, and insensitive mode lowercases both pattern and item. Missing signal: pattern-file reading, pflag option collection, invalid pattern validation, and warning behavior are covered indirectly or not here.

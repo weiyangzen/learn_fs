@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/mfd/menelaus.c
+
+Purpose: I2C driver for the TI/Nokia Menelaus PMIC. It provides singleton board-level helper APIs for MMC slot control, regulator voltages, sleep configuration, interrupt callbacks, optional RTC support, and low-level I2C register access.
+
+Important APIs, types, and functions: `struct menelaus_chip` stores the singleton client, mutex, work item, IRQ masks, callback table, MMC callback, VCORE mode, and optional RTC state. Exported helpers include `menelaus_set_mmc_opendrain()`, `menelaus_set_slot_sel()`, `menelaus_set_mmc_slot()`, `menelaus_register_mmc_callback()`, `menelaus_unregister_mmc_callback()`, `menelaus_set_vmem()`, `menelaus_set_vio()`, `menelaus_set_vmmc()`, `menelaus_set_vaux()`, `menelaus_get_slot_pin_states()`, and `menelaus_set_regulator_sleep()`. `menelaus_work()` is the deferred IRQ dispatcher, and optional RTC ops implement time/alarm access.
+
+Control flow: probe enforces a single device, stores `the_menelaus`, verifies revision, masks and acknowledges all IRQs, programs output buffer strength, requests the parent IRQ, initializes work/mutex, detects VCORE mode, runs platform late init, and optionally registers RTC. The hard IRQ disables the parent line and schedules work because I2C cannot run in interrupt context. Work reads status registers, masks/acks each active IRQ, calls registered handlers, re-enables each source, then re-enables the parent IRQ.
+
+State and persistence: state is global through `the_menelaus`, so all exported APIs assume a probed singleton. IRQ mask bytes mirror hardware masks. Regulator and MMC helpers directly program PMIC registers, and voltage changes include a stabilization sleep. RTC state includes cached control bits and can persist on backup battery.
+
+Dependencies and integration points: depends on I2C, workqueues, RTC core when `CONFIG_RTC_DRV_TWL92330`, board platform data, MMC users of exported callbacks, and OMAP-era IRQ assumptions. It does not use the generic MFD child-device model despite living under MFD.
+
+Risks: exported APIs dereference `the_menelaus` without NULL checks. Probe failure after assigning the singleton may leave stale global state on early errors. `menelaus_set_vdcdc()` is not exported while similar helpers are. Work handler calls registered handlers while holding the mutex, so callbacks that call back into Menelaus helpers can deadlock. Test signals include singleton probe/remove, IRQ deferral and callback ordering, MMC callback registration/unregistration, voltage table rejection, RTC alarm/update IRQs, and system behavior with no parent IRQ.

@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source4/rpc_server/backupkey/dcesrv_backupkey.c
+
+Purpose: `dcesrv_backupkey.c` implements Samba's DCERPC server for the MS-BKRP BackupKey protocol. It returns domain backup certificates, decrypts client-wrapped secrets, and encrypts/decrypts server-wrapped secrets for domain users on writable Active Directory DCs.
+
+Important APIs, types, and functions: Major helpers include `dcesrv_interface_backupkey_bind`, `set_lsa_secret`, `get_lsa_secret`, RSA key conversion helpers, `get_and_verify_access_check`, `bkrp_client_wrap_decrypt_data`, certificate/key generation helpers, `bkrp_retrieve_client_wrap_key`, server-wrap key retrieval/generation helpers, `bkrp_server_wrap_decrypt_data`, `bkrp_generic_decrypt_data`, `bkrp_server_wrap_encrypt_data`, and `dcesrv_bkrp_BackupKey`.
+
+Control flow: Binding requires DCERPC privacy. The main `BackupKey` handler rejects non-AD-DC roles, opens samdb as system, skips service on RODCs, then dispatches by action GUID. Certificate retrieval lazily generates an RSA keypair and self-signed certificate, stores the keypair as `BCKUPKEY_<guid>` and preferred GUID as `BCKUPKEY_PREFERRED`, then returns the DER certificate. Client-wrap decrypt parses NDR, loads the private keypair secret, decrypts the reversed RSA secret, validates magic/hash/access-check SID, and returns plaintext. Server-wrap encrypt/retrieve uses `BCKUPKEY_P` and `BCKUPKEY_<guid>` symmetric keys, derives RC4/HMAC keys from random values with SHA1 HMAC, binds ciphertext to caller SID, and validates MAC/SID on decrypt.
+
+State and persistence behavior: Persistent protocol secrets are stored as LSA secret objects in samdb's system container. Client-wrap RSA keypairs/certs and server-wrap symmetric keys are generated on demand and persist under BackupKey secret names. Per-call cryptographic buffers are talloc or GnuTLS-owned and freed/deinitialized along error paths where implemented.
+
+Dependencies and integration points: It depends on generated BackupKey NDR server stubs, samdb/DSDB secret manipulation, auth session info, DC role/loadparm checks, GnuTLS x509/private key/cipher/HMAC APIs, NDR security SID encoding, and DCERPC privacy enforcement from common server code.
+
+Risks: This file is security-critical. Secret storage, RODC handling, SID access checks, constant-time hash comparisons, RSA bignum endian conversion, and legacy RC4/SHA1 compatibility must be preserved exactly. Some paths return client-expected generic errors, complicating diagnostics. Debug dumps use password-aware logging helpers but still require care. Generated key insertion uses create-only semantics and may race on first use.
+
+Test signals: Required coverage includes privacy-required bind, non-DC and RODC rejection, first-use key generation, certificate retrieval, client-wrap v2/v3 decrypt success and bad hash/SID/magic failures, server-wrap encrypt/decrypt round trips, missing/corrupt LSA secrets, and interoperability vectors from MS-BKRP or Windows clients.

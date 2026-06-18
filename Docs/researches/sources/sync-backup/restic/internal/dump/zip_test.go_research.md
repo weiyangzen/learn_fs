@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/dump/zip_test.go
+
+Purpose: validates zip dump output. APIs exercised include shared `WriteTest`, `dumpZip`, `readZipFile`, and `checkZip`. Control flow writes a repository tree to an in-memory zip, opens it with `zip.NewReader`, reads each entry, and compares contents and expected entries against the original source fixture. State is temporary source data and zip buffer. Dependencies include archive/zip, bytes, filesystem helpers, and dump test harness. Risks covered: regular file content fidelity, directory entries, symlink representation, and archive readability. Missing signal: detailed permission/xattr metadata is not as rich for zip and is therefore less covered than tar.

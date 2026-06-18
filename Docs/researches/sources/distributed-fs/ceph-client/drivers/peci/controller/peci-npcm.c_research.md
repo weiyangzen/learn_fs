@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/peci/controller/peci-npcm.c
+
+Purpose: Implements the Nuvoton NPCM PECI controller driver. It exposes an MMIO-backed `struct peci_controller_ops` transfer function, initializes NPCM PECI timing/control registers, handles transfer completion interrupts, and registers the controller on the PECI bus for `nuvoton,npcm750-peci` and `nuvoton,npcm845-peci` platform devices.
+
+Important APIs and functions: `struct npcm_peci` stores regmap, completion, interrupt status, clock, timeout, controller pointer, and a spinlock. `npcm_peci_xfer()` is the core `.xfer` callback. `npcm_peci_irq_handler()` latches DONE/CRC/abort bits and completes pending transfers. `npcm_peci_init_ctrl()` enables the reference clock, parses `cmd-timeout-ms`, programs pull-down and host negotiation bit-rate defaults, waits for idle, and enables done interrupts. `npcm_peci_probe()` maps resources, creates the regmap, requests IRQ, initializes locks/completion, initializes hardware, and calls `devm_peci_controller_add()`.
+
+Control flow: Probe maps the controller registers and initializes the block before registering the PECI controller. A PECI request enters through the bus core, waits for `START_BUSY` to clear, programs target address, read/write lengths, command byte, and payload bytes, then starts the transaction. The interrupt handler records error/done state, acknowledges interrupt bits, and completes the wait when DONE is seen. The transfer path then validates that the only final latched status is DONE, clears the command register, reads response bytes, and returns success or `-EIO`/`-ETIMEDOUT`.
+
+State and persistence: Runtime state is in `priv->status`, `xfer_complete`, and NPCM PECI registers. The spinlock protects status/completion setup against IRQ-side updates. Hardware settings such as pull-down, bit rate, interrupt enable, and programmed request bytes persist in registers until reset or reprogramming. The devm controller lifetime follows the platform device.
+
+Dependencies and integration points: Depends on Linux platform, OF, regmap MMIO, clock, IRQ, reset, completion, and PECI APIs. It imports the `PECI` namespace. Its `.xfer` is consumed by the PECI core in `device.c` and `request.c`; the core serializes transfers with `controller->bus_lock`, while this driver handles controller-local IRQ synchronization.
+
+Risks: Register comments have some mislabeled offsets, so changes should follow macro values rather than comments. `NPCM_PECI_RD_LENGTH` is written with `NPCM_PECI_WR_LEN_MASK`, which is numerically equivalent but easy to misread. Any DONE combined with CRC/abort returns `-EIO`, so tests must cover mixed status. Timeout properties above 60000 ms or zero fall back to defaults. Transfer paths do not reset hardware after timeout, so later idle polling is the recovery signal.
+
+Test signals: Probe on both compatible strings, valid clock and IRQ resources, sysfs PECI controller appearance, ping/device scan success, GetDIB/GetTemp requests, CRC/abort fault injection if available, command timeout behavior, and dynamic debug TX/RX dumps are the strongest validation signals.

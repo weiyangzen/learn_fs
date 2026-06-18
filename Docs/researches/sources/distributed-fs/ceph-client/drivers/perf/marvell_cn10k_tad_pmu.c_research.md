@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/perf/marvell_cn10k_tad_pmu.c
+
+Purpose: This file implements the Marvell CN10K LLC-TAD PMU. TAD counters are distributed across multiple regions, and the driver exposes a single perf PMU whose event reads sum the same counter index across all mapped regions.
+
+Important APIs, types, and functions: `struct tad_region` wraps an MMIO base. `struct tad_pmu` stores PMU state, regions, region count, owner CPU, hotplug node, active event pointers, and counter bitmap. `struct tad_pmu_data` identifies v1 versus v2 event tables. Important functions include `tad_pmu_event_counter_read()`, start/stop/add/del, `tad_pmu_event_init()`, sysfs event show, probe/remove, CPU offline migration, and module init/exit. Register macros map per-counter count registers (`TAD_PFC`) and event select registers (`TAD_PRF`).
+
+Control flow: Probe reads match data, memory resource, and firmware properties `marvell,tad-page-size`, `marvell,tad-pmu-page-size`, and `marvell,tad-cnt`. It maps each distributed TAD PMU page by stepping the parent resource start by `tad-page-size`, assigns attr groups by version, selects the current CPU, registers a dynamic hotplug instance, and registers the PMU named `tad`. Event init rejects events that are not initially disabled or not in `PERF_EVENT_STATE_OFF`, pins event CPU to owner CPU, and stores raw config. Add allocates a free counter bit. Start zeros the counter in every region then writes the event selector to every region. Read sums all region counters and updates the perf count. Stop writes zero selectors, reads a final delta, and marks the event stopped and up to date.
+
+State and persistence: State is volatile in `struct tad_pmu`, the counter bitmap, event pointer array, and hardware registers. No persistent storage is used. Counter values are reset on start.
+
+Dependencies and integration points: Supports OF compatible `marvell,cn10k-tad-pmu` and ACPI IDs `MRVL000B` and `MRVL000D`. Uses perf PMU APIs, platform device resources/properties, dynamic CPU hotplug, and sysfs `events`, `format`, and `cpumask`. It advertises `PERF_PMU_CAP_NO_INTERRUPT` because there is no overflow IRQ handling.
+
+Risks: Probe mutates `res->start` while mapping regions; that is unusual because resources are normally treated as descriptors, and later diagnostics using the same resource may see the advanced start. All instances register with PMU name `tad`, which can collide if multiple devices are present. Event init requires disabled/off state, unlike many other PMU drivers, so common perf usage that starts immediately may fail. No overflow handling means large counts can wrap between reads.
+
+Test signals: Confirm required firmware properties are present and region count matches hardware. Verify one PMU appears with the expected v1 or Odyssey event table. Run disabled-then-enabled `perf stat` events and compare summed counts across regions with direct register observations if available. Exercise more than eight simultaneous events to get `-EAGAIN`. CPU offline should migrate context to another online CPU.

@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/freescale/fec_main.c
+
+### Purpose
+`fec_main.c` implements the platform net_device driver for NXP/Freescale FEC/ENET MACs across ColdFire and i.MX-family SoCs. It handles probing, clock/regulator/runtime-PM setup, MDIO/PHY integration, descriptor rings, NAPI RX/TX polling, normal SKB transmit, software TSO descriptorization, checksum/VLAN offloads, PTP timestamp hooks, interrupt coalescing, Energy Efficient Ethernet, Wake-on-LAN, XDP, AF_XDP zero-copy, ethtool, suspend/resume, and SoC erratum workarounds.
+
+### Important APIs, Types, And Functions
+The driver registers `fec_driver` as a platform driver named `fec` with OF matches for `fsl,imx25-fec`, `imx27`, `imx28`, `imx6q`, `mvf600`, `imx6sx`, `imx6ul`, `imx8mq`, `imx8qm`, and `s32v234`. Each match maps to a `struct fec_devinfo` quirk set. Netdev operations are in `fec_netdev_ops`: `fec_enet_open()`, `fec_enet_close()`, `fec_enet_start_xmit()`, queue selection, multicast filtering, MAC address changes, MTU changes, feature toggles, BPF/XDP setup, XDP transmit, AF_XDP wakeup, and hwtstamp get/set. Ettool operations are in `fec_enet_ethtool_ops`.
+
+Key lifecycle functions are `fec_probe()`, `fec_drv_remove()`, `fec_enet_init()`, `fec_enet_deinit()`, `fec_restart()`, `fec_stop()`, `fec_suspend()`, `fec_resume()`, `fec_runtime_suspend()`, and `fec_runtime_resume()`. TX functions include descriptor helpers, `fec_enet_txq_submit_skb()`, `fec_enet_txq_submit_tso()`, `fec_enet_start_xmit()`, and `fec_enet_tx_queue()`. RX functions include `fec_enet_rx_queue()`, `fec_enet_rx_queue_xdp()`, `fec_enet_rx_queue_xsk()`, and `fec_build_skb()`. MDIO/PHY functions include `fec_enet_mii_init()`, Clause 22/45 read/write helpers, `fec_enet_mii_probe()`, and `fec_enet_adjust_link()`.
+
+### Control Flow
+Probe allocates a multi-queue Ethernet device, chooses quirks from OF or platform id data, maps MMIO, parses WOL, stop-mode, PHY/fixed-link, PHY mode, RGMII delays, clocks, optional regulator, runtime PM, resets the PHY, initializes PTP if enhanced descriptors are usable, allocates descriptor rings and queues, requests IRQs, creates/registers the MDIO bus, sets carrier down, configures MTU/buffer sizing, and registers the netdev.
+
+Open resumes runtime PM, selects pinctrl default state, enables clocks, allocates RX/TX buffers, calls `fec_restart()` to program hardware and rings, connects to the PHY, enables NAPI, starts phylib, and starts TX queues. Link changes call `fec_enet_adjust_link()`, which restarts the MAC on speed/duplex changes or stops it on link down. Interrupts only collect/clear non-MDIO events and schedule NAPI. NAPI loops over RX and TX work until the budget is reached or no events remain, then reenables interrupts.
+
+Transmit maps SKB heads/fragments or TSO-generated header/data descriptors, uses bounce buffers for alignment or frame-swap variants, marks descriptors ready with memory barriers, stores cleanup state in `tx_buf[]`, and triggers TDAR with erratum-aware logic. TX cleanup unmaps DMA, completes SKBs or XDP frames, extracts TX hardware timestamps from enhanced descriptors, updates stats, wakes stopped queues, handles AF_XDP completions, and keeps transmit active for ERR006358. RX consumes descriptors, checks status bits, updates/replaces page-pool or XSK buffers before handing packets up, handles VLAN/checksum/timestamps from enhanced descriptors, and dispatches through normal GRO, XDP_PASS/DROP/TX/REDIRECT, or AF_XDP zero-copy flows.
+
+### State, Persistence, And Dependencies
+Persistent state is limited to hardware registers while the device is powered and software fields in `struct fec_enet_private`. The driver maintains descriptor rings in DMA memory, page pools, XSK pools, PTP timecounter state, ethtool statistic snapshots, runtime PM status, WOL flags, PHY link state, and PM QoS requests. It depends on platform devices/OF, clk/regulator/pinctrl APIs, phylib and fixed PHY, MDIO, NAPI/netdev core, DMA mapping, page_pool, BPF/XDP/AF_XDP, PTP via `fec_ptp.c`, i.MX cpuidle/SCU stop-mode integration, and ethtool selftests.
+
+### Integration Points
+The file is the main integration layer between FEC hardware and Linux networking. It exposes netdev and ethtool operations, registers an MDIO bus for PHY devices, calls PTP helpers for PHC and timestamp configuration, uses devm IRQ/resource management for platform resources, participates in runtime and system sleep PM, and advertises XDP features when hardware does not require software frame swapping.
+
+### Risks
+High-risk areas are DMA descriptor ownership, memory barriers, ring wrap and dirty/cur pointer math, mixed SKB/XDP/XSK cleanup types, and restart paths that free or reuse descriptors while NAPI/TX may be active. PM paths are subtle because MDIO operations resume runtime PM, WOL may keep ENET partially enabled, and clocks/regulators affect PHY link state. SoC quirks are critical; wrong quirk data can break timestamping, MDIO, reset, endian/frame swapping, coalescing, or multi-queue registers. The file also has complex failure unwinds in probe/open and comments noting cleanup limitations in `fec_enet_init()`.
+
+### Test Signals
+Signals include successful probe/register on each compatible, MDIO Clause 22/45 scans, PHY link up/down and speed/duplex changes, suspend/resume and runtime PM MDIO access, WOL magic packet wake, TX timeout recovery, normal RX/TX under stress, TSO and SG transmit, checksum/VLAN offloads, ethtool stats/register dumps/coalescing/EEE/pause/WOL, PTP hwtstamp get/set, XDP basic/redirect/TX, AF_XDP zero-copy RX/TX/wakeup, multi-queue VLAN priority selection, jumbo MTU on i.MX8QM, and fault injection for DMA map/page allocation failures.

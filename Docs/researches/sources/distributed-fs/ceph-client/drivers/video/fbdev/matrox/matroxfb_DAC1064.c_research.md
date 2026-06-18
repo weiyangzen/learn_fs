@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/video/fbdev/matrox/matroxfb_DAC1064.c
+
+Purpose: `matroxfb_DAC1064.c` is the low-level RAMDAC/output driver for Matrox Mystique and G-series devices that use the MGA1064/DAC1064-compatible DAC family, including G100/G200/G400 and G450/G550-specific output handling. It supplies `matrox_switch` implementations used by the base PCI driver for preinit, reset, mode init, and restore.
+
+Important APIs and functions: exported switch instances are `matrox_mystique` and `matrox_G100` when enabled. Shared exported helpers are `DAC1064_global_init()` and `DAC1064_global_restore()`. Important internals include `DAC1064_calcclock()`, `DAC1064_setpclk()`, `DAC1064_setmclk()`, `DAC1064_init_1()`/`DAC1064_init_2()`, `DAC1064_restore_1()`/`DAC1064_restore_2()`, `MGA1064_preinit()`/`reset()`/`init()`/`restore()`, `MGAG100_preinit()`/`reset()`/`init()`/`restore()`, and G450-specific `g450_set_plls()`, `g450_preinit()`, clock and memory init helpers.
+
+Control flow: preinit sets chip capabilities, output routing, PLL feature limits, PCI option registers, memory interface defaults, and output descriptors. Reset programs memory/system clocks and device-specific defaults. Init builds DAC register images for the requested bpp and sync mode, calls VGA CRTC initialization, and populates palette defaults. Restore writes PCI, DAC, VGA, and CRTC extension registers back to hardware. For G450/G550, output routing also selects pixel/video/reference PLLs and power bits for DAC, secondary, and DVI outputs.
+
+State and persistence: hardware images live in `minfo->hw.DACreg`, `DACclk`, `DACpal`, `MXoptionReg`, CRTC arrays, and G450 `crtc2.ctl`. Persistent device facts and BIOS-derived values live in `minfo->features`, `values`, `devflags`, `outputs`, and PLL caches. Hardware state persists in PCI option registers, DAC extended registers, memory timing registers, and PLLs.
+
+Dependencies and integration points: depends on `matroxfb_misc` for generic VGA timing/PLL calculation and PINS parsing results, `matroxfb_accel` for later accelerated fbops, `g450_pll` for G450/G550 PLL programming, and `linux/matroxfb.h` for output mode constants. The base driver invokes the switch hooks during PCI initialization and every primary-head mode set; CRTC2 code calls global DAC init/restore when secondary routing changes.
+
+Risks: this is highly hardware-sequenced code. Comments warn that accessing the device while MCLK is stopped can lock the PCI bus. G450/G550 memory and PLL initialization depends on BIOS/PINS values and has many chipset-specific magic registers. Output routing has tricky interactions between DAC, MAVEN, panel-link, TMDS, pixel PLL, and video PLL. Failure modes include blank display, unstable clocks, broken acceleration, or bus lockups.
+
+Test signals: test cold boot and mode switches across Mystique, G100, G200, G400, G450, and G550 configs. Watch for PLL lock errors, memory-size stability, correct palette at 8/16/24/32 bpp, working primary/secondary output routing, and no PCI hangs with `init`/`noinit` options. G450/G550 should be tested with monitor, TV/MAVEN, and DVI/panel-link combinations.

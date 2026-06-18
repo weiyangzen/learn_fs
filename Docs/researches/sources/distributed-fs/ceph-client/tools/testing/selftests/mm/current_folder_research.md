@@ -1,0 +1,122 @@
+# Folder Research: sources/distributed-fs/ceph-client/tools/testing/selftests/mm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 108
+- Recursive researched files: 110
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/Makefile`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/charge_reserved_hugetlb.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/check_config.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/compaction_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/config`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/cow.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/droppable.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/folio_split_race_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/guard-regions.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/gup_longterm.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/gup_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hmm-tests.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugepage-mmap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugepage-mremap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugepage-shm.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugepage-vmemmap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb-madvise.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb-read-hwpoison.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb-soft-offline.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb_dio.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb_fault_after_madv.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb_madv_vs_map.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/hugetlb_reparenting_test.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/khugepaged.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_compaction.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_cow.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_gup_test.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_hmm.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_hugetlb.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_hugevm.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_ksm.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_ksm_numa.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_madv_guard.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_madv_populate.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_mdwe.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_memfd_secret.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_memory_failure.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_migration.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_mkdirty.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_mlock.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_mmap.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_mremap.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_page_frag.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_pagemap.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_pfnmap.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_pkey.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_process_madv.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_process_mrelease.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_rmap.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_soft_dirty.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_thp.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_userfaultfd.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_vma_merge.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksft_vmalloc.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksm_functional_tests.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/ksm_tests.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/madv_populate.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/map_fixed_noreplace.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/map_hugetlb.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/map_populate.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mdwe_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/memfd_secret.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/memory-failure.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/merge.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/migration.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mkdirty.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mlock-random-test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mlock2-tests.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mlock2.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mrelease_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mremap_dontunmap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mremap_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mseal_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/mseal_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/on-fault-limit.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pagemap_ioctl.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pfnmap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pkey-arm64.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pkey-helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pkey-powerpc.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pkey-x86.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pkey_sighandler_tests.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/pkey_util.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/prctl_thp_disable.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/process_madv.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/protection_keys.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/rmap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/run_vmtests.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/soft-dirty.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/split_huge_page_test.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/test_hmm.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/test_page_frag.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/test_vmalloc.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/thp_settings.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/thp_settings.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/thuge-gen.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/transhuge-stress.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/uffd-common.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/uffd-common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/uffd-stress.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/uffd-unit-tests.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/uffd-wp-mremap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/va_high_addr_switch.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/va_high_addr_switch.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/vm_util.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/vm_util.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/write_hugetlb_memory.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/mm/write_to_hugetlbfs.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

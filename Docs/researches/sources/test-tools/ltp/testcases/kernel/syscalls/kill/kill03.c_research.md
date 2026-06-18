@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill03.c
+
+Purpose: negative `kill()` errno test for invalid signal and nonexistent PIDs, including `INT_MIN`. Setup records current PID, an unused PID from LTP, and `INT_MIN`. The table calls `kill(real_pid, 2000)` expecting `EINVAL`, and `kill(fake_pid, SIGKILL)` plus `kill(INT_MIN, SIGKILL)` expecting `ESRCH`. State is only pid values; no child processes are created. Dependencies are Linux signal validation order and `tst_get_unused_pid`. Risks are signal-number range differences, though 2000 is intentionally invalid. Test signal is `kill()` returning `-1` with the expected errno in each row.

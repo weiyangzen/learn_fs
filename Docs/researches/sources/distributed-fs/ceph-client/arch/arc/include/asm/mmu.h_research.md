@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/mmu.h
+
+Purpose: ARC MM context type and shared MMU declarations. Important APIs/types/functions: defines `mm_context_t` as per-CPU ASID array and declares `do_tlb_overlap_fault`, then includes `mmu-arcv2.h`. Control flow: type/declaration header only. State and persistence: each `mm_struct` persists ASID generation per CPU. Dependencies/integration: used by scheduler MM switching, TLB code, and fault handling. Risks: ASID array size and per-CPU semantics must match TLB shootdown design. Test signals: SMP context switch tests and duplicate/overlap TLB fault paths.

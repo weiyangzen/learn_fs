@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/app/log/Logger.h
+
+## Research
+`Logger.h` defines the logger API, log levels, log topics, debug macros, and `struct Logger`. The public surface includes lifecycle, printf-checked formatted logging, va-list variants, error shortcuts, topic-level accessors, and topic string parsing. Inline helpers handle copied client ID, bulk topic-level updates, per-topic updates, and simple string logging wrappers.
+
+Control flow in the header is mostly compile-time: `LOG_DEBUG_MESSAGES` either expands debug log macros to real calls or removes them entirely. Runtime inline wrappers normalize string-only calls into formatted calls. State is the `LogTopicLevels` array, `App` pointer, output and recursion mutexes, current-output PID, two buffers, and optional client ID. Dependencies include `Config`, `App`, `Common`, `StringTk`, `Time`, and `Mutex`. Integration points are all client modules that need kernel logging and procfs code that reads/writes topic levels. Risks include adding a new topic without updating `Logger_getLogTopicStr` and procfs handlers, calling logging during teardown after levels/buffers are disabled, and relying on macros that compile away debug side effects. Test signals are compiler format-attribute warnings, topic-string conversion tests, and runtime checks that disabling levels suppresses output.

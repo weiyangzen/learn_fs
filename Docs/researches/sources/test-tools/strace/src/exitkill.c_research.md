@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/exitkill.c
+
+Implements process cleanup helpers that kill tracees when strace exits or when configured exit-kill behavior is needed. It coordinates signal delivery to tracked tasks and preserves errno around kill operations where appropriate. State is external to this file in tracee tables and process IDs; persistence is the kernel-visible signal side effect. Dependencies include `exitkill.h`, process-control helpers, and errno-safe kill wrappers. Risks are killing the wrong pid type, losing errno in cleanup paths, and races with already-exited tracees. Tests should cover detach/exit cleanup with live and already-dead tracees, multi-threaded tracees, and errno preservation around cleanup calls.

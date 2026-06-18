@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/crypto/skcipher.c
+
+`skcipher.c` implements the Crypto API symmetric-key cipher frontend: scatterlist walking, setkey, encrypt/decrypt dispatch, import/export, transform allocation, sync-allocation checks, algorithm registration, template instance registration, and a helper for simple block-cipher modes.
+
+Important APIs include `skcipher_walk_virt()`, `skcipher_walk_aead_encrypt()`, `skcipher_walk_aead_decrypt()`, `skcipher_walk_done()`, `crypto_skcipher_setkey()`, `crypto_skcipher_encrypt()`, `crypto_skcipher_decrypt()`, `crypto_skcipher_export()`, `crypto_skcipher_import()`, `crypto_alloc_skcipher()`, `crypto_alloc_sync_skcipher()`, `crypto_register_skcipher(s)()`, `skcipher_register_instance()`, and `skcipher_alloc_instance_simple()`.
+
+Walk setup records length, IV, scatterlist positions, block size, stride, IV size, and alignmask. `skcipher_walk_next()` selects a fast mapped path, a copy path for alignment fixes, or a slow temporary-buffer path when page/block constraints require it. `skcipher_walk_done()` advances scatterwalks, copies temporary output, propagates IV updates, frees page/buffer resources, and schedules the next segment. Transform init supports native skcipher and lskcipher-backed algorithms; encrypt/decrypt reject `CRYPTO_TFM_NEED_KEY` before dispatch.
+
+State is per transform for key/context, per request for IV/state, and per walk for temporary buffers. Dependencies include scatterwalk, internal cipher/aead/skcipher APIs, lskcipher sg adapters, cryptouser/procfs reporting, and template/spawn infrastructure. Risks are page-boundary and alignment handling, IV copy-back, partial-block rejection, request-size limits, and lskcipher request layout. Test signals include unaligned buffers, cross-page scatterlists, no-key paths, sync request-size rejection, lskcipher-backed transforms, and `tcrypt` skcipher speed modes.

@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/net/mac80211/agg-tx.c
+
+Purpose: this file manages transmit-side A-MPDU Block Ack aggregation sessions. It starts and stops per-station/per-TID TX BA sessions, sends ADDBA and BAR frames, coordinates driver `ampdu_action` callbacks, tracks handshake state bits, gates TXQs while sequence numbers and pending queues are stabilized, and handles peer ADDBA responses.
+
+Important APIs and functions: exported driver/subsystem APIs include `ieee80211_start_tx_ba_session()`, `ieee80211_stop_tx_ba_session()`, `ieee80211_start_tx_ba_cb_irqsafe()`, `ieee80211_stop_tx_ba_cb_irqsafe()`, `ieee80211_refresh_tx_agg_session_timer()`, and `ieee80211_send_bar()`. Internal core routines include `ieee80211_tx_ba_session_handle_start()`, `__ieee80211_stop_tx_ba_session()`, `ieee80211_agg_tx_operational()`, `ieee80211_process_addba_resp()`, and queue/pending helpers such as `ieee80211_agg_splice_packets()`.
+
+Control flow: starting a session validates station capabilities, interface type, hardware flags, retry backoff, MFP authorization, and idle TID state. It allocates `tid_ampdu_tx`, initializes pending queues and timers, assigns a dialog token, stores the object in `tid_start_tx`, and queues station MLME work. The work path moves into `tid_tx`, synchronizes with TX, calls driver `IEEE80211_AMPDU_TX_START`, sends ADDBA immediately or after driver readiness, and starts the response timer. When the driver callback and peer ADDBA response have both arrived, `ieee80211_agg_tx_operational()` notifies `IEEE80211_AMPDU_TX_OPERATIONAL`, marks the TXQ AMPDU-capable, splices pending frames, and clears stop bits.
+
+Stop flow: `ieee80211_stop_tx_ba_session()` marks `WANT_STOP` and queues work. `__ieee80211_stop_tx_ba_session()` validates reason, clears pending start state, sets `STOPPING`, stops the TXQ, deletes timers, clears `OPERATIONAL`, synchronizes network TX paths, calls driver stop actions, and leaves final freeing to `ieee80211_stop_tx_ba_cb()`. Teardown splices pending frames back to local queues, removes the RCU pointer, restarts TXQ, and optionally sends DELBA.
+
+State and persistence behavior: per-TID persistent state lives in `sta->ampdu_mlme.tid_tx`, `tid_start_tx`, retry counters, last request timestamps, dialog token allocator, and `struct tid_ampdu_tx` fields such as `state`, `pending`, `ssn`, `buf_size`, `amsdu`, timers, and NDP flag. Global queue-stop refcounts in `local->agg_queue_stop[]` avoid premature queue wake across concurrent sessions.
+
+Dependencies and integration: this file uses `driver-ops.h`, `wme.h`, TXQ scheduling, station MLME work, action-frame TX helpers, RCU, timers, and shared ADDBA extension parsing from RX aggregation. Rate control and TX code call `ieee80211_start_tx_ba_session()`, and drivers complete setup/teardown via the irqsafe callback exports.
+
+Risks: state-bit ordering and synchronization with lockless TX are delicate. Missing `synchronize_net()` or incorrect queue splicing can reorder frames or leak pending packets. Driver callbacks after stop/destroy must be tolerated. ADDBA response parsing must reject wrong tokens and zero buffer sizes. Retry throttling protects peers that decline aggregation.
+
+Test signals: BA session start/stop under traffic, peer decline and timeout, duplicate/late ADDBA responses, station destroy during teardown, driver delayed callbacks, BAR transmission, S1G NDP BA, and stress tests with many stations/TIDs starting and stopping concurrently.

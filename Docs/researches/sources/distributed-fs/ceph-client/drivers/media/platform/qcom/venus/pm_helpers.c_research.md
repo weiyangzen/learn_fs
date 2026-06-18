@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/qcom/venus/pm_helpers.c
+
+This file implements generation-specific power, clock, bandwidth, OPP, reset, power-domain, and core-routing operations for Venus. It returns a `venus_pm_ops` table for HFI v1, v3, v4, and v6 platforms.
+
+Important functions include core clock helpers, vcodec clock helpers, `load_per_instance()`, `load_scale_bw()`, `load_scale_v1()`, v3 `vcodec_control_v3()`, v4/v6 `vcodec_control_v4()`, `poweron_coreid()`, `poweroff_coreid()`, `decide_core()`, `acquire_core()`, `release_core()`, `coreid_power_v4()`, `vcodec_domains_get()`, reset helpers, `core_get_v4()`, `core_power_v4()`, `calculate_inst_freq()`, `load_scale_v4()`, and exported `venus_pm_get()`.
+
+Control flow begins during core/decoder/encoder probe through `core_get`, `vdec_get`, and `venc_get`. Runtime PM calls `core_power` or vcodec power callbacks to enable clocks, resets, OPP domains, and codec subdomains. Stream start calls `venus_pm_acquire_core()` via the inline wrapper, which may decide a target core based on current instance load and set `HFI_PROPERTY_CONFIG_VIDEOCORES_USAGE`. Load scaling calculates macroblocks-per-second and bitstream bandwidth, votes interconnect bandwidth, and sets OPP/clock rates. Stream teardown releases core usage counts and powers off unused codec cores.
+
+State lives in `venus_core` and `venus_inst`: clock handles, PM domain lists, reset controls, usage counts, selected `clk_data.core_id`, per-instance frequency data, `VENUS_LOW_POWER` flags, and global `legacy_binding`. Dependencies include clk, interconnect, OPP, PM runtime/domain, reset, V4L2 mem2mem, HFI parser capability helpers, platform frequency helpers, and register offsets.
+
+Risks include global `legacy_binding` affecting multiple cores, unbalanced PM runtime on errors, wrong core routing under concurrent sessions, clock under-voting for high bitrate decode, and low-power mode changes that depend on HFI property success. Test signals include probe on legacy and non-legacy bindings, dual-core session placement, runtime suspend/resume, OPP vote changes under load, bandwidth votes for 8-bit/10-bit streams, and clean release after session errors.

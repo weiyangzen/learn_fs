@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/adjtimex/adjtimex02.c
+
+Purpose: negative `adjtimex()` errno test across libc and direct syscall variants. It saves current parameters, computes HZ-scaled tick limits, then tests EPERM as nobody, EFAULT for direct syscall bad pointer, and EINVAL for `ADJ_TICK` below and above permitted range; cleanup restores saved parameters using `SET_MODE`. Important APIs are `adjtimex`, `tst_syscall(__NR_adjtimex)`, `SAFE_SETEUID`, `SAFE_SYSCONF`, and LTP variants. State includes system clock parameters and temporary euid changes. Dependencies are root and a nobody account. Risks are libc hiding EFAULT, explicitly skipped, and live clock side effects if cleanup fails. Test signal is exact expected errno per variant/case.

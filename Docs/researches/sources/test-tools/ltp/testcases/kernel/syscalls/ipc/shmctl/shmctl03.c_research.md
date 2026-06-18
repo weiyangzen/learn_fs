@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/shmctl03.c
+
+Purpose: checks `shmctl(IPC_INFO)` global shared-memory limits against procfs kernel tunables. The test calls `shmctl(0, IPC_INFO, (struct shmid_ds *)&info)`, validates `shmmin == 1`, then compares `shmmax`, `shmmni`, and `shmall` with `PATH_KERN_SHMMAX`, `PATH_KERN_SHMMNI`, and `PATH_KERN_SHMALL` through LTP assertion helpers. No shared-memory segment is created; state is read-only kernel IPC configuration. Dependencies are procfs/sysctl visibility and the Linux `struct shminfo` ABI. Risks are concurrent sysctl changes or missing proc paths in constrained environments. Test signals are pass/fail for each tunable equality and syscall success.

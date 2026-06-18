@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/sprd/pinctrl-sprd.c
+
+## Purpose
+This is the common Spreadtrum pinctrl implementation. It converts SoC-provided `sprd_pins_info` metadata into pinctrl pin descriptors, parses device-tree pin groups, implements four-function mux selection, implements generic and Spreadtrum-specific pin configuration, and exports probe/remove/shutdown helpers for SoC wrapper drivers.
+
+## Important APIs, types, and functions
+Core runtime types are local `struct sprd_pin`, `struct sprd_pin_group`, `struct sprd_pinctrl_soc_info`, and `struct sprd_pinctrl`. Public entry points are `sprd_pinctrl_core_probe()`, `sprd_pinctrl_remove()`, and `sprd_pinctrl_shutdown()`. Pinctrl callbacks are `sprd_pctrl_group_count()`, `sprd_pctrl_group_name()`, `sprd_pctrl_group_pins()`, and `sprd_dt_node_to_map()`. Pinmux callbacks expose `func1` through `func4` and write `PIN_FUNC_MASK` in `sprd_pmx_set_mux()`. Pinconf callbacks are `sprd_pinconf_get()`, `sprd_pinconf_set()`, group variants, and debug display helpers. Custom DT params are `sprd,control` and `sprd,sleep-mode`.
+
+## Control flow
+Probe allocates controller state, ioremaps resource 0, converts SoC metadata with `sprd_pinctrl_add_pins()`, parses DT groups with `sprd_pinctrl_parse_dt()`, creates `pinctrl_pin_desc` entries, fills the static `sprd_pinctrl_desc`, and registers the pinctrl device. DT parsing counts direct children and grandchildren as groups. Each group is named after its DT node and resolves its `pins` strings to SoC pin numbers. `sprd_dt_node_to_map()` looks up the group by node name, optionally adds a mux map from the `function` property, and adds pin or group config maps depending on whether the node has one or multiple pins. Mux selection writes two function bits on every common pin in the group; global-control and misc pins are skipped for muxing. Pinconf set loops over packed configs, computes a mask/shift/value, and performs read-modify-write on either a global-control bitfield or a full common/misc pin register.
+
+## State and persistence behavior
+Persistent driver state is devm-allocated and stored in platform drvdata. Hardware state is direct MMIO in the pin controller. `sprd_pinconf_set()` updates registers immediately and has no rollback across a multi-config sequence or group operation. Some sleep-related configs only take effect when the config list also contains `PIN_CONFIG_SLEEP_HARDWARE_STATE`; otherwise input/output/high-impedance and sleep pull settings can be ignored by falling through with zero mask. `sprd_pinctrl_shutdown()` obtains the pinctrl handle and selects a state named `shutdown`, so board DT can define last-minute pin state before poweroff/reboot.
+
+## Dependencies and integration points
+The file depends on Linux pinctrl, pinmux, generic pinconf parsing, `pinctrl-utils`, platform MMIO resources, and SoC wrapper metadata from `pinctrl-sprd.h`. Integration with consumers is entirely through pinctrl state nodes and generic pinconf properties plus `sprd,control` and `sprd,sleep-mode`. Debugfs integration prints raw register values for pins and groups when enabled.
+
+## Risks
+`sprd_pinctrl_desc` is static and mutated during probe, which is common for singleton SoC drivers but risky if multiple Spreadtrum pinctrl instances coexist. `sprd_pinconf_group_dbg_show()` increments `config` in the loop header despite assigning it each iteration, which is harmless but suspicious. Drive-strength validation accepts 2 through 60 mA, while `sprd_pinconf_drive()` only maps discrete values and silently maps unsupported in-range values to 2 mA encoding. Pull-up set accepts only 20000 and 4700 ohms but silently writes zero for other arguments. Group parsing does not fail if a pin name is not found; it leaves the default zero entry in the group array, which can misconfigure pin 0. RMW operations are not locked, so concurrent pinconf/mux updates may race.
+
+## Test signals
+Useful tests include DT parsing with direct child groups and nested groups, invalid pin names, one-pin versus multi-pin config maps, all four mux functions, sleep-state config combinations, global-control `sprd,control`, pull-up/down/bias-disable, and shutdown state selection. Runtime observability comes from pinctrl debugfs raw register dumps and dev_dbg group/pin logs. Static tests should check sparse pin numbers and that SoC table order matches hardware register order.

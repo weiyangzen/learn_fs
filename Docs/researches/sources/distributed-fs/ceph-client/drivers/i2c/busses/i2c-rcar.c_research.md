@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/i2c/busses/i2c-rcar.c
+
+Purpose: Renesas R-Car I2C master/slave platform driver for Gen1 through Gen4 controllers. It registers a numbered `i2c_adapter`, supports normal and atomic master transfers, optional slave mode, SMBus host notify on older generations, DMA acceleration, runtime PM, reset control, and bus recovery through generic SCL recovery.
+
+Important APIs/types/functions: `struct rcar_i2c_priv` is the central persistent state: MMIO base, adapter, current `i2c_msg`, wait queue, clock dividers, generation type, DMA channels, reset control, IRQ, slave client, host-notify client, and persistent flag bits. `rcar_i2c_algo` wires `.xfer`, `.xfer_atomic`, `.functionality`, `.reg_slave`, and `.unreg_slave`. Key routines are `rcar_i2c_clock_calculate()`, `rcar_i2c_init()`, `rcar_i2c_bus_barrier()`, `rcar_i2c_master_xfer()`, `rcar_i2c_master_xfer_atomic()`, `rcar_i2c_irq_send()`, `rcar_i2c_irq_recv()`, `rcar_i2c_irq()`, `rcar_i2c_slave_irq()`, and probe/remove/PM callbacks.
+
+Control flow: probe maps registers, gets clock/reset resources, calculates timing from firmware properties, initializes master/slave blocks, selects Gen2 or Gen3 IRQ behavior, registers the adapter, and optionally registers a host-notify slave. Master transfer resumes runtime PM, waits for free SDA or invokes recovery, resets Gen3+ hardware before transfer, initializes registers, lazily requests DMA channels per message, starts the first message, and waits for `ID_DONE`. The IRQ path handles arbitration loss, NACK, STOP, then dispatches to read or write byte/DMA sequencing; Gen2 clears START/STOP immediately because hardware races make lockless interrupt latency important. Atomic transfers poll status and invoke the same IRQ state machine manually.
+
+State and persistence: transient state is in `flags`, `msg`, `msgs_left`, `pos`, `dma_direction`, and wait queue wakeups. Persistent flags include FM+, not-atomic mode, host notify, RXDMA suppression, and PM blocking. DMA state is cleaned on completion or timeout, and Gen3+ RXDMA is limited to one per transfer. Slave registration keeps runtime PM active until unregister.
+
+Dependencies/integration: Linux I2C core, runtime PM, reset controller, DMA engine, firmware timing parser, OF match data, platform resources, and bus recovery callbacks. Hardware timing and generation quirks are encoded in `enum rcar_i2c_type` and compatible table.
+
+Risks: lock-free IRQ sequencing is intentional and fragile; reordering ICMSR/ICMCR writes can create unwanted repeated starts. Clock calculation can underflow if timing assumptions change. DMA needs `I2C_M_DMA_SAFE` and has special read-tail handling. Reset cannot run while slave mode is active. Host notify is disabled on Gen3+ because hard reset would disturb it.
+
+Test signals: exercise Gen1/2 and Gen3/4 transfers, repeated starts after reads, SMBus block reads with `I2C_M_RECV_LEN`, NACK/arbitration/timeout paths, bus recovery, slave read/write/stop events, DMA-safe buffers above `RCAR_MIN_DMA_LEN`, atomic transfers, suspend/resume adapter marking, and multi-master PM-blocked operation.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/fanotify.h
+
+This UAPI header defines fanotify events, initialization flags, mark flags, event metadata records, permission response structures, and helper macros. It is the ABI for filesystem notification and permission mediation through `fanotify_init`, `fanotify_mark`, reads from fanotify fds, and writes of permission responses.
+
+Important exports include event masks `FAN_ACCESS`, `MODIFY`, `ATTRIB`, close/open/move/create/delete events, permission events `FAN_OPEN_PERM`, `FAN_ACCESS_PERM`, `FAN_OPEN_EXEC_PERM`, filesystem/mount events, `FAN_FS_ERROR`, `FAN_RENAME`, and `FAN_PRE_ACCESS`. Init flags cover classes, queue/mark limits, audit, pidfd/TID/FID/name/target/mount reporting, and fd-error reporting. Mark flags cover add/remove/flush, inode/mount/filesystem/mount-namespace scopes, ignore masks, evictable marks, and child events. Key types are `struct fanotify_event_metadata`, info headers and records for FID, pidfd, error, range, mount, plus `struct fanotify_response` and response info.
+
+Control flow is event-queue based: userspace creates a fanotify group, installs marks, reads variable-length metadata plus optional info records, optionally opens reported fds or decodes file handles, and writes allow/deny responses for permission events. Kernel state includes notification groups, marks, ignored masks, event queues, permission waiters, and audit data. Persistence is fd lifetime and marks; no on-disk state is created.
+
+Dependencies include `linux/types.h`, VFS path/file-handle logic, fsnotify core, audit, pidfd support, mount IDs, and filesystem file-handle support for FID modes. Integration points include antivirus/scanners, container monitors, backup/indexing tools, security policy daemons, and filesystem error reporting.
+
+Risks include permission-event deadlocks, queue overflow, variable-length record parsing bugs, fd lifetime leaks, incompatible report flag combinations, races with rename/delete/mount changes, and security bypasses from incorrect mark scope. Test signals include fanotify selftests, permission response tests, overflow tests, FID/name/rename record parsing, pidfd/error/range/mount info checks, audit response tests, and cross-filesystem file-handle coverage.

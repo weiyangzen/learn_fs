@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-xdev -->
+# sources/sync-backup/bup/test/ext/test-xdev
+
+Purpose: Linux root-only test for filesystem boundary exclusion using `-x`/xdev behavior in `drecurse`, `index`, `save`, and `restore`. Important APIs are loopback/bind mounts, `bup drecurse -x`, `bup index -x`, `save`, `restore`, and directory comparisons. Control flow creates mounted subtrees, verifies default recursion crosses mount points while `-x` excludes them, then tests index/save/restore with no `-x`, with `-x` excluding mounted subtrees, with explicit mount roots included, with symlink-to-mount paths, and with deeper nested mount arguments. State includes mount points, source trees, bup index, saved branches, and restored trees. Dependencies are root privileges, Linux mount support, WvTest, and cleanup unmounts. Risks are mount leakage on failure, symlink/mount identity confusion, and platform-only behavior. Test signals are exact `drecurse` output and restored tree listings matching the selected boundary policy.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-xdev -->

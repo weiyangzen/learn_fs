@@ -1,0 +1,13 @@
+## sources/object-store/apache-ozone/hadoop-hdds/common/src/main/java/org/apache/hadoop/hdds/ratis/RatisHelper.java
+
+Purpose: utility class for bridging HDDS datanodes/pipelines/configuration to Apache Ratis clients, peers, groups, TLS, retry policies, routing tables, debug logging, and leadership transfer.
+
+Important APIs: Ratis peer ID/address conversion, Raft peer/group construction, Ozone client Raft client factories, TLS parameter setup, `newRaftProperties`, client/server property propagation from `hdds.ratis.*`, TLS client config creation, retry policy reflection, min replicated index, routing table generation, byte buffer debug dump, `transferRatisLeadership`, retry-until condition helper, attempt calculation, and first-election-timeout setting.
+
+Control flow: peer address uses a static `OzoneConfiguration` to decide host vs IP and reads RATIS_SERVER, RATIS_ADMIN, RATIS, and RATIS_DATASTREAM ports from `DatanodeDetails`. Client construction creates properties, enables Netty data stream, copies only client/grpc/netty/data-stream config prefixes, attaches TLS params for GRPC, and sets retry policy. Server property propagation excludes client configs except stream-related keys. Leadership transfer validates target membership and follower role, queries remote group info, checks group equality, raises target priority, calls Ratis transferLeadership, and resets priorities in finally when configuration was changed.
+
+State/persistence: static logger, static default `OzoneConfiguration`, dummy empty group ID/group, no durable state; methods mutate caller-provided `RaftProperties` and perform networked Ratis admin operations.
+
+Dependencies: HDDS config/security/pipeline/datanode types, Ratis client/server/config/protocol APIs, TLS config, Java duration/time utilities, Netty buffers. Integration points: container pipeline clients, OM/SCM HA leadership transfer, datanode Ratis server/client setup, secure gRPC, and data stream configuration.
+
+Risks: static `CONF` for hostname preference may not reflect caller configuration; missing split Ratis ports rely on `DatanodeDetails` fallback; reflection-based retry policy creation wraps all failures in runtime exceptions; routing table returns null on closest-node lookup failure; debug dumps can be large; leadership transfer has distributed failure modes and priority reset can fail, leaving operational impact. Test signals: peer address host/IP modes, client/server property filtering, TLS GRPC-only behavior, retry policy class loading, leadership transfer success/failure/reset, routing table order, attempt calculation bounds, and first election timeout setting.

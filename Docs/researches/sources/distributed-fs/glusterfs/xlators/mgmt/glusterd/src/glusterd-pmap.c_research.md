@@ -1,0 +1,15 @@
+# sources/distributed-fs/glusterfs/xlators/mgmt/glusterd/src/glusterd-pmap.c
+
+Purpose: Implements the glusterd portmap service that maps brick paths and RPC transports to brick ports. It allocates ports, maintains the in-memory port registry, handles brick sign-in/sign-out RPCs, and updates local brick status when brick processes disconnect.
+
+Important APIs and functions: `pmap_registry_get()` lazily creates `priv->pmap`. `pmap_port_alloc()` chooses a free port in the configured range. `pmap_assign_port()` removes stale mapping for an old path and allocates a new port. `pmap_registry_search()` finds a brick path and can mark it as destroyed in a whitespace-separated brick string. `pmap_registry_search_by_xprt()` finds by transport pointer. `port_brick_bind()` binds a brick to an existing or new port, supporting brick multiplexing by appending brick names. `pmap_add_port_to_list()`, `pmap_port_new()`, and `pmap_port_remove()` manage registry entries. RPC handlers implement `PORTBYBRICK`, placeholder `BRICKBYPORT`, `SIGNIN`, and `SIGNOUT`.
+
+Control flow: `pmap_port_alloc()` starts at a pseudo-random port between `base_port` and `max_port` and probes ports by binding a temporary IPv4 socket. Brick sign-in decodes XDR, binds the provided brick and request transport to the port, then locates matching local brickinfo and marks `port_registered`. Sign-out decodes XDR, removes the mapping by brick/transport, marks `port_registered` false, unlinks the brick pidfile, sets brick status to stopped, and removes the brick from its brick process if it was killed outside the normal brick-op path.
+
+State and persistence: Portmap state is in-memory in `struct pmap_registry` under `glusterd_conf_t->pmap`, with `struct pmap_ports` entries holding port, whitespace-separated brick names, and transport pointer. It updates in-memory `glusterd_brickinfo_t` fields (`port_registered`, `status`) and pidfiles under the glusterd runtime directory, but it does not write volume store data itself.
+
+Dependencies and integration points: Uses glusterd utils for volume/brick lookup, pidfile macros, brick process removal, RPC service wrappers, XDR generated portmap types, `glusterd_big_locked_handler()` for serialized RPC execution, and the exported `gluster_pmap_prog` program table. Brick processes use sign-in/sign-out to register their actual port with glusterd.
+
+Risks: Registry mutation is safe only under the expected glusterd big lock; helpers themselves do not take a local mutex. Brick multiplexing stores multiple paths in a single mutable string and removal whites out names before possibly deleting the entry, which is fragile if path matching or whitespace handling changes. `pmap_port_alloc()` checks only bind availability and can race another process binding the port after allocation. `pmap_port_remove()` always returns 0, hiding failed removal from callers.
+
+Test signals: Brick process startup/shutdown, brick multiplex attach/detach, port lookup by brick, backend-killed brick cleanup, stale pidfile removal, snapshot brick lookup, and concurrent-looking sign-in/sign-out under big lock are useful test cases.

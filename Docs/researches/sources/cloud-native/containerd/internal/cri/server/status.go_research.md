@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/status.go
+
+This file implements CRI `Status` and the containerd deprecation warning runtime condition. `criService.Status` always marks `RuntimeReady` true because serving CRI implies the containerd plugin is active. It initializes `NetworkReady` true, then consults the default CNI plugin status and marks it false with reason `NetworkPluginNotReady` if CNI reports an error.
+
+The response includes `RuntimeFeatures` and a stable sorted list of runtime handlers collected from `c.runtimeHandlers`. In verbose mode it serializes the CRI config, Go runtime version, default CNI config, runtime-specific CNI load statuses, and default `lastCNILoadStatus` into `Info`. It then queries containerd introspection server state and appends `ContainerdHasNoDeprecationWarnings`, produced by `runtimeConditionContainerdHasNoDeprecationWarnings`.
+
+`runtimeConditionContainerdHasNoDeprecationWarnings` filters deprecation warnings by configured ignore IDs, returns status true when none remain, or status false with reason `ContainerdHasDeprecationWarnings` and a JSON message map keyed by warning ID. Dependencies include CRI runtime types, go-cni behavior, containerd introspection API, JSON, maps/slices sorting helpers, and service config. Risks include verbose serialization errors, introspection failure failing status, CNI config marshal errors only logged, and condition message JSON stability. Tests cover deprecation filtering and runtime handler order stability.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_display_power_map.c
+
+Purpose: defines the platform-specific mapping from logical display power domains to concrete power wells. It is the static topology database used by `intel_display_power.c` to allocate per-platform `struct i915_power_well` instances with the correct names, IDs, domain masks, operation tables, IRQ masks, fuse flags, timeout quirks, and enable/disable ordering.
+
+Important APIs, types, and functions: local macros `I915_PW_DOMAINS()`, `I915_DECL_PW_DOMAINS()`, `I915_PW_INSTANCES()`, `I915_PW()`, and `I915_PW_DESCRIPTORS()` compactly define domain lists, instance lists, and descriptor arrays. `struct i915_power_well_desc_list` groups descriptor arrays. `init_power_well_domains()` fills a well bitmap, treating a zero-length list as all domains and NULL as no domains. `__set_power_wells()` counts instances, allocates `power_domains->power_wells`, initializes descriptors/instance indexes/domain masks, and validates unique direct-lookup IDs. `intel_display_power_map_init()` selects the descriptor list for the detected platform. `intel_display_power_map_cleanup()` frees the allocated well array.
+
+Control flow: init returns no wells when `HAS_DISPLAY()` is false. Otherwise it selects from WCL, Xe3LPD, Xe2LPD, Xe_LPD+, DG2/Xe_HPD, Xe_LPD, DG1, ADL-S, RKL, TGL, ICL, GLK, BXT, SKL, CHV, BDW, HSW, VLV, i830, or generic i9xx tables. Ordering in each descriptor list is significant: normal enabling walks lower to higher indexes and disabling walks the reverse path, which encodes parent-before-child power dependencies.
+
+State and persistence: the file contains static const topology tables. Runtime state created here is only the allocated `power_wells` array, `power_well_count`, per-well descriptor pointer, instance index, and domain bitmap. Hardware state is not touched in this file.
+
+Dependencies and integration points: depends on `intel_display_core`/platform flags, display power well types and ops, register index definitions, and VLV IOSF sideband constants. Descriptor `ops` link directly to operation tables exported by `intel_display_power_well.c`; descriptor IDs are consumed by `lookup_power_well()` callers in init/DC/PHY paths.
+
+Risks: an omitted domain leaves hardware unpowered for a logical user; an extra domain keeps wells on and hurts power. Descriptor order mistakes can violate platform dependency chains. Duplicate nonzero IDs are warned through a bitset check. `u8 count` and `u8 instance_idx` assume descriptor/instance counts stay small. The CHV table contains duplicated `POWER_DOMAIN_PIPE_PANEL_FITTER_C`, which is harmless in a bitmap but shows why domain-list review matters.
+
+Test signals: boot on each platform family should allocate the expected number and names of wells in `intel_display_power_debug()` output. Runtime PM debug verification detects mismatched refcounts against domain membership. Platform-specific CI should cover DC-off, AUX, DDI IO, TC cold, PICA, and independent pipe power-gating paths for modern tables.

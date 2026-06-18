@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/test/java/org/apache/hadoop/hdds/scm/HddsTestUtils.java
+
+Purpose: `HddsTestUtils` is a broad static helper library for SCM tests. It creates datanode details, storage reports, metadata storage reports, node reports, container reports, pipeline reports/actions, command status reports, containers, replicas, test SCM instances, and mocked RPC remote users.
+
+Important APIs and types: Helpers include `getDatanodeDetails`, `createRandomDatanodeAndRegister`, `getListOfRegisteredDatanodeDetails`, `getRandomNodeReport`, `createNodeReport`, `createStorageReport`, `createMetadataStorageReport`, `getRandomContainerReports`, `getPipelineReportFromDatanode`, `openAllRatisPipelines`, `getPipelineActionFromDatanode`, `getContainerReports`, `getRandomContainerInfo`, `createContainerInfo`, `createCommandStatusReport`, `allocateContainer`, `closeContainer`, `quasiCloseContainer`, `getScmSimple`, `getScm`, `getContainer`, `getECContainer`, `getReplicas`, `getReplicaBuilder`, `getReplicasWithReplicaIndex`, `getRandomPipeline`, `createNodeRegistrationContainerReport`, `getContainerInfo`, `getECContainerInfo`, `createContainerReplica`, and `mockRemoteUser`.
+
+Control flow: Most helpers build protobufs or SCM model objects from provided values or random defaults. SCM creation helpers configure loopback random ports, initialize `SCMStorageConfig` with random cluster and SCM IDs when needed, optionally inject `SCMHAManagerStub` and empty `SCMContext`, and delegate to `StorageContainerManager.createSCM`. Container state helpers drive container lifecycle events through `ContainerManager`. `mockRemoteUser` installs a spied Hadoop RPC `Server.Call` in thread-local state.
+
+State and persistence behavior: The class is static and keeps a `ThreadLocalRandom` and one static random pipeline ID. `getScm` can create SCM VERSION files and start real SCM metadata state under configured directories. Report builders are in-memory. Randomized object IDs and usage values make many fixtures non-deterministic unless callers pass explicit values.
+
+Dependencies and integration points: It supports tests across node manager, pipeline manager, container manager, replication manager, SCM protocol servers, and SCM startup. It depends on protobuf report types, SCM model classes, mock datanode details, Ratis and EC replication configs, `SCMConfigurator`, `SCMHAManagerStub`, Mockito, and Hadoop RPC internals.
+
+Risks: Random IDs can make failures harder to reproduce. `getScm` mutates the supplied configuration by setting several SCM addresses and may initialize storage on disk. The static `randomPipelineID` means default container helpers can share a pipeline ID across tests. `mockRemoteUser` modifies RPC thread-local state and must be isolated. Several helpers set simplified default values that may not satisfy all invariants for newer code.
+
+Test signals: This file is itself test support. Downstream tests should rely on it for concise construction, but failures around storage initialization, random ports, replica index, lifecycle transitions, and mocked remote users often point back to helper behavior.

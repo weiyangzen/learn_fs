@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/recon/src/test/java/org/apache/hadoop/ozone/recon/heatmap/TestHeatMapInfo.java
+
+Purpose: This suite validates `HeatMapUtil.generateHeatMap` against representative Solr/Ranger audit facet JSON for key, volume, and bucket resources. It verifies that flat resource strings are converted into hierarchical `EntityReadAccessHeatMapResponse` trees with expected child counts, aggregate sizes, min/max access counts, paths, labels, and normalized colors.
+
+Important APIs/types/functions: The tests use `ReconTestInjector`, `getTestReconOmMetadataManager`, `initializeNewOmMetadataManager`, `ReconOMMetadataManager`, `HeatMapUtil.generateHeatMap`, `HeatMapProviderDataResource`, `EntityMetaData`, `EntityReadAccessHeatMapResponse`, `JsonUtils.readTree`, `JsonTestUtils.treeToValue`, `OzoneStorageContainerManager`, `ReconStorageContainerManagerFacade`, and mocked OM/SCM service providers.
+
+Control flow: `initializeInjector` builds a Recon test injector rooted at a temp directory with SQL DB, OM metadata manager, container DB, and SCM facade binding, then obtains `HeatMapUtil`. It also initializes a large `auditRespStr` containing key-resource facet buckets. `setUp` guards this initialization with an instance boolean. Each test parses a JSON string, navigates to `facets.resources`, deserializes it into `HeatMapProviderDataResource`, converts its metadata array to a list, calls `generateHeatMap`, and asserts the response tree.
+
+State and persistence behavior: Persistent test state includes temporary OM DB directories, Recon SQL DB, and container DB created by `ReconTestInjector`, although the heatmap assertions primarily consume embedded JSON. Runtime state is the parsed metadata list and generated tree. The response tree carries aggregate `size`, `minAccessCount`, `maxAccessCount`, `label`, `path`, `children`, leaf `accessCount`, and normalized `color`.
+
+Dependencies and integration points: This is the main integration test for heatmap generation from external audit facets into Recon API response types. It exercises Jackson JSON mapping, Recon dependency injection, OM metadata setup, SCM facade binding for datanode mapping availability, and hierarchical path construction for Ozone volume/bucket/key resources.
+
+Risks: The key-resource JSON is very large and embedded inline, making the test brittle and hard to update. Assertions depend on exact ordering and color normalization values such as `0.442` and `0.058`. The `isSetupDone` flag is an instance field under JUnit's default per-method lifecycle, so it does not actually share setup across test instances unless lifecycle is changed. The tests parse static fixture JSON rather than calling a live audit provider.
+
+Test signals: Key-resource heatmap has root label `root`, 12 children, size 25600, min access 2924, max access 155074, and selected child colors 0.0, 0.442, and 0.058. Volume-resource heatmap has two children, size 512, min 8590, max 19263, first child color 1.0, and root label `root`. Bucket-resource heatmap has two top-level volume children, first child color 0.0, and a nested path `/testnewvol2/fsobuck11`.

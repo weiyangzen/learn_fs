@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/mediatek/mt76/agg-rx.c
+
+Purpose: implements mt76 software RX BlockAck reorder buffering. It accepts received skbs with mt76 RX metadata, buffers out-of-order aggregated frames per WCID/TID, releases in-order frames to mac80211, handles BAR control frames, and tears down reorder state when BA sessions stop.
+
+Important APIs/functions: exports `mt76_rx_aggr_reorder`, `mt76_rx_aggr_start`, and `mt76_rx_aggr_stop`. Internal helpers include `mt76_aggr_tid_to_timeo`, `mt76_aggr_release`, `mt76_rx_aggr_release_frames`, `mt76_rx_aggr_release_head`, `mt76_rx_aggr_check_release`, `mt76_rx_aggr_reorder_work`, `mt76_rx_aggr_check_ctl`, and `mt76_rx_aggr_shutdown`.
+
+Control flow: `mt76_rx_aggr_start` first stops any existing TID session, allocates a flexible `mt76_rx_tid` with a `reorder_buf[]`, initializes head sequence/size/work/lock, and publishes it through RCU. `mt76_rx_aggr_reorder` initially queues the skb for completion, finds the station and TID, ignores non-aggregated/no-ack traffic, and locks the TID. Frames older than the head are dropped, the first acceptable frame starts the session, in-order frames advance `head` and release contiguous buffered frames, while future frames are unlinked from completion and stored by sequence modulo window size. If a sequence lies outside the reorder window, older frames are released to make room. A delayed work item releases expired holes based on shorter VI timeout or longer BE/BK timeout. BAR frames release up to the requested start sequence. Stop removes the RCU pointer, marks the TID stopped, frees buffered skbs, cancels delayed work, and frees via RCU.
+
+State and persistence: per-WCID `wcid->aggr[tid]` RCU pointers hold active `mt76_rx_tid` state: head sequence number, reorder window size, TID number, started/stopped flags, `nframes`, spinlock, delayed work, and buffered skb pointers. Per-skb `struct mt76_rx_status` carries `seqno`, `qos_ctl`, `aggr`, `wcid`, flags, and `reorder_time`. State is runtime only and reset when BA sessions stop.
+
+Dependencies and integration: depends on mt76 core metadata, Linux sk_buff queues, RCU, spinlocks, delayed work, mac80211 sequence helpers, BAR frame formats, and `mt76_rx_complete`. It is called from mt76 RX paths before final mac80211 completion.
+
+Risks: sequence arithmetic and modulo indexing must respect the negotiated reorder window to avoid retaining wrong frames or dropping valid ones. RCU publication/removal requires callers to hold the documented device mutex for `rcu_replace_pointer` lockdep. Work cancellation must happen after marking stopped to prevent requeue races. Duplicate slot detection drops the new skb. Delayed release trades latency against reordering; wrong timeout choices can harm throughput or voice/video latency.
+
+Test signals: test BA start/stop, in-order AMPDU, out-of-order holes, duplicate sequence numbers, sequence wraparound, BAR-triggered release, timeout release, no-ack frames, non-aggregated control frames, station removal during pending work, and memory accounting for buffered skbs.

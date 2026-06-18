@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/smblibrary/SMBLibrary/NetBios/SessionPackets/SessionRequestPacket.cs -->
+# sources/user-network-fs/smblibrary/SMBLibrary/NetBios/SessionPackets/SessionRequestPacket.cs
+
+## Purpose
+Defines `SessionRequestPacket` for SMBLibrary protocol serialization.
+
+## Important APIs, Types, And Functions
+Declarations: `public class SessionRequestPacket : SessionPacket`. Important fields include `public string CalledName`, `public string CallingName`. Serialization surface: buffer constructors/read methods, `GetBytes`, `WriteBytes`/writer methods.
+
+## Control Flow
+Concrete session packet classes set their `Type`, optionally decode the trailer into typed fields, rebuild `Trailer` in `GetBytes`, then delegate header writing to `SessionPacket`.
+
+## State And Persistence
+State is the packet fields or encoded name data for one NetBIOS packet. Network registration, cache, and session state are managed by callers; these classes only preserve fields needed for serialization.
+
+## Dependencies And Integration Points
+Depends on `Utilities.ByteReader`/`ByteWriter` and endian-specific converter/writer helpers, `SessionPacketTypeName`, concrete session packet classes, `NetBiosUtils`, `System.IO`, and optionally `ArrayPool<byte>`. It integrates with SMB over NetBIOS/TCP and Direct TCP receive/send framing.
+
+## Risks
+Session packet lengths are trusted after the four-byte header; callers must ensure the receive buffer is large enough for Direct TCP lengths or increase it deliberately. Trailer-relative offsets must start at zero; offset reuse bugs would misparse trailer fields.
+
+## Test Signals
+Useful signals are fragmented TCP receive tests, multiple packets in one buffer, partial following-packet compaction, keep-alive/positive/negative/request/retarget/message factory dispatch, Direct TCP large-length framing, and Dispose/ArrayPool behavior.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/smblibrary/SMBLibrary/NetBios/SessionPackets/SessionRequestPacket.cs -->

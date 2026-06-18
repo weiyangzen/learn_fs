@@ -1,0 +1,15 @@
+# sources/test-tools/crashmonkey/code/harness/DiskContents.cpp
+
+Purpose: implements file-system image comparison helpers used by automated checkpoint checking. It mounts crash-state snapshots read-only, walks directory trees, captures file attributes and data hashes, compares them against `/mnt/snapshot`, and performs basic sanity mutations.
+
+Important APIs/functions: `fileAttributes` stores `dirent`, `stat`, and `md5sum`; setters populate directory, stat, and md5 fields; comparison methods compare directory metadata, stat metadata, and hashes. `DiskContents::mount_disk()` mounts a device under `/mnt/<device suffix>`. `get_contents()` recursively collects relative-path attributes. `compare_disk_contents()` compares full namespace and file contents. `compare_entries_at_path()` compares metadata/data for a single path. `compare_file_contents()` compares a byte range at offset/length. `deleteFiles()`, `makeFiles()`, and `sanity_checks()` mutate `/mnt/snapshot` to verify recovered state remains writable/cleanable.
+
+Control flow: a base `DiskContents` object is usually pointed at already mounted `/mnt/snapshot`, while the comparison object mounts another snapshot. The code gathers content maps keyed by relative path, checks entry counts, reports missing/mismatched entries to a diff file, compares md5s for regular files, then unmounts the comparison disk. Path-specific checks mount only the comparison disk and directly stat/read the relevant paths.
+
+State and persistence behavior: object state is the `contents` map, mount path, disk path, fs type, and mount flag. The comparisons observe post-replay persisted state. `sanity_checks()` intentionally creates dummy files in directories and recursively deletes contents from `/mnt/snapshot`, so it is destructive and should run only on disposable crash-state images.
+
+Dependencies and integration: depends on POSIX directory/stat/mount APIs, `md5sum` via `popen()`, C++ streams, and hard-coded `/mnt/snapshot`. `Tester::check_disk_and_snapshot_contents()` uses this class for automated checks based on `DiskMod` checkpoint data.
+
+Risks: constructor initialization has a bug (`stat_attr.st_ino == -1`) that compares rather than assigns. `compare_md5sum()` returns the raw `std::string::compare()` integer as bool, so equal hashes return false and mismatches return true; callers compensate with `!= 0` in some places but the API is misleading. `unmount_and_delete_mount_point()` calls `unlink()` on a directory instead of `rmdir()`. Shelling out to `md5sum` with an unquoted path is injection- and whitespace-prone. `compare_file_contents()` uses C strings and `strcmp()` on binary buffers, so embedded NUL bytes can hide differences. `contents` is not cleared before scans, which can contaminate repeated comparisons.
+
+Test signals: diff files named by checkpoint, failed automated data tests, and sanity-check console messages indicate comparison behavior. Unit-style coverage should include equal/mismatched hashes, binary files with NULs, symlinks, missing files, and mount cleanup.

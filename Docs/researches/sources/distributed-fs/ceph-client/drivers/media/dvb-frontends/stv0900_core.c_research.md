@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/drivers/media/dvb-frontends/stv0900_core.c
+
+### Purpose
+`stv0900_core.c` implements the Linux DVB frontend driver for the STV0900 satellite demodulator. It handles chip allocation, shared dual-demod internal state, low-level I2C register access, chip initialization, tuner setup, DVB-S/DVB-S2/DSS search, status and metric callbacks, DiSEqC commands, transport stream control, and module registration metadata.
+
+### Important APIs, Types, And Functions
+The file exports `stv0900_attach()` and internal helpers declared in `stv0900_priv.h`. The global `stvdebug` module parameter gates debug printing. `struct stv0900_inode` links shared `struct stv0900_internal` objects by I2C adapter/address so two frontend instances can share one physical dual-demod chip. Register helpers are `stv0900_write_reg()`, `stv0900_read_reg()`, `stv0900_write_bits()`, and `stv0900_get_bits()`. Initialization helpers include `stv0900_initialize()`, `stv0900_set_mclk()`, `stv0900_set_ts_parallel_serial()`, `stv0900_st_dvbs2_single()`, and `stv0900_init_internal()`. Runtime frontend callbacks are collected in `stv0900_ops`: `init`, `sleep`, `search`, `read_status`, BER/SNR/strength/uncorrected-block reads, DiSEqC send/receive, tone control, I2C gate control, and `get_frontend`.
+
+### Control Flow
+Attach allocates `struct stv0900_state`, copies `stv0900_ops`, stores board config and I2C adapter, builds `stv0900_init_params`, and calls `stv0900_init_internal()`. Internal initialization either reuses an existing shared chip object in dual mode or allocates and appends a new one, runs the startup register sequence from `stv0900_init.h`, configures rolloff, TS routing or custom TS registers, tuner type/address/ADC settings, IQ swap, and master clock.
+
+Tuning uses the DVB custom-search flow. `stv0900_search()` validates symbol rate, calls the board TS hook, configures MIS filtering from `stream_id`, fills `intp` search state, narrows DVB-S searches to `STV0900_SEARCH_DVBS1`, and delegates acquisition to `stv0900_algo()` from the algorithm code. Search success is reported only when the algorithm returns range OK and the per-demod result is locked. `stv0900_start_search()` programs acquisition registers based on chip cut, symbol rate, search range, and warm/cold/blind search mode. Lock polling in `stv0900_get_demod_lock()` watches `HEADER_MODE`, then `LOCK_DEFINITIF`.
+
+Status and metrics read hardware fields after tuning. `stv0900_status()` distinguishes DVB-S2 and DVB-S lock paths using packet delineator/Viterbi and TS FIFO flags. Strength and C/N use interpolation against lookup tables from `stv0900_init.h`. BER samples error counters several times and scales them when the relevant lock flag is set. DiSEqC control writes mode/reset bits, pushes FIFO bytes, waits for TX idle or RX end, and implements mini-burst and 22 kHz tone operations.
+
+### State, Persistence, And Dependencies
+Persistent driver state lives in memory in `struct stv0900_internal` and per-frontend `struct stv0900_state`. The internal object tracks clock, chip id, demod mode, per-path frequency/bandwidth/symbol-rate/search settings, tuner type, result structures, error state, I2C adapter/address, optional TS config, and a reference count `dmds_used`. The global inode list persists shared chips until release. Hardware state persists in demodulator registers until reset, sleep, retune, or module unload. Dependencies include Linux kernel module/I2C/slab APIs, DVB frontend APIs, `stv0900_reg.h` register labels, private enums/types, static init tables, and external acquisition helpers such as `stv0900_algo()` and `stv0900_get_standard()`.
+
+### Integration Points
+The file integrates upward with the DVB core through `struct dvb_frontend_ops` and downward with the STV0900 chip through I2C transfers. It also integrates sideways with board drivers through `struct stv0900_config` hooks, tuner operations in `fe->ops.tuner_ops`, and optional hardware/auto tuner register programming. DiSEqC and tone callbacks connect satellite equipment control to the DVB SEC API. The real attach symbol is exported with `EXPORT_SYMBOL_GPL`.
+
+### Risks
+The shared inode list is global and has no explicit locking, so concurrent attach/release paths would rely on broader DVB registration serialization. Several I2C helpers only log transfer failures and do not set a local error in the shown code, so later logic can continue with zero/stale values. `stv0900_diseqc_send()` busy-waits while FIFO full without a timeout, which can hang if hardware never drains. Search and TS setup are sensitive to chip cut (`chip_id`) and symbol-rate thresholds. Custom `ts_config_regs` must be correctly terminated. Release decrements shared `dmds_used`; mismatched attach/release lifetimes could free shared state still in use.
+
+### Test Signals
+High-value tests require hardware or emulation: attach both demods on one chip and release them in both orders, probe all supported chip cuts, tune DVB-S and DVB-S2 transponders across low/high symbol rates, verify MIS filtering and `FE_CAN_MULTISTREAM` on chip id `>= 0x30`, measure BER/SNR/strength monotonicity, exercise DiSEqC master commands, mini-bursts, slave replies, and tone toggles, confirm TS output in serial/parallel/DVBCI modes, and inject I2C failures to check graceful attach/search failure.

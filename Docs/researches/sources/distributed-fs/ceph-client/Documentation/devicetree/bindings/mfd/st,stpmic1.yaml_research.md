@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/st,stpmic1.yaml
+
+Purpose: Schema for the ST STPMIC1 PMIC MFD, covering PMIC interrupt controller, onkey input, watchdog, and a rich regulator subtree with over-current interrupts and reset-mask behavior.
+
+Important schema surface and control flow: `compatible = "st,stpmic1"`, `reg = 0x33`, `interrupts`, `#interrupt-cells = 2`, and `interrupt-controller` are required. Optional `onkey` references input semantics and requires falling/rising interrupts and names, with power-off timing and ST-specific flags. Optional `watchdog` references watchdog semantics. The `regulators` child requires `compatible = "st,stpmic1-regulators"` and defines buck, LDO, vref, boost, and power-switch children, with supply pattern properties, per-rail allowed regulator properties, optional current-limit interrupts, and `st,mask-reset` on selected rails.
+
+State, dependencies, and integration: DT configures PMIC IRQ demultiplexing, onkey behavior, watchdog, regulator constraints, supply inputs, and fault handling for STPMIC1 drivers. Dependencies include input, watchdog, regulator, interrupt, and STPMIC1 IRQ constant bindings. Risks include wrong interrupt IDs/names for onkey or regulator current limits, using disallowed regulator properties on fixed switches, and masking reset on rails that should reset with the PMIC. Test signals are `dt_binding_check`, per-rail additional-property rejection, example validation, and runtime registration of interrupt, onkey, watchdog, and regulator cells.

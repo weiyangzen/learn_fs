@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_lookup.c
+
+Purpose: implements nftables set lookup expressions, including map value extraction and verdict-map validation.
+
+Important APIs/types/functions: `struct nft_lookup` stores the bound set, source/destination registers, map/invert flags, and binding. `nft_set_do_lookup()` is exported and wraps backend lookup with a base-sequence retry to avoid missing elements across commits. Under retpoline mitigation, `__nft_set_do_lookup()` dispatches directly to known backend lookup functions. `nft_lookup_eval()` performs lookup, catchall fallback, optional map data copy, and element expression update.
+
+Control flow: init looks up the set by name/id and next generation mask, validates key register load, parses invert, validates map destination rules, rejects anonymous maps used only as existence checks, sets binding flags, and binds the set. Eval computes found xor invert; if false, it tries catchall, otherwise breaks. For found extensions, map data is copied to the destination register and set element expressions are updated. Validate walks verdict maps and validates catchall verdicts.
+
+State/persistence: expression state is a set binding; runtime state remains in the set, including dynamic expressions/timeouts. Dependencies include all set backends, nf_tables generation sequencing, set catchall, map datatypes, and transaction activation/deactivation. Risks include missed lookup during generation changes if retry logic regresses, invalid map/invert combinations, anonymous map lifetime, verdict map validation gaps, and retpoline dispatch drift when set backends change. Test signals: positive/negative/inverted lookup, map data extraction, named map lookup-only, anonymous map rejection, catchall entries, concurrent set update lookup retry, verdict map validation, and deactivate/activate/destroy transactions.

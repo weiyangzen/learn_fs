@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-edp.c
+
+This Qualcomm eDP/DP QMP PHY driver exposes a generic DP PHY plus two clock outputs for link and VCO-divided pixel clocks. `struct qcom_edp` holds MMIO regions for eDP, TX0, TX1, PLL, bulk clocks, two regulators, DP configuration, clock hardware, and version-specific config.
+
+Probe selects `qcom_edp_phy_cfg` by compatible, maps four resources, obtains all clocks, gets `vdda-phy` and `vdda-pll`, sets regulator loads, registers clock providers, creates the PHY, and registers `of_phy_simple_xlate`. Init enables supplies/clocks, programs AUX configuration, bias, power-down states, and interrupt masks. Configure stores `phy_configure_opts_dp` and optionally applies voltage swing/pre-emphasis tables. Power-on dispatches version ops for v4/v6/v8 PLL and SSC programming based on link rate, configures lanes, sets VCO divisor and derived clock rates, runs reset-state-machine control, and polls `DP_PHY_STATUS`. Power-off writes power-down; exit disables clocks and regulators; set-mode accepts only `PHY_MODE_DP` and tracks eDP submode.
+
+Dependencies are QMP register headers, clk provider API, regulators, MMIO polling, generic PHY DP opts, and OF match data. Risks include dense per-version magic tables, invalid link-rate/lane combinations, no unwind in several init early returns after clocks are enabled, and clock rate assumptions. Test signals are DP/eDP link training, clock consumers, and poll failures.

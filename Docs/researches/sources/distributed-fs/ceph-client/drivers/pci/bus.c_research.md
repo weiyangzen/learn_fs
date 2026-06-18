@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/pci/bus.c
+
+Purpose: PCI bus resource and device-addition helpers. It manages host bridge window lists, allocates device resources from bus windows, clips bridge resources, starts devices, walks bus hierarchies, and reference-counts PCI buses.
+
+Important APIs/types/functions: exports resource list helpers `pci_add_resource_offset()`, `pci_add_resource()`, `pci_free_resource_list()`, `pci_bus_resource_n()`, `devm_request_pci_bus_resources()`, allocation helpers `pci_bus_alloc_resource()`, `pci_bus_clip_resource()`, device start helpers `pci_bus_add_device()` and `pci_bus_add_devices()`, hierarchy walkers `pci_walk_bus()` and `pci_walk_bus_reverse()`, and `pci_bus_get/put()`.
+
+Control flow/state: extra bus resources are stored as `struct pci_bus_resource` list entries beyond fixed bridge-window slots. Allocation converts CPU resources to bus regions, clips to 32-bit/64-bit/high address windows, filters type/prefetch flags, applies min/max/alignment, and calls `allocate_resource()`. Adding a device runs arch hooks, final fixups, dynamic OF node creation for bridges, sysfs/proc attachment, D3/runtime PM setup, optional binding permission, initial probe, and added-state marking. Walkers hold `pci_bus_sem`.
+
+Dependencies/integration: uses generic resource lists, resource trees, OF/proc/sysfs/PM hooks, PCI fixups, architecture `pcibios_*` hooks, and downstream driver binding. Risks include allocation window translation bugs, prefetch/type mismatches, partial device-add side effects, dynamic OF node availability rules, and recursive walk locking assumptions. Test signals include host bridge resource request failures, BAR allocation across 32/64-bit windows, bridge window clipping logs, device sysfs/proc presence, recursive probe ordering, and lockdep for walk APIs.

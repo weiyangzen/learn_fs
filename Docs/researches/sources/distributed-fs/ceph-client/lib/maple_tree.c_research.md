@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/lib/maple_tree.c
+
+Purpose: Implements the Linux Maple Tree, a range-aware B-tree-like container used for sparse index/range storage with RCU-friendly readers and write-side replacement/rebalancing. It supports ordinary lookup/store/insert/erase, range allocation, cyclic allocation, duplication, destruction, traversal, and debug validation/dumping.
+
+Important APIs and types: Public exports include `mas_walk`, `mas_store`, `mas_store_gfp`, `mas_store_prealloc`, `mas_preallocate`, `mas_next`, `mas_prev`, `mas_find`, `mas_find_rev`, `mas_empty_area`, `mas_empty_area_rev`, `mas_erase`, `mas_nomem`, `mtree_load`, `mtree_store_range`, `mtree_insert_range`, `mtree_alloc_range`, `mtree_alloc_cyclic`, `mtree_alloc_rrange`, `mtree_erase`, `mtree_dup`, `mtree_destroy`, `mt_find`, and `mt_find_after`. Core state comes from `struct maple_tree`, `struct ma_state`, `struct ma_wr_state`, `struct maple_node`, encoded `struct maple_enode`, and transient `struct maple_copy`.
+
+Control flow: Reads start with `mas_start()` and descend through pivot/slot arrays via `mtree_range_walk()` or `mtree_lookup_walk()`, retrying if dead RCU nodes are observed. Writes classify the operation with `mas_wr_store_type()` into exact-fit, append, slot-store, node-store, spanning-store, split, rebalance, root-store, or new-root paths, preallocate nodes, then replace or mutate leaves while maintaining pivots, parent encodings, metadata, and allocation gap summaries. Large range overwrites use `maple_copy` to synthesize one to three destination nodes and ascend until the tree converges or a new root is needed.
+
+State and persistence: State is in-memory only. Tree root, height, flags, encoded parent pointers, node metadata, and optional allocation gaps are maintained under tree locks for writes and read through RCU for lockless readers. Deleted nodes are marked dead by self-parenting and freed immediately or through RCU callbacks. A slab cache `maple_node_cache` is initialized by `maple_tree_init()` with sheaf prefill support.
+
+Dependencies and integration: Depends on `linux/maple_tree.h`, xarray tagging helpers, slab/RCU primitives, tracepoints, barriers, lockdep, and kernel export/module infrastructure. It is a shared kernel data-structure implementation, not Ceph-specific, but Ceph-client source imports it as part of the kernel subtree.
+
+Risks: The highest-risk areas are encoded pointer bit manipulation, RCU memory ordering, node replacement after spanning writes, gap propagation for allocation trees, overflow at `ULONG_MAX`, and `mas_nomem()` lock dropping/retry behavior. Invalid reserved xarray entries and zero/internal values require caller discipline. Debug builds validate parent slots, pivots, gaps, null adjacency, and minimum occupancy.
+
+Test signals: In-file debug-only exports `mt_validate`, `mt_dump`, `mas_dump`, and allocation counters support maple-tree self-tests. Runtime tracepoints expose read/write operations. Correctness is generally covered by upstream Maple Tree tests and VM users that exercise range allocation and iteration.

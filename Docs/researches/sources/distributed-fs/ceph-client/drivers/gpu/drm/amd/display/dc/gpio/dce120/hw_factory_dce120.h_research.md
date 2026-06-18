@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/gpio/dce120/hw_factory_dce120.h
+
+Purpose: DCE 12.0 factory declaration header. Important API is `dal_hw_factory_dce120_init(struct hw_factory *factory)`, used by the common factory dispatcher to install DCE 12.0 register tables and function pointers. The header has no control flow, persistence, or runtime state. It depends on callers having a visible `struct hw_factory` declaration. Integration points are `hw_factory.c` cases for `DCE_VERSION_12_0` and `DCE_VERSION_12_1`. Risks are signature drift and include-order assumptions. Tests are compile/link coverage for DCE 12.x builds and service creation tests that force the dispatcher through this init function.

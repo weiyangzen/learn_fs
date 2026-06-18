@@ -1,0 +1,13 @@
+# sources/user-network-fs/rclone/backend/sftp/sftp.go
+
+Purpose: implements rclone's SFTP backend on top of `github.com/pkg/sftp`, supporting internal Go SSH or an external `ssh` binary, connection pooling, directory/object operations, optional hardlink copy, remote-shell hashing, quota discovery, and platform-specific path handling.
+
+Important APIs/types/functions: `Options` exposes host/auth/key/certificate/agent/proxy/cipher/hash/shell/path/chunk/concurrency settings. `Fs` stores root paths, SSH config, feature flags, connection pool, token dispenser, pacer, hash cache, and session count. `Object` caches stat data and checksums. Core functions include `NewFs`, `NewFsWithConnection`, `sftpConnection`, `getSftpConnection`, `putSftpConnection`, `drainPool`, `newSftpClient`, `List`, `Put`, `Mkdir`, `Rmdir`, `Move`, `Copy`, `DirMove`, `run`, `Hashes`, `About`, `remotePath`, `remoteShellPath`, `quoteOrEscapeShellPath`, `parseHash`, `parseUsage`, `Open`, `Update`, and `Remove`.
+
+Control flow: initialization builds SSH auth methods from agent, key files/PEM, certs, password, or ask-password callback; configures host-key validation; applies cipher/KEX/MAC options; opens an early connection; auto-detects remote shell type; canonicalizes root; and detects file-root remotes. Operations borrow pooled connections, return reusable ones, and validate questionable connections after non-ordinary errors. Uploads hold a connection for the full file write, clear cached hashes, remove failed partial uploads, then set or infer modtime. Reads open an SFTP file and pump it through a pipe reader with session accounting.
+
+State and persistence behavior: connection pool and idle timer are in-memory; `connections` uses a token dispenser. Shell type and autodetected hash commands are persisted back to the config mapper. `cachedHashes` avoids repeated command probing. `mkdirLock` serializes recursive creation per path. `savedpswd` caches prompted password for reconnects.
+
+Dependencies/integration: integrates rclone `fs` interfaces, `accounting.LimitTPS`, `pacer`, `encoder`, env/proxy helpers, `ssh-agent`, `x/crypto/ssh`, `knownhosts`, and `pkg/sftp`. Implements `Fs`, `PutStreamer`, `Mover`, `Copier`, `DirMover`, `DirSetModTimer`, `Abouter`, `Shutdowner`, and `Object`.
+
+Risks/test signals: risks include deadlocks with low connection limits, external SSH non-reuse, shell command injection/quoting, Windows path conversion, server-specific SFTP extensions, hash command autodetection, partial failed uploads, and stale pooled connections. Unit tests cover shell escaping, path encoding/override, hash and `df` parsing; integration tests exercise OpenSSH/rclone SFTP remotes.

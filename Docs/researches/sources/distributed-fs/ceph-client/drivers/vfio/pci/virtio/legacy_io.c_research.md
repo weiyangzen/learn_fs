@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/virtio/legacy_io.c
+
+This file implements admin-command-backed legacy I/O emulation for virtio-net PCI VFs that do not expose BAR0 but can be controlled through a supporting PF. It makes a modern VF look like a transitional virtio device to userspace/guest drivers by virtualizing config fields and intercepting BAR0 I/O.
+
+Important functions are `virtiovf_issue_legacy_rw_cmd()`, `virtiovf_pci_bar0_rw()`, config wrappers `virtiovf_pci_read_config()` and `virtiovf_pci_write_config()`, exported `virtiovf_pci_core_read/write()`, `virtiovf_pci_ioctl_get_region_info()`, `virtiovf_open_legacy_io()`, `virtiovf_support_legacy_io()`, `virtiovf_init_legacy_io()`, `virtiovf_release_legacy_io()`, and `virtiovf_legacy_io_reset_done()`.
+
+Control flow routes config-space reads through generic VFIO first, then patches device ID, revision, command I/O bit, BAR0, subsystem ID, and subsystem vendor ID where the requested range intersects those registers. Config writes shadow PCI command and BAR0 values before delegating to generic VFIO. BAR0 read/write checks the shadow I/O enable bit, resumes runtime PM, handles queue notify via the mapped notify address, and sends other common/device config accesses through virtio PCI admin legacy I/O commands. Region info for BAR0 reports the synthetic virtual size instead of a real PCI resource.
+
+State includes the virtual BAR0 buffer, BAR mutex, notify BAR/offset/address, shadow `pci_cmd`, and shadow `pci_base_addr_0`. Init reads notify info through admin commands, computes a power-of-two virtual BAR0 size, allocates the buffer, and initializes locking. Open maps the notify BAR after core enable has established BAR maps. Reset clears `pci_cmd`.
+
+Dependencies include virtio PCI admin legacy commands, VFIO core read/write and range intersection helper, runtime PM, BAR map setup, and virtio-net config sizing. Risks include only supporting virtio-net device `0x1041`, partial config writes to shadow fields, exposing I/O as enabled inconsistently with generic config state, notify BAR mapping lifetime, and PF admin command failures. Test signals include virtio-net VF with no BAR0, non-net virtio devices, legacy common/device config reads, queue notify writes, config range-intersection partial reads/writes, reset clearing I/O enable, and Kconfig-disabled builds.

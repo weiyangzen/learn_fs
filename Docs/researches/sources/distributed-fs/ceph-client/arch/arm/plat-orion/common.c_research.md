@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/arch/arm/plat-orion/common.c
+
+Purpose: Provides shared boot-time platform-device setup for multiple Marvell Orion machine families. It registers UART, RTC, Ethernet, I2C, SPI, XOR DMA, EHCI, SATA, crypto, and clkdev entries using SoC-specific base addresses, IRQs, clocks, and platform data supplied by machine files.
+
+Important APIs/functions: Exported `__init` initializers include `orion_clkdev_add`, `orion_clkdev_init`, `orion_uart0_init` through `orion_uart3_init`, `orion_rtc_init`, `orion_ge00_init` through `orion_ge11_init`, `orion_i2c_init`, `orion_i2c_1_init`, `orion_spi_init`, `orion_spi_1_init`, `orion_xor0_init`, `orion_xor1_init`, `orion_ehci_init`, `orion_ehci_1_init`, `orion_ehci_2_init`, `orion_sata_init`, and `orion_crypto_init`. Internal helpers `fill_resources`, `fill_resources_irq`, `uart_complete`, and `ge_complete` centralize platform resource population and registration.
+
+Control flow: Machine code calls the relevant initializer during early board setup. Each initializer mutates static `platform_device`, `resource`, and platform-data instances with the caller's mapbase/IRQ/clock values, then calls `platform_device_register()` or `platform_device_register_simple()`. Ethernet setup registers shared MIB/port devices before the port device; GE00 also registers an MDIO device with error IRQ. XOR setup fills two memory resources and two channel IRQs, then advertises `DMA_MEMCPY` and `DMA_XOR` capabilities.
+
+State and persistence: Static platform devices and resource arrays persist for the lifetime of the kernel. The functions are `__init`, but the registered structures remain referenced by the device core, so their storage is intentionally static. Clock lookup entries are installed through clkdev. There is no locking because initialization is single-threaded.
+
+Dependencies and integration: Integrates with Linux platform bus, serial8250, `mv643xx_eth`, `orion-mdio`, `mv64xxx_i2c`, `orion_spi`, `mv_xor`, `orion-ehci`, `sata_mv`, and `mv_crypto` drivers. It depends on correct machine-provided MMIO ranges, IRQ numbers, clocks, and platform data.
+
+Risks: Resource end calculations mix inclusive ranges with size-minus-one arguments; callers must pass base addresses matching the hardware manuals. Reusing shared `orion_ehci_data` for EHCI instances means later calls can overwrite PHY version data used by earlier registered devices. `uart_get_clk_rate()` enables clocks but does not disable them. Tests should include boot/link tests for every enabled peripheral class and confirm `/proc/iomem`, IRQ assignments, and driver probe success.

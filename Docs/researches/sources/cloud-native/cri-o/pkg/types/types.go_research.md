@@ -1,0 +1,5 @@
+# sources/cloud-native/cri-o/pkg/types/types.go
+
+This file defines small JSON-serializable data transfer structs for CRI-O introspection. `ContainerInfo` captures container metadata such as name, pid, image identifiers, timestamps, labels, annotations, CRI-O annotations, log/root paths, sandbox ID, IPs, and host-network state. `IDMappings` wraps UID/GID maps from container storage idtools. `CrioInfo` reports daemon-level storage and cgroup information plus default ID mappings.
+
+There are no functions or control flow. State is represented as values that can be marshaled to JSON for APIs or diagnostics. Dependencies are limited to `go.podman.io/storage/pkg/idtools`. Integration points are likely status/info endpoints and tooling that consume CRI-O's daemon/container metadata. Risks are schema stability and the comment that `Image` may not correspond to the user's requested image name, while `ImageRef` has a storage-specific string format. There are no direct tests in this subset; compatibility is usually covered by consumers that marshal or inspect these structs.

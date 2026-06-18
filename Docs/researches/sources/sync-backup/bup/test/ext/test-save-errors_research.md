@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-errors -->
+# sources/sync-backup/bup/test/ext/test-save-errors
+
+Purpose: verifies save error handling for metadata read failures and duplicate index entries. Important APIs are generated Python monkey patches of `bup.metadata.from_path`, a `DupReader(index.Reader)` subclass, `bup index`, `bup save`, and stderr assertions. Control flow initializes a repo, injects a metadata exception for a file and then for a folder, confirms save reports the failure path correctly, then injects duplicate index records to test duplicate-entry detection. State is the temp bup repo, source tree, generated override modules, and captured logs. Dependencies include `--import-py-module`, bup Python module internals, WvTest, and index reader behavior. Risks are brittle coupling to internal exception text, path quoting, and duplicate-index injection needing to match current index APIs. Test signals are failed saves with expected diagnostics and no silent success when metadata or index invariants are broken.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-errors -->

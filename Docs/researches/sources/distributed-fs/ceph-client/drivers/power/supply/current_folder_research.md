@@ -1,0 +1,153 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/power/supply
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 139
+- Recursive researched files: 139
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/power/supply/88pm860x_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/88pm860x_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500-bm.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500-chargalg.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500_bmdata.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500_btemp.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500_chargalg.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ab8500_fg.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/acer_a500_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/act8945a_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/adc-battery-helper.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/adc-battery-helper.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/adp5061.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/apm_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/axp20x_ac_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/axp20x_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/axp20x_usb_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/axp288_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/axp288_fuel_gauge.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bd71828-power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bd99954-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bd99954-charger.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq2415x_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq24190_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq24257_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq24735-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq2515x_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq256xx_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq257xx_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq25890_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq25980_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq25980_charger.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq27xxx_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq27xxx_battery_hdq.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/bq27xxx_battery_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/chagall-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/charger-manager.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/collie_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/cpcap-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/cpcap-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/cros_charge-control.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/cros_peripheral_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/cros_usbpd-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/cw2015_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/da9030_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/da9052-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/da9150-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/da9150-fg.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ds2760_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ds2780_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ds2781_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ds2782_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/generic-adc-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/goldfish_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/gpio-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/huawei-gaokun-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ingenic-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/intel_dc_ti_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ip5xxx_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ipaq_micro_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/isp1704_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/lego_ev3_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/lenovo_yoga_c630_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/lp8727_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/lp8788-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/lt3651-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ltc2941-battery-gauge.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ltc4162-l-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/macsmc-power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max14577_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max14656_charger_detector.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max17040_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max17042_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max1720x_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max1721x_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max77650-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max77693_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max77705_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max77759_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max77976_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max8903_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max8925_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max8971_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max8997_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/max8998_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/mm8013.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/mp2629_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/mt6360_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/mt6370-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/olpc_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/pf1550-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/pm8916_bms_vm.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/pm8916_lbc.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/pmu_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/power_supply.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/power_supply_core.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/power_supply_hwmon.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/power_supply_leds.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/power_supply_sysfs.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/qcom_battmgr.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/qcom_smbb.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/qcom_smbx.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rk817_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rn5t618_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rt5033_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rt5033_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rt9455_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rt9467-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rt9471.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rt9756.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/rx51_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/s2mu005-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/samsung-sdi-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/samsung-sdi-battery.h`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/sbs-battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/sbs-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/sbs-manager.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/sc2731_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/sc27xx_fuel_gauge.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/smb347-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/stc3117_fuel_gauge.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/surface_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/surface_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/test_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/tps65090-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/tps65217_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/twl4030_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/twl4030_madc_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/twl6030_charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ucs1002_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/ug3105_battery.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/wilco-charger.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/wm831x_backup.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/wm831x_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/wm8350_power.c`
+- `sources/distributed-fs/ceph-client/drivers/power/supply/wm97xx_battery.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

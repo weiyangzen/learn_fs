@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph/src/rgw/rgw_lc.cc
+
+Purpose: Implements RGW bucket lifecycle execution: expiration, noncurrent expiration, delete-marker expiration, object transition, noncurrent transition, aborting incomplete multipart uploads, lifecycle shard scheduling, and S3 lifecycle response headers.
+
+Important APIs and functions: Core public methods are `RGWLC::initialize()`, `start_processor()`, `stop_processor()`, `process()`, `process_bucket()`, `bucket_lc_process()`, `set_bucket_config()`, and `remove_bucket_config()`. Rule expansion is handled by `RGWLifecycleConfiguration::_add_rule()`. Execution is organized through `LCObjsLister`, `LCOpRule`, `LCOpAction_*`, `remove_expired_obj()`, `handle_multipart_expiration()`, and helpers in namespace `rgw::lc`.
+
+Control flow: Lifecycle XML/config is decoded into `LCRule` objects and expanded into prefix-keyed `lc_op` entries. Worker threads run only during configured work windows, choose lifecycle index shards in random order, lock a shard object, read or initialize its head marker, mark a bucket entry processing, advance the head, drop the shard lock, process the bucket, then reacquire the lock to mark the entry complete, failed, or remove stale entries. Per-bucket processing groups rules by prefix, lists current and versioned objects, evaluates candidate actions, fetches tags only when needed, and dispatches object work through an async spawn throttle. Versioned hard deletes for the same key are grouped so `rgw::multi_delete::dispatch()` can skip redundant OLH updates.
+
+State and persistence: Lifecycle configs are stored in bucket attrs under `RGW_ATTR_LC`. Bucket work is persisted in SAL lifecycle entries stored under hashed `lc.N` objects and coordinated by `LCSerializer` locks named `lc_process`. `LCHead` tracks shard marker, start date, and rollover date. Object actions mutate bucket indexes and objects through SAL delete/transition APIs and emit notifications. Per-bucket counters are batched through `LCBatchCounters`.
+
+Dependencies and integration points: Uses SAL `Driver`, `Bucket`, `Object`, `Lifecycle`, `Restore`, `Notification`, lock serializers, RGW tags, object lock attrs, multipart upload APIs, placement tiers including cloud-S3 tiers, perf counters, and Boost.Asio coroutine throttling.
+
+Risks: Lifecycle is concurrency-heavy and relies on lock/relock ordering around bucket processing. Bugs can cause skipped buckets, repeated daily processing, stale processing sessions, or unsafe deletes around object lock and delete markers. Prefix grouping and unordered listing improve scale but raise boundary risks for versioned delete marker handling. Notification failures are logged but do not roll back object mutations.
+
+Test signals: Tests should cover rule expansion, duplicate ids, days/date conflict validation, work-window scheduling, shard rollover, stale session clearing, bucket-marker mismatch removal, object lock blocking, delete marker exposure checks, tag/size filters, versioned multi-delete grouping, transition to local and cloud tiers, multipart aborts, counters, and `x-amz-expiration`/abort header calculation.

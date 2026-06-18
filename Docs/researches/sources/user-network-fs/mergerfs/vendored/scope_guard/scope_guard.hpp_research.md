@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/mergerfs/vendored/scope_guard/scope_guard.hpp -->
+# sources/user-network-fs/mergerfs/vendored/scope_guard/scope_guard.hpp
+
+Purpose: Header-only vendored `scope_guard` 0.9.1 implementation that provides RAII cleanup actions for scope exit, exception failure, exception success, and `DEFER`-style cleanup macros. mergerfs uses it to keep cleanup paths local in filesystem and vendored libfuse code.
+
+Important APIs, types, and functions: Main types are `scope_guard::detail::scope_guard<F, P>`, `on_exit_policy`, `on_fail_policy`, and `on_success_policy`, with aliases `scope_exit`, `scope_fail`, and `scope_success`. Factory functions are `make_scope_exit`, `make_scope_fail`, and `make_scope_success`. Public macros include `SCOPE_EXIT`, `SCOPE_FAIL`, `SCOPE_SUCCESS`, `DEFER`, named `MAKE_*` forms, and `WITH_*` loop helpers. Configuration macros control throwable behavior: `SCOPE_GUARD_MAY_THROW_ACTION`, `SCOPE_GUARD_NO_THROW_ACTION`, `SCOPE_GUARD_SUPPRESS_THROW_ACTION`, `SCOPE_GUARD_NO_THROW_CONSTRUCTIBLE`, and `SCOPE_GUARD_CATCH_HANDLER`.
+
+Control flow: A guard captures an rvalue no-argument void action and a policy initialized as active. On move, the new object takes the action and policy while dismissing the source. On destruction, `policy_.should_execute()` decides whether to run the action: always for exit, only when the uncaught exception count increased for fail, and only when it did not increase for success. `dismiss()` disables execution. The macro interface creates uniquely named const guards through `__COUNTER__` or `__LINE__`.
+
+State and persistence behavior: State is strictly automatic object lifetime: each guard owns one decayed action and one policy flag or exception-count snapshot. There is no heap allocation by `scope_guard` itself, and class-specific `operator new` is deleted to prevent direct dynamic allocation. No state persists beyond the lexical scope.
+
+Dependencies and integration points: Depends on `<type_traits>` and, on modern C++ modes, `<exception>` for `std::uncaught_exceptions()`. Older GCC/Clang paths read ABI exception globals directly; old MSVC has a `_getptd()` offset fallback. mergerfs includes this header in many cleanup-heavy paths such as readdir implementations, copy/clone helpers, procfs handling, API code, and vendored libfuse mutex/loop code.
+
+Risks: In default `SCOPE_GUARD_MAY_THROW_ACTION` mode, a throwing cleanup action can propagate from a destructor and can terminate the process during stack unwinding. The suppressed mode swallows exceptions unless a custom catch handler is provided. The old compiler uncaught-exception fallbacks are ABI-sensitive. Actions must be no-argument `void` callables and are accepted only as rvalues by the core constructor, so storing references requires capture discipline. The macro helpers capture by reference, which is convenient but unsafe if used beyond normal lexical lifetime.
+
+Test signals: Compile coverage is the main signal: files using `SCOPE_EXIT`/`DEFER` must compile under the repository's C++ standard and warning profile. Runtime tests should cover normal exit, dismissed guard, move construction, exception path for `SCOPE_FAIL`, non-exception path for `SCOPE_SUCCESS`, and destructor behavior under the selected throwable policy.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/mergerfs/vendored/scope_guard/scope_guard.hpp -->

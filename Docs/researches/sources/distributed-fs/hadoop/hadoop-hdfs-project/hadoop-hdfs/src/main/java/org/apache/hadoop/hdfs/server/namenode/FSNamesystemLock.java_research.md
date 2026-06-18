@@ -1,0 +1,17 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystemLock.java
+
+## sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystemLock.java
+
+Purpose: `FSNamesystemLock` is the NameNode namespace lock wrapper used where plain `ReentrantReadWriteLock` behavior is not enough. It exposes read/write lock operations while adding fairness configuration, long-hold detection, throttled diagnostics, detailed lock-hold metrics, and per-RPC processing details.
+
+Important APIs and types: constructors accept `Configuration`, a lock name, `MutableRatesWithAggregation`, and optionally a test `Timer`. Public lock APIs include `readLock`, `readLockInterruptibly`, `readUnlock` overloads, `writeLock`, `writeLockInterruptibly`, and `writeUnlock` overloads with operation names, optional suppression, and optional lock-report detail suppliers. Introspection/configuration APIs expose hold counts, write-owner state, `newWriteLockCondition`, queue length, long-hold counters, metrics enablement, reporting thresholds, and test lock injection. The private `LockHeldInfo` captures start time, interval, stack trace, operation, and supplied report detail.
+
+Control flow: lock acquisition records `LOCKWAIT` timing, takes either the read or write lock, then stores the first acquisition timestamp for non-reentrant accounting. Unlocking computes the hold interval before releasing, records per-operation and overall metrics when enabled, updates RPC `ProcessingDetails`, and only emits long-hold logs when the outermost hold exits. Read-lock warning selection is concurrent: the longest interval since the last report is stored in an `AtomicReference`, warning timestamps are CAS-updated, and suppressed warning counts are accumulated. Write-lock reporting uses `LogThrottlingHelper` and keeps the longest write hold seen in the throttle window.
+
+State and persistence behavior: all state is in-memory instrumentation around the underlying lock. Configuration keys control fair locking, detailed metrics, warning suppression interval, and read/write reporting thresholds. There is no durable persistence, but emitted metrics and logs become operational telemetry. Thread-local read timestamps are removed after outermost unlock to avoid leaking thread state across RPC worker reuse.
+
+Dependencies and integration points: this class integrates with `FSNamesystem.LOG`, DFS lock configuration keys, Hadoop metrics, `Server.getCurCall()` processing details, `Timer`, `Time`, and `LogThrottlingHelper`. `FSNamesystem`, `FSDirectory`, and namespace operations rely on it indirectly for lock correctness and lock diagnostics.
+
+Risks: lock accounting depends on balanced acquire/release calls and correct outermost-hold detection. Long report suppliers run while handling unlock reporting, so expensive suppliers can add latency. Metric names are built from capitalized operation names and can proliferate if callers pass unstable names. Replacing `coarseLock` in tests while state counters remain live can hide race bugs if used outside tests.
+
+Test signals: useful tests cover reentrant read/write holds, interruptible acquisition, fair-lock configuration, metric enable/disable behavior, RPC processing detail updates, long-hold threshold reporting, throttling/suppression counts, and ThreadLocal cleanup after read unlock.

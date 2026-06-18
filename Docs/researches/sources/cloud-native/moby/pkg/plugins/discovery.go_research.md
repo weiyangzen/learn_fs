@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/plugins/discovery.go -->
+# sources/cloud-native/moby/pkg/plugins/discovery.go
+
+Purpose: discovers legacy v1 plugins from socket directories and spec files. Important APIs are `LocalRegistry`, `NewLocalRegistry`, `Scan`, `Plugin`, `SpecsPaths`, `readPluginInfo`, `readPluginJSONInfo`, and `pluginPaths`. Control flow scans `/run/docker/plugins` sockets and platform-specific spec paths, supports `<name>.sock` and `<name>/<name>.sock`, reads `.spec` files as plugin addresses, decodes `.json` specs with TLS config, tolerates missing paths and rootless permission errors, and returns `ErrNotFound` when unresolved. State is filesystem plugin/spec content and decoded `Plugin` structs. Dependencies include JSON, filesystem APIs, user namespace detection, homedir platform paths, and logging. Risks include path priority, rootless permission handling, socket-mode checks, JSON TLS defaults, and compatibility with old plugin layouts. Test signal is in discovery tests.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/plugins/discovery.go -->

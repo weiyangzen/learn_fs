@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/dynamic/package-info.java
+
+This package descriptor marks `org.apache.hadoop.util.dynamic` as limited-private to testing and unstable. Its purpose is dynamic class loading and instantiation, with code lineage from Apache Parquet and a related fork in Apache Iceberg. The package-level API promise is therefore intentionally narrow: Hadoop uses it internally for optional compatibility layers rather than as a stable user-facing reflection framework.
+
+There are no executable functions, persistent fields, or control-flow branches in this file. The important behavior is metadata: `@InterfaceAudience.LimitedPrivate("testing")` and `@InterfaceStability.Unstable` apply to package documentation and communicate that consumers should not assume long-term binary/source compatibility.
+
+Dependencies are limited to Hadoop classification annotations. Integration is through the package classes `DynMethods`, `DynConstructors`, and neighboring helpers such as `BindingUtils`; real callers include JDK signal support and wrapped IO/statistics compatibility code. The main risk is accidental external adoption of unstable reflection helpers, especially because the classes are generally useful and similar to Parquet/Iceberg utilities. Test signals are indirect through `TestDynMethods` and `TestDynConstructors`; the package descriptor itself has no dedicated tests.

@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/filter/filter_patterns_test.go
+
+Purpose: validates pattern validation behavior for known valid/invalid pattern strings. API under test is `ValidatePatterns`. Control flow table-tests pattern slices and asserts whether validation returns an error. State is only local pattern data. Dependencies include testing and filter package APIs. Integration signal protects CLI exclude/include validation before traversal begins. Risks covered include malformed filepath glob components and recursive wildcard syntax accepted by restic. Missing signal: matching behavior is covered in `filter_test.go`; this file focuses only on validation acceptance/rejection.

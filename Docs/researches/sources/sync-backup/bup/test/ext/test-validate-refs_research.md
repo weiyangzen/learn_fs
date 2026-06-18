@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-validate-refs -->
+# sources/sync-backup/bup/test/ext/test-validate-refs
+
+Purpose: integrates bup reference validation modes for object links and `.bupm` completeness. Important APIs are `bup validate-refs --links`, `--bupm`, default `validate-refs`, `index`, `save`, Git `mktree`, `commit-tree`, and `branch -f`. Control flow first checks correct refs pass all validation modes, then creates two saves, constructs a broken commit whose current tree reuses an older abridged `.bupm` entry, moves branch `src` to that commit, and expects validation failures. State is the `src` branch history, Git tree objects, and altered `.bupm` entry. Dependencies include Git tree editing and WvTest. Risks are exact tree structure assumptions and validators producing overlapping diagnostics. Test signals are zero output for valid refs and exit code 1 with logs for abridged metadata.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-validate-refs -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/linux/qed/nvmetcp_common.h
+
+Purpose: defines QED's NVMe/TCP firmware ABI for function initialization, TCP/NVMe connection offload and update, SQ WQEs, CQEs, event opcodes, task contexts, CCCID-to-iTID mapping, and E5 storm aggregation contexts.
+
+Important APIs/types/functions: init/offload structures include `nvmetcp_spe_func_init`, `nvmetcp_init_ramrod_params`, `nvmetcp_conn_offload_section`, `nvmetcp_conn_offload_params`, `nvmetcp_spe_conn_offload`, `nvmetcp_conn_update_ramrod_params`, and `nvmetcp_spe_conn_termination`. Command/event enums include `nvmetcp_ramrod_cmd_id`, `nvmetcp_eqe_opcode`, `nvmetcp_wqe_type`, `nvmetcp_task_type`, and `nvmetcp_fw_cqes_type`. Queue/completion formats include `nvmetcp_wqe`, `nvmetcp_db_data`, `nvmetcp_fw_cqe`, `nvmetcp_fw_cqe_data`, `nvmetcp_icresp_mdata`, and `nvmetcp_host_cccid_itid_entry`. Task context structures include `ystorm_nvmetcp_task_state`, `nvmetcp_task_hdr_aligned`, `mstorm_nvmetcp_task_st_ctx`, `ustorm_nvmetcp_task_st_ctx`, E5 per-storm aggregation contexts, and top-level `e5_nvmetcp_task_context`.
+
+Control flow: function init configures queue ring page counts, LL2 out-of-order queue, counters, TCP init parameters, and SCSI-style function queue settings. Connection offload supplies SQ/R2TQ/XHQ/UHQ PBLs, TCP option-2 offload parameters, physical queues, default CQ, initial ACK, and a CCCID-to-iTID table. Connection update enables header/data digest and PDU size limits. WQEs describe normal I/O, cleanup, middle path, and ICReq exchange work; firmware emits CQEs for normal completions, cleanup, dummy entries, IC response metadata, and connection errors. Doorbells update SQ producer state.
+
+State and persistence: per-task state lives in firmware-visible host task contexts; per-connection TCP/NVMe state is held in firmware and keyed by connection IDs, ICIDs, CCCIDs, and iTIDs. The CCCID mapping table is host DMA memory that must remain valid while the connection is offloaded. No durable NVMe session state is persisted here.
+
+Dependencies and integration points: depends on `tcp_common.h`, Linux `<linux/nvme-tcp.h>`, common QED register pairs, and storage SGL helpers. It backs the public `qed_nvmetcp_if.h` APIs and integrates QED firmware with NVMe/TCP host controller logic, TCP offload, digest validation, LL2 filtering, and storage SGL/DIF-like metadata.
+
+Risks: the header is newer and has placeholder/reserved fields, so firmware/driver version drift is a risk. CCCID/iTID table sizing and lifetime are critical. Digest update flags, NVMe/TCP mode bits, ICReq/ICResp metadata, and opaque task handles must align with the Linux NVMe/TCP PDU definitions. Errors in context padding or reserved E5 contexts can corrupt firmware parsing.
+
+Test signals: test NVMe/TCP connect/offload/update/destroy, ICReq exchange, read/write I/O, cleanup, digest on/off, source/destination TCP port filters, CCCID mapping range checks, async TCP error events, and CQE decoding. Layout checks should compare task context, WQE, and CQE sizes to firmware-generated expectations.

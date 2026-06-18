@@ -1,0 +1,9 @@
+## sources/test-tools/syzkaller/syz-verifier/verifier.go
+
+`verifier.go` implements the corpus-exercising verifier that runs the same programs across multiple kernels and reports errno mismatches. `Verifier` owns shared config/target, kernels, per-kernel queue sources, optional HTTP server, crash store, first-connect timestamp, and preloaded programs. `Kernel` wraps one kernel config, rpcserver, VM dispatcher, reporter, channels for machine-check data, and queue source.
+
+`RunVerifierFuzzer` builds a pool map for HTTP, initializes crash store/HTTP server, preloads corpus, and starts `Loop`. `Loop` serves HTTP, starts each kernel loop, and runs `verifierLoop`. The verifier waits for every kernel to report enabled syscalls/features, intersects enabled calls transitively, records stats, then for each preloaded corpus program creates cloned `queue.Request`s for every kernel, submits them, waits for all results, and calls `compareResults`. Mismatches ignore executor-not-completed errno 999, generate a detailed report with the full program and per-kernel errno/flags/output, log it, and save it to crash store.
+
+Kernel-side flow starts rpcserver listening, dispatches VMs, forwards RPC ports, copies executor, runs `executor runner`, reports enabled syscalls/features in `MachineChecked`, and returns queue sources with default execution options. Coverage/signal/bug-frame APIs are mostly no-ops because verifier exercises existing corpus rather than discovering new coverage.
+
+State is local queue/result state plus crash-store mismatch reports. Dependencies include fuzzer queues, rpcserver, VM dispatcher, flatrpc, report/crash store, manager HTTP server, stats, and corpus seed loading. Risks include waiting indefinitely for all kernels to become ready, comparing responses by kernel ID index assumptions, only comparing errno not deeper side effects, and continuing past nil/missing result info. No direct tests were observed.

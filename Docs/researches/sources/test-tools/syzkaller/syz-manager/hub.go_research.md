@@ -1,0 +1,7 @@
+## sources/test-tools/syzkaller/syz-manager/hub.go
+
+This file implements syz-manager's client-side connector to syz-hub. It handles auth-key retrieval, initial connect with corpus and supported calls, periodic sync, processing incoming programs/repros, and domain-based candidate flags.
+
+`pickGetter` returns a static key getter or OAuth token-cache getter. `hubSyncLoop` constructs a `HubConnector` with manager view methods, enabled calls, domain, leak mode, fresh state, repro queue, and stats. `HubConnector.loop` connects, syncs when candidate triage is ready, marks hub unreachable after early repeated failures, and reconnects every 30 hours to resend corpus. `connect` caps initial corpus at 100k programs and uses a transient RPC connection for the large request. `sync` sends queued repros, processes all batches until no inputs/more remain, updates stats, and clears sent repros. Incoming programs are parsed, disabled-call filtered, and flagged minimized/smashed based on domain matching. Incoming repros become external reproduction crashes.
+
+State is mostly in-memory, with manager corpus/repro queues backing inputs. Integration points are syz-hub RPC, manager phase machine, dashboard errors, fuzzer candidate queue, and repro loop. Risks include nil `hubReproQueue` if reproduction is disabled but repros arrive, relying on manager readiness before sync, large initial connect payloads despite cap, and domain parsing subtleties. Tests cover `matchDomains` only.

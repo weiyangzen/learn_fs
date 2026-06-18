@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/pca9450-regulator.c
+
+Purpose: implements the NXP PCA9450/PCA9451A/PCA9452 PMIC I2C regulator driver, registering buck and LDO regulators, configuring PMIC reset/power timing, handling interrupts, and providing a restart handler.
+
+Important APIs/types/functions: `struct pca9450` stores device, regmap, optional LDO5 SD_VSEL GPIO, chip type, regulator count, IRQ, and SD_VSEL policy. `struct pca9450_regulator_desc` embeds a descriptor plus DVS register metadata. Ops cover DVS bucks with ramp/mode support, non-DVS bucks, normal LDOs, and LDO5 with dynamic high/low selector register access. Key functions include `buck_set_dvs()`, `pca9450_set_dvs_levels()`, `pca9450_buck_set/get_mode()`, `pca9450_ldo5_get_reg_voltage_sel()`, `pca9450_irq_handler()`, `pca9450_i2c_restart_handler()`, `pca9450_of_init()`, and `pca9450_i2c_probe()`.
+
+Control flow: probe selects the regulator table by OF match data, initializes I2C regmap with status registers volatile, reads and validates device ID, registers each regulator while skipping PCA9451A LDO3, requests an optional low-triggered IRQ and unmasks selected fault interrupts, clears BUCK123 preset mode, applies global OF reset/debounce/timing/I2C-level-translator settings, obtains optional LDO5 `sd-vsel` GPIO from the LDO device, records `nxp,sd-vsel-fixed-low`, and registers a sys-off restart handler.
+
+State and persistence: PMIC registers hold regulator enable modes, voltage selectors, DVS run/standby levels, ramp settings, interrupt masks/status, reset behavior, debounce timing, power sequencing, and restart command. Driver state records chip type/count, dynamic LDO5 selector source, and optional GPIO.
+
+Dependencies and integration: depends on I2C, regmap cache, GPIO descriptors, interrupts, sys-off/restart API, regulator OF parsing, NXP PCA9450 headers and DT binding constants. The DVS parse callback consumes regulator child properties `nxp,dvs-run-voltage` and `nxp,dvs-standby-voltage`.
+
+Risks and test signals: `ldo5` is used after registration loop and assumes all selected variants register LDO5 successfully. The property name `npx,pmic-rst-b-debounce-ms` appears misspelled relative to the `nxp,` prefix used elsewhere, which affects DT compatibility. `buck_set_dvs()` leaves `ret` as the last listed voltage when no exact match is found, producing a positive return from an error path. Test each chip compatible and ID mismatch, PCA9451A LDO3 skip, DVS exact/missing/invalid voltages, LDO5 GPIO high/low/fixed-low selector behavior, IRQ mask/status logging, reset and debounce property validation, restart command, and PRESET_EN clearing.

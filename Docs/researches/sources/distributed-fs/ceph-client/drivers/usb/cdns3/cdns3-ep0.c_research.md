@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/usb/cdns3/cdns3-ep0.c
+
+Purpose: Implements CDNS3 gadget endpoint zero control-transfer handling: setup packet arming, standard request handling, delegation to composite gadget drivers, status/data stage completion, ep0 queuing, and ep0 initialization.
+
+Important APIs, types, and functions: Internal transfer primitive `cdns3_ep0_run_transfer` writes up to two TRBs for data/ZLP and rings DRDY/ERDY. Standard request handlers cover set address, set configuration, get status, set/clear feature, set SEL, and set isoch delay. `cdns3_ep0_setup_phase`, `cdns3_transfer_completed`, and `cdns3_check_ep0_interrupt_proceed` form the ep0 interrupt state machine. Exported functions are `cdns3_pending_setup_status_handler`, `cdns3_ep0_config`, and `cdns3_init_ep0`. The ep0 `usb_ep_ops` provide queue/dequeue through CDNS3 implementations and reject explicit enable/disable.
+
+Control flow: Connection or reset configures ep0 and arms an OUT setup transfer. On setup/IOC, `cdns3_ep0_setup_phase` records direction, cancels any old ep0 request, sets DATA or STATUS stage based on `wLength`, handles standard requests locally when possible, delegates class/vendor requests to `gadget_driver->setup`, and either stalls, waits for delayed status, or completes status. `cdns3_gadget_ep0_queue` handles function-driver data-stage requests, maps DMA, enforces only one pending request, handles status-stage `SET_CONFIGURATION` by configuring all claimed endpoints and scheduling a software completion work item because the controller does not interrupt for that status stage.
+
+State and persistence behavior: Runtime state lives in `struct cdns3_device`: `ep0_stage`, `ep0_data_dir`, `wait_for_setup`, `setup_pending`, `pending_status_request`, `status_completion_no_call`, `u1_allowed`, `u2_allowed`, `wake_up_flag`, and gadget state. The setup buffer is coherent DMA allocated by gadget initialization. No filesystem persistence exists.
+
+Dependencies and integration points: Uses the Linux gadget/composite setup callback, USB chapter 9 request constants, DMA mapping helpers, CDNS3 register/TRB definitions, `cdns3_gadget_giveback`, endpoint halt helpers, `cdns3_set_hw_configuration`, and tracepoints from `cdns3-trace.h`.
+
+Risks: ep0 is highly stateful and races with new SETUP packets; `cdns3_check_new_setup` is used to reject stale queues. The deferred status path relies on workqueue completion because hardware lacks an interrupt. `cdns3_gadget_ep0_set_halt` is a TODO returning success, so ep0 halt behavior is mostly through internal setup completion. SET_CONFIGURATION configures claimed endpoints that class drivers have not enabled yet, reflecting a Cadence hardware limitation that endpoint type/maxpacket must be known before hardware configuration.
+
+Test signals: USB enumeration at full/high/super speed, standard requests including address/configuration/status/features, delayed-status gadget functions, ep0 ZLP requests, class/vendor setup delegation, disconnect/reset during pending ep0 transfer, SET_CONFIGURATION endpoint preconfiguration, and control-transfer stall/error paths.

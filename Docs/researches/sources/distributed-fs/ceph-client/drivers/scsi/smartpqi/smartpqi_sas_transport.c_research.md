@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/smartpqi/smartpqi_sas_transport.c
+
+Purpose: this file adapts the Microchip SmartPQI controller driver to the Linux SAS transport class. It creates transport objects for the controller SAS host, per-device SAS ports, PHYs, and remote PHYs, and provides the `sas_function_template` callbacks used by sysfs and BSG/SMP paths.
+
+Important APIs, types, and functions: local helpers allocate and tear down `pqi_sas_node`, `pqi_sas_port`, and `pqi_sas_phy` wrappers around `sas_port`, `sas_phy`, and `sas_rphy`. `pqi_add_sas_host()` creates the controller node, a host port, and a synthetic PHY using `ctrl_info->sas_address`; `pqi_delete_sas_host()` frees the whole node tree. `pqi_add_sas_device()` allocates a port/rphy for a `pqi_scsi_dev`, selects expander or end-device rphy allocation, and sets target protocols from Smart Array device type. `pqi_remove_sas_device()` reverses that link. `pqi_find_device_by_sas_rphy()` maps transport objects back to driver devices.
+
+Control flow: add paths build Linux transport objects first, publish them with `sas_port_add()`, `sas_phy_add()`, and `sas_rphy_add()`, then link the driver-side device pointer. Remove paths walk list heads with safe iteration, delete PHYs from ports, delete ports, and clear `device->sas_port`. SMP BSG handling validates the target is a fanout expander and that request/reply payloads are single-SG, builds a CSMI SMP passthrough buffer, calls `pqi_csmi_smp_passthru()`, copies firmware response data back to BSG buffers, and finishes with `bsg_job_done()`.
+
+State and persistence: no on-disk state exists. Runtime state is held in `ctrl_info->sas_host`, each `pqi_scsi_dev->sas_port`, Linux SAS class devices, and linked lists under each node/port. Enclosure and bay identifiers are derived on demand under `scsi_device_list_lock` from discovered PQI device metadata and enclosure WWIDs.
+
+Dependencies and integration: depends on `smartpqi.h`, the SCSI host/device layer, `scsi_transport_sas`, BSG, and CSMI/BMIC passthrough types implemented elsewhere in SmartPQI. The exported `pqi_sas_transport_functions` integrates with the SAS transport template used when the SmartPQI host is registered.
+
+Risks: most PHY operation callbacks are stubs and report no link management support, so user actions such as speed setting and reset are no-ops. `pqi_build_csmi_smp_passthru_buffer()` uses the request SG count for `sg_copy_to_buffer()` but passes `job->reply_payload.sg_cnt`, which should be reviewed carefully because it can under-copy or over-trust a reply count. Identifier lookup relies on enclosure metadata conventions such as `box_index`, `phys_box_on_bus`, `bay`, connector bytes, and VSEP drive number.
+
+Test signals: useful validation includes hot add/remove of SAS and SATA devices, expander SMP passthrough through `sg_ses` or `smp_utils`, sysfs SAS enclosure/bay identifiers, failure injection for `sas_*_alloc/add` errors, and lockdep/KASAN coverage around device removal while transport attributes are queried.

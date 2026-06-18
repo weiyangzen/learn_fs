@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/aspeed/pinctrl-aspeed.c
+
+## Purpose
+This is the common implementation for Aspeed pinctrl, pinmux, GPIO mux enable, probe, and generic pin configuration handling. SoC-specific files supply tables and optional pinmux operations, while this file implements the Linux pinctrl callbacks that interpret those tables.
+
+## Important APIs, types, and functions
+Group callbacks are `aspeed_pinctrl_get_groups_count()`, `aspeed_pinctrl_get_group_name()`, `aspeed_pinctrl_get_group_pins()`, and `aspeed_pinctrl_pin_dbg_show()`. Function callbacks are `aspeed_pinmux_get_fn_count()`, `aspeed_pinmux_get_fn_name()`, and `aspeed_pinmux_get_fn_groups()`. Mux control is implemented by `aspeed_pinmux_set_mux()`, with helpers `aspeed_sig_expr_enable()`, `aspeed_sig_expr_disable()`, `aspeed_disable_sig()`, and `aspeed_find_expr_by_name()`. GPIO routing is handled by `aspeed_gpio_request_enable()`, `aspeed_expr_is_gpio()`, and `aspeed_gpio_in_exprs()`. Registration is handled by `aspeed_pinctrl_probe()`. Pin configuration is implemented by `aspeed_pin_config_get()`, `aspeed_pin_config_set()`, `aspeed_pin_config_group_get()`, and `aspeed_pin_config_group_set()`, with lookup helpers for config ranges and config maps.
+
+## Control flow
+The pinctrl core calls group and function accessors directly into static SoC data through `struct aspeed_pinctrl_data`. For a mux request, `aspeed_pinmux_set_mux()` walks each pin in the selected group. For each pin it scans priority levels in order. Until it finds an expression whose `function` matches the selected function, it disables every expression in higher-priority levels. When it finds the matching expression, it enables it and continues to the next pin. If no expression is found, it constructs debug strings listing available signals and functions and returns `-ENXIO`. GPIO requests follow a similar priority walk but search for a pin-specific GPIO expression by name convention. Pinconf get/set first find a pin range and parameter entry, then translate between generic pinconf arguments and hardware bitfield values through `confmaps`.
+
+## State and persistence behavior
+This file does not allocate long-lived domain state except transient diagnostic strings in error paths. Persistent state is held in the SoC regmap registers supplied by the parent syscon and in the platform driver's `aspeed_pinctrl_data`. `aspeed_pinctrl_probe()` obtains the SCU regmap via `syscon_node_to_regmap()`, stores it in `pdata->scu`, and installs it into `pdata->pinmux.maps[ASPEED_IP_SCU]`. Pinmux and pinconf changes persist in hardware registers until reset or later writes. Group configuration applies per-pin writes and stops on the first failure, so partial configuration can remain if earlier pins succeeded.
+
+## Dependencies and integration points
+The implementation depends on Linux pinctrl, pinmux, pinconf generic helpers, platform devices, syscon/regmap, and the Aspeed table definitions. It is used by generation-specific Aspeed drivers such as the AST2600 driver. It integrates with device tree through the SoC pinctrl descriptors, with GPIO through `.gpio_request_enable`, and with debugfs through `.pin_dbg_show` and debug logging.
+
+## Risks
+Mux correctness depends on priority list ordering supplied by SoC data. If a GPIO expression does not follow the expected `GPI*` name and signal/function equality convention, `aspeed_gpio_request_enable()` can reject or misidentify it. The GPIO path assumes that if GPIO is not the lowest priority signal type there is only one expression to enable. The pinconf map lookup accepts wildcard `arg == -1`, so ordering in `confmaps` matters for ambiguous parameters. `aspeed_pin_config_group_set()` applies pins one at a time without rollback. Diagnostic string construction uses `krealloc()` and can fail, turning a reporting path into `NULL` strings but still returns the mux error.
+
+## Test signals
+Compile tests should cover all Aspeed SoC drivers that include these helpers. Runtime tests should verify pinmux requests where the target function is high priority, lower priority, and absent. GPIO tests should include normal `GPIO*`, input-only `GPI*`, and pass-through GPIO-like names. Pinconf tests should exercise pull-up, pull-down, bias disable, drive strength, and group operations, including unsupported parameters and invalid arguments. Debugfs pinctrl listings and dynamic debug messages provide useful observability.

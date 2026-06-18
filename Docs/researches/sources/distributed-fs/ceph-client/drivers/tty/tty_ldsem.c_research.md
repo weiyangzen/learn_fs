@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/tty/tty_ldsem.c
+
+Purpose: `tty_ldsem.c` implements `struct ld_semaphore`, a TTY-specific reader/writer semaphore used for line-discipline lifetime synchronization. It behaves like an rwsem with timeout support, writer priority, no downgrade operation, and lockdep integration.
+
+Important APIs and types: `struct ldsem_waiter` stores wait-list entries and task pointers. Public functions are `__init_ldsem()`, `ldsem_down_read()`, `ldsem_down_read_trylock()`, `ldsem_down_write()`, `ldsem_up_read()`, `ldsem_up_write()`, plus debug builds of `ldsem_down_read_nested()` and `ldsem_down_write_nested()`. Internal helpers include `__ldsem_wake_readers()`, `writer_trylock()`, `__ldsem_wake_writer()`, `__ldsem_wake()`, `ldsem_wake()`, `down_read_failed()`, `down_write_failed()`, and nested lock acquisition helpers.
+
+Control flow: the semaphore count packs active owners in the low bits and waiters in the high bits. Fast-path read increments by `LDSEM_READ_BIAS` and succeeds while the count stays non-negative; otherwise it reverses the attempt, queues on `read_wait`, increments `wait_readers`, and sleeps until a wake grants ownership or a timeout removes the waiter. Fast-path write adds `LDSEM_WRITE_BIAS` and succeeds only when the active count becomes one; otherwise it queues on `write_wait` and repeatedly sleeps, then attempts write-lock stealing with `writer_trylock()`. Unlock subtracts the relevant bias and wakes a writer first, otherwise all queued readers.
+
+State and persistence: state is entirely in each semaphore instance: `atomic_long_t count`, `wait_readers`, `wait_lock`, `read_wait`, `write_wait`, and optional lockdep map. There is no persistent storage beyond the in-memory tty object that owns the semaphore.
+
+Dependencies and integration points: `tty_ldisc.c` initializes `tty->ldisc_sem` and uses this implementation for `tty_ldisc_ref*`, ldisc changes, hangup, and release. The code depends on atomic operations, raw spinlocks, task wakeups, scheduler timeouts, and lockdep rwsem annotations. It intentionally uses uninterruptible waits because ldisc transition callers rely on deterministic timeout semantics rather than signal interruption.
+
+Risks: count arithmetic has no overflow checking, so bias constants and active/waiter transitions must remain correct for supported architectures. Timeout cleanup is subtle because a waiter may be granted ownership while timing out. Writer priority can starve readers if writers continually arrive, but that is intended to make ldisc changes complete. Wakeups use task pointers with release/acquire ordering; mistakes can wake freed tasks or leak task refs. Debug lockdep annotations must match real ownership.
+
+Test signals: stress concurrent readers and writers, read trylock under free and contended states, write timeouts, read timeouts racing with grants, writer-first wake policy, reader wake batches, nested lockdep acquisition for pty pairs, unlock wakeups when active count reaches zero, and ldisc-change workloads under lockdep and scheduler debugging.

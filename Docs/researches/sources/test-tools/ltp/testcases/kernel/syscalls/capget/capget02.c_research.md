@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/capget/capget02.c
+
+Purpose: negative `capget()` error handling test. Setup obtains an unused pid and bad address; cases cover bad header pointer `EFAULT`, bad data pointer `EFAULT`, bad version `EINVAL`, negative pid `EINVAL`, and nonexistent pid `ESRCH`. Important APIs are raw `__NR_capget`, `tst_get_unused_pid`, `tst_get_bad_addr`, and capability structs. State is allocated header/data buffers and bad pointer values. Dependencies are Linux capability syscall semantics. Risks include kernel returning preferred capability version through the header, which the test verifies after failures. Test signal is exact errno plus preferred version reset to v3 on unsupported version.

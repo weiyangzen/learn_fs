@@ -1,0 +1,3 @@
+## sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/SafeModeAction.java
+
+`SafeModeAction` is an enum copy of HDFS safe-mode actions for generic filesystem use. Values are `ENTER`, `LEAVE`, `FORCE_EXIT`, and `GET`. It has no methods or state beyond enum identity. Integration is with the `SafeMode` interface and filesystems that expose safe-mode controls without taking a dependency on HDFS protocol constants. Risks are compatibility risks if HDFS adds actions or changes semantics and this copy diverges. Tests should verify mappings in implementations and switch handling for all four values.

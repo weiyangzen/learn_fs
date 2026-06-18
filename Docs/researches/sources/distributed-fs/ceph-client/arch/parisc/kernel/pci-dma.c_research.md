@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/parisc/kernel/pci-dma.c
+
+Purpose: implements dynamic DMA allocation and cache synchronization for PA-RISC 1.1 PCXL/PCXL2 systems that lack an I/O TLB or DMA address translation hardware. It creates uncached kernel aliases backed by ordinary pages so coherent DMA buffers can be handed to devices.
+
+Important state includes `pcxl_dma_start`, `pcxl_res_map`, `pcxl_res_hint`, `pcxl_res_size`, `pcxl_used_bytes`, `pcxl_used_pages`, `pcxl_res_lock`, and optional `/proc/bus/gsc/pcxl_dma` reporting. Important functions are page-table builders `map_pte_uncached`, `map_pmd_uncached`, `map_uncached_pages`, teardown helpers `unmap_uncached_*`, bitmap allocators `pcxl_alloc_range` and `pcxl_free_range`, `pcxl_dma_init`, `arch_dma_alloc`, `arch_dma_free`, `arch_sync_dma_for_device`, and `arch_sync_dma_for_cpu`.
+
+Control flow at init only activates if `pcxl_dma_start` is set. It sizes the resource bitmap from `PCXL_DMA_MAP_SIZE`, allocates and clears it, and creates procfs diagnostics. Allocation verifies CPU type, rounds to page order, reserves a virtual alias range in a bitmap under spinlock, allocates zeroed physical pages, flushes their kernel mapping, maps the alias with `PAGE_KERNEL_UNC`, and returns the uncached virtual address while the DMA handle remains the physical address. Free reverses the mapping and bitmap state. Sync-to-device flushes dirty cache lines; sync-from-device purges cache lines so CPU reads see device writes.
+
+Dependencies include generic DMA direct/map-ops contracts, PA-RISC cache/TLB purge helpers, kernel page-table allocation, physical/virtual translation, procfs, and boot CPU type data. Integration points are device DMA APIs and drivers running on older GSC/PCI PA-RISC machines.
+
+Risks include panic on resource exhaustion or requests over 32 pages, bitmap accounting bugs, missing allocation failure checks after `__get_free_pages`, stale cache lines causing DMA corruption, and PCXL-only behavior returning `NULL` for other CPUs so generic DMA must handle fallback. Test signals are DMA buffer allocation/free on PCXL hardware, procfs resource accounting, driver I/O correctness for all DMA directions, and stress tests for allocation exhaustion and cache coherency.

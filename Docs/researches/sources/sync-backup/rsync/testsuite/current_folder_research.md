@@ -1,0 +1,127 @@
+# Folder Research: sources/sync-backup/rsync/testsuite
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 113
+- Recursive researched files: 113
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/sync-backup/rsync/testsuite/00-hello_test.py`
+- `sources/sync-backup/rsync/testsuite/abdiff.py`
+- `sources/sync-backup/rsync/testsuite/acls-default_test.py`
+- `sources/sync-backup/rsync/testsuite/acls-depth_test.py`
+- `sources/sync-backup/rsync/testsuite/acls_test.py`
+- `sources/sync-backup/rsync/testsuite/alt-dest-deep_test.py`
+- `sources/sync-backup/rsync/testsuite/alt-dest-symlink-race_test.py`
+- `sources/sync-backup/rsync/testsuite/alt-dest_test.py`
+- `sources/sync-backup/rsync/testsuite/append-shortsum_test.py`
+- `sources/sync-backup/rsync/testsuite/append_test.py`
+- `sources/sync-backup/rsync/testsuite/atimes_test.py`
+- `sources/sync-backup/rsync/testsuite/backup-deep_test.py`
+- `sources/sync-backup/rsync/testsuite/backup_test.py`
+- `sources/sync-backup/rsync/testsuite/bare-do-open-symlink-race_test.py`
+- `sources/sync-backup/rsync/testsuite/batch-mode_test.py`
+- `sources/sync-backup/rsync/testsuite/chdir-symlink-race_test.py`
+- `sources/sync-backup/rsync/testsuite/chgrp_test.py`
+- `sources/sync-backup/rsync/testsuite/chmod-option_test.py`
+- `sources/sync-backup/rsync/testsuite/chmod-symlink-race_test.py`
+- `sources/sync-backup/rsync/testsuite/chmod-temp-dir_test.py`
+- `sources/sync-backup/rsync/testsuite/chmod_test.py`
+- `sources/sync-backup/rsync/testsuite/chown_test.py`
+- `sources/sync-backup/rsync/testsuite/clean-fname-underflow_test.py`
+- `sources/sync-backup/rsync/testsuite/compare_test.py`
+- `sources/sync-backup/rsync/testsuite/compress-options_test.py`
+- `sources/sync-backup/rsync/testsuite/compress-zlib-insert_test.py`
+- `sources/sync-backup/rsync/testsuite/copy-dest-source-symlink_test.py`
+- `sources/sync-backup/rsync/testsuite/crtimes_test.py`
+- `sources/sync-backup/rsync/testsuite/cvs-exclude_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-access-ip_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-access_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-auth_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-chroot-acl_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-config_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-delete-stats_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-exec_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-filter_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-groupmap-wild_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-gzip-download_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-gzip-upload_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-munge_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-path-root-read_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-refuse-compress_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon-refuse_test.py`
+- `sources/sync-backup/rsync/testsuite/daemon_test.py`
+- `sources/sync-backup/rsync/testsuite/delay-updates-deep_test.py`
+- `sources/sync-backup/rsync/testsuite/delay-updates_test.py`
+- `sources/sync-backup/rsync/testsuite/delete-deep_test.py`
+- `sources/sync-backup/rsync/testsuite/delete-missing-args-files-from_test.py`
+- `sources/sync-backup/rsync/testsuite/delete_test.py`
+- `sources/sync-backup/rsync/testsuite/devices_test.py`
+- `sources/sync-backup/rsync/testsuite/dir-sgid_test.py`
+- `sources/sync-backup/rsync/testsuite/dirs_test.py`
+- `sources/sync-backup/rsync/testsuite/duplicates_test.py`
+- `sources/sync-backup/rsync/testsuite/exclude_test.py`
+- `sources/sync-backup/rsync/testsuite/executability_test.py`
+- `sources/sync-backup/rsync/testsuite/exitcodes.py`
+- `sources/sync-backup/rsync/testsuite/file-to-file-mkpath-dry-run_test.py`
+- `sources/sync-backup/rsync/testsuite/files-from-depth_test.py`
+- `sources/sync-backup/rsync/testsuite/files-from_test.py`
+- `sources/sync-backup/rsync/testsuite/filter-depth_test.py`
+- `sources/sync-backup/rsync/testsuite/fleettest.py`
+- `sources/sync-backup/rsync/testsuite/fuzzy-basis_test.py`
+- `sources/sync-backup/rsync/testsuite/fuzzy_test.py`
+- `sources/sync-backup/rsync/testsuite/hands_test.py`
+- `sources/sync-backup/rsync/testsuite/hardlinks-deep_test.py`
+- `sources/sync-backup/rsync/testsuite/hardlinks_test.py`
+- `sources/sync-backup/rsync/testsuite/inplace_test.py`
+- `sources/sync-backup/rsync/testsuite/itemize_test.py`
+- `sources/sync-backup/rsync/testsuite/link-dest-module-escape_test.py`
+- `sources/sync-backup/rsync/testsuite/link-dest-pathroot_test.py`
+- `sources/sync-backup/rsync/testsuite/link-dest-relative-basis_test.py`
+- `sources/sync-backup/rsync/testsuite/links_test.py`
+- `sources/sync-backup/rsync/testsuite/longdir_test.py`
+- `sources/sync-backup/rsync/testsuite/merge_test.py`
+- `sources/sync-backup/rsync/testsuite/metadata-depth_test.py`
+- `sources/sync-backup/rsync/testsuite/missing_test.py`
+- `sources/sync-backup/rsync/testsuite/mkpath_test.py`
+- `sources/sync-backup/rsync/testsuite/omit-times_test.py`
+- `sources/sync-backup/rsync/testsuite/open-noatime_test.py`
+- `sources/sync-backup/rsync/testsuite/output-options_test.py`
+- `sources/sync-backup/rsync/testsuite/ownership-depth_test.py`
+- `sources/sync-backup/rsync/testsuite/partial_nowrite_test.py`
+- `sources/sync-backup/rsync/testsuite/partial_test.py`
+- `sources/sync-backup/rsync/testsuite/perftest.py`
+- `sources/sync-backup/rsync/testsuite/preallocate_test.py`
+- `sources/sync-backup/rsync/testsuite/protected-regular_test.py`
+- `sources/sync-backup/rsync/testsuite/proxy-response-line-too-long_test.py`
+- `sources/sync-backup/rsync/testsuite/prune-empty-dirs_test.py`
+- `sources/sync-backup/rsync/testsuite/recv-discard-nullderef_test.py`
+- `sources/sync-backup/rsync/testsuite/relative-implied_test.py`
+- `sources/sync-backup/rsync/testsuite/relative_test.py`
+- `sources/sync-backup/rsync/testsuite/reverse-daemon-delta_test.py`
+- `sources/sync-backup/rsync/testsuite/rsyncfns.py`
+- `sources/sync-backup/rsync/testsuite/safe-links-absolute-intree_test.py`
+- `sources/sync-backup/rsync/testsuite/safe-links_test.py`
+- `sources/sync-backup/rsync/testsuite/secure-relpath-validation_test.py`
+- `sources/sync-backup/rsync/testsuite/sender-flist-symlink-leak_test.py`
+- `sources/sync-backup/rsync/testsuite/simd-checksum_test.py`
+- `sources/sync-backup/rsync/testsuite/size-filter_test.py`
+- `sources/sync-backup/rsync/testsuite/sparse_test.py`
+- `sources/sync-backup/rsync/testsuite/ssh-basic_test.py`
+- `sources/sync-backup/rsync/testsuite/stop-time_test.py`
+- `sources/sync-backup/rsync/testsuite/symlink-dirlink-basis_test.py`
+- `sources/sync-backup/rsync/testsuite/symlink-ignore_test.py`
+- `sources/sync-backup/rsync/testsuite/temp-dir_test.py`
+- `sources/sync-backup/rsync/testsuite/trimslash_test.py`
+- `sources/sync-backup/rsync/testsuite/unsafe-byname_test.py`
+- `sources/sync-backup/rsync/testsuite/unsafe-links_test.py`
+- `sources/sync-backup/rsync/testsuite/update_test.py`
+- `sources/sync-backup/rsync/testsuite/wildmatch_test.py`
+- `sources/sync-backup/rsync/testsuite/xattrs-depth_test.py`
+- `sources/sync-backup/rsync/testsuite/xattrs_test.py`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

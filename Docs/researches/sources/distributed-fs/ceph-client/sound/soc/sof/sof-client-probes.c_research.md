@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/soc/sof/sof-client-probes.c
+
+Purpose: implements the SOF auxiliary client driver for probe extraction, exposing a small ASoC compressed-capture card and debugfs controls for adding, removing, and listing firmware probe points. The client is opt-in through the `enable` module parameter and binds to platform-provided host callbacks for HDA/ACP-style probe DMA setup plus IPC3 or IPC4 probe operations.
+
+Important APIs/functions: `sof_probes_client_probe()` validates `sof_probes_host_ops`, selects `ipc3_probe_ops` or `ipc4_probe_ops`, registers the compressed DAI/component/card, creates `probe_points`, `probe_points_remove`, and `probe_points_available` debugfs entries, and enables autosuspend runtime PM. The compressed stream path uses `sof_probes_compr_startup()`, `set_params()`, `trigger()`, `pointer()`, and `shutdown()` to hold the SOF core module, allocate SG pages, boot the DSP, initialize/deinitialize probe IPC, and disconnect active points on close. Debugfs helpers parse integer arrays from userspace and call IPC `points_add`, `points_remove`, and `points_info`.
+
+Control flow/state: `priv->extractor_stream_tag` is the gate for debugfs operations; it is invalid until host startup assigns a stream tag and is reset on shutdown. Runtime PM is resumed around debugfs IPC access and idled with autosuspend afterward. Compressed copy reads from the circular DMA buffer using `total_bytes_transferred`.
+
+Dependencies/integration: depends on `sof-client.h`, `sof-client-probes.h`, ASoC compressed PCM, debugfs, runtime PM, and IPC-specific probe implementations. It expects host ops in auxiliary platform data and stores `sof_probes_priv` in `cdev->data`.
+
+Risks/test signals: debugfs creation assigns both `probe_points` and `probe_points_available` to `priv->dfs_points`, so removal only tracks the last of those two dentries. `sof_probes_compr_set_params()` can leak allocated compressed pages on later host/IPC failures unless the ALSA close path always unwinds. Useful tests are module probe with `enable=1`, compressed capture open/close, debugfs add/remove/list during active capture, runtime suspend/resume while reading debugfs, and IPC3/IPC4-specific probe point formatting.

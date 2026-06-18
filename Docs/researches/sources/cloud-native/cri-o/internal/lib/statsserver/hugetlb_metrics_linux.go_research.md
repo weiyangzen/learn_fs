@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/statsserver/hugetlb_metrics_linux.go
+
+Purpose: converts cgroup hugeTLB stats into CRI metrics. `generateContainerHugetlbMetrics` emits usage and max-usage gauges per page size label. Control flow iterates the `map[string]cgroups.HugetlbStats` separately for each descriptor and delegates label/base construction to `computeContainerMetrics`. State is per-call only and map iteration order is not stable. Dependencies are cgroups hugeTLB stats, CRI metric types, descriptors, and OCI container identity. Risks include nondeterministic metric order, nil maps producing zero metrics but non-nil result, and label cardinality if descriptor labels change. Test signals verify generated sample metrics match descriptor label counts.

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/gen_bpf_attr_check.sh
+
+Shell generator that emits C compile-time checks for BPF attribute structure sizes and offsets. It uses project headers and generated `bpf_attr` definitions to produce assertions that catch kernel UAPI drift. State is generated output only; the script itself has no persistent runtime state. Dependencies are the shell, C preprocessor/compiler context, `defs.h`, and BPF attr metadata. Risks are host shell portability, header-version skew, and generated checks becoming stale when BPF structs change. Tests should run the script in the build, compile the generated check, and verify failures occur for intentional size mismatches.

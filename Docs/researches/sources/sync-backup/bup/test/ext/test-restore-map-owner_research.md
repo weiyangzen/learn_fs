@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-restore-map-owner -->
+# sources/sync-backup/bup/test/ext/test-restore-map-owner
+
+Purpose: root-only test for `bup restore` owner remapping options. Important APIs are `restore --map-user`, `--map-group`, `--map-uid`, `--map-gid`, `bup xstat`, `id-other-than`, and Python `pwd`/`grp` lookup for uid/gid zero. Control flow creates a saved file, restores it unchanged as a control, then restores with user/group mappings, verifies named mappings override numeric mappings, verifies numeric uid/gid mappings, and conditionally maps the current owner to root if uid/gid zero are present. State is the saved metadata and restored `dest/foo` ownership. Dependencies include root privileges, available alternate users/groups, and reliable `xstat` name/ID reporting. Risks are host account database variance, root/fakeroot behavior, and name-vs-ID precedence. Test signals are `bup xstat` output containing the expected user, group, uid, and gid fields.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-restore-map-owner -->

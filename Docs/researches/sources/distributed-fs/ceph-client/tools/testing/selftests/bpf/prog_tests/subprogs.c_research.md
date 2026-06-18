@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/subprogs.c
+
+Purpose: validates BPF subprogram execution results and robustness of skeleton load while `bpf_jit_harden` toggles. It uses `test_subprogs` and `test_subprogs_unused` skeletons.
+
+Control flow `subprogs_alone` loads and attaches the main skeleton, waits, checks BSS results `12`, `17`, `19`, and `36`, then loads an unused-program skeleton to ensure unused subprograms do not break loading. `subprogs_and_jit_harden` opens `/proc/sys/net/core/bpf_jit_harden`, starts a thread repeatedly writing `2` and `0`, then repeatedly opens/loads the skeleton. State includes sysctl fd, toggler stop flag, pthread, and skeleton BSS results. Dependencies are writable JIT harden sysctl, generated skeletons, pthreads, and trace/probe activity during sleep. Risks include permission/environment failures for sysctl, race sensitivity, and restoring sysctl value only by toggling loop stop rather than saving original. Test signals are BSS result equality and ten successful loads under JIT hardening churn.

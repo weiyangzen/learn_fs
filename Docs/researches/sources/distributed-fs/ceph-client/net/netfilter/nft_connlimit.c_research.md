@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_connlimit.c
+
+Purpose: implements the nftables `connlimit` expression and `NFT_OBJECT_CONNLIMIT` object for limiting rule traversal by the number of concurrent conntrack entries associated with packets.
+
+Important APIs/types/functions: `struct nft_connlimit` stores an `nf_conncount_list`, limit, and invert flag. `nft_connlimit_do_eval()` is shared by expression and object evaluation. `nft_connlimit_do_init()` allocates the count list, parses `NFTA_CONNLIMIT_COUNT` and `NFT_CONNLIMIT_F_INV`, initializes conntrack namespace usage with `nf_ct_netns_get()`, and `nft_connlimit_do_destroy()` releases it. Clone and GC support are provided by `nft_connlimit_clone()`, `nft_connlimit_destroy_clone()`, and `nft_connlimit_gc()`.
+
+Control flow: eval calls `nf_conncount_add_skb()` for the current skb. `-EEXIST` is treated as a soft signal to run `nf_conncount_gc_list()` and refresh the count; other errors drop the packet. The current list count is compared with `limit`, xor `invert`; matches that exceed the policy set `NFT_BREAK`, so later expressions in the rule do not run.
+
+State/persistence: state is the allocated `nf_conncount_list`, its live count/cache, and mutable object limit/invert fields updated with `WRITE_ONCE()`. Expressions are flagged `NFT_EXPR_STATEFUL | NFT_EXPR_GC`. Dependencies include conntrack count/core/zones and nf_tables object/expr registration. Risks include stale count if GC is not run often, resource failure causing packet drops, clone semantics intentionally not sharing live counts, and object updates changing policy while old tracked entries remain. Test signals: limit boundary tests, invert behavior, object update behavior, clone/transaction rollback cleanup, conntrack namespace unload, GC after closed connections, and failure injection for list allocation or `nf_conncount_add_skb()`.

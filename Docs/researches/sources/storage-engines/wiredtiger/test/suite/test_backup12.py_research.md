@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup12.py
+
+Purpose: validates block-based incremental backup through a full backup, later changes, table drop, and cleanup of stale files in the backup directory. It uses large keys/values to dirty multiple blocks.
+
+Important APIs are table create/drop, `add_data`, `take_full_backup`, `take_log_backup`, `take_incr_backup`, manual `os.remove`, and `wiredtiger_open` recovery. Control flow creates three tables, writes data, opens an incremental primary with granularity and `this_id=ID1`, performs a full copy plus log backup, closes the primary, writes more data to two tables, drops one table, runs incremental backup ID1 to ID2, removes files from the backup directory that are no longer in the current backup set, and opens the backup. State behavior spans incremental block metadata, log backup, and deletion propagation. Risks include file-set bookkeeping and removing required files if helper semantics change. Test signal is successful recovery after applying incremental changes and removals.

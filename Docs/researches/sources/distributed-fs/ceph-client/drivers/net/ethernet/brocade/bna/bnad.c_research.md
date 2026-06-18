@@ -1,0 +1,25 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/brocade/bna/bnad.c
+
+## Purpose
+Provides the Linux PCI/netdev implementation for the BR-series 10G Ethernet driver. It bridges kernel networking APIs, DMA mapping, interrupts, NAPI, timers, firmware loading, PCI probe/remove, netdev open/stop, Tx/Rx packet processing, VLAN/MAC/multicast configuration, MTU changes, statistics, and BNA control-plane callbacks.
+
+## Important APIs, Types, and Functions
+PCI/module entry points are `bnad_module_init`, `bnad_module_exit`, `bnad_pci_probe`, and `bnad_pci_remove`. Netdev operations are `bnad_open`, `bnad_stop`, `bnad_start_xmit`, `bnad_get_stats64`, `bnad_set_rx_mode`, `bnad_set_mac_address`, `bnad_change_mtu`, `bnad_vlan_rx_add_vid`, `bnad_vlan_rx_kill_vid`, `bnad_set_features`, and optional `bnad_netpoll`.
+
+Data-path functions include Tx cleanup/completion helpers `bnad_tx_buff_unmap`, `bnad_txq_cleanup`, `bnad_txcmpl_process`, `bnad_tx_complete`, `bnad_txq_wi_prepare`, and Rx helpers `bnad_rxq_alloc_init`, `bnad_rxq_refill_page`, `bnad_rxq_refill_skb`, `bnad_rxq_post`, `bnad_cq_process`, `bnad_cq_setup_skb`, `bnad_cq_setup_skb_frags`, and `bnad_napi_poll_rx`. Interrupt handlers are `bnad_msix_tx`, `bnad_msix_rx`, `bnad_msix_mbox_handler`, and shared INTx `bnad_isr`. Resource/lifecycle APIs exported to other files include `bnad_setup_tx`, `bnad_destroy_tx`, `bnad_setup_rx`, `bnad_destroy_rx`, `bnad_tx_coalescing_timeo_set`, `bnad_rx_coalescing_timeo_set`, `bnad_mac_addr_set_locked`, `bnad_enable_default_bcast`, `bnad_restore_vlans`, and stats fill helpers.
+
+## Control Flow and State
+Probe first loads firmware under `bnad_fwimg_mutex`, allocates a netdev with private `struct bnad`, initializes PCI/BAR/workqueue/netdev/debugfs, asks BNA for common resources, calls `bna_init`, enables MSI-X when possible, requests the mailbox IRQ, starts IOC timers, enables IOC Ethernet, negotiates firmware queue limits, allocates BNA module resources, initializes modules, reads the permanent MAC, and registers the netdev. Remove unregisters the netdev, disables IOC, deletes timers, uninitializes BNA, frees common/module resources, IRQs, MSI-X, PCI, debugfs, BAR mapping, locks, and netdev.
+
+`bnad_open()` creates Tx and Rx objects, configures MTU and pause, enables enet, enables broadcast/multicast defaults, restores VLANs and unicast address, and starts stats polling. `bnad_stop()` stops stats, disables enet and waits for completion, destroys Tx/Rx objects, synchronizes mailbox IRQ, and returns. Tx transmit maps skb head/frags into BNA work items, handles TSO/checksum/VLAN/CEE priority flags, stops/wakes queues around ring pressure, writes producer index, and rings the Tx doorbell. Tx completions unmap DMA, free skbs, update counters, acknowledge IBs, and wake queues.
+
+Rx setup allocates page or skb buffers, posts ring entries, and NAPI polls completion queues. `bnad_cq_process()` validates completion entries with barriers, supports multi-buffer packets, drops MAC/FCS/length errors, builds skb frags or skb data, sets checksum state, attaches VLAN tags, sends packets to GRO or `netif_receive_skb`, clears CQ valid bits, disables/acks IRQs during polling, and refills queues. Cleanup disables NAPI, clears CQ entries, unmaps pages/skbs, and signals the BNA FSM.
+
+## State and Persistence Behavior
+Driver state lives in `struct bnad`: active VLAN bitmap, queue counts/depths, coalescing timers, resource descriptors, completions, timers, workqueue, stats, BAR mapping, MSI-X table, run/config flags, and debugfs scratch. Persistent hardware/firmware state includes flash firmware, IOC state, MAC/MTU/pause settings, filters, rings, and hardware counters. Active VLANs and netdev flags are replayed after Rx recreation. Firmware image pointer `bfi_fw` is released at module exit.
+
+## Dependencies and Integration Points
+Integrates with Linux PCI, DMA, `net_device`, NAPI/GRO, VLAN, ethtool, netpoll, timers, firmware loader, workqueues, MSI-X/INTx IRQ APIs, and BNA/BFA firmware modules. It supplies callback tables to `bna_tx_create` and `bna_rx_create`, handles BNA completions, and exposes debugfs/ethtool support via `bnad.h`.
+
+## Risks and Test Signals
+Risks are DMA unmap correctness on partial map failure, queue stop/wake races, interrupt/NAPI ordering during teardown, null dereferences when setup partially fails, timer deletion races, mailbox IRQ synchronization, firmware enable timeout handling, and MTU transitions over the Catapult2 4K multi-buffer threshold. `bnad_change_mtu()` writes `netdev->mtu` before `bnad_mtu_set()` succeeds and does not visibly roll back on failure. `bnad_pci_probe()` has a `probe_success` path after IOC enable failure that returns success without registering a netdev, which deserves regression attention. Test signals include probe/remove failure injection, open/stop stress, INTx and MSI-X modes, Tx map-failure tests, NAPI teardown under traffic, jumbo MTU toggles, VLAN feature toggles, promisc/allmulti/multicast overflow, firmware reset/recovery, and ethtool stats consistency.

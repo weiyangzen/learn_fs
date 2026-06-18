@@ -1,0 +1,7 @@
+# sources/storage-engines/rocksdb/java/src/main/java/org/rocksdb/CompactRangeOptions.java
+
+Purpose: Java `RocksObject` wrapper for `CompactRangeOptions` used by `RocksDB.compactRange` style manual compactions. Important APIs include fluent setters/getters for exclusive manual compaction, change-level/target-level/target-path behavior, bottommost-level compaction policy, write-stall allowance, subcompaction override, full-history timestamp low watermark, and cancellation.
+
+Control flow is thin JNI forwarding through `nativeHandle_`; construction allocates a C++ option object and `disposeInternal` frees it. `BottommostLevelCompaction` maps explicit byte constants to C++ `BottommostLevelCompaction`, while `Timestamp` is a Java immutable pair used by timestamp-aware compaction. State is native and transient, not persisted by Java, but it changes compaction output placement, throttling, and history retention behavior. Dependencies include `RocksObject`, `RocksDB`, `Objects`, and C++ JNI symbols.
+
+Risks: enum values must remain in C++ order, `fromRocksId` can return null for unknown native values, target path IDs are explicitly undefined when out of range, and cancellation/full-history timestamp semantics depend on native support. Test signals should cover JNI round-trips, enum mapping, timestamp equality/hash, disposal, and compact-range behavior with level movement and write-stall options.

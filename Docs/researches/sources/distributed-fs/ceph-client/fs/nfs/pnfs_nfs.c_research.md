@@ -1,0 +1,25 @@
+# sources/distributed-fs/ceph-client/fs/nfs/pnfs_nfs.c
+
+## Purpose
+`pnfs_nfs.c` provides common support for file-based pNFS layout drivers. It handles generic DS read/write release, DS commit bucketing and recovery, data-server address caching, NFSv3/NFSv4 data-server connection setup, multipath address decoding from XDR, request marking for DS commit, and sync behavior that combines DS COMMIT with LAYOUTCOMMIT.
+
+## Important APIs, types, and functions
+I/O release helpers are `pnfs_generic_rw_release()`, `pnfs_generic_prepare_to_resend_writes()`, `pnfs_generic_write_commit_done()`, and `pnfs_generic_commit_release()`. Commit-array APIs include `pnfs_alloc_commit_array()`, `pnfs_free_commit_array()`, `pnfs_add_commit_array()`, `pnfs_generic_clear_request_commit()`, `pnfs_generic_scan_commit_lists()`, `pnfs_generic_recover_commit_reqs()`, `pnfs_generic_commit_pagelist()`, `pnfs_generic_ds_cinfo_release_lseg()`, and `pnfs_generic_ds_cinfo_destroy()`. Data-server APIs include `nfs4_pnfs_ds_add()`, `nfs4_pnfs_ds_put()`, `nfs4_pnfs_ds_connect()`, `nfs4_pnfs_v3_ds_connect_unload()`, and `nfs4_decode_mp_ds_addr()`. `pnfs_layout_mark_request_commit()` assigns written requests to DS buckets, and `pnfs_nfs_generic_sync()` drives commit plus layoutcommit.
+
+## Control flow
+For DS commits, layout drivers organize written requests by layout segment and DS commit index in `pnfs_commit_array` buckets. `pnfs_layout_mark_request_commit()` looks up or creates the commit array for an lseg, validates the lseg, pins the bucket's lseg reference if the bucket was empty, marks `PG_COMMIT_TO_DS`, increments DS written counters, and adds the request to the bucket's written list. If setup fails, the request is rescheduled through normal write completion ops.
+
+Commit scanning moves requests from bucket `written` lists to `committing` lists under `commit_mutex` and updates counters. `pnfs_generic_commit_pagelist()` builds a list of MDS commit calls for normal pages and DS commit calls for each non-empty bucket, initializes each `nfs_commit_data`, and either uses generic `nfs_initiate_commit()` for MDS pages or a layout-driver `initiate_commit()` callback for DS pages. On allocation failure or retry, committing requests are moved back with `nfs_retry_commit()`. Completion releases lseg and DS client references through `pnfs_generic_commit_release()`.
+
+The data-server cache is per network namespace. `nfs4_pnfs_ds_add()` canonicalizes a list of decoded addresses by subset matching; an existing DS gets a refcount increment, otherwise the address list is moved into a new cached DS with a debug remote string. `nfs4_pnfs_ds_connect()` serializes connection attempts with `NFS4DS_CONNECTING`, respects device unavailable backoff, dispatches to v3 or v4 connect helpers, and validates that the resulting `nfs_client` completed initialization. V3 uses a dynamically requested `nfs3_set_ds_client` symbol and adds matching transports as aliases. V4 creates DS clients, initializes sessions, and may test/add session-trunked transports, including TLS servername handling.
+
+`nfs4_decode_mp_ds_addr()` decodes RFC 5665 netid and universal address strings from XDR, splits the final two decimal octets into a TCP/UDP port, parses IPv4/IPv6 addresses, maps netid to an RPC transport, and stores a printable address string.
+
+## State and persistence behavior
+Commit state is in-memory and protected by the inode commit mutex plus RCU for commit-array lists. Counters `nwritten` and `ncommitting` reflect requests staged for DS commit. Buckets hold lseg references while non-empty. DS cache state is per-net namespace, protected by `nfs4_data_server_lock`, and each DS owns an address list, debug string, optional connected `nfs_client`, refcount, and connection-state bit. The file does not persist state, but DS COMMIT and subsequent LAYOUTCOMMIT affect server-side durability.
+
+## Dependencies and integration points
+The file depends on generic NFS commit helpers, pNFS layout segments and device IDs, SUNRPC transport/address utilities, NFS network namespace state, NFSv3 DS connector symbol, NFSv4 DS client/session setup, session trunking, TLS transport policy, XDR decoding, and `nfs4trace.h`. It is used by file and flexfile layout drivers rather than by block/object layout drivers that need different DS semantics.
+
+## Risks and test signals
+Risks include commit counter drift, lseg reference leaks from buckets or arrays, RCU/list races when arrays are removed during scanning, requests stranded on committing lists after allocation failure, address subset matching that aliases distinct DS sets, v3 connector module lifetime mistakes, connection serialization deadlocks, TLS trunk servername errors, and universal address parsing edge cases. Tests should cover DS and MDS mixed commits, commit retry/resend, clear-request on rewritten dirty pages, lseg invalidation while commit buckets are non-empty, DS cache reuse and destroy, concurrent connect attempts, unavailable device backoff, v3/v4/TLS/trunking connections, IPv4/IPv6 decode, malformed XDR addresses, and `pnfs_nfs_generic_sync()` with and without pending layoutcommit.

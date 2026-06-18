@@ -1,0 +1,15 @@
+# sources/security-integrity/cryfs/old-cpp/test/cryfs/impl/config/CryConfigCreatorTest.cpp
+
+Purpose: This file tests `CryConfigCreator`, the component that creates new CryFS configs from command options, console answers, defaults, local state, and version information.
+
+Important APIs/types/functions: Includes: gtest/gtest.h, gmock/gmock.h, cryfs/impl/config/CryConfigCreator.h, cryfs/impl/config/CryCipher.h, cpp-utils/crypto/symmetric/ciphers.h, ../../impl/testutils/MockConsole.h, ../../impl/testutils/TestWithFakeHomeDirectory.h, cpp-utils/io/NoninteractiveConsole.h, gitversion/gitversion.h, plus 1 more. Classes/fixtures: CryConfigCreatorTest. Helper functions: CryConfigCreatorTest, AnswerNoToDefaultSettings, AnswerYesToDefaultSettings. Direct tests: CryConfigCreatorTest.DoesAskForCipherIfNotSpecified; CryConfigCreatorTest.DoesNotAskForCipherIfSpecified; CryConfigCreatorTest.DoesNotAskForCipherIfUsingDefaultSettings; CryConfigCreatorTest.DoesNotAskForCipherIfNoninteractive; CryConfigCreatorTest.DoesAskForBlocksizeIfNotSpecified; CryConfigCreatorTest.DoesNotAskForBlocksizeIfSpecified; CryConfigCreatorTest.DoesNotAskForBlocksizeIfNoninteractive; CryConfigCreatorTest.DoesNotAskForBlocksizeIfUsingDefaultSettings; CryConfigCreatorTest.DoesAskWhetherMissingBlocksAreIntegrityViolationsIfNotSpecified; CryConfigCreatorTest.DoesNotAskWhetherMissingBlocksAreIntegrityViolationsIfSpecified_True; CryConfigCreatorTest.DoesNotAskWhetherMissingBlocksAreIntegrityViolationsIfSpecified_False; CryConfigCreatorTest.DoesNotAskWhetherMissingBlocksAreIntegrityViolationsIfNoninteractive.
+
+Control flow: The test fixture prepares console/key/config dependencies, invokes the production config or crypto API, and then validates either returned values, exceptions/load errors, mock expectations, or serialized round trips.
+
+State and persistence behavior: It writes temp config/local-state data through a fake home directory, tracks generated filesystem IDs, stores version strings, and verifies whether prompts are skipped or required.
+
+Dependencies and integration points: The file integrates Google Test/Mock with CryFS config classes, cpp-utils data/KDF/crypto helpers, temp files, fake home directories, and local-state/version helpers as needed by the target under test.
+
+Risks: Creation behavior combines CLI flags, interactive defaults, noninteractive mode, and local-state writes; regressions can silently produce incompatible filesystems.
+
+Test signals: Primary signals are CryConfigCreatorTest.DoesAskForCipherIfNotSpecified; CryConfigCreatorTest.DoesNotAskForCipherIfSpecified; CryConfigCreatorTest.DoesNotAskForCipherIfUsingDefaultSettings; CryConfigCreatorTest.DoesNotAskForCipherIfNoninteractive; CryConfigCreatorTest.DoesAskForBlocksizeIfNotSpecified; CryConfigCreatorTest.DoesNotAskForBlocksizeIfSpecified; CryConfigCreatorTest.DoesNotAskForBlocksizeIfNoninteractive; CryConfigCreatorTest.DoesNotAskForBlocksizeIfUsingDefaultSettings. Assertion/mocking density: EXPECT_EQ x4, EXPECT_CALL x11.

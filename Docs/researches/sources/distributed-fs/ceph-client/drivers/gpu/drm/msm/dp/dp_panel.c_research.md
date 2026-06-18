@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/msm/dp/dp_panel.c
+
+Purpose: This file represents sink/panel capability and timing programming for MSM DP. It reads DPCD/EDID, derives link capabilities, chooses mode bpp, programs mainlink timing and P0 interface timing/test pattern registers, handles EDID test checksums, and manages VSC SDP for YUV420.
+
+Important APIs and functions: Public functions include `msm_dp_panel_read_sink_caps()`, `msm_dp_panel_get_mode_bpp()`, `msm_dp_panel_get_modes()`, `msm_dp_panel_handle_sink_request()`, `msm_dp_panel_timing_cfg()`, `msm_dp_panel_init_panel_info()`, TPG config, DSC DTO clear, VSC SDP enable/disable, get, and put. Private state lives in `struct msm_dp_panel_private`, which wraps public `struct msm_dp_panel`, AUX, link, MMIO bases, and `panel_on`.
+
+Control flow: On HPD high, display code calls `read_sink_caps()`. It reads DPCD, detects VSC SDP support, parses eDP 1.4 link-rate tables or falls back to MAX_LINK_RATE, applies DT and LTTPR rate/lane limits, notes enhanced framing, reads PSR caps, validates rate/lane/bw code, reads branch downstream info, and refreshes EDID. Mode validation and mode set call bpp selection, which lowers bpp in 6-bit steps until bandwidth fits. Stream enable calls `timing_cfg()`, which writes total/sync/active timing registers, toggles P0 wide-bus, optionally builds a DP 1.4 VSC SDP for YUV420, and marks the panel on. EDID automated tests send checksum plus response through `dp_link`.
+
+State and dependencies: Persistent public state includes raw DPCD, downstream port bytes, link info, cached `drm_edid`, connector pointer, mode, PSR caps, video-test flag, VSC support, hardware revision, and max bandwidth code. It depends on DRM EDID/DP helpers, MMIO register constants, and `dp_utils` SDP parity packing.
+
+Risks and test signals: Risks include EDID lifetime, branch-device unplug during EDID read, eDP supported-rate parsing versus `LINK_BW_SET`, LTTPR limits, incorrect YUV420/VSC SDP enablement, wide-bus toggling, mode bpp underflow, and test-pattern timing math. Test with DP/eDP DPCD variants, MST/branch sink counts, EDID failure, 420-only modes, PSR-capable eDP, TPG enable/disable, and DP CTS EDID/video-pattern requests.

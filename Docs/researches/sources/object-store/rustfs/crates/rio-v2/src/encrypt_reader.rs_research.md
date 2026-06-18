@@ -1,0 +1,13 @@
+# sources/object-store/rustfs/crates/rio-v2/src/encrypt_reader.rs
+
+Purpose: this file implements async DARE v2 AES-256-GCM encryption and decryption readers compatible with MinIO encrypted object streams, including singlepart, multipart, object-key-derived part keys, and legacy nonce-derived multipart modes.
+
+Important APIs and types: `EncryptReader<R>` provides constructors for direct key/nonce, random nonce from object key, explicit sequence start, multipart nonce derivation, and multipart object-key derivation. It emits 16-byte DARE headers plus ciphertext/tag packages over 64 KiB plaintext payloads. `DecryptReader<R>` mirrors those modes, tracks expected nonce/reference nonce, package sequence, multipart part list, current part index, and key source. `derive_part_key(object_key, part_number)` uses HMAC-SHA256 over the little-endian part number. Both readers implement rio traits for ETag/hash/index forwarding.
+
+Control flow: encryption buffers up to `DARE_PAYLOAD_SIZE + 1` to distinguish full non-final packages from the final package. `build_dare_package` writes version, cipher suite, payload length minus one, nonce with final flag in byte 4, derives the per-package nonce by XORing sequence into the last four nonce bytes, and authenticates header bytes 0..4 as AAD. Decryption incrementally reads headers and ciphertext, checks version/cipher, validates nonce against configured and reference nonce with final flag handling, decrypts with the sequence-derived nonce, then advances multipart state after a finalized package.
+
+State and persistence: reader state includes AES-GCM cipher, nonce, sequence number, buffers, finalization flags, and multipart state. The persistent wire state is the DARE package stream; header bits, nonce masking, and sequence resets define compatibility with stored encrypted object parts.
+
+Dependencies and integration points: uses `aes-gcm`, `hmac`, `sha2`, `rand`, `tokio`, and legacy `rustfs_rio::multipart_part_nonce`. It composes with compression readers and exposes underlying indexes for compressed encrypted reads. Object-key multipart mode is validated against MinIO-style part key vectors.
+
+Risks and test signals: security risks center on nonce uniqueness, final-flag masking, sequence wrap, and accepting only correctly authenticated package streams. Zero-length input produces no package, which callers must expect. Multipart decryption relies on correct part ordering and sizes supplied out of band. Tests cover non-zero sequence starts, object-key singlepart round-trip, exact MinIO part-key vectors, multipart object-key sequence reset, and lib-level DARE package boundary/header assertions.

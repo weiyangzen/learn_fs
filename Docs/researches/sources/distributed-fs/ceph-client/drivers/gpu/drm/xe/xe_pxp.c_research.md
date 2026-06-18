@@ -1,0 +1,13 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/xe_pxp.c -->
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/xe_pxp.c
+
+Purpose: implements Protected Xe Path (PXP) orchestration for integrated Xe devices, including feature detection, readiness reporting, KCR enablement, ARB session start/termination, protected exec queue tracking, protected BO key generation, and suspend/resume behavior. PXP is exposed to userspace through query status and protected queue/BO paths, but the implementation depends on HuC authentication via GSC and the GSC proxy.
+
+Important APIs and control flow: `xe_pxp_is_supported()` gates on device capability plus `CONFIG_INTEL_MEI_GSC_PROXY`; `xe_pxp_init()` rejects unsupported topology, missing GSCCS, missing firmware, and too-old Panther Lake GSC firmware, then allocates `struct xe_pxp`, initializes completions, mutex/list state, ordered IRQ workqueue, KCR, and execution resources. `xe_pxp_get_readiness_status()` returns the uAPI status convention: negative errors, `0` for not ready, `1` for ready. `pxp_start()` serializes activation and termination through `pxp->mutex` and `pxp->activation`/`pxp->termination` completions, can run a termination before activation, and calls `__pxp_start_arb_session()` to submit the GSC session-init command and poll KCR session-in-play.
+
+State and persistence: `pxp->status` moves through error, ready, start-in-progress, active, needs-termination, termination-in-progress, additional-termination, and suspended states. `key_instance` is incremented when an active session is terminated or suspended, invalidating protected BOs tagged with an older key. Active protected queues are held on `pxp->queues.list` and hold runtime PM references until removed.
+
+Dependencies and integration: calls into `xe_pxp_submit.c` for VCS/GSC submissions, `xe_mmio`/KCR registers for session state, `xe_force_wake`, `xe_pm`, `xe_exec_queue_kill()`, BO helpers, HuC/GSC firmware state, and IRQ work from `xe_pxp_irq_handler()`. `xe_pxp_exec_queue_add()` starts PXP on demand and adds queues only when active; `pxp_invalidate_queues()` kills and removes all protected queues during termination or suspend.
+
+Risks and test signals: the key-validity checks are intentionally racy and rely on repeated checks at submission/flip boundaries; tests should inject `xe_pxp_exec_queue_add()` failures, simulate termination IRQs, cover suspend/resume during activation/termination, and verify runtime PM refs are balanced for queue add/remove. Error paths around forcewake, firmware status, GSC pending responses, and completion timeouts should be validated.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/xe_pxp.c -->

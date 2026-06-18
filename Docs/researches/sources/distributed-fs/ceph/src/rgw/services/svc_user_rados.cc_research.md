@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph/src/rgw/services/svc_user_rados.cc -->
+# sources/distributed-fs/ceph/src/rgw/services/svc_user_rados.cc
+
+Purpose: Implements RADOS-backed RGW user metadata storage, secondary indexes, metadata listing, chained lookup caching, account/group membership links, and mdlog completion.
+
+Important APIs, types, and functions: `init()` wires RADOS, zone, mdlog, sysobj, and cache services. `do_start()` initializes `uinfo_cache`. `get_buckets_obj()` maps a user to `<uid>.buckets`. `UserLister` filters `.buckets` objects. `read_user_info()` reads and decodes UID records. `PutOperation` performs store preparation, primary object write, mdlog completion, secondary index writes, old index cleanup, and account/group links. Public methods implement `store_user_info()`, `remove_user_info()`, index removals, `remove_uid_index()`, `get_user_info_from_index()`, lookup by email/Swift/access key, and `read_email_index()`.
+
+Control flow: Store first prepares a write version and checks uniqueness of active Swift keys, active S3 keys, and account display names. It writes the primary UID object containing `RGWUID` then `RGWUserInfo`, completes a user mdlog entry, writes email/key/Swift secondary indexes to link back to UID, removes stale old indexes, and updates account/group user lists. Remove deletes active key indexes, Swift indexes, email index, user buckets index or account link, group links, then UID object and mdlog entry. Lookups by secondary index read a UID object from the appropriate pool, ignore account ids that are not users, read the primary user info, then chain-cache the result using primary metadata cache info.
+
+State and persistence: User primary records persist in `user_uid_pool`; secondary indexes persist in email, keys, and Swift pools; per-user bucket indexes use `<uid>.buckets`; account/group links use `rgwrados::users` objects; UID removals and stores write metadata log completion entries. `uinfo_cache` caches resolved user info keyed by `pool/key` and invalidates through sysobj cache chaining.
+
+Dependencies and integration points: Depends on `RGWSI_Zone`, `RGWSI_MDLog`, `RGWSI_SysObj`, `RGWSI_SysObj_Cache`, `RGWChainedCacheImpl`, `rgw_user`, `rgw_account`, `rgwrados::account`, `rgwrados::group`, `rgwrados::users`, and metadata lister. It backs RGW authentication, admin user APIs, account membership, and metadata sync.
+
+Risks and test signals: Store is multi-step and can leave partial secondary indexes if later operations fail. `PutOperation::set_err_msg()` appears to assign only when `err_msg` is not empty, so error message capture may be ineffective. Email lookup is case-insensitive through lowercase oids. Tests should cover duplicate active keys, Swift id conflicts, account display-name conflicts, rename/tenant mismatch, old index cleanup, group/account link updates, remove idempotence on ENOENT, chained cache invalidation, and mdlog entries on primary changes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph/src/rgw/services/svc_user_rados.cc -->

@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/video/fbdev/matrox/matroxfb_crtc2.c
+
+Purpose: `matroxfb_crtc2.c` implements the optional secondary framebuffer for Matrox G400/G450/G550-style CRTC2 hardware. It registers as a private Matrox extension driver, reserves or borrows a slice of VRAM for the second head, registers a second fbdev, and programs CRTC2 timing/output registers for 16/32 bpp display.
+
+Important APIs and functions: extension entry points are `matroxfb_crtc2_probe()` and `matroxfb_crtc2_remove()` in a `matroxfb_driver` named `Matrox G400 CRTC2`. fbops are `matroxfb_dh_open()`, `release()`, `check_var()`, `set_par()`, `setcolreg()`, `pan_display()`, `blank()`, and `ioctl()`. Hardware helpers include `matroxfb_dh_restore()`, `matroxfb_dh_disable()`, `matroxfb_dh_pan_var()`, `matroxfb_dh_decode_var()`, and `matroxfb_dh_get_vblank()`.
+
+Control flow: module init checks `fb_get_options("matrox_crtc2fb")` and registers the extension. Probe requires `minfo->devflags.crtc2`, allocates `matroxfb_dh_fb_info`, reserves the requested memory size from the top of VRAM or borrows from primary usable memory, initializes fix/cmap/fbops, registers a secondary framebuffer, and stores it in `minfo->crtc2.info` under lock. Mode setting validates 16/32 bpp, computes timings via `matroxfb_var2my()`, lets all outputs routed to CRTC2 compute clocks, programs CRTC2 registers or disables it, refreshes DAC1064 global state, and starts routed outputs.
+
+State and persistence: secondary state is `matroxfb_dh_fb_info`, including its own `fb_info`, registration/initialized flags, pointer to primary `matrox_fb_info`, video offset/base/length/borrowed bytes, shared MMIO mapping, interlace flag, and 16-entry pseudo-palette. Primary state updated includes `minfo->crtc2.info`, `crtc2.pixclock`, `crtc2.mnp`, `hw.crtc2.ctl`, output routing, and vsync counter.
+
+Dependencies and integration points: depends on the base Matrox extension API, `matroxfb_misc` timing conversion, DAC1064 global output helpers, MAVEN/output mode definitions, fbdev core, and user ioctl definitions in `linux/matroxfb.h`. Primary and secondary heads coordinate through shared output routing and shared VRAM/MMIO.
+
+Risks: CRTC2 supports only 16 and 32 bpp here; invalid memory reservation or primary/secondary incompatible panning can break display. The module mutates primary `video.len_usable` when borrowing memory and restores it on deregister, so unload ordering matters. Output routing ioctls must reject conflicts with primary and panel-link constraints. Blank is effectively unimplemented. Register programming uses raw addresses and timing truncation to 8-pixel horizontal granularity.
+
+Test signals: load with `matrox_crtc2fb` enabled on CRTC2-capable hardware, verify second fb registration, memory reservation size, 16/32 bpp mode setting, panning, vblank and wait-for-vsync ioctls, CRTC2 output routing to secondary/DAC/TV as available, and clean unload restoring primary usable memory. Test conflicts with DFP/panel-link and primary output ownership.

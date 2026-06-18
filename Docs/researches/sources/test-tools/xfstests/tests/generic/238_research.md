@@ -1,0 +1,59 @@
+# sources/test-tools/xfstests/tests/generic/238
+
+## Purpose
+
+See what happens if we DIO CoW blocks 2-4 of a page's worth of blocks when the surrounding blocks vary between unwritten/regular/delalloc/hole This test is dependent on the system page size, so we cannot use md5 in the golden output; we can only compare to a check file. It is registered with `_begin_fstest auto quick clone prealloc` and is part of the xfstests generic suite, so the same script is intended to validate the behavior across every filesystem that satisfies its feature gates.
+
+## Important APIs, Types, and Functions
+
+This is an executable xfstests bash test. Its runner-facing interface is the numbered script `238` plus `_begin_fstest auto quick clone prealloc`. Imported libraries: `. ./common/preamble`, `. ./common/filter`, `. ./common/reflink`. Capability gates: `_require_scratch_reflink`, `_require_xfs_io_command "falloc"`, `_require_odirect`. Local functions: `_cleanup`, `runtest`. The important external command surface is the xfstests harness variables (`$TEST_DIR`, `$SCRATCH_MNT`, `$SCRATCH_DEV`, `$seq`, `$tmp`, `$seqres.full`) plus helper programs invoked from `$here/src` and command variables such as `$XFS_IO_PROG` or `$FIO_PROG` when present.
+
+Notable variables and setup values:
+
+- Line 31: `pagesz=$(getconf PAGE_SIZE)`
+- Line 32: `blksz=$((pagesz / 4))`
+- Line 38: `testdir=$SCRATCH_MNT/test-$seq`
+- Line 41: `real_blksz=$(_get_file_block_size $testdir)`
+- Line 46: `b2=$1`
+- Line 47: `b4=$2`
+- Line 48: `dir=$3`
+- Line 132: `status=0`
+
+## Control Flow
+
+The visible phases are driven by echo markers such as line 34 `echo "Format and mount"`, line 45 `echo "runtest $1 $2"`, line 50 `echo "Create the original files"`, line 87 `echo "Compare files"`. Reusable shell functions encapsulate repeated setup or validation before the main body invokes them in sequence. After setup, the test prepares files or devices, performs the filesystem operation under test, and validates through filtered command output or explicit assertions.
+
+Key operational lines:
+
+- Line 20: `rm -rf $tmp.* $testdir`
+- Line 28: `_require_xfs_io_command "falloc"`
+- Line 35: `_scratch_mkfs_blocksized $blksz > $seqres.full 2>&1`
+- Line 39: `mkdir $testdir`
+- Line 52: `_pwrite_byte 0x61 0 $pagesz $dir/file1 >> $seqres.full`
+- Line 55: `$XFS_IO_PROG -f -c "truncate $pagesz" $dir/file2.chk >> $seqres.full`
+- Line 60: `_pwrite_byte 0x61 $blksz $blksz $dir/file2.chk >> $seqres.full`
+- Line 64: `_pwrite_byte 0x00 $blksz $blksz $dir/file2.chk >> $seqres.full`
+- Line 73: `_pwrite_byte 0x61 $((blksz * 3)) $blksz $dir/file2.chk >> $seqres.full`
+- Line 77: `_pwrite_byte 0x00 $((blksz * 3)) $blksz $dir/file2.chk >> $seqres.full`
+- Line 84: `_pwrite_byte 0x61 $((blksz * 2)) $blksz $dir/file2.chk >> $seqres.full`
+- Line 88: `! cmp -s $dir/file1 $dir/file2 || _fail "file1 and file2 don't match."`
+- Line 91: `echo "CoW and unmount"`
+- Line 108: `cmp -s $dir/file2 $dir/file2.chk || _fail "file2 and file2.chk don't match."`
+
+## State and Persistence Behavior
+
+Primary state is created under `$SCRATCH_MNT` on a freshly formatted scratch filesystem, so the test can destroy, remount, or cycle the filesystem without touching the configured test directory. Cycle-mount calls force metadata and extent state through unmount/remount persistence before validation. Temporary files are rooted at `$tmp.*` and removed by the local or default cleanup path. The only durable outputs expected outside the exercised filesystem are normal xfstests artifacts such as `$seqres.full`; local cleanup removes `$tmp.*` and test files when the script overrides `_cleanup`.
+
+## Dependencies and Integration Points
+
+It integrates with the xfstests runner through `_begin_fstest` tags `auto`, `quick`, `clone`, `prealloc`, imports `. ./common/preamble`, `. ./common/filter`, `. ./common/reflink`, and uses capability gates such as `_require_scratch_reflink`, `_require_xfs_io_command "falloc"`, `_require_odirect`. The script reports detailed command output to `$seqres.full` where needed and relies on the numbered golden output for user-visible pass/fail text. It also depends on the common xfstests semantics for `_notrun`, `_fail`, filtered output, scratch formatting, user/group identities, and external helper binaries referenced in the operation list.
+
+## Risks and Edge Cases
+
+- Reflink coverage is sensitive to extent alignment, delayed allocation, unwritten extents, and page-size dependent block geometry, so comparisons against check files are the main correctness guard.
+- Direct I/O paths can be affected by device sector size, alignment, cache invalidation, and filesystem-specific serialization between buffered and direct writes.
+- Several checks can intentionally call `_notrun`; this is expected for unsupported geometry or feature combinations and should be distinguished from a failing assertion.
+
+## Test Signals
+
+The pass signal is byte-for-byte `cmp` checks against companion files, explicit `_fail` assertions. Regressions show up as golden-output mismatches, unexpected stderr in `$seqres.full`, skipped capability gates, failed helper status, or nonzero final `status`.

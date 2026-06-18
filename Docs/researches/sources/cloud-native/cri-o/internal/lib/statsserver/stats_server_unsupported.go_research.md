@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/statsserver/stats_server_unsupported.go
+
+Purpose: non-Linux statsserver fallback. It provides stub implementations for `updateSandbox`, `updateContainerStats`, and `metricsForPodSandbox`, each returning empty CRI stats/metrics structures. There is no real control flow, persistence, or external collection. Dependencies are sandbox, OCI, and CRI API types so generic statsserver code compiles. Risks include callers receiving empty-but-non-nil stats and assuming data was collected, and no remove/cache behavior in the platform functions. Test signals are compile-time platform coverage rather than runtime validation.

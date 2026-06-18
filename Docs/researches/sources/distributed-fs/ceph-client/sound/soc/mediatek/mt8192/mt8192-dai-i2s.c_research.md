@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/sound/soc/mediatek/mt8192/mt8192-dai-i2s.c
+
+This file implements MT8192 CONNSYS I2S plus I2S0/1/2/3/5/6/7/8/9 backend DAIs. It owns I2S DAI definitions, low-jitter controls, DAPM widgets/routes, per-I2S private state, sysclk handling, shared-clock relationships, normal I2S register programming, and CONNSYS ASRC trigger flow.
+
+`struct mtk_afe_i2s_priv` stores DAI id, last rate, low-jitter enable, shared I2S id, MCLK id, MCLK rate, and selected APLL. `mt8192_dai_i2s_register()` registers all I2S DAIs, controls, widgets, routes, and private data. `mt8192_dai_i2s_set_share()` is exported for machine drivers that configure a secondary I2S to share a main clock.
+
+Normal hw_params calls `mtk_dai_i2s_config()`, which translates rate/format, writes the matching `AFE_I2S_CON*` register, stores the rate, and recursively configures a shared I2S parent if configured. `set_sysclk()` accepts only output clocks, checks exact APLL divisibility, stores MCLK rate/APLL, and propagates state to a shared target. CONNSYS hw_params programs proxy I2S mode, ASRC mode, and calibration constants; trigger start/resume enables I2S, calibrator, and ASRC, while stop/suspend disables them and bypasses ASRC.
+
+State is devm-owned per-I2S private data plus hardware I2S, ASRC, MCLK, GPIO, and DAPM clock state. Dependencies are clock helpers, GPIO helpers, rate transforms, interconnection definitions, and ASoC DAPM route predicates. Risks include `set_sysclk()` using `share_i2s_id > 0`, which skips propagation to I2S0, possible recursion loops with cyclic sharing, and hard-coded CONNSYS ASRC constants. Test signals include all I2S ports, low-jitter on/off, MCLK divisibility, shared I2S pairs including I2S0, CONNSYS start/stop, dummy routes, loopback, and suspend/resume.

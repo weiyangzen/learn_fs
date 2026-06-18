@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/vexpress-spc-cpufreq.c
+
+Purpose: provides CPUFreq support for ARM Versatile Express SPC big.LITTLE systems, including optional b.L switcher mode where logical CPUs may migrate between physical A15 and A7 clusters and use a merged virtual frequency table.
+
+Important APIs and functions: `ve_spc_cpufreq_init()` initializes per-policy cluster masks, OPP frequency tables, clocks, and transition latency. `_get_cluster_clk_and_freq_table()` validates OPP count, builds cluster tables, and obtains CPU clocks. `merge_cluster_tables()` combines big and little tables using A7 virtual frequency scaling. `ve_spc_cpufreq_set_rate()` serializes per-cluster clock changes, updates per-CPU last requested/physical cluster state in switcher mode, calls `bL_switch_request()` when clusters change, and rebalances the old cluster clock. The driver supports energy model registration through `cpufreq_register_em_with_opp`.
+
+Control flow and state: global arrays hold two cluster clocks and tables plus a virtual table slot. `cluster_usage` reference-counts table/clock lifetimes, `physical_cluster` and `cpu_last_req_freq` are per-CPU, and `cluster_lock[]` protects clock updates. Probe detects b.L switcher state, toggles cooling-device support, registers CPUFreq, and registers a switcher notifier that unregisters/reregisters CPUFreq around switcher mode changes.
+
+Dependencies and integration points: depends on platform-specific SPC OPP initialization, CCF CPU clocks, topology physical package IDs, optional `CONFIG_BL_SWITCHER`, CPUFreq governors, OPP tables, and ARM big.LITTLE switcher callbacks.
+
+Risks and test signals: risks include many global resources with complex unregister paths, switcher mode assumptions that init starts on A15, virtual A7 frequency shift conventions, clock readback workaround indicating possible hidden CCF failures, and incomplete cleanup if some present CPU device lookup fails mid-loop. Test signals include cluster-specific OPP tables, merged table sorted without duplicate big rates, clock rates matching requested actual rates, physical cluster migration at threshold crossings, notifier unregister/register cycles, and policy masks matching sharing CPUs.

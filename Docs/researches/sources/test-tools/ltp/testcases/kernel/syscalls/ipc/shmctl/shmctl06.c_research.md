@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/shmctl06.c
+
+Purpose: verifies that kernel `shmctl(IPC_STAT)` clears high timestamp fields in `struct shmid64_ds` when those fields exist. The test is compiled only under `HAVE_SHMID64_DS_TIME_HIGH`; otherwise it reports TCONF. It initializes `shm_atime_high`, `shm_dtime_high`, and `shm_ctime_high` to nonzero, creates a shared-memory segment, calls `shmctl`, then checks all high fields are zero before removing the segment. State is one segment and a compatibility structure cast to `struct shmid_ds *`. Dependencies are LTP `lapi/shmbuf.h`, newipc key helpers, and architecture headers exposing the high fields. Risks are ABI-layout sensitivity. Test signal is all high fields cleared.

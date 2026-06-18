@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/authorization/authz_unix_test.go -->
+# sources/cloud-native/moby/pkg/authorization/authz_unix_test.go
+
+Purpose: Unix integration/unit tests for authorization plugin request/response flows and response modification. Tests create Unix-socket plugin servers, exercise request and response calls, plugin errors, body-size limits, `sendBody` URL/content-type matrix, response override behavior, and `ResponseModifier` flush/hijack-like behavior. State includes temporary sockets, HTTP test servers, buffered request/response bodies, and plugin client state. Dependencies include `plugins.NewClient`, gorilla mux, Unix sockets, TLS config, and JSON assertions. Risks covered include auth endpoint body suppression, content-type case handling, oversized body rejection, and plugin denial/error propagation. Remaining risks include Windows behavior and real daemon handler integration, which are covered elsewhere.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/authorization/authz_unix_test.go -->

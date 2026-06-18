@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chdir/chdir04.c
+
+Purpose: negative `chdir()` errno test for overlong path, nonexistent directory, and bad userspace address. Setup substitutes `tst_get_bad_addr` for the EFAULT case; run calls `chdir` and expects ENAMETOOLONG, ENOENT, or EFAULT. Important APIs are `chdir`, `tst_get_bad_addr`, and LTP expected-failure macros. State is a tmpdir but no created fixture is required. Dependencies are pathname errno behavior. Risks are long string length being below some kernels' full path limit but intended as component/path too long. Test signal is exact errno for each case.

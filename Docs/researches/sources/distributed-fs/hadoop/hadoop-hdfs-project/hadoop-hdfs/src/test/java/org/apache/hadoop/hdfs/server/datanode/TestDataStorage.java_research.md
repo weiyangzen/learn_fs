@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/TestDataStorage.java
+
+Purpose: tests `DataStorage` storage-directory initialization, block-pool slice setup, duplicate/invalid additions, missing `VERSION` protections, and failure behavior during recovery/transition.
+
+Important APIs and types: `DataStorage`, `Storage.StorageDirectory`, `StorageLocation`, `NamespaceInfo`, `StartupOption`, mocked `DataNode`, `FileUtil`, and `GenericTestUtils`. Helpers create temporary storage locations as directories or regular files and build multiple namespace infos.
+
+Control flow: setup creates a clean `dstest` directory, a `DataStorage`, a mocked DN returning `HdfsConfiguration`, and a default namespace. `testAddStorageDirectories` adds the same storage locations across multiple namespaces and verifies both DataNode storage roots and block-pool slices contain `current/VERSION`; duplicate active locations return no additions; adding a larger set updates active storage dir count. `testAddStorageDirectoriesFailure` shows a restarted DN with a different cluster ID rejects existing locations. `testMissingVersion` places a fake block-pool directory under uninitialized `current` and asserts storage add does not format it away. `testRecoverTransitionReadFailure` passes regular files as locations and expects all dirs fail. `testRecoverTransitionReadDoTransitionFailure` verifies transition exceptions leave no active dirs after reset.
+
+State and persistence behavior: this file creates and deletes local storage tree artifacts, `VERSION` files, and block-pool directories. Integration points are DN startup and namespace transition storage contracts. Risks include filesystem cleanup, URI parsing, cluster ID mismatch semantics, and exact exception text. Signals are directory/file existence checks, returned added-location counts, storage-dir counts, and expected IOException messages.

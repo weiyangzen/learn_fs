@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_probe_helper.c
+
+Purpose: implements KMS output probing helpers: connector detection, mode collection and validation, connector polling, hotplug event helpers, fixed-mode and EDID-based get_modes helpers, TV mode helpers, and DDC-based detect helpers.
+
+Important APIs/types/functions: `drm_helper_probe_single_connector_modes()` is the central `fill_modes` implementation. `drm_helper_probe_detect()`, `drm_connector_mode_valid()`, `drm_crtc_mode_valid()`, `drm_encoder_mode_valid()`, and `drm_mode_validate_pipeline()` run detect and mode validation callbacks. Polling is controlled by `drm_kms_helper_poll_init()`, `drm_kms_helper_poll_enable()`, `drm_kms_helper_poll_disable()`, `drm_kms_helper_poll_fini()`, `drmm_kms_helper_poll_init()`, and `output_poll_execute()`. Hotplug helpers include `drm_kms_helper_hotplug_event()`, `drm_kms_helper_connector_hotplug_event()`, `drm_connector_helper_hpd_irq_event()`, and `drm_helper_hpd_irq_event()`. Convenience modes helpers include fixed, EDID, TV, and DDC functions.
+
+Control flow: fill_modes requires `mode_config.mutex`, locks `connection_mutex` with deadlock backoff, marks old modes stale, applies forced connector state or runs detect, schedules delayed hotplug if status changes, gathers modes from driver/EDID/fallback/cmdline, validates against basic, size, flags, ycbcr420, connector, encoder, bridge, and CRTC constraints, prunes invalid modes, adds DisplayPort failsafe modes when needed, sorts modes, and logs results. Poll work scans non-forced pollable connectors, runs non-destructive detection, clamps unknown results back to old status, emits hotplug events when epochs change, and reschedules if polling remains needed.
+
+State and persistence behavior: per-device `mode_config` stores polling flags, delayed work, delayed hotplug events, and connector mode lists. Per-connector `status`, `force`, `epoch_counter`, `polled`, EDID properties, and command-line mode data are mutated during probing.
+
+Dependencies and integration points: integrates connector, encoder, CRTC and bridge helper vtables, EDID/DDC helpers, sysfs hotplug events, DRM client hotplug callbacks, workqueues, module parameter `poll`, modeset locking/backoff, and managed cleanup through `drmm_add_action_or_reset()`.
+
+Risks: callers must observe locking and process-context rules around hotplug helpers. Destructive detection is avoided in poll paths, which can temporarily hide true status. Misreported helper callbacks, especially negative `get_modes()` or missing deadlock handling, degrade mode lists. Poll enable/disable ordering matters around suspend/resume and runtime PM deadlocks.
+
+Test signals: connector fill_modes under forced on/off/detect states, EDID fallback and cmdline mode insertion, invalid mode pruning reasons, DisplayPort 640x480 fallback, HPD and polling status-change uevents, suspend/resume poll disable/enable, lockdep for modeset backoff, and fixed/TV/DDC helper unit coverage.

@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/service_test.go
+
+This test-support file supplies fake services and a `newTestCRIService` constructor used by multiple CRI server unit tests. `fakeSandboxService` implements the local `sandboxService` interface with mostly `ErrNotImplemented` behavior, while `SandboxPlatform` returns the default platform and `SandboxController` returns `fakeSandboxController`. `fakeSandboxController` implements containerd sandbox controller methods with `ErrNotImplemented` stubs.
+
+`fakeRuntimeService` returns `testConfig` and can load cached OCI specs from an in-memory map. The `testOpt` pattern allows specific tests to inject runtime service or mutate the constructed `criService`. `newTestCRIService` builds a CRI service with fake OS operations, label store, sandbox and container stores without stats collector, registrars, fake default CNI plugin, fake sandbox service, and default fake runtime/image services.
+
+State is all in-memory and scoped to tests; no checkpointing or live containerd connection is used unless a test overrides the client. This helper is an integration point for status, stop, runtime config, and resource update tests. Risks include tests relying on incomplete fake behavior, `ErrNotImplemented` masking interactions not under test, and divergence from `NewCRIService` setup such as missing stats collector, event monitor, streaming server, NRI, runtime handlers, and platform initialization. Its value is deterministic isolation for narrow unit tests.

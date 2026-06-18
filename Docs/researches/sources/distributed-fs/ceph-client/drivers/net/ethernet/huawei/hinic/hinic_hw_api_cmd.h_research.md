@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/huawei/hinic/hinic_hw_api_cmd.h
+
+Defines HiNIC hardware API command bitfields, structures, and public command-chain API. Macros set/clear/get producer index, chain request/control, cell control, descriptor, and status fields. Key structs are `hinic_api_cmd_chain_attr`, `hinic_api_cmd_status`, `hinic_api_cmd_cell`, `hinic_api_cmd_cell_ctxt`, and `hinic_api_cmd_chain`; the only active chain type is write-to-management-CPU.
+
+There is no executable flow, but the macros and structures are used to program CSRs and build device-visible descriptors in `hinic_hw_api_cmd.c`. Runtime chain state includes producer/consumer indexes, semaphore, DMA contexts, write-back status, and head/current cells. Dependencies are Linux types/semaphore and `hinic_hw_if.h`. Risks are hardware ABI drift, untyped macro width assumptions, and structure layout/endian requirements. Test via command-chain initialization and management command descriptor decoding.

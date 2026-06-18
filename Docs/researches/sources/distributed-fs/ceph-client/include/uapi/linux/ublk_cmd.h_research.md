@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/ublk_cmd.h
+
+Purpose: Defines the complete userspace ABI for `ublk`, a user-space block device framework built on control commands and `io_uring` command delivery.
+
+Important APIs/types/functions: Control commands cover device add/delete/start/stop, parameter set/get, queue affinity, feature discovery, user recovery, async delete, size update, quiesce, safe stop, and shared-memory buffer registration. IO commands include fetch, commit-and-fetch, need-get-data, buffer register/unregister, and batch prep/commit/fetch. Feature flags describe zero copy, task completion, recovery semantics, unprivileged devices, ioctl encoding, user copy, zoned support, size update, auto buffer registration, quiesce, per-IO daemons, off-daemon buffer registration, batch IO, integrity metadata, safe stop, no auto partition scan, and shared-memory zero-copy. Core structs include `ublksrv_ctrl_cmd`, `ublksrv_ctrl_dev_info`, `ublksrv_io_desc`, `ublk_auto_buf_reg`, `ublksrv_io_cmd`, `ublk_batch_io`, and `ublk_params` with basic/discard/devt/zoned/DMA/segment/integrity sub-parameters. Inline helpers decode op/flags, pack/unpack auto-buffer registration in `sqe->addr`, and encode/decode shared-memory zero-copy addresses.
+
+Control flow: A userspace server creates/configures a device through control ioctls or uring commands, starts queues, then repeatedly fetches block requests, processes them against a backing store, and commits results. Optional modes change the flow: `NEED_GET_DATA` separates write buffer acquisition, user-copy uses `pread`/`pwrite`, auto-buffer registration attaches buffers during fetch, batch IO delivers multiple tags per command, recovery allows server restart, quiesce coordinates upgrade, and shared-memory zero-copy encodes buffer index/offset in request addresses.
+
+State and persistence behavior: Device state constants are dead/live/quiesced/fail-IO. Control info stores queue geometry, owner UID/GID, flags, and server PID. Kernel state persists while the ublk device exists and may survive userspace server restart under recovery flags, but backing data persistence is entirely server-defined.
+
+Dependencies and integration points: Includes `linux/types.h`; references Linux block op semantics, `io_uring` uring_cmd, zoned block definitions from `linux/blkzoned.h`, integrity constants from `linux/fs.h`, udev ownership, and block-device partition scanning.
+
+Risks: This is a complex ABI with many feature interactions. Incorrect flag negotiation can leak uninitialized data (`UBLK_F_USER_COPY` restrictions), hang IO on failed auto-buffer registration, corrupt zoned semantics, mishandle recovery/quiesce, or break 32/64-bit layouts. Address bitfields for queue/tag/buffer and shared-memory zero-copy must stay within documented masks.
+
+Test signals: Run ublk selftests for add/start/stop/delete, feature discovery, read/write/flush/discard/write-zeroes, recovery modes, unprivileged setup, user copy, zoned report/append/reset, resize, quiesce timeout, batch IO, integrity metadata, shared-memory zero-copy, and compat-layout checks for all structs and ioctl encodings.

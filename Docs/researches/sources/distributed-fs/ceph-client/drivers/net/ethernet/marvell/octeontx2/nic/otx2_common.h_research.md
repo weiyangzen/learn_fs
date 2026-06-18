@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/marvell/octeontx2/nic/otx2_common.h
+
+`otx2_common.h` is the shared contract for the OcteonTX2/CN10K/CN20K RVU NIC driver. It defines the PF/VF state model, mailbox wrapper, hardware capability flags, queue/resource accounting, MCAM flow state, PTP state, DCB/PFC fields, MACsec/IPsec hooks, and prototypes used across PF, VF, ethtool, devlink, flow, QoS, XDP, and timestamp code.
+
+Important types are `struct otx2_nic`, `struct otx2_hw`, `struct mbox`, `struct otx2_flow_config`, `struct otx2_ptp`, `struct otx2_vf_config`, `struct otx2_tc_flow`, and `struct dev_hw_ops`. `otx2_nic` is the per-netdev anchor for BAR mappings, mailbox instances, workqueues, NIX/NPA queues, feature flags, PTP, devlink, SR-IOV VF config, QoS, representors, MACsec, IPsec, and AF_XDP state. `otx2_hw` tracks queues, pools, scheduler queues, RSS, MSI-X offsets, stats, LMTST, and silicon capabilities.
+
+Inline control helpers classify silicon, initialize capability bits, route logical register offsets through `otx2_get_regaddr`, issue `otx2_read64`/`otx2_write64`, create mailbox bounce buffers, send synchronous mailbox requests, perform aura alloc/free operations, wrap DMA mapping, select SMQ IDs, compute total TX queues, and convert rates. The `MBOX_MESSAGES` macro expansion generates typed `otx2_mbox_alloc_msg_*` allocators.
+
+State is volatile kernel memory but mirrors hardware: queue counts, RSS key/table, scheduler lists, MCAM arrays, PFC scheduler maps, VF MAC/VLAN/trust data, timestamp config, and stats. Open/reset paths must restore features whose flags remain set. Dependencies include Linux netdev/PCI/PTP/devlink/TC/MACsec/DIM/page-pool headers plus Marvell `mbox.h`, `npc.h`, `rvu.h`, `qos.h`, `rep.h`, `cn10k_ipsec.h`, and `cn20k.h`.
+
+Risks concentrate around shared invariants: queue-count mismatches, mailbox bounce-buffer size handling, architecture-specific MMIO atomics, and feature flags that must stay synchronized with hardware. Test signals include clean PF/VF probe, AF mailbox ready, open/close cycles, ethtool queue/RSS output, ntuple add/delete, PFC scheduler allocation, PTP registration, XDP attach, and no NIX/NPA queue interrupt errors during traffic.

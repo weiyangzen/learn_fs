@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/memorystore/history_test.go
+
+Purpose: tests the generic `History` sorter with sandbox objects. It creates two sandboxes with distinct creation times through the builder, builds a `History[*sandbox.Sandbox]`, and asserts `Len`, `Less`, and `Swap` behavior. State is in-memory test sandboxes and the mutable history slice. Dependencies include time, Ginkgo/Gomega, CRI API types, hostport, sandbox builder, and memorystore. Risks are timing sensitivity from `time.Now()` and using full sandbox fixtures for a small sorter. Test signals confirm descending creation ordering and slice swap semantics.

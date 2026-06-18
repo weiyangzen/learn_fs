@@ -1,0 +1,19 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/tpm/google,cr50.yaml -->
+
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/tpm/google,cr50.yaml
+
+Purpose: `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/tpm/google,cr50.yaml` is a Linux Devicetree YAML schema for trusted platform module device binding. It preserves the binding title `Google Security Chip H1 (running Cr50 firmware)` and documents: Google has designed a family of security chips called "Titan". One member is the H1 built into Chromebooks and running Cr50 firmware: https://www.osfc.io/2018/talks/google-secure-microcontroller-and-ccd-closed-case-debugging/ The chip provides several functions, including TPM 2.0 like functionality. It communicates over SPI or I²C using the FIFO protocol described in the TCG PC Client Platform TPM Profile Specification for TPM 2.0 (PTP), sec 6: https://trustedcomputinggroup.org/resource/pc-client-platform-tpm-profile-ptp-specification/.
+
+Important APIs/types/functions: this is a declarative dt-schema contract, so the important interface is the set of node properties rather than runtime functions. Top-level properties include `compatible`. Required keys across the schema are `compatible`, `reg`. Compatible values exposed by the schema are `google,cr50`.
+
+Control flow: validation starts from the node selected by `compatible`, checks common bus properties such as `compatible`, follows referenced common schemas `/schemas/spi/spi-peripheral-props.yaml#`, `tcg,tpm-tis-i2c.yaml#/properties/reg`, `tpm-common.yaml#`, and then applies conditional branches `allOf`=1, `anyOf`=1. Kernel runtime flow is indirect: once a matching DT node passes schema validation, the corresponding platform, bus, thermal, timer, timestamp, TPM, or IIO trigger driver consumes the resources described here.
+
+State and persistence behavior: the file stores no runtime state; it constrains persistent hardware description in DTS/DTB data. Persistent state is the fixed register layout, interrupt routing, clock/reset wiring, calibration cells, trip points, cooling maps, timer capabilities, timestamp line mappings, TPM transport properties, or trigger-source links encoded in the device tree. Driver probe state is recreated from those properties at boot or overlay application time.
+
+Dependencies and integration points: schema validation depends on dt-schema core meta-schemas and referenced bindings `/schemas/spi/spi-peripheral-props.yaml#`, `tcg,tpm-tis-i2c.yaml#/properties/reg`, `tpm-common.yaml#`. The binding integrates with subsystem consumers through standard phandles and properties; notable local integration keys are `compatible`. The file has 2 example block(s) and source signal 65 lines with top-level schema blocks `properties`, `required`, `allOf`, `anyOf`, `examples`.
+
+Risks: schema regressions can silently allow invalid board descriptions or reject existing DTS files. The highest-risk areas are compatible fallback ordering, resource array cardinality, clock/reset name alignment, interrupt count and naming, provider cell counts, referenced common-schema compatibility, and conditional branches for SoC variants or transport-specific nodes. Strictness signals include `unevaluatedProperties`=False, limits `unevaluatedProperties=False`.
+
+Test signals: run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/tpm/google,cr50.yaml` from the kernel tree, plus broader `dtbs_check` on DTS files that instantiate the compatible strings. Useful failures are missing required properties, mismatched phandle cell counts, bad reg/interrupt/clock cardinality, invalid child-node names, and example DTS snippets rejected by the schema.
+
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/tpm/google,cr50.yaml -->

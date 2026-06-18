@@ -1,0 +1,15 @@
+# sources/storage-engines/tikv/components/raftstore/src/store/disk_probe.rs
+
+Purpose: This file provides the small shared disk probe used by raftstore disk latency checks and fail-fast disk hang detection. It intentionally performs a blocking `write + sync_all` on a dedicated file so higher layers can detect either ordinary probe failures or a probe that stops making progress.
+
+Important APIs and types: `write_sync_once(path, payload)` opens or creates the probe file with truncate-write semantics, writes the payload, syncs the file, and returns elapsed monotonic duration. `ProbeRunner` owns a probe `PathBuf`, a static payload, and shared mutex-protected `ProbeState`. `ProbeRunner::probe_once` performs the blocking IO. `try_start_probe`, `finish_probe_success`, `finish_probe_failure`, `current_probe_elapsed`, `time_since_last_success`, and `failure_count_since_last_success` expose the minimum state needed for non-overlapping probes and hang classification.
+
+Control flow: A caller first calls `try_start_probe`; if no probe is already in flight, `ProbeState` records the start instant. The caller then invokes `probe_once`. On success, it calls `finish_probe_success`, which clears the in-flight marker, records the last success instant, and resets the failure counter. On error, it calls `finish_probe_failure`, which clears the in-flight marker and increments the failures since last success. If `sync_all` blocks indefinitely, no finish method runs, so `current_probe_elapsed` keeps growing and an independent checker can detect a hang.
+
+State and persistence behavior: Persistent state is only the temporary probe file at the configured path. Each probe truncates and rewrites the file with the same static payload, then forces it to disk. Runtime state is in `ProbeState`: the current probe start, last successful probe time, and failure count since that success. The state is wrapped in `Arc<parking_lot::Mutex<_>>`, allowing cloned `ProbeRunner`s to be shared between a blocking probe thread and a checker thread.
+
+Dependencies and integration points: `fail_fast.rs` uses `ProbeRunner` for raft and optional kv disk probes. `worker/disk_check.rs` uses the same helper for flush latency inspection. The module depends on standard filesystem APIs, `parking_lot::Mutex`, and TiKV's monotonic `Instant`.
+
+Risks: The probe is deliberately blocking, so it must be run on a dedicated worker thread rather than a critical reactor or raftstore FSM thread. Callers must maintain the `try_start_probe` and finish-method protocol; missing a finish call after a non-blocking error would create a false in-flight hang. The probe file path must be on the disk being checked, otherwise it can report health for the wrong mount. The module does not delete the probe file; cleanup is the caller's responsibility.
+
+Test signals: `test_probe_runner_probe_once` verifies that a probe writes a real file and reports non-zero elapsed time. `test_probe_runner_state` verifies non-overlap, in-flight elapsed reporting, success resetting failures, success time retention, and failure counting after a prior success.

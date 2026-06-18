@@ -1,0 +1,5 @@
+# sources/cloud-native/cri-o/server/container_attach_test.go
+
+This test file exercises the basic attach paths. The suite setup creates a server SUT and tears it down around each test. The CRI `ContainerAttach` test adds a container and sandbox, calls `sut.Attach` with the test container ID and stdout requested, and expects a non-nil response. A second CRI test sends an empty request and expects an error/nil response. The stream-server test calls `testStreamService.Attach` without registering the container and expects failure.
+
+State is provided by the server test framework helpers such as `addContainerAndSandbox`, `setupSUT`, and `testContainer`. Dependencies include CRI runtime API types, Kubernetes remotecommand terminal size, Ginkgo/Gomega, and context. Integration signal confirms the high-level CRI endpoint wiring and missing-container error path. Gaps include no test for websocket runtime handlers, container state rejection, status update failure, stdin/stderr combinations, TTY resize behavior, or actual stream data transfer.

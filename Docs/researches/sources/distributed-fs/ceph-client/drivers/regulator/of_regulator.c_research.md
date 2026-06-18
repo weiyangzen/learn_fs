@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/of_regulator.c
+
+Purpose: provides the regulator framework's Open Firmware/device-tree parsing and lookup helpers. It converts regulator DT nodes into `regulator_init_data`, resolves supplies to provider rdevs, validates coupled regulator topology, and supports bulk acquisition from `*-supply` properties.
+
+Important APIs/types/functions: exported functions include `of_get_regulator_init_data()`, `of_regulator_match()`, `of_regulator_dev_lookup()`, `of_regulator_get()`, `of_regulator_get_optional()`, `of_get_n_coupled()`, `of_check_coupling_data()`, `of_parse_coupled_regulator()`, and `of_regulator_bulk_get_all()`. Internal helpers parse protection limits, constraints, suspend states, init nodes, child supply phandles, and supply-name property syntax.
+
+Control flow: `of_get_regulation_constraints()` reads voltage/current ranges, load, status-change permissions, bypass/DRMS flags, ramp and settling times, active discharge, protection limits, initial/allowed modes via `desc->of_map_mode`, coupled-regulator spread arrays, and standby/mem/disk suspend subnodes. `of_regulator_match()` walks child nodes, matches by `regulator-compatible` or node name, parses init data, and stores node references with devres cleanup. Provider lookup finds a supply phandle, then class-searches registered regulators by OF node, returning defer when a node exists but no rdev is registered.
+
+State and persistence: the file owns no persistent hardware state. It allocates devm init-data and devres-managed node references, fills constraint structures consumed by registered regulator devices, and relies on regulator core class devices for lookup lifetime.
+
+Dependencies and integration: depends on OF core, regulator core internals, device class lookup, devres, and common regulator binding property names. It is a central integration point for almost every DT-backed regulator driver in this subset.
+
+Risks and test signals: parsing is permissive in places: invalid modes log errors but do not fail constraints, missing coupled max-spread arrays are not checked after read, and `of_check_coupling_data()` calls phandle counting on `c_node` even after a missing phandle path sets `ret = false`. Recursive child supply lookup may find nested supplies outside the immediate consumer. `of_regulator_bulk_get_all()` uses `regulator_get()` by derived property names and must unwind cleanly on partial failure. Test all binding properties, ambiguous settling times, suspend subnodes, protection limit semantics where value `1` means enable, deprecated `regulator-compatible`, full-name matching, provider probe deferral, coupled-regulator mismatch cases, and bulk get error unwinding.

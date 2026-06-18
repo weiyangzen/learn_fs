@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/nand/ecc-mxic.c
+
+Purpose: implements the Macronix Data Processing Engine NAND ECC controller, supporting both external on-host ECC and a pipelined/mapping mode used with specific host controllers.
+
+Important APIs and types: `mxic_ecc_engine` owns registers, optional IRQ, completion, mutex, and two `nand_ecc_engine` objects. `mxic_ecc_ctx` stores selected data/OOB step sizes, parity/meta sizes, per-step status bytes, request tweak context, temporary OOB-with-status buffer, scatterlists, and current request. Exported integration helpers include `mxic_ecc_get_pipelined_ops()`, `mxic_ecc_get_pipelined_engine()`, `mxic_ecc_put_pipelined_engine()`, and `mxic_ecc_process_data_pipelined()`.
+
+Control flow: common context init rejects small-OOB NAND, installs a custom OOB layout, enables status interrupts, chooses strength from user or chip requirements, forces 1 KiB steps, tunes strength to fit OOB, validates hardware spare/meta/parity sizing, and allocates request/OOB buffers. External prepare on writes tweaks the request, inserts status-byte gaps in OOB, DMA maps data and OOB, processes each step through SDMA, then copies calculated ECC bytes back into the linear OOB layout. External finish on reads runs the engine per step, extracts status bytes, reconstructs OOB, restores the original request, and updates ECC stats. Pipelined prepare maps buffers and programs DMA addresses while leaving processing to the host path; finish unmaps, extracts read status, and restores. Probe maps registers, disables engine/interrupts, optionally requests an IRQ or falls back to polling, initializes the external engine, and registers it as an on-host hardware engine.
+
+State and persistence: runtime state includes hardware configuration, DMA mappings, status bytes, and request bounce buffers. Persistent state is the NAND OOB ECC layout generated or consumed by the controller.
+
+Dependencies and integration points: integrates with the generic NAND ECC engine registry, MTD OOB layout helpers, DMA scatterlists, platform/OF phandles, optional IRQ completion, and host drivers using the pipelined API.
+
+Risks and test signals: risks include OOB/status-byte reconstruction, strength downgrade to fit OOB, lock lifetime across pipelined prepare/finish, DMA unmap on early errors, IRQ versus polling behavior, and preserving bad-block markers by requiring packed layout. Tests should cover external read/write, pipelined read/write, missing IRQ polling, timeout handling, invalid OOB geometry, phandle probe defer, status values for no-error/erased/corrected/uncorrectable, and cleanup after partial init.

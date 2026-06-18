@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/mfd/wm831x-irq.c
+
+`wm831x-irq.c` implements nested interrupt-controller support for WM831x PMICs. It maps PMIC primary/secondary interrupt bits onto Linux IRQs, maintains cached masks, supports GPIO IRQ trigger configuration, creates an IRQ domain, and services the top-level threaded interrupt.
+
+Important elements are `struct wm831x_irq_data`, `wm831x_irqs[]`, `wm831x_irq_enable()`, `wm831x_irq_disable()`, `wm831x_irq_sync_unlock()`, `wm831x_irq_set_type()`, `wm831x_irq_thread()`, `wm831x_irq_map()`, `wm831x_irq_init()`, and `wm831x_irq_exit()`. Init masks all secondary sources, creates a legacy or linear irqdomain, configures CMOS/open-drain IRQ output, enables parent wake, requests the threaded IRQ, and unmasks top-level interrupts. The threaded handler reads `WM831X_SYSTEM_INTERRUPTS`, dispatches optimized touch IRQs, lazily reads secondary status registers, masks disabled bits, acknowledges handled bits, and calls `handle_nested_irq()`.
+
+State includes `irq_lock`, current/cache mask arrays, deferred GPIO update arrays, level-emulation flags, IRQ domain, and parent IRQ number. Hardware state includes secondary masks, top-level mask, `WM831X_IRQ_CONFIG`, GPIO control registers, and status acknowledgements. Dependencies include genirq, irqdomain, WM831x core helpers, GPIO register definitions, and MFD child resources.
+
+Risks: the copied source contains a duplicated `dev_err(` line and duplicated initializer mask that should be checked; GPIO level emulation can loop while an active level is stuck; only GPIO 1-11 support `irq_set_type()`; domain cleanup is incomplete if parent IRQ request fails; no parent IRQ means degraded functionality. Test signals are domain creation, representative child IRQ dispatch, mask sync, GPIO trigger type tests, and wake behavior.

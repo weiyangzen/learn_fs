@@ -1,0 +1,29 @@
+# sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup.cc
+
+## Purpose
+This file implements the RADOS-backed background deduplication scan for RGW. In the compiled configuration shown here, full dedup mutation support is behind `FULL_DEDUP_SUPPORT`, so the active production path performs estimate-oriented scanning: it creates or opens the dedup work pool, scans all bucket index shards into temporary slab objects partitioned by md5 shard, builds dedup tables to estimate duplicates, records cluster tokens/statistics, honors pause/abort/restart/throttle notifications, and cleans up temporary slabs and the work pool when all shards complete.
+
+## Important APIs, Types, and Functions
+`Background::DedupWatcher` receives cluster notifications and redirects valid watch cookies to `Background::handle_notify()`. `control_t` serialization records dedup request type, start/execution/shutdown/pause/abort/restart flags, and bucket-index/metadata throttles.
+
+Pool and handle helpers include `create_pool()`, `init_dedup_pool_ioctx()`, `safe_pool_delete()`, and `init_rados_access_handles()`. `safe_pool_delete()` verifies the pool id still matches the expected id before deletion to avoid removing a recreated pool.
+
+The active scan path includes `collect_all_buckets_stats()`, `calc_num_md5_shards()`, `setup()`, `objects_ingress_single_work_shard()`, `ingress_bucket_objects_single_shard()`, `process_bucket_shards()`, `ingress_bucket_idx_single_object()`, `process_all_slabs()`, `objects_dedup_single_md5_shard()`, `process_all_shards()`, `work_shards_barrier()`, `md5_shards_barrier()`, and `run()`. These functions enumerate buckets, list bucket index shards with cls rgw bucket list operations, filter buckets and storage classes, parse etags, skip too-small non-multipart objects, write `disk_record_t` records to slab objects, build dedup tables per md5 shard, count duplicates, remove slabs, and update heartbeats.
+
+When `FULL_DEDUP_SUPPORT` is enabled, additional helpers read object attrs and manifests, calculate BLAKE3 hashes, split head objects into tail objects, compare strong hashes, manipulate refcount cls tags, adjust target manifests, write `RGW_ATTR_SHARE_MANIFEST` and `RGW_ATTR_BLAKE3`, free old tail refs, and execute actual dedup remapping. These paths are important for understanding intended design but are compiled out in the current non-full-dedup build.
+
+## Control Flow
+`Background::start()` launches `run()` once. The main loop waits for remote restart, pause, or shutdown. On a restart that `d_cluster.can_start_new_scan()` accepts, it sets `dedup_exec` and performs `setup()`: gather bucket stats, compute md5/work shard counts, initialize the dedup pool/ioctx, reset cluster epoch tokens, and validate request type. Without full support, setup asserts that the request type is estimate.
+
+The scan allocates one raw memory buffer sized as `DISK_BLOCK_COUNT * sizeof(disk_block_t) * num_md5_shards`. It first claims work shard tokens and runs ingress. Each worker lists all bucket instances, filters configured buckets, opens each bucket index, processes only bucket-index shards assigned to that worker id, converts eligible entries into disk records, and flushes slab buffers into the dedup pool. After all work shards finish or time out, md5 shard workers load slabs from every work shard, build a dedup table, count duplicates, display statistics, remove input slabs, and mark md5 shard tokens completed. Once all md5 shards are complete, the dedup pool is deleted if the pool id is unchanged.
+
+Notification flow decodes urgent messages. Abort and pause wait for the background thread to acknowledge, resume clears pause flags, restart optionally decodes a filter and requests a new scan, and throttle updates bucket-index or metadata throttle limits. Local pause closes watch and ioctx; resume refreshes handles and watch.
+
+## State and Persistence Behavior
+Persistent state is mostly temporary and coordination-oriented: the dedup pool stores slab objects, cluster epoch/token objects, shard heartbeats, and stats; pool deletion is the cleanup boundary. RGW bucket index entries and bucket stats are read but not modified in the active estimate build. Control state is encoded for cluster notifications/acks. In full-support builds, object attrs and manifests become persistent mutation targets, with compare-xattr guards intended to avoid deduping changed objects.
+
+## Dependencies and Integration Points
+The file integrates with RGW SAL, `RadosStore`, bucket metadata listing, bucket index cls operations, RGW placement/storage class helpers, dedup table/store/cluster/epoch utilities, cls refcount/version/rgw clients, librados aio throttles, Ceph crypto, and perf counters. It relies on companion dedup headers for disk record layout, filters, epoch tokens, and statistics.
+
+## Risks and Test Signals
+Active-path risks include races with bucket deletion, indexless buckets, malformed etags, changed storage class metadata, slab corruption, token heartbeat expiry, pool id reuse, and pause/shutdown condition-variable ordering. `collect_all_buckets_stats()` and `objects_ingress_single_work_shard()` complete the metadata-list handle inside the loop after each batch, which deserves focused regression coverage because premature completion could affect pagination semantics. In full-support builds, risks expand to manifest corruption, md5 collision without strong-hash validation, refcount rollback gaps, shared tail objects from server-side copy, split-head orphan tails, compare-xattr coverage, and compressed/encrypted object skips. Tests should cover estimate scans over sharded buckets, filters, small object and multipart thresholds, storage classes, corrupted bucket index records, pause/resume/abort/restart notifications, throttle changes, safe pool deletion after pool recreation, slab load failures, and full-support unit tests for hash/manifests/refcount rollback if that build flag is enabled.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pci/controller/dwc/pcie-fu740.c
+
+Purpose: This is the SiFive FU740 DesignWare PCIe root-complex integration driver. It drives FU740 management registers, external PERST and power-enable GPIOs, an auxiliary clock, controller reset, PHY CR parameter programming, RC mode selection, link startup, and reboot shutdown reset.
+
+Important APIs, types, and functions: `struct fu740_pcie` embeds `struct dw_pcie` and stores management register base, reset and power GPIOs, `pcie_aux` clock, and reset control. Hardware helpers include `fu740_pcie_assert_reset()`, `fu740_pcie_deassert_reset()`, `fu740_pcie_power_on()`, `fu740_pcie_drive_reset()`, `fu740_phyregwrite()`, and `fu740_pcie_init_phy()`. DWC callbacks are `fu740_pcie_host_init()` through `dw_pcie_host_ops` and `fu740_pcie_start_link()` through `dw_pcie_ops`.
+
+Control flow: Probe allocates the wrapper, sets DWC ops, sets `pp.num_vectors` to `MAX_MSI_IRQS`, maps the `mgmt` region, obtains optional reset/power GPIOs, fetches `pcie_aux`, obtains the reset control, stores drvdata, and calls `dw_pcie_host_init()`. Host init performs power-on reset, enables the auxiliary clock, asserts `APP_HOLD_PHY_RST`, deasserts power-up reset, writes the PHY lane AC termination values through the CR parameter interface for both PHYs and all four lanes, toggles the aux clock around hold-phy reset release, and sets the device type to RC. Link start temporarily forces advertised link speed to 2.5 GT/s, enables LTSSM, waits for link, restores the original speed capability, requests a speed change, and waits again.
+
+State and persistence behavior: State lives in driver structures and FU740 management/DBI registers. GPIO state controls endpoint PERST and board power. The driver does not persist configuration outside hardware runtime state. Shutdown asserts PERST so firmware/bootloader gets a clean PCIe state after reboot.
+
+Dependencies and integration points: Uses DWC host core and DBI helpers, Linux GPIO consumer APIs, clock and reset frameworks, iopoll, and FU740 management registers. It relies on common DWC MSI setup via the host core and standard PCI Express capability registers for speed manipulation.
+
+Risks: PHY programming uses magic lane offsets and poll timeouts; failures only warn in `fu740_phyregwrite()` and do not abort host init. Link startup mutates read-only PCIe capability fields and must restore DBI RO write protection. The aux clock enable/deassert/re-enable sequence is hardware-specific and easy to break. Optional GPIOs are used without null checks in reset/power helpers, relying on `gpiod_set_value_cansleep()` optional handling. `WARN_ON(ret)` in link start assumes link failures are rare but can be noisy on absent endpoints.
+
+Test signals: On FU740/Unmatched-class hardware, test cold boot and reboot, PERST and power GPIO timing, PHY CR parameter acknowledge polling, aux clock/reset sequencing, initial Gen1 training followed by speed change, MSI enumeration, no-endpoint behavior, and shutdown reset handoff to firmware.

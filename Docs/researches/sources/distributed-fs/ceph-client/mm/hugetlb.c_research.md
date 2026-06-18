@@ -1,0 +1,53 @@
+# `sources/distributed-fs/ceph-client/mm/hugetlb.c`
+
+## Purpose
+`hugetlb.c` is the core generic HugeTLB implementation. It owns huge-page hstate registration, boot-time and runtime pool allocation, per-node free/active lists, persistent/surplus/reserved page accounting, hugetlbfs reservation maps, VMA lock coordination, page fault handling, PMD page-table sharing, userfaultfd fill paths, migration/isolation hooks, memory-hotplug dissolve/replace behavior, and public reporting helpers used by `/proc`, sysfs, sysctl, hugetlbfs, migration, memory failure, and architecture page-table code.
+
+## Important APIs, Types, And Functions
+- Global state: `hstates[]`, `hugetlb_max_hstate`, `default_hstate_idx`, `hugetlb_lock`, `hugetlb_bootmem_nodes`, `huge_boot_pages[]`, `hugetlb_fault_mutex_table`, and per-hstate counters in `struct hstate`.
+- Subpool API: `hugepage_new_subpool()`, `hugepage_put_subpool()`, `hugepage_subpool_get_pages()`, and `hugepage_subpool_put_pages()` enforce hugetlbfs inode min/max quotas and translate local subpool accounting into global reservations.
+- VMA lock API: `hugetlb_vma_lock_read/write()`, `hugetlb_vma_unlock_read/write()`, `hugetlb_vma_trylock_write()`, `hugetlb_vma_lock_alloc()`, and `hugetlb_vma_lock_free()` serialize faults, truncation, and PMD sharing for shared VMAs, while private reservation maps carry their own `rw_sema`.
+- Reservation-map internals: `resv_map_alloc()`, `resv_map_release()`, `region_chg()`, `region_add()`, `region_abort()`, `region_del()`, `region_count()`, `vma_needs_reservation()`, `vma_commit_reservation()`, `vma_end_reservation()`, `vma_add_reservation()`, and `vma_del_reservation()` maintain ordered `file_region` ranges and preallocated region cache entries.
+- Pool and folio management: `enqueue_hugetlb_folio()`, `dequeue_hugetlb_folio_*()`, `remove_hugetlb_folio()`, `add_hugetlb_folio()`, `free_huge_folio()`, `alloc_fresh_hugetlb_folio()`, `alloc_hugetlb_folio()`, `alloc_hugetlb_folio_nodemask()`, `alloc_hugetlb_folio_reserve()`, `set_max_huge_pages()`, and `__nr_hugepages_store_common()` are the main runtime allocation and resizing surface.
+- Boot allocation: `hugetlb_add_hstate()`, `hugetlb_bootmem_alloc()`, `alloc_bootmem_huge_page()`, `gather_bootmem_prealloc()`, `hugetlb_init_hstates()`, `hugetlb_init()`, plus command-line parsers for `hugepages=`, `hugepagesz=`, `default_hugepagesz=`, and `hugepage_alloc_threads=`.
+- Fault and page-table paths: `hugetlb_fault()`, `hugetlb_no_page()`, `hugetlb_wp()`, `copy_hugetlb_page_range()`, `move_hugetlb_page_tables()`, `__unmap_hugepage_range()`, `hugetlb_change_protection()`, `huge_pte_alloc()`, `huge_pte_offset()`, and `hugetlb_mask_last_page()`.
+- PMD sharing: `want_pmd_share()`, `huge_pmd_share()`, `huge_pmd_unshare()`, `huge_pmd_unshare_flush()`, `adjust_range_if_pmd_sharing_possible()`, `hugetlb_unshare_pmds()`, and `hugetlb_unshare_all_pmds()`.
+- Userfaultfd and migration hooks: `hugetlb_mfill_atomic_pte()`, `hugetlb_handle_userfault()`, `folio_isolate_hugetlb()`, `folio_putback_hugetlb()`, `move_hugetlb_state()`, `get_hwpoison_hugetlb_folio()`, and `get_huge_page_for_hwpoison()`.
+- Reservation public API: `hugetlb_reserve_pages()` and `hugetlb_unreserve_pages()` connect hugetlbfs mmap/truncate/evict operations to global, subpool, and hugetlb-cgroup reservation accounting.
+
+## Control Flow
+Initialization begins with early parameter capture through `hugetlb_early_param()` wrappers. `hugetlb_bootmem_alloc()` sets bootmem nodes, initializes `huge_boot_pages[]`, parses deferred HugeTLB parameters, and allocates gigantic hstates through memblock or CMA. Later `hugetlb_init()` guarantees the default hstate exists, applies implicit default-size counts, allocates non-gigantic pools, gathers bootmem pages into real folios, reports hstates, registers sysfs/cgroup/sysctl interfaces, and initializes per-page fault mutexes.
+
+Pool growth and shrinkage flow through `__nr_hugepages_store_common()` into `set_max_huge_pages()`. Growth first converts surplus pages back to persistent pages, then allocates fresh frozen folios across allowed nodes and bulk-optimizes vmemmap before enqueuing. Shrinkage frees enough unused persistent pages while preserving reservations, optionally moves excess persistent pages into surplus state, and uses `update_and_free_pages_bulk()` to restore vmemmap before returning memory to buddy/CMA.
+
+Reservations are two-phase. `region_chg()` computes missing reservation ranges and preallocates file-region entries, then `region_add()` commits or `region_abort()` rolls back. Shared mappings store reservation ranges in the inode `resv_map`; private mappings allocate a per-VMA `resv_map` where range meaning is inverted: absent entries mean reserved and present entries mean consumed. `hugetlb_reserve_pages()` charges hugetlb cgroups, subpools, and global reserves before committing shared map entries; `hugetlb_unreserve_pages()` deletes ranges and releases excess reservation state.
+
+Fault handling uses a hash mutex keyed by mapping and hugepage offset to avoid spurious allocation failure when multiple tasks instantiate the same page. `hugetlb_fault()` allocates or locates a huge PTE under the VMA lock, dispatches missing entries to `hugetlb_no_page()`, handles markers/migration/hwpoison, resolves userfaultfd write-protect, and calls `hugetlb_wp()` for COW or unshare. `hugetlb_no_page()` can allocate a new folio, add shared folios to page cache, install PTEs, and opportunistically COW on write faults. `hugetlb_wp()` either reuses exclusive anonymous folios, allocates and copies a new huge folio, or unmaps child private mappings when the original owner cannot COW because the pool is inadequate.
+
+Unmap, remap, protection, and fork paths all respect huge PTE granularity and PMD sharing. `copy_hugetlb_page_range()` preserves markers and migration entries, write-protects COW mappings, duplicates rmap state, and may allocate a new child folio when anon rmap duplication is unsafe. `__unmap_hugepage_range()` clears PTEs, restores private reservations when needed, leaves userfaultfd markers, updates mm counts and rmap, and flushes shared-PMD unshares. `move_hugetlb_page_tables()` and `hugetlb_change_protection()` widen invalidation ranges when PMD sharing is possible.
+
+## State And Persistence Behavior
+Persistent state is kept in `struct hstate` counters and lists: total pages, free pages, reserved pages, surplus pages, per-node variants, max persistent pages, demotion order, next allocation/free nodes, and resize locks. Huge folios persist on `hugepage_freelists[nid]` when free or `hugepage_activelist` when allocated/migratable; flags such as hugetlb, freed, temporary, restore-reserve, CMA, migratable, and vmemmap-optimized encode lifecycle state.
+
+Reservation state persists in inode or private VMA `struct resv_map` objects with ordered `file_region` lists, region-cache entries, `adds_in_progress`, cgroup uncharge metadata, and a `kref`. Private reservation ownership and unmapped-failure state are stored in low bits of `vm_private_data` (`HPAGE_RESV_OWNER`, `HPAGE_RESV_UNMAPPED`).
+
+Accounting spans multiple systems: `h->resv_huge_pages`, subpool `used_hpages` and `rsv_hpages`, `inode->i_blocks`, `mm->hugetlb_usage`, lruvec `NR_HUGETLB`, memcg hugetlb charges, and hugetlb cgroup reservation/fault counters. Boot-only state in `hugetlb_params`, `default_hugepages_in_node`, `huge_boot_pages`, and `hstate_boot_nrinvalid` is consumed during init.
+
+## Dependencies And Integration Points
+The file depends on generic mm, mempolicy, cpuset, memblock, padata, rmap, mmu-notifier, TLB gather, page-owner/tagging, migration, memory hotplug, userfaultfd, cgroup hugetlb, memcg, hugetlbfs inode/subpool helpers, architecture huge PTE primitives, CMA/contig allocation, and hugetlb vmemmap optimization. It calls into `hugetlb_cma.c` for gigantic CMA allocation and `hugetlb_vmemmap` for HVO restore/optimize. It exports behavior to sysfs/sysctl, `/proc/meminfo`, node meminfo, hugetlbfs mmap and inode eviction, fork/mremap/mprotect/munmap, memory failure, and migration.
+
+## Risks
+- Lock ordering is delicate: `hugetlb_lock`, hstate `resize_lock`, VMA locks, `i_mmap_rwsem`, page-table locks, page locks, mmap locks, and fault mutexes are combined in many paths. PMD sharing and userfaultfd paths are especially sensitive.
+- Reservation maps are intentionally nontrivial. Incorrect `region_chg()`/`region_add()`/`region_abort()` pairing can leak `adds_in_progress`, lose file-region cache entries, or corrupt global/subpool/cgroup reservation counts.
+- Private mapping semantics are inverted relative to shared mappings; mistakes around `HPAGE_RESV_OWNER`, `HPAGE_RESV_UNMAPPED`, or restore-reserve flags can SIGBUS/SIGKILL users or overcommit huge pages.
+- Vmemmap optimization can fail under memory pressure; error handling intentionally turns pages into surplus or retries freeing. Counters and flags must remain consistent across partial restore failures.
+- CMA, gigantic pages, and runtime allocation differ by architecture and config. Code must tolerate unsupported runtime gigantic allocation, early CMA-only allocation, and invalid bootmem zone intersections.
+- PMD sharing requires widened invalidation ranges and deferred `huge_pmd_unshare_flush()` before dropping mapping locks; missing flushes risk page-table reuse races with GUP-fast or hardware walkers.
+- Fault handling deliberately drops and reacquires locks for allocation, userfaultfd, and COW; stale PTE checks are mandatory to avoid installing pages over racing migration/truncation/unmap.
+
+## Test Signals
+- Boot tests with combinations of `hugepages=`, node-specific `hugepages=N:M`, `hugepagesz=`, `default_hugepagesz=`, `hugepage_alloc_threads=`, and gigantic/CMA options should verify hstate counts, invalid page handling, and init logs.
+- Runtime sysfs/sysctl resize tests should grow, shrink, signal-interrupt, and node-constrain pools while checking `/proc/meminfo`, per-node meminfo, sysfs counts, and no negative reserve/surplus counters.
+- hugetlbfs mmap tests should cover shared/private, `MAP_NORESERVE`, truncate/hole punch, fork/COW, mremap reservation fixup, mprotect write-protect, munmap, and subpool min/max limits.
+- cgroup tests should verify `hugetlb.*.current/max/rsvd.*`, cgroup charge rollback on allocation failure, migration, and reservation uncharge when regions are deleted or VMAs close.
+- Stress tests should combine faults from multiple tasks on the same offset, userfaultfd missing/minor/WP/poison/copy/continue, page migration, memory hotplug dissolve/replace, HWPoison, PMD sharing/unsharing, and HVO enabled/disabled.

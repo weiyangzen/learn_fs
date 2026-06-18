@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/fs.h
+
+This central UAPI header defines generic filesystem and block-device constants, ioctl numbers, shared structures, inode attribute flags, range clone/dedupe/trim structures, read/write flags, pagemap scan/query ABIs, proc maps query ABI, and generic filesystem shutdown flags.
+
+Important exports include seek constants including `SEEK_DATA`/`SEEK_HOLE`, rename flags, `PROCFS_ROOT_INO`, `struct file_clone_range`, `fstrim_range`, `fsuuid2`, `fs_sysfs_path`, `logical_block_metadata_cap`, dedupe structures, `files_stat_struct`, `inodes_stat_t`, `fsxattr`, `file_attr`, `FS_XFLAG_*`, block ioctls `BLK*`, filesystem ioctls `FIBMAP`, `FIGETBSZ`, `FIFREEZE`, `FITHAW`, `FITRIM`, `FICLONE`, `FICLONERANGE`, `FIDEDUPERANGE`, `FS_IOC_*`, inode flags `FS_*_FL`, `RWF_*` per-I/O flags, pagemap scan structures, `procmap_query`, and `FS_IOC_SHUTDOWN`.
+
+Control flow spans many syscalls/ioctls: VFS dispatches generic fs ioctls for clone, dedupe, freeze, trim, labels, UUIDs, xattrs, fiemap, shutdown, and block-device controls; read/write syscalls interpret `RWF_*`; procfs ioctls scan pagemap or query VMAs. State lives in mounted filesystems, inodes, block devices, page tables, VMA metadata, and procfs. Persistence applies to inode flags, labels, UUIDs, dedupe/clone extent sharing, trims/discards, and block-device settings where supported.
+
+Dependencies include `linux/limits.h`, `linux/ioctl.h`, `linux/types.h`, `linux/fscrypt.h` for userspace, `linux/mount.h`, block layer, VFS, MM/procfs, and numerous filesystem implementations. Integration points include coreutils, util-linux, xfs/ext tooling, backup/dedupe applications, databases using `RWF_*`, memory introspection tools, and container/security tooling using procfs queries.
+
+Risks are very high ABI blast radius: changing constants breaks libc and tools, inode flag exhaustion, compat issues for `long`/pointer-sized ioctl payloads, incorrect permission checks exposing physical layout or process memory metadata, destructive block ioctls, and semantic divergence across filesystems. Test signals include exported header builds, xfstests generic ioctl suites, block ioctl tests, clone/dedupe/trim/freeze tests, read/write flag tests, pagemap/procmap selftests, and 32-bit compat coverage.

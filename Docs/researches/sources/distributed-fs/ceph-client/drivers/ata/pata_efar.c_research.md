@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_efar.c
+
+Purpose: EFAR 9130 PIIX4-like PCI PATA driver with UDMA66 support. It follows Intel PIIX-style timing rules but uses EFAR-specific enable, cable, and UDMA register layouts.
+
+Important APIs and control flow: `efar_pre_reset` checks per-channel enable bits in config registers `0x41/0x43`. `efar_cable_detect` reads cable state from `0x47`. `efar_set_piomode` serializes register updates with `efar_lock`, programs PPE/IORDY/TIME/SITRE and master/slave timing fields, and clears UDMA enable for the device. `efar_set_dmamode` either programs widened UDMA mode nibbles in `0x4A` and enables UDMA in `0x48`, or maps MWDMA onto PIO timing with DMA-only/IORDY/TIME controls. `efar_init_one` exposes two identical ports, MWDMA1/2 only plus UDMA4, and requests parallel scan.
+
+State, dependencies, and risks: state is PCI config timing and UDMA-enable registers protected by a static spinlock. Dependencies are PCI EFAR ID, libata BMDMA, and PIIX timing semantics. Risks are clone-specific divergence from Intel behavior, shared spinlock across controllers, cable detect interpretation inverted from many controllers, and MWDMA depending on previously compatible PIO programming. Test signals are reset skipping disabled channels, UDMA4 mode programming in widened register fields, MWDMA with forced PIO timing when needed, 80-wire detection from `0x47`, and parallel scan of both ports.

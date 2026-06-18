@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/common/net/message/control/GenericResponseMsg.h
+
+## Research
+`GenericResponseMsg.h` defines a generic internal control response as a `SimpleIntStringMsg` with message type `NETMSGTYPE_GenericResponse`. It declares `GenericRespMsgCode` values for retry advice, indirect communication errors, and new sequence-number base negotiation, and accessors for the control code and human-readable log string.
+
+Control flow is consumed by messaging request/response helpers rather than ordinary callers: requestors may receive this control message instead of the expected response, and messaging toolkit logic interprets it internally. State is inherited integer-plus-string payload; no resources are owned. Dependencies are `SimpleIntStringMsg.h`. Integration points are retry handling, forwarding errors, and sequence-number recovery after client restart. Risks include callers accidentally seeing or mishandling generic responses, string lifetime, and adding control codes without updating request-handling logic. Test signals are request-response paths retrying on `TRYAGAIN`, surfacing indirect communication errors correctly, and sequence-number reset behavior.

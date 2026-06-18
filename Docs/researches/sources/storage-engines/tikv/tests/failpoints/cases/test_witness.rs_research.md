@@ -1,0 +1,3 @@
+# sources/storage-engines/tikv/tests/failpoints/cases/test_witness.rs
+
+See the grouped report section in `Docs/researches/groups/subset-b-008947_research.md` for the full source-aligned research. Summary: this file validates witness peer behavior: local-reader `IsWitness` errors, raft log GC using voter replicated indexes, witness-to-non-witness snapshot recovery, non-witness availability, replica-read behavior during conversion, witness leader command rejection and transfer-out, and snapshot invalidation when a leader becomes witness. It inspects apply truncated indexes, PD pending peers, region witness flags, data presence, and leader identity.

@@ -1,0 +1,22 @@
+# sources/storage-engines/pebble/batch.go
+
+## Purpose
+`batch.go` implements Pebble's mutable write batch abstraction, including public point/range mutation APIs, optional indexing for read-your-own-writes, binary batch representation ownership, commit lifecycle state, and the `flushableBatch` adapter used when a large batch is represented as a memtable-like flushable. It is persistence-critical because the batch byte representation is the WAL payload format and must remain backward compatible for CockroachDB raft log replay.
+
+## Important APIs, Types, And Functions
+Key exported surfaces are `Batch`, `DeferredBatchOp`, `BatchCommitStats`, `BatchOption`, `WithInitialSizeBytes`, and `WithMaxRetainedSizeBytes`. `Batch` implements Pebble `Reader` and `Writer`. Mutators include `Set`, `Merge`, `Delete`, `DeleteSized`, `SingleDelete`, `DeleteRange`, `RangeKeySet`, `RangeKeyUnset`, `RangeKeyDelete`, `LogData`, plus deferred variants that return slices into `Batch.data`. Representation APIs are `Repr`, `SetRepr`, `Reader`, `SeqNum`, `Count`, `Len`, and `Empty`. Read surfaces are `Get`, `NewIter`, `NewIterWithContext`, and `NewBatchOnlyIter`, all requiring an indexed batch. Internal orchestration includes `newBatch`, `newIndexedBatch`, `Apply`, `refreshMemTableSize`, `newFlushableBatch`, `batchIter`, `flushableBatchIter`, range span fragmentation helpers, and private test hook `batchSort`.
+
+## Control Flow
+Mutation starts by lazily initializing `data` with the 12-byte batch header, appending a kind byte and varstring-encoded key/value fields, incrementing counters, and optionally adding the record offset to a `batchskl.Skiplist`. Range deletes and range keys use separate lazily allocated indexes and invalidate cached fragmented spans. `Apply` appends another batch's records after the header, updates counts and format-version requirements, then scans just the appended region when memtable sizing or indexing is needed. `SetRepr` validates the header and, when attached to a DB, rescans records to rebuild memtable size and kind counters. `Commit` delegates to `DB.Apply`; async sync paths use `commit`/`fsyncWait` and `SyncWait`.
+
+## State And Persistence Behavior
+`Batch.data` is both in-memory storage and the stable WAL representation: little-endian sequence number, little-endian count, then kind-tagged records. `Count` excludes `LogData` from memtable-modifying operations; ingest/excise batches count WAL records but restore memtable size. `minimumFormatMajorVersion` is ratcheted by newer record kinds such as sized deletes, flushable ingest, blob-file ingest, and excise. Lifecycle reuse is guarded by an atomic refcount plus `batchClosedBit` so WAL failover can retain `data` safely after commit returns. `Reset` may drop `data` when references remain, and `Close` may defer pooling until `Unref`. `grow` panics on the 4 GiB representation limit.
+
+## Dependencies And Integration Points
+The file depends on `batchrepr` for wire-format reading/writing, `batchskl` for indexed-batch skiplist storage, `base` for internal keys and sequence numbers, `keyspan`, `rangedel`, and `rangekey` for range operation fragmentation, `rawalloc` for backing buffers, DB commit pipeline state, `private.BatchSort` for tests, and Pebble comparers/split functions for prefix and range-key invariants. `flushableBatch` integrates with the memtable flush queue through the `flushable` interface.
+
+## Risks And Edge Cases
+The highest risks are corrupt batch representations, stale `minimumFormatMajorVersion` propagation, indexed-batch mutation while iterators are open, range span cache invalidation, prefix iteration with non-trivial split functions, lifecycle data races under WAL failover, and divergent behavior between `batchIter` and `flushableBatchIter` (the code explicitly requires they stay in sync). Deferred operations are footgun-prone because callers must populate returned slices and call `Finish` exactly once. Large or corrupted batches can panic or return marked corruption errors; ingest/excise records are intentionally illegal in `Batch.Apply`.
+
+## Test Signals
+`batch_test.go` exercises normal and deferred mutations, ingest records with blob IDs, format-version propagation through `Apply`, reset/reuse/lifecycle behavior, indexed and batch-only iteration, strict-prefix behavior, range key/delete fragmentation, flushable batches, commit stats, memtable size handling, overflow conditions, and batch options. Datadriven tests cover iteration and range behavior against golden files.

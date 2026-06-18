@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ipa/gsi.c
+
+Purpose: Implements the IPA Generic Software Interface runtime: register programming, channel/event-ring allocation, command issue/wait, interrupt handling, NAPI polling, modem-channel workarounds, setup/teardown, suspend/resume, and the public GSI lifecycle API. It is the bridge between static `ipa_data` endpoint descriptors and live GSI hardware state.
+
+Important APIs/functions: Public entry points are `gsi_init()`, `gsi_exit()`, `gsi_setup()`, `gsi_teardown()`, `gsi_channel_start()`, `gsi_channel_stop()`, `gsi_channel_reset()`, `gsi_suspend()`, `gsi_resume()`, `gsi_channel_suspend()`, `gsi_channel_resume()`, `gsi_channel_tre_max()`, and `gsi_modem_channel_flow_control()`. Internal clusters handle IRQ masks (`gsi_irq_*`), hardware commands (`gsi_command()`, channel/event command helpers, generic commands), ring utilities, event processing, channel programming, and channel setup/init/exit.
+
+Control flow: `gsi_init()` sets device/version, allocates a dummy netdev for NAPI, maps GSI registers, records IRQ, and initializes AP-owned channels from endpoint data. `gsi_setup()` first verifies GSI firmware enabled hardware, requests IRQ, discovers hardware channel/event counts, initializes the error log, enables interrupts, allocates/programs event rings and channels, and allocates modem channels for IPA v4.2. Channel start enables NAPI and IEOB completion interrupts before issuing `GSI_CH_START`; stop waits for transaction quiescence, stops hardware, then disables completion IRQ/NAPI. Completion interrupts disable IEOB for affected event rings and schedule NAPI, where events are translated back to transactions and retired.
+
+State and persistence: `struct gsi` owns register mappings, cached IRQ masks, completion/result state, mutex, channel/event arrays, event allocation bitmap, modem channel bitmap, and a dummy netdev. `struct gsi_channel` owns ring indices, stats counters, NAPI, and transaction state. Persistent effects are programmed GSI registers and DMA-coherent rings.
+
+Dependencies/integration: Depends on `gsi_reg` register descriptions, `gsi_trans` transaction helpers, `ipa_gsi` callbacks for TX accounting and completion release, static endpoint data from `ipa_data.h`, Linux IRQ/NAPI/DMA APIs, and version constants. It integrates upward with IPA setup and downward with GSI hardware.
+
+Risks: Hardware command timeouts are short and state-sensitive; wrong endpoint data produces channel validation or unsupported-channel failures. Ring index math assumes power-of-two rings and 32-bit low DMA addresses in event pointers. Interrupt flood handling only reports after repeated loops. Modem generic commands ignore some channel-state errors by design, so real modem-channel mistakes can be subtle.
+
+Test signals: Unit-level signals are scarce because this is hardware code. Useful runtime checks include successful probe/setup/teardown, no GSI command timeout logs, correct NAPI completion behavior, no event-with-no-transaction warnings, TX BQL accounting callbacks firing, suspend/resume channel stop/start passing, and modem SSR/flow-control tests on v4.2+.

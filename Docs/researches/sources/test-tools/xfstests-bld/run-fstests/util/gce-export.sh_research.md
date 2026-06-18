@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/run-fstests/util/gce-export.sh
+
+- Purpose: startup script used by image export VM; it runs inside the exporter VM, creates or attaches disks from the requested image source, optionally clears UUIDs, archives the disk, uploads it to GCS, and deletes the exporter instance. The file is 78 lines/2516 bytes and is researched as source path `sources/test-tools/xfstests-bld/run-fstests/util/gce-export.sh`.
+- Important APIs/types/functions: shell variables include BUCKET, GS_TAR, GCE_ZONE, GCE_IMAGE_PROJECT, GCE_PROJECT, IMAGE_FLAG, ROOT_FS, SKIP_UUID, IMG_DISK, EXP_INST; functions include top-level script logic.
+- Control flow: loads `util/get-config` or `/usr/local/lib/gce-funcs`, validates required GCE/GCS inputs, composes gcloud/gcloud-storage commands or metadata, performs the cloud action, and records local marker/state files when a long-running service is launched.
+- State and persistence: uses local marker files, GCS objects, result directories, generated configs, temporary disks/images, schroot entries, or mounted filesystems depending on the helper; cleanup is generally explicit and failure paths may leave debug artifacts.
+- Dependencies/integration: integrates with xfstests-bld frontends, `get-config`, `arch-funcs`, `/root/runtests_utils`, gcloud/gcloud storage, systemd services, Debian tooling, QEMU/KVM, and filesystem utilities as applicable.
+- Risks and test signals: most failures come from missing credentials/tools, stale cloud resources, command-line validation gaps, destructive device operations, or partial cleanup; validate with `--no-action` where available, smoke selftests, GCS artifact checks, systemd logs, and generated xUnit summaries.

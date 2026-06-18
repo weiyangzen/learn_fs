@@ -1,0 +1,112 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 98
+- Recursive researched files: 98
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/cpu_ca53_cfg_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/cpu_ca53_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/cpu_if_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/cpu_pll_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_ch_0_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_ch_0_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_ch_1_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_ch_2_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_ch_3_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_ch_4_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_macro_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_macro_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_nrtr_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_nrtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_qm_0_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_qm_0_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_qm_1_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_qm_2_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_qm_3_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/dma_qm_4_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/goya_blocks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/goya_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/goya_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/ic_pll_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mc_pll_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme1_rtr_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme1_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme2_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme3_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme4_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme5_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme6_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme_cmdq_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme_qm_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mme_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mmu_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/mmu_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/pci_nrtr_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/pci_nrtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/pcie_aux_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/pcie_wrap_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_emmc_pll_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_etr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_global_conf_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_global_conf_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_mme_pll_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_pci_pll_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_spi_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/psoc_timestamp_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/sram_y0_x0_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/sram_y0_x1_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/sram_y0_x2_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/sram_y0_x3_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/sram_y0_x4_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/stlb_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/stlb_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_cfg_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_cmdq_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_eml_cfg_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_eml_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_nrtr_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_nrtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_qm_masks.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc0_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc1_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc1_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc1_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc1_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc2_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc2_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc2_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc2_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc3_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc3_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc3_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc3_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc4_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc4_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc4_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc4_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc5_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc5_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc5_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc5_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc6_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc6_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc6_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc6_rtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc7_cfg_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc7_cmdq_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc7_nrtr_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc7_qm_regs.h`
+- `sources/distributed-fs/ceph-client/drivers/accel/habanalabs/include/goya/asic_reg/tpc_pll_regs.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

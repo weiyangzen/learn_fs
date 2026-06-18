@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/samba/source3/locking/share_mode_lock.c -->
+# sources/user-network-fs/samba/source3/locking/share_mode_lock.c
+
+## Purpose
+`share_mode_lock.c` implements Samba's `locking.tdb` share-mode record manager. It stores per-file share-mode metadata, sorted open entries, oplock/lease flags, delete-on-close state, async watch/fetch operations, and g-lock based serialization for local and clustered operation.
+
+## Important APIs, Types, And Functions
+The file defines private `struct share_mode_lock { struct file_id id; struct share_mode_data *cached_data; }`. Public APIs include `locking_init`, `locking_init_readonly`, `locking_end`, `share_mode_lock_file_id`, `get_existing_share_mode_lock`, `fetch_share_mode_unlocked`, `fetch_share_mode_send/recv`, `share_mode_watch_send/recv`, `share_mode_wakeup_waiters`, `set_share_mode`, `del_share_mode`, `del_share_mode_open_id`, `remove_share_oplock`, `downgrade_share_oplock`, `mark_share_mode_disconnected`, `reset_share_mode_entry`, `share_mode_forall`, `share_mode_forall_read`, `share_entry_forall`, `share_entry_forall_read`, `share_mode_forall_entries`, `share_mode_count_entries`, `share_mode_flags_get/set`, `_share_mode_do_locked_vfs_denied`, `_share_mode_do_locked_vfs_allowed`, prepare-lock/unlock helpers, `fsp_get_share_entry_flags`, and `fsp_apply_share_entry_flags`.
+
+## Control Flow
+Initialization opens `locking.tdb`, wraps it in a `g_lock_ctx`, initializes byte-range and POSIX locking, and sets lock ordering. Record access goes through a single active share-mode key guarded by static refcount state; nested locks are allowed only for the same `file_id`. Fetch parses a record or creates fresh `share_mode_data` for new opens. Store serializes modified `share_mode_data`, writes sorted fixed-size share entries, unlocks g-lock state, and optionally moves clean data into memcache. `set_share_mode` binary-searches the sorted entry array by `(server_id, share_file_id)`, rejects duplicates, builds a fixed NDR entry, and stores vector slices around the insertion. Entry update/delete paths fetch the packed array, update one entry or compact stale entries, and write back. Async fetch/watch use `g_lock_dump_send` and watch APIs to support clustered queue behavior.
+
+## State And Persistence
+`locking.tdb` records are g-lock-maintained blobs keyed by raw `struct file_id`. The payload format is a little-endian `uint32_t share_mode_data_len`, NDR `share_mode_data`, followed by a sorted array of fixed 124-byte NDR `share_mode_entry` buffers. `share_mode_data` carries identity, path, stream, flags, delete tokens, modified/not_stored bits, and a `unique_content_epoch` used to validate memcache entries. Global static state (`lock_ctx`, `current_share_mode_glck`, `share_mode_lock_key_id`, refcount, `static_share_mode_data`) enforces one locked record per process thread of control.
+
+## Dependencies And Integration Points
+This file integrates dbwrap, g_lock, dbwrap watch, memcache, NDR generated `open_files` records, messaging/global contexts, byte-range initialization, POSIX locking init, VFS deny assertions, lease cleanup in `leases_db.c`, and fd/share flags from smbd. It is central to open/close, share-access checks, oplock break/downgrade, durable reconnect, `smbstatus`, and lock waiter wakeups.
+
+## Risks And Test Signals
+The packed record format has strict invariants: share entries must remain sorted, fixed entry size must match generated NDR, and the data-length header must parse correctly. Static single-record locking can panic if code tries to lock two different share modes simultaneously. Destructor/store failures panic. Memcache correctness depends on `unique_content_epoch` and clean ownership transfers. Watcher wakeups must fire after entry deletion/oplock changes. Test signals include duplicate open entry rejection, insertion at every sorted position, stale entry compaction, delete of last entry deleting the record, durable disconnect/reconnect `reset_share_mode_entry`, oplock removal/downgrade with lease cleanup, memcache hit/miss on epoch change, async fetch not-found/corruption paths, and g-lock watcher wakeups.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/samba/source3/locking/share_mode_lock.c -->

@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/usb.h -->
+# sources/distributed-fs/ceph-client/include/linux/usb.h
+
+Purpose: defines the kernel host-side USB core API: parsed descriptors, device/interface state, driver registration, power management, URBs, synchronous transfers, scatter/gather I/O, endpoint pipe helpers, notifications, and misc support macros.
+
+Important APIs and types: descriptor wrappers include `struct usb_host_endpoint`, `usb_host_interface`, `usb_interface`, `usb_interface_cache`, `usb_host_config`, and `usb_host_bos`. Topology and device state live in `struct usb_bus` and `struct usb_device`. Driver-facing objects include `struct usb_driver`, `usb_device_driver`, `usb_class_driver`, dynamic ID lists, and registration helpers (`usb_register`, `usb_deregister`, `usb_register_dev`, device-driver variants). Transfer APIs center on `struct urb`, `struct usb_anchor`, URB flags, `usb_fill_control_urb()`, `usb_fill_bulk_urb()`, `usb_fill_int_urb()`, allocation/submission/cancel/anchor APIs, coherent/noncoherent allocation, synchronous control/bulk/interrupt helpers, descriptor/string/configuration helpers, and `struct usb_sg_request`. Pipe macros encode direction, device address, endpoint, and transfer type.
+
+Control flow: usbcore parses raw descriptors into host wrappers, selects/configures devices, binds interface or device drivers from ID tables, and drivers submit URBs to endpoints. URBs complete asynchronously in interrupt context, while sync helpers wrap URB submission/wait. PM helpers manage autosuspend, remote wakeup, LPM/LTM, resets, interface rebinding, and offload locks. Device matching macros build `usb_device_id` tables for hotplug and module autoload.
+
+State and persistence: USB state is runtime device-model state: topology, current configuration/altsetting, endpoint queues, URB refs, anchors, PM/LPM flags, string caches, dynamic IDs, bus address bitmap, bandwidth counters, open usbfs files, and device authorization. Persistent hardware identity is read from descriptors, but kernel state is rebuilt on enumeration.
+
+Dependencies and integration points: depends on USB chapter 9 descriptors, device model, krefs, completions, mutexes/spinlocks, runtime PM, ACPI optional power hooks, USB monitors, notifiers, debugfs, LED triggers, HCDs, hubs, usbfs, and class drivers. It is the primary integration surface for all host USB client drivers.
+
+Risks and test signals: risks include URB lifetime and completion-context misuse, DMA buffer mapping errors, endpoint/pipe type mismatches, PM reference leaks, reset/disconnect races, descriptor parsing quirks, altsetting ordering assumptions, dynamic ID locking, LPM disable-count imbalance, and short-transfer semantics. Test with USB core selftests where available, hotplug/disconnect under I/O, suspend/resume/runtime PM, reset during active URBs, scatter/gather and coherent DMA paths, malformed descriptor devices, usbmon traces, and driver probe/disconnect races.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/usb.h -->

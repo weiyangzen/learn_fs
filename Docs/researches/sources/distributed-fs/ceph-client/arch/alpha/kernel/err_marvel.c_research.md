@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/alpha/kernel/err_marvel.c
+
+**Purpose:** Provides Marvel EV7 system-event and system-error handling, especially IO7/PCI-X error discovery, decoding, acknowledgment, and reporting. It supplements generic EV7 PAL parsing with Marvel-specific environmental and IO ASIC interpretation and fallback collection when PAL did not supply the correct IO subpacket.
+
+**Important APIs/types/functions:** Exposes `marvel_machine_check()` and `marvel_register_error_handlers()`. Key helpers include `marvel_process_680_frame()`, `marvel_process_logout_frame()`, `marvel_process_io_error()`, `marvel_find_io7_with_error()`, and verbose decoders for PO7 and POx error summary, uncorrectable/correctable symptoms, TLB errors, split completions, transaction summaries, and up-hose garbage symptoms.
+
+**Control flow:** `marvel_machine_check()` synchronizes, selects a processor for system event, system uncorrectable, or system correctable vectors, collects EV7 logout subpackets, supplies a scratch IO subpacket if PAL omitted one, initializes the IO PID, evaluates the frame silently, then either dismisses, reports decoded details, or dumps annotated subpackets. `marvel_process_logout_frame()` handles RBOX IO-error indications and dismisses expected PCI-X bridge config-probe machine checks matching a specific EV7 C_STAT/C_ADDR pattern. `marvel_process_io_error()` verifies or finds the IO7 with a valid error. `marvel_find_io7_with_error()` walks `marvel_next_io7()`, snapshots IO7/port CSRs into the PAL IO subpacket, acknowledges port TLB/error summary registers, acknowledges PO7 errors, and updates `io_pid`.
+
+**State and persistence behavior:** It mutates IO7 hardware error CSRs to clear/acknowledge errors, fills scratch or PAL-provided subpacket memory, and temporarily changes `err_print_prefix`. No persistent filesystem state exists. The handler releases PAL logout frames with `wrmces`.
+
+**Dependencies and integration points:** Depends on EV7 subpacket collection from `err_ev7.c`, IO7 topology/CSR accessors from `<asm/core_marvel.h>`, common error registries, and system vectors for Marvel. Verbose decoding depends on `CONFIG_VERBOSE_MCHECK`.
+
+**Risks:** Error handling occurs during machine-check context; walking IO7 topology and acknowledging CSRs must be carefully ordered. Some useful diagnostics are compiled out without verbose machine-check support. The fallback IO7 search overwrites an IO subpacket with `0x55` first, so consumers must not rely on untouched PAL contents after fallback. Dismissal of config-probe errors is intentionally narrow but could hide real errors if the signature overlaps.
+
+**Test signals:** Exercise Marvel system event, system correctable, and system uncorrectable vectors; inject IO7 PO7 and per-port POx valid errors; verify correct IO7 discovery when PAL reports no or wrong IO subpacket; check CSR acknowledgment order; validate the PCI-X config-probe dismissal path; and compare verbose versus non-verbose build output.

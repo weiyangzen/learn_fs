@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/misc/cardreader/rtsx_usb.c
+
+Purpose: implements the common Realtek USB card-reader parent driver. It binds Realtek USB reader IDs, initializes the USB chip, exposes SD and MemoryStick child devices through MFD hotplug cells, exports register/PPBUF/clock/data-transfer helpers, and handles autosuspend and USB reset coordination.
+
+Important APIs, types, and functions: module parameter `polling_pipe` selects control endpoint versus bulk command polling for card status. Exports include `rtsx_usb_transfer_data()`, `rtsx_usb_read_ppbuf()`, `rtsx_usb_write_ppbuf()`, endpoint-0 register access, command assembly/send/response helpers, `rtsx_usb_get_card_status()`, register access, `rtsx_usb_switch_clock()`, and `rtsx_usb_card_exclusive_check()`. Driver lifecycle functions are `rtsx_usb_probe()`, `rtsx_usb_disconnect()`, PM callbacks, and pre/post-reset locks.
+
+Control flow: probe allocates `struct rtsx_ucr`, command/response buffers, sets USB IDs, initializes the chip with `rtsx_usb_init_chip()`, initializes the SG timeout timer, and registers SD/MS child MFD devices. Chip init clears FSM errors, powers SSC, reads hardware version and package, detects RTS5179 variation, and calls `rtsx_usb_reset_chip()` to program pull control, deglitch, drive, DMA async, interrupt, OCP, and non-crystal PHY settings. Data transfer uses either bulk messages or USB scatter-gather with a timer that cancels timed-out SG transfers. Autosuspend checks card presence while holding `dev_mutex`; if a card exists or an operation is active, suspend is deferred.
+
+State and persistence: `struct rtsx_ucr` stores USB device/interface pointers, vendor/product IDs, buffers, current clock, package and IC variation, SG transfer state, timer, and mutex. Hardware state lives in USB-accessed registers for command buffer, SSC clock, card status, OCP, pull controls, and PHY. No on-disk persistence is involved.
+
+Dependencies and integration points: depends on Linux USB core, MFD hotplug devices, timers, mutexes, scatter-gather USB API, and `linux/rtsx_usb.h`. Child Realtek USB SD/MMC and MemoryStick drivers use the exported helpers through the MFD parent.
+
+Risks: command buffers are shared and require child-driver serialization around `dev_mutex`; misuse can corrupt command streams. SG timeout handling depends on timer deletion semantics. `rtsx_usb_ep0_read_register()` copies a byte even when `usb_control_msg()` returns an error, although the function returns that error. Autosuspend decisions depend on card-status reads that can fail or race with ongoing operations. Clock programming rejects invalid frequencies but stale `ucr->cur_clk` can skip needed reconfiguration.
+
+Test signals: probe/disconnect for USB IDs 0x0129/0x0139/0x0140, child device creation, SD/MS card insertion/removal, bulk and endpoint-0 polling modes, SG and non-SG transfers, clock switching for initial and high-speed modes, USB autosuspend/resume with and without inserted media, and USB reset_resume with active children.

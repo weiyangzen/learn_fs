@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/nand/raw/omap_elm.c
+
+Purpose: this file is the TI OMAP Error Location Module driver used by NAND/GPMC BCH users to turn BCH syndrome bytes into bit error locations. It is not a NAND controller itself; it exports `elm_config()` and `elm_decode_bch_error_page()` so another NAND driver can configure BCH4/BCH8/BCH16 geometry and ask the ELM hardware to locate correctable errors.
+
+Important APIs, types, and functions: `struct elm_info` owns the MMIO base, completion, BCH type, ECC step count, syndrome size, and saved suspend registers. `struct elm_registers` snapshots the hardware context. `elm_load_syndrome()` writes per-step syndrome fragments in the layout required by each BCH mode, `elm_start_processing()` marks valid syndrome vectors, `elm_error_correction()` reads `ELM_LOCATION_STATUS` and `ELM_ERROR_LOCATION_*`, and `elm_isr()` completes page processing on `INTR_STATUS_PAGE_VALID`.
+
+Control flow: probe maps the register resource, requests the IRQ, enables runtime PM, initializes the completion, and stores driver data. A client first calls `elm_config()` to validate ECC step size and program `ELM_LOCATION_CONFIG`. For a decode, the driver clears/enables the page interrupt, loads syndrome fragments only for reported-error vectors, starts processing by setting `ELM_SYNDROME_VALID`, waits for IRQ completion, disables the interrupt, copies error counts/locations into `struct elm_errorvec`, clears vector interrupts, and disables page mode.
+
+State and persistence: persistent software state is the configured BCH type, number of ECC steps, syndrome size, and the completion. Hardware state is saved and restored across system sleep under `CONFIG_PM_SLEEP`, including IRQ enable, sysconfig, location config, page control, and BCH-mode-dependent syndrome fragment registers. Runtime PM keeps the hardware clocked while probed and drops it on remove/suspend.
+
+Dependencies and integration points: the exported symbols and `linux/platform_data/elm.h` bind this helper to OMAP NAND/GPMC ECC users. It depends on platform IRQ/MMIO resources, OF compatibles `ti,am3352-elm` and `ti,am64-elm`, and Linux completion/PM-runtime APIs.
+
+Risks: `elm_decode_bch_error_page()` waits without a timeout, so a lost interrupt or wedged ELM can stall its caller. `elm_config()` only rejects ECC step sizes above the module limit and a narrow invalid step-count case, so callers must pass coherent ECC geometry. Syndrome loading uses unaligned word casts from ECC byte buffers and mode-specific byte ordering, making regressions hard to spot without hardware vectors. The global `elm_devices` list is populated but not used here and remove does not delete from it.
+
+Test signals: validate successful probe/runtime PM, client `elm_config()` for BCH4/8/16, decode completion IRQ delivery, correct `error_count`, `error_loc`, and `error_uncorrectable` population, suspend/resume preserving register context, and failure behavior for unsupported ECC size/steps.

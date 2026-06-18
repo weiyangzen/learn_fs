@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/hwss/dce/dce_hwseq.h
+
+Purpose: defines shared DCE/DCN hardware sequencer register lists, mask/shift lists, register storage structs, field storage structs, blender modes, and public helper prototypes. It is the central compile-time register contract for many AMD Display Core hardware sequencer generations.
+
+Important APIs and types: register-list macros cover DCE6/8/10/11/12, VG20, and DCN1/2/2.01/2.1/3.0/3.01/3.02/3.03 variants, selecting clock, blender, pixel-rate, PHYPLL, DCHUB, MMHUB, power-domain, VGA, CRC, audio, HPO, ODM, DMU, and memory power registers. `struct dce_hwseq_registers` stores resolved register addresses. Mask/shift macros such as `HWSEQ_DCE10_MASK_SH_LIST()`, `HWSEQ_DCN_MASK_SH_LIST()`, and generation-specific DCN lists define field mappings. `struct dce_hwseq_shift` and `struct dce_hwseq_mask` aggregate all supported field names through `HWSEQ_*_REG_FIELD_LIST` macros. `enum blnd_mode` and function prototypes expose helper behavior implemented in `dce_hwseq.c`.
+
+Control flow: no executable code is present, but macro composition controls which fields each ASIC generation can access. Resource files instantiate these macros into concrete register tables; `reg_helper` consumers then use `hws->regs`, `hws->shifts`, and `hws->masks` at runtime.
+
+State and persistence: this header describes persistent hardware register state: clock enables, pixel-rate sources, blender update locks, VM aperture and page-table registers, power-gating domains, global timers, CRC controls, VGA disable state, audio DTO, HPO clocks, and DCN power management fields. The C structs hold register addresses and masks, not runtime hardware values.
+
+Dependencies and integration points: includes `dc_types.h` and forward declares `dce_hwseq`, `pipe_ctx`, and `clock_source`. It is consumed by many DCE/DCN HWSS generation files and by register table definitions generated from ASIC headers. It is also related to the `hwss/Makefile` because each compiled generation relies on these common declarations.
+
+Risks and test signals: this file is large, macro-heavy, and generation-sensitive. Duplicate entries, missing fields, or stale register names can compile for one ASIC and fail or misprogram another. Comments note temporary direct MMHUB reads instead of GVM-owned data, which is an architectural risk. Signals include broad AMDGPU build matrices, per-ASIC register table validation, power-gating tests across domains, VGA disable validation, CRC debug tests, clock-source switching, and static analysis for duplicate macro fields.

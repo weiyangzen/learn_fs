@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/protocol/BlockListAsLongs.java
+
+Purpose: Encodes and decodes DataNode block reports efficiently as packed protobuf `ByteString` buffers while preserving compatibility with the old long-array block report format. It avoids repeated boxed protobuf longs during large block reports.
+
+Important APIs and types: Static factories include `decodeBuffer()`, `decodeBuffers()`, `decodeLongs()`, `encode()`, `readFrom()`, `writeTo()`, and `builder()`. Abstract methods expose `getNumberOfBlocks()`, `getBlocksBuffer()`, `getBlockListAsLongs()`, and an iterator. `Builder` writes replicas as four varints: block id, bytes, generation stamp, and replica state. `BufferDecoder` iterates packed ByteString reports and can transcode to legacy longs. `LongsDecoder` iterates legacy reports and can transcode to packed buffers. `BlockReportReplica` extends `Block` and implements `Replica` with replica state.
+
+Control flow: Builders write each replica with zig-zag block id encoding and unsigned varints for length/generation/state, counting finalized replicas for legacy conversion. `readFrom()` parses a small protobuf envelope with field 1 `numBlocks` and field 2 `blocksBuf`. `BufferDecoder.iterator()` reuses a single `BlockReportReplica` object while reading four fields per block and masking reserved bits. Legacy decoding reads finalized block triples, validates the `-1,-1,-1` delimiter, then reads under-construction block triples plus state.
+
+State and persistence behavior: Instances hold immutable or effectively immutable encoded buffers plus counts; `BufferDecoder` lazily computes and caches `numFinalized` when transcoding. The serialized form is a compatibility-sensitive wire format between DataNodes and NameNodes. Iterators reuse a mutable `BlockReportReplica`, so returned objects should not be retained without copying.
+
+Dependencies and integration points: Depends on HDFS `Block`, DataNode `Replica`, `ReplicaState`, protobuf `ByteString`/coded streams, IPC maximum data length configuration, and DataNode volume interfaces for unsupported `Replica` methods. It integrates with block report RPC serialization/deserialization.
+
+Risks: Encoded format changes are wire-compatibility sensitive. Iterator object reuse can surprise callers who store references. Size limits must be set on coded streams to avoid oversized data. Legacy delimiter validation catches malformed long arrays, but malformed packed buffers surface as `IllegalStateException` during iteration. Masks reserve upper bits for future use; incorrect masking can corrupt block length or state.
+
+Test signals: Tests should cover empty reports, packed encode/decode round trip, chunking via `getBlocksBuffers()`, protobuf `readFrom`/`writeTo`, legacy finalized and under-construction reports, delimiter failure, max data length limits, iterator reuse expectations, reserved upper-bit masking, and transcoding between packed and long formats.

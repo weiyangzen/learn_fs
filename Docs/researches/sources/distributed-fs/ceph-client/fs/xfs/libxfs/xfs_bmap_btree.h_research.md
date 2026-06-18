@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_bmap_btree.h
+
+Purpose: Defines the public bmap-btree geometry helpers and function prototypes shared by `xfs_bmap.c`, inode fork code, repair/staging code, and the bmbt implementation. It codifies how to address records, keys, and pointers in in-memory btree blocks and on-disk dinode roots.
+
+Important APIs, types, and functions: Declares `XFS_BM_MAXLEVELS()`, bmbt record conversion helpers, root conversion helpers, cursor initialization, staged commit, owner change, btree size calculation, cursor cache lifecycle, block initialization, and root reallocation. Inline geometry helpers include `xfs_bmbt_block_len()`, `xfs_bmbt_rec_addr()`, `xfs_bmbt_key_addr()`, `xfs_bmbt_ptr_addr()`, `xfs_bmdr_rec_addr()`, `xfs_bmdr_key_addr()`, `xfs_bmdr_ptr_addr()`, `xfs_bmap_broot_ptr_addr()`, `xfs_bmap_broot_space_calc()`, `xfs_bmap_broot_space()`, `xfs_bmdr_space_calc()`, and `xfs_bmap_bmdr_space()`.
+
+Control flow: Callers use the address helpers after determining block header length and max record count. In-memory bmbt blocks store records immediately after the btree header for leaves; internal roots place keys after the header and pointers after the key array sized by `maxrecs`. On-disk dinode roots use the compact `xfs_bmdr_block` header and parallel key/pointer arrays. Space helpers compute whether a root fits in an inode fork and how much memory to allocate before root conversion or resize.
+
+State and persistence: No standalone mutable state is stored here. The header describes persistent layout constraints for dinode btree roots and in-memory representations that later serialize back to disk. Its size and address calculations must match the disk ABI, CRC block header selection, inode fork capacity, and btree cursor expectations.
+
+Dependencies and integration points: Depends on XFS format types (`xfs_bmdr_block`, `xfs_bmbt_rec`, `xfs_bmbt_key`, `xfs_bmbt_ptr_t`), mount feature checks, and generic btree declarations. It is included by the bmap engine and bmbt implementation, and indirectly supports inode fork logging, btree verification, staged btree rebuilds, and bmapbt owner changes.
+
+Risks and test signals: The most important risk is layout drift: a wrong `sizeof`, header-length choice, pointer offset, or max-record calculation can make roots unreadable or corrupt adjacent fork data. Test with CRC and non-CRC filesystems, data and attr fork root conversion, minimum inode sizes, maximum root record counts, grow/shrink of `if_broot`, endian-safe record conversion through the `.c` implementation, and xfs_db/scrub validation of bmapbt roots.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/lgetxattr/lgetxattr01.c
+
+Purpose: positive symlink-specific `lgetxattr()` test. Setup creates a regular file and symlink, sets `security.ltptest1` on the file and `security.ltptest2` on the symlink using `lsetxattr`, treating `ENOTSUP` as TCONF. The test reads `SECURITY_KEY2` from `symlink`, checks size and value, then confirms `SECURITY_KEY1` is not visible through `lgetxattr` on the symlink and fails with `ENODATA`. State is xattrs on both target and link. Dependencies include root, `<sys/xattr.h>`, filesystem xattr support, and permission to set `security.*` attributes. Risks are filesystem/security-policy differences. Test signals are expected value retrieval and `ENODATA` for target-only attr.

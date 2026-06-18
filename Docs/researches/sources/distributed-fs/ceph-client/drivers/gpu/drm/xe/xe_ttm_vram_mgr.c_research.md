@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
+
+Purpose: Implements Xe's TTM VRAM resource manager using the DRM GPU buddy allocator, including allocation/free, placement compatibility checks, debug reporting, initialization/finalization, and DMA scatter-gather export for CPU-visible VRAM.
+
+Important APIs/types/functions: Internal helpers `xe_ttm_vram_mgr_first_block` and `xe_is_vram_mgr_blocks_contiguous`. TTM callbacks are `xe_ttm_vram_mgr_new`, `xe_ttm_vram_mgr_del`, `xe_ttm_vram_mgr_intersects`, `xe_ttm_vram_mgr_compatible`, and `xe_ttm_vram_mgr_debug`, collected in `xe_ttm_vram_mgr_func`. Public APIs include `__xe_ttm_vram_mgr_init`, `xe_ttm_vram_mgr_init`, `xe_ttm_vram_mgr_alloc_sgt`, `xe_ttm_vram_mgr_free_sgt`, `xe_ttm_vram_get_cpu_visible_size`, `xe_ttm_vram_get_used`, and `xe_ttm_vram_get_avail`.
+
+Control flow: Allocation clamps `lpfn`, rejects impossible sizes, allocates a `xe_ttm_vram_mgr_resource`, sets buddy flags from TTM placement flags, checks size/page alignment, locks the manager, enforces visible-memory availability for visible-only placements, allocates buddy blocks, computes visible usage, updates `visible_avail`, and records contiguous start when possible. Free returns buddy blocks and visible accounting under the same lock. Init optionally registers a DRM cgroup region, initializes the TTM manager and buddy allocator, registers the memory type, marks it used, and adds managed cleanup. SG export walks resource cursors over buddy blocks, limits SG segment size to 2 GiB, maps physical VRAM resources with `dma_map_resource`, and unwinds on errors.
+
+State and persistence behavior: Persistent manager state includes buddy allocator state, visible-size/available counters, default page size, mutex, memory type, and TTM manager registration. Per-resource state includes the allocated buddy block list, visible bytes used, and flags. `visible_avail` is protected by `mgr->lock` and must return to `visible_size` at teardown.
+
+Dependencies and integration points: Depends on DRM buddy, TTM resource manager, DRM managed cleanup, cgroup registration, Xe VRAM region descriptors, Xe resource cursors, DMA mapping APIs, and tile-to-VRAM IO start mapping. Used by normal VRAM placements and by stolen manager via `__xe_ttm_vram_mgr_init`.
+
+Risks: Visible-memory accounting is a central correctness constraint; missed updates can overcommit CPU-visible BAR space or trip teardown warnings. Alignment checks rely on `default_page_size`, buddy chunk size, and BO page alignment. SG export only supports fully visible resources (`used_visible_size >= res->size`) and must unmap partially-built tables correctly. The tile calculation assumes `res->mem_type - XE_PL_VRAM0` indexes the right tile.
+
+Test signals: Allocate/free VRAM BOs with topdown, contiguous, range-limited, and visible-only placements; verify fragmentation handling, contiguous flag inference, placement compatibility/intersection behavior, debugfs manager output, SG export/import under DMA mapping, and teardown after eviction.

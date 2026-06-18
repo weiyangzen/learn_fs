@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/file_handle.c
+
+Decoder for `name_to_handle_at` and `open_by_handle_at`. It prints dirfd/path or mount fd, `file_handle` header, bounded opaque handle bytes, mount id, flags, and fd-return semantics. `name_to_handle_at` stores initial `handle_bytes` in `tcb` private ulong and prints changed size on exit, including `EOVERFLOW` behavior. Dependencies include `<linux/fcntl.h>`, `name_to_handle_at_flags`, `umove`, and path/fd printers. Risks are handle length overrun, partial output on `EOVERFLOW`, and keeping the opening struct balanced across enter/exit. Tests should cover normal handles, too-small buffers, bad pointers, max/oversized handle bytes, and open-by-handle fd returns.

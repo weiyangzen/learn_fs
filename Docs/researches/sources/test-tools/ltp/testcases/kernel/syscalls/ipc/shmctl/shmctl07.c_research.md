@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/shmctl07.c
+
+Purpose: positive test for `shmctl(SHM_LOCK)` and `SHM_UNLOCK`. Setup creates one private shared-memory segment. The test locks it, reads `IPC_STAT`, expects the `SHM_LOCKED` bit in `shm_perm.mode`, unlocks it, and expects the bit to be clear. Important APIs are `shmctl`, `SAFE_SHMGET`, `SAFE_SHMCTL`, and mode-bit inspection. State is one segment whose locked flag changes. Dependencies include kernel support and sufficient privilege/resource limits for locking. Risks are environment-specific `RLIMIT_MEMLOCK` or privilege restrictions causing lock failure. Test signals are syscall return values and exact mode-bit transitions, followed by cleanup removal.

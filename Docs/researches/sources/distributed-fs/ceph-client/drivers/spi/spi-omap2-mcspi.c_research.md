@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/spi/spi-omap2-mcspi.c
+
+Purpose: OMAP2/OMAP4/AM654 McSPI controller driver supporting host and target mode, PIO and DMA transfers, FIFO setup, 3-wire operation, GPIO/native chip-select handling, runtime PM context restore, and SoC-specific register offsets/transfer limits.
+
+Important APIs, types, and functions: `struct omap2_mcspi` stores controller, base/phys, DMA channels, context shadow, ref clock, FIFO state, target abort flag, pin direction, max transfer length, multi-mode flags, and last-CS state. `struct omap2_mcspi_cs` stores per-CS register base, word length, mode, and shadowed `CHCONF0/CHCTRL0`. Important functions include register/shadow helpers, DMA request/release and callbacks, `omap2_mcspi_txrx_dma()`, `omap2_mcspi_txrx_pio()`, `omap2_mcspi_setup_transfer()`, `omap2_mcspi_transfer_one()`, `prepare_message()`, runtime suspend/resume, target abort, and probe/remove.
+
+Control flow: probe allocates host or target based on `spi-slave`, maps registers with optional offset, allocates one DMA pair per chipselect, requests IRQ, gets optional ref clock, enables runtime PM, sets wake and mode, then registers the controller. Setup allocates a per-CS state node and programs default clock/mode. `prepare_message()` decides whether multi-mode CS handling is valid for one-word transfers and clears stale FORCE bits. `transfer_one()` disables the channel, optionally overrides setup for transfer speed/bits/3-wire direction, sets TRM mode and turbo, enables FIFO for DMA-mapped transfers, enables the channel, performs DMA or PIO, checks byte count, disables channel/FIFO, restores defaults, and toggles GPIO CS if needed.
+
+State and persistence: register context is shadowed in `ctx` and per-CS objects for runtime resume, including FORCE bit repair after off-mode wake. DMA completions and `txdone` completion synchronize interrupts. `last_msg_kept_cs` affects later multi-mode eligibility. Runtime PM switches pinctrl states and restores MODULCTRL, WAKEUPENABLE, and each CS CHCONF0.
+
+Dependencies and integration points: integrates with SPI core host/target APIs, DMAEngine, scatterlist splitting, GPIO descriptors, pinctrl, runtime/system PM, device tree compatibles, OMAP platform data, and internal SPI helpers such as `spi_xfer_is_dma_mapped()`.
+
+Risks: DMA RX has documented transfer length reductions and manual tail reads, with special turbo handling. FIFO enable is constrained by word alignment and max word count. Multi-mode CS logic is strict and depends on `cs_change` semantics. Target abort must unblock all completions. Runtime resume toggles FORCE to repair CS state after off-mode. PIO paths poll with one-second timeouts.
+
+Test signals: PIO and DMA TX/RX/full-duplex across 4..32 bits, turbo RX-only, FIFO and non-FIFO DMA, 3-wire direction changes, GPIO and native CS including `cs_change`, target-mode abort/EOW IRQ, runtime/system suspend resume with active per-CS contexts, AM654 max transfer size, and missing/deferred DMA channels.

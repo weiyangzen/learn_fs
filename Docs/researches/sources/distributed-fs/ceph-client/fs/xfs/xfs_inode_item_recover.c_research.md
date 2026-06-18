@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/fs/xfs/xfs_inode_item_recover.c
+
+Purpose: implements log-recovery handling for inode log items. It registers `xlog_inode_item_ops` for `XFS_LI_INODE`, readaheads logged inode buffers during pass 2, verifies logged inode cores and forks, replays them into on-disk dinodes, performs swapext owner repairs, recalculates CRCs, and queues modified buffers for delayed writeback.
+
+Important APIs and functions: `xlog_recover_inode_ra_pass2` issues inode-buffer readahead from the logged inode format. `xlog_recover_inode_commit_pass2` is the main replay routine. `xfs_log_dinode_to_disk`, `xfs_log_dinode_to_disk_ts`, and `xfs_log_dinode_to_disk_iext_counters` translate log-endian/runtime dinode fields into disk dinode fields, including bigtime and 64-bit extent-count formats. `xlog_dinode_verify_extent_counts` rejects inconsistent or unsupported extent counters. `xlog_recover_inode_dbroot` converts logged btree roots for normal data BMBT and metadata btrees. `xfs_recover_inode_owner_change` instantiates a temporary `xfs_inode` directly from the recovered dinode to change BMBT owners without transactions.
+
+Control flow: recovery converts legacy 32-bit inode log formats when necessary, skips replay if the inode buffer was cancelled, reads the inode cluster, verifies disk and log magic, compares disk LSN or v2 flush iteration to decide whether replay is stale, validates mode-specific fork formats and fork offsets, copies the core and optional data/attr fork regions, optionally performs owner-change repair, then validates and CRCs the final dinode before queuing the buffer.
+
+State and persistence: this file mutates persistent inode cluster buffers during log replay. It writes the current recovery LSN into v3 dinodes instead of trusting the logged LSN, updates device numbers and fork payloads, and logs no new transactions because recovery uses the supplied delayed-write buffer list.
+
+Dependencies and integration: it depends on log recovery, inode verifier, buffer, bmap btree, realtime metadata btree, and transaction-private helpers. The owner-change path is tightly coupled to extent swap recovery and CRC-enabled inode owner semantics.
+
+Risks and test signals: corruption checks protect against bad magic, impossible extent counts, unsupported large counts, invalid fork formats, oversized log records, bad fork offsets, and post-replay verifier failures. Tests should include crash replay of inode core/fork updates, v2 flushiter skip behavior, v3 LSN ordering, swapext owner changes, bigtime and nrext64 inodes, cancelled inode buffers, and malformed log records.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/instructions/xe_mfx_commands.h
+
+Purpose: defines media fixed-function command encodings. Important APIs are MFX subtype/opcode/subopcode/flags masks, `XE_MFX_INSTR`, `MFX_WAIT`, sync-control bits, and `CRYPTO_KEY_EXCHANGE`. Control flow is compile-time command header construction for video/media command buffers. State is media pipeline synchronization and crypto command state in hardware. Dependencies are `xe_instr_defs.h`. Integration points include media engines, PXP/crypto key exchange, and MFX wait synchronization. Risks include opcode/subtype drift and misuse of sync-control flags. Test signals include media command golden dwords, PXP key exchange flows, and media wait/synchronization tests.

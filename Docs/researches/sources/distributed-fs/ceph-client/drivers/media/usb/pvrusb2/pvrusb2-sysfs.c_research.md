@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/pvrusb2/pvrusb2-sysfs.c
+
+Purpose: optional sysfs interface for pvrusb2 devices. It creates a `pvrusb2` class device per hardware instance, exposes hardware identity/minor-number attributes, creates per-control sysfs groups, and optionally exposes debug command/status files.
+
+Important APIs, types, and functions: `struct pvr2_sysfs` stores a channel, class device, optional debug interface, linked control items, top-level device attributes, and creation flags. `struct pvr2_sysfs_ctl_item` stores attributes for one control (`name`, `type`, `min_val`, `max_val`, `def_val`, `enum_val`, `bit_val`, `cur_val`, `custom_val`) plus its attribute group. Show/store helpers use `pvr2_ctrl_*` APIs and `pvr2_hdw_commit_ctl()`. `pvr2_sysfs_add_control()`, `pvr2_sysfs_add_controls()`, and teardown functions manage control groups. `class_dev_create()` creates the class device and top-level files. Public functions are `pvr2_sysfs_create()`, `pvr2_sysfs_class_create()`, and `pvr2_sysfs_class_destroy()`.
+
+Control flow: module init registers the class. Per-device create allocates a `pvr2_sysfs`, initializes a pvrusb2 channel with a disconnect check callback, creates the class device named from the hardware identifier, adds top-level files, adds one group per hardware control, and optionally adds debug files. Attribute reads fetch current values, descriptions, types, enumerations, bit names, or hardware identity. Attribute writes parse normal or custom symbols, set control masks/values, and commit hardware controls. On context disconnect, `pvr2_sysfs_internal_check()` tears down debug files, control groups, top-level files, drops the parent device reference, unregisters the class device, finalizes the channel, and frees state.
+
+State and persistence: sysfs object state is in memory. Control writes change driver and hardware state through the hardware commit path but are not persisted across unload or unplug. Creation flags prevent removing files that were never successfully added.
+
+Dependencies and integration points: depends on `pvrusb2-context` channel lifecycle, hardware/control APIs, Linux device/sysfs class APIs, optional `pvrusb2-debugifc`, and V4L minor-number storage in hardware state. The header compiles to no-ops when sysfs support is disabled.
+
+Risks: many files are created individually, so partial creation must be unwound carefully. `pvr2_sysfs_add_control()` leaves a `ctl_item` linked even if `sysfs_create_group()` fails, relying on `created_ok` to skip removal. Control stores commit hardware synchronously and can trigger disruptive pipeline reconfiguration. Device parent references must be balanced; teardown handles this through `get_device()`/`put_device()`.
+
+Test signals: sysfs class registration with `CONFIG_VIDEO_PVRUSB2_SYSFS`; per-device class entries named by serial/unit; enumerate all `ctl_*` groups; read/write integer, enum, bitmask, and custom controls; unplug while sysfs files are open; enable debug interface and run `debugcmd`/`debuginfo`; verify no sysfs warnings or leaked devices on unload.

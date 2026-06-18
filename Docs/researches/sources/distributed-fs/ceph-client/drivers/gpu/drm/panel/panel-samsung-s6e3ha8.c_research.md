@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e3ha8.c
+
+Purpose: S6E3HA8 is a generated MIPI DSI panel driver for a 1440x2960 WQHD Samsung panel that requires DSC. It configures a `drm_dsc_config`, enables DSI compression mode, and sends PPS during prepare.
+
+Important APIs, control flow, and state: probe allocates `struct s6e3ha8`, gets `vdd3`, `vci`, and `vddr` supplies, gets reset GPIO, configures four-lane RGB888 non-continuous/no-HFP/no-HBP/no-HSA/no-EOT DSI flags, attaches `dsi->dsc` to the panel DSC config, and sets DSC 1.1, 720-pixel slices, 40-line slice height, 8 bpc, 8 bpp, and block prediction. `prepare()` enables supplies, waits 120 ms, runs a three-edge reset, executes the vendor on sequence, packs PPS with `drm_dsc_pps_payload_pack()`, writes it under level-1 key, and waits 28 ms. `enable()` wraps display-on in level-1 key. `disable()` display-offs, disables AFC through level-2 key, and waits 160 ms. `unprepare()` only disables supplies. `get_modes()` returns the fixed WQHD mode.
+
+Dependencies, integration, risks, and tests: dependencies are DRM DSC helpers, MIPI DSI compression/PPS helpers, regulator/GPIO APIs, and `samsung,s6e3ha8`. Risks include DSC being mandatory and host-dependent, no reset assertion in unprepare, vendor scaler/FFC/brightness commands, and `WARN_ON` only checking slice divisibility. Tests should verify DSC negotiation with the host, PPS packet contents, WQHD scanout, disable/re-enable, and no blank frame after compression mode enable.

@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/cpupower/cpupower-service.conf -->
+# sources/distributed-fs/ceph-client/tools/power/cpupower/cpupower-service.conf
+
+## Purpose
+Default commented configuration for the cpupower systemd service wrapper. It documents optional environment variables for governor, min/max/fixed frequency, Intel performance bias, and energy performance preference.
+
+## Important APIs, Types, And Functions
+There is no executable control flow; when installed, systemd reads it as an optional `EnvironmentFile`, and `cpupower.sh` consumes variables such as `GOVERNOR`, `MIN_FREQ`, `MAX_FREQ`, `FREQ`, `PERF_BIAS`, and `EPP`. State changes happen only if an administrator uncomments values and enables the service. Dependencies are systemd environment-file syntax and cpupower command support for the selected options. Risks include invalid values causing boot-time service failure, comments mentioning specific governors not present on all kernels, and direct policy changes at boot. Test signals are shellcheck-like syntax checks, service run with each variable, and systemd journal exit status.
+
+## Control Flow
+There is no executable control flow; when installed, systemd reads it as an optional `EnvironmentFile`, and `cpupower.sh` consumes variables such as `GOVERNOR`, `MIN_FREQ`, `MAX_FREQ`, `FREQ`, `PERF_BIAS`, and `EPP`. State changes happen only if an administrator uncomments values and enables the service. Dependencies are systemd environment-file syntax and cpupower command support for the selected options. Risks include invalid values causing boot-time service failure, comments mentioning specific governors not present on all kernels, and direct policy changes at boot. Test signals are shellcheck-like syntax checks, service run with each variable, and systemd journal exit status.
+
+## State And Persistence
+There is no executable control flow; when installed, systemd reads it as an optional `EnvironmentFile`, and `cpupower.sh` consumes variables such as `GOVERNOR`, `MIN_FREQ`, `MAX_FREQ`, `FREQ`, `PERF_BIAS`, and `EPP`. State changes happen only if an administrator uncomments values and enables the service. Dependencies are systemd environment-file syntax and cpupower command support for the selected options. Risks include invalid values causing boot-time service failure, comments mentioning specific governors not present on all kernels, and direct policy changes at boot. Test signals are shellcheck-like syntax checks, service run with each variable, and systemd journal exit status.
+
+## Dependencies And Integration Points
+There is no executable control flow; when installed, systemd reads it as an optional `EnvironmentFile`, and `cpupower.sh` consumes variables such as `GOVERNOR`, `MIN_FREQ`, `MAX_FREQ`, `FREQ`, `PERF_BIAS`, and `EPP`. State changes happen only if an administrator uncomments values and enables the service. Dependencies are systemd environment-file syntax and cpupower command support for the selected options. Risks include invalid values causing boot-time service failure, comments mentioning specific governors not present on all kernels, and direct policy changes at boot. Test signals are shellcheck-like syntax checks, service run with each variable, and systemd journal exit status.
+
+## Risks And Edge Cases
+There is no executable control flow; when installed, systemd reads it as an optional `EnvironmentFile`, and `cpupower.sh` consumes variables such as `GOVERNOR`, `MIN_FREQ`, `MAX_FREQ`, `FREQ`, `PERF_BIAS`, and `EPP`. State changes happen only if an administrator uncomments values and enables the service. Dependencies are systemd environment-file syntax and cpupower command support for the selected options. Risks include invalid values causing boot-time service failure, comments mentioning specific governors not present on all kernels, and direct policy changes at boot. Test signals are shellcheck-like syntax checks, service run with each variable, and systemd journal exit status.
+
+## Test Signals
+There is no executable control flow; when installed, systemd reads it as an optional `EnvironmentFile`, and `cpupower.sh` consumes variables such as `GOVERNOR`, `MIN_FREQ`, `MAX_FREQ`, `FREQ`, `PERF_BIAS`, and `EPP`. State changes happen only if an administrator uncomments values and enables the service. Dependencies are systemd environment-file syntax and cpupower command support for the selected options. Risks include invalid values causing boot-time service failure, comments mentioning specific governors not present on all kernels, and direct policy changes at boot. Test signals are shellcheck-like syntax checks, service run with each variable, and systemd journal exit status.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/cpupower/cpupower-service.conf -->

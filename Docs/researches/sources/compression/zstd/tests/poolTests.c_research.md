@@ -1,0 +1,13 @@
+# sources/compression/zstd/tests/poolTests.c
+
+Purpose: This is a focused executable test for the zstd thread pool abstraction in `pool.h`. It validates pool creation constraints, FIFO-style job completion behavior, queue draining during `POOL_free()`, deadlock resistance with small queues, thread-count reduction through `POOL_resize()`, and completion of queued jobs when a pool is shrunk immediately before teardown.
+
+Important APIs, types, and functions: The file uses `POOL_create()`, `POOL_add()`, `POOL_resize()`, and `POOL_free()` from the pool implementation, plus zstd's pthread wrapper types `ZSTD_pthread_mutex_t` and `ZSTD_pthread_cond_t`. Local assertion macros return `1` from the active test on failure. `struct data` is shared by `fn()` to record job ordering under a mutex. `poolTest_t` combines a mutex, condition variable, active-worker counter, maximum-observed concurrency, and countdown latch for resize checks. `abruptEndCanary_t` records how many queued delayed jobs actually ran before `POOL_free()` returned.
+
+Control flow: `main()` first rejects successful creation with zero threads, then runs `testOrder()` and `testWait()` for `numThreads` 1 through 4 and `queueSize` 0 through 2. `testOrder()` submits sixteen jobs that lock a mutex, write their current index, and increment it; after `POOL_free()` it verifies all entries were executed in submission order. `testWait()` floods the pool with short sleeping jobs to expose producer/consumer deadlocks. `testThreadReduction()` creates a four-thread pool, observes max concurrency of four, resizes to two, and observes max concurrency of two. `testAbruptEnding()` queues all jobs, shrinks the pool, frees it, and verifies teardown waits for every job.
+
+State and persistence: All state is process-local and owned by stack structs protected by mutexes and condition variables. There is no file or global persistence. The pool itself is externally allocated by `POOL_create()` and must be freed even on successful paths.
+
+Dependencies and integration points: It integrates with zstd's portable threading wrapper, `UTIL_sleepMilli()` from `util.h`, and the library pool implementation. It is normally built and run as part of zstd's native test suite to guard multithreaded compression infrastructure.
+
+Risks and test signals: The ordering assertion depends on pool semantics that preserve execution order in the tested configuration; if pool behavior changes to allow out-of-order execution, this test will fail even if every job completes. Timing-sensitive sleeps make resize tests sensitive to very slow or oversubscribed systems, though the condition variable countdown avoids fixed waits. A pass prints `PASS: all POOL tests`; failures print a named test failure and exit nonzero.

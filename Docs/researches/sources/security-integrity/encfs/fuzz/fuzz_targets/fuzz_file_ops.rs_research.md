@@ -1,0 +1,7 @@
+## sources/security-integrity/encfs/fuzz/fuzz_targets/fuzz_file_ops.rs
+
+Purpose: Differential libFuzzer target for EncFS file operations. It applies random sequences of writes, reads, shrink truncates, and expand truncates to both `EncFs` and a plain in-memory reference buffer, comparing decrypted on-disk content after mutations and read slices.
+
+Important APIs and types: `Op`, `FuzzInput`, `TempDir`, constants `MAX_OPS`, `MAX_WRITE_SIZE`, `MAX_FILE_SIZE`, `BLOCK_SIZE`, `BLOCK_MAC_BYTES`, `HEADER_SIZE`, helpers `make_request`, `make_cipher`, `make_encfs`, `ref_write`, `ref_slice`, `read_encfs_full`, `verify_full`, and `fuzz_target!`. Control flow creates an EncFs rooted in a temp dir, creates one file via FUSE-layer API, discovers its encrypted physical path, decrypts file IV from the header, then interprets up to 32 operations with bounds to keep inputs manageable.
+
+State and persistence: Uses a temporary encrypted directory removed on drop; in-memory reference tracks expected plaintext. Dependencies include EncFS config/crypto/fs APIs, `FileDecoder`, `SslCipher`, `fuse_mt::FilesystemMT`, and libFuzzer arbitrary generation. Integration specifically exercises block boundaries, MAC verification, sparse-hole handling, and truncate expansion with `allow_holes=true`. Risks: only one deterministic test config is covered, full-file decrypt after every operation is expensive, and it bypasses mounted kernel FUSE behavior by using the filesystem object directly.

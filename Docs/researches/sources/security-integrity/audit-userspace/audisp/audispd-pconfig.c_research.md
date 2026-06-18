@@ -1,0 +1,5 @@
+## sources/security-integrity/audit-userspace/audisp/audispd-pconfig.c
+
+Purpose: parser and validator for audisp plugin `.conf` files.
+
+`load_pconfig` opens config files relative to a directory fd, verifies root ownership, non-world-writability, and regular-file target, then parses `key = value...` lines through keyword-specific parsers for active, direction, path, type, args, and format. It normalizes obsolete builtin paths/types, reverses args into stored order for later exec handling, records plugin basename, and validates active plugin executable ownership/permissions/inode. State is a populated `plugin_conf_t` with owned strings/arrays, pipes initialized to `-1`, restart counters, and inode for reload detection. Dependencies include `audit_msg`, `private.h`, file descriptor APIs, `dirname`/`basename`. Risks include whitespace-only tokenizer with no quoting, symlinked configs allowed after target checks, args reversal coupling with `safe_exec`, PATH_MAX formatting, and partial allocation cleanup correctness. Tests should cover malformed keywords, permissions failures, obsolete builtin config, arg ordering, and active executable validation.

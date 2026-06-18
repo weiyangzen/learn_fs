@@ -1,0 +1,13 @@
+# sources/storage-engines/rocksdb/microbench/db_basic_bench.cc
+
+Purpose: Defines a Google Benchmark binary for RocksDB basic DB-path microbenchmarks. It measures DB open/close, Put, manual compaction, manual flush, Get, GetMergeOperands, block seek, iterator seek/next/prev, prefix seek, and RandomAccessFileReader reads under combinations of compaction style, data volume, value size, statistics, WAL, filters, mmap, compression, checksum, and block-cache settings.
+
+Important APIs/types/functions: `KeyGenerator` creates fixed-size encoded random/sequential keys, prefixes, non-existing keys, and min/max range keys. `SetupDB`/`TeardownDB` create a process-scoped test DB, gather approximate size, close, and destroy it. Benchmark entry points include `DBOpen`, `DBClose`, `DBPut`, `ManualCompaction`, `ManualFlush`, `DBGet`, `SimpleGetWithPerfContext`, `DBGetMergeOperandsInMemtable`, `DBGetMergeOperandsInSstFile`, `DataBlockSeek`, iterator benchmarks, `PrefixSeek`, and `RandomAccessFileReaderRead`.
+
+Control flow: Most benchmarks build options from `state.range()` arguments, create/load a static DB on thread 0, run timed Google Benchmark loops, expose counters through `state.counters`, then wait for compaction and tear the DB down. Read benchmarks prepopulate data and compact/flush to stabilize file shape. Perf-context benchmarks enable `kEnableTime`, reset `get_perf_context()` per operation, and aggregate counters per iteration.
+
+State and persistence behavior: The benchmark persists temporary RocksDB instances under `Env::GetTestDirectory()` with names using benchmark labels and `getpid()`, then destroys them. Write-heavy benchmarks may disable WAL, disable auto compaction, tune write buffers, or use snapshots to preserve merge operands. The file-reader benchmark creates temporary files and deletes them at the end.
+
+Dependencies/integration: Integrates public `rocksdb::DB`, options, statistics, filters, merge operators, internal `DBImpl`, block builders/readers, perf context, table factories, and Google Benchmark. It exercises both public APIs and internal APIs such as `BlockBuilder`, `Block`, `DataBlockIter`, and `RandomAccessFileReader`.
+
+Risks/test signals: This is benchmark code rather than correctness-test code. Static `std::unique_ptr<DB>` variables are shared across threaded benchmark instances, relying on Google Benchmark setup timing and thread 0 conventions. `ManualCompaction` uses `if (i + 1 % flush_mod == 0)`, which parses as `i + (1 % flush_mod)` and likely never does the intended periodic flush except final flush. Several loops ignore some intermediate statuses until later, and large argument matrices can be expensive.

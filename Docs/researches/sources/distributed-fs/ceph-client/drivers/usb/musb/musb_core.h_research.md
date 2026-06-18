@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/usb/musb/musb_core.h
+
+Purpose: defines the common data model, platform operation contract, state helpers, endpoint structures, PM context structures, and core function prototypes for the MUSB HDRC driver family.
+
+Important APIs, types, and symbols: role helpers include `is_peripheral_active`, `is_host_active`, `MUSB_HST_MODE`, `MUSB_DEV_MODE`, `MUSB_MODE`, `musb_set_state`, `musb_get_state`, and `musb_otg_state_string`. Ep0 state enums cover host and gadget control-transfer phases. `struct musb_platform_ops` is the glue contract for quirks, init/exit, enable/disable, endpoint/fifo/busctl offsets, MMIO methods, FIFO methods, data toggle methods, DMA init/exit, mode changes, idle/recover/VBUS hooks, root-reset hooks, PHY callback, and RX interrupt clearing. Core structures include `struct musb_hw_ep`, `struct musb_csr_regs`, `struct musb_context_registers`, and the central `struct musb`.
+
+Control flow represented by the header: platform glue fills `musb_hdrc_platform_data` with `musb_platform_ops`; `musb_core.c` uses the inline wrappers to call optional hooks safely. Endpoint handlers use `next_in_request`/`next_out_request` to inspect gadget queues. PM code uses `musb_context_registers` to save/restore global and per-endpoint hardware state. Host/gadget code consumes the same `struct musb` fields for queues, endpoint state, port status, HCD/gadget references, and role flags.
+
+State and persistence: no persistent storage. This header defines all major runtime state fields: locks, IO ops, platform ops, saved register context, work items, endpoint array, host scheduling lists, timers, DMA controller, MMIO bases, interrupt latches, PHY pointers, OTG state, IRQ/wakeup state, endpoint masks, power/session flags, runtime-PM flags, role mode, gadget state, HCD pointer, config pointer, old xceiver state, and optional debugfs root.
+
+Dependencies and integration points: includes Linux USB, gadget, HCD, OTG, PHY, timer, workqueue, interrupt, and device headers plus local debug, DMA, IO, gadget, host, and register headers. It is included by core, platform glue, host/gadget endpoint code, DMA backends, and debugfs support.
+
+Risks: `struct musb_platform_ops` is broad and optional-heavy; new glue must fill enough hooks for its register semantics or the core falls back to defaults that may be wrong. The central `struct musb` is shared by host, gadget, DMA, PM, IRQ, and glue code, so field ownership must be clear when changing locking or state transitions. The inline state helpers write either `xceiv->otg->state` or fallback `musb->otg_state`, so callers must handle missing xceiv consistently. Header inclusion pulls in both host and gadget headers, making role-specific build guards important.
+
+Test signals: compile all MUSB role combinations and platform glue users; run sparse/lockdep around shared `struct musb` fields; validate platform ops defaults against each glue; exercise PM context save/restore; verify endpoint structure initialization for all `MUSB_C_NUM_EPS`; and check that host/gadget-only builds do not expose missing prototypes or role-specific fields.

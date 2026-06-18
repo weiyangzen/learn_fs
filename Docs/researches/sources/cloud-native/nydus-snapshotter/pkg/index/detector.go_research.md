@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/nydus-snapshotter/pkg/index/detector.go
+
+This file implements OCI index-based Nydus alternative detection. A `detector` owns a `remote.Remote`. `checkIndexAlternative` fetches the resolved index manifest, limits reads to 8 MiB, unmarshals an OCI index, finds a same-platform Nydus manifest alternative, fetches that manifest, validates it has layers, and returns the last layer if it is marked as a Nydus metadata layer.
+
+`findNydusManifestInIndex` first locates the original manifest descriptor by digest, then uses `platforms.NewMatcher` against its platform and returns the first same-platform descriptor with either the Nydus OS feature or Nydus artifact type. `fetchMetadata` fetches a selected descriptor and unpacks `converter.BootstrapFileNameInLayer` to the requested metadata path, removing partial output on unpack error.
+
+State is remote registry content plus local metadata output. Dependencies include auth-backed remote resolvers, OCI descriptors/index/manifest, Nydus converter constants, Nydus labels, and digest/platform packages. Risks include nil platform dereference in `platforms.NewMatcher(*originalDesc.Platform)` or `pMatcher.Match(*manifest.Platform)`, selecting the first matching alternative, and silent plain-HTTP retry only when remote allows it. Tests cover platform feature/artifact matching and descriptor selection, not network or unpack paths.

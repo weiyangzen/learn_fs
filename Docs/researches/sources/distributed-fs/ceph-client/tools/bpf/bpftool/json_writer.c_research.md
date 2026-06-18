@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/bpf/bpftool/json_writer.c
+
+`json_writer.c` is a small streaming JSON emitter used throughout bpftool. It owns syntax mechanics: commas, object/array depth, optional pretty indentation, string escaping, scalar output, and common name/value helpers. The implementation backs the opaque `json_writer_t` from `json_writer.h` with `FILE *out`, `depth`, `pretty`, and `sep`.
+
+Core helpers are `jsonw_eor()` for comma insertion, `jsonw_eol()`/`jsonw_indent()` for pretty whitespace, `jsonw_puts()` for C-style JSON string escapes, `jsonw_begin()` for `{`/`[`, and `jsonw_end()` for `}`/`]`. Public functions allocate and destroy writers, toggle pretty output, reset top-level separators, write property names, write raw formatted fragments, and write typed scalar values. Field helpers simply call `jsonw_name()` followed by the matching scalar writer.
+
+Control flow is intentionally linear: callers must start/end objects and arrays in a balanced way, with `jsonw_destroy()` asserting `depth == 0`, appending a final newline, flushing, freeing, and nulling the caller's pointer. State is entirely in the writer instance, but many bpftool modules share the global `json_wtr`. The writer does not validate full JSON grammar beyond separator/depth mechanics and trusts `jsonw_printf()` callers to emit valid JSON fragments.
+
+Dependencies are only libc, `stdio`, `stdarg`, `inttypes`, and the public header annotations. Risks include no Unicode escaping for control bytes beyond selected C escapes, assertions rather than recoverable errors on unbalanced output, raw `jsonw_printf()` misuse producing invalid JSON, and non-thread-safe shared output. Test signals include nested object/array formatting, pretty and compact output, all string escape cases, reset after a completed top-level value, scalar widths for signed/unsigned 64-bit fields, and intentionally unbalanced usage in debug builds.

@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/pantherlake/memory.json
+
+**Purpose:** Panther Lake memory topic with 29 records focused on atom load-head stalls, memory-ordering machine clears, core sampled load latency thresholds, store PEBS sampling, misaligned page splits, OCR demand data/RFO L3-miss and DRAM responses, and core offcore L3-miss demand-data outstanding/request events.
+
+**Schema and important records:** Atom `LD_HEAD.*` records use `EventCode: 0x05` with different umasks to distinguish L1 misses, WCB-full conditions, and retirement-stalled variants. `MACHINE_CLEARS.MEMORY_ORDERING` is duplicated for atom and core. `MEM_TRANS_RETIRED.LOAD_LATENCY_GT_*` core records use `Data_LA: 1`, `MSRIndex: 0x3F6`, threshold-specific `MSRValue`, and varied `SampleAfterValue` defaults; they count randomly selected loads above thresholds from 4 to 2048 cycles. `MEM_TRANS_RETIRED.STORE_SAMPLE` is a store-latency PEBS trigger on counters 0 and 1. OCR records use `MSRIndex: 0x1a6,0x1a7` with unit-specific `MSRValue` encodings for atom event `0xB7` and core events `0x2A,0x2B`.
+
+**Control flow and integration:** The perf generator emits these into the Panther Lake memory topic. Runtime use splits into ordinary stall/clear counters, PEBS load/store sampling, OCR offcore response selectors, and offcore outstanding counters. The latency-threshold records depend on programming the threshold MSR, and OCR records depend on offcore response MSRs. These records complement `cache.json`: this file emphasizes sampled latency and L3-miss/DRAM response attribution, while `cache.json` contains broader cache-level request and retired-load families.
+
+**State and persistence:** Static metadata only. Generated tables persist threshold and OCR selector values. Runtime state includes programmed PEBS threshold MSRs, offcore response MSRs, sampled data addresses, and measured counter values for each perf session.
+
+**Dependencies:** Depends on Panther Lake core and atom PMU support, PEBS load/store latency facilities, OCR/offcore MSR programming, and counter limits from `counter.json`. Descriptions reference Intel SDM store-latency facility behavior; kernel support must expose the required precise sampling capabilities.
+
+**Risks:** Threshold records are high risk because `MSRValue` controls the bucket and `SampleAfterValue` differs widely to tune sampling rates. OCR atom and core records have the same event names but different event codes and selector values; collapsing by name or copying selectors between units would corrupt measurements. The core load-latency records report dispatch-to-completion latency, not pure memory latency, which can mislead analysis if omitted from documentation.
+
+**Test signals:** JSON/schema validation should preserve all 29 records and all threshold MSR values. Runtime PEBS smoke tests should exercise `MEM_TRANS_RETIRED.LOAD_LATENCY_GT_128` and `STORE_SAMPLE` with data-address capture. OCR tests should verify both atom and core L3-miss/DRAM selectors program successfully. `perf list memory` should show load-head, machine-clear, latency, misalignment, OCR, and offcore outstanding events.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/fakestorage/fixtures.go -->
+# sources/cloud-native/moby/internal/testutil/fakestorage/fixtures.go
+
+Purpose: builds and protects a tiny `httpserver` image used by remote fake storage when tests need an HTTP file server on the daemon host. The main API is `ensureHTTPServerImage`, guarded by `sync.Once`. Control flow writes a small Go file server, cross-compiles it for the daemon OS/architecture with `CGO_ENABLED=0`, writes a scratch Dockerfile, tars the build context, builds image `httpserver`, drains build output, and marks the image protected. State persists as a daemon image plus temporary build files. Dependencies include the local Go toolchain, `moby/go-archive`, Docker `ImageBuild`, and `testEnv`. Risks include build-tool availability, daemon platform mismatch, hard-coded port 80, and hidden global `testEnv`; test signal is indirect through remote build-context tests.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/fakestorage/fixtures.go -->

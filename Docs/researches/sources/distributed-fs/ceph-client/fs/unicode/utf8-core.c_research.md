@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/fs/unicode/utf8-core.c
+
+`utf8-core.c` exports filesystem-facing UTF-8 helpers: validation, normalized comparison, casefolding, hashing, normalization, Unicode table loading/unloading, and version parsing.
+
+Exported APIs are `utf8_validate()`, `utf8_strncmp()`, `utf8_strncasecmp()`, `utf8_strncasecmp_folded()`, `utf8_casefold()`, `utf8_casefold_hash()`, `utf8_normalize()`, `utf8_load()`, `utf8_unload()`, and `utf8_parse_version()`. Validation uses `utf8nlen()` in NFDI mode. Comparisons stream bytes from `utf8cursor`s until mismatch, error, or NUL. Casefold and normalize write NFDICF or NFDI bytes into caller buffers and fail with `-EINVAL` for invalid input or insufficient destination space. Hashing feeds NFDICF bytes through VFS name hashing. `utf8_load()` allocates `unicode_map`, requests `utf8_data_table`, verifies the version, selects exact NFDI/NFDICF table entries, and unwinds references on failure.
+
+State is a heap `unicode_map` with the requested version, table symbol, and selected normalization table pointers; no persistent storage is modified. Dependencies include `utf8-norm.c`, generated `utf8_data_table`, module symbol APIs, parser helpers, qstr/stringhash APIs, and filesystem callers. Risks include exact-version matching, destination termination semantics, pre-folded comparison length assumptions, and module reference lifetime. Signals are KUnit tests, filesystem casefold lookup/hash tests, invalid UTF-8 tests, and load/unload checks.

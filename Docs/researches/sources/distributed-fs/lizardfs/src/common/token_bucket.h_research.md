@@ -1,0 +1,3 @@
+# sources/distributed-fs/lizardfs/src/common/token_bucket.h
+
+Purpose: declares `TokenBucket`, a rate limiter that accrues budget over monotonic time. Important APIs: constructor taking current time, two `reconfigure` overloads, `rate`, `budgetCeil`, and `attempt`. Control flow: callers periodically call `attempt(now, cost)` and receive up to the available budget. State/persistence: stores current rate, available budget, budget ceiling, and previous timepoint. Dependencies: `time_utils.h`. Integration points: bandwidth or operation throttling. Risks: API requires caller-supplied monotonic time and positive costs; class is not thread-safe and does not expose current budget for diagnostics. Test signals: direct behavior tests in `token_bucket_unittest.cc`.

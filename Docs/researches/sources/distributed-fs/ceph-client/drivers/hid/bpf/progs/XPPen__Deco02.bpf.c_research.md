@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/hid/bpf/progs/XPPen__Deco02.bpf.c
+
+Purpose: This HID-BPF program fixes the XP-Pen Deco 02 main pad interface. It replaces a mixed pen/vendor/button/keyboard descriptor with a descriptor that preserves pen reporting while exposing pad buttons and the rotary dial as proper tablet-pad controls, then rewrites keyboard-style runtime reports into a dial byte and button bitmask.
+
+Important APIs/types/functions: `HID_BPF_CONFIG()` matches UGEE product `PID_DECO_02`. Constants define the original 188-byte descriptor, 8-byte pad report, keyboard report ID 3, six button count, and the keyboard descriptor offset. `fixed_rdesc_pad` uses descriptor helper macros to create a pen collection followed by a fixed keypad/tablet-function-key collection. The fixed pad report uses byte 1 for relative `Usage_GD_Dial`, byte 2 for six buttons, byte 3 as a tablet-pad marker, bytes 4 and 5 for dummy X/Y fields, and bytes 6 and 7 as padding. `xppen_deco02_rdesc_fixup()` replaces the descriptor, and `xppen_deco02_device_event()` performs event conversion.
+
+Control flow: Probe only accepts the 188-byte descriptor. The descriptor fixup copies `fixed_rdesc_pad` and returns its size. At runtime, reports that are missing or not report ID 3 pass through. For keyboard reports, bytes 2 through 7 are scanned. Key code `0x2e` becomes dial `+1`, `0x2d` becomes dial `-1`, and known key codes set bits for buttons 1 through 6. A new 8-byte report `{3, dial_code, button_mask, 0, ...}` replaces the original report.
+
+State and persistence: There is no mutable state across reports. The dial is emitted as a relative single-event value based on the current keyboard click code, and button state is reconstructed from currently present key codes. Descriptor replacement persists through the HID device's parsed report layout.
+
+Dependencies and integration points: The program depends on HID-BPF helpers, descriptor-generation macros, and HID input interpretation of relative dials and tablet pad buttons. It integrates with libinput/tablet userspace by preventing the pad from acting as a keyboard and by exposing the dial through a standard relative HID usage.
+
+Risks: The report converter assumes the firmware's keyboard key codes for buttons and dial clicks remain fixed. It collapses any simultaneous clockwise and anticlockwise codes to the last scanned match, although the hardware should not produce both. The `BIT(05)` spelling is octal notation for decimal 5, so it currently sets the intended bit but is visually easy to misread. Replacement descriptor size and fields must remain compatible with the original 8-byte report payload.
+
+Test signals: Validate that the stylus report still works after descriptor replacement, all six buttons are reported as tablet pad buttons under single and combined presses, the dial emits relative +1 and -1 events and returns to rest, keyboard events are no longer leaked to applications, unknown report IDs pass through, and descriptor attachment is limited to the 188-byte main interface.

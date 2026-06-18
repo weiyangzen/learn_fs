@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/ivybridge/pipeline.json
+
+Purpose: Defines 126 Ivy Bridge core PMU event aliases for pipeline, branch, execution, retirement, stall, and cycle accounting. This is data consumed by perf's PMU event table generator/resolver, not executable code, so the effective API is the JSON event schema and the stable `EventName` strings exposed to `perf stat`, `perf record`, and metric expressions.
+
+Important APIs/types/functions: Entries use `EventName`, `EventCode`, `UMask`, `Counter`, `CounterMask`, `EdgeDetect`, `Invert`, `AnyThread`, `PEBS`, `SampleAfterValue`, `BriefDescription`, and `PublicDescription`. Major families include `BR_INST_EXEC`, `BR_INST_RETIRED`, `BR_MISP_EXEC`, `BR_MISP_RETIRED`, `CPU_CLK_UNHALTED`, `CYCLE_ACTIVITY`, `INST_RETIRED`, `INT_MISC`, `RESOURCE_STALLS`, `UOPS_DISPATCHED_PORT`, `UOPS_EXECUTED`, `UOPS_ISSUED`, and `UOPS_RETIRED`. Several fixed-counter aliases map retired instructions and unhalted cycles through pseudo `UMask` values such as fixed counters 0, 1, and 2.
+
+Control flow: At build time the perf PMU tooling parses this array into architecture-specific event tables. At runtime CPU identification selects the Ivy Bridge table, user-supplied aliases are matched by `EventName`, and perf translates the JSON fields into perf event attributes such as event select, unit mask, counter mask, edge detection, PEBS eligibility, any-thread mode, and sampling period. Higher-level metrics can then reference these aliases by name.
+
+State and persistence: The file is static source data. It persists event encodings in the repository and produces generated perf tables during build, but it has no runtime mutable state of its own. Runtime counts live in kernel/hardware PMU state and perf result buffers.
+
+Dependencies/integration: Depends on Intel Ivy Bridge PMU semantics and perf's `pmu-events` JSON parser. It integrates with neighboring Ivy Bridge files for cache, memory, frontend, and uncore coverage, and with metric files that reference aliases such as `INST_RETIRED.ANY`, `UOPS_RETIRED.RETIRE_SLOTS`, `CYCLE_ACTIVITY.*`, and branch events.
+
+Risks: Event accuracy depends on field correctness and Intel errata. Aliases with identical event select/unit mask but different `CounterMask`, `EdgeDetect`, or descriptions can be easy to confuse. Fixed-counter aliases and programmable-counter aliases for similar concepts must remain distinct. Counter constraints such as `Counter: 2` for some cycle-activity events can cause multiplexing or scheduling failures if changed. Description typos do not break parsing but can mislead performance diagnosis.
+
+Test signals: Validate with `jq` schema checks, perf's pmu event table tests, alias lookup tests for representative branch/uop/stall events, and on-hardware smoke tests such as `perf stat -e INST_RETIRED.ANY,CPU_CLK_UNHALTED.THREAD,UOPS_RETIRED.RETIRE_SLOTS`. Metric tests should confirm Ivy Town/Ivy Bridge topdown expressions resolve every referenced core alias.

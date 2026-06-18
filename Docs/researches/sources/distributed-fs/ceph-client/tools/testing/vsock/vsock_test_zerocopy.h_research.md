@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/vsock/vsock_test_zerocopy.h
+
+Purpose: declares zerocopy test entry points used by the main vsock test matrix. APIs: stream and seqpacket MSG_ZEROCOPY client/server pairs, empty error-queue stream pair, and stream coalescence-corruption pair. Control flow: `vsock_test.c` installs these functions directly in `struct test_case` entries. State: no header state. Dependencies: includes `util.h` for `struct test_opts`. Integration: separates zerocopy implementation from the already large main suite while preserving one executable. Risks: any signature drift from `struct test_case` callbacks breaks compile-time linkage. Test signals: successful linking and execution through named main-suite test cases.

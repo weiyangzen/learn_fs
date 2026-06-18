@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/tools/lib/bpf/gen_loader.c
+
+## Purpose
+`gen_loader.c` builds an embedded BPF loader program and data blob that can load another BPF object from inside the kernel context. It serializes BTF, maps, programs, map initialization, outer-map population, map freezing, extern/kfunc/CO-RE relocation handling, debug logging, cleanup, and optional data-blob signature checking into generated BPF instructions.
+
+## APIs, Types, and Functions
+Public builder functions include `bpf_gen__init()`, `bpf_gen__finish()`, `bpf_gen__free()`, `bpf_gen__load_btf()`, `bpf_gen__map_create()`, `bpf_gen__record_attach_target()`, `bpf_gen__record_extern()`, `bpf_gen__record_relo_core()`, `bpf_gen__prog_load()`, `bpf_gen__map_update_elem()`, `bpf_gen__populate_outer_map()`, and `bpf_gen__map_freeze()`. The generated loader stack is described by `struct loader_stack`, while mutable build state is in `struct bpf_gen` from `bpf_gen_internal.h`: instruction/data cursors, fd-array location, map/prog counts, relocation arrays, ksym descriptors, attach target, hash offsets, endianness flag, log level, and sticky error.
+
+## Control Flow, State, and Persistence
+Initialization reserves a blob fd-array, saves loader context in `R6`, clears the generated stack, emits a jump over cleanup code, then emits a shared cleanup path that closes stack and blob FDs and exits with `R7`. Builders append bytes to `data_start` and BPF instructions to `insn_start`, using `emit_sys_bpf()` for BPF syscalls and `emit_check_err()` to branch to cleanup on negative `R7`. `bpf_gen__finish()` closes temporary BTF FDs, copies generated map/prog FDs back into the caller-visible loader context, optionally patches SHA256 immediates, byte-swaps instructions for target endianness, and transfers final buffers through `gen_loader_opts`.
+
+## Loader Operations
+`bpf_gen__load_btf()` embeds raw BTF and emits `BPF_BTF_LOAD`. `bpf_gen__map_create()` prepares `BPF_MAP_CREATE`, fills BTF and inner-map FDs when needed, allows context override of `max_entries`, records map FDs in the blob fd-array, and closes temporary inner-map FDs. Program loading embeds license, instructions, func/line info, and CO-RE relo records, applies target-endian conversion, wires log buffers and fd arrays, resolves attach BTF IDs when an attach target was recorded, emits extern relocations, performs `BPF_PROG_LOAD`, and then closes temporary module BTF/attach FDs. Map update/populate/freeze emit the corresponding syscalls, including runtime copy from user or kernel-provided initial value for map initialization.
+
+## Relocation and Endianness Behavior
+Extern relocation paths support kfunc calls, typed ksyms through BTF ID lookup, and typeless ksyms through `kallsyms_lookup_name`. Duplicate symbols share cached `ksym_desc` state so repeated relocations copy previously resolved immediates and avoid exhausting kernel kfunc BTF FD limits. Weak relocations zero instruction fields on lookup failure, while strong relocations branch to cleanup. The file uses `tgt_endian()` and explicit byte-swap helpers for attrs, BPF instructions, func info, line info, and CO-RE relocation records when generating for an opposite-endian target.
+
+## Dependencies and Integration
+This file depends on BPF instruction macros, libbpf syscall attribute layouts, `bpf_gen_internal.h`, `skel_internal.h`, BTF helper naming, SHA256 helpers, and map/program descriptors shared with generated skeletons. It is tightly integrated with libbpf's object-loading pipeline: normal userspace loading records enough metadata for this generator to produce equivalent in-kernel loading instructions.
+
+## Risks and Test Signals
+Risks include fixed limits (`MAX_USED_MAPS`, `MAX_USED_PROGS`, `MAX_KFUNC_DESCS`), relative branch offsets exceeding signed 16-bit immediate range, stale sticky `gen->error` after allocation failures, offset mismatches in generated `union bpf_attr` blobs, endian conversion gaps, cleanup paths leaking module BTF or map FDs, weak relocation semantics producing zeroed instructions that must remain verifier-safe, and mismatch between recorded map/prog counts and final `bpf_gen__finish()` arguments. Test signals include skeleton gen-loader selftests, generated-loader load failures with cleanup verification, many maps/programs/kfuncs near limits, big-endian target generation, extern strong/weak ksym and kfunc resolution, attach-target BTF lookup, map-in-map creation, initial-value copying from user and kernel contexts, and optional loader data hash validation.

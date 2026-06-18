@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/control-plane/csi-driver-smb/deploy/v1.3.0/csi-smb-controller.yaml -->
+# sources/control-plane/csi-driver-smb/deploy/v1.3.0/csi-smb-controller.yaml
+
+Purpose: Kubernetes Deployment manifest for the SMB CSI controller in v1.3.0. It runs one `csi-smb-controller` workload in `kube-system` with `csi-smb-controller-sa`, binding the external CSI sidecars to the in-pod Unix socket and exposing SMB controller metrics on port 29644.
+
+Important APIs/types/functions: Declares `apps/v1` `Deployment` `Deployment/csi-smb-controller` with replicas `2`, selector label `app=csi-smb-controller`, `hostNetwork=None`, DNS policy `ClusterFirstWithHostNet`, Linux node selection, `system-cluster-critical` priority, and 2 control-plane tolerations. Containers are `csi-provisioner`, `liveness-probe`, `smb`. Images: `csi-provisioner` `mcr.microsoft.com/oss/kubernetes-csi/csi-provisioner:v2.2.2`, `liveness-probe` `mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.4.0`, `smb` `mcr.microsoft.com/k8s/csi/smb-csi:v1.3.0`.
+
+Control flow: Kubernetes schedules the controller pod on Linux control-plane-capable nodes, creates an `emptyDir` socket directory at `/csi`, and starts the SMB plugin with `--endpoint=$(CSI_ENDPOINT)`. The provisioner connects to `/csi/csi.sock`, uses leader election, and watches PVC/PV/storage objects to issue CSI `CreateVolume`/`DeleteVolume` calls through the socket. No external resizer is present in this release. The liveness sidecar probes the same socket using the legacy health-port flag; the SMB container serves `/healthz` on 29642 and metrics on 29644.
+
+State/persistence: This controller is mostly stateless: the pod socket is an `emptyDir`, while durable state lives in Kubernetes PV/PVC objects, Leases for leader election, Secrets referenced by volumes, and remote SMB shares. Runtime state includes sidecar work queues, liveness status, and emitted Events. Feature switches present here: none beyond leader election.
+
+Dependencies and integration points: Integrates with the `CSIDriver` object `smb.csi.k8s.io`, RBAC in the companion `rbac-csi-smb*.yaml`, kube-controller-manager storage workflows, the external provisioner/resizer sidecars, and the SMB plugin image. Pod security relies on privileged SMB container access and no pod-level seccomp profile in this version.
+
+Risks: Privileged controller plugin execution and host networking increase blast radius if the image or socket is compromised. Leader-election namespace and RBAC must match the deployment namespace or provisioning stalls. Sidecar/image version skew can break CSI calls. Health-probe flag changes between older and newer sidecars make upgrades sensitive to exact livenessprobe arguments. Resource limits are small (`csi-provisioner` requests {'cpu': '10m', 'memory': '20Mi'} and limits {'cpu': '100m', 'memory': '300Mi'}; `liveness-probe` requests {'cpu': '10m', 'memory': '20Mi'} and limits {'cpu': '100m', 'memory': '100Mi'}; `smb` requests {'cpu': '10m', 'memory': '20Mi'} and limits {'cpu': '200m', 'memory': '200Mi'}), so noisy clusters can expose throttling or OOM behavior.
+
+Test signals: `kubectl apply --dry-run=server`, rollout readiness for `deployment/csi-smb-controller`, leader-election Lease creation in `kube-system`, liveness `/healthz` success, controller metrics on 29644, successful dynamic PVC provisioning/deletion, and expansion tests when `csi-resizer` is included.
+<!-- END_FILE_RESEARCH: sources/control-plane/csi-driver-smb/deploy/v1.3.0/csi-smb-controller.yaml -->

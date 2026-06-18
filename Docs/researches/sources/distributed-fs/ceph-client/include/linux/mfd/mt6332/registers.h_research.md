@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6332/registers.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/mt6332/registers.h
+
+This MT6332 register header defines an offset map beginning in the `0x8000` range. It covers chip ID, top/test/drive/status registers, flash and core controls, charger/status/boost controls, top clock/reset/interrupt controls and status registers, charger watchdog, DEW wrapper diagnostics, BIF, BATON, buck global controls, VDRAM, VDVFS2, VRF1/2, VPA, VSBST, buck calibration, AUXADC data/status/request/control, startup and fuel-gauge ADC, OTP output/value ranges, LDO controls, frequency meter, IWLED, speaker, test input/output muxes, debug, reset status, and an extended VDVFS2 register.
+
+There is no function implementation. The register constants feed regmap operations in MFD and child drivers: charger/boost/flash/WLED blocks use the lower bank, regulator drivers use buck and LDO sections, ADC/fuel-gauge drivers use AUXADC/FGADC, BIF code uses BIF registers, and IRQ code uses `INT_CON*`/`INT_STATUS*`. State is in hardware registers, with volatile status and persistent calibration/OTP regions.
+
+Dependencies include `mt6332/core.h`, MediaTek PMIC regmap configuration that supports high offsets, and child drivers for charger, flash/WLED, regulators, BIF, ADC/fuel gauge, speaker, and IRQ. Risks include high address base assumptions, large sparse register map, write hazards to OTP/test/debug registers, and matching four IRQ banks correctly. Test signals include regmap range tests including `0x8000+` addresses, IRQ status reads for all banks, charger/flash/WLED fault tests, regulator access tests, and AUXADC/FGADC reads.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6332/registers.h -->

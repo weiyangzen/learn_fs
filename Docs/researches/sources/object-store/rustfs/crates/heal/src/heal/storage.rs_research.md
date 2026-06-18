@@ -1,0 +1,7 @@
+# sources/object-store/rustfs/crates/heal/src/heal/storage.rs
+
+`storage.rs` defines the heal crate's storage abstraction and its `ECStore` implementation. `HealStorageAPI` is the async trait consumed by heal tasks and resumable erasure-set healing; it covers object metadata/data IO, delete/write, integrity verification, EC rebuild, disk status/format, bucket info/listing/healing, format healing, paged object listing, and resume disk lookup. `ECStoreHealStorage` wraps `Arc<ECStore>` and mostly delegates to `rustfs_ecstore`, translating not-found and hard failures into `rustfs_heal::Error`.
+
+Important control flow includes `get_object_data` reading from an object stream with a 16 MiB cap, `verify_object_integrity` stream-copying to a sink instead of buffering, `object_exists` using `ObjectOptions { no_lock: true }`, and transient object-exists classification for quorum, lock, timeout, slowdown, cancellation, and transport failures. `list_objects_for_heal` accumulates pages from `list_objects_for_heal_page`, while the page method calls `list_objects_v2` with 1000 keys. `get_disk_for_resume` parses `pool_N_set_M` and queries `StorageAdminApi::disk_set_inventory`.
+
+The file persists no state beyond the `ECStore` reference; durable effects happen inside ECStore operations. Main risks are placeholder `get_disk_status`, memory-heavy full listing, string-based transient matching, and the large-object read cap. Inline tests cover transient classification, and integration tests exercise format, bucket, and object healing through this adapter.

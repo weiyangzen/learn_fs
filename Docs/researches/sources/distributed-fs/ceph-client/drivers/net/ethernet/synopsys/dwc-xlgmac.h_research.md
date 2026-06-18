@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/synopsys/dwc-xlgmac.h
+
+## Purpose
+This header is the shared internal contract for the Synopsys DesignWare XLGMAC ethernet driver. It centralizes driver identity, descriptor sizing, DMA channel limits, interrupt categories, coalescing defaults, flow control/RSS limits, descriptor helper macros, all major private state structures, hardware operation tables, descriptor operation tables, and cross-file entry points used by the PCI, netdev, hardware, descriptor, ethtool, and common support files.
+
+## Important APIs, Types, and Functions
+Important exported declarations include `xlgmac_init_desc_ops`, `xlgmac_init_hw_ops`, `xlgmac_get_netdev_ops`, `xlgmac_get_ethtool_ops`, descriptor dump helpers, hardware feature discovery helpers, `xlgmac_drv_probe`, and `xlgmac_drv_remove`. Core types include `struct xlgmac_pdata`, `struct xlgmac_channel`, `struct xlgmac_ring`, `struct xlgmac_desc_data`, `struct xlgmac_pkt_info`, `struct xlgmac_hw_ops`, `struct xlgmac_desc_ops`, `struct xlgmac_hw_features`, and `struct xlgmac_stats`. The register bit helpers `XLGMAC_GET_REG_BITS`, `XLGMAC_GET_REG_BITS_LE`, `XLGMAC_SET_REG_BITS`, and `XLGMAC_SET_REG_BITS_LE` are used to manipulate hardware descriptor/register fields consistently, including little-endian descriptor values.
+
+## Control Flow and State
+The file itself does not execute control flow, but it defines the state transitions used elsewhere. `xlgmac_pdata` is the root per-device state: netdev/device pointers, operation tables, hardware features, channel/ring counts, coalescing settings, FIFO/PBL thresholds, flow-control settings, interrupt routing, VLAN filter bitmap, RSS key/table/options, clock rate, and PHY speed. `xlgmac_channel` binds queue index, DMA register base, NAPI context, timer state, and optional per-channel IRQ to TX/RX rings. `xlgmac_ring` tracks DMA descriptor arrays, per-descriptor software data, current/dirty indices, RX page allocation caches, and TX queue state. Receive continuation state is persisted in `xlgmac_desc_data.state` for incomplete packets across NAPI budget boundaries.
+
+## Dependencies and Integration Points
+The header depends on Linux networking, DMA, workqueue, PHY, VLAN, bitops, and timecounter facilities. It integrates with netdev ops via `xlgmac_get_netdev_ops`, ethtool via `xlgmac_get_ethtool_ops`, platform/PCI probe via `xlgmac_drv_probe`, and the hardware/descriptor implementation files through `xlgmac_hw_ops` and `xlgmac_desc_ops`. Feature fields mirror hardware registers and drive conditional enablement for RSS, checksum offload, timestamping, VLAN filtering, TSO, split headers, and flow control.
+
+## Risks and Test Signals
+Descriptor count and buffer-size constants are high-risk because TX split/GSO and RX allocation depend on them matching hardware constraints. Ring indices assume descriptor counts are power-of-two because `XLGMAC_GET_DESC_DATA` masks with `count - 1`. Endianness helpers need coverage on descriptor field generation and parsing. Useful tests include build coverage for all XLGMAC objects, probe/remove on PCI hardware or emulation, TX GSO and VLAN traffic, RX checksum/VLAN/RSS paths, interrupt coalescing changes via ethtool, and suspend/remove paths that validate DMA resources and NAPI/channel state are released.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/st,stm32-timers.yaml
+
+Purpose: Binding for STM32 general-purpose and low-power timer MFD nodes that may provide PWM, counter, timer-trigger, DMA, reset, interrupt, and power-domain integration.
+
+Important schema surface and control flow: compatible values cover `st,stm32-timers` and `st,stm32-lptimer`; `reg`, `clocks`, and `clock-names = "int"` are required. Optional properties include reset, power domain, DMA channels and names, interrupt names, access controllers, and child nodes for `pwm`, `counter`, and `timer@N`. The `pwm` child validates `st,breakinput`, PWM cells, and compatible; the counter and timer-trigger children use their own constrained properties. Pattern properties allow timer trigger child nodes with unit addresses.
+
+State, dependencies, and integration: the DT node represents a timer register block and advertises child devices that share the same hardware. Dependencies include STM32 clock/reset/power-domain bindings, DMA mappings, PWM/counter bindings, and interrupt definitions. Risks include DMA name/channel order mismatches, incorrect break-input tuples, missing reset controls on reset-gated timers, and invalid child `reg` values. Test signals are binding validation, example validation with DMA and PWM, runtime child creation, PWM output tests, counter reads, and trigger IRQ behavior.

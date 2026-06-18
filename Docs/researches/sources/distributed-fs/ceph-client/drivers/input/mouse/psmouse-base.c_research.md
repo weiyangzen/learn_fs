@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/input/mouse/psmouse-base.c
+
+`psmouse-base.c` is the central PS/2 mouse serio driver. It owns generic packet handling, protocol probing, device lifecycle, sysfs controls, reconnect/resync behavior, module parameters, and dispatch to protocol modules.
+
+Key APIs include standard reporting helpers, state setters, reset/activate/deactivate, PNP matching, `psmouse_protocols[]`, receive handlers, `psmouse_extensions()`, connect/disconnect/cleanup/reconnect, and sysfs protocol/rate/resolution handlers. Connect allocates psmouse/input state, opens serio, probes IDs, seeds defaults, auto-detects or forces a protocol, registers input unless an SMBus companion handles events, and enables stream mode. Receive flow filters timeout/parity/OOB data, accumulates packets, invokes the protocol handler, and schedules resync or reconnect on bad data.
+
+State is `struct psmouse`: protocol, packet buffer, state machine, tunables, callbacks, pass-through hooks, private protocol data, counters, names, and input device. Dependencies are serio, libps2, input, all protocol modules, and psmouse SMBus. Risks are fragile probe ordering, resync/reconnect races, pass-through parent handling, protocol switching with child ports, SMBus companion suppression, and reconnect storms. Test signals include module parameters, auto/forced protocols, standard packet decoding, OOB extra buttons, pass-through, suspend cleanup, reconnect/resync, SMBus paths, and Kconfig combinations.

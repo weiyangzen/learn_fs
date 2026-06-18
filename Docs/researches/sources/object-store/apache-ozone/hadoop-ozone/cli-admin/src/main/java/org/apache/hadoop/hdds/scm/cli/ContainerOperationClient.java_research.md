@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/cli-admin/src/main/java/org/apache/hadoop/hdds/scm/cli/ContainerOperationClient.java
+
+Purpose: `ContainerOperationClient` is the concrete CLI/admin implementation of `ScmClient`. It bridges administrator commands to SCM RPCs and, for container data operations, to datanode container protocol calls through xceiver clients.
+
+Important APIs and types: It implements many `ScmClient` methods and wraps `StorageContainerLocationProtocol`, `SecretKeyProtocolScm`, `XceiverClientManager`, `XceiverClientSpi`, `ContainerProtocolCalls`, `ContainerWithPipeline`, `Pipeline`, `ContainerInfo`, `ContainerReplicaInfo`, `ReplicationConfig`, `ReplicationManagerReport`, `StartContainerBalancerResponseProto`, `ContainerBalancerStatusInfoResponseProto`, `StatusAndMessages`, and datanode admin response types.
+
+Control flow: Construction creates an SCM container RPC client for the configured HA service or a target SCM node, creates a secret-key client, reads container size and default replication settings, detects container-token support, and stores the max list count. `getXceiverClientManager` lazily creates a client manager, using CA certificates and `ClientTrustManager` when security is enabled. Container create/read/delete methods allocate or fetch pipelines from SCM, acquire xceiver clients, issue datanode protocol calls with optional encoded container tokens, and release clients in finally blocks. Most admin methods delegate directly to `storageContainerLocationClient`.
+
+State and persistence behavior: Local state includes configuration, clients, token-enabled flag, default replication type/factor, container size, and max list count. It persists nothing locally. Remote side effects include allocating/closing/deleting containers, changing pipeline state, safe mode, replication manager state, container balancer state, SCM upgrade finalization, SCM leadership, secret key rotation, and suppressed-container flags.
+
+Dependencies and integration points: This class is a central integration point across CLI commands, SCM HA utilities, security certificate handling, datanode xceiver protocol, container tokens, replication manager, container balancer, safe mode, datanode admin, SCM roles, upgrade finalization, metrics, and reconciliation APIs.
+
+Risks: Many methods are thin delegations, so protocol drift in `ScmClient` or `StorageContainerLocationProtocol` affects this class broadly. `createContainer(type, factor, owner)` ignores the passed `type` and uses the instance default replication type with the passed factor, which is a notable behavior risk. `containerSizeB` casts a storage size to `int` before assigning to long. `close` logs but suppresses close exceptions. List operations silently cap requested count and only warn.
+
+Test signals: Signals include correct lazy client-manager construction under secure/insecure configs, token generation only when enabled, xceiver acquire/release around create/read/delete, SCM delete after datanode delete, capped list counts, direct delegation for admin operations, and propagated IO failures.

@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/test-appliance/files/usr/lib/python3/dist-packages/gen_results_summary.py
+
+- Purpose: results summary library; it walks results.xml files, aggregates JUnit statistics, handles LTM ordering/properties, writes human summaries, and optionally merges xUnit XML. The file is 434 lines/13866 bytes and is researched as source path `sources/test-tools/xfstests-bld/test-appliance/files/usr/lib/python3/dist-packages/gen_results_summary.py`.
+- Important APIs/types/functions: Python imports copy, os, sys, time, datetime, junitparser; definitions include class TestStats, class wrapped_print, def get_results, def parse_timestamp, def failed_tests, def get_property, def get_properties, def remove_properties, def print_tests, def total_tests, def sum_testsuites, def get_testsuite_stats, def testsuite_failed, def print_summary, def print_property_line, def print_properties, def print_header, def print_trailer.
+- Control flow: walks result trees for `results.xml`, loads JUnit XML, adjusts LTM properties/order when `ltm-run-stats` exists, prints per-suite summaries, optionally marks hard failures and writes merged XML atomically via `.new`/rename.
+- State and persistence: reads and writes result XML/stat/report files; no daemon state, but output files are consumed by `runtests.sh`, selftests, and result publication.
+- Dependencies/integration: depends on the vendored `junitparser` package plus standard Python modules; wrappers under `/usr/local/bin` are called by test runners and selftest helpers.
+- Risks and test signals: malformed XML, missing properties, duplicate suite identity, or locale-sensitive float parsing can skew counts; test with representative passing/failing/skipped/preempted xUnit samples and CLI exit status checks.

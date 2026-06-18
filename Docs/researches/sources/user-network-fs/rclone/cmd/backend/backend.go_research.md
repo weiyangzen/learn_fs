@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/cmd/backend/backend.go
+
+Purpose: implements `rclone backend`, a generic frontend for backend-specific commands plus built-in `help` and `features` actions. It supports repeated `-o/--option` values and `--json`.
+
+Control flow: after argument validation, `help <backendname>` can show help without instantiating a remote. Otherwise it resolves `remote:path` with `fs.ConfigFs`, constructs the Fs, dispatches `help`, `features` (`operations.GetFsInfo`), or a backend `Features().Command` call with parsed options and extra args. Output is printed as string/lines or JSON depending on type or `--json`. `showHelp` renders backend command help, sorting option names. State can be read-only or mutating depending on backend command invoked. Dependencies include fs registry, RC option parser, operations fs info, and Cobra. Risks include backend commands with side effects, option parsing ambiguity for key-only options, overlay remotes requiring underlying backend commands, and global flag state. Test signal is indirect command/integration coverage.

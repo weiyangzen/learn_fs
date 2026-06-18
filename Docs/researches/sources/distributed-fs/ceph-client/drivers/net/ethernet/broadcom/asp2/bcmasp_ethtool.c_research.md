@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/broadcom/asp2/bcmasp_ethtool.c
+
+Purpose: `bcmasp_ethtool.c` implements the ethtool surface for Broadcom ASP2 netdevs. It reports driver info, message level, custom statistics, MAC/RMON/control counters, timestamp capabilities, link settings through PHYLIB, EEE through PHYLIB, Wake-on-LAN configuration, and RX network classifier rules used for wake filters.
+
+Important APIs/types/functions: the exported integration point is `const struct ethtool_ops bcmasp_ethtool_ops`. Important helpers are `bcmasp_get_sset_count()`, `bcmasp_get_strings()`, `bcmasp_update_mib_counters()`, `bcmasp_get_ethtool_stats()`, `bcmasp_get_drvinfo()`, `bcmasp_get_wol()`, `bcmasp_set_wol()`, `bcmasp_flow_insert()`, `bcmasp_flow_delete()`, `bcmasp_flow_get()`, `bcmasp_set_rxnfc()`, `bcmasp_get_rxnfc()`, `bcmasp_get_eee()`, `bcmasp_set_eee()`, `bcmasp_get_eth_mac_stats()`, `bcmasp_get_rmon_stats()`, and `bcmasp_get_eth_ctrl_stats()`.
+
+Control flow: ethtool stats requests optionally refresh hardware MIB values when the interface is running, then copy values from `intf->mib`. WOL get merges PHY WOL capabilities with MAC WOL capabilities when the device can wake; WOL set tries PHY WOL first and falls back to MAC-managed WOL options guarded by `priv->wol_lock`. RXNFC insertion accepts only wake filters (`RX_CLS_FLOW_WAKE`) for selected flow types, rejects duplicates, allocates one or two software filter slots through core helpers, and defers hardware programming until suspend.
+
+State and persistence: `intf->msg_enable`, `intf->wolopts`, `intf->sopass`, `intf->mib`, and `priv->net_filters` are the main state touched here. WOL settings persist in driver memory until changed and affect suspend behavior. RX classifier rules persist in the software filter table and are exposed by get/list operations.
+
+Dependencies and integration points: the file depends on ethtool, PHYLIB ethtool helpers, unaligned access for stats layout, netdevice, and the core filter/WOL helpers declared in `bcmasp.h`. It reads UniMAC and RX control registers using MMIO accessors and delegates link operations to `phy_ethtool_*`.
+
+Risks: only wake filters are supported; non-wake classifier inserts return `-EOPNOTSUPP`. Wake filters consume paired slots for 256-byte matching, so location and capacity behavior is stricter than generic ethtool users may expect. The stats table must match `struct bcmasp_mib_counters` order exactly. Test signals include `ethtool -S`, WOL get/set with PHY and MAC combinations, SecureOn password behavior, RX classifier insert/delete/list/get, EEE get/set, and MAC/RMON counter reads.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/x86/boot/compressed/pgtable_64.c
+
+Purpose: handles the compressed x86-64 kernel's early switch between 4-level and 5-level paging. It decides whether LA57 is required from command line and CPUID, finds a safe low-memory trampoline placement, copies the trampoline template, builds a temporary top-level page table, calls the trampoline, moves the resulting top page table to the caller-provided page-table buffer, and restores overwritten low memory.
+
+Important APIs and state: exports `configure_5level_paging(struct boot_params *bp, void *pgtable)`. Persistent early state is held in `.data` variables `__pgtable_l5_enabled`, `pgdir_shift`, `ptrs_per_p4d`, and `trampoline_32bit`, because `.bss` is cleared during decompression. `find_trampoline_placement()` uses `boot_params_ptr->e820_table`, EFI loader signatures, EBDA, and BIOS low-memory size. It depends on `trampoline_32bit_src`, `trampoline_ljmp_imm_offset`, and `TRAMPOLINE_32BIT_*` constants from startup assembly.
+
+Control flow: `configure_5level_paging()` sanitizes boot params, checks `no5lvl`, CPUID leaf 7 ECX bit 16, and current CR4.LA57. If the requested mode already matches hardware, it returns after updating the global paging-shape variables. Otherwise it saves a low-memory trampoline buffer, copies code, patches the absolute far-jump immediate, prepares either a new 5-level root pointing at the old CR3 or a copied 4-level root from the current 5-level tree, calls the trampoline, copies the new top-level page to `pgtable`, writes CR3, and restores low memory.
+
+Dependencies and integration: consumed by compressed/head startup before the normal kernel virtual mapping exists. It relies on sanitized boot protocol data, e820 RAM typing, early string helpers, raw CR3/CR4/CPUID helpers, and unencrypted page-table flags (`_PAGE_TABLE_NOENC`) for memory-encrypted guests.
+
+Risks and test signals: placement must never collide with BIOS/EBDA or non-RAM e820 ranges, and `trampoline_32bit` must remain under 4 GiB. Off-by-one or alignment errors can destroy low memory or leave CR3 pointing at an invalid root. Useful tests are booting with and without `no5lvl` on LA57-capable hardware or emulation, EFI and non-EFI boots, SEV/SME guests, and inspection that `__pgtable_l5_enabled`, `pgdir_shift`, and `ptrs_per_p4d` match final CR4.LA57.

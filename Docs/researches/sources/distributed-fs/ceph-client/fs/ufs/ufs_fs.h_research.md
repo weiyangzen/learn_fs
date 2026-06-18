@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/fs/ufs/ufs_fs.h
+
+`ufs_fs.h` describes the UFS on-disk format and parsed in-core geometry. It defines filesystem integer types, constants, magic values, flag masks, geometry macros, directory entries, cylinder groups, UFS1/UFS2 inodes, split superblock structures, and private parsed superblock/cylinder-group structures.
+
+Important types and constants include `__fs64`, `__fs32`, `__fs16`, UFS/UFS2/HP magic values, `UFS_DE_*`, `UFS_UID_*`, `UFS_ST_*`, `UFS_CG_*`, `UFS_TYPE_*`, `struct ufs_dir_entry`, `struct ufs_csum_core`, `struct ufs_cylinder_group`, `struct ufs_inode`, `struct ufs2_inode`, `struct ufs_buffer_head`, `struct ufs_cg_private_info`, `struct ufs_sb_private_info`, and `struct ufs_super_block_first/second/third`. Macros such as `ufs_cgstart`, `ufs_inotofsba`, `ufs_blkroundup`, and `UFS_DIR_REC_LEN` drive runtime address and size calculations.
+
+The file is declarative but persistence-critical: a field, shift, mask, or alignment mistake affects superblock parsing, inode lookup, directory parsing, allocation, and statfs. It integrates with `swab.h`, `util.h`, and all UFS implementation files. Risks include layout drift, packed UFS2 fields, macros that assume local `uspi`/`sb`, and variant-specific formats. Test signals include mounting known UFS1/UFS2 images, comparing geometry/statfs with external tools, and allocation/free operations that stress cylinder-group bitmaps.

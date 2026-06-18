@@ -1,0 +1,3 @@
+# sources/distributed-fs/lizardfs/src/common/syslog_defs.h
+
+Purpose: provides syslog priority constants portably. Important behavior: on Windows defines `LOG_EMERG` through `LOG_DEBUG`; on non-Windows includes `<syslog.h>`. Control flow: compile-time platform branch only. State/persistence: no runtime state. Dependencies: `platform.h`, optional system syslog header. Integration points: logging code and legacy C-style log calls that use syslog priorities. Risks: Windows definitions must match expected numeric ordering used by `slogger.cc`; no facility constants are defined. Test signals: no direct tests in this subset.

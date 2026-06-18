@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/px30-cru.h
+
+Purpose: defines Rockchip PX30 CRU clock and soft-reset specifier IDs. It exports 350 macros across PLL/core clocks, SCLK/HCLK/PCLK/ACLK gates, power-domain clocks, and `SRST_*` reset IDs; numeric values span 0..353 with gaps matching hardware/reset bank layout.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 350 exported defines, numeric range 0..353, first numeric symbols `PLL_APLL`=1, `PLL_DPLL`=2, `PLL_CPLL`=3, `PLL_NPLL`=4, `APLL_BOOST_H`=5, and last numeric symbols `SRST_GPIO2_P`=183, `SRST_GPIO3_P`=184, `SRST_SGRF_P`=185, `SRST_GRF_P`=186, `SRST_I2S0_RX`=191. Dominant macro prefixes are `SRST`(178), `SCLK`(80), `PCLK`(37), `HCLK`(25), `ACLK`(18), `PLL`(5), `APLL`(2), `DCLK`(2); common suffix categories are `P`(48), `H`(31), `A`(22), `PRE`(11), `PMU`(8), `OUT`(6), `DIV`(5), `ISP`(5). Source section markers include `core clocks`, `sclk gates (special clocks)`, `dclk gates`, `aclk gates`, `hclk gates`, `pclk gates`, `pmu-clocks indices`, `soft-reset indices`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The constants map to `drivers/clk/rockchip/clk-px30.c`, Rockchip CRU DTS clock/reset specifiers, and reset-controller consumers using the shared CRU provider.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `_DT_BINDINGS_CLK_ROCKCHIP_PX30_H` should remain unique enough to avoid accidental include suppression. Clock and reset IDs coexist in one header, so edits must avoid colliding semantic domains while preserving bank gaps used by the CRU provider.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include PX30 CRU probe, clock/reset consumers resolving their phandles, stable peripheral boot for UART/I2C/MMC/GMAC/GPU/VOP, and reset IDs operating through the CRU reset controller.

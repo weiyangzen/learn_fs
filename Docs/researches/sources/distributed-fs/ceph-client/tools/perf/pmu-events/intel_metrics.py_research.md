@@ -1,0 +1,16 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/perf/pmu-events/intel_metrics.py -->
+# sources/distributed-fs/ceph-client/tools/perf/pmu-events/intel_metrics.py
+Purpose: Generates Intel-specific perf metric JSON for one x86 model. It builds a hierarchy of low-power, branch, context-switch, FPU, ILP, L2/cache, load/store, and uncore memory/UPI metrics by composing the expression objects from `metric.py`. The command-line interface accepts `model`, `events_path`, and `-metricgroups`, loads model events from `events_path/x86/<model>/`, and prints either full metric JSON or metric-group descriptions.
+
+Important APIs/types/functions: The public surface is a set of metric factory functions: `Idle`, `Rapl`, `Smi`, `Tsx`, `IntelBr`, `IntelCtxSw`, `IntelFpu`, `IntelIlp`, `IntelL2`, `IntelMissLat`, `IntelMlp`, `IntelPorts`, `IntelSwpf`, `IntelLdSt`, `UncoreCState`, `UncoreDir`, `UncoreMem`, `UncoreMemBw`, `UncoreMemSat`, and `UncoreUpiBw`. Each returns a `Metric`, `MetricGroup`, or `None` when prerequisite events are absent. It relies on `Event` fallback arguments, `Select`, `MetricRef`, `Literal`, `source_count`, `has_event`, `d_ratio`, `max`, and `MetricConstraint` to produce runtime-safe formulas.
+
+Control flow: `main()` validates the event directory, calls `LoadEvents`, then constructs one root `MetricGroup` from `Cycles()` plus all Intel factories. Individual factories probe event availability through `Event(...)` inside `try/except` blocks and skip unsupported feature groups. Some functions inspect JSON files directly, such as `IntelPorts()` reading `pipeline.json` and `UncoreMemBw()` reading `uncore-memory.json`, to synthesize groups from matching event names.
+
+State and persistence: State is process-local: `_args` holds parsed CLI options and `interval_sec` is the reusable `duration_time` event expression. No files are written; stdout is the generated artifact. The script mutates some `Event.name` fields to add filters or aliases after validation, which makes generated expressions model-specific.
+
+Dependencies and integration points: This is part of perf's PMU event build pipeline and feeds JSON consumed by `jevents.py`. It depends on neighboring `common_metrics.py` and `metric.py`, plus model event JSON under `arch/x86`. Generated metrics integrate with perf's metric parser and runtime PMU event lookup.
+
+Risks: Several broad `except:` blocks intentionally tolerate missing model events but can hide malformed JSON or expression errors. There are apparent typo hazards where code references `args.model` instead of `_args.model` in some branches, which would only surface when those branches execute. Duplicate metric names appear in some L2 groups, so downstream deduplication/order behavior matters. Event-name mutation after construction must preserve escaping expected by `metric.Event.ToPerfJson`.
+
+Test signals: Main signals are `metric_test.py`, perf PMU event generation tests, and running this script against representative x86 model directories with and without `-metricgroups`. Useful regression checks include JSON validity, no missing event exceptions for supported models, and stable metric-group names expected by perf list/stat.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/perf/pmu-events/intel_metrics.py -->

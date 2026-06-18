@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/uapi/asm/swab.h
+
+ARC byte-swap acceleration for userspace/kernel headers. It defines __arch_swab32() using the ARC `swape` instruction and enables 64-bit swaps through 32-bit pieces outside strict ANSI or inside the kernel. Control flow is generic swab macros selecting this arch primitive. State is none beyond input values. Dependencies are compiler inline assembly support and ARC ISA availability. Risks are using `swape` on incompatible cores/toolchains and missing memory clobbers not needed for pure register operations. Test signals are endian conversion selftests, big/little endian builds, and userspace header compilation.

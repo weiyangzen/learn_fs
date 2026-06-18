@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/core/dev_ioctl.c
+
+Purpose: Implements classic network-device ioctl handling for interface queries and mutations. It translates `SIOCxIF*`, bonding, private device, MII, ethtool, WAN, multicast, and hardware timestamp commands into netdevice operations with the required user-copy, capability, RTNL, RCU, and netdev ops locking.
+
+Important APIs, types, and functions: `dev_ifconf()` implements `SIOCGIFCONF` with compat handling. `dev_ioctl()` is the main dispatcher. Helper paths include `dev_ifname()`, `dev_ifsioc_locked()` for RCU-safe read-only queries, `dev_ifsioc()` for RTNL-serialized mutations, `dev_load()` for autoloading absent interfaces, `net_hwtstamp_validate()`, `dev_get_hwtstamp_phylib()`, `dev_set_hwtstamp_phylib()`, `generic_hwtstamp_get_lower()`, and `generic_hwtstamp_set_lower()`.
+
+Control flow and state: `dev_ioctl()` normalizes interface names, strips alias suffixes after `:`, sets the caller's copyout flag, and dispatches by command class. Read-only queries use RCU or specialized helpers. Privileged mutating commands check `CAP_NET_ADMIN` in the target net namespace or global capability for legacy map/queue commands, then take `rtnl_net_lock()` and call `dev_ifsioc()`. Multicast add/delete wraps `dev_mc_add_global()` or `dev_mc_del_global()` with ops locking and `netif_rx_mode_sync()`. Unknown private ranges are delegated to driver callbacks if present.
+
+Hardware timestamping flow: Set paths copy `hwtstamp_config` from userspace, convert to `kernel_hwtstamp_config`, validate flag/tx/rx enums, run DSA conduit validation, require `ndo_hwtstamp_set`, and call `dev_set_hwtstamp_phylib()` under ops lock. That helper gives phylib timestamping precedence unless the registered provider says netdev, supports `see_all_hwtstamp_requests`, and rolls back netdev changes if PHY programming fails. Get paths call `dev_get_hwtstamp_phylib()` and copy an updated config back unless an unconverted driver already copied to userspace.
+
+Dependencies and integration points: The file integrates with inet `gifconf`, rtnetlink locking, netdevice ops, phylib/PTP timestamp providers, DSA validation, ethtool, wireless extensions, bridge and bonding ioctls, private driver commands, and module autoloading via `request_module()`.
+
+Risks: The command matrix has legacy compatibility constraints. Incorrect capability checks can expose privileged mutations; missed compat layout handling can corrupt user data; missing `netif_device_present()` can call into removed hardware; timestamp rollback paths can leave NIC and PHY state inconsistent if driver get/set methods are incomplete. `dev_load()` may trigger module autoloading from interface names, so caller context and capabilities matter.
+
+Test signals: Exercise `SIOCGIFCONF` in native and compat modes; `SIOCGIFFLAGS`, MTU, index, and txqlen reads; privileged MTU, name, flags, MAC, broadcast, multicast add/delete, and queue-length changes; timestamp get/set with netdev-only, phylib-only, and `see_all_hwtstamp_requests` devices; private/bonding/MII delegation; and lockdep-clean operation under RTNL.

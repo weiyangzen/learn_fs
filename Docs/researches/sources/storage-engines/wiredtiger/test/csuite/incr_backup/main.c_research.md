@@ -1,0 +1,15 @@
+# sources/storage-engines/wiredtiger/test/csuite/incr_backup/main.c
+
+Purpose: randomized incremental backup correctness test. It creates and mutates many tables with predictable per-table histories, alternates full and incremental backups, verifies backup contents after each iteration, and records seeds so failures can be reproduced.
+
+Important APIs, types, and functions: `TABLE` tracks one table slot, table name, generation index, change count, random state, and max value size. `TABLE_INFO` tracks the table array, tables in use, full backup number, and incremental backup number. `OPERATION_TYPE` defines insert, modify, remove, and update phases. `key_value` deterministically maps a table change count to an expected key/value and operation. `table_changes`, `create_table`, and `drop_table` mutate live tables. `base_backup` calls `testutil_backup_create_full`; `incr_backup` calls `testutil_backup_create_incremental`; `check_backup` opens a copied backup and calls `check_table` for each live table. `run_test` orchestrates random schema/data/checkpoint/reopen/backup cycles.
+
+Control flow: `main` parses home, preserve, seed, and verbosity. Without a seed it runs two fixed seeds plus one random seed; with `-S` it runs that seed. `run_test` creates an isolated working directory and `WT_HOME`, chooses max value sizes, log file sizes, table count, per-table random seeds, and a checkpoint cadence. Across ten iterations it randomly creates/drops table slots, mutates live tables, checkpoints periodically, sometimes closes/reopens and copies the source bitmap while closed, takes a full backup on iteration 0, then either a new full backup or an incremental backup on later iterations, verifies the resulting backup copy, and prunes old backups.
+
+State and persistence behavior: creates `WT_TEST.incr_backup` by default, a nested `WT_HOME`, backup directories (`BACKUP_BASE`, `CHECK_BASE` via testutil helpers), optional preserved artifacts, log files with random `file_max`, and incremental backup metadata. Table data cycles through predictable insert/update/modify/remove phases so the expected final state can be reconstructed from `change_count`.
+
+Dependencies and integration points: depends on WiredTiger logging, checkpointing, table create/drop, modify API (`wiredtiger_calc_modify`), backup cursors/helpers from `test_util.h`, random APIs, and POSIX directory handling. It is registered by `test_incr_backup` and normally launched through `smoke.sh`.
+
+Risks: the test is random and storage-heavy; failures need the printed seed and possibly preserve mode. Incremental backup correctness depends on backup helper semantics and bitmap/granularity behavior. The TODO notes preserve artifacts can nest under `WT_TEST.incr_backup/WT_TEST.incr_backup...`. Very small or zero max value sizes are possible and intentionally exercised.
+
+Test signals: every backup verification must open the copied backup and match all expected records. The smoke script runs `-v 3`, and final output includes `Success.` and total copied backup ranges with granularity/allocation information.

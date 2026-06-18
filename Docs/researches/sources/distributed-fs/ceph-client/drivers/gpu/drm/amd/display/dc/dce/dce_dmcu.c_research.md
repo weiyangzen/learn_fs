@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/dce/dce_dmcu.c
+
+Purpose: implements DCE/DCN Display Microcontroller Unit callbacks for initialization, IRAM access, Panel Self Refresh control, firmware/version handling, backlight fractional PWM, PHY synchronization, EDID CEA messaging, and optional secure-display CRC window forwarding.
+
+Important APIs and functions: creators `dce_dmcu_create()`, `dcn10_dmcu_create()`, `dcn20_dmcu_create()`, and `dcn21_dmcu_create()` allocate a `struct dce_dmcu` and install generation-specific `dmcu_funcs`. DCE paths include `dce_dmcu_load_iram()`, `dce_dmcu_setup_psr()`, `dce_dmcu_set_psr_enable()`, PSR state/wait-loop helpers, and initialization checks. DCN10 adds stateful initialization from `DC_DMCU_SCRATCH`, version reads from IRAM, fractional PWM control, IRAM init notification, extended PSR setup with SMU optimization, EDID CEA send/receive helpers, and optional secure-display CRC commands. DCN20/21 add PHY lock/unlock and PSP/auto-load gating.
+
+Control flow: command paths wait for `MASTER_COMM_INTERRUPT` to clear, write command data registers, set `MASTER_COMM_CMD_REG_BYTE0`, then assert `MASTER_COMM_INTERRUPT` and often wait for it to clear again. PSR setup also programs link encoder fast training and secondary packet timing before handing packed config unions to firmware. DCN init reads firmware state from scratch, initializes ramping/PWM and USB-C transmitter interrupt masks when firmware is loaded but uninitialized, then caches version and state.
+
+State and persistence: state spans hardware scratch/command/IRAM registers and `struct dmcu` fields such as `dmcu_state`, `dmcu_version`, `cached_wait_loop_number`, `auto_load_dmcu`, and `psp_version`. No filesystem persistence exists. Wait-loop caching avoids redundant firmware commands. IRAM access toggles host access and auto-increment bits and relies on memory-power-state waits.
+
+Dependencies and integration: depends on link encoder PSR functions, DC link list, DC config flags, SMU interrupt control, register helpers, PSP scratch registers, and optional secure display config. It implements the `dmcu_funcs` table used by ABM/PSR/link power features in the DC stack.
+
+Risks and test signals: risks include command mailbox deadlocks, high-IRQ PSR waits requiring `udelay` instead of sleeping, IRAM power-state timeout assumptions, `dcn10_send_edid_cea()` packing eight bytes while only validating `length <= 8` and then reading `data[4..7]`, PSP version gate regressions, and generation-specific scratch semantics. Test PSR enter/exit, firmware unloaded/uninitialized/running states, suspend/resume, fractional PWM toggles, USB-C interrupt mask formation, PHY lock/unlock, EDID CEA ACK/NACK, and secure-display builds.

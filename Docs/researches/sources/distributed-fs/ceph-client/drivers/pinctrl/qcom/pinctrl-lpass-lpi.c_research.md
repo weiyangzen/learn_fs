@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/qcom/pinctrl-lpass-lpi.c
+
+Purpose: reusable Qualcomm LPASS LPI GPIO/pinctrl implementation. Unlike the IPQ TLMM files, this file contains active runtime logic for muxing, pinconf, GPIO operations, debugfs display, probe, and remove for LPASS low-power island pin controllers.
+
+Important APIs, types, and functions: `struct lpi_pinctrl` stores device, pinctrl device, gpio chip, descriptor, TLMM/slew MMIO bases, two optional clocks (`core`, `audio`), a mutex, an `ever_gpio` bitmap, and variant data. `lpi_gpio_read()`/`lpi_gpio_write()` compute register offsets either by `LPI_TLMM_REG_OFFSET * pin` or predefined per-group offsets. `lpi_gpio_pinctrl_ops`, `lpi_gpio_pinmux_ops`, and `lpi_gpio_pinconf_ops` connect the implementation to pinctrl. `lpi_gpio_set_mux()` validates requested function membership, prevents first-GPIO-output glitches by mirroring input state to output, then writes the function field. `lpi_config_get()` and `lpi_config_set()` handle generic bias, input enable, output level, drive strength, and slew rate configs. GPIO callbacks wrap those pinconf helpers. `lpi_pinctrl_probe()` and `lpi_pinctrl_remove()` are exported for variant drivers.
+
+Control flow: a variant platform driver matches DT and calls `lpi_pinctrl_probe()`. Probe allocates state, obtains match data, validates `npins <= MAX_NR_GPIO`, maps TLMM and optionally slew resources, enables optional clocks, fills pinctrl/gpio descriptors, registers pinctrl, creates one generic group per pin, then registers a sleeping gpiochip. Remove destroys the mutex, disables clocks, and removes generic groups.
+
+State and persistence: runtime state includes enabled clocks, MMIO mappings, pinctrl/gpio registrations, mutex, and `ever_gpio` glitch-prevention bitmap. Hardware pin state persists in LPASS registers. Devm resources cover most cleanup; explicit remove handles clocks, mutex, and generic groups.
+
+Dependencies and integration: uses bitfield helpers, clocks, gpiolib, pinctrl generic helpers, pinconf generic DT parsing, `pinctrl-utils`, and `pinctrl-lpass-lpi.h` variant data. Integrates with DT resources/clocks and variant-specific pin/function/group tables.
+
+Risks: `lpi_config_set()` defaults drive strength to 2 mA and bias disable for every call, so partial config calls can rewrite fields unless consumers submit complete states. `LPI_GPIO_DS_TO_VAL(v)` assumes valid even mA strengths; unusual values can underflow or encode unexpected drive. Slew-rate register selection depends on variant flags. The `ever_gpio` bitmap caps variants at 32 pins. Concurrent register updates rely on the local mutex, but value-before-OE writes include an unlocked value register write before the config lock.
+
+Test signals: build and symbol export coverage; probe with and without separate slew resource; optional clock enable/disable paths; DT pinconf parsing; mux membership rejection; GPIO direction/get/set; bias/drive/slew readback; first GPIO output transition without glitches; debugfs formatting; remove/unbind cleanup; suspend/resume or audio low-power island tests for clock and register retention.

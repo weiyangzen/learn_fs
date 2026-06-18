@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/omap4.h
+
+Purpose: maps OMAP clock-control register offsets into DT clock specifier indexes. It defines 96 macros plus register-index helpers; most exported `*_CLKCTRL` values are computed by subtracting the clock-control base offset, not by assigning opaque clock IDs.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 96 exported defines, numeric range 0..440, first numeric symbols `OMAP4_CLKCTRL_OFFSET`=32, `OMAP4_MPU_CLKCTRL`=0, `OMAP4_DSP_CLKCTRL`=0, `OMAP4_L4_ABE_CLKCTRL`=0, `OMAP4_AESS_CLKCTRL`=8, and last numeric symbols `OMAP4_GPIO1_CLKCTRL`=24, `OMAP4_TIMER1_CLKCTRL`=32, `OMAP4_COUNTER_32K_CLKCTRL`=48, `OMAP4_KBD_CLKCTRL`=88, `OMAP4_DEBUGSS_CLKCTRL`=0. Dominant macro prefixes are `OMAP4`(96); common suffix categories are `CLKCTRL`(94), `OFFSET`(2). Source section markers include `mpuss clocks`, `tesla clocks`, `abe clocks`, `l4_ao clocks`, `l3_1 clocks`, `l3_2 clocks`, `ducati clocks`, `l3_dma clocks`, `l3_emif clocks`, `d2d clocks`, `l4_cfg clocks`, `l3_instr clocks`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The constants integrate with TI OMAP clock-control providers and OMAP DTS nodes that specify module clockctrl offsets. The `CLKCTRL_INDEX()` convention must match PRCM register maps and OMAP clock data.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `__DT_BINDINGS_CLK_OMAP4_H` should remain unique enough to avoid accidental include suppression. The computed offset macros are especially sensitive to base-offset changes; a wrong `CLKCTRL_OFFSET` or secure-clock base shifts every derived index.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include OMAP PRCM clockctrl providers registering each module clock, remoteproc/display/DMA/MMC/USB devices probing, and no shifted offset lookups in clock debug output.

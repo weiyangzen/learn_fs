@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/ocfs2/stackglue.c
+
+Purpose: provides the central OCFS2 abstraction over cluster stack plugins. It selects and pins one active stack, exposes stack and protocol state through `/sys/fs/ocfs2`, runs the heartbeat cleanup helper on hangup, and forwards generic OCFS2 DLM and plock requests into the selected plugin operations.
+
+Important APIs and functions: exported entry points include `ocfs2_stack_glue_register`, `ocfs2_stack_glue_unregister`, `ocfs2_stack_glue_set_max_proto_version`, `ocfs2_cluster_connect`, `ocfs2_cluster_connect_agnostic`, `ocfs2_cluster_disconnect`, `ocfs2_cluster_hangup`, `ocfs2_cluster_this_node`, `ocfs2_dlm_lock`, `ocfs2_dlm_unlock`, `ocfs2_dlm_lock_status`, `ocfs2_dlm_lvb_valid`, `ocfs2_dlm_lvb`, `ocfs2_dlm_dump_lksb`, `ocfs2_stack_supports_plocks`, and `ocfs2_plock`.
+
+Control flow: stack drivers register into `ocfs2_stack_list`. Mount calls `ocfs2_cluster_connect`, which checks the requested locking protocol, allocates `ocfs2_cluster_connection`, selects a plugin based on the on-disk stack label (`o2cb` uses the classic plugin, all others use the user plugin), requests the module if missing, pins the active plugin, and calls its `connect`. Disconnect calls the plugin and drops the active-stack reference unless a later heartbeat hangup is pending. Sysfs allows reading the maximum locking protocol, loaded plugins, active plugin, and selected cluster stack; writes to `cluster_stack` are rejected while a different active stack is in use.
+
+State and persistence behavior: `active_stack`, plugin counts, global `locking_max_version`, and configured `cluster_stack_name` are in-memory and protected by `ocfs2_stack_lock`. The active plugin is module-pinned while any connection exists. `ocfs2_hb_ctl_path` is mutable via sysctl and used for post-unmount heartbeat cleanup, but no filesystem metadata is changed here.
+
+Dependencies and integration points: integrates with plugin modules such as `ocfs2_stack_o2cb` and `ocfs2_stack_user`, `request_module`, sysfs under the exported `ocfs2_kset`, proc sysctl, usermode helper execution, and the DLM-facing wrappers used throughout OCFS2 lock management. `super.c` relies on `ocfs2_kset` for per-device sysfs and on `ocfs2_cluster_hangup` during unmount.
+
+Risks: only one active stack is allowed globally, so mixed-stack mounts should fail cleanly. Module reference counting depends on balanced connect, disconnect, and hangup paths. `ocfs2_cluster_stack_store` must not permit switching stacks after a plugin is active. The `call_usermodehelper` heartbeat cleanup is outside the journal/DLM transaction model and can fail after unmount decisions have been made.
+
+Test signals: register/unregister duplicate stack plugins, mount with default `o2cb`, mount with a userspace stack label, request-module failure, concurrent mounts with conflicting stack labels, sysfs reads/writes while active and inactive, plock support checks for stacks with and without `.plock`, and unmount paths with `hangup_pending` both set and clear.

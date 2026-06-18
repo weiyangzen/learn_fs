@@ -1,0 +1,22 @@
+# sources/control-plane/rook/pkg/daemon/ceph/osd/volume.go
+
+## Purpose
+`volume.go` is the main daemon-side ceph-volume integration for preparing, listing, and cleaning Ceph OSD block devices. It decides between raw and LVM modes, builds ceph-volume commands for PVC-backed and host devices, parses ceph-volume JSON output into operator `OSDInfo`, updates LVM configuration, wipes stale devices from other clusters, and handles encrypted block device discovery and cleanup.
+
+## Important APIs, Types, and Functions
+Data structs `osdInfoBlock`, `osdInfo`, `osdTags`, and `cephVolReportV2` model ceph-volume raw/lvm list and report JSON. `OsdAgent.configureCVDevices()` orchestrates prepare/list behavior. `initializeBlockPVC()`, `initializeDevices()`, `initializeDevicesRawMode()`, and `initializeDevicesLVMMode()` perform command construction for PVC/raw/LVM paths. `allowRawMode()`, `isSafeToUseRawMode()`, and `lvmModeAllowed()` choose mode eligibility. `GetCephVolumeLVMOSDs()` and `GetCephVolumeRawOSDs()` parse existing OSDs. `ZapDevice()`, `WipeDevicesFromOtherClusters()`, `wipeEncryptedDevicesFromOtherClusters()`, and `GetBackingDeviceForEncryptedBlock()` clean stale devices. Smaller helpers cover device class matching, encrypted mapper extraction, ceph-volume logging, database sizing, and OSDInfo dedupe.
+
+## Control Flow
+`configureCVDevices()` first handles idempotent no-new-device cases by listing existing LVM then raw OSDs. For new devices it creates an OSD bootstrap keyring, detects LV-backed PVCs, runs PVC raw prepare or non-PVC mode initialization, then lists LVM and raw OSDs again to return authoritative `OSDInfo`. Non-PVC initialization splits eligible devices into raw and LVM maps. Raw mode is denied for encryption, multiple OSDs per device, metadata devices, logical volumes, and unsafe per-device settings. LVM mode builds `ceph-volume lvm batch --prepare` or `lvm prepare` commands, validates report JSON for metadata devices, supports multipath and LV device paths, applies device classes, database sizes, and encrypted flags. Raw listing handles closed encrypted PVC devices by reopening them when passphrase and PVC env vars are available, then closes encrypted devices after preparing.
+
+## State and Persistence
+The file mutates host block devices, LVM config, ceph-volume logs, LUKS labels/subsystems, dmcrypt mappings, and OSD metadata. It reads global environment-derived flags `isEncrypted` and `isOnPVC`, plus several OSD env vars during runtime. `UpdateLVMConfig()` rewrites `/etc/lvm/lvm.conf` to disable udev sync/rules and adjust filters. `ZapDevice()` performs destructive cleanup with ceph-volume zap, unmount, wipefs, ceph-bluestore-tool, and `dd` zeroing. `WipeDevicesFromOtherClusters()` clears stale filesystem state on in-memory `LocalDisk` entries after zapping.
+
+## Dependencies and Integration Points
+This file is central to OSD agent operation and depends on Rook `clusterd` device discovery, Ceph client bootstrap keyring helpers, operator OSD types/config, encryption helpers from sibling OSD files, executor abstraction, `sys` device parsing, and external binaries (`ceph-volume`, `lvm`, `nsenter`, `cryptsetup`, `wipefs`, `ceph-bluestore-tool`, `dd`, `lsblk`, `sgdisk`, `udevadm`). It returns `oposd.OSDInfo` consumed by operator activation and deployment logic.
+
+## Risks
+The code is intentionally command-heavy and environment-sensitive. Package globals such as `isEncrypted` and `isOnPVC` are initialized at package load, so tests or callers that mutate env vars later may not affect those booleans. Several paths are destructive (`ZapDevice`, stale cluster wipe) and depend on correct matching of desired devices, DevLinks, and cluster FSIDs. Ceph-volume report validation is critical for metadata devices; missing or malformed JSON can block preparation. LVM config rewriting uses byte replacements and assumes expected default text is present. Raw/LVM listing behavior differs for PVC versus host devices, with stricter errors on PVC when a foreign cluster OSD is found.
+
+## Test Signals
+`volume_test.go` is broad: it covers PVC raw and LVM idempotency, raw mode on partitions/disks, LVM argument construction for encryption, multiple OSDs, metadata devices, partitions, LVs, by-id/by-path links, multipath devices, encrypted mapper parsing, ceph-volume raw/lvm JSON parsing, multi-cluster filtering, raw-mode eligibility, OSDInfo dedupe, stale device wiping, and device class matching. It still relies heavily on mocked command argument positions rather than live ceph-volume behavior.

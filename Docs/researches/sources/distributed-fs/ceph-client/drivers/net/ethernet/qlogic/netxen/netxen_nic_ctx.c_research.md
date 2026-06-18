@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/qlogic/netxen/netxen_nic_ctx.c
+
+Purpose: Implements NetXen firmware command submission, minidump template setup, PHY/MTU firmware commands, RX/TX firmware context creation/destruction, legacy P2 context initialization, and coherent hardware ring allocation/free.
+
+Important APIs and functions: `netxen_issue_cmd()` serializes CDRP firmware commands under `netxen_api_lock()`, writes signature/arguments to CRB registers, polls for response, and optionally reads response arguments. Minidump helpers query template size, fetch the template via DMA, verify checksum, endian-convert it, and initialize `adapter->mdump`. `nx_fw_cmd_create_rx_ctx()` and `nx_fw_cmd_create_tx_ctx()` allocate DMA request/response blocks and issue create-context commands. `netxen_alloc_hw_resources()` allocates hardware context, TX descriptors, RX descriptor rings, status rings, and creates firmware contexts. `netxen_free_hw_resources()` destroys firmware/legacy contexts and frees coherent memory.
+
+Control flow: Newer non-P2 devices allocate rings, set `__NX_FW_ATTACHED`, then create RX context followed by TX context through firmware. Firmware responses provide CRB addresses for producer/consumer and interrupt-mask registers, which are translated to MMIO pointers. P2 devices instead populate `struct netxen_ring_ctx`, write its physical address and signature into per-port CRB registers, and skip CDRP create commands. Free reverses this: destroy contexts or write D3 reset signature, wait 20 ms for DMA drain, then free coherent allocations.
+
+State and persistence behavior: Updates adapter fields such as `recv_ctx->state`, `context_id`, `virt_port`, `tx_context_id`, ring CRB pointers, `recv_ctx->hwctx`, `tx_ring->hw_consumer`, `__NX_FW_ATTACHED`, and minidump fields. No disk persistence, but firmware context state persists on the card until destroyed/reset.
+
+Dependencies and integration points: Depends on `NXRD32/NXWR32`, PCI coherent DMA allocation, firmware CRB constants, semaphore locks, revision checks, ring counts from adapter setup, and NetXen main reset paths. Public functions are called from device open/close, MTU/link operations, ethtool dump setup, and PHY access paths.
+
+Risks: Firmware command polling can block up to `NX_OS_CRB_RETRY_COUNT` milliseconds and maps firmware failures to Linux errors inconsistently (`NX_RCODE_*` versus `-EIO`). Error unwinding relies on `netxen_free_hw_resources()` handling partially allocated rings. CDRP request/response structures are DMA ABI; size, endian, and physical-address split mistakes break hardware bring-up. `netxen_get_minidump_template()` returns 0 even after logging a failed fetch unless callers inspect resulting state, so template validity depends heavily on checksum/setup flow.
+
+Test signals: Probe/open/close on P2 and P3 hardware or emulation, forced allocation-failure unwinds, firmware timeout/fail responses, MTU command with inactive and active contexts, PHY read/write, minidump setup with unsupported firmware, context reset, and repeated open/close to verify DMA memory and `__NX_FW_ATTACHED` state do not leak.

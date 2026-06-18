@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/regs/xe_bars.h
+
+Purpose: defines PCI BAR indices used by Xe. Important APIs are `GTTMMADR_BAR` for MMIO/GTT, `LMEM_BAR` for VRAM, and `VF_LMEM_BAR` for VF VRAM. Control flow and state are absent; callers use these constants during PCI resource discovery and mapping. Dependencies are none. Integration points are device probe, MMIO mapping, local-memory BAR handling, and SR-IOV VF resource setup. Risks include platform-specific BAR layout changes and confusing PF/VF local-memory BARs. Test signals include PCI probe on PF and VF devices, BAR resource validation, and VRAM aperture mapping tests.

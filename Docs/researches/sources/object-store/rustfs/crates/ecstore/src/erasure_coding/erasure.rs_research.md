@@ -1,0 +1,27 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/rustfs/crates/ecstore/src/erasure_coding/erasure.rs -->
+# sources/object-store/rustfs/crates/ecstore/src/erasure_coding/erasure.rs
+
+## Purpose
+Provides the core Reed-Solomon erasure coding abstraction used by RustFS object storage. It splits object blocks into data and parity shards, reconstructs missing data/parity shards, calculates shard sizing and shard-file offsets, and supports both the current codec and a legacy MinIO/main-branch compatible format.
+
+## Important APIs, types, and functions
+`calc_shard_size` is the current `ceil(block_size / data_shards)` formula; `calc_shard_size_legacy` rounds the ceil value up to an even size for legacy files. `ReedSolomonEncoder` wraps `reed_solomon_erasure::galois_8::ReedSolomon` for current parity encode and reconstruct operations. `LegacyReedSolomonEncoder` wraps cached `reed_solomon_simd` encoder/decoder instances for legacy encode, data reconstruct, full reconstruct, and parity regeneration. `encode_parity_shards` is shared parity-regeneration plumbing that validates shard count and shard lengths. `Erasure` is the central type with `new`, `new_with_options`, `encode_data`, `encode_data_owned`, `decode_data`, `decode_data_and_parity`, `total_shard_count`, `shard_size`, `shard_file_size`, `shard_file_offset`, and `encode_stream_callback_async`.
+
+## Control flow
+`Erasure::new_with_options` chooses backend state from `uses_legacy`: current mode creates a `ReedSolomonEncoder` when `parity_shards > 0`; legacy mode creates a `LegacyReedSolomonEncoder`; zero-parity configurations skip backend creation. `encode_data` and `encode_data_owned` calculate the per-shard size from the selected formula and input length, pad a `BytesMut` to `per_shard_size * total_shard_count`, collect mutable shard slices, encode parity when parity exists, freeze the buffer, and split it into zero-copy `Bytes` shards. The owned variant tries to reuse the caller's `Vec<u8>` allocation through `Bytes::try_into_mut`.
+
+`decode_data` reconstructs missing data shards only. `decode_data_and_parity` reconstructs missing data shards and regenerates parity, which is needed for healing missing parity shards. Current mode delegates to `reed-solomon-erasure`; legacy mode delegates to the SIMD wrapper. `LegacyReedSolomonEncoder` caches encoder/decoder objects behind `RwLock<Option<_>>`, takes a cached instance, resets it for the current shard length, and returns it to the cache after use. `encode_parity_shards` fills missing parity shard slots with zeroed buffers, verifies all shard lengths match, then invokes the backend encoder.
+
+`shard_file_size` maps original object length to the number of bytes stored in each shard file, accounting for full blocks plus the final partial block. `shard_file_offset` calculates a shard-file read extent for a logical range. `encode_stream_callback_async` is a callback-oriented async encoder: it reads blocks, offloads encoding to blocking tasks, invokes `on_block` for either encoded blocks or errors, and returns total bytes read.
+
+## State and persistence behavior
+`Erasure` itself is mostly stateless apart from codec configuration, backend caches, `uses_legacy`, block size, and a UUID. Its calculations define persistent object layout: shard count, shard size, padding, parity contents, and legacy compatibility. The distinction between `decode_data` and `decode_data_and_parity` is persistence-relevant: read repair should not unnecessarily rebuild parity, while heal must recreate all missing shards. Legacy mode changes both shard sizing and parity backend, so metadata that selects `uses_legacy` must be accurate for old objects.
+
+## Dependencies and integration points
+Uses `bytes::{Bytes, BytesMut}` for shard buffers, `reed_solomon_erasure` for current coding, `reed_solomon_simd` for legacy coding, `smallvec` for stack-optimized shard slice vectors, `tokio::task::spawn_blocking` in the async callback path, and tracing warnings. `encode.rs`, `decode.rs`, and `heal.rs` extend `Erasure` with streaming write, read, and repair operations. File metadata code is expected to choose `new_with_options` when old-version or legacy-checksum objects are encountered.
+
+## Risks and test signals
+Constructors call `unwrap()` when creating backend encoders, so invalid shard counts can panic instead of returning an error. `calc_shard_size` divides by `data_shards`, so zero data shards are invalid even if not always guarded at construction. `encode_stream_callback_async` treats `UnexpectedEof` as a break rather than an error except in the main `encode.rs` pipeline, so callers should understand the differing stream semantics. Legacy cache locks can fail only on poisoning but return I/O errors if they do. Tests include compatibility hash expectations with comments noting MinIO parity behavior; these are critical because any backend or formula change can alter persistent shard bytes.
+
+Tests cover owned-vs-borrowed encode equivalence, read decode not rebuilding missing parity, full decode-and-parity reconstruction for current and legacy modes, shard-file sizing, current and legacy encode/decode round trips, missing shard recovery, stream callback behavior and zero-block-size reporting, SIMD-oriented large and small data cases, maximum erasures, and compatibility hashes.
+<!-- END_FILE_RESEARCH: sources/object-store/rustfs/crates/ecstore/src/erasure_coding/erasure.rs -->

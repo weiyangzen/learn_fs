@@ -1,0 +1,19 @@
+# sources/distributed-fs/tahoe-lafs/src/allmydata/web/directory.py
+
+## Purpose
+Implements WebAPI handling for Tahoe directory nodes, including traversal, dynamic handler selection, directory listing, HTML forms, child creation/replacement, uploads into directories, URI attachment, unlink/rename/relink, shallow and deep checks, manifest/deep-size/deep-stats operations, streaming JSON-lines traversal, and unknown-node metadata.
+
+## Important APIs, Types, And Functions
+`make_handler_for` chooses `FileNodeHandler`, `DirectoryNodeHandler`, or `UnknownNodeHandler` based on Tahoe node interfaces. `DirectoryNodeHandler` is the main `Resource`, with `getChild`, `render_GET`, `render_PUT`, `render_POST`, and many `_POST_*` helpers. `DirectoryAsHTML`, `RenameForm`, `ManifestElement`, `ManifestResults`, `DeepSizeResults`, and `DeepStatsResults` are presentation resources/elements. `ManifestStreamer` and `DeepCheckStreamer` implement `IPushProducer` over `dirnode.DeepStats`. Helpers `_directory_json_metadata`, `_directory_uri`, `_directory_readonly_uri`, `_slashify_path`, `_cap_to_link`, `abbreviated_dirnode`, and `UnknownJSONMetadata` support representations.
+
+## Control Flow
+Traversal first rejects empty path components, fetches children asynchronously, and, for write requests, may create intermediate directories or a placeholder leaf. `GET` without `t` renders `DirectoryAsHTML`; `t=json`, `info`, `uri`, `readonly-uri`, and `rename-form` return alternate resources. `PUT t=mkdir` completes traversal-created directories, while `PUT t=uri` replaces the current directory link. `POST` dispatches by `t`: creating directories, uploading form files through a child/placeholder handler, setting child caps, deleting links, moving links, running checks, starting monitor-backed deep operations through `OphandleTable`, streaming manifest/check JSON lines directly to the request, and setting a full children map from JSON.
+
+## State And Persistence
+The handler stores `client`, current `node`, optional `parentnode`/`name`, and the client's operation table. Durable changes are delegated to directory nodes: `create_subdirectory`, `set_uri`, `delete`, `move_child_to`, `set_children`, immutable/mutable directory creation, and uploads that create child file nodes. Operation state is held by `Monitor` instances registered under operation handles. Streaming producers keep request and monitor references and cancel the monitor when the HTTP producer is stopped.
+
+## Dependencies And Integration Points
+This file integrates Twisted Web, Tahoe directory/file interfaces, URI parsing, blacklist/prohibited nodes, monitor cancellation, mutable version constants, `filenode.ReplaceMeMixin` and file handlers, check result renderers, `MoreInfo`, operation reload behavior, and shared helpers from `common.py`. It is reached under `/uri/<dircap>/...` and supplies the directory half of the user-facing WebAPI. Templates include `directory.xhtml`, `rename-form.xhtml`, `manifest.xhtml`, and deep operation result templates through `check_results.py`.
+
+## Risks And Test Signals
+High-risk areas are traversal-time mutation, empty-path validation, replace semantics including `replace=only-files`, slash handling in child names, body parsing for children JSON, and streaming producers that ignore backpressure pause while honoring stop/cancel. HTML rendering assumes `_get_children` succeeds before template renderers read `self.dirnode_children`. Unknown-node and prohibited-node metadata must avoid capability confusion. Tests should exercise `src/allmydata/test/web/test_web.py`, `test_grid.py`, `test_deepcheck.py`, path auto-creation, upload forms, mkdir variants, set-children JSON, relink across directories, operation-handle requirements, stream-manifest/deep-check cancellation, and immutable/read-only directory behavior.

@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/alluxio/underfs/cephfs/src/main/java/alluxio/underfs/cephfs/CephFSUnderFileSystem.java
+
+Purpose: native CephFS `UnderFileSystem` implementation using `com.ceph.fs.CephMount`. It extends `ConsistentUnderFileSystem` and implements `AtomicFileOutputStreamCallback` for atomic writes.
+
+Important APIs and control flow: `createInstance` configures auth id, config file, semicolon-separated config options, key/keyfile/keyring, monitor hosts, MDS namespace, mount uid/gid, mount point, and localized reads before mounting. Operations use `stripPath`, `lstat`, `statfs`, `openInternal`, `deleteInternal`, and retry loops with `CountingRetry(MAX_TRY)`. It supports create/direct create, recursive delete, existence/status, block/space reporting, listStatus, mkdirs with parent creation and owner attempts, seekable open via `CephInputStream`/`CephSeekableInputStream`, rename, chmod, and flush support.
+
+State, dependencies, integration, risks, tests: persistent state is remote CephFS; object state is `mMount`, which is unmounted on close. Dependencies include Ceph native Java APIs, Alluxio UFS option/status classes, `PathUtils`, and retry policies. Risks include native library availability, mount lifecycle, no-op owner support, null file locations, recursive delete correctness, and visible source anomalies in this checkout around duplicated/extra braces near keyfile/delete/open code that would warrant compile verification.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/nand/raw/rockchip-nand-controller.c
+
+Purpose: this is the Rockchip NAND Flash Controller driver for NFC v6/v8/v9 variants. It provides raw NAND `exec_op`, SDR timing setup, hardware BCH ECC, DMA page transfers, boot-ROM-aware OOB/sys-data shuffling, optional boot-block ECC strength switching, clock/IRQ handling, and child chip registration.
+
+Important APIs, types, and functions: `struct rk_nfc` stores controller config, clocks, MMIO, selected bank, current ECC/timing, completion, chip list, shared page/OOB DMA buffers, and assigned CS bitmap. `struct rk_nfc_nand_chip` stores per-chip CS list, boot block count, boot ECC strength, metadata size, and timing. `struct nfc_cfg` describes variant register offsets, ECC strengths/configs, and BCH status bit layouts. Key functions include `rk_nfc_select_chip()`, `rk_nfc_cmd()`, `rk_nfc_setup_interface()`, `rk_nfc_xfer_start()`, `rk_nfc_write/read_page_hwecc()`, `rk_nfc_write/read_page_raw()`, `rk_nfc_ecc_init()`, and `rk_nfc_attach_chip()`.
+
+Control flow: probe selects match data, maps registers, gets optional `nfc` and required `ahb` clocks, enables clocks, requests an IRQ, and scans child nodes. Child init validates `reg` CS entries, defaults to on-host ECC, sets flash BBT options, installs the Rockchip OOB layout, initializes hardware, scans NAND, reads optional `rockchip,boot-blks` and `rockchip,boot-ecc-strength` for boot media, and registers MTD. Generic operations use simple bank command/address/data registers; page ECC paths use DMA buffers and wait for DMA IRQ plus transfer-ready polling.
+
+State and persistence: per-controller state caches selected bank, current timing, and current ECC strength. OOB persistence is unusual: each 1024-byte data step has 4 bytes of system data before ECC, and the driver rotates these bytes so the MTD-visible BBM/free OOB layout is preserved while reserving boot-ROM page-address metadata. Boot blocks may temporarily switch to a different ECC strength for reads/writes, then restore the normal ECC setting.
+
+Dependencies and integration points: it depends on raw NAND, DMA mapping, clocks, IRQ completions, OF compatibles `rockchip,px30-nfc`, `rockchip,rk2928-nfc`, and `rockchip,rv1108-nfc`, and MTD boot-medium flags/properties.
+
+Risks: 16-bit bus width is unsupported. Raw access to boot blocks with a different boot ECC returns `-EIO` because MTD cannot represent the alternate ECC layout. ECC failure logs but returns success after updating failure stats in the page read path. OOB byte rotation is central to BBM preservation and easy to regress. Shared buffers are manually `kzalloc`/`krealloc` with GFP_DMA and must cover the largest attached chip.
+
+Test signals: probe on v6/v8/v9 configs, clock enable/disable and suspend/resume reset, CS selection and duplicate rejection, generic ID/status operations, ECC strength auto-selection from OOB capacity, DMA read/write timeout handling, boot block ECC switching, OOB/BBM round trips, raw read/write outside boot blocks, and BCH corrected/failure counter updates.

@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/nri/sandbox_linux.go
+
+Purpose: Linux-specific NRI pod sandbox conversion. `podSandboxToNRI` calls `commonPodSandboxToNRI`, reads the pod's `LinuxPodSandbox`, and fills Linux namespaces, pod overhead/resources, cgroup parent, cgroups path, and current resources. It does not mutate state; it returns a snapshot with provider-owned pointers/slices. Dependencies are containerd NRI adaptation types. Integration feeds pod lifecycle and sync requests sent to plugins on Linux. Risks include nil `GetLinuxPodSandbox()` panic, aliasing mutable resource pointers, and plugin compatibility if fields are incomplete. Test signals are integration-level rather than unit tests in this subset.

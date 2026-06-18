@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/containerd/client/client.go -->
+# sources/cloud-native/containerd/client/client.go
+
+Purpose: central high-level containerd client implementation. It constructs gRPC-backed or injected-service clients, exposes service adapters, manages defaults, and implements image/container convenience operations.
+
+Important APIs/types/functions: `New`, `NewWithConn`, `Client`, `Reconnect`, `Runtime`, `IsServing`, `Containers`, `NewContainer`, `LoadContainer`, `Fetch`, `Push`, `GetImage`, `ListImages`, `Restore`, `GetLabel`, `Subscribe`, `Close`, service accessors, `Version`, `Server`, snapshotter/runtime introspection helpers, and `RuntimeInfo`. `RemoteContext` holds resolver, platform, unpack, label, handler, concurrency, metadata, and referrer options.
+
+Control flow: `New` applies `Opt`s, configures defaults, builds gRPC dial options with insecure local transport, connect backoff, context dialer, default message sizes, optional namespace interceptors, and a reconnect connector. Default runtime/sandboxer/snapshotter resolve lazily from namespace labels under a mutex and then cache. Container creation wraps operations in a lease, applies `NewContainerOpts`, creates metadata, and traces attributes. Fetch prepares a remote context, rejects unpack-on-fetch, resolves platform matcher, creates a lease, calls lower-level fetch helpers, and creates an image record. Push resolves platform matcher, appends digest to refs lacking `@`, obtains a pusher, wraps handlers, applies optional upload limiter, and calls `remotes.PushContent`. Service methods return injected services when present, otherwise create proxies from the current gRPC connection.
+
+State/persistence: holds connection state behind `connMu`, default namespace/platform, cached default runtime/sandboxer, and optional service injection fields. It persists container metadata through the container service, images through image service, content through content store, leases around content/snapshot mutations, and checkpoint indexes via content/image records. Namespace labels influence default runtime, sandboxer, and snapshotter.
+
+Dependencies/integration: integrates with containerd gRPC API services, core content/images/containers/snapshots/events/leases/sandbox/transfer/mount/introspection packages, typeurl, OCI specs, Docker resolver, tracing, defaults, and plugin introspection. `init` registers common runtime-spec type URLs and works around Windows gRPC resolver behavior.
+
+Risks: default gRPC transport is insecure and assumes local/containerd socket trust. Lazy default caching can hide later namespace-label changes. Many service accessors create proxies with `c.conn` even if nil unless callers used injected services consistently. `SnapshotService` falls back to default snapshotter on label resolution error, which can mask namespace issues. `Push` mutates refs without digest into digest-qualified refs. Runtime option typeurl marshal/unmarshal failures surface late.
+
+Test signals: unit/integration tests should cover dial option precedence, namespace interceptors, reconnect, injected-service mode, default label resolution/caching, lease cleanup on errors, fetch/push platform selection, service accessors with nil conn, version/server unavailable errors, snapshotter plugin lookup, and runtime info typeurl decode.
+<!-- END_FILE_RESEARCH: sources/cloud-native/containerd/client/client.go -->

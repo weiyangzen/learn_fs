@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/x86/boot/compressed/sev.c
+
+Purpose: implements compressed-stage AMD SEV, SEV-ES, and SEV-SNP enablement. It detects SEV capabilities, negotiates GHCB protocol, sets the SME encryption mask, initializes SNP CPUID/SVSM state from the CC blob, accepts or changes SNP page state, and prepares identity mappings required by the uncompressed kernel.
+
+Important APIs and state: exports `sev_enable()`, `sev_get_status()`, `early_setup_ghcb()`, `sev_es_shutdown_ghcb()`, `snp_set_page_private()`, `snp_set_page_shared()`, `snp_accept_memory()`, `snp_check_features()`, `snp_get_unsupported_features()`, `sev_prep_identity_maps()`, `sev_es_check_ghcb_fault()`, and `early_is_sevsnp_guest()`. Persistent data includes `boot_ghcb_page`, `.data` pointer `boot_ghcb`, `snp_vmpl`, `ghcb_version`, and `boot_svsm_caa_pa`. It directly includes `startup/sev-shared.c`.
+
+Control flow: `sev_enable()` clears stale `cc_blob_address`, verifies CPUID leaf `0x8000001f`, probes for SNP CC blob via EFI config table or setup_data, copies the SNP CPUID table, configures SVSM CA when needed, reads `MSR_AMD64_SEV`, negotiates GHCB for SEV-ES, checks SNP hypervisor features and VMPL rules, validates blob/MSR consistency, and sets `sme_me_mask`. GHCB setup decrypts and zeroes a page, initializes instruction decode tables, and registers the GHCB GPA for SNP. Shutdown maps the GHCB encrypted and non-present before handing off. SNP page-state APIs build `psc_desc` requests and call the shared page-state transition path.
+
+Dependencies and integration: integrates with EFI config table scanning, Linux boot protocol setup_data, GHCB MSR/page protocols, SVSM services, CPUID table validation, compressed page-table helpers, and decompressor identity-map creation. `sev_prep_identity_maps()` ensures the CC blob and SNP CPUID page remain accessible after switchover.
+
+Risks and test signals: misdetecting SNP or unsupported SNP features risks undefined confidential-guest behavior, so unsupported feature masks terminate the guest. GHCB page cache/encryption transitions are security-sensitive. Test signals include successful boots across plain, SEV, SEV-ES, SNP VMPL0, SNP+SVSM/non-VMPL0, `cc_blob_address` propagation, unsupported feature termination with exit info, and page-state transitions for memory acceptance.

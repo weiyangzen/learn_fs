@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/comedi/drivers/comedi_bond.c
+
+Purpose: Implements a virtual Comedi driver that bonds DIO subdevices from one or more existing Comedi devices into a single linear DIO subdevice. It is meant to simplify userspace access when digital lines are spread across multiple boards/subdevices.
+
+Important APIs/types/functions: `struct bonded_device` records a referenced Comedi device, minor, subdevice index, and channel count. `struct comedi_bond_private` stores display name, dynamic bonded-device pointer array, device count, and total channel count. Core functions are `bonding_attach()`, `bonding_detach()`, `do_dev_config()`, `bonding_dio_insn_bits()`, and `bonding_dio_insn_config()`.
+
+Control flow: Manual attach parses `comedi_devconfig` options as a list of Comedi minors. `do_dev_config()` rejects invalid, duplicate, or self minors, opens each source device with `comedi_open_from()`, finds all DIO subdevices, obtains channel counts, appends `bonded_device` records with `krealloc()`, and builds a board name string like `minor:subdev`. Attach creates one DIO subdevice whose channel count is the sum of all bonded DIO channels. Bit instructions translate a base channel and up to 32 bits into per-source masks/data and call `comedi_dio_bitfield2()` on the underlying subdevices. Config instructions locate the underlying subdevice/channel and delegate to `comedi_dio_config()` or `comedi_dio_get_config()`.
+
+State and persistence: Runtime state is the open references to underlying Comedi devices, the dynamic bonded-device array, aggregate channel count, and generated name. Underlying device output/configuration state is changed directly through Comedi library calls and persists in those devices. Detach closes each source minor once and frees bond records.
+
+Dependencies and integration points: Depends on Comedi core and in-kernel comedilib APIs (`comedi_open_from()`, `comedi_close_from()`, `comedi_find_subdevice_by_type()`, `comedi_dio_bitfield2()`, `comedi_dio_config()`). It is manually configured and does not bind to hardware itself.
+
+Risks: It only supports DIO and no command paths. Error handling during `do_dev_config()` can return after opening devices or allocating records; detach later cleans normal attached state, but partially failed attach paths depend on core cleanup. Bitfield operations are limited to a 32-channel window starting at the requested base channel. Underlying devices can disappear or change behavior independently. Test signals include bonding multiple minors, duplicate/self-minor rejection, cross-subdevice bitfield reads/writes spanning boundaries, DIO config/query translation, and detach closing each source minor exactly once.

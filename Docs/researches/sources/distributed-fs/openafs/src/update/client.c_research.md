@@ -1,0 +1,12 @@
+
+# sources/distributed-fs/openafs/src/update/client.c
+
+`client.c` implements `upclient`, a polling file synchronizer that copies exported files from an `upserver` to local directories. It fetches directory manifests, compares local files by mtime and size, downloads changed files to `.NEW` staging files, removes local files absent from the server manifest, and renames staged files into place.
+
+Important functions are `main`, `GetServer`, `IsCompatible`, `FetchFile`, `update_ReceiveFile`, `NotOnHost`, `RenameNewFiles`, `GetFileFromUpServer`, and `PathsAreEquivalent`. `main` parses host, `-time`, `-crypt`, `-clear`, and `-verbose`, normalizes requested directories, initializes Rx and server-local authentication, then loops forever over directories. For each directory, it constructs a local path, ensures it exists, fetches remote directory info via `UPDATE_FetchInfo`, scans manifest lines containing quoted path, mtime, length, mode, uid, gid, and atime, and fetches incompatible files via `UPDATE_FetchFile`.
+
+Transfer control flow uses `FetchFile` for both manifest and file data. It starts the relevant rxgen streaming call, opens/truncates the local output, and delegates to `update_ReceiveFile`, which reads a network-order length followed by data chunks sized from filesystem block size. `GetFileFromUpServer` writes to `<local>.NEW`, then applies mode, uid/gid on Unix, and access/modify times before later atomic-ish rename by `RenameNewFiles`.
+
+State and persistence are filesystem-based. Temporary manifest files are created under `gettmpdir()` as `upclient.<pid>`, staged downloads use `.NEW`, and extra local non-directory/non-`.NEW` files are unlinked if not in `okhostfiles`. Lists are maintained with `struct filestr` from `global.h` and `utils.c`.
+
+Dependencies include Rx, rxkad, afsconf local auth, path normalization/localization helpers, `update.h` generated stubs, and the update server's manifest format. Risks include trusting server-supplied metadata, fixed `MAXFNSIZE` buffers with `strcpy`/`strcat` in several paths, deletion of local files not in the server manifest, manifest parsing fragility, and retry loops that sleep indefinitely. Test signals include changed/unchanged file comparison, `.NEW` cleanup on failed fetch, deletion filtering, path equivalence on Unix/Windows, crypt/clear auth modes, reconnect after repeated failures, and metadata restoration.

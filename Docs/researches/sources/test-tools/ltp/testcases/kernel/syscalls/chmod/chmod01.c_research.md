@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chmod/chmod01.c
+
+Purpose: positive `chmod()` test for regular file and directory modes. Setup creates either `testfile` or `testdir_1` depending on test variant; each case applies modes including 0, execute bits, all permissions, setuid, setgid, and sticky combinations, then stats the object and compares mode bits after masking file type. Important APIs are `chmod`, `SAFE_STAT`, `SAFE_TOUCH`, `SAFE_MKDIR`, and LTP variants. State is one tmpdir object per variant. Dependencies are standard Unix mode bits. Risks include filesystem support for special bits. Test signal is `chmod` success and exact mode match.

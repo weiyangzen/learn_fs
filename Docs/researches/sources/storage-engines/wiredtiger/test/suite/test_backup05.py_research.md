@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup05.py
+
+Purpose: simulates MongoDB-like `fsyncLock` manual backup: checkpoint, open backup cursor to pin state, copy the live home directory, and recover the copy. It verifies metadata is flushed enough for manual copies.
+
+Important APIs are `session.checkpoint`, `session.open_cursor('backup:')`, `helper.copy_wiredtiger_home`, schema `drop/create`, `verifyUntilSuccess`, and `expectedStdoutPattern('recreating metadata')`. Control flow creates an empty table, reopens, then repeatedly inserts into a data table; every fifth iteration it checkpoints, opens a backup cursor, copies the home with aligned or unaligned copy, verifies schema operations fail during backup cursor lifetime, closes the cursor, confirms schema operations resume, and verifies the copied database. State behavior covers live filesystem copies, metadata recovery, and backup cursor schema protection. Risks include platform-specific unaligned copy support, Windows alignment fallback, and recovery output matching. Test signals are schema-operation errors during backup and successful verification after opening copied home.

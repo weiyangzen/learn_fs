@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/bridge/ti-tfp410.c
+
+Purpose: implements the TI TFP410 parallel RGB to DVI transmitter as a DRM bridge, supporting both platform and I2C instantiation. The driver wraps a downstream bridge/connector, controls an optional powerdown GPIO, reports input bus format/timing constraints, handles fallback connector creation, and debounces HPD callbacks from the next bridge.
+
+Important APIs/types/functions: `struct tfp410` holds `drm_bridge`, optional local `drm_connector`, negotiated `bus_format`, delayed HPD work, powerdown GPIO, bridge timings, and device pointer. `tfp410_parse_timings()` sets default timings or parses non-I2C strap-mode endpoint properties (`pclk-sample`, `bus-width`) plus `ti,deskew` to derive input bus flags, setup/hold time, and RGB888 24-bit or 2x12 media-bus format. `tfp410_attach()` attaches the downstream bridge with `DRM_BRIDGE_ATTACH_NO_CONNECTOR`, optionally initializes a connector when caller did not request no-connector, wires DDC from the next bridge, sets polling based on downstream detect/HPD ops, and enables debounced HPD. `tfp410_get_modes()` reads EDID from the next bridge if available and otherwise adds no-EDID modes up to 1920x1200 with 1024x768 preferred. `tfp410_get_input_bus_fmts()` and `tfp410_atomic_check()` advertise the configured input format and bus flags.
+
+Control flow: `tfp410_init()` validates OF data, allocates the bridge, parses timings, finds the next bridge at graph port 1, gets an optional `powerdown` GPIO initially high, and registers the bridge. Platform probe calls `tfp410_init(..., false)`, while I2C probe validates the `reg` property and calls `tfp410_init(..., true)`. Module init attempts I2C registration when enabled, then platform registration, and succeeds if at least one registration worked.
+
+State and persistence: persistent state is static configuration parsed from DT and the delayed HPD work item. Runtime hardware state is only the powerdown GPIO. The driver does not program TFP410 registers in I2C mode; it assumes default I2C-mode strap behavior.
+
+Dependencies and integration points: depends on DRM bridge/connector helpers, EDID helpers, OF graph, media bus formats, GPIO consumer API, workqueues, platform and optional I2C driver infrastructure. Downstream bridge ops provide EDID, detect, HPD, DDC, and connector type.
+
+Risks: I2C mode is nominal only; no I2C configuration is implemented. If connector initialization fails after downstream HPD was enabled, the current attach path returns without disabling HPD work. The connector is created only when the upstream did not request no-connector, so modern bridge-connector pipelines usually bypass local connector logic. Bad DT timing fields return `-EINVAL` and prevent probe.
+
+Test signals: platform and I2C probe paths, 12-bit and 24-bit bus format negotiation, deskew boundary values 0..7, powerdown GPIO polarity, EDID and fallback no-EDID modes, HPD debounce and detach cancellation, and 25 MHz to 165 MHz mode validation.

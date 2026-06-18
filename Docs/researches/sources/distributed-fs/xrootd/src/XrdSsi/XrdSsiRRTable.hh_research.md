@@ -1,0 +1,9 @@
+# sources/distributed-fs/xrootd/src/XrdSsi/XrdSsiRRTable.hh
+
+Purpose: provides a reference-counted table for active request/response objects keyed by request ID. It supports safe lookup handles, deletion, deferred finalization, and blocking reset while callbacks may still hold references.
+
+Important APIs/types: `XrdSsiRRTableItem<T>` is a move-only RAII handle that releases a table reference on destruction. `XrdSsiRRTable<T>` methods include `Add()`, `LookUp()`, `Del()`, `DelFinalize()`, `DeferFinalize()`, `DeferredFinalizeDone()`, `Release()`, `Reset()`, `Clear()`, and `Num()`. It has a special `baseItem` fast slot plus a `std::map` for additional entries.
+
+Control flow and state: `Add()` starts refcount at 2: one for table ownership and one for the returned handle. `LookUp()` increments refcount unless deleted. `Del()` marks deleted and drops table ownership. When refcount reaches zero, the table either erases immediately or calls `DeferredFinalize()`/`Finalize()` depending on flags. `DelFinalize()` blocks until the entry disappears. `Reset()` marks all entries deleted, finalizes eligible ones outside the table lock, and waits for deferred finalization count `nDef` to drain via condition variable.
+
+Dependencies and integration: depends on SSI mutex/condition helpers, `std::map`, and `std::vector`. Used by `XrdSsiFileSess` to keep `XrdSsiFileReq` alive across reads, fctl callbacks, direct attention responses, close, and cancellation. Risks are high: refcount underflow, missed condition broadcasts, typoed `deferedFinalize` naming hiding logic mistakes, blocking waits under unusual callback order, and `Clear()` dropping items without finalization. Test signals should include duplicate add rejection, lookup/delete races, callback-held item release, reset with live references, direct `DelFinalize()`, and thread-sanitizer stress.

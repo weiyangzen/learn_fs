@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ronbo-rb070d30.c
+
+Purpose: Ronbo RB070D30 is a simple 1024x600 MIPI-DSI video-mode panel driver. It exposes one fixed preferred mode, controls one regulator named `vcc-lcd`, and drives reset, power, up/down, and shift-left/right GPIOs. The two orientation GPIOs are forced low at probe and never changed later.
+
+Important APIs, control flow, and state: `rb070d30_panel_dsi_probe()` allocates a `drm_panel`, fetches resources, attaches OF backlight, sets four DSI lanes, RGB888, video burst, and LPM flags, then attaches to the DSI host. `prepare()` enables the regulator, asserts panel power and reset with 20 ms gaps; `enable()` exits DCS sleep; `disable()` enters sleep; `unprepare()` drops reset, power, and regulator. `get_modes()` duplicates `default_mode`, sets 8 bpc, physical size, and RGB888 bus format. There is no software prepared/enabled flag, no cached hardware state, and no persistent data beyond the devm-managed context.
+
+Dependencies, integration, risks, and tests: integration is the DRM panel framework, MIPI DSI host, GPIO/regulator/backlight descriptors, and `ronbo,rb070d30` DT binding. Main risks are strict GPIO polarity and sequencing assumptions, no rollback if later GPIO steps fail after regulator enable, and no panel-specific DCS init beyond sleep exit. Test signals are successful DSI attach, correct fixed mode exposure, backlight discovery, clean suspend/resume sequencing, and visible video without orientation or RGB-order issues.

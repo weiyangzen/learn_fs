@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/hid/hid-appletb-kbd.c
+
+Purpose: implements the Apple Touch Bar keyboard mode driver for T2 MacBook Pro iBridge display devices. It turns the Touch Bar HID output report into kernel-managed modes (`ESC`, function keys, media/special keys, off), translates Touch Bar key usages into normal Linux input key events, handles Fn toggling, and optionally dims/offlines the Touch Bar backlight after inactivity.
+
+Important APIs/types/functions: `struct appletb_kbd` stores the HID mode field, input handler/handles, backlight device, delayed/workqueue state, and saved/current modes. `appletb_kbd_set_mode()` writes the HID output field via `hid_set_field()` and `hid_hw_request()`. `mode_show()`/`mode_store()` expose sysfs control through `DEVICE_ATTR_RW(mode)`. `appletb_kbd_hid_event()` filters Touch Bar key usages and injects special-key translations through `sparse_keymap`. The input-handler callbacks (`appletb_kbd_inp_event`, connect, disconnect, match) watch the internal Apple keyboard and trackpad for activity and Fn presses. Probe/remove/suspend/resume are registered through `struct hid_driver`.
+
+Control flow: probe parses the HID descriptor, locates the vendor mode output field with `hid_find_field()`, starts/open the HID device, obtains `appletb_backlight`, registers an input handler that matches internal Apple USB keyboard/trackpad devices, sets the default mode, and finally installs driver data. HID events first check keyboard-page EV_KEY usages, ignore non-Touch-Bar keys, reset the inactivity timer, and either synthesize translated special keys in special mode or swallow events when off. Fn input events temporarily toggle between special and function modes until key release. Suspend saves current mode and turns the Touch Bar off; resume restores the saved mode.
+
+State/persistence: state is per-HID-device and not persisted across driver unload. Module parameters control default mode, Fn toggle behavior, autodim, dim timeout, and idle timeout. Runtime state includes current/saved mode plus backlight dim/off booleans. Delayed work dims to brightness 1, then to 0; restore work returns brightness to 2 after activity.
+
+Dependencies/integration: integrates HID core, USB device matching, Linux input, sparse-keymap, sysfs device groups, the backlight class, workqueues, and the separate `hid_appletb_bl` backlight driver via soft dependency.
+
+Risks: mode setting powers the device up and down around report writes, so failures or resume races can leave `current_mode` stale. Input handle lifetime depends on careful register/open/unregister/put ordering. The internal-device match searches USB parent names and product strings, which is pragmatic but fragile. Work items must be canceled before the backlight reference is dropped.
+
+Test signals: verify sysfs mode read/write and invalid mode rejection, Touch Bar F-key/media translation, off-mode event suppression, Fn hold toggling and release restore, activity-based dim/off/restore, suspend/resume restoration, driver remove turning off the Touch Bar, and behavior when `appletb_backlight` is absent.

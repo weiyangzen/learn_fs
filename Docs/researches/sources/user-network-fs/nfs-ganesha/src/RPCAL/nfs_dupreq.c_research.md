@@ -1,0 +1,15 @@
+# sources/user-network-fs/nfs-ganesha/src/RPCAL/nfs_dupreq.c
+
+Purpose: implements the NFS duplicate request cache (DRC), used to detect retransmitted RPC requests and either replay cached responses, queue duplicates while the original is in progress, or bypass caching for non-cacheable operations.
+
+Important APIs and types: `dupreq2_pkginit()`, `dupreq2_cleanup()`, `nfs_dupreq_start()`, `nfs_dupreq_finish()`, `nfs_dupreq_delete()`, `nfs_dupreq_rele()`, `nfs_dupreq_put_drc()`, `for_each_tcp_drc()`, `get_tcp_drc_recycle_qlen()`, `drc_t`, `dupreq_entry_t`, `nfs_request_t`, object pools `dupreq_pool`, `nfs_res_pool`, and `tcp_drc_pool`.
+
+Control flow: package init creates pools, a shared UDP DRC, and TCP DRC recycle structures. Request start checks whether the function is cacheable, DRC is enabled, and NFSv4 request lookahead permits caching. It obtains a shared UDP or per-connection TCP DRC, builds a key from xid, program, version, procedure, client address for UDP, and TI-RPC checksum, then searches an rb-tree partition. A hit increments duplicate count, queues unfinished duplicates up to `DUPREQ_MAX_DUPES`, returns existing completed responses, or drops excess in-flight dupes. A miss allocates a response, inserts a START entry, and gives it two references. Finish marks the entry complete, queues it for FIFO retirement, drains the retire window, and removes old completed entries when high-water or max-size conditions require. Delete removes failed uncached entries unless duplicate waiters need retry. Release resumes queued duplicates, drops request references, releases DRC references, and releases RPC auth.
+
+State and persistence: all state is in memory. UDP has one shared DRC. TCP DRCs can outlive transports via a recycle rb-tree and FIFO queue keyed by client address, with refcounts, recycle flags, and expiry. Dupreq entries own cached `nfs_res_t` responses and duplicate wait queues.
+
+Dependencies and integration points: integrates with ntirpc transports (`xp_u2`, `rq_u1`, `rq_u2`, resume callbacks), protocol function descriptor tables, NFSv3/v4/MOUNT/NLM/RQUOTA/NFSACL dispatch descriptors, CityHash, rb-tree partitions, object pools, and request lookahead populated by XDR decoders.
+
+Risks: concurrency is delicate: DRC mutexes, global recycle mutex, rb-tree partition locks, and per-entry mutexes have explicit lock-order workarounds. TCP DRC refcounts can rise from zero during recycle reuse. Magic `rq_u1` sentinel values must never alias real pointers. Replaying cached responses requires protocol free functions to match response ownership. NFSv4.1 caching is intentionally bypassed because sessions have slot reply caches.
+
+Test signals: UDP and TCP duplicate detection, completed response replay, in-flight duplicate queuing and resume, excess duplicate drop, failed request delete/retry paths, TCP DRC recycle reuse after reconnect, expiry under high water, disabled DRC mode, NFSv4 non-cacheable lookahead cases, and stress tests under concurrent retransmits/disconnects.

@@ -1,0 +1,19 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/xrootd/src/XProtocol/XProtocol.hh -->
+# sources/distributed-fs/xrootd/src/XProtocol/XProtocol.hh
+
+Purpose: defines the public XRoot binary wire protocol: protocol version constants, handshake layouts, all client request structures, all server response structures, feature flags, limits, response/error codes, and the small `XProtocol` utility class. It is a contract header shared by clients, servers, plugins, and external reimplementations, so layout stability and numeric compatibility are more important than local abstraction.
+
+Important APIs/types/functions: `ClientInitHandShake`, `ServerInitHandShake`, `XRequestTypes`, `ClientRequestHdr`, request structs for auth/bind/chmod/checkpoint/clone/close/dirlist/endsess/fattr/gpfile/locate/login/mkdir/mv/open/pgread/pgwrite/ping/protocol/prepare/query/read/readv/rm/rmdir/set/sigver/stat/sync/truncate/write/writev, `ClientRequest`, `SecurityRequest`, `XResponseType`, `ServerResponseHeader`, all response body structs, `ServerResponse`, `ServerResponseV2`, and `XProtocol::{mapError,toErrno,errName,reqName}`. `XrdProto` holds newer extension structs/constants such as clone/readv/writev item layouts, page-read/write sizes, protocol security/bind response aliases, and `RespType`.
+
+Control flow: this file has no runtime protocol parser. Its executable behavior is inline error translation: `mapError()` normalizes negative errno values, then maps POSIX errors to XRootD `kXR_*` response errors; `toErrno()` performs the reverse mapping and returns `ENOMSG` for unknown protocol errors. The rest of the file controls runtime behavior indirectly because dispatch tables and serializers elsewhere interpret `requestid`, `dlen`, option bits, and status codes according to these definitions.
+
+State and persistence behavior: the header declares only wire state, not process-owned persistent state. State crosses the network in fixed-size headers plus variable payloads indicated by `dlen`. Persistent compatibility is encoded in constants such as `kXR_PROTOCOLVERSION`, TLS/signing/clone version gates, max vector sizes, page sizes, and request/response numeric fences.
+
+Dependencies: depends on `XProtocol/XPtypes.hh` for fixed-width protocol aliases and `<cerrno>` for error mapping. It conditionally normalizes missing errno names on Windows or platforms missing `ENOATTR`, `EBADRQC`, or `EAUTH`.
+
+Integration points: central to XRootD request decoding, response encoding, protocol negotiation, TLS and signing policy exchange, vector I/O, page checksummed I/O, file attributes, redirects, async responses, and status streaming. Any plugin or client that includes this file relies on exact numeric values and binary field ordering. `ALIGN_CHECK` intentionally enforces expected request/header sizes at compile time by making invalid layouts fail.
+
+Risks: ABI/wire compatibility is the main risk. Changing struct fields, enum order, numeric constants, or alias sizes can break old clients or external implementations. The comments note network byte order but the structs do not enforce conversion, so callers must consistently marshal/unmarshal. Some response bodies include large fixed arrays as convenience buffers even when actual wire length is `dlen`, so consumers must validate lengths before copying. Error mappings are lossy and default many unknown errors to filesystem/server failures.
+
+Test signals: compile-time size checks for request and response headers; protocol interoperability tests for login/protocol/open/read/write/readv/writev/page I/O/TLS/signing; round-trip tests for `mapError()`/`toErrno()` on supported errnos; fuzz/negative tests for `dlen`, vector limits, and status response lengths; compatibility tests against older protocol versions.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/xrootd/src/XProtocol/XProtocol.hh -->

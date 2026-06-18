@@ -1,0 +1,9 @@
+# sources/control-plane/rook/tests/integration/ceph_upgrade_test.go
+
+Upgrade integration suite verifying Rook operator and Ceph daemon upgrades preserve block, file, and object functionality. It covers manifest and Helm Rook upgrades plus stable-to-devel Ceph image upgrades.
+
+`baseSetup` installs an initial cluster in namespace `upgrade`. `testUpgrade` starts from `installer.Version1_19`, creates pre-upgrade block/file/object resources via `deployClusterforUpgrade`, upgrades Rook to local build, verifies daemon labels/readiness and data access, then upgrades Ceph from Squid to Tentacle for non-Helm. `TestUpgradeCephToSquidDevel` and `TestUpgradeCephToTentacleDevel` patch Ceph images to devel variants. `upgradeToMaster`, `upgradeCephVersion`, `verifyOperatorImage`, `verifyRookUpgrade`, `waitForUpgradedDaemons`, and `verifyFilesAfterUpgrade` implement assertions.
+
+State includes cluster resources with `SkipClusterCleanup`, RBD PVC/PV/image/pod, CephFS/storage class/consumer, object store/user/OBC/storage class/bucket, daemon deployments, CRDs/manifests, operator image, Helm releases, and patched `CephCluster.spec.cephVersion.image`. Dependencies are installer version constants, shared block/file/object helpers, Kubernetes deployment label queries, toolbox execution, Helm upgrade support, and manifest generation.
+
+Risks: no pre-upgrade CephFS file is recorded before first upgrade, so old CephFS persistence is weakly covered; cleanup disables strict block image removal; version checks depend on labels and image string format; devel image pulls can exceed ordinary wait times. Signals include operator image, daemon deployment counts/readiness with new labels, toolbox availability, RBD read/write persistence, CephFS active/read/write, object user readiness, OBC bound, and pre-upgrade log collection.

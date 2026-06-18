@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/fixed.c
+
+Purpose: Implements the fixed-voltage regulator platform driver. It supports plain fixed supplies, fixed supplies enabled by a clock, fixed supplies represented as PM-domain performance states, optional enable GPIOs, input supply naming, startup/off-on delays, and optional under-voltage IRQ notification.
+
+Important APIs, types, and functions: `struct fixed_voltage_data` stores the runtime descriptor, registered rdev, optional enable clock, enable counter, and performance state. `struct fixed_dev_type` selects clock-enabled or domain-enabled behavior. Operation tables are empty for pure fixed regulators, `fixed_voltage_clkenabled_ops` for clock enable/disable/is_enabled, and `fixed_voltage_domain_ops` for PM-domain performance state control. OF parsing is in `of_get_fixed_voltage_config()`, IRQ setup in `reg_fixed_get_irqs()`, and main registration in `reg_fixed_voltage_probe()`.
+
+Control flow: Probe obtains configuration from DT or platform data, duplicates the supply name, selects an ops table based on OF match data, gets an enable clock or required OPP performance state when needed, sets descriptor delays and input supply, configures a nonexclusive optional enable GPIO with boot state, registers the regulator, stores driver data, and requests an optional IRQ for under-voltage notification. Clock/domain enable increments `enable_counter`; disable decrements it after disabling clock or clearing performance state.
+
+State and persistence: The hardware model is fixed voltage; only enable state may be controlled by GPIO, clock, or PM-domain. `enable_counter` tracks software enable state for clock/domain variants. The regulator core takes ownership of the optional enable GPIO, so the driver intentionally does not use devm for that descriptor.
+
+Dependencies and integration points: It integrates with platform devices, OF regulator constraints, GPIO descriptors, clocks, generic PM domains, OPP performance state parsing, regulator notifications, and fixed regulator platform data. It registers as `reg-fixed-voltage` at `subsys_initcall` and supports compatibles `regulator-fixed`, `regulator-fixed-clock`, and `regulator-fixed-domain`.
+
+Risks and test signals: Test fixed voltage constraint equality, boot-on GPIO polarity, shared nonexclusive enable GPIOs, clock prepare/enable failures, PM-domain performance-state failures, enable counter balance, optional IRQ absence versus request failure, and regulator core ownership of GPIO descriptors. Fixed regulators with variable min/max constraints should fail probe.

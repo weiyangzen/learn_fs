@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/arch/m68k/sun3/leds.c
+
+## Purpose
+
+updates Sun-3 diagnostic LED hardware through the platform LED register
+
+## Important APIs, Types, and Functions
+
+Source read size: 16 lines, 273 bytes. Includes: `asm/contregs.h`, `asm/sun3mmu.h`, `asm/io.h`,
+`sun3.h`. Defined functions: `sun3_leds`. Declared functions: `GET_DFC`.
+
+## Control Flow and Behavior
+
+control flow is driven by platform initialization, machdep callbacks, interrupt entry, or driver
+DMA/clock requests depending on the file
+
+## State and Persistence
+
+persistent state is hardware register state, installed callbacks, cached IDPROM/RTC data, or
+MMU/DVMA mappings as appropriate
+
+## Dependencies and Integration Points
+
+integrates with asm/machdep.h, Sun-3 PROM/oplib, sun3.h prototypes, m68k traps, generic
+IRQ/timekeeping, and device drivers
+
+## Risks and Test Signals
+
+hardware register ordering and firmware assumptions are the main risks; Sun-3 defconfig boot, PROM
+diagnostics, clock, IRQ, and device I/O tests are signals

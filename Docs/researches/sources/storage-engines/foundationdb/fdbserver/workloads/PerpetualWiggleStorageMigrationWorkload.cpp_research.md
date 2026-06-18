@@ -1,0 +1,11 @@
+## sources/storage-engines/foundationdb/fdbserver/workloads/PerpetualWiggleStorageMigrationWorkload.cpp
+
+`PerpetualWiggleStorageMigrationWorkload` verifies that perpetual storage wiggle can migrate a selected storage process to a configured storage engine without affecting an excluded-and-reincluded process that should continue using the base `storage_engine`. It is RocksDB-specific and exits immediately if the build lacks `WITH_ROCKSDB`.
+
+Important APIs include `getStorageServers`, `ManagementAPI::changeConfig`, `excludeServers`, `includeServers`, `checkForExcludingServers`, `StorageServerInterface::getKeyValueStoreType`, `LocalityData`, simulator process lookup, and `AddressExclusion`. It disables all failure injection workloads because smooth exclude/include behavior is required.
+
+On client 0, `startImpl` selects a reliable storage process to exclude/include and a distinct process to wiggle. It configures `perpetual_storage_wiggle_engine=ssd-rocksdb-v1`, enables perpetual wiggle, sets `storage_migration_type=gradual`, and restricts wiggle by `perpetual_storage_wiggle_locality` to the target process id. It excludes and includes the first process, then `validateDatabase` polls storage servers, asserting the excluded/reincluded process remains `ssd-2` and the wiggle target eventually reports the requested engine. With 50% probability it clears the wiggle engine to `none`, excludes/includes the wiggle target, and expects it to return to `ssd-2`.
+
+State and persistence are cluster configuration changes, exclusion state, and storage server engine identity after recruitment. Validation tolerates the selected process never reappearing as a storage server by bounding missing-count loops and only requiring absence if the expected migrated engine is not observed. Risks include reliance on process reliability, build-time RocksDB availability, fixed storage engine names (`ssd-2`, `ssd-rocksdb-v1`), and probabilistic coverage of engine reset.
+
+Integration points are data distribution, perpetual wiggle migration, storage process recruitment, simulator process metadata, and management exclusions. Test signals are trace events for selected processes, configuration success assertions, storage type assertions, and timeout-style loops that prevent indefinite waits. `check` returns true; execution assertions provide the pass/fail signal.

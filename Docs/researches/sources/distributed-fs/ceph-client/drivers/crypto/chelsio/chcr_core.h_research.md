@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/crypto/chelsio/chcr_core.h
+
+Purpose: declares the Chelsio crypto core ABI shared by the ULD core and algorithm implementation: module names, detach timing constants, work-request container layout, device lists, device state, ULD context, and core entry points.
+
+Important APIs and control flow: `struct chcr_driver_data` defines the global active/inactive device manager. `enum chcr_state` describes INIT, ATTACH, and DETACH states. `struct chcr_wr` lays out a firmware lookaside WR followed by ULP TX packet metadata, immediate data command, security CPL, and flexible key context. `struct chcr_dev` contains locking, state, inflight count, delayed detach work, and completion state. `struct uld_ctx` embeds `cxgb4_lld_info` plus `chcr_dev`. Helpers include `sgl_len()` for Chelsio ULP SGL flit sizing and `padap()` for recovering the adapter from a crypto device.
+
+State and persistence behavior: the header fixes the in-memory layout used by both core and algorithm files. Runtime persistence is in the global driver lists and per-device in-flight/detach state; WR contents are per-request and sent through skb payloads. Constants such as `WQ_RETRY` and `WQ_DETACH_TM` define how long detach can poll for outstanding completions.
+
+Dependencies and integration points: depends on Chelsio hardware headers (`t4_hw.h`, `cxgb4.h`, `t4_msg.h`, `cxgb4_uld.h`), Linux Crypto API request types, TLS include exposure through Chelsio headers, workqueue/completion infrastructure, and the firmware/CPL structures embedded in `struct chcr_wr`. It exports `assign_chcr_device()`, `chcr_send_wr()`, `start_crypto()`, `stop_crypto()`, `chcr_uld_rx_handler()`, and `chcr_handle_resp()`.
+
+Risks and test signals: risks include `struct chcr_wr` relying on flexible key storage and exact firmware layout, `sgl_len()` underflow if called with zero entries, detach retry constants being too short for long hardware operations, and shared header coupling to many low-level Chelsio definitions. Test signals include compile-time layout compatibility with firmware macros, successful skb WR construction for min/max key contexts, correct adapter recovery through `padap()`, and detach behavior under sustained request load.

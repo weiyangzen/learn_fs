@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfsd/blocklayoutxdr.h
+
+Purpose: declares pNFS block/SCSI layout wire structures, size constants, and XDR helper prototypes used by NFSD block layout implementation. Key types include `pnfs_block_extent`, `pnfs_block_range`, `pnfs_block_layout`, `pnfs_block_volume`, and `pnfs_block_deviceaddr`.
+
+There is no runtime control flow. State represented by these structs is allocated and filled in `blocklayout.c` and encoded/decoded in `blocklayoutxdr.c`: device IDs, file/storage offsets, lengths, extent state, simple UUID volume info, SCSI designator info, and persistent reservation keys. Dependencies include block device definitions, `xdr4.h`, NFSv4 pNFS enums, and `struct iomap`. Risks include wire-size constant drift, flexible-array bounds, UUID/designator maximum assumptions, and mismatched layout structures between block and SCSI users. Test signals: compile coverage for both layout drivers, XDR size/encoding tests, and static checks for counted flexible arrays.

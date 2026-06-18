@@ -1,0 +1,22 @@
+# sources/storage-engines/rocksdb/cache/compressed_secondary_cache_test.cc
+
+## Purpose
+This GoogleTest file validates RocksDB's compressed secondary cache and its tiered-cache integration with primary caches. It exercises direct `SecondaryCache` behavior, integration through `CacheWithSecondaryAdapter`, custom split/merge value storage, cache-entry role compression policy, and dynamic capacity/reservation behavior in `NewTieredCache`.
+
+## Important APIs, Types, And Functions
+`CompressedSecondaryCacheTestBase` provides reusable helpers for several parameterized suites. `BasicTestHelper()` verifies direct compressed-secondary-cache insert/lookup semantics, including dummy-entry admission on first insert and real insertion on later eviction. `BasicIntegrationTest()` builds a primary cache with a compressed secondary cache and checks demotion, promotion, dummy primary entries, capacity changes, and `PerfContext` counters. `FailsTest()`, `BasicIntegrationFailTest()`, `IntegrationSaveFailTest()`, `IntegrationCreateFailTest()`, and `IntegrationFullCapacityTest()` cover failed object creation, failed serialization, missing helpers, and promotion under full primary capacity. `SplitValueIntoChunksTest()`, `MergeChunksIntoValueTest()`, and `SplictValueAndMergeChunksTest()` directly validate `CompressedSecondaryCache::CacheValueChunk` split/merge helpers. `CompressedSecCacheTestWithTiered` exercises `NewTieredCache()`, `CacheReservationManager`, `UpdateTieredCache()`, and admission policy behavior for LRU and HyperClock primary caches.
+
+## Control Flow
+The direct-cache tests first insert a dummy entry, confirm lookup miss, then insert the same key again to materialize compressed or uncompressed payload storage. Lookups with `advise_erase=true` are expected to remove the secondary entry, while lookups without erase can keep it. Integration tests drive a small strict-capacity primary cache so inserts evict older entries into the secondary cache; later lookups promote secondary results back through `CacheWithSecondaryAdapter`, sometimes as standalone handles plus dummy markers. Tiered tests construct a combined primary/secondary budget and then mutate reservations, total capacity, and compressed-secondary ratio to ensure usage moves between tiers in chunked increments.
+
+## State And Persistence Behavior
+The tests observe secondary-cache state through `TEST_GetCharge()`, `TEST_GetUsage()`, `GetCapacity()`, perf counters, and returned result handles. They do not persist data to disk; persistence is in-memory cache state. Important state transitions include dummy-to-real secondary entries, compressed-byte accounting, kept-versus-erased secondary handles, split chunk ownership through helper deleters, and tiered reservation accounting across primary placeholder entries and compressed secondary capacity.
+
+## Dependencies And Integration Points
+The file depends on `cache/compressed_secondary_cache.h`, `cache/secondary_cache_adapter.h`, `rocksdb/cache.h`, `rocksdb/convenience.h`, `test_util/secondary_cache_test_util.h`, `JemallocNodumpAllocator`, `PerfContext`, and RocksDB cache option factories. It is parameterized across cache types from `secondary_cache_test_util::GetTestingCacheTypes()` and across compression enabled/disabled cases. LZ4 availability gates compressed tests. Tiered tests integrate `PrimaryCacheType`, `TieredAdmissionPolicy`, LRU/HyperClock options, and `CacheReservationManagerImpl`.
+
+## Risks And Edge Cases
+The most important risks covered are silent loss on failed serialization or failed create callbacks, stale secondary entries after promotion, incorrect dummy-handle handling, compressed-size accounting regressions, allocator-specific chunk deallocation, and reservation drift after dynamic tiered-cache updates. Some assertions tolerate HCC differences, so behavior is not perfectly uniform across primary cache implementations. Tests also depend on exact perf counter increments and small capacities, which can be sensitive to metadata charge or cache policy changes.
+
+## Test Signals
+This file is itself a test suite. Strong signals include `ASSERT_OK`/`ASSERT_NOK` around secondary inserts, data equality after `SecondaryCacheResultHandle::Value()`, perf-context counters such as `compressed_sec_cache_insert_dummy_count`, `compressed_sec_cache_insert_real_count`, `compressed_sec_cache_uncompressed_bytes`, `compressed_sec_cache_compressed_bytes`, and `block_cache_standalone_handle_count`, plus tiered usage checks with `CacheUsageWithinBounds()`.

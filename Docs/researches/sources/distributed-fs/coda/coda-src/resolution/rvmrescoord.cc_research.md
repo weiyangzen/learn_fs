@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/resolution/rvmrescoord.cc
+
+Purpose: coordinator-side RVM-backed directory resolution. It first tries regular directory resolution, then runs multi-replica log collection, log distribution/compensation, inconsistency reconciliation, and final version-vector installation.
+
+Important functions: `RecovDirResolve` orchestrates phases and updates `dirresstats`. `CoordPhase2` allocates per-server buffers, performs `FetchLogs` MRPC calls using SmartFTP VM buffers, checks return codes, and concatenates successful logs. `CoordPhase3` ships merged logs to subordinates via `ShipLogs` or `NewShipLogs`, computes the final status/VV, gathers returned inconsistency byte streams into a `dlist`, and compares returned `ViceStatus` fields. `CoordPhase34` sends the merged inconsistency list to `HandleInc`. `CoordPhase4` builds an update-set VV, calls `InstallVV`, fetches directory contents, and compares replicas. `UpdateStats` stores resolution stats in the volume log statistics object.
+
+Control flow and state: phase 1 locking is assumed already done by `ViceResolve`. On phase failure, and when no hint fid is supplied, it broadcasts `MarkInc_OP`. Success requires phase 4 content comparison to pass. Persistent effects mostly happen on subordinates; coordinator allocates store ids and final update-set vectors.
+
+Dependencies, risks, tests: depends on MRPC/RPC2 side effects, `res_mgrpent`, VRDB host indexing, version-vector utilities, `rescomm`, `resutil`, and RVM timing probes. Risks include buffer-size assumptions from caller-provided `sizes`, partial VSG handling, conservative inconsistency marking, and `CoordPhase34` logging errors but returning zero. Test with complete/incomplete VSGs, failed fetch/ship/install RPCs, hint-fid retry paths, nonmatching status, and directory-content mismatch.

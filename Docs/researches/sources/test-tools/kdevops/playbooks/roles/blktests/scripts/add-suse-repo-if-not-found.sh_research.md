@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/blktests/scripts/add-suse-repo-if-not-found.sh
+
+This shell helper manages SUSE zypper repositories for blktests dependencies. It accepts a repository URL and repository name, removes existing repos whose detailed listing contains `yast2`, tries to enable the named repository with `zypper mr -e`, and if that fails adds the repository with refresh/autorefresh/check flags, then refreshes it with automatic GPG key import.
+
+Important commands are `zypper lr -d`, `zypper rr`, `zypper mr -e`, `zypper ar -f -c`, and `zypper refresh`. State persistence is global zypper repository configuration. Integration occurs from SUSE dependency tasks when benchmark repos are needed for dbench. Risks include broad removal of repos matching `yast2`, positional arguments with no validation, stdout/stderr redirection style that may hide useful diagnostics, and no `set -e` despite multiple privileged package-manager operations. Test signals should run in a disposable SUSE container or VM and verify idempotency for existing and missing repo names.

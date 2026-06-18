@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/arch/alpha/boot/Makefile
+
+This boot Makefile builds Alpha SRM and BOOTP boot artifacts from the linked kernel. It defines host tools `tools/mkbb` and `tools/objstrip`, raw/stripped kernel targets, compressed payloads, boot headers, and final images: `bootimage`, `bootpfile`, `bootpzfile`, and `vmlinux.gz`.
+
+The key build APIs are kbuild `if_changed` commands for `gzip`, `strip`, `objstrip`, and `ld`; generated size headers `ksize.h` and `kzsize.h`; and object sets `OBJ_bootlx`, `OBJ_bootph`, and `OBJ_bootpzh`. `INITRD` is optional and, when set, its size is added to generated headers and its bytes are appended to BOOTP images.
+
+Control flow strips `vmlinux` to `vmlinux.nh`, compresses where needed, creates raw bootloader/header binaries with `objstrip`, concatenates header plus payload, and for SRM `bootimage` calls `mkbb` to install boot block metadata. State exists only as generated artifacts under the object tree. Risks include stale size headers, missing initrd files, linker-script mismatch, and `objstrip` assumptions about one program segment/OMAGIC layout. Useful test signals are Alpha defconfig or cross-build coverage, sparse/header dependency checks, and targeted boot-image build checks. Runtime validation normally requires Alpha SRM/QEMU or real hardware because many paths depend on PALcode, HWRPB data, chipset registers, or old ISA/PCI behavior.

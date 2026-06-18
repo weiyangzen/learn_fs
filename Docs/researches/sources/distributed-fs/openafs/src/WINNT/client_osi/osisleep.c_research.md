@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/client_osi/osisleep.c -->
+## sources/distributed-fs/openafs/src/WINNT/client_osi/osisleep.c
+
+Purpose: Implements OSI initialization, once-only initialization, sleep/wakeup primitives, lock turnstiles, sleep remote-debug fd iteration, panic hooks, time helpers, and prime/hash utilities for the Windows OSI layer.
+
+Important APIs, types, and functions: `osi_Init` initializes boot time, TLS, fd registry, sleep hash critical sections, sleep-info allocation, sleep fd type, base locks, stat locks, and queues. `osi_AllocSleepInfo`, `osi_FreeSleepInfo`, and `osi_ReleaseSleepInfo` manage TLS-backed semaphore wait records with refcounts. `osi_Once`, `osi_TestOnce`, and `osi_EndOnce` implement spin-based one-time initialization. `osi_TWait`, `osi_TWaitExt`, `osi_TSignal`, `osi_TBroadcast`, and `osi_TSignalForMLs` implement turnstile waits and wakeups for locks. `osi_SleepSpin`, `osi_WakeupSpin`, `osi_Sleep`, and `osi_Wakeup` implement address-based sleeping. `osi_SleepFDCreate`, `osi_SleepFDGetInfo`, `osi_AdvanceSleepFD`, and `osi_SleepFDClose` expose sleepers to remote debugging. `osi_IsPrime`, `osi_PrimeLessThan`, `osi_GetBootTime`, `osi_InitPanic`, `osi_panic`, `osi_Time`, and `osi_GetTime` provide utility behavior.
+
+Control flow and state: Each sleeping thread reuses a TLS `osi_sleepInfo_t` containing a semaphore. Address-based sleep hashes by sleep value, adds the record to a bucket under `osi_critSec[idx]`, releases the caller's critical section atomically with entering the wait, waits on the semaphore, then frees or marks the record. Wakeup scans the bucket and releases matching semaphores. Turnstiles maintain explicit FIFO/LIFO lists for lock waiters and can patch lock flags/read counts before releasing waiters. Sleep fd iteration holds refs on sleep records so remote-debug reads can safely traverse while sleepers exit.
+
+Persistence and dependencies: No disk persistence. Runtime state includes TLS slot, sleep hash buckets, per-bucket critical sections, free list, boot time, and fd type registrations. Dependencies include Windows semaphores/TLS/critical sections, `osifd`, `osiqueue`, base locks, stats initialization, large integer helpers, and aggregate `osi_internal.h`.
+
+Integration points: Base and stat lock implementations call turnstile and sleep helpers. `osidb.c` exposes the `"sleep"` fd type over RPC. `osi_panic` informs an optional callback and calls `osi_LogPanic`.
+
+Risks: `osi_Once` sets `done = 1` before the initializer has finished and relies on `atomic` to block other callers until `osi_EndOnce`; initializers must always call `osi_EndOnce` or future callers spin forever. TLS values for deleted sleep infos are cleared only in some paths. Turnstile code patches lock state using raw `void *` casts and assumes caller lock layout. `osi_SleepFDGetInfo` assigns `LONG_PTR` sleep values into integer RPC slots that may be narrower depending on generated definitions. `DLLMain` is a stub. Time logic subtracts a magic high-date offset.
+
+Test signals: Stress sleep/wakeup lost-wakeup prevention, wake-all semantics, turnstile writer/reader ordering, one-time initialization races, remote sleep iteration while sleepers exit, panic callback/log call, and `osi_Time`/`osi_GetTime` monotonic sanity on 32/64-bit builds.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/client_osi/osisleep.c -->

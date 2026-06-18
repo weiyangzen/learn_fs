@@ -1,0 +1,9 @@
+# Research: sources/distributed-fs/seaweedfs/weed/s3api/iceberg/handlers_table.go
+
+## sources/distributed-fs/seaweedfs/weed/s3api/iceberg/handlers_table.go
+
+Purpose: Iceberg REST table handlers for list, create, load, exists, drop, stale-location cleanup, and metadata construction.
+
+Important APIs and flow: `validateCreateTableRequest` requires a table name. `handleListTables` lists S3 Tables rows in a namespace with pagination. `handleCreateTable` resolves the table location from request, namespace warehouse property, `ICEBERG_WAREHOUSE`, or bucket default; validates bucket/path confinement; builds Iceberg metadata with `newTableMetadata`; writes spec-compliant `v1.metadata.json`; handles idempotent existing-table responses; optionally stage-creates metadata/markers; otherwise creates the S3 Tables row. `handleLoadTable` returns `buildLoadTableResult`. `handleDropTable` deletes the S3 Tables row and then purges the catalog-owned table location to support recreation. `cleanupStaleTableLocation` validates path segments before recursive filer removal. `buildFileIOConfig` advertises S3 endpoint, path-style access, and region.
+
+State and persistence: table metadata files live under the filer-backed S3 Tables path; catalog rows store UUID, `FullMetadata`, version, and location; drop may recursively delete table storage. Dependencies include `iceberg-go`, `s3tables.Manager`, `filer_pb`, path validation helpers, stage-create helpers, environment variables, and S3 identity context. Risks: create writes metadata before catalog registration and lacks cleanup for generic create failures; recursive cleanup must only run after catalog deletion; custom locations are restricted to the catalog bucket. Tests cover validation, stage-create env behavior, namespace locations, issue #9103 bucket/config helpers, and path validation separately.

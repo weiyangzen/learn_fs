@@ -1,0 +1,3 @@
+# sources/storage-engines/tikv/tests/failpoints/cases/test_titan.rs
+
+See the grouped report section in `Docs/researches/groups/subset-b-008947_research.md` for the full source-aligned research. Summary: this file verifies Titan can be disabled safely when peer cleanup leaves obsolete blob references in SST files. It manipulates a raftstore cluster with Titan enabled, fallback mode, and disabled mode; uses manual flush/compaction and RocksDB properties; interrupts peer removal cleanup with `after_delete_files_in_range`; then confirms re-added peers can read/write large values without evaluating stale blob refs.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dmub/src/dmub_dcn31.h
+
+Purpose: declares the DCN 3.1 DMUB register layout and hardware-operation API used by the DMUB service layer. The register macro inventory covers DMCUB control/reset/security, inbox0/inbox1 and outbox0/outbox1 mailbox registers, code-window region3 offsets/base/top registers, region4/5 mappings, scratch registers, GPINT, pipe-support, MMHUBBUB soft reset, framebuffer base/offset, timer, fault addresses, and GPINT interrupt enable/ack fields.
+
+Important APIs and control flow: `DMUB_DCN31_REGS()` and `DMUB_DCN31_FIELDS()` are expanded by ASIC-specific `.c` files to build `struct dmub_srv_dcn31_regs`, which contains offset, mask, and shift tables consumed by `dmub_reg.h` macros. The declared functions form the DCN31 hardware vtable: reset/release, backdoor firmware load, window/mailbox setup, mailbox pointer access, support/init detection, PSR-SU capability, GPINT command/ack/response/dataout, boot option scratch programming, outbox0 trace setup, current time, diagnostic capture, and detection-required status.
+
+State and persistence behavior: the header owns no runtime state, but fixes the persistent register ABI between generated DCN offset headers, the static `dmub_srv_dcn31_regs` table, and `struct dmub_srv` function pointers. Runtime state persists in hardware registers and DMUB scratch fields; software state is maintained by `dmub_srv.c` after calling these callbacks.
+
+Dependencies and integration points: depends on `dmub_dcn20.h`, `dmub_cmd` types reachable through lower headers, and the per-ASIC generated DCN offset/mask headers that provide field names. `dmub_srv_hw_setup()` assigns this API for DCN31/DCN31B/DCN314/DCN315/DCN316, sometimes replacing only the register table or PSR-SU predicate.
+
+Risks and test signals: risks include macro drift between `DMUB_DCN31_REGS()` and generated DCN headers, missing field definitions causing compile failures, scratch-register ABI changes breaking boot status/options, and unlocked outbox pointer access relying on the documented stat-only path. Test signals include successful build for every DCN31-family ASIC, DMUB boot reaching `dal_fw`, inbox/outbox pointer movement, GPINT stop/reset completion, PSR-SU gating on supported firmware, and populated diagnostics after timeouts.

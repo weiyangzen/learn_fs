@@ -1,0 +1,28 @@
+## sources/distributed-fs/tahoe-lafs/src/allmydata/mutable/filenode.py
+
+### Purpose
+This module implements the main mutable-file node and version facades. `MutableFileNode` represents a mutable file capability and coordinates servermap discovery, reading, overwriting, modifying, checking, and repair. `MutableFileVersion` represents a specific recoverable version and performs version-scoped reads, writes, modify retries, and MDMF partial updates. `BackoffAgent` provides retry delay behavior for write collisions.
+
+### Important APIs, Types, and Functions
+`BackoffAgent.delay` implements exponential jittered retry and gives up after four attempts. `MutableFileNode` implements `IMutableFileNode` and `ICheckable`. Important construction methods are `init_from_cap`, async `create_with_keys`, and `_get_initial_contents`. Capability/state methods include `get_cap`, `get_readcap`, `get_verify_cap`, `get_repair_cap`, `get_uri`, `get_write_uri`, `get_readonly_uri`, `get_readonly`, `get_writekey`, `get_readkey`, `get_storage_index`, `get_fingerprint`, `get_privkey`, `get_pubkey`, and encoding-share getters. Operational methods include `check`, `check_and_repair`, `repair`, `get_best_readable_version`, `download_best_version`, `get_size_of_best_version`, `get_best_mutable_version`, `overwrite`, `upload`, `modify`, `download_version`, `get_servermap`, `_update_servermap`, and `_upload`.
+
+`MutableFileVersion` implements `IMutableFileVersion` and `IWriteable`. It exposes version identity and accessors (`get_sequence_number`, `get_writekey`, `get_size`, `get_storage_index`), read paths (`download_to_data`, `read`, `_read`), write paths (`overwrite`, `modify`, `_modify_and_retry`, `_modify_once`, `_upload`), and `update` for MDMF in-place-ish updates.
+
+### Control Flow
+Existing nodes are initialized from caps, learning protocol version, read/write keys, storage index, and fingerprint. New nodes are created with an RSA keypair; mutable keys are derived in a CPU thread, an SDMF or MDMF write URI is built, initial contents are wrapped as an `IMutableUploadable`, and `_upload` publishes initial shares.
+
+Most public `MutableFileNode` operations use `_do_serialized`, chaining a persistent Deferred serializer and firing caller Deferreds via `eventually` to avoid reentrancy. Reads obtain a servermap in `MODE_READ`, build a read-only `MutableFileVersion`, and download through `Retrieve`; `download_best_version` retries with `MODE_WRITE` if a read-mode download lacks enough shares. Write-intent operations obtain a servermap in `MODE_WRITE` and build a writeable `MutableFileVersion`. `overwrite`, `upload`, and `modify` are serialized because they must not race on the same node.
+
+`MutableFileVersion.modify` updates the servermap, downloads old bytes with private-key fetch, calls a synchronous modifier, validates bytes-or-None output, publishes changed data, and retries on `UncoordinatedWriteError` through `BackoffAgent`. `update` handles MDMF partial updates: SDMF falls back to full modify/re-encode; MDMF calculates affected segments, updates the servermap over that range, decodes needed old edge segments via `Retrieve.decode`, builds a `TransformingUploadable`, and calls `Publish.update`.
+
+### State and Persistence Behavior
+`MutableFileNode` stores authority and learned state: `_uri`, `_writekey`, `_readkey`, `_storage_index`, `_fingerprint`, `_pubkey`, `_privkey`, `_encprivkey`, encoding parameters, `_most_recent_size`, `_protocol_version`, `_downloader_hints`, and a serializer Deferred. Persistent data is created or changed only through `Publish`, storage server mutable slots, and repair paths. Lease/write secrets are derived per server from the node secret holder and storage index. `MutableFileVersion` stores the servermap and immutable version tuple it was built for, plus optional write authority.
+
+### Dependencies and Integration Points
+This module is the integration point between URI/capability classes, mutable key derivation, `ServerMap`/`ServermapUpdater`, `Retrieve`, `Publish`, checker/repairer classes, Twisted Deferreds/reactor, Foolscap `eventually`, consumer utilities, and history/status notifications. `nodemaker.py` constructs mutable file nodes, `dirnode.py` uses mutable files as backing stores for directories, and web/client APIs expose these operations.
+
+### Risks and Edge Cases
+Serialization is central: callbacks passed to `_do_serialized` must not invoke serialized methods on the same node/version or they can deadlock. `MutableFileVersion._did_upload` sets `_most_recent_size` on the version object, not the node, which is local status only. `is_allowed_in_immutable_directory` returns false for mutable URIs, enforcing deep-immutable constraints. `modify` requires a synchronous, idempotent modifier because it may run repeatedly. Retry behavior gives up after four attempts. MDMF partial update logic has segment-boundary and power-of-two cases and falls back to full re-encode for SDMF. Read-only nodes cannot produce writeable versions or repair caps.
+
+### Test Signals
+`test/mutable/test_filenode.py` covers SDMF/MDMF creation, caps, single-share and max-share cases, downloads, readonly/writecap behavior, and keypair creation. `test/mutable/test_update.py` covers append, replacement, zero-length writes, segment-boundary fenceposts, extension, and re-encode cases. Additional mutable tests cover multiple versions, encoding variations, repair, round trip, interoperability, data/file handles, and write-collision behavior. `test_dirnode.py` uses mutable files for directory mutation and uncoordinated write retry scenarios.

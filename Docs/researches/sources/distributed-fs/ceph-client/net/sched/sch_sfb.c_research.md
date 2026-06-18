@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/sched/sch_sfb.c
+
+Purpose: implements Stochastic Fair Blue as a classful wrapper around one child qdisc. It hashes flows into multiple virtual queue buckets, adjusts marking probabilities per bucket, identifies likely nonresponsive flows, and optionally ECN marks or drops before child enqueue.
+
+Important APIs, types, and functions: `struct sfb_sched_data` stores child qdisc, classifier block/list, timing and queue parameters, token-bucket penalty state, active hash slot, double-buffering flag, two `sfb_bins` arrays, and stats. `struct sfb_bucket` stores virtual qlen and marking probability; `struct sfb_skb_cb` stores up to two hash values per skb. Key functions are `sfb_enqueue`, `sfb_dequeue`, `increment_qlen`, `decrement_qlen`, `sfb_swap_slot`, `sfb_rate_limit`, `sfb_classify`, `sfb_change`, `sfb_reset`, and dump/stat/class helpers.
+
+Control flow: enqueue enforces hard qlen limit, advances hash perturbation on `rehash_interval`, enables double buffering during warmup, obtains a flow hash from an external classifier classid or skb hash, updates bucket probabilities based on virtual qlen, and records the minimum qlen/probability across levels. Flows with min qlen above `max` are bucket-dropped; flows with saturated probability are considered inelastic and subject to penalty token limiting. Otherwise a random draw below `p_min` causes ECN mark or early drop. Accepted packets enqueue to the child; only successful child enqueue increments virtual bucket qlens. Dequeue pulls from the child and decrements qlens recorded in the skb control block.
+
+State and persistence behavior: all state is runtime: bucket qlens/probabilities, perturbation keys, double-buffering slot, rehash/token timestamps, penalty tokens, child queue, and counters. `sfb_change` replaces the child qdisc with a pfifo, resets all bins and perturbations, and installs new parameters. `sfb_reset` clears buckets and reinitializes slot 0. No persistent storage exists.
+
+Dependencies and integration points: uses siphash perturbations, skb flow hashes, optional TC classifiers, ECN helpers, child qdisc grafting, qdisc class ops, and netlink `tc_sfb_qopt`. External classifiers can provide classid salt; otherwise skb hash drives bucket selection.
+
+Risks: qlen accounting depends on saving hash values before child enqueue and decrementing the same hashes on dequeue. Double buffering temporarily accounts a packet in two hash tables. Probability is Q0.16 saturated arithmetic; parameter extremes can overdrop or undermark. `sfb_dump_class`, class change, and delete return `-ENOSYS`, so it is only minimally classful around one child. Hard queue limit uses root `sch->q.qlen`, not child-specific byte backlog.
+
+Test signals: default parameter init, custom change/dump, classifier-provided salt versus skb hash, rehash and warmup double buffering, virtual qlen increment/decrement, ECN mark versus drop, inelastic penalty token behavior, child drop accounting, hard queue limit, grafting child qdisc, reset bucket clearing, and xstats maxqlen/maxprob/avgprob.

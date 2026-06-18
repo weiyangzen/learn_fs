@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/include/asm/ps3.h
+
+Purpose: This header defines the PS3 platform interface for firmware versioning, OS area storage, DMA/MMIO regions, interrupt setup, LV1 result codes, system-bus devices and drivers, system manager operations, preallocated buffers, logical performance monitor access, and early debug shutdown.
+
+Important APIs/types/functions: It defines `union ps3_firmware_version`, OS area helpers, flash ops, `enum ps3_dma_page_size`, `enum ps3_dma_region_type`, `struct ps3_dma_region`, `struct ps3_dma_region_ops`, DMA init/create/free/map/unmap APIs, `enum ps3_mmio_page_size`, `struct ps3_mmio_region`, MMIO init/create/free and physical-to-LPAR helpers, many IRQ setup/destroy functions, `enum lv1_result` and `ps3_result`, match IDs/module aliases, `struct ps3_system_bus_device`, `struct ps3_system_bus_driver`, registration helpers, driver-data accessors, `struct ps3_sys_manager_ops`, power/restart/halt/WOL APIs, prealloc descriptors, LPM rights/types, LPM open/close/copy/bookmark/signal APIs, PM counter accessors, and `ps3_early_mm_init`.
+
+Control flow: PS3 platform discovery creates `ps3_system_bus_device` objects with DMA/MMIO regions and interrupts. Drivers register `ps3_system_bus_driver` instances matching IDs/sub-IDs, open LV1 devices, create regions, set up IRQs, perform I/O, and tear down on remove/shutdown. System manager operations are registered for power/restart. LPM/perf functions interact with LV1 monitor services.
+
+State and persistence: Persistent runtime state includes per-device DMA region chunk lists, MMIO mappings, IRQ plugs, system bus core device state, driver private data, OS area RTC diff and flash state, system manager ops, preallocated video/flash buffers, and LPM session state.
+
+Dependencies and integration points: It depends on Linux device, spinlock/list/completion/user access types through included headers, Cell PMU definitions, and PS3 LV1 hypervisor calls in implementation files. It integrates PS3 USB/network/storage/AV/GPU/sound/LPM drivers with the PS3 system bus, hypervisor, firmware OS area, interrupt domain, DMA/IOMMU, and power management.
+
+Risks and test signals: LV1 result handling may compile to empty strings outside verbose builds, so diagnostics differ by config. DMA and MMIO region lifetimes must match hypervisor mappings. Flexible system-bus matching and module aliases are ABI for PS3 drivers. Tests include PS3 boot/device enumeration, DMA map/unmap alignment and page-size coverage, IRQ setup/destroy per class, system manager restart/poweroff, LPM open/copy, firmware version comparison, and driver probe/remove cycles.

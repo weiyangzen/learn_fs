@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/kernel/sched/rt.c
+
+## Purpose
+Implements the real-time scheduling class for `SCHED_FIFO` and `SCHED_RR`. It manages priority queues, runtime throttling, RT group scheduling, push/pull migration, round-robin slices, scheduler-class callbacks, sysctls, and cgroup RT bandwidth controls.
+
+## APIs, Control Flow, and State
+Global tunables include `sched_rr_timeslice`, `sysctl_sched_rt_period`, and `sysctl_sched_rt_runtime`, with sysctl handlers for `/proc/sys/kernel/sched_rt_period_us`, `sched_rt_runtime_us`, and `sched_rr_timeslice_ms`. Initialization and group helpers include `init_rt_rq()`, `init_rt_bandwidth()`, `alloc_rt_sched_group()`, `free_rt_sched_group()`, `unregister_rt_sched_group()`, `init_tg_rt_entry()`, `sched_group_set_rt_runtime()`, `sched_group_set_rt_period()`, `sched_rt_can_attach()`, `init_sched_rt_class()`, and `print_rt_stats()`.
+
+The class is exposed through `DEFINE_SCHED_CLASS(rt)`. Enqueue/dequeue paths update RT entities through hierarchical `sched_rt_entity` chains, maintain per-priority lists and bitmaps, track `rt_nr_running`, `rr_nr_running`, boosted counts, highest priority, runqueue `nr_running`, cpufreq utilization, schedstats, and pushable-task plists. Picking chooses the first set priority bitmap entry, recursing through group runqueues to a task. Wakeup/preemption compares RT priorities and can reschedule or attempt equal-priority migration. `task_tick_rt()` accounts runtime, runs the RT watchdog, and rotates `SCHED_RR` tasks when their slice expires.
+
+Runtime bandwidth control uses `struct rt_bandwidth` hrtimers and per-`rt_rq` `rt_time`, `rt_runtime`, and `rt_throttled`. `update_curr_rt()` charges execution time and throttles groups that exceed runtime; `do_sched_rt_period_timer()` replenishes runtime, unthrottles queues, and restarts or idles the period timer. Optional runtime sharing borrows spare bandwidth across root-domain CPUs. Group schedulability validation ensures child runtime ratios do not exceed parent or global RT bandwidth and prevents starving existing RT tasks.
+
+SMP balancing tracks overloaded RT runqueues in root-domain `rto_mask`/`rto_count` and CPU priority arrays. Push paths select migratable queued RT tasks and move them to lower-priority CPUs; pull paths inspect overloaded CPUs when a CPU lowers priority. With `HAVE_RT_PUSH_IPI`, root-domain IRQ work serializes push requests to reduce lock contention on large systems. CPU online/offline callbacks update overload state, runtime, and `cpupri`.
+
+## Dependencies and Integration Points
+Depends on scheduler core, PELT, root domains, `cpupri`, cpumasks, hrtimers, cgroups/task groups, sysctl, cpufreq updates, POSIX RT CPU timers, utilization clamping, scheduler core scheduling throttling hooks, stop-machine CPU push helpers, and feature flags such as `RT_RUNTIME_SHARE` and `RT_PUSH_IPI`. It integrates with task policy changes, affinity changes, CPU hotplug, cgroup CPU controller files, deadline global bandwidth validation, and scheduler debug output.
+
+## Risks and Test Signals
+Risks are high because this code is latency and correctness critical: RT throttling can starve or overrun tasks, push/pull migration can race with affinity and migration-disabled sections, priority queue counts can desynchronize, group runtime changes can violate hierarchy constraints, IPI push loops can create latency storms, and RR timeslice changes can regress fairness. Test signals include RT scheduler selftests, `rt-tests` latency workloads, cgroup RT bandwidth tests, CPU hotplug with RT load, affinity/migration-disabled stress, SCHED_RR timeslice tests, sysctl validation including rollback, lockdep on double runqueue locking, POSIX `RLIMIT_RTTIME` tests, PREEMPT_RT builds, and heterogeneous capacity/uclamp placement tests.

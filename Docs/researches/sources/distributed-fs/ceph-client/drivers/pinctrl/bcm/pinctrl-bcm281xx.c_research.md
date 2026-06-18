@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/bcm/pinctrl-bcm281xx.c
+
+## Purpose
+This file implements the Broadcom BCM281xx family pinctrl driver, with support for BCM11351-style BCM281xx devices and BCM21664 devices. It exposes each pin as a one-pin group, supports generic alternate mux functions, and implements pin configuration for standard, I2C, and HDMI pin register layouts.
+
+## Important APIs, types, and functions
+Register field definitions describe common function select bits and type-specific config bits for standard, I2C, and HDMI pin registers. `enum bcm281xx_pin_type` classifies pins as standard, I2C, HDMI, or unknown. `struct bcm281xx_pin_function` represents alternate functions. `enum bcm281xx_pinctrl_type`, `struct bcm281xx_pinctrl_info`, and `struct bcm281xx_pinctrl_data` distinguish device variants and runtime data. Large pin descriptor arrays define BCM281xx and BCM21664 pin names, numbers, and pin types. Function arrays define `alt1` through `alt4` for BCM281xx and `alt1` through `alt6` for BCM21664. Lock helpers `bcm21664_pinctrl_lock_all()` and `bcm21664_pinctrl_set_pin_lock()` handle BCM21664 write protection. Pinmux uses `bcm281xx_pinmux_set()`. Pinconf uses `bcm281xx_std_pin_update()`, `bcm281xx_i2c_pin_update()`, `bcm21664_i2c_pin_update()`, `bcm281xx_hdmi_pin_update()`, and `bcm281xx_pinctrl_pin_config_set()`.
+
+## Control flow
+`builtin_platform_driver_probe()` registers a built-in platform driver. Probe gets match data for the compatible string, maps the MMIO resource, creates a regmap, initializes the global pinctrl descriptor with variant-specific pins, and locks all BCM21664 pins by default. The pinctrl core sees one group per pin through `get_groups_count`, `get_group_name`, and `get_group_pins`. For muxing, `bcm281xx_pinmux_set()` optionally unlocks a BCM21664 pin, writes the function number into bits 10:8 of that pin's register, then relocks the pin. For pinconf, `bcm281xx_pinctrl_pin_config_set()` selects a type-specific updater, builds one value/mask pair for all requested configs, optionally unlocks the pin, writes the mask with `regmap_update_bits()`, and relocks. `pin_config_get` is intentionally unsupported.
+
+## State and persistence behavior
+Runtime state is in the static `bcm281xx_pinctrl_pdata` and variant info tables, plus the MMIO-backed regmap. Hardware mux and config state persists in per-pin PADCTRL registers until reset or later writes. BCM21664 adds access-lock register state: probe locks all lock banks, and each mux or pinconf write temporarily unlocks the target pin and relocks it. There is no rollback if relocking fails after a successful register update.
+
+## Dependencies and integration points
+The driver depends on Linux platform devices, OF match data, MMIO resource mapping, regmap-mmio, pinctrl, pinmux, pinconf generic parsing, and pinctrl utility DT map cleanup. It is selected by `PINCTRL_BCM281XX`, built by the BCM Makefile, and matches `brcm,bcm11351-pinctrl` and `brcm,bcm21664-pinctrl`. GPIO is explicitly provided by a separate driver; this driver only handles mux and electrical configuration.
+
+## Risks
+The group model says every pin supports every alternate function, so invalid hardware combinations may not be rejected by pinctrl and must be avoided by correct device tree data. Pin indices must match the PADCTRL register order exactly because offsets are computed as `4 * pin`. The global `bcm281xx_pinctrl_desc` and `bcm281xx_pinctrl_pdata` assume a single instance. `pin_config_get()` returns `-ENOTSUPP`, limiting readback tests and diagnostics. BCM21664 lock handling can leave a pin unlocked if relocking fails after a write path returns early. Type-specific config validation differs between BCM281xx I2C and BCM21664 I2C, so incorrect pin type tagging changes accepted properties.
+
+## Test signals
+Build tests should enable `PINCTRL_BCM281XX` for `ARCH_BCM_MOBILE` and `COMPILE_TEST`. Device tree validation should ensure pin names in groups match the arrays and compatible strings select the right variant. Runtime tests should verify mux writes for each alt function count, standard pin configs for bias, hysteresis, slew, input enable, and drive strength, I2C pull-up resistance validation, HDMI mode/input controls, and BCM21664 lock/unlock behavior. Negative tests should cover invalid drive strengths, unsupported I2C pull-up values, unsupported config parameters, unknown pin indices, and missing MMIO resources.

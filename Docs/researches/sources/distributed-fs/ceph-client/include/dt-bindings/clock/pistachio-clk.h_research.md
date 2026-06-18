@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/pistachio-clk.h
+
+Purpose: publishes the Imagination Pistachio clock-controller IDs for PLLs, fixed-factor clocks, gates, dividers, muxes, peripheral clocks, system clocks, and external input gates. It exports 149 macros with several independent ID spaces and `*_NR_CLKS` sentinels.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 149 exported defines, numeric range 0..113, first numeric symbols `CLK_MIPS_PLL`=0, `CLK_AUDIO_PLL`=1, `CLK_RPU_V_PLL`=2, `CLK_RPU_L_PLL`=3, `CLK_SYS_PLL`=4, and last numeric symbols `SYS_CLK_HASH`=27, `SYS_CLK_NR_CLKS`=28, `EXT_CLK_AUDIO_IN`=0, `EXT_CLK_ENET_IN`=1, `EXT_CLK_NR_CLKS`=2. Dominant macro prefixes are `CLK`(87), `PERIPH`(35), `SYS`(24), `EXT`(3); common suffix categories are `DIV`(51), `MUX`(17), `PLL`(7), `IN`(6), `CLKS`(4), `OUT`(3), `TIMER`(3), `ADC`(2). Source section markers include `PLLs`, `Fixed-factor clocks`, `Gate clocks`, `Divider clocks`, `Mux clocks`, `Peripheral gate clocks`, `Peripheral divider clocks`, `System gate clocks`, `Gates for external input clocks`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The header is included by `arch/mips/boot/dts/img/pistachio.dtsi` and matches the providers under `drivers/clk/pistachio/`, including the core, peripheral, system, and external clock domains.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `_DT_BINDINGS_CLOCK_PISTACHIO_H` should remain unique enough to avoid accidental include suppression. Since the file has no executable validation, errors usually appear as boot-time probe failures, missing clocks, or devices stuck in reset.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include Pistachio MIPS DTS boot, provider registration for core/peripheral/system/external domains, audio/network/USB/MMC clock consumers probing, and `*_NR_CLKS` matching provider array sizes.

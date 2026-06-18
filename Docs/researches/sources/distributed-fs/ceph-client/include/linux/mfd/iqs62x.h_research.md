@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/linux/mfd/iqs62x.h
+
+Purpose: This header defines the Azoteq IQS620/621/622/624/625 multifunction sensor core interface. It captures product/hardware IDs, event register layout, event descriptors, per-device descriptors, and shared core state for proximity, SAR, hall, ALS/IR, wheel, and PMU-style children.
+
+Important APIs, types, and constants: Constants define product numbers, IQS620 hardware revisions, ALS flag register addresses, IQS624 hall UI register and bits, global event mask, key/event counts, and event table width. Enums define UI selection, event-register groups, and event flags for key-like and switch-like events. `struct iqs62x_event_data` carries decoded UI and ALS flags. `struct iqs62x_event_desc` maps event flags to register/bit metadata. `struct iqs62x_dev_desc` describes each chip variant, subdevices, calibration registers, masks, flags, firmware name, and event register matrix. `struct iqs62x_core` stores descriptor, I2C client, regmap, blocking notifier, firmware block list, ATI/firmware completions, selected UI, event cache, and hardware/software numbers. `iqs62x_events` exports the global event descriptor table.
+
+Control flow, state, and persistence: The core probes the chip, selects a descriptor by product/hardware/software number, optionally loads firmware/calibration, registers MFD subdevices, masks/unmasks global events, caches event bits, and notifies children. Persistent state includes sensor calibration and firmware behavior; live kernel state includes notifier subscribers, firmware blocks, completions, selected UI, and event cache.
+
+Dependencies and integration points: It integrates with I2C/regmap, MFD cells, firmware loading, notifier chains, completions, input, IIO/ALS, hall sensor, and power management children.
+
+Risks and test signals: Risks include descriptor mismatch across similar products, notifier ordering bugs, stale `event_cache`, firmware completion timeouts, and event matrix width mismatches. Test signals include product ID probe tests, ATI/firmware completion handling, event notification for all `IQS62X_NUM_EVENTS`, suspend/resume event mask restore, and child-driver calibration reads.

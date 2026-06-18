@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pwm/pwm_th1520.rs
+
+Purpose: Rust PWM driver for the T-HEAD TH1520 controller. It registers up to six channels and implements the newer PWM waveform API, including conversion between abstract waveform fields and hardware period, duty, control, and enable state.
+
+Important APIs, types, and functions: `Th1520WfHw` is the hardware waveform representation with `period_cycles`, `duty_cycles`, `ctrl_val`, and `enabled`. `Th1520PwmDriverData` owns devres-managed MMIO and the clock. `ns_to_cycles()` and `cycles_to_ns()` perform saturating time/rate conversion. The `pwm::PwmOps` implementation provides `round_waveform_tohw`, `round_waveform_fromhw`, `read_waveform`, and `write_waveform`. `Th1520PwmPlatformDriver::probe()` maps resources and registers the chip. A pinned drop disables and unprepares the clock.
+
+Control flow: probe obtains IO resource 0, gets and enables the unnamed clock, rejects zero or greater-than-1 GHz rates, maps a fixed `0xB0` register region, and registers six PWM channels with `pwm::Chip::new`. Waveform rounding treats period zero as disabled, converts period and duty to 32-bit cycle values, rounds a too-small nonzero period up to one cycle with nonzero status, and encodes inversion by using `FPOUT` absence plus `period - duty` when the requested duty offset indicates an inverted signal. Reads fetch control, period, and duty registers for the selected channel and report enabled as `duty_cycles != 0`. Writes disable by writing the requested control, zero duty, and `CFG_UPDATE` when previously enabled; enable/configure writes control, period, duty, then `CFG_UPDATE`, and writes `START` as a separate final transaction only when transitioning from disabled.
+
+State and persistence: hardware registers are the source of truth. The driver deliberately disables by forcing duty to zero rather than clearing `START` because hardware does not reliably force inactive output through `INACTOUT`. Clock state persists for the driver lifetime and is released in `PinnedDrop`. No software state is cached between operations.
+
+Dependencies and integration: depends on Rust-for-Linux `kernel::pwm`, `platform`, `of`, `clk`, devres, and typed IO memory APIs. It binds `thead,th1520-pwm` and uses the Rust module PWM platform-driver macro.
+
+Risks: clock-rate exclusivity is noted as missing because the Rust wrapper lacks an equivalent to `clk_rate_exclusive_get()`, so later rate changes can skew conversions. `cycles_to_ns()` assumes nonzero rate; probe enforces this. Inversion inference from duty offset is intentionally limited and does not support arbitrary phase offsets. The enabled heuristic treats any zero-duty programmed state as disabled.
+
+Test signals: probe with valid and invalid clock rates, read back default hardware state, apply normal and inverted waveforms, verify glitch-free latch on next period, check disable produces static low, test all six channels, and compare rounded waveform status for sub-cycle periods.

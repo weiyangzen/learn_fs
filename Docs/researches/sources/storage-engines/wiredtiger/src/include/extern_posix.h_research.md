@@ -1,0 +1,15 @@
+## sources/storage-engines/wiredtiger/src/include/extern_posix.h
+
+Purpose: this generated POSIX prototype header declares the OS abstraction layer used on Unix-like platforms: path handling, privilege checks, dynamic loading, condition variables, filesystem hooks, memory mapping, time, process/thread utilities, and stream buffering.
+
+Important APIs/types/functions: path and process helpers include `__wt_absolute_path`, `__wt_path_separator`, `__wt_has_priv`, `__wt_process_id`, and `__wt_thread_id`. Dynamic library APIs are `__wt_dlopen`, `__wt_dlsym`, and `__wt_dlclose`. Condition and once primitives are `__wt_cond_alloc`, `__wt_cond_destroy`, `__wt_cond_signal`, `__wt_cond_wait_signal`, and `__wt_once`. Thread wrappers are `__wt_thread_create`, `__wt_thread_join`, and `__wt_thread_str`. Time and sleep APIs include `__wt_epoch_raw`, `__wt_localtime`, `__wt_sleep`, and `__wt_yield`. Filesystem integration is anchored by `__wt_os_posix` plus `__wti_posix_directory_list*`, `__wti_posix_file_extend`, `__wti_posix_map`, `__wti_posix_map_preload`, `__wti_posix_map_discard`, `__wti_posix_unmap`, and remap/resize helpers.
+
+Control flow: startup calls `__wt_os_posix` to install a `WT_FILE_SYSTEM`. Runtime code flows through wrapper functions rather than calling libc/syscalls directly, allowing error mapping, session diagnostics, and durable file semantics to stay consistent. Memory mapping flows through map/preload/discard/unmap, while remap-aware resize uses prepare/remap/release helpers around file growth.
+
+State and persistence behavior: this layer does not own database metadata, but it directly manipulates durable files and mapped views. Directory listing and file-size/extend/map operations influence table files, log files, checkpoint files, and backup/copy workflows. Condition variables and threads are in-memory process state; dynamic library handles hold extension-loading state.
+
+Dependencies and integration points: it depends on POSIX APIs (`dlopen`, pthreads, time functions, file/mmap primitives, process IDs, stdio buffering) behind WiredTiger types such as `WT_SESSION_IMPL`, `WT_FILE_SYSTEM`, `WT_FILE_HANDLE`, and `WT_DLH`. It integrates with extension loading, storage source/file-system abstraction, live restore/remap handling, logging, checkpoint, backup, and diagnostic output.
+
+Risks: OS wrappers are portability choke points. Path rules, privilege detection, mmap lifetime, remap during resize, durable extend semantics, and directory-list filtering can differ across POSIX variants. `__wt_getenv`, `__wt_localtime`, thread, snprintf, and sleep functions with default visibility may be consumed outside the core library, so signature or visibility drift is risky. Memory-mapped file length/cookie mismatches can lead to stale reads or unmap errors.
+
+Test signals: POSIX filesystem tests, extension load/unload tests, mmap and remap resize tests, backup/copy-and-sync tests, file durability tests, thread lifecycle tests, and builds on Linux, macOS, and other Unix platforms validate this header's contract.

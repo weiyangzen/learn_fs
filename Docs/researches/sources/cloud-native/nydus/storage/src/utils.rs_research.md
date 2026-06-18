@@ -1,0 +1,15 @@
+# sources/cloud-native/nydus/storage/src/utils.rs
+
+Purpose: provides low-level storage helpers for vectored IO, memory-slice copying, platform-specific file copy, fd path lookup, memory cursoring over FUSE buffers, readahead, aligned uninitialized allocation, and hash/CRC verification.
+
+Important APIs/types/functions: `readv` wraps `nix::sys::uio::preadv` and retries interrupted reads. `copyv` copies from a slice of byte buffers into `FileVolatileSlice` destinations and returns bytes copied plus final destination cursor. `copy_file_range` uses Linux `copy_file_range` or a portable pread/pwrite loop. `get_path_from_file` resolves fd paths through `/proc/self/fd` on Linux or `F_GETPATH` on macOS. `MemSliceCursor` tracks `index` and `offset` across `FileVolatileSlice` arrays, with `move_cursor`, `consume`, and `inner_slice`. `readahead` issues Linux `libc::readahead` or macOS `F_RDADVISE` in 128 KiB windows after 4 KiB alignment. `alloc_buf` returns page-aligned, unzeroed storage. `check_hash` and `check_crc` verify against `RafsDigest` and iSCSI CRC32.
+
+Control flow: callers typically validate read/copy ranges, then call `copyv` or cursor `consume` to write into FUSE memory slices. `copyv` iterates source buffers and nested destination slices, advancing destination indices as slices fill and returning `StorageError::MemOverflow` when destination capacity is exhausted. `MemSliceCursor::consume` produces mutable IO slices directly over volatile memory using raw pointer arithmetic, advancing its cursor as slices are consumed. File copying loops until the requested byte count is copied and treats zero-byte progress as IO error.
+
+State and persistence: `MemSliceCursor` maintains transient cursor state over caller-owned memory. `copy_file_range` persists bytes into destination files. Readahead changes kernel page-cache state but no durable data. `alloc_buf` deliberately leaves memory uninitialized, so callers must write before reading.
+
+Dependencies and integration points: depends on `fuse_backend_rs::file_buf::FileVolatileSlice`, `vm_memory::bytes::Bytes`, `nix`, `libc`, and `nydus_utils::{crc32,digest,round_down_4k}`. Used by storage backends and blob/device read paths that need efficient vectored memory movement.
+
+Risks: `copyv` validates `offset` only against the first source buffer, then resets `src_offset` for later buffers; this matches its documented "first buffer offset" behavior but is easy to misuse. It may partially write before returning `MemOverflow`, as covered by tests. `MemSliceCursor::consume` creates `IoSliceMut` from raw pointers and relies on valid `FileVolatileSlice` lifetimes and bounds. `alloc_buf` is uninitialized and page-aligned via unsafe allocation. Linux `copy_file_range` can have filesystem-specific semantics, and the fallback does not handle partial writes beyond treating zero as error.
+
+Test signals: tests cover copy edge cases, partial overflow behavior, cursor movement and consume semantics, page-aligned allocation, hash/CRC checks, file copy success and EOF errors, and fd path lookup including invalid fd. Platform-specific tests are guarded where appropriate.

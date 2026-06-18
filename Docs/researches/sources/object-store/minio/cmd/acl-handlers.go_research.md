@@ -1,0 +1,5 @@
+## sources/object-store/minio/cmd/acl-handlers.go
+
+Purpose: implements S3 ACL compatibility handlers for buckets and objects while effectively supporting only private/full-control semantics. Key types are `grantee`, `grant`, and `accessControlPolicy`; handlers are `PutBucketACLHandler`, `GetBucketACLHandler`, `PutObjectACLHandler`, and `GetObjectACLHandler`.
+
+Control flow creates request context, audits, extracts bucket/object, checks object layer readiness, authorizes with bucket policy actions, validates bucket/object existence, and parses ACL XML or `x-amz-acl`. PUT accepts empty/header private or XML whose first grant is `FULL_CONTROL`; other ACLs return NotImplemented. GET returns dummy XML with a canonical user full-control grant. State is not persisted beyond existence checks; ACLs are not stored. Dependencies include mux vars, policy auth, XML decoding, object API, and logger. Risks are compatibility surprises for clients expecting real ACL storage or multiple grants. Tests are not in this subset.

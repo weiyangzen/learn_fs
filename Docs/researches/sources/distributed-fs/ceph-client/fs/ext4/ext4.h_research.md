@@ -1,0 +1,44 @@
+# sources/distributed-fs/ceph-client/fs/ext4/ext4.h
+
+## Purpose
+`ext4.h` is the central private header for the ext4 implementation in this source tree. It defines the filesystem's core scalar types, on-disk metadata structures, in-memory inode and superblock state, feature-bit accessors, mount/state flags, allocation and mapping request formats, directory-entry formats, and cross-module function prototypes. Most ext4 `.c` files include this header directly or through focused headers such as `ext4_jbd2.h` and `ext4_extents.h`.
+
+The header is both an ABI description and an internal integration contract. Structures such as `struct ext4_inode`, `struct ext4_group_desc`, `struct ext4_super_block`, `struct ext4_dir_entry_2`, and `struct mmp_struct` must match on-disk layout. Structures such as `struct ext4_inode_info`, `struct ext4_sb_info`, `struct ext4_map_blocks`, `struct ext4_allocation_request`, `struct ext4_io_end`, `struct ext4_group_info`, and `struct ext4_iloc` describe live kernel state and module-to-module call conventions.
+
+## Important APIs, types, and constants
+The file establishes ext4 numbering types: `ext4_fsblk_t` for filesystem physical blocks, `ext4_lblk_t` for file logical blocks, `ext4_group_t` for block groups, and `ext4_grpblk_t` for group-local block offsets. Mapping and allocation are expressed through `struct ext4_map_blocks` and `struct ext4_allocation_request`, with flags such as `EXT4_MAP_MAPPED`, `EXT4_MAP_UNWRITTEN`, `EXT4_GET_BLOCKS_CREATE`, `EXT4_GET_BLOCKS_CONVERT`, `EXT4_GET_BLOCKS_CONVERT_UNWRITTEN`, and `EXT4_GET_BLOCKS_QUERY_LAST_IN_LEAF`.
+
+The on-disk inode and superblock definitions are the largest persistence contract. `struct ext4_inode` stores mode, owner ids, timestamps, block/extents payload in `i_block`, generation, file ACL, size high bits, checksum fields, creation time, version high bits, and project id. `struct ext4_super_block` stores global counts, feature masks, UUID, journal backing data, default options, MMP, quota inodes, error telemetry, encoding flags, orphan-file inode, and checksum. Helper macros and inline functions convert split 64-bit counters and timestamps, including `ext4_blocks_count()`, `ext4_free_blocks_count()`, `ext4_isize()`, `ext4_encode_extra_time()`, and `ext4_decode_extra_time()`.
+
+The in-memory inode state in `struct ext4_inode_info` layers ext4-specific fields around `struct inode`: raw block payload, deletion time, file ACL block, allocation locality, xattr lock, orphan tracking, fast-commit queues and ranges, `i_disksize`, `i_data_sem`, JBD2 inode linkage, extent status tree, delayed allocation reservations, pending cluster reservations, inline-data coordinates, completed IO conversion lists, fsync transaction ids, inode checksum seed, project id, quota pointers, and optional fscrypt state. The in-memory superblock state in `struct ext4_sb_info` is the mount-wide nexus for block group geometry, descriptors, mount options, journaling, orphan tracking, buddy allocator state, workqueues, error handling, DAX, MMP, fast commit, shrinkers, checksum seeds, and runtime flags.
+
+Feature management is generated through macros such as `EXT4_FEATURE_COMPAT_FUNCS`, `EXT4_FEATURE_RO_COMPAT_FUNCS`, and `EXT4_FEATURE_INCOMPAT_FUNCS`, which produce `ext4_has_feature_*`, `ext4_set_feature_*`, and `ext4_clear_feature_*` accessors. Supported masks distinguish ext2, ext3, and ext4 capability sets. The header also defines mount options (`EXT4_MOUNT_*`, `EXT4_MOUNT2_*`), inode flags (`EXT4_*_FL` and `EXT4_INODE_*`), directory file types, error codes, special inode numbers, block and cluster conversion macros, and KUnit export support.
+
+## Control flow and integration
+This header does not implement major filesystem algorithms, but it shapes their control flow. Block mapping flows pass `struct ext4_map_blocks` plus `EXT4_GET_BLOCKS_*` flags into `ext4_map_blocks()`, `ext4_map_query_blocks()`, `ext4_map_create_blocks()`, `ext4_ext_map_blocks()`, or `ext4_ind_map_blocks()` depending on whether extents or indirect blocks are in use. Allocation flows pass `struct ext4_allocation_request` into `ext4_mb_new_blocks()` and use mballoc criteria from `CR_POWER2_ALIGNED` through `CR_ANY_FREE`.
+
+Directory flows consume `struct ext4_filename`, `struct dx_hash_info`, `struct dir_private_info`, `struct ext4_dir_entry_2`, and helpers such as `ext4_dir_rec_len()`, `ext4_rec_len_from_disk()`, `ext4_rec_len_to_disk()`, `ext4_set_de_type()`, `ext4_check_dir_entry()`, and htree prototypes. The file also exposes inline decision points such as `is_dx()`, `EXT4_DIR_LINK_MAX()`, `ext4_hash_in_dirent()`, `ext4_has_inline_data()`, and `is_special_ino()`.
+
+Journaling integration appears through inclusion of `<linux/jbd2.h>`, `handle_t`, `journal_t`, JBD2 inode fields, journal triggers, `struct ext4_io_end`, and prototypes for journal-aware mutation paths. Fast commit integration appears in `struct ext4_inode_info`, `struct ext4_sb_info`, `fast_commit.h`, fast-commit feature bits, `EXT4_FC_REPLAY`, and many `ext4_fc_*` prototypes.
+
+## State and persistence behavior
+The file clearly separates durable little-endian metadata from runtime state. On-disk fields use `__le16`, `__le32`, and `__le64`, while helpers convert to CPU order. Persistent checksums cover group descriptors, bitmaps, inodes, orphan-file blocks, directory tails, MMP blocks, and the superblock; the header defines seeds and trigger scaffolding while implementation lives elsewhere.
+
+`i_disksize` is a notable persistence boundary: it records the inode size known to be on disk and may lag `i_size` during truncate or growth. `ext4_update_i_disksize()` and `ext4_update_inode_size()` serialize through `i_data_sem` and require inode locking for regular files. Orphan tracking is represented by either an orphan list node or orphan-file index and recovery-related feature/state flags.
+
+Mount-level state includes clean/error/orphan/fast-commit-replay flags, emergency shutdown/read-only flags, journal destroy flags, writeback error sequence tracking, periodic superblock update work, and MMP thread data. Group and flex-group counters are mirrored in memory with atomic/percpu counters and must be reconciled with on-disk descriptors and superblock totals.
+
+## Dependencies and integration points
+The header depends on core kernel filesystem, block, quota, percpu, RCU, crypto checksum, fscrypt, fsverity, fiemap, rbtree, xarray, workqueue, and JBD2 facilities. It includes local `extents_status.h` and `fast_commit.h`, and it declares interfaces implemented by many ext4 compilation units: `bitmap.c`, `balloc.c`, `dir.c`, `fsync.c`, `hash.c`, `ialloc.c`, `fast_commit.c`, `mballoc.c`, `inode.c`, `indirect.c`, `ioctl.c`, `namei.c`, `resize.c`, `super.c`, `extents.c`, `move_extent.c`, `page-io.c`, `mmp.c`, `verity.c`, `orphan.c`, `inline.c`, `readpages.c`, `symlink.c`, `sysfs.c`, and block-validity code.
+
+It integrates directly with VFS through `struct inode`, `struct super_block`, inode/file operations, address-space operations, folios, readahead, ioctl, file attributes, dentry lookups, and quota structures. It integrates with block IO through `buffer_head`, `bio`, block devices, DAX, and writeback controls.
+
+## Risks and review notes
+Because this file defines on-disk layout, any field reordering, type-size change, endian misuse, or feature-bit mismatch can corrupt filesystems or break compatibility with e2fsprogs and older kernels. The compile-time flag checks in `ext4_check_flag_values()` reduce the risk of inode flag drift but do not protect all on-disk structures.
+
+The inline helpers encode assumptions about locking and mount state. Misusing `ext4_update_i_disksize()` without inode serialization, using feature setters without journaled superblock updates, dereferencing RCU arrays without the provided accessor pattern, or bypassing emergency state checks can produce races or inconsistent persistence. Many counters are split between on-disk descriptors, percpu counters, atomic counters, and runtime caches, so allocator and resize paths require careful synchronization.
+
+The header is also highly conditional on kernel config. Quota, encryption, verity, DAX, unicode/casefold, KUnit, SMP, and debug options alter available fields or behavior. Callers must use capability helpers instead of assuming a feature is compiled or mounted.
+
+## Test signals
+Testable invariants include inode flag bit/value parity, feature compatibility masks, endian round trips for block counts and inode sizes, timestamp encoding boundaries, directory record length conversions, extent-mode vs bitmap-mode maxbytes, special inode detection, inline-data detection, emergency-state behavior, and block group lock contention helpers. The KUnit-facing `EXPORT_SYMBOL_FOR_EXT4_TEST` and the dedicated extents test in this subset show that some internal helpers are intended to be exercised through KUnit rather than only whole-filesystem tests.

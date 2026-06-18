@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/pcmcia/pdaudiocf/pdaudiocf.c
+
+Purpose: Implements the PCMCIA driver front-end for the Sound Core PDAudioCF sound card. It handles card allocation, PCMCIA IO/IRQ/device configuration, low-level chip creation handoff, resource assignment, card registration, detach, suspend/resume callbacks, and PCMCIA device ID matching.
+
+Important APIs/types/functions: Module parameters are `index`, `id`, and `enable` arrays. `card_list[]` tracks allocated ALSA cards by slot. `snd_pdacf_probe()` allocates an ALSA card, calls `snd_pdacf_create()`, registers a low-level `snd_device` with `snd_pdacf_dev_free()`, initializes PCMCIA resource flags/config fields, and calls `pdacf_config()`. `pdacf_config()` requests IO, requests a threaded IRQ (`pdacf_interrupt` and `pdacf_threaded_irq`), enables the PCMCIA device, calls `snd_pdacf_assign_resources()`, and sets `card->sync_irq`. `snd_pdacf_assign_resources()` stores port/IRQ, marks configured, creates AK4117, names the card, creates PCM, and registers the card. `snd_pdacf_detach()` powers down configured hardware, marks stale, disconnects the card, and frees it when closed.
+
+Control flow: Probe finds an unused card slot, honors `enable[]`, creates software state, binds it to `link->priv`, sets IO width and config registers, then performs resource configuration. Failure paths free IRQ/disable device as appropriate and release the card. Detach marks the chip stale before disconnecting so other paths can reject hardware access. PM callbacks delegate to `snd_pdacf_suspend()`/`snd_pdacf_resume()` only when a chip exists and the PCMCIA device is present.
+
+State and persistence: Persistent per-card state is `struct snd_pdacf` allocated by `snd_pdacf_create()` and freed by the low-level snd_device callback. This file owns slot index, `card_list` membership, `p_dev` binding, configured status, IO port/IRQ assignment, and card naming. PCMCIA resources persist until `pdacf_release()` frees IRQ and disables the device.
+
+Dependencies/integration: Depends on ALSA core/initval, Linux module/slab/init, PCMCIA CIS/config APIs, and PDAudioCF core/IRQ/PCM helpers from `pdaudiocf.h`. Integrates with `module_pcmcia_driver`, ALSA card lifecycle, threaded IRQs, and PCMCIA resource negotiation.
+
+Risks: `pdacf_release()` unconditionally calls `free_irq()` and `pcmcia_disable_device()`, so error paths and partially configured devices must keep resource ownership clear. `card_list` must be cleared on failures/free to avoid slot leaks. Detach can race with open PCM users; the stale/disconnect/free-when-closed sequence is the safety mechanism. PCMCIA config uses fixed index `0x5` and 16-byte IO window, which must match the card CIS/hardware expectations.
+
+Test signals: Insert/remove a matching PCMCIA card, verify IO/IRQ assignment and threaded IRQ registration, confirm AK4117 and PCM creation, run capture, remove while PCM is open, test suspend/resume with device present, and verify slot reuse after detach/failure.

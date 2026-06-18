@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/service_linux.go
+
+This Linux build-tagged file provides platform initialization and CNI load options for the CRI service. The package `init` computes `kernelSupportsRRO` by checking for kernel version at least 5.12, which later gates advertised recursive read-only mount support. `criService.initPlatform` handles user namespace warnings, SELinux enable/disable and category range configuration, CNI plugin creation, capability discovery, and CDI registry configuration.
+
+The CNI setup builds a map from default runtime and runtime-specific `NetworkPluginConfDir` values. It chooses a minimum network attachment count of two by default, or one when `UseInternalLoopback` is enabled. For each network config directory it creates a `go-cni` instance with min network count, config directory, max config count, and plugin binary directories. It populates `c.netPlugin` keyed by runtime handler name.
+
+State changes are process-global for SELinux and CDI, service-local for `netPlugin` and `allCaps`, and package-global for `kernelSupportsRRO`. Dependencies include moby userns detection, opencontainers SELinux, go-cni, containerd capability and kernelversion helpers, log, and CDI. Risks include panicking during package init if kernel version parsing fails, global SELinux disablement when config disables SELinux, userns/AppArmor/OOM-score incompatibility, and CDI configuration errors aborting service creation. `cniLoadOptions` returns loopback plus default config unless internal loopback is used.

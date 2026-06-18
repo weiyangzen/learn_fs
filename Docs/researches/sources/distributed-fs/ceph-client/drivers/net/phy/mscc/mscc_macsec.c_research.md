@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/drivers/net/phy/mscc/mscc_macsec.c
+
+Purpose: implements hardware MACsec support for selected Microsemi/Microchip VSC85xx PHYs, mainly VSC856X/VSC8582/VSC8584. It programs the PHY MACsec ingress and egress classifier/security-association machinery, installs Linux `macsec_ops`, handles SecY/SA lifecycle callbacks from the MACsec core, and services packet-number rollover interrupts.
+
+Important APIs and functions:
+- `vsc8584_macsec_init()` is the exported initialization entry used by `mscc_main.c`. It initializes the private flow list, clears `priv->secy`, attaches `phydev->macsec_ops`, and runs the hardware block initialization for supported PHY IDs.
+- `vsc8584_macsec_phy_read()` and `vsc8584_macsec_phy_write()` are the low-level 32-bit accessors over the PHY MACsec CSR indirection page. They select `MSCC_PHY_PAGE_MACSEC`, program target/bank selection registers, poll the command bit, and restore the prior MDIO page.
+- `__vsc8584_macsec_init()` initializes ingress/egress MACsec blocks, host/line MACs, flow-control buffer settings, and processor protocol mode. It must run with the MDIO lock held by its caller.
+- The `vsc8584_macsec_ops` table maps kernel MACsec operations to this driver's handlers for device open/stop, SecY add/update/delete, RXSC/RXSA operations, and TXSA operations.
+- `vsc8584_macsec_flow()`, `vsc8584_macsec_transformation()`, and flow enable/disable helpers are the core programming routines for SAM match entries, flow-control action words, and transformation records.
+- `vsc8584_handle_macsec_interrupt()` detects egress PN rollover, disables the affected TX flow, and calls `macsec_pn_wrapped()`.
+
+Control flow: initialization resets both MACsec banks, enables clocks, configures classification/VLAN parsing/default actions, configures MAC pause/FCS/preamble behavior, enables the flow-control buffer, and switches the processor to protocol mode 4. When a SecY is added, `priv->secy` is set, default unmatched handling is tightened when validation is enabled, and two default MKA bypass flows for `ETH_P_PAE` are installed. RXSA/TXSA additions allocate a hardware flow from the relevant ingress/egress bitmap, configure match selectors, write a transformation record with AES key material plus derived GHASH key, then enable the SAM entry if the SA is active. Updates disable the flow first, rewrite match/action state, and re-enable. Deletions disable and free flows. Device open/stop toggles all flows without deleting state.
+
+State and persistence: all durable driver-side state is in `struct vsc8531_private`: one active `macsec_secy *`, a list of `struct macsec_flow`, and ingress/egress bitmaps with 16 entries each. Hardware state is programmed into PHY CSR banks and persists until reset or explicit reconfiguration. Transformation records contain live MACsec keys and PN/replay state in hardware; only `flow->has_transformation`, flow index, SA pointers, match flags, and action flags are retained in software. The code does not support multiple SecYs per PHY. PN update through `ctx->sa.update_pn` is rejected for both RX and TX updates.
+
+Dependencies and integration points: depends on phylib, the kernel MACsec core (`<net/macsec.h>`), AES helpers (`aes_prepareenckey()`, `aes_encrypt()`), and register definitions in `mscc.h`, `mscc_mac.h`, `mscc_macsec.h`, and `mscc_fc_buffer.h`. It is reached from `vsc8584_config_init()` in `mscc_main.c`; MACsec interrupts are enabled through `vsc8584_config_macsec_intr()` and dispatched by `vsc8584_handle_interrupt()`. PTP integration is compile-time visible through `CONFIG_NETWORK_PHY_TIMESTAMPING`, because host MAC packet-interface config adds a MACsec bypass PTP stall-clock value when PHY timestamping is enabled.
+
+Risks and edge cases:
+- The low-level MACsec read/write helpers poll for command completion but do not return an error on timeout; reads still return whatever data registers contain and writes silently proceed. Fault injection around stuck CSR commands would be valuable.
+- `vsc8584_handle_macsec_interrupt()` assumes `priv->secy` is valid when a MACsec rollover interrupt arrives. Interrupt routing before `add_secy` or after `del_secy` could dereference a null SecY if hardware still reports rollover.
+- Transformation record writes cast `u8 *` key and derived hkey buffers to `u32 *`, so byte order and alignment assumptions matter. This mirrors hardware expectations but should be tested on strict-alignment architectures or audited against kernel unaligned-access rules.
+- Flow lookup matches only association number and bank, not SCI for RX; if multiple RXSCs reuse association numbers, deletion/update paths can target the wrong flow.
+- Only 16 ingress and 16 egress flows are available; exhaustion returns `-ENOMEM` and should be visible to MACsec configuration tests.
+
+Test signals: exercise `ip macsec` add/update/delete for SecY, RXSC, RXSA, and TXSA; verify MKA frames bypass encryption on ingress and egress; validate strict/check/disabled modes and unmatched frame behavior; verify active/inactive SA enablement; drive PN rollover to ensure TXSA is disabled and the MACsec core is notified; run with `CONFIG_MACSEC` both enabled and disabled to validate stubs in `mscc.h`; inspect ethtool counters and packet forwarding before and after PHY reset.

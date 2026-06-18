@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/kgdb.h
+
+Purpose: ARC KGDB register numbering and breakpoint support. Important APIs/types/functions: when `CONFIG_KGDB`, defines `GDB_MAX_REGS`, `BREAK_INSTR_SIZE`, `CACHE_FLUSH_IS_SAFE`, `NUMREGBYTES`, `BUFMAX`, `arch_kgdb_breakpoint`, `kgdb_trap`, and `enum arc_linux_regnums`; otherwise makes `kgdb_trap` a no-op. Control flow: breakpoint emits `trap_s 0x4`; KGDB trap handling is external. State and persistence: exposes register layout for debugger packets. Dependencies/integration: used by KGDB core and ARC trap code. Risks: register numbering must match GDB ARC expectations; breakpoint size affects patching. Test signals: KGDB connect/break/continue, register read/write, and trap handling tests.

@@ -1,0 +1,156 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 142
+- Recursive researched files: 142
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/abt,y030xx067a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/advantech,idk-1110wr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/advantech,idk-2121wr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/anbernic,rg35xx-plus-panel.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/apple,summit.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/arm,rtsm-display.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/arm,versatile-tft-panel.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/armadeus,st0700-adapt.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/asus,z00t-tm5p5-nt35596.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/auo,a030jtn01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/bananapi,s070wv20-ct16.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/boe,bf060y8m-aj0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/boe,himax8279d.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/boe,td4320.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/boe,th101mb31ig002-28a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/boe,tv101wum-ll2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/boe,tv101wum-nl6.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/display-timings.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/dlc,dlc0700yzg-1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ebbg,ft8719.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/elida,kd35t133.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/fascontek,fs035vg158.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/feixin,k101-im2ba02.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/feiyang,fy07024di26a30d.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/focaltech,gpt3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/himax,hx8279.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/himax,hx83102.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/himax,hx83112a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/himax,hx83112b.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/himax,hx83121a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/himax,hx8394.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/hydis,hv101hd1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,il79900a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,ili9163.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,ili9322.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,ili9341.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,ili9805.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,ili9806e.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ilitek,ili9881c.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/innolux,ee101ia-01d.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/innolux,ej030na.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/innolux,p097pfg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/jadard,jd9365da-h3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/jdi,lpm102a188a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/jdi,lt070me05000.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/kingdisplay,kd035g6-54nt.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/leadtek,ltk035c5444t.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/leadtek,ltk050h3146w.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/leadtek,ltk500hd1829.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/lg,ld070wx3-sl01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/lg,lg4573.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/lg,sw43408.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/lgphilips,lb035q02.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/logicpd,type28.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/lxd,m9189a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/mantix,mlaf057we51-x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/mitsubishi,aa104xd12.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/mitsubishi,aa121td01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/motorola,mot-panel.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/nec,nl8048hl11.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/newvision,nv3051d.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/novatek,nt35510.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/novatek,nt35950.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/novatek,nt36523.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/novatek,nt36672a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/novatek,nt36672e.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/novatek,nt37801.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/olimex,lcd-olinuxino.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/orisetech,otm8009a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-common-dual.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-dpi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-dsi-cm.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-edp-legacy.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-edp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-lvds.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-mipi-dbi-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-simple-dsi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-simple-lvds-dual-ports.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-simple.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/panel-timing.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/pda,91-00156-a0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/powertip,hx8238a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/powertip,st7272.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/raspberrypi,7inch-touchscreen.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/raydium,rm67191.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/raydium,rm67200.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/raydium,rm68200.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/raydium,rm692e5.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/raydium,rm69380.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/renesas,r61307.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/renesas,r69328.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/rocktech,jh057n00900.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ronbo,rb070d30.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,amoled-mipi-dsi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,ams495qa01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,ams581vf01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,ams639rq08.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,atna33xc20.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,ld9040.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,lms380kf01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,lms397kf04.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6d16d0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6d27a1.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6d7aa0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e3fc2x01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e3ha8.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e63m0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e88a0-ams427ap24.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e88a0-ams452ef01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e8aa0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,s6e8aa5x01-ams561ra01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/samsung,sofef00.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/seiko,43wvf1g.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sgd,gktw70sdae4se.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sharp,lq079l1sx01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sharp,lq101r1sx01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sharp,lq150x1lg11.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sharp,ls037v7dw01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sharp,ls043t1le01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sharp,ls060t1sx01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sitronix,st7701.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sitronix,st7789v.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sony,acx424akp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sony,acx565akm.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sony,td4353-jdi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/sony,tulip-truly-nt35521.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/startek,kd070fhfid015.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/startek,startek-kd050c.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/synaptics,r63353.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/synaptics,td4300-panel.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/tfc,s9700rtwv43tr-01b.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/ti,nspire.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/tpo,td.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/tpo,tpg110.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/truly,nt35597-2K-display.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/visionox,g2647fb105.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/visionox,r66451.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/visionox,rm69299.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/visionox,rm692e5.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/visionox,vtdr6130.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/xinpeng,xpp055c272.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

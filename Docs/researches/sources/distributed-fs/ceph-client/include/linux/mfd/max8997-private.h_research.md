@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/max8997-private.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/max8997-private.h
+
+This private MAX8997/MAX8966 header is the low-level register, IRQ, and core-state contract for the MFD. It enumerates PMIC registers, MUIC registers and masks, haptic registers, RTC registers, interrupt source groups, individual PMIC/MUIC IRQs, GPIO masks, and chip variants. `struct max8997_dev` is the integration anchor: it stores PMIC/RTC/haptic/MUIC I2C clients, platform data, bus and IRQ locks, irqdomain, IRQ mask cache/current arrays, a battery platform device, hibernation register dump storage, and GPIO status cache.
+
+The declared APIs are `max8997_irq_init`, `max8997_irq_resume`, and I2C register helpers for single, bulk, and masked-update access. Control flow flows from MFD probe into child registration: each child receives the shared `max8997_dev` and uses the helper functions against the correct I2C client. IRQ control is grouped by `enum max8997_irq_source`; the IRQ layer caches masks and maps hardware bits to virtual IRQs through an irqdomain. State persistence is explicit in `reg_dump`, used for hibernation restore across PMIC, MUIC, and haptic register ranges; GPIO state is also mirrored in memory.
+
+Dependencies include I2C, irqdomain, exported symbols, mutexes, and public platform data from `max8997.h`. Risks include cross-bank register confusion, hibernation dump sizing depending on enum sentinels, unimplemented IRQ groups still present in enums, and stable IRQ enum ordering being required by irqdomain mappings. Test signals include suspend/hibernate resume restoring masks/registers, MUIC cable IRQ demux, RTC alarm IRQs, GPIO interrupt edge masks, and fault-injection of I2C helper failures.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/max8997-private.h -->

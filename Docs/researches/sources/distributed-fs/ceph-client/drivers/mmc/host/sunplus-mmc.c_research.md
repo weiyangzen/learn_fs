@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/sunplus-mmc.c
+
+Purpose: this is the Sunplus SP7021 MMC/SD host controller driver. It implements a non-SDHCI MMC host around Sunplus command, status, timing, DMA-sector, and PIO registers, providing card requests, bus clock/timing/width setup, software reset, runtime PM clock gating, and simple tuning.
+
+Important APIs, types, and functions: `struct spmmc_host` holds the MMIO base, clock, reset, current `mmc_request`, DMA/PIO mode, threaded IRQ state, and `struct spmmc_tuning_info`. The MMC entry points are `spmmc_request()`, `spmmc_set_ios()`, `spmmc_get_cd()`, and `spmmc_execute_tuning()`. Core helpers include `spmmc_prepare_cmd()`, `spmmc_prepare_data()`, `spmmc_finish_request()`, `spmmc_check_error()`, `spmmc_xfer_data_pio()`, `spmmc_sw_reset()`, and `spmmc_controller_init()`.
+
+Control flow: probe allocates an MMC host, maps registers, gets the clock and reset, requests a threaded IRQ, enables the clock, parses DT/MMC properties, obtains regulators, sets request and segment limits, initializes the controller, enables tuning, starts runtime PM, and registers with `mmc_add_host()`. A request programs command bytes and response mode; R2 commands are handled synchronously, PIO data is polled through the FIFO, small DMA requests are also waited synchronously, and large DMA requests complete from the threaded interrupt. Completion unmaps DMA, reads the response buffers, checks controller status/error bits, optionally sends STOP, clears `host->mrq`, and calls `mmc_request_done()`.
+
+State and persistence: persistent software state is limited to the current request, DMA interrupt threshold/use flag, DMA-vs-PIO mode, and adaptive tuning delay fields. Hardware state includes selected SD media mode, clock divider, timing delays, data width, DMA sector descriptors, interrupt enables, and reset state. Runtime suspend/resume only disables or reenables the module clock.
+
+Dependencies and integration points: the driver uses the MMC core, DT parsing, regulator helpers, common clock/reset APIs, DMA mapping, threaded IRQs, `readl_poll_timeout()`, scatterlist mapping iterators, and the `sunplus,sp7021-mmc` compatible.
+
+Risks: DMA supports at most eight mapped sectors and treats too many segments as `-EINVAL`; callers rely on MMC limits to avoid that path. The tuning scan breaks after the first passing delay, so the "best delay" helper rarely sees a full pass window. Error handling mutates delay fields and gives commands many retries, which can hide marginal timing faults. Reset has a documented DMA-idle workaround and ignores timeout return in one path. PIO assumes 4-byte FIFO accesses and can leave partial-transfer failures reflected only through status polling.
+
+Test signals: useful checks are successful probe and card enumeration, clean request completion in synchronous DMA, interrupt-driven DMA, and PIO modes, correct R2 response decoding, multi-block STOP behavior, CRC/timeout recovery with reset and retune, GPIO card-detect behavior, runtime PM clock gating, and high-speed/DDR timing transitions.

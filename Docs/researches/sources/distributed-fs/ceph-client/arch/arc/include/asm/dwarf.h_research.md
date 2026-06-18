@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/dwarf.h
+
+Purpose: abstracts DWARF CFI directives for ARC assembly. Important APIs/types/functions: defines `CFI_STARTPROC`, `CFI_ENDPROC`, `CFI_DEF_CFA`, `CFI_OFFSET`, and related macros either as real directives or ignored comments based on `ARC_DW2_UNWIND_AS_CFI`. Control flow: preprocessor-only assembly macro selection. State and persistence: affects emitted unwind metadata in object files. Dependencies/integration: used by ARC assembly linkage/entry code and controlled by Makefile assembler feature probing. Risks: absent or wrong CFI metadata weakens stack unwinding and debugging. Test signals: stacktrace/unwind tests and builds with assemblers that do and do not support CFI.

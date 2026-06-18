@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/cc770/cc770_platform.c
+
+Purpose: platform-bus wrapper for CC770/AN82527 controllers using either device tree properties or legacy platform data.
+
+Important APIs and functions: `cc770_platform_probe()` obtains the memory resource and IRQ, reserves and maps registers, allocates the CC770 netdev, installs `ioread8`/`iowrite8` callbacks, fills timing and bus configuration, and registers the device through `register_cc770dev()`. `cc770_get_of_node_data()` parses Bosch-specific properties for oscillator frequency, clock division, comparator bypass, pin disconnects, polarity, clock output, and slew rate. `cc770_get_platform_data()` mirrors the legacy `cc770_platform_data` path.
+
+Control flow and state: probe validates resources before allocation, stores the netdev as platform driver data, and on failures releases in reverse order. Remove unregisters, unmaps, frees the CAN device, and releases the memory region. Runtime behavior after registration is delegated to `cc770.c`; this file persists only mapped base and config bits in `struct cc770_priv`. Dependencies include OF, platform resources, MMIO, `include/linux/can/platform/cc770.h`, and the shared core. Risks are device-tree property interpretation, clock-output divisor validation, shared IRQ assumptions, and manual non-devm resource cleanup. Test signals include OF match for `bosch,cc770`/`intc,82527`, debug output of clock/config values, and probe unwind coverage for missing resources or failed core registration.

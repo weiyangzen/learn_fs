@@ -1,0 +1,37 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/hfi1/rc.c
+
+## Purpose
+`rc.c` implements most of the HFI1 reliable connected (RC) verbs protocol engine. It constructs outbound RC requests and responses, consumes inbound RC packets, manages packet sequence number (PSN) retry and completion state, emits ACK/NAK packets, and bridges regular InfiniBand RC operations with HFI1 TID RDMA extensions. The file is on the hot path for SEND, RDMA WRITE, RDMA READ, atomics, OPFN, ACK processing, RNR retry, PSN retry, duplicate-request replay, and congestion notification.
+
+## Important APIs, Types, and Functions
+- `hfi1_make_rc_req()` is the transmit-side packet builder used by the RUC send loop. It selects 9B or 16B headers, prioritizes pending responder work via `make_rc_ack()`, handles QP error flushing, and builds packets for SEND, RDMA WRITE, RDMA READ, atomics, OPFN, and TID RDMA read/write requests.
+- `make_rc_ack()` is the responder-side response builder. It drains `qp->s_ack_queue`, constructs ACK, atomic ACK, RDMA read response, TID RDMA read response, and TID RDMA write response packets, and manipulates `s_tail_ack_queue`, `s_acked_ack_queue`, `s_ack_state`, `s_ack_rdma_psn`, and responder flags.
+- `hfi1_send_rc_ack()` builds a minimal inline ACK/NAK packet and sends it through PIO when possible. It falls back to queued send-engine ACKs when responder work is pending, RDMA ACK counters are nonzero, link state is inactive, or PIO buffers are unavailable.
+- `hfi1_rc_rcv()` is the receive dispatcher for RC opcodes. It validates RUC headers, handles ECN/OPFN, dispatches responses to `rc_rcv_resp()`, checks PSN order and opcode sequencing, copies SEND/RDMA WRITE payloads, starts RDMA READ and atomic responses, and schedules ACK/NAK output.
+- `rc_rcv_resp()` processes inbound response packets on the requester side, including ACKs, atomic ACKs, and RDMA READ response first/middle/last/only packets.
+- `do_rc_ack()` advances completion and retry state for ACK, RNR NAK, and other NAK classes. It updates retry timers, credits, `s_last_psn`, `s_num_rd_atomic`, TID RDMA counters, and SWQE completion.
+- `hfi1_restart_rc()`, `reset_psn()`, and `reset_sending_psn()` implement retry positioning and send-side PSN rollback.
+- `do_rc_completion()` completes SWQEs once no in-flight SDMA descriptors still reference their SGEs.
+- `rc_rcv_error()` handles out-of-order and duplicate request packets, including replay of prior RDMA read or atomic responses from the ACK queue.
+- `process_becn()` and `log_cca_event()` update congestion-control state in response to backward ECN.
+
+## Control Flow
+The outbound path starts from `hfi1_do_send()` in `ruc.c`, which calls `hfi1_make_rc_req()` under `qp->s_lock`. If responder work is pending, `make_rc_ack()` takes precedence over requester sends. Otherwise the function checks QP send state, wait flags, PSN pacing, and the current SWQE. New SWQEs initialize SGE state, consume credits where applicable, set the opcode-specific BTH/extension headers, advance `s_cur`/`s_tail`, and update `s_psn`. Multi-packet SEND and RDMA WRITE work requests use `s_state` middle/last states and may enable SDMA AHG for repeated middle headers. RDMA READ, atomics, OPFN, and TID RDMA requests generate header-only or extension-specific packets and depend on ACK responses to complete.
+
+The inbound request path enters `hfi1_rc_rcv()` with `r_lock` held. `hfi1_ruc_check_hdr()` validates addressing, P_Key, migration, and GRH constraints. Response opcodes are redirected to `rc_rcv_resp()`. Request opcodes are checked against `qp->r_psn` and `qp->r_state`; mismatches go through `rc_rcv_error()`. Valid SEND packets consume receive WQEs and produce receive completions. RDMA WRITE packets validate remote-write access and R_Key mapping before copying data. RDMA READ and atomic requests allocate or reuse ACK queue entries and schedule responder output through the send engine. ACKs are sent inline by `hfi1_send_rc_ack()` or deferred with `rc_defered_ack()`.
+
+The ACK response path combines transport ACK semantics with local work completion. `do_rc_ack()` walks from `s_acked` while `ack_psn` covers SWQEs, completes normal WQEs, writes atomic return values, calls OPFN reply handling, manages read/atomic outstanding counters, and handles TID RDMA write exceptions. ACKs reset retry/RNR counters and refresh credits. RNR NAKs reset PSN, schedule RNR timers, and pause sends. Sequence-error NAKs call `hfi1_restart_rc()` and reschedule sends. Class B NAKs complete or error the QP when the failed SWQE is the last outstanding operation.
+
+## State and Persistence Behavior
+This file persists protocol state inside `struct rvt_qp`, `struct hfi1_qp_priv`, per-port counters, ACK queues, and TID RDMA request state. Important fields include `s_psn`, `s_next_psn`, `s_last_psn`, `s_sending_psn`, `s_sending_hpsn`, `r_psn`, `r_ack_psn`, `r_msn`, `s_ack_state`, `r_nak_state`, `s_nak_state`, `s_num_rd_atomic`, `s_rdma_ack_cnt`, and queue indices such as `s_cur`, `s_tail`, `s_acked`, `s_tail_ack_queue`, `s_acked_ack_queue`, and `r_head_ack_queue`. State is volatile kernel runtime state, not durable storage. Memory registrations held in ACK entries are reference-counted and released by `release_rdma_sge_mr()`.
+
+Concurrency relies on `qp->s_lock` for send-side and ACK-queue state, `qp->r_lock` for receive-side state, interrupt-safe locking for mixed paths, and explicit memory barriers before clearing response-pending flags. Some copy operations deliberately drop locks while copying RDMA READ data into SGEs.
+
+## Dependencies and Integration Points
+The file depends heavily on RDMA core/RDMA VT (`rvt_*`, `ib_rvt_state_ops`, `rvt_get_rwqe()`, `rvt_copy_sge()`, `rvt_rkey_ok()`, timers, credits, and completions), HFI1 packet helpers (`hfi1_make_ruc_header()`, PIO send, ECN, P_Key, LID/SL/SC helpers), SDMA tx request state, TID RDMA helpers in `tid_rdma.c`, OPFN helpers, and tracepoints. `verbs.c` maps RC opcodes to `hfi1_rc_rcv()`. `driver.c` can call `hfi1_send_rc_ack()` for deferred ACK handling. The send loop in `ruc.c` invokes `hfi1_make_rc_req()`.
+
+## Risks and Edge Cases
+Risk is concentrated in retry and duplicate handling. Incorrect PSN rollback can resend the wrong bytes, complete a SWQE too early, or leak SGE/MR references. ACK queue wraparound has to preserve prior RDMA read and atomic responses for duplicate requests. TID RDMA adds special counters and states that do not always align with ordinary IB PSN semantics. Lock ordering between `r_lock` and `s_lock` must stay consistent in error and retry paths. Inline ACK fallback is sensitive to `s_rdma_ack_cnt`, PIO buffer availability, and link state. Length checks must account for 9B versus 16B padding, CRC, and LT bytes. Congestion BECN/FECN handling changes send headers and CCA timers and should not interact badly with ACK coalescing.
+
+## Test Signals
+Useful signals include RC SEND/RDMA READ/RDMA WRITE/atomic loopback and remote interoperability tests, induced packet loss or PSN sequence NAKs, RNR retry exhaustion, duplicate RDMA READ request replay, QP migration tests, OPFN negotiation tests, TID RDMA read/write stress, AHG-enabled multi-packet payload tests, and QP teardown while SDMA descriptors are still in flight. Runtime counters and tracepoints such as `rc_acks`, `rc_qacks`, `n_rc_resends`, `n_seq_naks`, `n_rnr_naks`, `n_rc_dupreq`, `n_rdma_seq`, and congestion log events are strong observability signals.

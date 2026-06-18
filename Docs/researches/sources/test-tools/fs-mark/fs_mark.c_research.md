@@ -1,0 +1,13 @@
+# sources/test-tools/fs-mark/fs_mark.c
+
+Purpose: `fs_mark` benchmark for synchronous/asynchronous file creation and metadata operations. It creates many files across one or more directories/processes, writes fixed-size zero buffers, optionally fsyncs/syncs in several policies, optionally unlinks files, aggregates per-child timing logs, and reports files/sec plus syscall timing statistics.
+
+Important APIs/functions: `process_args()` parses benchmark options and assigns directories/threads. `setup_file_name()` selects subdirectory policy and generates timestamp/random filenames. `setup()` opens per-child logs and prepares directories/buffers. `write_file()` chunks writes and records write latencies. `do_run()` performs one child iteration: create/write/fsync/close/post-fsync/unlink, then writes a 19-field child log row. `fork_threads()` forks child workers and waits. `process_child_log_file()` reads and removes per-child logs. `aggregate_thread_stats()` combines child stats. `print_run_info()` and `print_iteration_stats()` report headers/results. `main()` loops until requested iterations, fill mode, or SIGINT, then prints average and p50/p90/p99 files/sec.
+
+Control flow: parent parses options, opens master log, installs SIGINT handler, then repeatedly forks children. Each child runs setup and one iteration, writing a private `<log>.<pid>` file. Parent waits, aggregates all child logs, prints to stdout and master log, records files/sec for final percentiles, then repeats.
+
+State/persistence: global configuration and stats dominate the program. It creates benchmark directories/subdirectories, benchmark files, per-child transient logs, and an append-mode master log. `keep_files`, fill mode, and loop count determine whether files persist. `do_fill_fs` plus `check_space()` controls fill-until-full mode.
+
+Dependencies/integration: Linux-focused C program using `statfs`, fork/wait, signals, `open/write/fsync/sync/close/unlink`, `gettimeofday`, and timing helpers from `lib_timing.c`. `fs_mark.h` owns constants, globals, structs, policy strings, and prototypes.
+
+Risks/test signals: many fixed-size `sprintf`/`strncat` operations risk path/name overflow if validation misses combinations. Children inherit global state after fork; per-child log parsing is brittle to format changes. `files_per_sec` is stored as integer for percentile sorting despite float stats. Default cleanup on errors exits and removes only child logs, not benchmark files. Tests should run in temp dirs for single/multi-thread, keep/unlink, sync policies, subdir policies, loop count, SIGINT, and path-length boundaries.

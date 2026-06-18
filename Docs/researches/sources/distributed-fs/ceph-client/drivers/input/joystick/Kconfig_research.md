@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/input/joystick/Kconfig
+
+This Kconfig file defines the joystick/gamepad driver menu. `INPUT_JOYSTICK` is a bool menu gate that depends on `!UML`; it only controls visibility of individual driver options. The contained symbols cover gameport devices, serial/serio controllers, parport adapters, USB/SPI/I2C gamepads, platform-specific devices, and optional force-feedback/LED features.
+
+The important behavior is dependency and selection wiring. Several legacy digital/analog options `select GAMEPORT`; serial devices `select SERIO`; parport devices depend on `PARPORT`; I2C devices depend on `I2C`; some FF options `select INPUT_FF_MEMLESS`; Seesaw selects `INPUT_SPARSEKMAP`; Sense HAT selects `MFD_SIMPLE_MFD_I2C`. Options such as `JOYSTICK_XPAD_FF`, `JOYSTICK_XPAD_LEDS`, and `JOYSTICK_PSXPAD_SPI_FF` are feature toggles layered on base drivers.
+
+There is no runtime state, but the file is a persistent configuration contract that controls Makefile object inclusion and available module builds. Integration points include input core, gameport, serio, parport, USB, SPI, I2C, LED class, MFD, and documentation references. Risks include stale dependencies that allow impossible builds, missing `select` for shared helper libraries, module name conflicts, and menu options visible on unsupported platforms. Test signals include `allyesconfig`, `allmodconfig`, platform-specific configs, dependency solver output for helper selections, and matching every symbol to a Makefile object or subdirectory.

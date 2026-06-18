@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/uapi/asm/page.h
+
+Userspace page constants for ARC. Kernel builds include vdso/page.h; non-kernel consumers get default 8 KiB PAGE_SHIFT/PAGE_SIZE/PAGE_MASK and PAGE_OFFSET 0x80000000. Control flow is userspace headers providing constants when libc/autoconf is absent. State is ABI constants, not runtime data. Dependencies are linux/const.h and kernel VDSO page definitions. Risks are userspace assuming 8 KiB pages on kernels configured differently; the comment acknowledges ad hoc consumers. Test signals are headers_install, busybox/uClibc builds, VDSO builds, and page-size variant user ABI tests.

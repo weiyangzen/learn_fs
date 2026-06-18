@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/landlock/landlock_exec.c
+
+Purpose: tiny helper executable used by Landlock filesystem execute tests. Its `main()` simply returns zero, providing a deterministic binary that can be copied into the sandbox and run by `_test_exec()` in `landlock_tester.h`. There are no APIs beyond process entry, no state, and no dependencies other than successful compilation. Integration point is `landlock04.c`, which declares this helper in `.resource_files`, copies it to `sandbox/landlock_exec`, and tests whether Landlock allows or denies `execve()` on it. Risks are dynamic-linker/library access, handled in `landlock04.c` by adding rules for shared libraries. Test signal is exit status zero when execution is allowed.

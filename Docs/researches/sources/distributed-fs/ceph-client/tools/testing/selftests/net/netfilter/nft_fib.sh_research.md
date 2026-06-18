@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/tools/testing/selftests/net/netfilter/nft_fib.sh
+
+Purpose: validates nftables `fib` expression behavior for reverse-path filtering, address type lookups, policy-based routing, loopback handling, and VRF interactions across IPv4 and IPv6.
+
+Important APIs and tools: uses nft inet/ip/ip6 tables, `fib saddr . iif oif missing`, `fib daddr type`, `fib daddr . iif type`, dynamic nft sets, `ip rule`/routing tables, VRF/dummy devices, dmesg log prefixes, forwarding sysctls, and ping.
+
+Control flow: creates ns1 - nsrouter - ns2 topology, loads rpfilter-like prerouting rules in all namespaces, enables logging for netns, and verifies normal routing does not produce fib drops. It tests input-chain loopback/local behavior, then readdresses ns1 to create expected missing reverse routes and checks fib counters. Policy-routing tests remove main IPv4 table lookup, install table 128/129 rules, and assert forwarded ping works with `fib saddr . iif oif`. Type tests reload ip/ip6 rules and compare counters for local-on-incoming-interface, local-on-other-interface, and remote unicast addresses. VRF tests add dummy0 and tvrf, use dynamic sets to record fib outputs/types, first with incoming interface outside VRF, then with veth0 enslaved to VRF, deleting expected elements and ensuring no unexpected set entries remain.
+
+State and persistence: temporary namespaces, nft rules, dmesg reads, sysctl change for `nf_log_all_netns`, routes/rules/VRF devices; cleanup restores log sysctl and namespaces. Dependencies include nft fib expression, VRF, IPv6, and clean dmesg signal. Risks include duplicate address add in setup, dmesg noise from prior tests, exact packet counter expectations, and complex VRF route semantics. Test signal is PASS/FAIL lines, fib counters, and final `ret`.

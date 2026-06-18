@@ -1,0 +1,13 @@
+# sources/object-store/openstack-swift/swift/common/manager.py
+
+Purpose: implements the `swift-init` style process manager for starting, stopping, reloading, status-checking, and running Swift service daemons from configuration files and pid files.
+
+Important APIs/types/functions: constants define known servers, aliases, graceful/seamless shutdown support, resource limits, and filesystem roots. `setup_env` raises process limits. `command` exposes `Manager` methods as CLI commands. `watch_server_pids`, `safe_kill`, `kill_group`, and `get_child_pids` manage process signaling. `Manager` expands aliases/globs and dispatches commands. `Server` maps service names to binaries, config files, pid files, running pids, subprocess spawning, waiting, and signaling. `main` parses CLI options and executes commands.
+
+Control flow: CLI arguments resolve to server names plus a command. `Manager` expands aliases such as `all`, `main`, and `rest`, verifies binaries, builds `Server` objects, and calls decorated command methods. `start` sets resource limits, launches each server's config files, optionally waits for startup output, or interacts in no-daemon mode. `stop` signals pid-file processes, polls until they disappear, and optionally sends SIGKILL to process groups after timeout. `reload`, `reload_seamless`, `shutdown`, `once`, and `kill` compose start/stop variants. `Server.conf_files` searches Swift config trees, including special object-expirer and standalone cases; `pid_files` maps run-dir state back to config choices.
+
+State and persistence: persistent state is pid files under the run directory and daemon processes. The manager also reads Swift configuration files and `/proc` command lines to avoid killing reused PIDs.
+
+Dependencies and integration: uses Swift utility `search_tree`, `write_file`, `remove_file`, and `readconf`; Swift `InvalidPidFileException`; system `resource`, `signal`, `subprocess`, `/proc`, and executable lookup. It is the operational control plane for installed Swift services.
+
+Risks: stale or incorrect pid files can target wrong processes, mitigated by command-line checks only for noop checks; process-group SIGKILL can affect all children; config search rules have legacy object-expirer behavior; strict/non-strict exit behavior changes automation semantics; writing pid files immediately after spawning assumes daemon startup succeeds. Tests should cover alias/glob expansion, config and pid mapping, stale pid removal, signal selection, start-once restrictions, object-expirer config preference, command visibility, and CLI command/server argument swapping.

@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/bin/cross-compile.go
+
+Purpose: release build tool that cross-compiles rclone for many GOOS/GOARCH pairs, builds zip archives, builds Linux deb/rpm packages via nfpm, embeds Windows resources, and optionally aliases artifacts to a release name. It is excluded from normal builds via `//go:build ignore`.
+
+Important functions: `compile` fans out builds with a worker pool; `compileArch` sets `GOOS`, `GOARCH`, optional CGO/macOS flags, build tags, ldflags version, and packaging; `buildZip` collects manual/manpage assets; `buildDebAndRpm` renders `bin/nfpm.yaml`; `generateResourceWindows` runs `resource_windows.go`. State changes occur under `build/`, with generated binaries, archives, package files, `version.txt`, and temporary Windows `.syso` files. Dependencies include Go, zip, nfpm, docs artifacts, optional xcrun/macOS SDK, and filesystem links. Risks include unpinned host toolchain behavior, concurrent builds sharing source-level `.syso` files, packaging failures after successful compile, and platform-specific environment correctness. Validation is command success plus failure aggregation.

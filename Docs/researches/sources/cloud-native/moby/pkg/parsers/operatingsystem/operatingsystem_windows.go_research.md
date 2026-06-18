@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/parsers/operatingsystem/operatingsystem_windows.go -->
+# sources/cloud-native/moby/pkg/parsers/operatingsystem/operatingsystem_windows.go
+
+Purpose: Windows OS description and version helpers. Important APIs are `GetOperatingSystem`, `GetOperatingSystemVersion`, `IsContainerized`, `IsWindowsClient`, and `getFirstStringValue`. Control flow gets product type/build from `RtlGetVersion`, best-effort reads `DisplayVersion` or `ReleaseId` plus `UBR` from registry, formats via `windowsOSRelease`, returns `osversion.Get().ToString()` for version, and treats Windows as not containerized. State is registry/OS API snapshot. Dependencies are hcsshim/osversion and Windows registry APIs. Risks include undocumented registry keys, fallback display strings, and product-type interpretation. Test signal is mostly `windows_os_string_test.go` for formatting.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/parsers/operatingsystem/operatingsystem_windows.go -->

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-sgmii.h
+
+This header defines QMP PCS offsets for SGMII PHY use. The macro API covers PHY start, power-down, software reset, line reset timing, TX large/small amplitude levels, PCS ready status, mid-term TX controls, and SGMII misc control. It has no functions, state, or control flow. It integrates with SGMII-specific Qualcomm QMP PHY drivers rather than the PCIe driver in this subset. Dependencies are only the preprocessor guard and consumers that add these offsets to a PCS base. Risks are wrong-ready-status or reset offsets, which can cause false bring-up success or stuck reset. Test signals include SGMII link establishment, PCS ready polling, reset sequencing, and amplitude tuning validation.

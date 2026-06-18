@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/include/fixed31_32.h
+
+Purpose: Defines AMD Display Core's 31.32 fixed-point numeric type and the public arithmetic/conversion API used by timing, color, scaler, and gamma code that cannot rely on floating point in kernel paths. `struct fixed31_32` stores a signed 64-bit raw value with 31 integer bits and 32 fractional bits. The header also defines shared constants such as `dc_fixpt_zero`, `dc_fixpt_epsilon`, `dc_fixpt_half`, and `dc_fixpt_one`.
+
+Important APIs and types: Inline helpers cover integer construction, negation, absolute value, comparisons, min/max/clamp, shifts, addition/subtraction, integer multiply/divide wrappers, rounding (`floor`, `round`, `ceil`), and truncation. Out-of-line functions include fraction construction, full fixed multiply/square/divide support, reciprocal, trigonometric functions, exponential/log/power support, and hardware-format packers such as `dc_fixpt_u4d19`, `dc_fixpt_u3d19`, `dc_fixpt_u2d19`, `dc_fixpt_u0d19`, `dc_fixpt_clamp_u0d14`, `dc_fixpt_clamp_u0d10`, and `dc_fixpt_s4d19`.
+
+Control flow: Most inline operations operate directly on the raw `value` field and assert overflow/underflow preconditions before shifting or adding. Division delegates to `dc_fixpt_from_fraction`; `dc_fixpt_pow` composes `log`, multiply, and `exp`, with explicit zero handling. Rounding converts to absolute magnitude, adds a fixed offset, shifts down, then restores sign. The conversion helpers at the end support deriving 31.32 values from packed unsigned or integer/fractional bitfield formats.
+
+State and persistence: The header is stateless except for immutable constants. Callers own all values by copy. Error behavior is assertion-based, not status-return-based, so invalid numeric ranges become debug/assertion failures or undefined downstream math depending on build configuration.
+
+Dependencies and integration points: Requires kernel/common definitions for `bool`, `ASSERT`, integer types, and the out-of-line implementation provided elsewhere in AMD DC. Color code in `modules/color/color_gamma.c` depends heavily on this API for PQ/HLG/gamma calculations; scaler and hardware programming paths use the fixed-to-hardware packers.
+
+Risks: Several comments explicitly constrain domains: `dc_fixpt_cos` expects normalized radians, `dc_fixpt_exp` is verified for small absolute values, and `dc_fixpt_log`/`pow` expect suitable positive/small arguments. The duplicate `LLONG_MIN`/`LLONG_MAX` guard block is harmless but brittle. Division by zero is not guarded in the interface. Overflow relies on `ASSERT`, so non-debug builds may have weaker protection.
+
+Test signals: Unit or kernel selftests should cover sign handling, boundary values around `LLONG_MAX`/`LLONG_MIN`, fraction reduction, rounding of negative values, small gamma/PQ inputs, and conversion packers against known hardware encodings. Runtime signals are assertion trips, color curve corruption, or scaler programming anomalies.

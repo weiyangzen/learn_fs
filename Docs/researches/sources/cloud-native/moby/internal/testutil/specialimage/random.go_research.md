@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/specialimage/random.go -->
+# sources/cloud-native/moby/internal/testutil/specialimage/random.go
+
+Purpose: creates deterministic pseudo-random single-platform image layouts for tests that want varied layer counts and image refs. Important APIs are `RandomSinglePlatform`, `layersToDigests`, `blobPaths`, `readJson`, and `LegacyManifest`. Control flow uses a caller-provided `rand.Source`, chooses a random tag and 0-7 layers, writes config/manifest/index, and can synthesize legacy `manifest.json` from an existing manifest descriptor. State is generated image layout content. Dependencies include math/rand, OCI specs, digests, JSON, and shared blob helpers. Risks include non-cryptographic randomness being intentional, zero-layer images, and digest changes when fixture serialization changes. Test signal is for image import robustness across varied layer graphs.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/specialimage/random.go -->

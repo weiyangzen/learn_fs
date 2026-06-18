@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/TestDatanodeRegister.java
+
+Purpose: unit-tests DataNode registration and namespace-info validation for version compatibility, layout versions, shutdown-before-register behavior, and invalid configuration values.
+
+Important APIs and types: `BPServiceActor`, `BPOfferService`, `DataNode`, `DNConf`, `NamespaceInfo`, `DatanodeProtocolClientSideTranslatorPB`, `VersionInfo`, `IncorrectVersionException`, `HadoopIllegalArgumentException`, `LambdaTestUtils.intercept`, and `Lists`.
+
+Control flow: setup builds mocked DN config and BPOfferService, constructs a `BPServiceActor` against an invalid address, and wires a mocked NN protocol returning a fake `NamespaceInfo` with current software and layout versions. `testSoftwareVersionDifferences` accepts equal versions and NN versions above the DN minimum, then expects `IncorrectVersionException` when the NN version is below `getMinimumNameNodeVersion`. `testDifferentLayoutVersions` documents that differing layout versions no longer fail namespace retrieval. `testDNShutdwonBeforeRegister` creates a real DataNode with empty locations, initializes a BPOfferService/actor, stops the actor before registration, and expects `"DN shut down before block pool registered"`. `testInvalidConfigurationValue` verifies DataNode construction rejects tolerated failed volumes below -1.
+
+State and persistence behavior: mostly mocked, with one short-lived DataNode config and BP service state. Integration points are namespace version negotiation, actor lifecycle, and DataNode config validation. Risks include exact exception messages and mixed mocked/real actor state. Signals are retrieved namespace values, expected exceptions, and invalid-config interception.

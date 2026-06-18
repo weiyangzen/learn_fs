@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/kprobes.c
+
+Purpose: implements SH kprobes and kretprobes by patching trap instructions and planting temporary probes for single-step simulation.
+
+Important APIs and control flow: `arch_prepare_kprobe()` rejects `rte`, copies original instructions, and records opcode. `arch_arm_kprobe()`/`arch_disarm_kprobe()` write or restore `BREAKPOINT_INSTRUCTION` and flush icache. `prepare_singlestep()` disarms the current probe and arms one or two per-CPU temporary probes at the next possible flow targets, handling jumps, branches, returns, and conditional delay-slot forms. `kprobe_handler()` manages active/reentered probes and pre-handlers. `post_kprobe_handler()` restores temporary probes and calls post-handlers. `kprobe_fault_handler()` rewinds or fixups faults. `kprobe_exceptions_notify()` consumes trap die notifications, and `arch_init_kprobes()` registers the kretprobe trampoline probe.
+
+State, dependencies, and risks: per-CPU state includes current probe, control block, and saved current/next opcodes. Dependencies include die notifier flow, exception tables, SH opcode decoding, icache flush, and kretprobe core. Risks include conditional branch displacement sign handling, probes in delay slots, recursion status bugs, and stale temporary probes. Test signals are kprobes/kretprobes on simple functions, branch/delay-slot probes, faulting probed instructions, and concurrent probes on SMP.

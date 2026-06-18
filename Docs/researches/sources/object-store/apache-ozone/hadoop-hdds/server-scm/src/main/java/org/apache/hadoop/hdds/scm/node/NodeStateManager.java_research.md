@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/main/java/org/apache/hadoop/hdds/scm/node/NodeStateManager.java
+
+Purpose: `NodeStateManager` is the in-memory source of truth for SCM datanode health state, operational state, container membership, pipeline membership, heartbeat timestamps, and layout-version health transitions. It schedules periodic heartbeat health checks and fires node-state events.
+
+Important APIs and types: Important methods include `addNode`, `updateNode`, `updateLastHeartbeatTime`, `updateLastKnownLayoutVersion`, `getNode`, `getNodeStatus`, filtered `getNodes` and count methods, `setNodeOperationalState`, `addPipeline`, `removePipeline`, `addContainer`, `removeContainer`, `getContainers`, `run`, `checkNodesHealth`, `forceNodesToHealthyReadOnly`, `pause`, `unpause`, and `close`. It uses `NodeStateMap`, `Node2PipelineMap`, `DatanodeInfo`, `NodeStatus`, `StateMachine<NodeState, NodeLifeCycleEvent>`, `LayoutVersionManager`, `SCMContext`, and SCM events.
+
+Control flow: Construction validates heartbeat/stale/dead intervals, builds a state machine for `HEALTHY`, `HEALTHY_READONLY`, `STALE`, and `DEAD`, defines layout-match/mismatch predicates, creates a scheduled executor, and schedules the first check. `checkNodesHealth` calculates healthy and stale deadlines, scans all nodes, and applies timeout, restore, resurrect, layout mismatch, and layout match transitions. Each state transition updates `NodeStateMap` and fires the mapped event. `run` skips one iteration after long scheduler delays to avoid misclassifying nodes after pauses, otherwise checks health and reschedules itself.
+
+State and persistence behavior: All node maps, pipeline maps, and container membership are in-memory. Datanode operational state is copied from datanode persisted state at registration, and updates through `setNodeOperationalState` must be sent to datanodes elsewhere. Layout version state is based on last heartbeat/report values and finalization checkpoint. The manager does not write its own DB records.
+
+Dependencies and integration points: It drives `STALE_NODE`, `DEAD_NODE`, `HEALTHY_READONLY_NODE`, and `HEALTHY_READONLY_TO_HEALTHY_NODE` handlers. It feeds `NodeManager` implementations, decommission manager, pipeline manager, placement policies, upgrade finalization, and container tracking.
+
+Risks: Snapshot getters are explicitly stale and can be inconsistent across calls. Health processing is synchronized only for check/finalization coordination; maps must preserve their own safety. A long JVM pause skips only one check. `setNodeOperationalState` fires an event based on current health to let other subsystems reconcile operational-state changes, so event handlers must be idempotent.
+
+Test signals: Tests should cover interval validation, all health state-machine transitions, layout mismatch/match behavior, forced readonly finalization, skip-after-delay, event firing for health and operational changes, container/pipeline map updates, registration with persisted op state and expiry, close/pause/unpause behavior, and stale snapshot semantics.

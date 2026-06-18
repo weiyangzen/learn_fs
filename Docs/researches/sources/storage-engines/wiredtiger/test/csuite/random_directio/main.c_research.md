@@ -1,0 +1,15 @@
+# sources/storage-engines/wiredtiger/test/csuite/random_directio/main.c
+
+Purpose: direct-I/O crash simulation test. A child writer process continuously mutates tables while the parent periodically stops it, copies the database home using direct I/O, opens the copy with recovery, verifies table consistency, resumes the child, and repeats. This approximates on-disk state after a crash without relying on buffered filesystem reads.
+
+Important APIs, types, and functions: `WT_THREAD_DATA` stores per-thread connection, buffer, data size, ID, RNG, and schema flags. `large_buf`, `gen_kv`, `gen_table_name`, and `gen_updated_value` generate deterministic keys/values/schema table names. `schema_operation` creates/inserts/updates/drops per-thread tables during selected ID windows. `thread_run` writes `table:main` and `table:rev` transactionally and optionally integrates schema operations. `thread_ckpt_run` checkpoints and flushes tiered storage. `create_db`, `fill_db`, `check_kv`, `check_schema`, and `check_db` implement setup, child workload, and recovered-copy validation. `handler`, `kill_child`, and `die` handle abnormal child exits.
+
+Control flow: `main` verifies `O_DIRECT` support, parses options for checkpointing, tiered storage, data size, schema frequency, home, copy interval, sync method, cycle count, populate/verify/preserve, schema flags, thread count, and initial timeout. In normal mode it creates the home, optional tier bucket, randomizes thread count/timeouts when requested, creates base tables, forks the child, sleeps, then for each cycle sends `SIGSTOP`, calls `check_db` with direct I/O copy, sends `SIGCONT`, and finally kills the child. Verify-only mode checks an existing home without direct I/O.
+
+State and persistence behavior: creates `WT_TEST.random-directio`, optional `bucket`, base tables `table:main` and `table:rev`, optional schema tables `table:A<id>-<thread>`, debug/check/save copies (`.DEBUG`, `.CHECK`, `.SAVE`), logs, checkpoints, and tiered-storage objects. Validation scans the recovered copy from near the last complete ID neighborhood and checks both main and reverse tables plus schema metadata.
+
+Dependencies and integration points: depends on POSIX signals/fork/wait, `O_DIRECT`, helper `copy_directory` from `util.c`, WiredTiger logging/recovery/transactions/checkpoints/tiered storage, `dir_store` extension paths, testutil option parsing, and CMake linking `random_directio/util.c`.
+
+Risks: this is highly timing- and filesystem-dependent. The direct-I/O copy can observe files disappearing during schema drops; helper logic tolerates `ENOENT` on source open. `check_kv` currently calls `cursor->search` twice, which is redundant but should be harmless. Tiered storage requires checkpoint mode. Many stronger integrated schema checks are commented out in the smoke script as not reliably passing.
+
+Test signals: each cycle should copy, recover, scan to the last consistent ID, validate reverse-table pairs and schema expectations, then print `SUCCESS`. The smoke script runs a bounded five-thread, five-second default plus create/drop schema variant.

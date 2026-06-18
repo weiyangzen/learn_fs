@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/dvb-frontends/drxd.h
+
+Purpose: Declares the public board-integration interface for the Micronas DRXD DVB-T demodulator frontend. It lets bridge/card drivers describe board-specific I2C addresses, oscillator/IF parameters, PLL wiring, MPEG transport output behavior, and optional oscillator-deviation persistence before calling `drxd_attach()`.
+
+Important APIs/types/functions: `struct drxd_config` is the only configuration contract. It carries `index`, tuner PLL address/type (`DRXD_PLL_NONE`, `DRXD_PLL_DTT7520X`, `DRXD_PLL_MT3X0823`), oscillator clock, `insert_rs_byte`, demodulator I2C addresses/revision, `disable_i2c_gate_ctrl`, intermediate frequency `IF`, and an `osc_deviation(priv, dev, flag)` callback used by the hard driver to retrieve or save oscillator correction. `drxd_attach()` returns a `struct dvb_frontend *` when `CONFIG_DVB_DRXD` is reachable and otherwise compiles to a stub that logs that the driver is disabled.
+
+Control flow: This header has no runtime flow of its own. A bridge driver fills `struct drxd_config`, passes private board state plus an `i2c_adapter` and `device` to `drxd_attach()`, then the implementation in `drxd_hard.c` allocates the demodulator state, checks register access, initializes the host interface enough for gate control, and returns a DVB frontend.
+
+State and persistence: The header does not store state, but it defines which state the implementation persists in `struct drxd_state`: copied board configuration, private pointer, oscillator deviation callback, transport mode preference, I2C-gate policy, and IF/clock geometry. The `osc_deviation` callback is the only explicit persistence hook; `flag == 0` is used by the driver to read a saved deviation and `flag == 1` to save a measured correction.
+
+Dependencies/integration: Includes Linux `types.h` and `i2c.h`, forward-uses DVB frontend types supplied by media callers, and depends on Kconfig symbol `CONFIG_DVB_DRXD`. It is consumed by card/bridge drivers that need to attach a DRXD demodulator, and by `drxd_hard.c` for the concrete attach implementation.
+
+Risks and test signals: Validate callers set `disable_i2c_gate_ctrl` correctly when the tuner is not behind the demodulator bridge, because the comment warns a wrong setting can wedge the I2C bus. Exercise A2/B1 board variants, missing/disabled Kconfig behavior, oscillator callback read/write semantics, zero `IF` fallback to 36 MHz, and transport output options such as RS-byte insertion. ABI changes to `struct drxd_config` require auditing all board drivers that initialize it positionally or partially.

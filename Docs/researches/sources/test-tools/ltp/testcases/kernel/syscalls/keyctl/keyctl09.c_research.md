@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/keyctl/keyctl09.c
+
+Purpose: tests encrypted key instantiation using user-provided decrypted data encoded as hex ASCII. It first adds a `user:masterkey` to the process keyring, then adds an `encrypted` key with a valid payload, reads it with `KEYCTL_READ`, and finally expects `EINVAL` when adding another encrypted key with non-hex plaintext characters. State is the process keyring containing user and encrypted keys, cleared at the end. Dependencies include `CONFIG_USER_DECRYPTED_DATA=y`, encrypted key type support, and keyutils APIs. Risks are kernel key type availability and payload-format coupling. Test signals are positive `add_key`/`read` for valid data and `EINVAL` for invalid data.

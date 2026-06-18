@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/open/Makefile
+
+Purpose: build leaf for `open(2)` tests with large-file compilation flags. Important APIs/types/functions: common LTP make includes plus `CFLAGS += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE`. Control flow: standard make rules build all open tests after applying directory-wide large-file macros. State/persistence: standard build outputs only. Dependencies/integration: large-file macros support tests such as `open12` and general 64-bit offsets. Risks: directory-wide feature macros can affect all tests' ABI expectations, but that is intentional for open syscall coverage. Test signals: successful build means all listed open tests compile under large-file mode.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_base01.py
+
+Purpose: basic API smoke test for table create, invalid config handling, missing-key search, insert, and readback across column-store record-number keys and row-store string keys.
+
+Important APIs are `session.create`, `open_cursor`, cursor `set_key/set_value/insert/search/get_value`, `dropUntilSuccess`, and expected stderr matching. Control flow runs scenario key formats, creates tables with page/allocation settings, checks malformed config raises `WiredTigerError` containing invalid argument and stderr “unknown configuration key,” searches for a nonexistent key and expects `WT_NOTFOUND`, then inserts one value and reads it back. State behavior is simple table persistence within one connection; no reopen is used. Dependencies are `wttest`, `wiredtiger`, and `make_scenarios`. Risks include a missing `inscursor.close()` call because the method is referenced without invocation, though test lifetime cleanup masks it. Test signals are expected error capture, WT_NOTFOUND, and value equality.

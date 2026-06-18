@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/sandbox/sandbox_test_inject.go
+
+Purpose: test-only injection helper for sandbox port mappings. Build tag `test` limits it to test builds. The single API `(*Sandbox).SetPortMappings` directly assigns the private `portMappings` field so tests can alter sandbox state without broad production setters. There is no persistence or external control flow. Dependencies are CRI-O hostport types and the sandbox package. Risks are accidental reliance on this helper outside test builds and bypassing validation or defensive copying. Test signal is indirect: sandbox tests can set or assert port mappings through controlled fixture setup.

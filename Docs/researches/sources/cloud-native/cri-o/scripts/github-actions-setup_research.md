@@ -1,0 +1,7 @@
+# sources/cloud-native/cri-o/scripts/github-actions-setup
+
+This Bash script performs full dependency setup for CRI-O GitHub Actions jobs. It sources a `versions` file, detects `GOARCH`, prepares the system, and installs bats, conmon, conmon-rs, cri-tools, crun, libpathrs, runc, ginkgo, CNI plugins, policy/config files, and buildah.
+
+Control flow is through `main` and helper functions. `prepare_system` stops Docker, disables ufw, loads bridge netfilter, sets sysctls, adds subordinate ID ranges, and disables journald rate limits. Install helpers clone GitHub repositories or download release artifacts, build components, copy binaries into system paths, and verify versions. `install_libpathrs` verifies downloaded helper scripts by SHA256 before building. `install_files` copies CRI-O test registry policy/configuration into `/etc/containers`.
+
+State/persistence is extensive and system-wide: kernel modules/sysctls, iptables NAT rule, `/etc/subuid`, `/etc/subgid`, journald config, binaries under `/usr/bin` and `/usr/sbin`, `/opt/cni/bin`, `/etc/containers`, and cloned temp trees. Dependencies include sudo, git, make, Go, curl/wget, network, and many upstream repos. Integration is CI and e2e-style tests. Risks include high privilege requirements, network drift, building from `master` for cri-tools, checksum maintenance for libpathrs helpers, and cleanup omissions if a command fails mid-function.

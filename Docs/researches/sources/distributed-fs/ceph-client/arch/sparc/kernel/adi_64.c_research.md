@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sparc/kernel/adi_64.c -->
+# sources/distributed-fs/ceph-client/arch/sparc/kernel/adi_64.c
+
+Purpose: Implements SPARC64 Application Data Integrity tag capability discovery and swap-out/swap-in tag persistence.
+
+Important APIs and control flow: `mdesc_adi_init()` grabs the machine description, checks CPU `hwcap-list` for `adp`, reads platform `adp-blksz`, `adp-nbits`, and `ue-on-adp`, and disables ADI if tag width exceeds the two-tags-per-byte assumption. `find_tag_store()` looks for an existing descriptor covering a VMA address. `alloc_tag_store()` allocates a page of descriptors per mm, finds holes, reserves a range of tag storage sized for up to `TAG_STORAGE_PAGES`, and maintains `tag_users`. `adi_save_tags()` reads physical-page ADI tags with `ASI_MCD_REAL` and packs two 4-bit tags per byte. `adi_restore_tags()` unpacks saved tags, writes them to the new physical page, clears saved bytes, issues a sync membar, and releases descriptor references.
+
+State, dependencies, and risks: global `adi_state` exports platform capability state. Per-mm state includes `mm->context.tag_store` and `tag_lock`; descriptor entries persist tag ranges and buffers across swap. Dependencies include MDESC, MM context fields, SPARC page-table physical address bits, ADI block size helpers, `ASI_MCD_REAL`, GFP_NOWAIT allocation, and swap/VMA paths. Risks include allocation failure losing tags (`-1`), descriptor exhaustion, address overflow/underflow range math, the 4-bit tag packing assumption, and concurrency around tag descriptor reuse. Test signals are ADI auxv/capability exposure, `mprotect(PROT_ADI)`, swapping tagged pages out and back in, descriptor exhaustion/failure injection, and non-ADI platform boot.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sparc/kernel/adi_64.c -->

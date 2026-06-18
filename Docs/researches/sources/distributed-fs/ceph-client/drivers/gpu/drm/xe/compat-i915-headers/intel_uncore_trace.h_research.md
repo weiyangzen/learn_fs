@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/compat-i915-headers/intel_uncore_trace.h
+
+Purpose: stubs the i915 register tracepoint macro for Xe compatibility. `trace_i915_reg_rw(a...)` expands to an empty `do { } while (0)`. There is no runtime control flow or state. Dependencies are none. Integration points are shared display code that emits i915 MMIO trace events when built in i915 but must compile under Xe. Risks are loss of register trace observability and tests that assume trace events exist. Test signals are build coverage and manual tracing expectations around display MMIO debugging.

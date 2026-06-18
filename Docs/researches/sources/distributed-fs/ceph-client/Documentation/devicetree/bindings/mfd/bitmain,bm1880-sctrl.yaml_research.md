@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/bitmain,bm1880-sctrl.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/bitmain,bm1880-sctrl.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/bitmain,bm1880-sctrl.yaml` defines the MFD or system-controller binding titled `Bitmain BM1880 System Controller`. It constrains devicetree nodes through compatible strings, required resources, bus topology, and shared schema references before the corresponding Linux subsystem uses the node at probe time.
+
+## Important APIs, Types, and Functions
+The exported API is the devicetree ABI, not callable functions. `compatible` uses an ordered compatible/fallback `items` sequence with 3 tokens: `bitmain,bm1880-sctrl`, `syscon`, `simple-mfd`. Top-level properties are `compatible`, `reg`, `ranges`, `#address-cells`, `#size-cells`. Required top-level properties are `compatible`, `reg`, `ranges`, `#address-cells`, `#size-cells`. Important reusable or nested constraints are: child-node patterns: `^pinctrl@[0-9a-f]+$`, `^clock-controller@[0-9a-f]+$`, `^reset-controller@[0-9a-f]+$`; child-node API keys include `compatible`. The highest-risk contract area is parent compatible strings, register windows, interrupt wiring, child-node schemas, regulator or functional subnode names, clock/reset cell counts, and `simple-mfd`/`syscon` fallback ordering.
+
+## Control Flow
+Control flow is declarative schema evaluation. `dt_binding_check` parses the YAML, validates embedded examples against this schema and any `$ref` targets, then `dtbs_check` matches real DTS nodes by `compatible`, `$nodename`, or inclusion from a parent schema. Validation checks required properties, array lengths and constants, applies no top-level conditionals, descends into pattern-matched child nodes, and finally enforces `additionalProperties` or `unevaluatedProperties`. Runtime flow starts only after the DTB is loaded: Linux driver core or MFD population uses the compatible and resources to bind drivers.
+
+## State and Persistence Behavior
+The YAML file stores no mutable runtime state and writes no persistent data. Its persistent behavior is ABI-level: property names, compatible fallback order, address-cell layout, child-node names, and example nodes become contracts shipped in source DTS files and compiled DTBs. Runtime state is owned by the matched kernel drivers after probe, including parent regmap lifetime, child-device population, IRQ domains, regulator state, GPIO/pinctrl state, clock/reset providers, and subdriver probe ordering.
+
+## Dependencies and Integration Points
+Maintainers listed: Manivannan Sadhasivam <mani@kernel.org>. Schema dependencies include dt-schema core/meta schemas only. Integration points include the Linux MFD core, regmap/syscon, I2C/platform/SPI instantiation, child device creation, GPIO/pinctrl/clock/reset/regulator/RTC/PWM/input/display subdrivers, and board DTS nodes. The binding also participates in Linux `make dt_binding_check`, `make dtbs_check`, YAML example extraction, driver `of_match_table` review, and DTS board-file validation.
+
+## Risks
+Primary risks are incompatible ABI changes to parent compatible strings, register windows, interrupt wiring, child-node schemas, regulator or functional subnode names, clock/reset cell counts, and `simple-mfd`/`syscon` fallback ordering, mismatch between documented compatibles and the driver's match table, resource ordering or cell-count mistakes that pass review but break probe, child-node regexes that over-match unrelated children or under-match valid bus devices, lack of embedded examples, leaving coverage dependent on in-tree DTS users. This schema rejects unknown top-level properties with `additionalProperties: false`. Because these bindings describe hardware contracts, regressions can appear as boot-time probe failures, missing child devices, invalid timing/ECC configuration, or dtbs_check noise across unrelated boards.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/mfd/bitmain,bm1880-sctrl.yaml` for targeted schema validation and `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/mfd/bitmain,bm1880-sctrl.yaml` against boards that instantiate the binding. There are no embedded examples, so representative DTS users and schema-only validation carry the coverage. Exercise child-node validation for `^pinctrl@[0-9a-f]+$`, `^clock-controller@[0-9a-f]+$`, `^reset-controller@[0-9a-f]+$`. Also compare compatible strings with in-tree driver `of_match_table` entries and review DTS examples for register tuple counts, interrupt names, clocks/resets, address ranges, and phandle references.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/bitmain,bm1880-sctrl.yaml -->

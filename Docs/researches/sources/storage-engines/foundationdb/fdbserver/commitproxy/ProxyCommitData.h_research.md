@@ -1,0 +1,22 @@
+# sources/storage-engines/foundationdb/fdbserver/commitproxy/ProxyCommitData.h
+
+## Purpose
+This header defines the in-memory data structures shared by the commit proxy implementation. It centralizes counters, histograms, durable-state handles, resolver and storage-server caches, idempotency bookkeeping, version-vector and accumulative-checksum state, range-lock state, and the adapter context that `applyMetadataMutations()` needs without exposing the entire proxy implementation.
+
+## Important APIs and types
+`ProxyStats` owns `CounterCollection` metrics, latency sketches, histograms, and special counters for assigned version, committed version, batch memory, and compute estimates. `ExpectedIdempotencyIdCountForKey` carries the expected number of idempotency expiration acknowledgements for a `(commitVersion, high-order batch index)` key group. `ProxyCommitData` is the main mutable role state. Its key helpers are `tagsForKey`, `updateLatencyBandConfig`, `updateSSTagCost`, `rangeLockEnabled`, the constructor, and `getApplyMetadataProxyContext`. `RangeLock` implements `ApplyMetadataRangeLock`, stores decoded range-lock state in a `KeyRangeMap<RangeLockStateSet>`, and exposes the fast-path `anyExclusiveLockHeld()` plus `isLocked()`.
+
+## State and persistence behavior
+The header itself persists nothing directly, but it owns handles to persistent subsystems. `txnStateStore` stores transaction subsystem metadata. `logSystem` and `logSystemConsumer` publish and consume durable log data. `version`, `committedVersion`, and `minKnownCommittedVersion` model progress across durable and applied state. `keyInfo`, `storageCache`, `tssMapping`, `tag_popped`, `vecBackupKeys`, `uid_applyMutationsData`, and range-lock maps are populated from recovered state or metadata mutations. `idempotencyClears` is a memory buffer of clear-range mutations to be included in later commits. `acsBuilder` is created only when mutation checksum and accumulative checksum are enabled and version-vector modes are disabled.
+
+## Control flow and integration
+`ProxyCommitData` is constructed by `CommitProxyServerCore` before log-system and transaction-state-store initialization are complete; pointer fields such as `logAdapter` and `txnStateStore` start as null and are filled during startup. The commit pipeline reads and mutates this state at every phase: batcher memory counters and stats in intake, resolver and key-info maps during conflict and tag assignment, transaction-state fields during metadata application, ratekeeper maps during commit cost reporting, and range locks before final mutation assignment. `getApplyMetadataProxyContext()` builds the smaller context consumed by the shared metadata mutation engine, passing pointers into `ProxyCommitData` plus a borrowed `RangeLock`.
+
+## Dependencies
+The header depends on `FDBTypes`, `RangeLock`, `Stats`, accumulative checksum utilities, `ApplyMetadataMutation`, `Knobs`, log-system interfaces, master/resolver interfaces, and Flow random/actor types. It bridges commitproxy code to core fdbserver metadata logic and the fdbclient id/type definitions used by wire requests.
+
+## Risks and edge cases
+The struct is large and mostly unsynchronized because FoundationDB actors run cooperatively; accidental blocking or reentrancy assumptions can still be dangerous. Cached tags in `ServerCacheInfo` must be invalidated by metadata code when tag assignments change. `rangeLockEnabled()` deliberately disables range locks under version-vector and TLog-unicast modes, so callers must not assume configured read locks are always active. `RangeLock::anyExclusiveLockHeld_` is a derived summary; recovery uses monotonic initialization, but normal updates recompute after coalescing so stale fast-path state is a correctness risk if new update paths bypass `consumePendingRequest`. `acsBuilder` availability depends on several knobs, so checksum mutation paths must null-check consistently.
+
+## Test signals
+`ProxyStats` exposes production metrics such as `RangeLockFastPath`, `RangeLockSlowPath`, commit latency bands, transaction-size distribution, and commit-batch memory. The range-lock comments and counters identify a specific hot-path optimization that simulation and performance tests should verify. Accumulative checksum paths have trace events in the implementation; idempotency count structures are exercised by commit idempotency workflows; and the header participates in commit proxy link/build tests through the commitproxy target.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/drm/drm_gem.h
+
+Purpose: Defines the DRM GEM base object model for graphics buffer objects: object callbacks, refcounting, handle namespaces, mmap offsets, dma-buf/PRIME integration, reservation locks, GPUVA tracking, LRU shrinker support, default GEM file operations, and helper APIs.
+
+Important APIs, types, and functions: Defines `enum drm_gem_object_status`, `struct drm_gem_object_funcs`, `struct drm_gem_lru`, `struct drm_gem_object`, `DRM_GEM_FOPS`, `DEFINE_DRM_GEM_FOPS()`, huge tmpfs helpers, object init/release/free functions, mmap helpers, get/put helpers, handle create/delete, mmap offset allocation/free, page get/put, GEM lock/unlock, vmap/vunmap, object lookup helpers, DMA reservation wait, multi-object reservation lock/unlock, dumb map offset, LRU helpers, eviction helper, shared/imported predicates, GPUVA lock assertion/init, and GPUVM BO iteration macros.
+
+Control flow: Drivers initialize GEM objects with either shmem-backed or private storage, install object funcs, expose per-file handles, optionally allocate mmap offsets, and use reservation locks for CPU/GPU synchronization. When handles are closed and references drop, the object free callback releases backing storage and dma-buf attachment/export state. PRIME paths export/import dma-bufs through object funcs and driver hooks. LRU helpers allow shrinkers to scan reclaimable objects. GPUVA-aware drivers maintain per-object mapping lists under the proper lock mode.
+
+State and persistence: GEM objects are runtime memory objects with refcounts, handle counts, global flink names, optional shmem file backing, mmap node, dma-buf export/import references, reservation object, GPUVA list, object funcs, and LRU placement. State persists while any handle, dma-buf, framebuffer, GPU mapping, or driver reference exists.
+
+Dependencies and integration points: Depends on krefs, dma-buf, dma-resv, VMA manager, Linux mm, file operations, DRM file handle IDRs, PRIME helpers, sync/fence infrastructure, fdinfo memory stats, transparent hugepage tmpfs support, and GPUVM. It is the base for DMA, shmem, TTM, VRAM, and driver-private BO implementations.
+
+Risks and test signals: Risks include refcount/handle-count imbalance, global-name lifetime bugs, mmap offset exposure after free, reservation deadlocks, dma-buf reference loops, incorrect imported-object cleanup, shrinker eviction while pinned/active, GPUVA list locking mismatches, and fdinfo stats races. Test handle create/delete across files, flink/open legacy paths, mmap and munmap, PRIME export/import, vmap/vunmap, reservation contention, shrinker/LRU eviction, hot-unplug cleanup, fdinfo memory stats, and GPUVA map/unmap under both immediate and reservation-lock modes.

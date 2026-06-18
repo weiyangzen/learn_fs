@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+
+Purpose: Reads Intel Wi-Fi ACPI methods and DSM functions into `iwl_fw_runtime` regulatory, SAR, TAS, geo, PPAG, PHY-filter, and feature-policy state.
+
+Important APIs and functions: Exports `iwl_acpi_get_dsm_object()`, `iwl_acpi_get_dsm()`, `iwl_acpi_get_tas_table()`, `iwl_acpi_get_mcc()`, `iwl_acpi_get_pwr_limit()`, `iwl_acpi_get_eckv()`, `iwl_acpi_get_wrds_table()`, `iwl_acpi_get_ewrd_table()`, `iwl_acpi_get_wgds_table()`, `iwl_acpi_get_ppag_table()`, `iwl_acpi_get_phy_filters()`, `iwl_acpi_get_guid_lock_status()`, `iwl_acpi_get_wbem()`, and `iwl_acpi_get_dsbr()`. Static helpers locate/evaluate ACPI methods, parse Wi-Fi-domain packages, parse chain tables, and cache DSM integer values.
+
+Control flow: Method readers call `iwl_acpi_get_object()`, select the Wi-Fi package by revision and expected size/range, validate element types and revisions, then copy values into firmware runtime tables. WRDS/EWRD parse SAR profiles across multiple revisions and sub-band counts. WGDS selects the highest supported geo revision, handles variable profile counts for newer revisions, and fills missing bands from 5 GHz data. PPAG handles rev 0, rev 1-4, and rev 5 sizes. DSM loading first queries the validity bitmap, then caches supported fixed-size functions into `fwrt->dsm_values` and `dsm_funcs_valid`.
+
+State and persistence: Populates runtime caches: DSM revision/source/values, TAS selection and block list, MCC, default power limit, external clock, reduced-power flags, SAR profiles, geo profiles/revision/source, PPAG flags/chains/source, PHY filter config, UEFI GUID lock status, WBEM, and DSBR values. The data is platform firmware policy cached in driver memory.
+
+Dependencies and integration points: Depends on Linux ACPI object APIs, Intel ACPI method names and GUID, `iwl_fw_runtime` storage, BIOS/regulatory helper routines such as `iwl_bios_get_ppag_flags()` and `iwl_bios_print_ppag()`, SAR/geo regulatory definitions, and exported-symbol consumers in MVM/MLD runtime code.
+
+Risks: ACPI packages are externally supplied and must be type/size checked before indexing; a known issue exists in `iwl_acpi_get_pwr_limit()` where it compares an element value with `ACPI_TYPE_INTEGER` instead of checking the element type. Revision fallback must not accept a package with the wrong table revision. DSM buffer parsing pads/truncates little-endian values and can silently lose high bits. Some methods return `-ENOENT` for optional policy, while others use nonzero enabled values, so callers must distinguish absence from disabled.
+
+Test signals: Systems with absent ACPI handles, malformed packages, each WRDS/EWRD/WGDS/PPAG revision, variable WGDS profile counts, DSM query with sparse validity bits, integer and buffer DSM returns, invalid DSM sizes, TAS enabled/disabled/blocklist limits, China-only WRDD MCC, PHY filter loading, GUID lock status, WBEM/DSBR revision mismatch, and `CONFIG_ACPI` disabled stubs from the header.

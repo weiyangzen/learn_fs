@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6357/core.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/mt6357/core.h
+
+This MT6357 core header defines top-level interrupt group indexes, flat IRQ numbers, group base/bit-count macros, and a `MT6357_TOP_GEN(sp)` initializer macro for MediaTek PMIC IRQ descriptors. Groups include buck, LDO, PSC, SCK, BM, HK, XPP, audio, and misc top status shifts. IRQs cover regulator over-current/pre-over-current events, power/home keys, charger detect and voltage/baton/watchdog events, RTC, fuel-gauge/battery/auxadc events, audio/accessory detect, and SPI command alert.
+
+Control flow is encoded in `MT6357_TOP_GEN(sp)`: IRQ table definitions can instantiate per-group metadata with hwirq base, number of interrupt registers derived from `MTK_PMIC_REG_WIDTH`, enable/status registers, shifts, and top-status offset. The MFD IRQ core uses that metadata to enable, mask, and read grouped interrupts. State is hardware interrupt top/status/mask data; this header stores no runtime state.
+
+Dependencies include MT6357 register definitions for symbols such as `MT6357_BUCK_TOP_INT_CON0` and `MT6357_BUCK_TOP_INT_STATUS0`, the MediaTek PMIC IRQ type that has `.hwirq_base`, `.num_int_regs`, `.en_reg`, `.sta_reg`, and `.top_offset` fields, and `MTK_PMIC_REG_WIDTH`. Risks include macro token-pasting hiding missing register symbols until compile time, group bit counts requiring correct inclusive arithmetic, and sparse IRQ numbering. Test signals include compile coverage for all `MT6357_TOP_GEN()` uses, IRQ group registration count, key/charger/RTC/audio interrupt delivery, and over-current fault injection for buck/LDO groups.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6357/core.h -->

@@ -1,0 +1,15 @@
+# sources/storage-engines/tikv/components/raftstore/src/store/compaction_guard.rs
+
+Purpose: Implements a RocksDB SST partitioner factory/generator that tries to align compaction output files with region boundaries and avoid huge future compactions. It also supports temporary force-partition ranges with TTL.
+
+Important APIs and types: `ForcePartitionRangeManager` stores sorted `TtlRange`s and supports add, remove, overlap lookup, expiration cleanup, and iteration. `CompactionGuardGeneratorFactory<P>` validates CF names and creates `CompactionGuardGenerator<P>` from RocksDB partitioner context. `CompactionGuardGenerator` tracks compaction input keys, region boundary keys, next-level SST boundaries/sizes, current cursors, min output size, max compaction size, and force ranges. Helper functions `overlap_with` and `seek_to` handle range overlap and cursor advancement with binary-search fallback.
+
+Control flow: The factory's `create_partitioner` captures context cheaply and defers region provider queries until `should_partition`. `initialize` maps engine keys to data/origin key ranges, asks `RegionInfoProvider` for covered regions, converts region end keys to data keys, merges force range boundaries, sorts/dedups boundaries, and enables or disables guard use. `should_partition` seeks to the next boundary and next-level segments crossed by the current key pair. It requires partitioning when a boundary is crossed and either the current output file is large enough, accumulated next-level overlap reaches `max_compaction_size`, or the key interval overlaps a force-partition range.
+
+State and persistence: The manager's TTL ranges are in-memory control state. The generator's cursors are per-compaction in-memory state. Persistent impact is RocksDB SST layout: compaction output files can be split at region and forced boundaries, reducing future cross-region compaction amplification and honoring temporary split hints.
+
+Dependencies and integration points: It depends on engine trait partitioner interfaces, CF names, TiKV key encoding (`DATA_PREFIX_KEY`, `origin_key`, `data_end_key`), raftstore metrics, and coprocessor `RegionInfoProvider`. It integrates with RocksDB through `SstPartitionerFactory` and `SstPartitioner`.
+
+Risks: Region provider failure disables guard for that compaction after logging and metrics. The guard intentionally skips partitioning small output files unless next-level size or force ranges justify a split, so some regions may share SSTs. `create_partitioner` avoids querying under RocksDB mutex, but the first `should_partition` can still pay provider cost. Force ranges require correct key-space convention; they are merged and expired lazily. The code resets next-level accumulated size after partition, accepting possible undercount of a segment already crossed.
+
+Test signals: Unit tests cover non-data key initialization, partition decisions for output size, boundary crossing, force ranges, next-level size accumulation, binary-search cursor fallback, overlap logic, force range merging/expiration behavior, and RocksDB integration that inspects resulting SST files and level layout.

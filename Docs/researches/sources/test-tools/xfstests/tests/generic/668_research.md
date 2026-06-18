@@ -1,0 +1,69 @@
+# sources/test-tools/xfstests/tests/generic/668
+
+## Purpose
+
+This executable xfstests bash test researches `sources/test-tools/xfstests/tests/generic/668`. Ensuring that copy on write in direct-io mode works when the CoW range originally covers multiple extents, mixed with reflinked, unwritten, hole, regular and delalloc blocks. - Create a file with the following repeating sequence of blocks: 1. reflinked 2. unwritten 3. hole 4. regular block 5. delalloc - directio CoW across the halfway mark, starting with the unwritten extent. - Check that the files are now different where we say they're different. It is registered with `_begin_fstest auto quick clone punch prealloc`, so the harness schedules it for filesystems satisfying the script gates and compares its visible output with the numbered `.out` golden file.
+
+## Important APIs, Types, and Functions
+
+- Script type: executable xfstests bash test with 65 source line(s).
+- Harness registration: `_begin_fstest auto quick clone punch prealloc`.
+- Imported common libraries: `./common/preamble`, `./common/filter`, `./common/reflink`.
+- Capability and skip gates: `_require_scratch_reflink`, `_require_scratch_delalloc`, `_require_xfs_io_command "falloc"`, `_require_xfs_io_command "fpunch"`, `_require_odirect`.
+- Local shell functions: none visible.
+- External `$here/src` helpers: none visible.
+- Notable variables and constants:
+- `testdir=$SCRATCH_MNT/test-$seq`
+- `blksz=65536`
+- `nr=64`
+- `filesize=$((blksz * nr))`
+- `cowoff=$((filesize / 4))`
+- `cowsz=$((filesize / 2))`
+
+## Control Flow
+
+- Capability gating runs first through `_require_scratch_reflink`, `_require_scratch_delalloc`, `_require_xfs_io_command "falloc"`, `_require_xfs_io_command "fpunch"`, `_require_odirect`.
+- The test formats or constructs the filesystem/device image before exercising the behavior.
+- It mounts the target filesystem, creates files/directories/metadata, and drives the regression scenario.
+- It forces a remount, shutdown, unmount, or injected I/O failure when the assertion depends on persistence, recovery, or cache invalidation.
+- It validates by comparing metadata/data, checking filesystem consistency, probing allocation maps, or emitting filtered golden output.
+- User-visible phase markers include:
+- `line 31: echo "Format and mount"`
+- `line 38: echo "Create the original files"`
+- `line 45: echo "Compare files"`
+- `line 50: echo "directio CoW across the transition"`
+- `line 59: echo "Compare files"`
+- Key operational lines include:
+- `line 25: _require_scratch_reflink`
+- `line 26: _require_scratch_delalloc`
+- `line 27: _require_xfs_io_command "falloc"`
+- `line 32: _scratch_mkfs > $seqres.full 2>&1`
+- `line 33: _scratch_mount >> $seqres.full 2>&1`
+- `line 42: _sweave_reflink_rainbow $blksz $nr $testdir/file1 $testdir/file3 >> $seqres.full`
+- `line 43: _scratch_cycle_mount`
+- `line 46: md5sum $testdir/file1 | _filter_scratch`
+- `line 47: md5sum $testdir/file3 | _filter_scratch`
+- `line 48: md5sum $testdir/file1.chk | _filter_scratch`
+- `line 53: _sweave_reflink_rainbow_delalloc $blksz $nr $testdir/file1 >> $seqres.full`
+- `line 55: $XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $cowsz $cowoff $cowsz" $testdir/file1 >> $seqres.full`
+- `line 57: _scratch_cycle_mount`
+- `line 60: md5sum $testdir/file1 | _filter_scratch`
+- `line 61: md5sum $testdir/file3 | _filter_scratch`
+- `line 62: md5sum $testdir/file1.chk | _filter_scratch`
+
+## State and Persistence Behavior
+
+Uses a freshly formatted scratch filesystem for destructive setup, so state is isolated under `$SCRATCH_MNT` and `$SCRATCH_DEV`. Mount transitions are part of the assertion surface; remount, unmount, or shutdown is used to force persistence, recovery, or cache invalidation. Shared extent or atomic-update state is exercised, so correctness depends on clone/dedupe/exchange persistence and metadata ordering. Cleanup relies mostly on the default xfstests harness cleanup plus explicit unmounts/removals in the script body.
+
+## Dependencies and Integration Points
+
+This file integrates with the xfstests runner through `_begin_fstest auto quick clone punch prealloc`, common helper libraries (`./common/preamble`, `./common/filter`, `./common/reflink`), and the golden-output file `sources/test-tools/xfstests/tests/generic/668.out` (12 line(s)). It relies on standard xfstests environment variables such as `$TEST_DIR`, `$SCRATCH_MNT`, `$SCRATCH_DEV`, `$seq`, `$tmp`, and `$seqres.full`. Requirements and exclusions define the supported filesystem matrix: `_require_scratch_reflink`, `_require_scratch_delalloc`, `_require_xfs_io_command "falloc"`, `_require_xfs_io_command "fpunch"`, `_require_odirect`.
+
+## Risks and Edge Cases
+
+- Direct/AIO coverage depends on alignment, device logical block size, page size, and filesystem direct-I/O semantics.
+- Shared-extent and exchange operations can expose stale data, permission-bit, or log-ordering bugs that only appear after remount/recovery.
+
+## Test Signals
+
+The paired `.out` file has 12 line(s); its first visible signals are: 'QA output created by 668; Format and mount; Create the original files; Compare files; 6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-668/file1'. Runtime pass/fail is also signaled by explicit comparisons or filtered inspection commands, xfstests output filters, post-remount or failure-injection persistence checks. Regressions normally appear as unexpected stdout compared with `.out`, nonzero command status, `_fail` messages, fsck/check helper failures, or diagnostic detail appended to `$seqres.full`.

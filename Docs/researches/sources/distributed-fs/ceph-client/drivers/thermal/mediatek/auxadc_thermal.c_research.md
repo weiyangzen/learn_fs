@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/thermal/mediatek/auxadc_thermal.c
+
+Purpose: legacy MediaTek SoC thermal driver using thermal controller hardware to trigger AUXADC conversions through AHB-programmed register addresses. It supports multiple SoCs, calibration formats, banked sensor groups, thermal OF registration, and hwmon export.
+
+Important APIs/types/functions: `struct mtk_thermal_data` describes each SoC: sensor counts, bank layouts, AUXADC channel, mux values, controller offsets, calibration version, and APMIXED buffer controls. `struct mtk_thermal` stores MMIO, clocks, calibration fields, banks, lock, and raw conversion function. `raw_to_mcelsius_v1/v2/v3()` implement version-specific conversion. `mtk_thermal_get_bank()`/`put_bank()` serialize bank selection through `PTPCORESEL`. `mtk_thermal_bank_temperature()` reads measurement registers and validates ranges. `mtk_thermal_init_bank()` programs AUXADC/PNP mux addresses, polling, valid masks, and sensor enables. `mtk_thermal_get_calibration_data()` reads `calibration-data` nvmem and dispatches efuse decoders.
+
+Control flow: probe selects match data, maps thermal MMIO, loads calibration defaults/efuse, resolves `mediatek,auxadc` and `mediatek,apmixedsys` phandles and physical addresses, resets hardware, enables `auxadc` and `therm` clocks, configures analog buffer/periodic TS release, selects conversion function, initializes every controller/bank combination, registers thermal zone 0, and adds hwmon. Runtime reads compute the maximum valid temperature across banks.
+
+State/persistence: calibration values, bank lock, conversion function, and clock handles live in devm state; hardware polling/mux configuration persists while powered. Dependencies: OF match table for MT2701/2712/7622/7986/8173/8183/8365, nvmem, clocks, reset, phandles to AUXADC/APMIXEDSYS, thermal OF, hwmon.
+
+Risks: many SoC tables must remain consistent in sensor count, mux arrays, and register offsets; `of_iomap()` mappings are not explicitly unmapped; invalid calibration falls back silently to defaults after info logging; first samples can be invalid for up to about 60 ms. Test signals include calibration-valid and fallback paths per version, bank switching lock behavior, DT phandle failures, clock/reset errors, invalid temperature filtering, and per-SoC table bounds.

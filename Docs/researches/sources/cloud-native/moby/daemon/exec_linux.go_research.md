@@ -1,0 +1,7 @@
+# sources/cloud-native/moby/daemon/exec_linux.go
+
+Purpose: Linux-specific exec process option setup for user resolution, capabilities, AppArmor, and rlimits.
+
+Important APIs and control flow: `getUserFromContainerd` loads the containerd container, retrieves info and OCI spec, then applies containerd OCI spec options `WithUser`, `WithAdditionalGIDs`, and appended host-config groups to compute `spec.Process.User`. `execSetPlatformOpt` resolves `ec.User` either through containerd snapshotter metadata or legacy `getUser`; grants all capabilities when the exec is privileged; selects an AppArmor profile based on explicit container profile, privileged container inheritance, or default profile; reloads the default profile if missing; assigns `p.ApparmorProfile`; and finally applies daemon rlimits through `withRlimits`.
+
+State, dependencies, and risks: it mutates the `specs.Process` passed from `ContainerExecStart`. Dependencies include containerd OCI helpers, daemon config, container security options, capability listing, AppArmor feature/profiles, and rlimit setup. Risks include behavior differences between snapshotter and non-snapshotter user lookup, inherited AppArmor semantics where `docker exec --privileged` does not itself unconfine AppArmor, and runtime failure if AppArmor profile reload fails. Test coverage focuses on AppArmor selection across host support and container privilege/profile combinations.

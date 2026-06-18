@@ -1,0 +1,11 @@
+## sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/TestRouterRefreshSuperUserGroupsConfiguration.java
+
+Purpose: verifies that the Router admin command `-refreshSuperUserGroupsConfiguration` reloads server-side proxy-user authorization configuration used by `ProxyUsers.authorize`. It targets `RouterAdminServer#refreshSuperUserGroupsConfiguration` through the public `RouterAdmin` CLI path.
+
+Important APIs and types include `MiniRouterDFSCluster`, `RouterConfigBuilder`, `RouterAdmin`, `ProxyUsers`, `UserGroupInformation`, `ConfiguredFailoverProxyProvider`, HDFS client failover configuration keys, Mockito mocks, and `LambdaTestUtils.intercept`. `initializeClientConfig()` builds a client config for logical nameservice `rbfns` with Router admin and RPC addresses, failover provider, and default filesystem. `addFileBasedConfigResource()` writes a temporary XML resource next to `hdfs-site.xml` containing proxyuser groups and hosts.
+
+Control flow: `setUpCluster()` starts one Router with RPC and admin services. The test first mocks an impersonator and victim UGI, verifies authorization fails before new config is loaded, creates a temporary config resource with `hadoop.proxyuser.impersonator.groups=groupVictim` and loopback hosts, registers it as a default resource, invokes `RouterAdmin -refreshSuperUserGroupsConfiguration`, and verifies authorization now succeeds.
+
+State and persistence behavior is process-global configuration resource state plus Router server-side authorization cache refresh. The temporary resource path is tracked in `tempResource` and deleted in teardown; the cluster is also shut down. No state store is used.
+
+Dependencies and integration points are Router admin address wiring, HDFS HA logical URI settings, Hadoop `Configuration.addDefaultResource`, proxy-user authorization, and file-based XML resources. Risks covered include refreshing only client-side config, wrong admin endpoint wiring, stale proxy-user rules, and impersonation authorization failures after refresh. Test signals are pre-refresh `AuthorizationException`, RouterAdmin exit code `0`, and successful post-refresh `ProxyUsers.authorize`.

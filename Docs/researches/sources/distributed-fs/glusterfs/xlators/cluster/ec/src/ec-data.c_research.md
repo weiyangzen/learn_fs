@@ -1,0 +1,9 @@
+# sources/distributed-fs/glusterfs/xlators/cluster/ec/src/ec-data.c
+
+Purpose: allocates, initializes, references, cleans up, and releases EC fop and callback data objects.
+
+Important APIs: `ec_cbk_data_allocate()`, `ec_cbk_data_destroy()`, `ec_fop_data_allocate()`, `ec_fop_data_acquire()`, `ec_fop_cleanup()`, and `ec_fop_data_release()`. Allocation uses pools from `ec_t` (`cbk_pool`, `fop_pool`) and initializes list heads, locks, masks, callbacks, private frames, parent relationships, user/group ids, and pending-fop linkage.
+
+Control flow: callbacks call `ec_cbk_data_allocate()` after validating frame/xlator/fop identity; the callback is appended to `fop->answer_list`. Fop wrappers call `ec_fop_data_allocate()` to create a private frame, set `frame->local`, sleep the parent if nested, and append to `ec->pending_fops`. Reference release destroys the private stack, unrefs dicts/inodes/fds/iobrefs, frees vectors/strings/locations/error strings, resumes the parent, destroys callback answers, removes pending-fop tracking, handles healer completion, and emits pending-complete notification when this was the last fop.
+
+State and persistence: no disk persistence; this is in-memory lifecycle state. It protects refcount changes with `fop->lock` and pending list changes with `ec->lock`. Dependencies include Gluster memory pools, frames/stacks, dict/inode/fd/iobref reference APIs, EC common resume/pending/healer functions, and message IDs. Risks include mismatched frame or fop ids silently dropping callbacks, reference leaks on partial setup failure, parent resume error propagation, and list cleanup ordering. Test signals should cover allocation failure paths, nested fop parent sleep/resume, callback destruction with every optional field populated, and last-pending-fop notification.

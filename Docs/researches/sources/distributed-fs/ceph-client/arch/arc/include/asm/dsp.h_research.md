@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/dsp.h
+
+Purpose: defines saved ARC DSP/AGU register layout for task context. Important APIs/types/functions: `struct dsp_callee_regs` with `ACC0_GLO`, `ACC0_GHI`, `DSP_BFLY0`, `DSP_FFT_CTRL`, and optional AGU fields. Control flow: structure declaration only. State and persistence: per-task thread state persists DSP/AGU callee registers across context switches when enabled. Dependencies/integration: field names are consumed by `DSP_AUX_SAVE_RESTORE` macro generation in `dsp-impl.h`. Risks: renaming or reordering fields without offset updates corrupts save/restore. Test signals: DSP register preservation across schedule, fork/exec, and signal delivery.

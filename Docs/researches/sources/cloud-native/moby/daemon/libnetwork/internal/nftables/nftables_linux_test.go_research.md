@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/moby/daemon/libnetwork/internal/nftables/nftables_linux_test.go
+
+Purpose: integration-tests the nftables table abstraction against a real `nft` command in an isolated test network namespace. Important helpers/tests are `testSetup`, `applyAndCheck`, `reloadAndCheck`, `TestTable`, `TestChain`, `TestChainRuleGroups`, `TestIgnoreExist`, `TestVMap`, `TestSet`, `TestReload`, and `TestValidation`.
+
+Control flow: setup enables nftables, skips locally if nft is unavailable, fails in CI if enable fails, then creates an isolated OS context and resets `Disable` afterward. Tests create tables, base/regular chains, rules, grouped rule ordering, verdict maps, interval sets, reverse modifiers, full reloads after deleting the underlying table, and many invalid command sequences. Golden files compare `nft list table` output. Validation tests ensure failed applies do not leave a created table and that the in-memory `Table` remains usable afterward.
+
+State/dependencies: tests mutate real nftables state and depend on golden files, `icmd`, and netns utilities. Risks covered include syntax propagation, rollback, reload recovery, duplicate/missing object errors, idempotent rule handling, and rule-group ordering. Gaps include concurrent `Apply`, rootless detached namespace behavior, cgo-vs-exec backend differences beyond common behavior, and external modifications other than deleted tables.

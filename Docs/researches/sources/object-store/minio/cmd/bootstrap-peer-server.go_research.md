@@ -1,0 +1,11 @@
+# sources/object-store/minio/cmd/bootstrap-peer-server.go
+
+This file implements peer configuration verification during distributed MinIO bootstrap. It exposes a grid handler that returns local system configuration and a client loop that waits until enough remote peers are online with matching configuration.
+
+`ServerSystemConfig` captures endpoint count, endpoint command lines, selected hashed `MINIO_*` environment values, and the running binary checksum. `Diff` compares checksum, endpoint count, command-line entries, and environment maps, returning descriptive errors for missing, mismatching, and extra environment keys. `skipEnvs` excludes intentionally node-specific or sensitive variables such as credentials, debug options, operator/plugin versions, and CI/CD markers.
+
+`getServerSystemCfg` lists `MINIO_` environment variables, skips whitelisted names, hashes values with `logger.HashString`, records global endpoint count and command lines, and attaches `binaryChecksum`. `getBinaryChecksum` computes an MD5 of the current executable and falls back to zeroes on errors. `bootstrapRESTServer.VerifyHandler` returns local config via a grid single handler registered by `registerBootstrapRESTHandlers`.
+
+`bootstrapRESTClient.Verify` skips checks once the object layer is initialized, calls the remote verify handler, returns the response to the handler pool, and diffs against local config. `verifyServerSystemConfig` builds one client per unique remote host, repeatedly checks connected peers in parallel with 2-second timeouts, and waits until at least half the remote clients are online and valid. It logs bootstrap trace messages, classifies network versus incorrect-config errors, reports status every 20 retries, and honors context cancellation. `newBootstrapRESTClients` deduplicates endpoints by host.
+
+State is runtime-only except the binary checksum global. Dependencies include grid RPC, endpoint topology, env utilities, logging, set utilities, random jitter, and object-layer initialization. Risks include MD5 being used only as an identity checksum, command-line order sensitivity, environment hash mismatch diagnostics not revealing values, quorum threshold interpretation, and startup delay if peers are unreachable or config differs. Generated msgp files serialize `ServerSystemConfig` for the grid response.

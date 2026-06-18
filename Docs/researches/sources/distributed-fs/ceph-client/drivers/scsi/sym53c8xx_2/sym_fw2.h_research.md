@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/sym53c8xx_2/sym_fw2.h
+
+## Purpose
+This header embeds the second-generation NCR/Symbios/LSI 53C8xx SCSI SCRIPTS firmware used by the `sym53c8xx_2` driver. It is not a conventional declaration-only header: it defines the exact microprogram fragments that the host driver copies into DMA memory or on-chip SRAM, patches with bus addresses, and starts on the SCRIPTS processor. The firmware drives initiator selection, reselection, message handling, data movement, completion queueing, phase-mismatch recovery, negotiation message hand-offs, abort/reset message sequences, and the small startup snoop test.
+
+## Important APIs, Types, and Functions
+The important exported data contracts are `struct SYM_FWA_SCR`, `struct SYM_FWB_SCR`, and `struct SYM_FWZ_SCR`, plus the matching static instances `SYM_FWA_SCR`, `SYM_FWB_SCR`, and `SYM_FWZ_SCR`. The struct fields are label-sized arrays, and their array lengths are the ABI for all `SCRIPTA_BA()`, `SCRIPTB_BA()`, `SCRIPTZ_BA()`, and `PADDR_*()` patch references in the rest of the driver. The comments explicitly require length updates when SCRIPTS instructions are changed.
+
+`SYM_FWA_SCR` is the main fast path, usually suitable for 4 KiB on-chip RAM: `start`, `getjob_*`, `select`, `dispatch`, command/data/status/message phases, `done`, `complete_error`, save/restore data pointers, disconnect handling, reselection lookup, data-in/data-out tables, and phase-mismatch mini-scripts. `SYM_FWB_SCR` holds secondary paths that may remain in host memory except on 8 KiB RAM chips: 64-bit startup, abort selection, extended message parsing, WDTR/SDTR/PPR responses, data overrun drain, bad reselection handlers, bad-status callback, and SCRIPTS-side phase-mismatch contexts. `SYM_FWZ_SCR` is a short initialization/snoop-test script used by `sym_snooptest()`.
+
+## Control Flow
+The SCRIPTS scheduler reads `startpos` from the circular start queue, loads a CCB DSA, selects a target, sends IDENTIFY/tag/negotiation messages, transfers the CDB, and dispatches by current SCSI phase. Normal completions store the completed DSA into the done queue, perform a dummy read to flush posted DMA writes, raise `INTFLY`, and return to `start`. Error or policy situations use programmed interrupts such as `SIR_COMPLETE_ERROR`, `SIR_BAD_SCSI_STATUS`, `SIR_MSG_RECEIVED`, `SIR_DATA_OVERRUN`, and task-recovery SIRs; `sym_hipd.c` interprets those interrupts.
+
+Reselection flow resolves target, LUN, and optional tag through the target table, LUN table, and ITLQ table populated by the C code. Bad reselections branch to dedicated labels that request `M_ABORT`, `M_ABORT_TAG`, or reset handling. Data phase flow jumps through `lastp`; `data_in` and `data_out` arrays are filled at runtime according to `SYM_CONF_MAX_SG`. Phase mismatch is handled either by SCRIPTS mini-contexts (`pm0`, `pm1`) on capable chips or by C recovery.
+
+## State and Persistence Behavior
+The file itself has no persistent runtime storage outside static firmware templates, but it defines the hardware-visible state machine layout. The firmware reads and writes CCB fields such as `phys.head.status`, `lastp`, `savep`, selection registers, scatter-gather entries, message buffers, and phase-mismatch contexts. It also depends on HCB data words such as `done_pos`, `startpos`, `targtbl`, `pm*_data_addr`, and `scratch`. Runtime persistence is in DMA memory owned by `struct sym_hcb`, `struct sym_ccb`, `struct sym_tcb`, and `struct sym_lcb`.
+
+## Dependencies and Integration Points
+This file depends on the SCRIPTS opcode macros and address macros from the surrounding driver headers. It is consumed through the firmware descriptor machinery included by `sym_glue.h` and initialized by `sym_hcb_attach()`. `sym_start_up()` patches/downloads the scripts, starts the DSP at `init` or `start64`, and uses labels from this file for reset, start, done, abort, and phase-mismatch operations. The C interrupt handler in `sym_hipd.c` is tightly coupled to this file's SIR codes, critical sections, and label boundaries.
+
+## Risks
+The highest risk is ABI drift between label array sizes, generated instruction offsets, and C-side patching. A one-word insertion without updating the struct field length can redirect jumps to the wrong instruction. SCSI phase handling is timing-sensitive; critical sections such as `getjob`, `ungetjob`, `done`, and `sel_for_abort` are explicitly unsafe to interrupt and force host reset if interrupted. DMA ordering is also subtle: the script relies on dummy reads and host memory barriers to make done-queue writes visible before interrupts. Wide-residue, overrun, and phase-mismatch paths are hardware-specific and easy to regress on older or errata-affected chips.
+
+## Test Signals
+Useful signals are successful module probe with SCRIPTS copied or downloaded to SRAM, CCB start-queue scheduling, done-queue completions under load, reselection with tagged and untagged commands, CHECK CONDITION auto-sense, WDTR/SDTR/PPR negotiation, parity-error recovery, MODIFY DATA POINTER and IGNORE WIDE RESIDUE handling, data overrun/underrun reporting, abort and target-reset paths, SCSI bus reset recovery, and `sym_snooptest()` passing on each supported MMIO/DMA platform.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/dvb-frontends/drxk.h
+
+Purpose: Declares the public board-integration interface for the Micronas/NXP DRX-K demodulator frontend. It lets bridge/card drivers describe DRX-K I2C address, transport-stream mode, dynamic clocking, bridge policy, antenna GPIO behavior, MPEG output drive strength, I2C chunk size, firmware name, and QAM demodulator command shape before calling `drxk_attach()`.
+
+Important APIs/types/functions: `struct drxk_config` carries `adr`, `single_master`, `no_i2c_bridge`, `parallel_ts`, `dynamic_clk`, `enable_merr_cfg`, antenna GPIO polarity/bitmask fields (`antenna_dvbt`, `antenna_gpio`), `mpeg_out_clk_strength`, `chunk_size`, `microcode_name`, and `qam_demod_parameter_count`. `drxk_attach()` is declared when `CONFIG_DVB_DRXK` is reachable and otherwise becomes a stub that logs a Kconfig-disabled warning and returns `NULL`.
+
+Control flow: This header has no runtime logic beyond the disabled-driver inline stub. In normal builds, callers construct `struct drxk_config`, call `drxk_attach(config, i2c)`, and receive a DVB frontend from the separate DRX-K implementation. The `qam_demod_parameter_count` comments document an attach/runtime detection path in the implementation: zero or negative lets the driver autodetect whether firmware uses the common two-parameter command or the four-parameter `drxk_a3.mc` exception.
+
+State and persistence: The header itself owns no mutable state. The config fields become persistent demodulator state after attach in the implementation: I2C addressing, bridge mode, transport output mode, dynamic/static clock policy, antenna GPIO control, firmware filename, and QAM command compatibility. GPIO comments define semantic state for UIO bits and DVB-T/DVB-C antenna switching polarity.
+
+Dependencies/integration: Includes Linux `types.h` and `i2c.h`, uses DVB frontend types from media callers, and is controlled by Kconfig symbol `CONFIG_DVB_DRXK`. It is independent from the DRXD hard driver in this work item except for residing in the same DVB frontend family/directory and following the same attach-stub pattern.
+
+Risks and test signals: Validate board configs that set `no_i2c_bridge` or `single_master`, because wrong bridge/master policy can break tuner access. Test parallel versus serial TS output, dynamic clock on/off, `enable_merr_cfg`, antenna GPIO polarity, nondefault I2C chunk sizes, missing or custom `microcode_name`, and QAM parameter-count autodetection including the A3 four-parameter firmware case. ABI changes to `struct drxk_config` require auditing bridge drivers and any designated initializers.

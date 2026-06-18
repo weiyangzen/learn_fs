@@ -1,0 +1,232 @@
+# sources/cloud-native/moby/api/docs/v1.49.yaml lines 1-7767
+
+## Scope
+
+This chunk is the opening 7,767 lines of the Docker Engine API v1.49 Swagger 2.0 document. It covers the API metadata, ReDoc tag taxonomy, registry-auth/versioning guidance, and nearly the entire `definitions` catalog up to the start of `ImageManifestSummary.Descriptor`. The HTTP `paths` section is outside this range, so this chunk primarily defines the request/response data model consumed by later endpoint declarations and by generated client/server types.
+
+The file explicitly states that the schema is open: servers may add response properties and ignore unknown query/body properties. Client code generated from this document must therefore tolerate additional JSON object members.
+
+## Purpose
+
+`v1.49.yaml` is the versioned contract for Docker Engine API v1.49. It is used to generate API documentation and API types for client/server interactions. The chunk establishes:
+
+- global API shape: `swagger: "2.0"`, `basePath: "/v1.49"`, HTTP/HTTPS schemes, JSON and text content types;
+- public documentation sections through tags for `Container`, `Image`, `Network`, `Volume`, `Exec`, Swarm resources, plugins, and system APIs;
+- shared schema definitions for containers, images, networks, volumes, plugins, swarm objects, stats, system info, events, OCI descriptors, and cluster volumes;
+- cross-cutting API behaviors: standard JSON error body, version prefixing, deprecated unversioned access, registry auth through `X-Registry-Auth`, and base64/base64url encoded auth payloads.
+
+## Important APIs, Types, And Schema Families
+
+### API Metadata And Tags
+
+The top-level metadata names the API "Docker Engine API" version `1.49`. The introduction documents that Docker CLI operations map to HTTP endpoints, with container run being a multi-call workflow. It also defines a standard error envelope:
+
+- `ErrorResponse`: required `message` string.
+- HTTP status codes carry the success/failure signal.
+
+The tag list groups later paths into primary object APIs (`Container`, `Image`, `Network`, `Volume`, `Exec`), Swarm APIs (`Swarm`, `Node`, `Service`, `Task`, `Secret`, `Config`), and system/plugin APIs (`Plugin`, `System`). These tags are documentation-facing but also serve as integration hints for generated API clients.
+
+### Container And Runtime Configuration
+
+Core container creation and inspection schemas dominate the first part of the chunk:
+
+- `ContainerConfig`: portable image/container configuration: hostname/domain, user, attach/stdin/tty flags, environment, command, entrypoint, image reference, working directory, exposed ports, volumes, labels, healthcheck, stop signal/timeout, shell, and deprecated `MacAddress`.
+- `HostConfig`: host-dependent runtime configuration composed with `Resources`. It contains bind mounts, log config, network mode, port bindings, restart policy, auto-remove, volumes-from, structured mounts, console size, annotations, Linux namespace/capability/security options, tmpfs, sysctls, runtime, masked/read-only paths, and Windows isolation.
+- `Resources`: cgroup/resource controls across Linux and Windows: CPU shares/quota/period/realtime, cpuset, blkio weights and throttling, memory/swap/swappiness/OOM, `Init`, `PidsLimit`, ulimits, device mappings, device cgroup rules, device-driver requests, and Windows CPU/I/O controls.
+- `MountType`, `Mount`, and `MountPoint`: typed mount contracts for `bind`, `cluster`, `image`, `npipe`, `tmpfs`, and `volume`. `Mount` is the create/update spec, while `MountPoint` is the inspection/reporting view.
+- `RestartPolicy`: restart semantics (`no`, `always`, `unless-stopped`, `on-failure`) and retry count. It notes exponential backoff starting at 100ms.
+- `DeviceMapping`, `DeviceRequest`, and `ThrottleDevice`: low-level device exposure and rate limiting. `DeviceRequest` supports GPU-style driver requests with OR-of-AND capability lists and driver-specific options.
+
+`ContainerInspectResponse` combines identity, lifecycle state, image and storage data, daemon-managed file paths, exec IDs, host config, graph driver metadata, optional size fields, mounts, portable config, and network settings. `ContainerSummary` is the list/df summary view with names, image fields, ports, state/status, reduced host config, network settings, and mounts.
+
+`ContainerState` models lifecycle booleans and timestamps. A notable semantic risk is that `Running` and `Paused` are not mutually exclusive; consumers should prefer `Status` for state classification.
+
+### Health, Wait, Top, And Stats Payloads
+
+Healthcheck contracts include:
+
+- `HealthConfig`: probe command form (`NONE`, `CMD`, `CMD-SHELL`), interval, timeout, retries, start period, and start interval, all with nanosecond timing.
+- `Health`: `none`, `starting`, `healthy`, or `unhealthy`, plus failing streak and `HealthcheckResult` log.
+- `HealthcheckResult`: start/end timestamps, exit code semantics, and probe output.
+
+Container operation responses include:
+
+- `ContainerCreateResponse`: created container ID and warnings.
+- `ContainerUpdateResponse`: update warnings.
+- `ContainerTopResponse`: process table titles and row arrays.
+- `ContainerWaitResponse` and `ContainerWaitExitError`: exit status and optional wait error message.
+
+`ContainerStatsResponse` is a nested metrics schema for container telemetry. It includes sample timestamps, PID stats, blkio stats, CPU stats, memory stats, network interface stats, and Windows storage stats. Platform and cgroup-version distinctions are embedded throughout:
+
+- `ContainerBlkioStats` is Linux-specific; most fields are cgroups v1 only and omitted/null on cgroups v2 except `io_service_bytes_recursive`.
+- `ContainerCPUStats` and `ContainerCPUUsage` carry Linux/Windows differences in units and field availability.
+- `ContainerMemoryStats` exposes Linux cgroups v1/v2 memory.stat differences and Windows commit/private working-set fields.
+- `ContainerPidsStats`, `ContainerThrottlingData`, `ContainerNetworkStats`, and `ContainerStorageStats` each declare platform-specific omission behavior.
+
+### Image, Build, Distribution, And OCI Models
+
+Image schemas include:
+
+- `ImageHistoryResponseItem`: layer history item returned by image history.
+- `ImageConfig`: image default container configuration. Many container-like fields are deprecated as not part of the image specification and marked for removal in API v1.50.
+- `ImageInspect`: local image cache inspection, including content-addressable `Id`, optional `Descriptor`, optional `Manifests`, repo tags/digests, parent/comment/created metadata, config, architecture/platform, size, graph driver, rootfs layers, and local metadata.
+- `ImageSummary`: list view with required ID, parent, tags, digests, created time, size, shared size, labels, container count, optional manifests, and optional descriptor.
+- `ImageDeleteResponseItem`: untagged/deleted image IDs.
+- `ImageID`, `CreateImageInfo`, `PushImageInfo`, `BuildInfo`, `BuildCache`, `ProgressDetail`, and `ErrorDetail`: streaming/progress envelopes for build, pull/create, and push workflows. Deprecated `error` and `progress` fields are retained alongside structured `errorDetail` and `progressDetail`.
+- `DistributionInspect`: registry metadata with an OCI descriptor and supported platforms.
+- `OCIDescriptor` and `OCIPlatform`: OCI image-spec aligned descriptor/platform types with digest, media type, size, URLs, annotations, embedded data, platform, artifact type, architecture, OS, OS version/features, and variant.
+- `ImageManifestSummary`: starts at line 7754 and is only partial in this chunk. This slice includes the type name, Go name `ManifestSummary`, required fields list, `ID`, and the beginning of `Descriptor:`; fields after line 7767 belong to the next chunk.
+
+The image model includes experimental multi-platform image-store fields (`Descriptor`, `Manifests`, container `ImageManifestDescriptor`) whose descriptions warn they can change without backward compatibility.
+
+### Networking Models
+
+Network-related schemas include:
+
+- `NetworkingConfig`: create/connect-time map of network names to `EndpointSettings`.
+- `NetworkSettings`: container inspection view, including bridge/sandbox data, port mappings, default bridge legacy fields, and a `Networks` map of `EndpointSettings`.
+- `EndpointSettings`: endpoint configuration and operational data. It supports IPAM config, links, MAC address, aliases, driver options, gateway priority, network/endpoint IDs, gateway/IP addresses, prefixes, IPv6 data, and DNS names.
+- `EndpointIPAMConfig`, `Address`, `PortMap`, `PortBinding`, `Network`, `NetworkCreateResponse`, `ConfigReference`, `IPAM`, `IPAMConfig`, `NetworkContainer`, `PeerInfo`, and `NetworkAttachmentConfig`.
+
+Important semantics:
+
+- `PortMap` keys are `<port>/<protocol>` and values may be `null`, allowing exposed but unbound ports.
+- Many `NetworkSettings` top-level default-bridge fields are deprecated in favor of `Networks["bridge"]`.
+- Network creation supports IPv4/IPv6 enablement, internal/attachable/ingress/config-only behavior, IPAM, options, labels, overlay peers, and container endpoint maps.
+- `EndpointSettings.GwPriority` determines which network supplies the default gateway.
+
+### Volumes And Cluster Volumes
+
+Volume schemas include:
+
+- `Volume`: local or global volume representation with name, driver, mountpoint, created time, low-level driver status, labels, scope, cluster-volume detail, options, and optional `UsageData` for `/system/df`.
+- `VolumeCreateOptions`: name, driver, driver options, labels, and optional `ClusterVolumeSpec`.
+- `VolumeListResponse`: volume array and warnings.
+- `ClusterVolume`: Swarm CSI cluster volume metadata, including Swarm object ID/version/timestamps, spec, plugin-returned capacity/context/volume ID/topology, and per-node publish status.
+- `ClusterVolumeSpec`: group, access mode, secrets, topology requirements, capacity range, and availability.
+- `Topology`: CSI topology segment map.
+
+Cluster volume access mode is rich: `Scope` (`single`, `multi`), `Sharing` (`none`, `readonly`, `onewriter`, `all`), mount-vs-block volume options, plugin secrets, requisite/preferred topology, capacity bounds, and availability (`active`, `pause`, `drain`). The YAML indentation around `ClusterVolumeSpec.AccessMode.MountVolume`/`BlockVolume` is worth validating with the existing generator because these nested properties are easy to misinterpret.
+
+### Plugins
+
+Plugin models define both plugin configuration and privilege surfaces:
+
+- `PluginMount`, `PluginDevice`, `PluginEnv`, `PluginInterfaceType`, and `PluginPrivilege`.
+- `Plugin`: ID/name/enabled state, mutable settings, remote reference, and full plugin config.
+
+`Plugin.Config` captures Docker version, docs, interface types/socket/protocol, entrypoint/workdir/user, network mode, Linux capabilities/devices, propagated mounts, IPC/PID host flags, mounts/env/args, and rootfs layers. These fields are security-sensitive because they describe host device, namespace, mount, and capability exposure required by a plugin.
+
+### Swarm, Nodes, Tasks, Services, Secrets, And Configs
+
+Swarm shared object patterns:
+
+- `ObjectVersion`: `Index` value used for optimistic concurrency on updates. Clients must send the version from the last read; concurrent writes with stale versions can fail.
+- `NodeSpec`, `Node`, `NodeDescription`, `NodeStatus`, `NodeState`, `ManagerStatus`, `Reachability`, `Platform`, `EngineDescription`, `TLSInfo`.
+- `SwarmSpec`, `ClusterInfo`, `JoinTokens`, and `Swarm`.
+
+`SwarmSpec` covers orchestration task-history retention, Raft snapshot/election/heartbeat settings, dispatcher heartbeat, CA/external CA/signing cert settings, force rotation, encryption-at-rest autolock, and default task log driver. `ClusterInfo` is the `/info` swarm view without join tokens; `Swarm` extends it with tokens for `/swarm`.
+
+Task and service models include:
+
+- `TaskSpec`: mutually exclusive `PluginSpec`, `ContainerSpec`, and `NetworkAttachmentSpec`, plus resources, restart policy, placement, force update, runtime, networks, and log driver.
+- `TaskState`, `ContainerStatus`, `PortStatus`, `TaskStatus`, and `Task`.
+- `ServiceSpec`, `EndpointPortConfig`, `EndpointSpec`, `Service`, `ServiceCreateResponse`, and `ServiceUpdateResponse`.
+
+`TaskSpec.ContainerSpec` is effectively Swarm's container runtime contract: image, labels, command/args, hostname, env, dir, user/groups, privileges, TTY/stdin, readonly rootfs, mounts, stop signal/grace period, healthcheck, hosts, DNS, secrets/configs, isolation, init, sysctls, capabilities, and ulimits. Placement constraints and preferences describe scheduler behavior over node IDs, hostnames, roles, platform, node labels, and engine labels. Service modes include replicated, global, replicated job, and global job. Service endpoint ports support `tcp`, `udp`, and `sctp`, with `ingress` routing mesh or `host` publishing.
+
+Secrets/configs:
+
+- `SecretSpec` stores name, labels, base64 data, optional external secret driver, and templating driver. Secret data is create-only and not returned later; max size is documented as 500KB.
+- `Secret` wraps ID/version/timestamps/spec.
+- `ConfigSpec` stores name, labels, base64 data, and templating driver; max size is documented as 1000KB.
+- `Config` wraps ID/version/timestamps/spec.
+
+### System, Registry, Runtime, And Events
+
+System schemas include:
+
+- `SystemVersion`: `/version` response with platform, component versions/details, daemon/API/min API versions, git commit, Go version, OS/arch, kernel, experimental flag, and build time.
+- `SystemInfo`: daemon inventory and capabilities: counts, storage driver/status/root dir, plugin info, resource feature booleans, debug counters, system time, cgroup driver/version, kernel/OS/architecture, CPU/memory, registry config, generic resources, proxy settings with masked credentials, daemon name/labels, experimental build, runtimes, default runtime, swarm info, live restore, isolation, init binary, component commits, security options, license, default address pools, firewall backend, warnings, CDI spec dirs, and containerd info.
+- `ContainerdInfo`: daemon containerd socket and namespaces.
+- `FirewallInfo`: Linux firewall backend and driver-specific info.
+- `PluginsInfo`: unmanaged plugin names by volume/network/auth/log type.
+- `RegistryServiceConfig`, `IndexInfo`, `Runtime`, `Commit`, `SwarmInfo`, `LocalNodeState`, and `PeerNode`.
+
+Event schemas:
+
+- `EventActor`: object ID and attributes.
+- `EventMessage`: event type, action, actor, scope (`local`/`swarm`), seconds timestamp, and nanosecond timestamp. Event types cover builder, config, container, daemon, image, network, node, plugin, secret, service, and volume.
+
+## Control Flow And API Workflows Implied By The Schemas
+
+Although endpoint paths are outside this chunk, the definitions imply several multi-step flows:
+
+- Container create/start/inspect/list/update/wait/stats/top flows share `ContainerConfig`, `HostConfig`, `NetworkingConfig`, response envelopes, and state/stats models.
+- Image operations stream progress records (`BuildInfo`, `CreateImageInfo`, `PushImageInfo`) that can contain structured errors, deprecated string errors, progress text, detail counters, and auxiliary image IDs.
+- Registry operations require client-side auth encoded into `X-Registry-Auth`; identity-token and username/password modes are both documented.
+- Swarm mutation flows use `ObjectVersion` for optimistic concurrency across nodes, services, secrets, configs, cluster volumes, and swarm specs.
+- Service scheduling flows combine `ServiceSpec.TaskTemplate`, placement constraints, resource reservations/limits, restart/update/rollback policy, endpoint publishing, and task state/status reports.
+- Healthcheck flow starts with `HealthConfig`, produces repeated `HealthcheckResult` entries, updates `Health.Status`, and folds into `ContainerState`.
+- Stats flow is sample-based (`read`/`preread`) and consumers calculate rates/deltas across samples; one-shot mode may omit or zero `preread`.
+- Volume and cluster-volume flows separate ordinary local driver volumes from Swarm/CSI-managed cluster volumes with topology, capacity, and publish state.
+
+## State And Persistence Behavior
+
+Persistent daemon state represented in this chunk includes:
+
+- container IDs, names, create timestamps, restart counts, daemon-managed resolv/hostname/hosts/log file paths, storage-driver graph metadata, writable-layer size, rootfs size, mounts, health state, and runtime state;
+- image content-addressable IDs, repo tags/digests, rootfs layers, graph driver data, local cache metadata, and optional multi-platform image descriptors/manifests;
+- Docker root directory, storage driver state, containerd socket/namespaces, runtime configuration, firewall backend details, default address pools, registry configuration, daemon labels, proxy settings, and security options;
+- named volumes with mountpoints, driver options/status, labels, scope, usage data, and Swarm CSI cluster-volume state;
+- Swarm Raft object versions, node/service/task/secrets/configs state, join tokens, TLS CA material, root rotation state, data-path configuration, and manager autolock behavior;
+- event timestamps and actor attributes used for event stream consumers.
+
+The document frequently distinguishes stable API fields from informational or unstable state. `DriverStatus`, runtime `status`, `FirewallInfo.Info`, OS version formatting, daemon ID format, and some system component details are explicitly not stable contracts. Some fields are only populated on request, such as container sizes, service status, and image manifests.
+
+## Dependencies And Integration Points
+
+This schema integrates with:
+
+- Go type generation through `x-go-name`, `x-nullable`, and `x-omitempty` extensions.
+- ReDoc documentation generation through tags, descriptions, Markdown, examples, and `x-displayName`.
+- Docker CLI and Engine API clients, which consume the same endpoint models.
+- Registry authentication and distribution APIs through `X-Registry-Auth`, `AuthConfig`, `RegistryServiceConfig`, `IndexInfo`, and distribution/OCI descriptor models.
+- OCI runtime and image specifications through `Runtime`, `OCIDescriptor`, `OCIPlatform`, and container image manifest descriptors.
+- containerd via `ContainerdInfo` and OCI runtime invocation.
+- Linux kernel features: namespaces, cgroups v1/v2, cpuset, blkio, OOM killer, sysctls, freezer cgroup pause behavior, iptables/nftables firewalling, SELinux, AppArmor, seccomp, mount propagation, tmpfs, and CDI.
+- Windows container features: isolation modes, credential specs, Windows-specific CPU/I/O/memory/network fields, registry credential-spec lookup, and OS version/platform fields.
+- SwarmKit concepts: Raft object versions, nodes/managers, services/tasks, secrets/configs, scheduling constraints, CA rotation, dispatcher heartbeats, autolock, join tokens, and CSI cluster volumes.
+- Plugin APIs, especially managed plugins with mounts, devices, env, capabilities, namespace flags, sockets, and accepted privileges.
+
+## Risks And Edge Cases
+
+- The assigned chunk ends mid-definition at `ImageManifestSummary.Descriptor`; consumers of this research must merge with the next chunk for the complete type.
+- Open schema behavior means strict clients that reject unknown JSON fields will break against newer daemons.
+- Multiple deprecated fields remain in active schemas, including image config container-like fields planned for v1.50 removal, legacy network default-bridge fields, `ContainerConfig.MacAddress`, service-level `Networks`, build/push progress strings, and bridge netfilter booleans.
+- Nullability varies by platform, cgroup version, request flags, and daemon capabilities. Generated clients must preserve `null`/omitted distinctions for fields like `PidsLimit`, `Init`, stats sections, network maps, sizes, manifests, and plugin/settings arrays.
+- Integer widths matter: many resource, time, stats, and object-version fields use `int64`, `uint64`, `uint32`, or `uint16`. JavaScript and other JSON consumers risk precision loss for nanosecond timestamps, object versions, and counters.
+- Several durations are represented as nanoseconds; user-facing tooling must avoid confusing them with seconds.
+- Security-sensitive fields include registry credentials, swarm join tokens, CA signing keys/certs, external CA configuration, plugin privileges, host bind mounts, device mappings, capabilities, `Privileged`, namespace sharing, credential specs, secrets/config data, insecure registries, proxy URLs, and daemon/container paths.
+- Informational fields are explicitly unstable and should not be used for compatibility gates unless no stable field exists.
+- Platform-specific omissions can cause false assumptions in cross-platform code, especially stats, isolation, CPU controls, storage stats, firewall info, and Windows credential specs.
+- `ContainerState.Running` and `Paused` can both be true; state classification should use `Status`.
+- `PortMap` allows null values for exposed but unbound ports.
+- `ObjectVersion` optimistic concurrency requires clients to read before update and handle stale-version failures.
+- Experimental multi-platform image-store fields can change without backward compatibility.
+- The YAML uses extensive nested inline objects and extensions; schema validators and code generators should be checked for indentation-sensitive constructs, especially around cluster-volume access-mode mount/block options and long descriptions.
+
+## Test Signals
+
+Useful validation signals for this chunk:
+
+- Parse `sources/cloud-native/moby/api/docs/v1.49.yaml` as Swagger/OpenAPI 2.0 and verify all `$ref` values used in lines 1-7767 resolve either within this chunk or in later chunks of the same file.
+- Regenerate API docs/types and check for unexpected diffs in generated Go names, nullability, required fields, and examples.
+- Exercise generated JSON round-trips for representative schemas: `ContainerConfig` + `HostConfig` + `NetworkingConfig`, `ContainerInspectResponse`, `ContainerStatsResponse`, `ImageInspect`, `Network`, `Volume`, `ServiceSpec`, `Task`, `SystemInfo`, `EventMessage`, `OCIDescriptor`, and `ClusterVolume`.
+- Test strict handling of known enum values: mount types, restart policies, health states, container states, node states, manager reachability, task states, service update actions/orders, endpoint protocols/publish modes, local node state, and cluster-volume availability/access modes.
+- Test tolerant handling of unknown response fields and ignored unknown request fields to match the documented open schema model.
+- Verify platform/cgroup-specific stats serialization with Linux cgroups v1, Linux cgroups v2, and Windows fixtures.
+- Verify registry auth header encoding for username/password/serveraddress and identity-token payloads.
+- Verify optimistic-concurrency update paths use `ObjectVersion.Index` and handle stale updates.
+- Verify secrets/configs data are accepted on create but not returned from read/list/inspect responses.
+- Verify large integer handling for nanosecond timestamps, counters, resource limits, and object versions in generated clients.

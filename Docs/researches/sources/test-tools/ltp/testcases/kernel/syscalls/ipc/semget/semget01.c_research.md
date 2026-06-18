@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/semget/semget01.c
+
+Purpose: basic positive test that `semget()` creates a semaphore set with expected metadata. It uses `GETIPCKEY`, `semget`, `SAFE_SEMCTL(IPC_STAT)`, `union semun`, and LTP expectation macros to compare `sem_nsems` with `PSEMS` and creator UID with `geteuid()`. Control flow allocates a unique key in setup, creates the set with `IPC_CREAT | IPC_EXCL | SEM_RA`, reads `semid_ds`, reports pass on matching fields, and removes the set. Persistent state is one SysV semaphore array that must be removed by test or cleanup. Dependencies are `tse_newipc.h`, `lapi/sem.h`, and `tst_safe_sysv_ipc.h`. Risks are leaked IPC objects on abnormal exit; test signals are creation success and metadata equality.

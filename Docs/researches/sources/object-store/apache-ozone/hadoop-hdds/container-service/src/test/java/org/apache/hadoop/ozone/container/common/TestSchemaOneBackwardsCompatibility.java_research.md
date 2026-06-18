@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/container-service/src/test/java/org/apache/hadoop/ozone/container/common/TestSchemaOneBackwardsCompatibility.java
+
+Purpose: This suite validates that schema-v1 RocksDB containers from test resources can be read and processed after upgrading to schema-v2 or schema-v3 code. It protects compatibility for the legacy single/default column-family encoding where metadata, regular blocks, deleting blocks, and deleted blocks coexist under prefixed keys.
+
+Important APIs and types: It uses `ContainerDataYaml`, `KeyValueContainerUtil.parseKVContainerData`, `SchemaOneDeletedBlocksTable`, `BlockUtils.getDB`, `DatanodeStore` tables, `BlockIterator`, `BlockDeletingServiceTestImpl`, `KeyValueHandler`, `ContainerSet`, `MutableVolumeSet`, and a nested `TestDB` descriptor for the resource DB and `.container` file. The parameter source runs each test with target schema versions v2 and v3.
+
+Control flow: `setup` copies the resource DB and container file into a temp folder, points metadata configuration at that folder, and prepares paths for mutation. `newKvData` reads the container file, fills temp-specific metadata/chunk paths, recomputes the container-file checksum, and parses DB metadata. Tests forbid direct table iteration, count regular/deleting/deleted blocks, read with and without metadata keys, run the block deleting service against pending v1 deleting keys, inspect deleted block chunk-info compatibility, and verify key decoding through tables and iterators.
+
+State and persistence behavior: The persistent state is a copied legacy RocksDB directory plus `.container` YAML. Tests modify this copy by deleting metadata keys or running deletion. They verify metadata repair from scanning, key prefix removal on reads, deleted-block records whose old values cannot be decoded as `ChunkInfoList`, deleting-block records with `#deleting#` prefixes, and post-delete block counts. The block deleting path moves pending delete blocks into deleted-block state and updates metadata.
+
+Dependencies and integration points: It integrates legacy DB codecs, table wrappers, block iterators, YAML checksums, key-value container parsing, deletion service, and schema upgrade selection. The suite is a compatibility anchor for upgrade and rollback behavior.
+
+Risks: Resource DB contents are fixed and small, so coverage is representative rather than exhaustive. The deleting-service assertions account for mocked handler limitations around bytes-used updates. Direct table iteration being unsupported is an intentional schema-v1 guard and could break callers that assume all `Table` implementations are iterable.
+
+Test signals: Unsupported direct iterators, exact counts for two deleted, two deleting, and two regular blocks, metadata values `KEY_COUNT`, `BYTES_USED`, and pending deletes, decoded key lists matching resource IDs, absence of visible deleted-key prefixes, successful metadata reconstruction after deleting keys, and deletion service reducing pending state.

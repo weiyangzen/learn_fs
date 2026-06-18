@@ -1,0 +1,126 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/powerpc/boot
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 112
+- Recursive researched files: 114
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/44x.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/4xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/4xx.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/Makefile`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/addnote.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/bamboo.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cpm-serial.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/crt0.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/crtsavres.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-52xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-824x.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-83xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-85xx-cpm2.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-85xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-8xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-amigaone.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-bamboo.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-ebony.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-katmai.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-pq2.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-rainier.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-sam440ep.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-sequoia.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-taishan.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-warp.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot-yosemite.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/cuboot.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/dcr.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/decompress.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/devtree.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/div64.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ebony.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/elf.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/elf_util.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ep8248e.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ep88xc.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/epapr-wrapper.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/epapr.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/fixed-head.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/fixup-headers.sed`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/fsl-soc.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/fsl-soc.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/gamecube-head.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/gamecube.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/hack-coff.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/holly.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/install.sh`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/io.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/libfdt-wrapper.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/libfdt_env.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/main.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/microwatt.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/mktree.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/motload-head.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/mpc52xx-psc.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/mpc8xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/mpc8xx.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/mvme5100.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/mvme7100.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ns16550.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/of.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/of.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ofconsole.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/oflib.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/opal-calls.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/opal.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ops.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/page.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/planetcore.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/planetcore.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ppc_asm.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ppcboot.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/pq2.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/pq2.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ps3-head.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ps3-hvcall.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ps3.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/pseries-head.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/redboot-83xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/redboot-8xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/redboot.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/reg.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/rs6000.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/serial.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/simple_alloc.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/simpleboot.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/stdbool.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/stdint.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/stdio.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/stdio.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/stdlib.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/stdlib.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/string.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/string.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/swab.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/treeboot-akebono.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/treeboot-bamboo.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/treeboot-currituck.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/treeboot-ebony.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/treeboot-iss4xx.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/types.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ugecon.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/ugecon.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/util.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/wii-head.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/wii.c`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/wrapper`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/xz_config.h`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/zImage.coff.lds.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/zImage.lds.S`
+- `sources/distributed-fs/ceph-client/arch/powerpc/boot/zImage.ps3.lds.S`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/streaming.go
+
+This file adapts `criService` to the Kubernetes CRI streaming runtime interface used by exec, attach, and port-forward HTTP streams. `streamRuntime` wraps a `*criService`, and `newStreamRuntime` returns it as `streaming.Runtime` for `streaming.NewServer` in service construction.
+
+`Exec` calls `criService.execInContainer` in the containerd CRI namespace with command, stdio writers/readers, TTY flag, and resize channel. If the command exits nonzero it returns `executil.CodeExitError` carrying the exit code, matching Kubernetes streaming expectations. `Attach` delegates to `criService.attachContainer` with the same namespace wrapping and stream parameters. `PortForward` validates the port is in the TCP/UDP user range `1..math.MaxUint16`, wraps the namespace, and delegates to `criService.portForward`.
+
+`handleResizing` starts a goroutine, guarded by Kubernetes `runtime.HandleCrash`, that consumes terminal resize events until context cancellation or channel close. It ignores invalid sizes with height or width below one. There is no persistent state; the key dependencies are CRI service exec/attach/port-forward internals, containerd namespace utilities, Kubernetes streaming packages, and stdio streams. Risks include goroutine lifetime tied to context correctness, nil resize channel behavior, invalid port rejection, and exit code pointer assumptions from `execInContainer`. No direct tests are listed here.

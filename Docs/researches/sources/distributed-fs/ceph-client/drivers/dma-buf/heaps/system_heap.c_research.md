@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/dma-buf/heaps/system_heap.c
+
+Purpose: implements the default page-backed dma-buf system heap, plus an optional confidential-computing shared heap that decrypts pages before sharing.
+
+Important APIs/types/functions: defines `struct system_heap_priv`, `struct system_heap_buffer`, attachment state, `system_heap_buf_ops`, and heap op `system_heap_allocate()`. Helpers allocate high-order pages, duplicate sg tables for attachments, map/unmap DMA, mmap/vmap buffers, and set pages decrypted/encrypted for `system_cc_shared`.
+
+Control flow: allocation loops over high-order preferences 8, 4, and 0 to satisfy the requested length with zeroed pages, optionally using `__GFP_ACCOUNT` when dma-heap `mem_accounting` is enabled. It builds the master sg table from collected pages, decrypts pages for the shared confidential-computing heap, exports a dma-buf, and unwinds by re-encrypting/freeing pages on failure. Attach duplicates the master sg table for the device. Map uses `dma_map_sgtable()` with `DMA_ATTR_CC_SHARED` when appropriate; unmap calls `dma_unmap_sgtable()`. CPU begin/end invalidates or flushes vmap ranges and syncs all mapped attachments. mmap remaps pages from the sg table, using decrypted pgprot for cc-shared buffers. vmap builds a temporary page array from the sg table and caches a vmap under the buffer mutex. Release frees or re-encrypts pages, intentionally leaking pages that cannot be re-encrypted.
+
+State and persistence behavior: each buffer owns the master sg table, attachments list, mutex, length, vmap pointer/count, heap pointer, and cc-shared flag. Attachments own duplicated sg tables and mapped flags. Static heap private structs distinguish normal and cc-shared registration.
+
+Dependencies and integration points: depends on dma-buf/dma-heap, buddy page allocator, DMA mapping, mem encryption/set_memory APIs, scatterlist/vmalloc/mmap APIs, and `cc_platform_has(CC_ATTR_MEM_ENCRYPT)`. Registers `system` always and `system_cc_shared` only when not HIGHMEM and memory encryption is available.
+
+Risks and test signals: high-order allocation policy trades IOMMU efficiency for fragmentation sensitivity. Confidential-computing paths intentionally leak pages if re-encryption fails to avoid reusing shared memory unsafely. `system_heap_unmap_dma_buf()` does not pass the cc-shared attr on unmap, which should be checked against DMA API expectations. Test signals include allocation sizes spanning multiple orders, memcg accounting behavior, DMA map/unmap with and without cc-shared attrs, mmap/vmap coherency sync, cleanup under fatal signal/allocation failure, and no cc-shared heap on unsupported platforms.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listmount/listmount02.c
+
+Purpose: compares one-shot and iterator-style `listmount()` enumeration. Setup unshares a mount namespace, chroots to the mountpoint, and makes `/` shared recursively. The run creates seven recursive bind mounts of `/`, producing `1 << 7` mount IDs, reads all IDs in one call, then repeatedly calls `listmount(LSMT_ROOT, last_id, ..., GROUPS_SIZE)` to page through groups of three, comparing the resulting arrays. State is a synthetic mount tree in a private namespace. Dependencies include kernel >= 6.8, mount namespace support, and bind mounts. Risks are count assumptions if mount propagation differs. Test signal is exact array equality, followed by unmounting each bind.

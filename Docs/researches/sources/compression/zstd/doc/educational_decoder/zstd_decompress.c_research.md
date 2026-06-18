@@ -1,0 +1,15 @@
+# sources/compression/zstd/doc/educational_decoder/zstd_decompress.c
+
+Purpose: a readable educational implementation of a single-frame zstd decoder. It follows the format specification top-down: frame header, blocks, literals, sequences, match execution, optional dictionaries, and low-level HUF/FSE/bitstream primitives. It is designed for understanding, not production error recovery.
+
+Important APIs/types/functions: public functions are `ZSTD_decompress`, `ZSTD_decompress_with_dict`, `ZSTD_get_decompressed_size`, `create_dictionary`, `parse_dictionary`, and `free_dictionary`. Core internal types include `istream_t`, `ostream_t`, `HUF_dtable`, `FSE_dtable`, `frame_header_t`, `frame_context_t`, `dictionary_s`, `sequence_command_t`, and `sequence_states_t`. Major internal routines include `decode_frame`, `parse_frame_header`, `decompress_data`, `decode_literals`, `decode_huf_table`, `decode_sequences`, `decode_seq_table`, `execute_sequences`, `compute_offset`, `execute_match_copy`, `FSE_decode_header`, `FSE_init_dtable`, and `HUF_init_dtable_usingweights`.
+
+Control flow: `ZSTD_decompress()` creates an empty dictionary and delegates to `ZSTD_decompress_with_dict()`. That wraps input/output buffers in bounds-checked stream objects and decodes one zstd frame. `decode_frame()` validates magic, initializes frame context, parses the header, applies dictionary tables/content, then loops over blocks. Raw and RLE blocks copy directly; compressed blocks split into literal and sequence sections. Literal decoding handles raw/RLE and Huffman-compressed modes, including repeat tables. Sequence decoding reads the count, decodes FSE mode tables, consumes the reverse bitstream into literal length, match length, and offset commands, then execution copies literals and overlapping matches, including dictionary-backed references. Cleanup frees entropy tables after a frame.
+
+State and persistence: frame-local state carries repeated HUF/FSE tables, dictionary pointers, output history length, and repeat offsets across blocks. Parsed dictionaries persist entropy tables, content, prior offsets, and dictionary id until freed. IO streams update in-memory pointers and lengths only; no files are touched.
+
+Dependencies/integration: self-contained C using libc plus `zstd_decompress.h`. The harness and Makefile expose it to CLI tests. It intentionally mirrors zstd format concepts but does not depend on libzstd internals.
+
+Risks: all errors call `exit(1)`, unsuitable for library embedding. It assumes a single frame and rejects skippable/non-zstd frames. Content checksum is skipped rather than verified. It loads output into caller-provided contiguous memory and has simplified bounds/model handling. The decoder is sensitive to malformed bitstreams, table limits, dictionary-id mismatch, and repeated-offset edge cases.
+
+Test signals: Makefile round trips with and without dictionary, fuzz invalid/truncated frames, raw/RLE/compressed block coverage, repeated and FSE-compressed table modes, unknown content size handling through harness, dictionary-id mismatch, and compare outputs against libzstd on a corpus of small frames.

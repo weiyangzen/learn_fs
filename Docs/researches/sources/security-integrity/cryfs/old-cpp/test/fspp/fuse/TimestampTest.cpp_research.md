@@ -1,0 +1,15 @@
+# sources/security-integrity/cryfs/old-cpp/test/fspp/fuse/TimestampTest.cpp
+
+Purpose: This file tests timestamp conversion/rounding behavior in the fspp FUSE layer.
+
+Important APIs/types/functions: Includes: ../testutils/FuseTest.h, gmock/gmock.h. Classes/fixtures: none visible. Direct tests: FuseTimestampTest.whenCalledWithoutAnyAtimeFlag_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithNoatimeFlag_thenHasNoatimeBehavior; FuseTimestampTest.whenCalledWithStrictatimeFlag_thenHasStrictatimeBehavior; FuseTimestampTest.whenCalledWithRelatimeFlag_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithAtimeFlag_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithNodiratimeFlag_thenHasNoatimeBehavior; FuseTimestampTest.whenCalledWithAtimeAtimeFlag_withCsv_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithAtimeAtimeFlag_withSeparateFlags_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithAtimeNoatimeFlag_withCsv_thenFails; FuseTimestampTest.whenCalledWithAtimeNoatimeFlag_withSeparateFlags_thenFails; FuseTimestampTest.whenCalledWithAtimeRelatimeFlag_withCsv_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithAtimeRelatimeFlag_withSeparateFlags_thenHasRelatimeBehavior.
+
+Control flow: Tests pass timestamp values through FUSE/stat-related code paths and assert seconds/nanoseconds fields are preserved or converted as expected.
+
+State and persistence behavior: State is in-memory timestamp structs and stat buffers; no disk persistence is required.
+
+Dependencies and integration points: Timestamp behavior feeds `lstat`, `fstat`, and `utimens` adapter tests.
+
+Risks: Timestamp truncation or field mixups create subtle metadata regressions visible to applications.
+
+Test signals: Primary signals are FuseTimestampTest.whenCalledWithoutAnyAtimeFlag_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithNoatimeFlag_thenHasNoatimeBehavior; FuseTimestampTest.whenCalledWithStrictatimeFlag_thenHasStrictatimeBehavior; FuseTimestampTest.whenCalledWithRelatimeFlag_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithAtimeFlag_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithNodiratimeFlag_thenHasNoatimeBehavior; FuseTimestampTest.whenCalledWithAtimeAtimeFlag_withCsv_thenHasRelatimeBehavior; FuseTimestampTest.whenCalledWithAtimeAtimeFlag_withSeparateFlags_thenHasRelatimeBehavior. Assertion/mocking density: EXPECT_EQ x36.

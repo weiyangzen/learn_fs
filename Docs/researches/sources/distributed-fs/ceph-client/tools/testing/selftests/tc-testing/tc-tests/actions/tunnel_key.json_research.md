@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/tc-testing/tc-tests/actions/tunnel_key.json -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/tc-testing/tc-tests/actions/tunnel_key.json
+
+## Purpose
+This JSON file is a TDC selftest fixture for the Linux `tc` tunnel_key action. It contains 39 cases in the `actions/tunnel_key` category and is meant to validate both parser behavior and kernel action persistence for `tc actions add`, `replace`, `list`, `get`, `flush`, and `del` against tunnel metadata operations. The fixture covers the main `set` and `unset` modes, IPv4 endpoint arguments, tunnel key IDs, destination UDP ports, checksum flags, fragmentation flags, Geneve option encoding, control opcodes, cookies, batching-visible listing, and delete/flush lifecycle paths.
+
+## Important APIs, Types, And Functions
+The executable API is the TDC JSON schema plus the `tc` CLI. Each case uses fields such as `id`, `name`, `category`, `plugins.requires`, `setup`, `cmdUnderTest`, `expExitCode`, `verifyCmd`, `matchPattern`, `matchCount`, and `teardown`. The required plugin is `nsPlugin`, so the harness runs the cases in a network namespace with test devices and the `$TC` command variable available. The tested action API is `tc actions ... action tunnel_key`, especially `set src_ip ... dst_ip ... id ...`, `unset`, optional `dst_port`, `csum`/`nocsum`, `nofrag`, `no_percpu`, `cookie`, `index`, and control actions such as `pipe`, `continue`, `pass`, `reclassify`, `jump`, and `goto chain`.
+
+## Control Flow
+Most tests begin by flushing existing tunnel_key actions, run a single `cmdUnderTest`, then verify with either `tc actions list action tunnel_key` or `tc actions get action tunnel_key index N`. Positive cases expect exactly one regex match against the persisted action. Negative parser or range tests expect no persisted match and an error exit such as `1` or `255`. Replacement cases seed index `1` or `90` in setup, run `tc actions replace`, and verify that the previous object is overwritten only on valid input. List and flush tests create multiple indexed tunnel_key actions in setup, then check ordering or absence after flush. Delete tests seed a valid action and distinguish successful removal from an invalid-index delete that must leave the original action intact.
+
+## State And Persistence Behavior
+State is stored in the kernel action table keyed by `index`. The fixture explicitly tests persistence boundaries: successful `add` and `replace` commands must materialize visible action state, invalid arguments must not create state, invalid replace with `goto chain 42` must preserve the old action at index `90`, flush must remove all actions, and delete must only remove the addressed valid index. Index and ID bounds are important persistence gates: `4294967295` is accepted for action index and tunnel key ID, while larger values are rejected. `dst_port` is similarly tested at `65535` and beyond. `cookie` state is expected to survive and display in action dumps when valid.
+
+## Dependencies And Integration Points
+The fixture integrates with the tc-testing harness, network namespace plugin, kernel tunnel_key action implementation, iproute2 tunnel_key parser/printer, and regex-based result matching. Geneve option cases depend on iproute2 accepting `geneve_opts CLASS:TYPE:DATA` values and normalizing output as `geneve_opt` or `geneve_opts`. The list tests depend on stable enough dump formatting for multiple actions in one regex. No Ceph-specific code is involved despite the repository path; this is vendored Linux client selftest data.
+
+## Risks
+The tests are formatting-sensitive because assertions parse human-readable `tc` output. Small iproute2 wording changes, for example `key_id` versus `id` or singular versus plural Geneve option labels, can break matches even when kernel behavior is correct. Some negative cases expect different nonzero exits (`1` for address parse failures, `255` for missing or out-of-range action parameters), so harness or iproute2 changes to errno-to-exit mapping can create false failures. The multi-action list regex is broad and order-sensitive enough to catch regressions, but it can be brittle if dump ordering changes.
+
+## Test Signals
+Strong signals include valid mandatory set, missing `src_ip`/`dst_ip`, invalid IPv4 literals, invalid ID and port ranges, maximum accepted 32-bit and 16-bit bounds, unset mode, checksum and no-checksum persistence, valid and invalid cookies, valid and invalid Geneve option encodings, replace success and failure-preserves-old-state, all-action list, flush, delete success/failure, `no_percpu`, and `nofrag`. A passing run demonstrates both parser validation and kernel action table lifecycle behavior for tunnel_key.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/tc-testing/tc-tests/actions/tunnel_key.json -->

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rockchip,rk806.yaml
+
+Purpose: Schema for the Rockchip RK806 PMIC MFD, which may sit on SPI or I2C and provides many switchable regulators, GPIOs, reset behavior, and PWRCTRL pin muxing.
+
+Important schema surface and control flow: the top-level node requires `compatible = "rockchip,rk806"`, `reg`, and one interrupt. It allows GPIO controller registration, `system-power-controller`, `rockchip,reset-mode` values 0, 1, or 2, supplies `vcc1` through `vcc14` plus `vcca`, and a `regulators` object containing `dcdc-reg1` through `dcdc-reg10`, `pldo-reg1` through `pldo-reg6`, and `nldo-reg1` through `nldo-reg5`. Top-level `*-pins` nodes reference the pinmux-node schema and restrict `function` to `pin_fun0` through `pin_fun5` and `pins` to the three `gpio_pwrctrl` pins. `allOf` pulls in SPI peripheral properties so chip-select style nodes validate.
+
+State, dependencies, and integration: DT state configures regulator rails, reset policy, GPIO controller exposure, and optional PWRCTRL pin muxing used by the RK806 MFD/regulator/gpio/pinctrl drivers. Dependencies include `/schemas/spi/spi-peripheral-props.yaml`, `/schemas/regulator/regulator.yaml`, and `/schemas/pinctrl/pinmux-node.yaml`. Risks include mixing SPI and I2C conventions, wrong lowercase regulator child names, and reset-mode values that can briefly interrupt rails. Test signals are schema validation, example compile, and runtime probe of regulator names, GPIO cells, reset path, and SPI/I2C bus properties.

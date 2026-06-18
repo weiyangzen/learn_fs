@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/racer/fs_racer_file_rm.sh
+
+Purpose: repeated deletion mutator for the racer workload. It takes `DIR` and `MAX`, chooses a random numeric entry, runs `rm -rf $DIR/$file`, suppresses errors, then sleeps one second. Dependencies are Bash and `rm`; integration is with all other racer helpers because it removes files, directories, and links they may currently use. State behavior is destructive namespace pruning under active access. Risks are the normal hazards of unquoted `rm -rf`, external kill requirement, and removal of paths while other tools hold descriptors. Test signal is kernel/filesystem resilience to concurrent recursive deletion and recreation.

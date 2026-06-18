@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmdt/Makefile
+
+Purpose: builds the `shmdt` detach tests. It sets `LTPLIBS = newipc`, includes LTP testcase rules, links all local targets with `-lltpnewipc`, and uses the generic leaf target. There is no runtime behavior in the Makefile; it provides build-time integration with IPC helpers for keys, sizes, safe shm wrappers, and probe-address utilities used by the C files. Persistent state is only target configuration. Risks are missing LTP IPC library linkage or an incorrect relative `top_srcdir`. Test signal is successful compilation/linking of the shared-memory detach tests.

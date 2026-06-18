@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/container/common/statemachine/commandhandler/TestDeleteContainerHandler.java
+
+Purpose: This integration suite validates `DeleteContainerCommandHandler` behavior for open, closed, empty, non-empty, force-deleted, and locally inconsistent key-value containers. It specifically checks the safety rules around deleting containers when RocksDB state and chunk-directory contents disagree.
+
+Important APIs and types: The suite uses `MiniOzoneCluster`, `DeleteContainerCommand`, `CloseContainerCommand`, `NodeManager`, `ContainerMetrics`, `KeyValueContainer`, `KeyValueHandler`, `KeyValueContainerData`, `BlockUtils.getDB`, `DBHandle`, `Table<String, BlockData>`, `BatchOperation`, `OzoneTestUtils.flushAndWaitForDeletedBlockLog`, `OzoneTestUtils.waitBlockDeleted`, `ContainerData`, and `FileUtils` for chunk file manipulation.
+
+Control flow: A shared one-datanode cluster and volume/bucket are created in `setup`. Helper `createKey` writes a small RATIS factor-one key, and `getContainerID` resolves its container through OM. Tests close containers either through `OzoneTestUtils.closeAllContainers` or explicit `CloseContainerCommand`, optionally delete keys to mark containers empty, manipulate chunk directories by touching or deleting files, clear block-related DB tables, and then queue `DeleteContainerCommand` with force true or false. They poll for deletion from the datanode `ContainerSet`, inspect logs for expected non-empty rejection messages, and assert metrics increments for failed non-empty deletes and force deletes.
+
+State and persistence behavior: The file directly mutates and observes local persistent state: chunk files under `ContainerData.getChunksPath`, block data and last chunk info tables in RocksDB, in-memory/test block count statistics, `ContainerData.isEmpty`, and whether a container remains in the datanode container set. It also drives the normal OM/SCM delete-block pipeline so the container's empty flag becomes true after key deletion.
+
+Dependencies and integration points: Coverage includes SCM command queuing, datanode delete command handler, key-value handler empty checks, block-deleting service, container metrics, filesystem chunk directories, RocksDB batch deletion, OM key deletion, and SCM deleted-block flushing.
+
+Risks: The suite mutates low-level container internals for negative cases, so it is tightly coupled to key-value container storage details. It uses one static cluster and shared volume names, which can leak state if a test aborts. Some checks depend on log text and sleeps.
+
+Test signals: Expected signals include rejection of non-force delete for open or non-empty containers, successful forced delete, successful non-force delete once the container is empty, failure when directory empty-check is enabled and lingering chunks remain, failure when block table remains non-empty, success when DB/chunks are cleared despite stale block count, and increments to `containerDeleteFailedNonEmpty` and `containerForceDelete`.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup22.py
+
+Purpose: tests interaction between import and incremental backup, especially importing a dropped table and then expecting an incremental backup into an empty directory to copy the full file. It covers metadata import and repair import, with and without checkpoint.
+
+Important APIs are metadata cursor reads, `session.drop(remove_files=false)`, `session.create(import=...)`, `take_full_backup`, `take_incr_backup`, `compare_backups`, and scenario generation. Control flow creates/populates a table, checkpoints, captures table and file metadata, opens an incremental full backup (`ID1`), drops the table without removing files, imports it using either original metadata or repair mode, optionally checkpoints, then takes incremental backup ID1 to ID2 into an empty directory and compares against the full backup. State behavior includes import metadata, checkpoint state, and incremental changed-file detection. Risks include exact import config string construction and whole-file copy expectations. Test signal is backup equivalence.

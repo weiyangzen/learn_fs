@@ -1,0 +1,10 @@
+# sources/cloud-native/ostree/src/libostree/ostree-kernel-args.c
+
+## Purpose
+This file implements `OstreeKernelArgs`, an ordered multimap for Linux kernel command-line arguments. It supports appending duplicate keys, replacing values, deleting specific key/value entries, parsing strings while preserving quoted spaces, filtering current `/proc/cmdline`, and serializing back to `strv` or a command-line string.
+
+## Important APIs and Control Flow
+`ostree_kernel_args_new()` creates the table and order array; `ostree_kernel_args_free()` releases both. `split_kernel_args()` tokenizes on spaces outside quotes. `split_keyeq()` mutates an argument buffer into key and value pieces. `ostree_kernel_args_append()` adds one or more parsed entries, preserving every duplicate in `order` and appending to the key's value array. `ostree_kernel_args_replace_take()` replaces all values for an existing key at its old order position or inserts a new key. `ostree_kernel_args_new_replace()` handles the advanced `key`, `key=new`, and `key=old=new` replacement forms and errors on ambiguous duplicate keys. `ostree_kernel_args_delete()` removes by key or key/value, while `ostree_kernel_args_delete_key_entry()` removes all entries for a key. Serialization walks `order`, and `ostree_kernel_args_get_last_value()` returns the final value for a key.
+
+## State, Dependencies, Integration, Risks, and Tests
+State is entirely in memory: `table` owns key strings and per-key `GPtrArray`s, while `order` references the same entries for deterministic output. `/proc/cmdline` is read only by `ostree_kernel_args_append_proc_cmdline()`, filtering `BOOT_IMAGE=` and `initrd=`. Dependencies are GLib, libglnx, `otutil`, and private helpers. Risks include ownership coupling between table and order, quote parsing asserting on unterminated quotes, `ostree_kernel_args_contains()` checking only keys despite accepting key/value text, and ambiguous duplicate-key edits. Test signals should cover duplicate keys, NULL versus empty values, quoted arguments, delete ambiguity, replace old/new syntax, `/proc/cmdline` filters, and order-preserving serialization.

@@ -1,0 +1,25 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/pmdomain/renesas/r8a774a1-sysc.c -->
+# sources/distributed-fs/ceph-client/drivers/pmdomain/renesas/r8a774a1-sysc.c
+
+## Purpose
+RZ/G2M/R8A774A1 table based on R-Car M3-W: CA57 and CA53 clusters/CPUs, A3VC/A2VC video domains, and chained 3DG-A/B GPU domains.
+
+## Important APIs, Types, And Functions
+The file exports one SoC descriptor consumed by legacy `rcar-sysc.c`. Its primary data structures are `struct rcar_sysc_area` and `struct rcar_sysc_info`. Domain entries name each PM area, assign the hardware domain identifier/register selector, define parent-child hierarchy, and mark CPU/SCU/always-on quirks with flags such as `PD_CPU_NOCR`, `PD_CPU_CR`, `PD_SCU`, or `PD_ALWAYS_ON`.
+
+## Control Flow
+There is no runtime algorithm except optional revision fixups where present. During early/postcore SYSC initialization, the family driver selects this descriptor from the OF match table, allocates a genpd per area, initializes controllability flags, powers up controllable domains that are initially off, registers the provider, and adds subdomains according to the `parent` fields.
+
+## State And Persistence Behavior
+Descriptor data is `__initconst` or `__initdata`, so it is initialization-only. Runtime state is created by the family driver as generic PM domain objects and SYSC MMIO state; this file does not persist state itself.
+
+## Dependencies And Integration Points
+Depends on the matching dt-binding header for power-domain IDs and on the family header. It integrates with Device Tree compatibles compiled in `rcar-sysc.c` or `rcar-gen4-sysc.c`, and consumers use the exported domain IDs through `power-domains` references.
+
+## Risks
+The main risk is data accuracy: wrong parent IDs, register offsets/PDR IDs, or flags can break suspend/resume, CPU cluster handling, or device power sequencing. Revision fixups are especially sensitive because they mutate init-time descriptor tables before genpd registration.
+
+## Test Signals
+Boot logs should show successful SYSC provider registration with all expected domains. Device runtime PM should toggle non-CPU domains, while CPU/SCU/no-control domains remain always-on. DT binding tests should verify domain IDs line up with the descriptor array and consumers.
+
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/pmdomain/renesas/r8a774a1-sysc.c -->

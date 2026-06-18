@@ -1,0 +1,11 @@
+<!-- BEGIN_FILE_RESEARCH: sources/control-plane/csi-driver-smb/charts/v1.17.0/csi-driver-smb/templates/csi-smb-node-windows-hostprocess.yaml -->
+## sources/control-plane/csi-driver-smb/charts/v1.17.0/csi-driver-smb/templates/csi-smb-node-windows-hostprocess.yaml
+
+Purpose: renders the Windows HostProcess variant of the SMB CSI node `DaemonSet` introduced in chart v1.17.0. It is selected when both `.Values.windows.enabled` and `.Values.windows.useHostProcessContainers` are true, replacing the older pod-plus-csi-proxy-pipes model with host-process containers running directly as `NT AUTHORITY\SYSTEM`.
+
+Important APIs and inputs are `apps/v1 DaemonSet`, HostProcess pod `securityContext.windowsOptions`, `seccompProfile: RuntimeDefault`, `hostNetwork: true`, Windows node scheduling settings, an init container that creates the kubelet plugin directory, node-driver-registrar running `csi-node-driver-registrar.exe`, and smbplugin running `smbplugin.exe` with `--enable-windows-host-process=true`. Images use the SMB tag with a `-windows-hp` suffix for init and plugin containers.
+
+Control flow is gated by `.Values.windows.useHostProcessContainers`, while the non-hostprocess Windows node template is explicitly disabled under the same flag. State persists in Kubernetes DaemonSet/pods and on the Windows host through kubelet plugin directories, registration data, SMB mappings, and direct host filesystem/network access.
+
+Dependencies and integration points include Kubernetes Windows HostProcess support, kubelet Windows plugin paths, node-driver-registrar plugin registration flags, Windows SMB APIs, and the controller-provisioned volumes that later mount on Windows workloads. Risks are high privilege, requiring compatible Windows/Kubernetes versions, image tag suffix drift, hard-coded plugin directory creation using `C:\var\lib\kubelet`, and reduced liveness coverage compared with the non-hostprocess template. Test signals are Windows HostProcess admission/scheduling, plugin registration, kubelet CSINode visibility, SMB mount/unmount tests, and upgrade tests toggling `useHostProcessContainers`.
+<!-- END_FILE_RESEARCH: sources/control-plane/csi-driver-smb/charts/v1.17.0/csi-driver-smb/templates/csi-smb-node-windows-hostprocess.yaml -->

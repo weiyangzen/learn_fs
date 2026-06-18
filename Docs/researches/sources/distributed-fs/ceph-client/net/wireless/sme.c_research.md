@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/net/wireless/sme.c
+
+## Purpose
+`sme.c` implements cfg80211 station connection management. It provides the software SME used when drivers expose auth/assoc rather than connect/disconnect, handles driver SME connection/roam/disconnect events, manages current BSS references for single-link and MLO clients, reports nl80211 and WEXT events, uploads cached connect keys, and cleans up connections when owning userspace sockets disappear.
+
+## Important APIs, Types, And Functions
+The central private type is `struct cfg80211_conn`, which stores copied connect parameters and a software-SME substate such as scanning, authenticating, associating, connected, deauth, or abandon. Important functions include `cfg80211_conn_scan()`, `cfg80211_conn_do_work()`, `cfg80211_conn_work()`, `cfg80211_sme_scan_done()`, `cfg80211_sme_rx_auth()`, `cfg80211_sme_rx_assoc_resp()`, timeout/disassoc/abandon handlers, `cfg80211_sme_connect()`, `cfg80211_sme_disconnect()`, `__cfg80211_connect_result()`, `cfg80211_connect_done()`, `__cfg80211_roamed()`, `cfg80211_roamed()`, `__cfg80211_port_authorized()`, `cfg80211_port_authorized()`, `__cfg80211_disconnected()`, `cfg80211_disconnected()`, `cfg80211_connect()`, `cfg80211_disconnect()`, and `cfg80211_autodisconnect_wk()`.
+
+## Control Flow
+`cfg80211_connect()` validates duplicate connection attempts, reassociation `prev_bssid`, cached WEP keys, capability masks, and requested BSS type. It stores the SSID and connect keys on `wdev`, then either calls driver `connect` or starts the software SME. The software SME first looks for an existing BSS; if none exists it issues a scan. Scan completion calls `cfg80211_sme_scan_done()`, which either advances to authentication or reschedules work to fail. Auth success schedules association, auth algorithm rejection may rotate automatic auth type, association failure may retry without reassoc, and terminal failures emit `__cfg80211_connect_result()` with failure status.
+
+Driver SME events are queued as `cfg80211_event` objects by `cfg80211_connect_done()`, `cfg80211_roamed()`, `cfg80211_port_authorized()`, and `cfg80211_disconnected()` for serialized processing on cfg80211 workqueues. Immediate internal handlers update `wdev->connected`, `wdev->valid_links`, per-link `current_bss`, connected address, cached SSID, key state, QoS map, critical-protocol state, regulatory country hints, WEXT notifications, and nl80211 messages. Disconnect paths choose software SME deauth, `rdev_disconnect()`, or MLME down depending on the driver API and current connection state.
+
+## State And Persistence
+Connection-attempt state lives in `wdev->conn`, including copied IEs and BSSID/previous-BSSID buffers. Established state lives in `wdev->connected`, `wdev->valid_links`, `wdev->links[link].client.current_bss`, per-link client addresses for MLO, `wdev->u.client.connected_addr`, `wdev->u.client.ssid`, `wdev->connect_keys`, `wdev->conn_owner_nlportid`, WEXT previous BSSID state, and the per-wdev event list. Current BSS entries are held with `cfg80211_hold_bss()` and released with `cfg80211_unhold_bss()` plus `cfg80211_put_bss()`.
+
+## Dependencies And Integration Points
+The file depends on scan/BSS APIs from `scan.c`, MLME auth/assoc/deauth helpers, nl80211 event construction, regulatory disconnect and country-IE hints, rtnetlink and wiphy locking, cfg80211 workqueues, WEXT compatibility, driver ops (`connect`, `disconnect`, `auth`, `assoc`, `deauth`, `del_key`, `crit_proto_stop`), and interface-type-specific leave/stop helpers for autodisconnect. It is the main bridge between userspace connection requests, driver callbacks, and cfg80211-maintained client state.
+
+## Risks And Edge Cases
+Ownership of BSS references is subtle because connect/roam APIs intentionally consume BSS objects one way or another. MLO events require valid `ap_mld_addr`, per-link BSSID/address fields, and success filtering for individual links. Software SME retry and timeout transitions must avoid duplicate userspace notifications. Connect-key memory is sensitive and must be freed on failure/disconnect. Disconnect and regulatory idle checks span all registered devices, so lock ordering with RTNL and wiphy mutex matters. Queued events must copy variable data before driver-owned buffers disappear.
+
+## Test Signals
+Useful tests include software SME scan/auth/assoc success and each timeout/failure transition, automatic auth fallback with and without WEP keys, reassociation fallback from reassoc to assoc, driver-SME connect/roam/disconnect queued event ordering, MLO connect/roam per-link BSS reference balancing, failure cleanup of connect keys and SSID state, WEXT event emission for legacy clients, port-authorized validation, autodisconnect for station/AP/mesh/IBSS owners, and lockdep/KASAN coverage for event-list processing and BSS release.

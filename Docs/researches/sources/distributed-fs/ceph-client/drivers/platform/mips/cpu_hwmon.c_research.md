@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/platform/mips/cpu_hwmon.c
+
+Purpose: Loongson-3 CPU hardware-monitor driver exposing per-package CPU temperature through hwmon sysfs and enforcing an emergency thermal poweroff threshold. It supports both newer CSR temperature access and older Loongson chip-temperature registers, translating raw sensor values by PRID revision.
+
+Important APIs, types, and functions: `loongson3_cpu_temp()` is the primary exported-in-file helper and returns millidegrees Celsius for a package index. `SENSOR_DEVICE_ATTR(tempN_input/tempN_label)` defines up to four hwmon channels. `cpu_hwmon_is_visible()` hides channels beyond `nr_packages`. `loongson_hwmon_init()` detects CSR temperature support, computes package count from `loongson_sysconf`, registers `cpu_hwmon` with `hwmon_device_register_with_groups()`, and schedules `thermal_work`. `do_thermal_timer()` polls every 5 seconds and calls `orderly_poweroff(true)` when a package exceeds `CPU_THERMAL_THRESHOLD` of 90000 millidegrees.
+
+Control flow: module init checks `cpu_has_csr()` and `LOONGSON_CSRF_TEMP`; if neither CSR nor legacy `loongson_chiptemp[0]` is available it returns `-ENODEV`. Sysfs reads call `get_cpu_temp()`, which maps the hwmon attribute index to package id and delegates to `loongson3_cpu_temp()`. The delayed work starts after 20 seconds and reschedules itself after each scan. Module exit synchronously cancels the delayed work and unregisters the hwmon device.
+
+State and persistence: state is in static globals: `csr_temp_enable`, `nr_packages`, `cpu_hwmon_dev`, and the delayed work item. No persistent storage is used. Runtime state is visible through hwmon sysfs files, and thermal enforcement is timer-driven.
+
+Dependencies and integration points: depends on Loongson MIPS platform headers (`loongson.h`, `boot_param.h`, `loongson_hwmon.h`, `loongson_regs.h`), MIPS PRID revision constants, Linux hwmon, workqueues, and reboot/poweroff infrastructure. Integration points are `/sys/class/hwmon` channel files and kernel orderly poweroff.
+
+Risks: package count divides by `loongson_sysconf.cores_per_package`, so invalid platform configuration can break initialization. The driver assumes at most four packages because only four channel pairs are declared. Temperature conversion is revision-specific and can misreport if PRID mappings are incomplete. Thermal shutdown is abrupt and unconditional once a single read exceeds threshold; transient or faulty sensor values can power off the system. `loongson3_cpu_temp()` can be called with package ids derived from sysfs visibility, but any external caller would need to pass a valid id.
+
+Test signals: build with Loongson platform config and hwmon enabled; boot on a system with CSR temperature and one with legacy chiptemp. Verify sysfs `temp*_input` and `temp*_label` count matches packages, values are plausible in millidegrees, and hidden channels do not appear. Use fault injection or mocked register reads to exercise the 90 C poweroff branch and delayed-work cancellation on module removal.

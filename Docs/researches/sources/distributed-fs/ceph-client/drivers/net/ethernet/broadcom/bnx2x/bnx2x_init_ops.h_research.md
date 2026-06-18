@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/broadcom/bnx2x/bnx2x_init_ops.h
+
+## Purpose
+Implements static initialization helpers that are included into `bnx2x_main.c`. It replays firmware init operations, writes large firmware data blocks through the best available path, loads compressed PRAM/int-table blobs, programs the PXP arbiter, allocates and writes ILT entries, initializes QM pointer tables, and seeds the SRC T2 free list.
+
+## Important APIs, Types, and Functions
+Firmware replay helpers include `bnx2x_init_str_wr()`, `bnx2x_init_ind_wr()`, `bnx2x_write_big_buf()`, `bnx2x_init_fill()`, `bnx2x_write_big_buf_wb()`, `bnx2x_init_wr_64()`, `bnx2x_sel_blob()`, `bnx2x_init_wr_wb()`, `bnx2x_wr_64()`, `bnx2x_init_wr_zp()`, and the central `bnx2x_init_block()`. These depend on external helpers declared at the top: `bnx2x_gunzip()`, `bnx2x_reg_wr_ind()`, and `bnx2x_write_dmae_phys_len()`.
+
+PXP arbitration is driven by `struct arb_line`, large static tables `read_arb_data`, `write_arb_data`, `read_arb_addr`, `write_arb_addr`, and `bnx2x_init_pxp_arb()`. ILT functions include `bnx2x_ilt_line_mem_op()`, `bnx2x_ilt_client_mem_op()`, `bnx2x_ilt_mem_op_cnic()`, `bnx2x_ilt_mem_op()`, `bnx2x_ilt_line_wr()`, `bnx2x_ilt_line_init_op()`, `bnx2x_ilt_boundry_init_op()`, `bnx2x_ilt_client_init_op_ilt()`, `bnx2x_ilt_client_init_op()`, `bnx2x_ilt_client_id_init_op()`, `bnx2x_ilt_init_op_cnic()`, `bnx2x_ilt_init_op()`, `bnx2x_ilt_init_client_psz()`, and `bnx2x_ilt_init_page_size()`. QM and SRC helpers are `bnx2x_qm_init_cid_count()`, `bnx2x_qm_set_ptr_table()`, `bnx2x_qm_init_ptr_table()`, and `bnx2x_src_init_t2()`.
+
+## Control Flow and State
+`bnx2x_init_block()` obtains the start/end op indices for a block and phase from `INIT_OPS_OFFSETS(bp)[BLOCK_OPS_IDX(...)]`, iterates each `union init_op`, decodes `op->raw.op` and `op->raw.offset`, and dispatches reads, writes, string writes, DMAE widebus writes, zero fills, compressed blob writes, 64-bit pattern writes, and conditional skips based on `INIT_MODE_FLAGS(bp)`. `OP_IF_MODE_AND` skips when any required mode flag is missing; `OP_IF_MODE_OR` skips when none of the requested flags are present.
+
+Large writes select between DMAE, indirect writes, and direct string writes based on `bp->dmae_ready`, chip generation, and widebus requirements. `bnx2x_init_wr_zp()` selects the relevant T/C/U/X storm PRAM or interrupt-table blob by address range, gunzips it into `GUNZIP_BUF(bp)`, converts dwords to little-endian, then writes the expanded result. PXP arbitration clamps PCI read/write orders, special-cases FPGA and chip generations, then programs many PXP2 bandwidth/MPS/tag-limit registers.
+
+ILT memory state is allocated per client into DMA pages and mirrored into hardware as 64-bit page addresses with a valid bit. SET/INIT writes page entries and boundaries; CLEAR writes null mappings. QM state is initialized only for sufficiently large CID counts and sets per-queue base and pointer-table registers. SRC state is a host T2 linked list plus hardware first/last/count registers.
+
+## Dependencies and Integration Points
+Requires macros normally provided by `bnx2x_main.c`/`bnx2x.h`: `BP_ILT`, `BP_FUNC`, `BP_PORT`, `BNX2X_ILT_ZALLOC`, `BNX2X_ILT_FREE`, `GUNZIP_BUF`, `GUNZIP_PHYS`, `GUNZIP_OUTLEN`, `FW_BUF_SIZE`, `INIT_OPS`, `INIT_OPS_OFFSETS`, `INIT_DATA`, `INIT_*_PRAM_DATA`, `INIT_*_INT_TABLE_DATA`, `CNIC_SUPPORT`, `CONFIGURE_NIC_MODE`, register IO helpers, DMAE helpers, and chip predicates. Main initialization calls these helpers during common, port, function, and CNIC-specific bring-up and cleanup.
+
+## Risks and Test Signals
+Risks include init-op section corruption, invalid compressed blob selection, gunzip failure silently leaving firmware memory unwritten, endian conversion mistakes in decompressed dwords, DMAE readiness races, E1 widebus/ZLR workaround regressions, PXP arbitration table mistakes tied to PCI MPS/MRRS, ILT allocation leaks or partial allocation cleanup failures, wrong ILT boundary registers on E1 versus later chips, null ILT pointers under optional CNIC modes, and QM/SRC count off-by-one errors. Test signals include firmware init replay logs, successful common/port/function init on every supported chip generation, PRAM version visibility, DMAE and non-DMAE fallback boots, FPGA boots if supported, CNIC on/off probe cycles, memory allocation failure injection for ILT, PCI MPS/MRRS variation, traffic after RSS/filter/classification setup, and clean remove/reset without stale ILT/SRC state.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chown/chown02.c
+
+Purpose: verifies root `chown()` clears setuid/setgid on executable files but preserves setgid on non-group-executable files. Setup creates two files; each run chmods the selected mode, calls `CHOWN` to current uid/gid, stats, and checks owner/group plus expected mode. Important APIs are `SAFE_CHMOD`, `CHOWN`, `SAFE_STAT`, and compatibility uid/gid macros. State is tmpdir files with special permission bits. Dependencies are root and filesystem support for setuid/setgid semantics. Risks are filesystem-specific special-bit preservation. Test signal is correct ownership and mode transformation.

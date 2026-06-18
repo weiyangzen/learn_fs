@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/kernel/sched/psi.c
+
+## Purpose
+Implements Pressure Stall Information (PSI) for CPU, memory, IO, and optional IRQ pressure. It tracks task stalls as per-CPU time buckets, aggregates them into averages and totals, exposes `/proc/pressure/*`, and supports pollable threshold triggers for system and cgroup pressure.
+
+## APIs, Control Flow, and State
+Initialization flows through `psi_init()` and `psi_proc_init()`, honoring the `psi=` boot parameter and cgroup PSI enablement. Runtime scheduler hooks include `psi_task_change()`, `psi_task_switch()`, `psi_account_irqtime()`, `psi_memstall_enter()`, `psi_memstall_leave()`, and cgroup hooks `psi_cgroup_alloc()`, `psi_cgroup_free()`, `cgroup_move_task()`, and `psi_cgroup_restart()`. User-visible APIs are `psi_show()`, `psi_trigger_create()`, `psi_trigger_destroy()`, `psi_trigger_poll()`, and the proc file operations for `pressure/io`, `pressure/memory`, `pressure/cpu`, and optionally `pressure/irq`.
+
+State is organized around `struct psi_group` for the system and each cgroup. Each group owns per-CPU `struct psi_group_cpu` counters, cumulative totals for average and poll aggregators, decaying averages, trigger lists, delayed work for two-second average sampling, and optional real-time polling state driven by a `psimon` kthread and timer. Per-task `psi_flags` and `in_memstall` describe current stall state. `psi_group_change()` is the hot path: under the runqueue lock and per-CPU seqcount, it updates task counters, derives SOME/FULL/NONIDLE state masks, records elapsed time in old states, schedules trigger polling if needed, and wakes the periodic average worker. `collect_percpu_times()` locklessly snapshots per-CPU buckets with seqcounts, weights pressure by non-idle time, and updates group totals. `update_averages()` feeds totals into 10s/60s/300s fixed-point averages while capping samples at one period. Trigger windows track growth and signal via wait queues or kernfs notifications.
+
+## Dependencies and Integration Points
+Depends on scheduler runqueue locking, `cpu_clock()`/`sched_clock()`, workqueues, timers, kthreads, seqcounts, procfs, cgroups/kernfs, capability checks, IRQ time accounting, and PSI public headers. Integration points include scheduler enqueue/dequeue/switch hooks, memory reclaim/refault paths around memstall sections, cgroup migration, `/proc/pressure` monitoring, cgroup pressure files, and privileged low-latency PSI polling.
+
+## Risks and Test Signals
+Risks include underflow or inconsistent `psi_flags`, races between task migration and memstall state, stale cgroup state during migration, seqcount sampling drift, trigger leaks during cgroup/file teardown, excessive unprivileged polling cost, missed rtpoll events due to memory-order mistakes, and misreported FULL semantics for system CPU pressure. Test signals include PSI kernel selftests, polling trigger tests with privileged and unprivileged windows, cgroup migration under load, memory reclaim and IO stall workloads, IRQ accounting validation, procfs read/write/poll tests, race testing with cgroup deletion, and booting with `psi=0`.

@@ -1,0 +1,7 @@
+# sources/cloud-native/moby/daemon/graphdriver/btrfs/btrfs.go
+
+Purpose: Linux/cgo Btrfs graphdriver implementation using Btrfs subvolumes, snapshots, qgroups, and the generic naive diff wrapper.
+
+Important APIs and control flow: `Init` verifies the backing filesystem is Btrfs, creates/chowns driver home, parses `btrfs.min_space`, bind-mounts the home directory to improve propagation behavior, optionally enables quota, and returns `NewNaiveDiffDriver`. Cgo helpers open directories and issue Btrfs ioctls for subvolume create/snapshot/delete, quota enable/rescan, qgroup status/lookup/limit. `Create` creates a new subvolume or snapshot of the parent, applies per-layer `size` quota if requested, persists quota size under `quotas/<id>`, adjusts remapped root ownership, and relabels. `Remove` removes quota metadata, updates quota status, recursively deletes nested subvolumes, falls back to `EnsureRemoveAll`, and rescans quota. `Get` validates the subvolume and reapplies persisted quota; `Put` is a no-op.
+
+State, dependencies, and risks: persistent state lives under `subvolumes/` and `quotas/`, plus Btrfs qgroups. Dependencies include Linux Btrfs headers >=4.12, ioctls, mount helper, SELinux labels, user namespaces, fstype detection, and quota support. Risks include cgo/platform build constraints, privilege requirements, recursive subvolume deletion failures, and quota cleanup warnings not being fatal. Tests use `graphtest` plus nested subvolume deletion.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/Kbuild -->
+# sources/distributed-fs/ceph-client/arch/s390/Kbuild
+
+Purpose: declares the s390 architecture subdirectories built by Kbuild. Important variables are `obj-y`, `obj-$(CONFIG_KVM)`, `obj-$(CONFIG_S390_HYPFS)`, `obj-$(CONFIG_APPLDATA_BASE)`, `obj-$(CONFIG_PCI)`, `obj-$(CONFIG_ARCH_SUPPORTS_KEXEC_PURGATORY)`, and `subdir-`. Control flow is build selection: always build kernel, mm, crypto, and net; conditionally add kvm, hypfs, appldata, pci, and purgatory; include boot/tools for cleaning. There is no runtime state or persistence. Dependencies are s390 Kconfig symbols and the directory layout. Integration is with the top-level kernel build graph and cleanup targets. Risks are omitted directories when Kconfig enables features, clean rules missing generated boot/tool artifacts, and stale object selection when feature names change. Test signals: `make ARCH=s390` under base, KVM, APPLDATA, PCI, and kexec-purgatory configs; clean target coverage; and link failures for missing subdirectory objects.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/Kbuild -->

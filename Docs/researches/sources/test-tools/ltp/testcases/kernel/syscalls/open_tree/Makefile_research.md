@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/open_tree/Makefile
+
+Purpose: generic LTP build leaf for `open_tree` syscall tests in this directory. Important APIs/types/functions: `top_srcdir`, `testcases.mk`, and `generic_leaf_target.mk`. Control flow: includes the common test-case and generic leaf rules with no local overrides. State/persistence: only standard build artifacts. Dependencies/integration: ties any `open_tree` C tests in the directory into the syscall suite; this work item lists only the Makefile. Risks: absence of local flags means syscall number wrappers and feature detection must come from the C files/common headers. Test signals: successful make traversal indicates the directory follows standard LTP build conventions.

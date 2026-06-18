@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v6_20.h
+
+This header provides QMP V6.20 PCIe PCS offsets for power-state, TX/RX config, endpoint refclk, oscillator-detect actions, EQ, Gen3/Gen4 RXEQ timing, Gen4 EQ/pre-gain, RX margining, and Gen3/Gen4 figure-of-merit EQ controls. It is macro-only and has no runtime state. It integrates with SM8550/SM8650 and X1E80100 Gen4x2/x4 tables in the PCIe driver. One notable risk is the macro spelling `QPHY_PCIE_V6_20_PCS_OSC_DTCT_ATCIONS`, which is consistently used by the driver but is typo-prone for new code. Other risks are offset drift from V5.20 and V6.30. Test signals include Gen4 equalization, RX margining, FOM programming, and successful repeated power-on polling.

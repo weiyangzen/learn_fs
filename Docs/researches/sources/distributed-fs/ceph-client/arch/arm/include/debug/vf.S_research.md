@@ -1,0 +1,38 @@
+# sources/distributed-fs/ceph-client/arch/arm/include/debug/vf.S
+
+## Purpose
+`sources/distributed-fs/ceph-client/arch/arm/include/debug/vf.S` implements NXP/Freescale Vybrid
+DEBUG_LL UART output. It is part of the vendored Linux ARM code under the Ceph client source tree
+and has 36 source lines in this checkout.
+
+## Important APIs, Types, and Functions
+Primary API or contract surface: VF_UART*_BASE_ADDR, VF_UART_PHYSICAL_BASE, VF_UART_VIRTUAL_BASE,
+addruart, senduart, busyuart, and waituarttxrdy.
+Important macros/constants include: `VF_UART0_BASE_ADDR`, `VF_UART1_BASE_ADDR`,
+`VF_UART2_BASE_ADDR`, `VF_UART3_BASE_ADDR`, `VF_UART_BASE_ADDR(n)`, `VF_UART_BASE(n)`,
+`VF_UART_PHYSICAL_BASE`, `VF_UART_VIRTUAL_BASE`.
+
+## Control Flow
+the backend selects a configured UART port and writes the data register while polling its status
+register for TX readiness.
+
+## State and Persistence Behavior
+There is no durable state. The only state is CPU registers and UART MMIO state touched during early
+boot or decompression. Any characters written become serial side effects, and polling loops depend
+on live hardware status bits rather than scheduler-visible state.
+
+## Dependencies and Integration Points
+This file integrates with `arch/arm/kernel/debug.S` through the DEBUG_LL macro contract: `addruart`,
+`senduart`, `waituartcts`, `waituarttxrdy`, and `busyuart`. The decompressor, early printk, and low-
+level `printascii` code use those macros before serial drivers, clocks, or normal ioremap services
+are available.
+
+## Risks
+Primary risk: incorrect CONFIG_DEBUG_VF_UART_PORT or virtual mapping assumptions lose early console
+output. Changes should preserve register layouts, numeric constants, early-boot calling conventions,
+and userspace/module ABI boundaries implied by this file.
+
+## Test Signals
+Build-test a kernel with the matching `CONFIG_DEBUG_LL` and platform `CONFIG_DEBUG_*` option, boot
+with `earlyprintk`, and verify decompressor/early console output before the normal tty driver binds.
+Negative signals are hangs in wait loops, no early output, or output appearing on the wrong UART.

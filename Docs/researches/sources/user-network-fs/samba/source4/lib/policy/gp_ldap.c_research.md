@@ -1,0 +1,7 @@
+# sources/user-network-fs/samba/source4/lib/policy/gp_ldap.c
+
+`gp_ldap.c` implements LDAP-side Group Policy Object operations. `gp_init()` discovers a PDC, connects to LDAP, and creates `gp_context`. Query APIs list all GPOs, fetch one GPO, parse `gPLink`, list applicable GPOs for a security token, and map flag bits to strings. Mutation APIs set/delete `gPLink`, get/set inheritance through `gPOptions`, create a GPC object plus `CN=User` and `CN=Machine`, set `nTSecurityDescriptor`, and update basic GPO attributes.
+
+Control flow centers on LDB searches under `CN=Policies,CN=System` and base-object modifications. `parse_gpo()` converts LDAP attributes into `gp_object` and pulls the security descriptor via NDR. `gp_list_gpos()` finds the token's user/computer DN, walks parent containers to the domain root, applies inheritance/enforcement/disable flags, checks GPO read/list property access, and returns applicable GPO DNs.
+
+Persistent state is Active Directory LDAP data: GPC objects, links, inheritance options, security descriptors, flags, display names, and version attributes. Risks include string parsing of `gPLink`, direct mutation of returned LDAP attribute strings in `gp_set_gplink()`/`gp_del_gplink()`, missing transactionality across multi-object GPO creation, possible `version` vs `versionNumber` mismatch in `gp_set_ldap_gpo()`, and limited validation of LDAP result shapes. Tests require LDAP integration with links, inheritance, disabled user/machine policy, ACL filtering, and create/update/delete paths.

@@ -1,0 +1,15 @@
+# sources/sync-backup/borg/src/borg/testsuite/archiver/create_cmd_test.py
+
+Purpose: comprehensive integration coverage for `borg create`: filesystem metadata preservation, path sanitation, stdin/command-sourced content, path list ingestion, include/exclude patterns, cache/status modes, JSON/log output, special files, compression, large data, dataless/nodump exclusions, tags, and platform-specific behavior.
+
+Important APIs/types/functions: tests use the shared `cmd`, `create_test_files`, `create_regular_file`, `assert_dirs_equal`, cache/tag helpers, timestamp helpers, platform probes, `Repository`, `Manifest`, Borg `zeros`, exceptions `CommandError` and `BackupPermissionError`, and platform flag APIs. Parametrization runs local, remote, and binary variants where possible.
+
+Control flow: baseline tests create representative file trees, run repo creation and archive creation, extract, list, info, and compare output. Path tests verify POSIX archive paths, MSYS2 warnings, duplicate roots, unreadable parents, slash-dot root stripping, stdin names, `..` rejection, and pattern roots. Input-source tests cover stdin content, content from commands, failed/missing commands, paths from stdin, commands, and shell commands. Pattern/tag/cache tests cover excludes, exclude-tag preservation, path sanitation, repeated files, dry run, progress, file status letters/counters, files-cache modes, files-changed modes, topical filters, JSON archive metadata, explicit hostname/username, and tags. Special/platform tests cover Unix sockets, birthtime omission, FIFOs via `--read-special`, broken symlinks, JSON logging, big zero/random files, multiple compression algorithms, dataless cloud-file exclusion, and nodump directory exclusion.
+
+State and persistence behavior: creates many repositories/archives and mutates input trees, file modes, timestamps, flags, links, FIFOs, sockets, xattrs/metadata, environment variables, and output directories. Some tests verify no archive is persisted after dry runs or failed external commands. Cache state drives unchanged/modified/add status expectations.
+
+Dependencies and integration points: exercises create command interactions with archive metadata, manifest, cache/files-cache, chunking, compression, pattern engine, platform metadata, stdin/subprocess handling, JSON/logging, and extraction/list/info commands used as verification oracles.
+
+Risks: high platform sensitivity around Windows, MSYS2, Cygwin, birthtime, filesystem flags, roots/fakeroot, timestamp granularity, permissions, and special files. Large-data tests can be resource-heavy. Some status expectations depend on Borg's documented but non-obvious cache behavior where newer files may appear added rather than unchanged.
+
+Test signals: very broad end-to-end coverage for create correctness. Strong signals include archive list contents, extracted byte-for-byte comparisons, metadata equality, expected warnings/errors, JSON schema checks, and repository check passing after error-handling scenarios.

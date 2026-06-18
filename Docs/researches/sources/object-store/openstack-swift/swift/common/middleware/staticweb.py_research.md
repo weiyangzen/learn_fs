@@ -1,0 +1,15 @@
+# sources/object-store/openstack-swift/swift/common/middleware/staticweb.py
+
+Purpose: Implements the `staticweb` WSGI middleware, allowing Swift containers to behave like static web sites for GET/HEAD requests. It resolves container metadata such as `web-index`, `web-error`, `web-listings`, `web-listings-css`, `web-listings-label`, and `web-directory-type` into index-object lookup, custom error pages, generated HTML listings, and directory-marker handling.
+
+Important APIs and types: `_StaticWebContext` is the per-request `WSGIContext` that owns subrequests and response transformation. `StaticWeb` is the paste filter object and `filter_factory()` registers `staticweb` in Swift info. Key methods are `_get_container_info()`, `_listing()`, `_error_response()`, `_redirect_with_slash()`, `handle_container()`, and `handle_object()`.
+
+Control flow: `StaticWeb.__call__()` only engages after auth middleware has installed `swift.authorize`, on valid `/v1/account/container[/object]` GET/HEAD requests, and normally only for anonymous or `.wsgi.tempurl` users unless `X-Web-Mode: true` is present. Container requests authorize read ACLs before serving listings or index objects. Object requests first try the object, then treat configured directory-marker content types as not found, then attempt `index` lookup and listing/redirect fallback. Custom error handling replays selected 401/404 responses through an error object named by status code plus configured suffix.
+
+State and persistence: No durable state is owned by this middleware. It reads persisted container metadata and object metadata through `get_container_info()` and proxy subrequests, then stores transient metadata fields on the context for the current request. Generated listings are synthetic responses with `X-Backend-Content-Generator: staticweb`, which TempURL later recognizes.
+
+Dependencies and integration points: Depends on Swift WSGI helpers, `get_container_info`, `tempurl.get_temp_url_info`, `swift.authorize`, and standard Swift listing JSON. It must be placed after auth in the proxy pipeline. It cooperates with TempURL prefix signatures by preserving tempurl query parameters in generated listing links, and with logging through `swift.source = SW`.
+
+Risks: HTML listing generation depends on correct escaping and quote behavior; path prefix and tempurl prefix interactions are easy to regress. Redirects intentionally drop TempURL parameters in some cases, so broad prefix URLs need careful testing. Directory-marker detection treats content length `<= 1` as a directory object. Error-page lookup reuses previous response state and must avoid replacing successful app responses incorrectly.
+
+Test signals: Coverage should exercise anonymous versus authenticated access, `X-Web-Mode`, index resolution, listing disabled/enabled flows, custom CSS path construction, error object fallback, tempurl prefix listings, directory-marker handling, slash redirects, and non-GET/HEAD pass-through. Local source tree search found integration references in proxy pipeline ordering, but no local `test/` directory in this checkout.

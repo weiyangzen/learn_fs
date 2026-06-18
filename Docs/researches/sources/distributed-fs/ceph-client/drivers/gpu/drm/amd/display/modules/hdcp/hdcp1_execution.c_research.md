@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/modules/hdcp/hdcp1_execution.c
+
+Purpose: Implements HDCP 1.x action execution for HDMI/DVI and DP state machines. It performs receiver capability checks, BKSV validation, KSV readiness checks, R0/Ri availability, repeater topology validation, KSV list reads, V prime validation, encryption enabling, link maintenance, and DP-specific CPIRQ checks.
+
+Important APIs and functions: Public functions are `mod_hdcp_execute_and_set`, `mod_hdcp_hdcp1_execution`, and `mod_hdcp_hdcp1_dp_execution`. Internal action functions include `validate_bksv`, `check_ksv_ready`, `check_hdcp_capable_dp`, `check_r0p_available_dp`, `check_link_integrity_dp`, `check_no_reauthentication_request_dp`, `check_no_max_cascade`, `check_no_max_devs`, `get_device_count`, `check_device_count`, `wait_for_active_rx`, `exchange_ksvs`, `computations_validate_rx_test_for_repeater`, `authenticated`, `wait_for_ready`, `read_ksv_list`, `determine_rx_hdcp_capable_dp`, `wait_for_r0_prime_dp`, and `authenticated_dp`.
+
+Control flow: Each state execution validates the expected event type, then runs a sequence of DDC/PSP/helper actions through `mod_hdcp_execute_and_set`, which records PASS/FAIL in the transition input and emits trace lines. HDMI/DVI starts by reading BKSV/BCAPS, exchanges AN/AKSV/BKSV and optional AINFO, validates R0 and receiver, enables encryption, then handles repeater KSV readiness/list validation if needed. DP starts by checking BCAPS capability, exchanges KSVs, waits for R0 prime via CPIRQ/watchdog, validates receiver, monitors link integrity/reauth requests, and enables MST stream encryption when applicable.
+
+State and persistence: This file updates `hdcp->auth.msg.hdcp1` buffers and sizes, `hdcp->auth.trans_input.hdcp1` flags, connection trace attempt/downstream counts, and display encryption state indirectly through PSP calls. It does not own long-term storage beyond the `mod_hdcp` object passed in.
+
+Dependencies and integration points: Includes `hdcp.h`; uses DRM HDCP macros such as `DRM_HDCP_MAX_CASCADE_EXCEEDED`, `DRM_HDCP_MAX_DEVICE_EXCEEDED`, `DRM_HDCP_NUM_DOWNSTREAM`, DP BSTATUS/BCAPS bits, DDC read/write helpers, PSP session/encryption/validation helpers, and top-level event/state helpers.
+
+Risks: `validate_bksv` casts a local byte array to `uint64_t *`, which can raise alignment concerns on strict architectures even though the source buffer is small. Device count logic intentionally allows `1 + downstream >= active displays` for MST internal-panel quirks; this is policy-sensitive. Event-type mismatches mark unexpected events and skip work, so timer/CPIRQ sequencing must be exact. KSV list size is `device_count * 5` and depends on prior max-device checks to stay within buffer capacity.
+
+Test signals: HDCP1 BKSV bit-count validation, invalid BKSV rejection, DP capability/R0 ready/link failure/reauth bits, repeater max cascade/device failures, zero device count rejection, MST active display count policy, KSV list size bounds, PASS/FAIL transition flag behavior, and event sequencing for callback, CPIRQ, and watchdog timeout paths.

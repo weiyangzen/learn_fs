@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_autoclose.py
+
+Purpose: verifies Python/SWIG handle autoclose behavior for cursors, sessions, and connections. It ensures use-after-close produces catchable errors and subordinate handles become invalid when parent handles close.
+
+Important APIs are `session.create`, cursor insert/next/compare/close, `session.close`, `close_conn`, `truncate`, and assertion helpers matching exception messages. Control flow creates a table, opens cursors, closes cursor/session/connection in different orders, and asserts later operations fail with `wt_cursor.* is None`, `wt_session.* is None`, or `connection is closed`. It also validates two special cases: `truncate` allows null cursor arguments, while `Cursor.compare` rejects closed or null cursor arguments. State is handle lifetime rather than durable data. Risks include platform-dependent exception class (`TypeError` on Darwin, `RuntimeError` elsewhere) and SWIG message changes. Test signals are precise exception type/message matches and successful null-truncate behavior.

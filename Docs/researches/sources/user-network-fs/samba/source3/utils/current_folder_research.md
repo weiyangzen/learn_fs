@@ -1,0 +1,132 @@
+# Folder Research: sources/user-network-fs/samba/source3/utils
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 118
+- Recursive researched files: 118
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/user-network-fs/samba/source3/utils/clirap2.c`
+- `sources/user-network-fs/samba/source3/utils/clirap2.h`
+- `sources/user-network-fs/samba/source3/utils/conn_tdb.c`
+- `sources/user-network-fs/samba/source3/utils/conn_tdb.h`
+- `sources/user-network-fs/samba/source3/utils/dbwrap_tool.c`
+- `sources/user-network-fs/samba/source3/utils/dbwrap_torture.c`
+- `sources/user-network-fs/samba/source3/utils/destroy_netlogon_creds_cli.c`
+- `sources/user-network-fs/samba/source3/utils/eventlogadm.c`
+- `sources/user-network-fs/samba/source3/utils/interact.c`
+- `sources/user-network-fs/samba/source3/utils/interact.h`
+- `sources/user-network-fs/samba/source3/utils/log2pcaphex.c`
+- `sources/user-network-fs/samba/source3/utils/mdsearch.c`
+- `sources/user-network-fs/samba/source3/utils/mvxattr.c`
+- `sources/user-network-fs/samba/source3/utils/net.c`
+- `sources/user-network-fs/samba/source3/utils/net.h`
+- `sources/user-network-fs/samba/source3/utils/net_ads.c`
+- `sources/user-network-fs/samba/source3/utils/net_ads_gpo.c`
+- `sources/user-network-fs/samba/source3/utils/net_ads_join_dns.c`
+- `sources/user-network-fs/samba/source3/utils/net_afs.c`
+- `sources/user-network-fs/samba/source3/utils/net_afs.h`
+- `sources/user-network-fs/samba/source3/utils/net_cache.c`
+- `sources/user-network-fs/samba/source3/utils/net_conf.c`
+- `sources/user-network-fs/samba/source3/utils/net_conf_util.c`
+- `sources/user-network-fs/samba/source3/utils/net_conf_util.h`
+- `sources/user-network-fs/samba/source3/utils/net_dns.c`
+- `sources/user-network-fs/samba/source3/utils/net_dns.h`
+- `sources/user-network-fs/samba/source3/utils/net_dom.c`
+- `sources/user-network-fs/samba/source3/utils/net_eventlog.c`
+- `sources/user-network-fs/samba/source3/utils/net_file.c`
+- `sources/user-network-fs/samba/source3/utils/net_g_lock.c`
+- `sources/user-network-fs/samba/source3/utils/net_group.c`
+- `sources/user-network-fs/samba/source3/utils/net_groupmap.c`
+- `sources/user-network-fs/samba/source3/utils/net_help.c`
+- `sources/user-network-fs/samba/source3/utils/net_help_common.c`
+- `sources/user-network-fs/samba/source3/utils/net_help_common.h`
+- `sources/user-network-fs/samba/source3/utils/net_idmap.c`
+- `sources/user-network-fs/samba/source3/utils/net_idmap_check.c`
+- `sources/user-network-fs/samba/source3/utils/net_idmap_check.h`
+- `sources/user-network-fs/samba/source3/utils/net_join.c`
+- `sources/user-network-fs/samba/source3/utils/net_lookup.c`
+- `sources/user-network-fs/samba/source3/utils/net_notify.c`
+- `sources/user-network-fs/samba/source3/utils/net_offlinejoin.c`
+- `sources/user-network-fs/samba/source3/utils/net_printing.c`
+- `sources/user-network-fs/samba/source3/utils/net_proto.h`
+- `sources/user-network-fs/samba/source3/utils/net_rap.c`
+- `sources/user-network-fs/samba/source3/utils/net_registry.c`
+- `sources/user-network-fs/samba/source3/utils/net_registry_check.c`
+- `sources/user-network-fs/samba/source3/utils/net_registry_check.h`
+- `sources/user-network-fs/samba/source3/utils/net_registry_util.c`
+- `sources/user-network-fs/samba/source3/utils/net_registry_util.h`
+- `sources/user-network-fs/samba/source3/utils/net_rpc.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_audit.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_conf.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_printer.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_registry.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_rights.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_samsync.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_service.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_sh_acct.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_shell.c`
+- `sources/user-network-fs/samba/source3/utils/net_rpc_trust.c`
+- `sources/user-network-fs/samba/source3/utils/net_sam.c`
+- `sources/user-network-fs/samba/source3/utils/net_serverid.c`
+- `sources/user-network-fs/samba/source3/utils/net_share.c`
+- `sources/user-network-fs/samba/source3/utils/net_status.c`
+- `sources/user-network-fs/samba/source3/utils/net_tdb.c`
+- `sources/user-network-fs/samba/source3/utils/net_time.c`
+- `sources/user-network-fs/samba/source3/utils/net_user.c`
+- `sources/user-network-fs/samba/source3/utils/net_usershare.c`
+- `sources/user-network-fs/samba/source3/utils/net_util.c`
+- `sources/user-network-fs/samba/source3/utils/net_vfs.c`
+- `sources/user-network-fs/samba/source3/utils/net_witness.c`
+- `sources/user-network-fs/samba/source3/utils/netlookup.c`
+- `sources/user-network-fs/samba/source3/utils/nmblookup.c`
+- `sources/user-network-fs/samba/source3/utils/ntlm_auth.c`
+- `sources/user-network-fs/samba/source3/utils/ntlm_auth.h`
+- `sources/user-network-fs/samba/source3/utils/ntlm_auth_diagnostics.c`
+- `sources/user-network-fs/samba/source3/utils/ntlm_auth_proto.h`
+- `sources/user-network-fs/samba/source3/utils/passwd_proto.h`
+- `sources/user-network-fs/samba/source3/utils/passwd_util.c`
+- `sources/user-network-fs/samba/source3/utils/pdbedit.c`
+- `sources/user-network-fs/samba/source3/utils/profiles.c`
+- `sources/user-network-fs/samba/source3/utils/py_net.c`
+- `sources/user-network-fs/samba/source3/utils/py_net.h`
+- `sources/user-network-fs/samba/source3/utils/regedit.c`
+- `sources/user-network-fs/samba/source3/utils/regedit.h`
+- `sources/user-network-fs/samba/source3/utils/regedit_dialog.c`
+- `sources/user-network-fs/samba/source3/utils/regedit_dialog.h`
+- `sources/user-network-fs/samba/source3/utils/regedit_hexedit.c`
+- `sources/user-network-fs/samba/source3/utils/regedit_hexedit.h`
+- `sources/user-network-fs/samba/source3/utils/regedit_list.c`
+- `sources/user-network-fs/samba/source3/utils/regedit_list.h`
+- `sources/user-network-fs/samba/source3/utils/regedit_samba3.c`
+- `sources/user-network-fs/samba/source3/utils/regedit_treeview.c`
+- `sources/user-network-fs/samba/source3/utils/regedit_treeview.h`
+- `sources/user-network-fs/samba/source3/utils/regedit_valuelist.c`
+- `sources/user-network-fs/samba/source3/utils/regedit_valuelist.h`
+- `sources/user-network-fs/samba/source3/utils/regedit_wrap.c`
+- `sources/user-network-fs/samba/source3/utils/sharesec.c`
+- `sources/user-network-fs/samba/source3/utils/smb_prometheus_endpoint.c`
+- `sources/user-network-fs/samba/source3/utils/smbcacls.c`
+- `sources/user-network-fs/samba/source3/utils/smbcontrol.c`
+- `sources/user-network-fs/samba/source3/utils/smbcquotas.c`
+- `sources/user-network-fs/samba/source3/utils/smbfilter.c`
+- `sources/user-network-fs/samba/source3/utils/smbget.c`
+- `sources/user-network-fs/samba/source3/utils/smbpasswd.c`
+- `sources/user-network-fs/samba/source3/utils/smbtree.c`
+- `sources/user-network-fs/samba/source3/utils/status.c`
+- `sources/user-network-fs/samba/source3/utils/status.h`
+- `sources/user-network-fs/samba/source3/utils/status_json.c`
+- `sources/user-network-fs/samba/source3/utils/status_json.h`
+- `sources/user-network-fs/samba/source3/utils/status_json_dummy.c`
+- `sources/user-network-fs/samba/source3/utils/status_profile.c`
+- `sources/user-network-fs/samba/source3/utils/status_profile.h`
+- `sources/user-network-fs/samba/source3/utils/status_profile_dummy.c`
+- `sources/user-network-fs/samba/source3/utils/testparm.c`
+- `sources/user-network-fs/samba/source3/utils/wscript_build`
+- `sources/user-network-fs/samba/source3/utils/wspsearch.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/ha/TestObserverReadProxyProvider.java
+
+Purpose: validates `ObserverReadProxyProvider` client-side routing for HDFS observer reads, active writes, standby fallback, observer state changes, non-`ClientProtocol` proxies, and HA-state probe timeout behavior. The tests use mocked `ClientProtocol` endpoints instead of a real cluster so they can precisely model active, standby, observer, unreachable, slow, and retry-on-active responses.
+
+Important APIs and types: `ObserverReadProxyProvider<T>`, `ClientHAProxyFactory`, `HAProxyFactory`, `NNProxyInfo`, `ClientProtocol`, `GetUserMappingsProtocol`, `HAServiceState`, `ObserverRetryOnActiveException`, `StandbyException`, `RemoteException`, `Future<HAServiceState>`, and the provider configuration keys `NAMENODE_HA_STATE_PROBE_TIMEOUT` and `OBSERVER_PROBE_RETRY_PERIOD_KEY`. `NameNodeAnswer` is the local state machine used by Mockito `Answer` objects.
+
+Control flow: `setupProxyProvider` builds logical nameservice configuration, registers mocked proxies by address, disables random failover order, sets observer-read enabled, and injects a custom proxy factory. Read calls are represented by `checkAccess("/", READ)` and writes by `reportBadBlocks`. Tests then mutate `NameNodeAnswer` flags and assert `proxyProvider.getLastProxy().proxyInfo` points at the expected endpoint. Timeout tests call `getHAServiceStateWithTimeout` with mocked futures and assert returned states, cancellation, and log messages.
+
+State and persistence behavior: no persistent namespace state is used; all state is in the proxy provider's current/last proxy index and the mock answers. The test explicitly covers state transitions from observer to active or standby, unreachable observers, retry-active exceptions that force active service, and slow HA-state probes.
+
+Dependencies and integration points: integrates with Hadoop HA proxy configuration parsing, retry/failover provider logic, UGI-aware proxy creation, Mockito, and `GenericTestUtils.LogCapturer`. It is a narrow unit-style guard for client routing rather than NameNode server behavior.
+
+Risks and test signals: risks include stale observer choice, writes sent to observer/standby, delayed reads due to slow standby probes, failure to cancel timed-out probe tasks, and regressions for non-client HA proxy interfaces. Strong signals are endpoint assertions after every operation, cache/index behavior across observer recovery, log-count checks for timeout paths, and a JUnit timeout around the short-probe slow-node path.

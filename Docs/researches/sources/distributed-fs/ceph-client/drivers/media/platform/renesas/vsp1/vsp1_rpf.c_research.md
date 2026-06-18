@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/renesas/vsp1/vsp1_rpf.c
+
+Purpose: implements the Read Pixel Formatter entity, the VSP1 block that reads input image planes from memory or VSPX/IIF input and feeds the pipeline. It programs input strides, formats, color conversion, alpha handling, crop windows, plane addresses, interlaced AUTOFLD commands, and partition-specific reads.
+
+Important APIs/functions: `vsp1_rpf_create()` allocates and registers an RPF subdevice. Entity callbacks are `rpf_configure_stream()`, `rpf_configure_frame()`, `rpf_configure_partition()`, and `rpf_partition()`. `vsp1_rpf_configure_autofld()` fills a pre extended display-list command for interlaced top/bottom field addresses. `vsp1_rpf_write()` writes RPF-indexed registers into a display-list body.
+
+Control flow/state: stream configuration uses `rpf->fmtinfo`, `rpf->format`, active sink/source pad formats, and pipeline context. It writes `VI6_RPF_SRCM_PSTRIDE`, `VI6_RPF_INFMT`, `VI6_RPF_DSWAP`, optional Gen4 `EXT_INFMT*`, output location through BRx compose rectangles, alpha selection, multiplier setup, and disables mask/color-keying. Frame configuration writes current alpha and propagates it to UDS. Partition configuration starts from `rpf->mem`, applies crop and interlace adjustments, computes per-plane DMA offsets, manually swaps U/V addresses for Gen3+ 3-planar swapped formats, then writes addresses or AUTOFLD data.
+
+Dependencies/integration: depends on `vsp1_rwpf` for shared subdevice state, `vsp1_video` for queued buffer memory, `vsp1_pipe` for alpha/partition helpers, `vsp1_dl` for display lists, and VI6 register macros. It integrates with BRU/BRS through `brx_input` and with VSPX by skipping memory-output-only configuration when `pipe->iif` is present.
+
+Risks and test signals: DMA address calculations are sensitive to crop alignment, subsampling, bytesperline, and interlaced field layout. Gen3 three-plane U/V swap and Gen4 extended input formats are variant-sensitive. Test with all supported planar/semi-planar/packed formats, cropped YUV with even alignment, alpha and premultiplied-alpha inputs, interlaced pipelines, BRx positioning, and VSPX raw/config transfers.

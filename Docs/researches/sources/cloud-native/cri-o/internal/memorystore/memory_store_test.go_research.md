@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/memorystore/memory_store_test.go
+
+Purpose: unit tests for the generic memory store using sandbox values. Tests verify adding and retrieving by ID, missing lookup returning nil, deletion, listing one value, `First` with matching and nonmatching filters, and `ApplyAll` invoking a reducer. State is a fresh store per test plus sandbox fixture from the suite. Dependencies include Ginkgo/Gomega, sandbox type, and memorystore. Risks include single-item cases not testing sort order, duplicate IDs, concurrent access, nil reducers, or reducer race behavior. Test signals protect the core API contract and zero-value missing results.

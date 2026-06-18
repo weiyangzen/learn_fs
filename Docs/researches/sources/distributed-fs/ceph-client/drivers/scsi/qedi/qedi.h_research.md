@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/qedi/qedi.h
+
+Purpose: this is the central private header for the qedi iSCSI offload driver. It defines constants, queue sizes, DMA data structures, tracing records, UIO/LL2 metadata, task/CID maps, and the top-level `struct qedi_ctx` used across qedi source files.
+
+Important APIs and types: key constants include `QEDI_MAX_ISCSI_TASK`, `QEDI_MAX_ISCSI_CONNS_PER_HBA`, `QEDI_ISCSI_MAX_BDS_PER_CMD`, `QEDI_SQ_SIZE`, `QEDI_CQ_SIZE`, `QEDI_CMDQ_SIZE`, `QEDI_BDQ_NUM`, `QEDI_BDQ_BUF_SIZE`, local port allocation bounds, and link/recovery/shutdown flags. Important structs include `qedi_uio_ctrl`, `qedi_uio_dev`, `qedi_glbl_q_params`, `global_queue`, `qedi_fastpath`, `qedi_io_work`, `iscsi_cid_queue`, `qedi_portid_tbl`, `qedi_itt_map`, `qedi_io_log`, `qedi_bdq_buf`, `qedi_work`, `qedi_percpu_s`, and especially `qedi_ctx`. The inline `qedi_get_task_mem` indexes firmware task-context blocks by TID.
+
+State and persistence: `qedi_ctx` is the per-adapter in-memory root. It stores SCSI/PCI/QED handles, device info, interrupt info, global queues, UIO state, LL2 receive list/thread, error and lifecycle flags, MAC/source IP, BDQ buffers and producer registers, NVM iSCSI image buffer, CID and endpoint tables, task contexts and ITT maps, link state, workqueues for TMF/offload/DPC/recovery, task index bitmap, tracing ring, SGL path counters, boot sysfs kset, and statistics lock. None of this is persisted by this header; it defines runtime structures backed by allocations in implementation files.
+
+Control flow implications: queue and task constants constrain firmware command submission in `qedi_fw.c` and queue allocation in `qedi_main.c`. The `QEDI_NEXT_RX_IDX` macro controls LL2 RX ring wrap behavior. Flags such as `QEDI_IN_RECOVERY`, `QEDI_IN_OFFLINE`, `QEDI_IN_SHUTDOWN`, and `QEDI_BLOCK_IO` are shared synchronization signals across recovery, disconnect, and I/O submission paths.
+
+Dependencies and integration points: the header pulls in SCSI transport iSCSI, libiscsi, SCSI host, UIO, QED common/iSCSI/LL2 interfaces, qedi debug declarations, versioning, NVM iSCSI config, and the qedi hardware software interface. It is included by most qedi implementation files and therefore is a high-blast-radius contract.
+
+Risks: structure layout changes can affect many call sites and firmware assumptions. The driver has several fixed-size tables: 4096 tasks, 1024 connections, 256 BDQ entries, 2048 trace entries, and a firmware max of 255 BDs per command. Scatter-gather splitting and task-ID reuse must not exceed these bounds. Shared flags and lists require disciplined locking; the header documents locks but cannot enforce their use.
+
+Test signals: build coverage for all qedi objects, probe-time allocation of `qedi_ctx` and queues, task index allocation/free stress, high queue-depth I/O with large SGLs, recovery/offline/shutdown flag transitions, debugfs I/O trace dumping, UIO open/close behavior, and static analysis for array bounds against the constants in this header.

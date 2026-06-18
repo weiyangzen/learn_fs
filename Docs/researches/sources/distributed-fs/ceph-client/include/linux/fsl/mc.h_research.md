@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/fsl/mc.h
+
+Purpose: declares the Freescale/NXP Management Complex bus public interface for DPAA2 objects, drivers, resources, MSI interrupts, MC command portals, DPRC container management, and basic DPBP/DPCON object APIs.
+
+Important APIs and types: `struct fsl_mc_driver` wraps driver-core registration with MC match ids, probe/remove/shutdown/suspend/resume callbacks, and `driver_managed_dma`. Resource types include DPMCP, DPBP, DPCON, and IRQ pools. `struct fsl_mc_resource`, `struct fsl_mc_device_irq`, `struct fsl_mc_obj_desc`, and `struct fsl_mc_device` model allocatable resources, IRQs, firmware object descriptors, and Linux devices. Command helpers define `struct mc_cmd_header`, `enum mc_cmd_status`, command flags, `mc_encode_cmd_header()`, token/object/version readers, and `struct fsl_mc_io` portal state with mutex or raw spinlock serialization. Registration/resource APIs include `fsl_mc_driver_register()`, `module_fsl_mc_driver()`, portal allocate/free, object allocate/free, IRQ allocate/free, endpoint lookup, MSI domain creation, DPRC scan/remove/setup/cleanup/reset, IRQ pool population/cleanup, and DPBP/DPCON open/close/enable/disable/reset/attribute/notification operations.
+
+Control flow: MC bus discovery creates DPRC/container devices, scans child firmware objects, creates `fsl_mc_device` instances, allocates portals/resources/IRQs, and binds matching `fsl_mc_driver`s. Drivers send commands through an `fsl_mc_io` portal, using tokens from open commands, then close/free resources on remove. DPRC code rescans containers and removes devices that no longer exist in firmware.
+
+State and persistence: Linux-visible state mirrors MC firmware object state: object ids, handles/tokens, resource pools, ICIDs, regions, IRQs, portals, and device links. Hardware/firmware object configuration persists according to MC firmware semantics; this header defines command ABI packing and runtime ownership.
+
+Dependencies and integration points: depends on driver core, module device tables, interrupts/MSI domains, UAPI `fsl_mc.h`, IOMMU grouping, VFIO-style managed DMA, DPAA2 Ethernet/crypto/switch drivers, and irqchip ITS support.
+
+Risks and test signals: risks include command header endian/packing errors, portal serialization misuse in atomic context, resource pool leaks, IRQ pool exhaustion, stale object descriptors after rescan, wrong IOMMU container grouping, and driver-managed DMA bypass mistakes. Tests should cover module alias matching, DPRC scan hotplug/remove, portal command status handling, IRQ allocation/free, DPBP/DPCON operations, endpoint lookup, suspend/resume/shutdown callbacks, and concurrent command submission through shared portals.

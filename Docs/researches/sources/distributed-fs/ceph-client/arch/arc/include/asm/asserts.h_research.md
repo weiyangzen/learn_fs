@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/asserts.h
+
+Purpose: configuration-vs-hardware validation helpers for ARC optional features. Important APIs/types/functions: declares `chk_opt_strict`, `chk_opt_weak`, and macros `CHK_OPT_STRICT`/`CHK_OPT_WEAK`. Control flow: macros pass the option name, probed hardware existence, and `IS_ENABLED()` value to runtime checking functions. State and persistence: no state here; called checks may warn or panic. Dependencies/integration: used by DSP and other feature probing code to validate `.config`. Risks: choosing strict vs weak incorrectly either panics unnecessarily or allows unsupported hardware use. Test signals: boot on hardware with/without optional DSP/AGU/FPU features and negative config tests.

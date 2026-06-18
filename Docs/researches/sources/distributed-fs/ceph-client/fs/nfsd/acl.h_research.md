@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfsd/acl.h
+
+Purpose: declares shared NFSD NFSv4 ACL helpers used by server XDR/procedure/attribute code. It forward declares ACL, filehandle, request, attrs, and file type structures and exposes ACL size, who-type, XDR writer, POSIX ACL sorting, ACL retrieval, and ACL-to-attribute conversion APIs.
+
+There is no runtime control flow in this header. State is owned by implementation files and passed through `struct nfs4_acl`, `struct nfsd_attrs`, and POSIX ACL pointers. Dependencies include NFSD `svc_fh`, `svc_rqst`, NFSv4 file type definitions, XDR streams, and POSIX ACL handling. Integration points are NFSv4 GETATTR/SETATTR ACL handling and draft POSIX ACL support. Risks include prototype drift with implementation, ACL memory ownership ambiguity for callers, and interoperability between NFSv4 ACL and POSIX ACL semantics. Test signals: NFSv4 ACL get/set, ACL XDR encoding, POSIX ACL sorting ranges, and builds with/without experimental POSIX ACL config.

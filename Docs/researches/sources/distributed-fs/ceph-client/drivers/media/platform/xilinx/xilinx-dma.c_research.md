@@ -1,0 +1,13 @@
+# Research: sources/distributed-fs/ceph-client/drivers/media/platform/xilinx/xilinx-dma.c
+
+Purpose: implements V4L2 video-node DMA endpoints for Xilinx video pipelines. It registers capture/output video devices, owns vb2 queues, verifies format consistency against the connected subdevice, submits interleaved DMAEngine transfers, and coordinates media pipeline stream state across one output DMA and at most one input DMA.
+
+Important APIs/types: `struct xvip_dma_buffer` wraps `vb2_v4l2_buffer`; `xvip_dma_init/cleanup` are exported to the composite driver. Core helpers are `xvip_dma_remote_subdev`, `xvip_dma_verify_format`, `xvip_pipeline_start_stop`, `xvip_pipeline_prepare/cleanup/set_stream`, vb2 ops, and V4L2 ioctl ops for querycap, enum/get/set/try format, buffers, and stream on/off.
+
+Control flow: initialization sets default YUYV 1920x1080 format, creates a one-pad media entity, configures video_device/vb2 queue, requests DMA channel `port%u`, computes alignment, and registers the video node. Buffer queueing fills a `dma_interleaved_template` for capture or output, computes line size/interline gap from format and bytesperline, prepares a DMA descriptor, records the buffer on a spinlocked queue, submits, and issues pending when streaming. Start streaming starts the media pipeline, verifies remote format, validates pipeline topology, starts pending DMA, then starts upstream subdevices. Stop streaming stops subdevices, terminates DMA, cleans pipeline state, stops media pipeline, and returns queued buffers as error.
+
+State and persistence: per-DMA state includes active pixel format, format info, sequence counter, queued buffer list, DMA channel, and embedded pipeline object. `xvip_pipeline` tracks `use_count`, `stream_count`, `num_dmas`, and output DMA under a mutex. No persistent storage is used.
+
+Dependencies and integration: uses DMAEngine interleaved API, Xilinx DMA channel naming, media-controller pipeline API, V4L2 video_device/vb2, contiguous DMA memory, and shared `xilinx-vip` format helpers.
+
+Risks: pipeline start ignores the return from `xvip_pipeline_set_stream`, so a subdevice start failure after DMA issue may not propagate. Format verification requires exact code/size/colorspace match and returns `-EINVAL`/`-EPIPE` for graph mismatch. Buffer completion removes queued entries under spinlock; descriptor preparation failures must return buffers as error. Test signals include `v4l2-compliance` on capture/output nodes, DMAEngine failure paths, media pipeline topology validation, stream-on/off sequencing with one or two DMA endpoints, and mismatched subdev format rejection.

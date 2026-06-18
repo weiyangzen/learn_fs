@@ -1,0 +1,19 @@
+# sources/test-tools/stress-ng/stress-stream.c
+
+## Purpose
+Implements the `stream` stressor, a STREAM-inspired memory bandwidth, cache, floating-point, and memory-layout exerciser. It deliberately warns that results are not valid STREAM benchmark submissions; the goal is stressing read/write bandwidth, cache pressure, prefetch/non-temporal store paths, optional random indexing, and optional verification.
+
+## Important APIs, Types, And Functions
+The stressor exports `stress_stream_info` with `CLASS_CPU | CLASS_FP | CLASS_CPU_CACHE | CLASS_MEMORY`, optional verification, and options for discontiguous mappings, index depth, L3 size, madvise mode, mlock, and prefetch. `stress_stream_madvise_info_t` maps option names to `madvise()` constants. The large macro families generate copy, scale, add, and triad kernels for index depths 0 through 3, with prefetch variants and non-temporal store variants when available. `stress_stream_mmap()` allocates named anonymous buffers, optionally locks pages, and applies selected `madvise()`. `get_stream_L3_size()` discovers CPU cache size and scales it by NUMA node count. `stress_stream_init_index()` creates randomized permutation arrays, `stress_stream_exercise()` dispatches the selected kernel sequence, and `stress_stream_verify()` compares checksums across iterations using both numeric tolerance and byte-formatted fallback comparison.
+
+## Control Flow
+`stress_stream()` catches SIGILL for architecture-specific optimized paths, reads options, discovers or accepts L3 size, divides the working set across instances, rounds element count to an unroll-friendly multiple of eight, and allocates three double buffers plus optional index arrays. It seeds the pseudo-random generator, waits at the global stress-ng start barrier, optionally makes physical pages discontiguous, then repeatedly initializes data, runs the copy/scale/add/triad sequence selected by `stream-index`, verifies when requested, and increments bogo operations. At shutdown it reports read, write, and floating-point rates if runtime is long enough, collects mmap residency/swap/contiguity stats, and unmaps every buffer.
+
+## State And Persistence
+All durable state is in process memory: three stream buffers, up to three index arrays, checksum history, byte/op counters, elapsed-kernel time, and saved random seeds used to regenerate deterministic input data. There is no filesystem persistence. Optional mlock, discontiguous mapping, madvise, and mmap stats interact with kernel VM state and page placement, but all mappings are cleaned up before return.
+
+## Dependencies And Integration Points
+Depends on stress-ng core helpers for options, sync barriers, logging, metrics, random numbers, mmap stats, CPU cache discovery, NUMA count, signal handling, non-temporal stores, target clones, and compiler pragma feature gates. Kernel integration is through anonymous mmap, madvise, mlock, NUMA/cache topology discovery, and optional architecture-specific instruction support. The option parser exposes `stream-madvise` as a method list derived from compile-time available advice constants.
+
+## Risks And Test Signals
+Working-set sizing depends on cache detection; failures fall back to built-in defaults and can change pressure characteristics. `stream-index` 1 to 3 greatly increases memory footprint through index arrays. `stream-prefetch` is disabled with an info message when compiler support is missing. Optional non-temporal and target-clone paths can SIGILL on unsuitable CPUs, so the SIGILL catch is important. Useful test signals are successful allocation/unmap, bogo progress, checksum stability under `--verify`, nonzero rate metrics after runs longer than about 4.5 seconds, and mmap stats showing expected swapped/contiguous behavior. A code-review signal is that the final mmap stats block samples buffer `b` twice and never samples `c`, which may underreport one buffer's residency.

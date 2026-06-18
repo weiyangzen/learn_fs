@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/checksum_64.S
+
+This 64-bit checksum implementation exports the same checksum ABI as the 32-bit file: `__csum_partial`, `csum_partial_copy_generic`, and `csum_ipv6_magic`. The main checksum path handles halfword alignment, then uses an aggressively scheduled 64-byte unrolled loop to avoid POWER6/POWER7 XER carry-chain stalls from back-to-back `adde`. It saves `r14-r16` only for the large loop and folds the 64-bit accumulator into a 32-bit checksum at the end.
+
+The copy/checksum variant uses macros that stamp `EX_TABLE` entries for source and destination operations. It aligns source to doubleword where possible, copies 64-byte chunks with paired loads/stores and checksum accumulation, then handles doubleword, word, halfword, and byte tails. Faults restore any nonvolatile registers used by the large loop and return zero, matching the generic checksum-copy contract. `csum_ipv6_magic` uses 64-bit loads for the two IPv6 addresses, adjusts length/protocol byte order under little endian, folds twice, complements, and returns a `__sum16`.
+
+Dependencies include the PowerPC ABI, `ppc_asm.h`, exception tables, and endian configuration. Risks include misfolding carry from 64-bit accumulation, byte-order mismatches in IPv6 pseudo-header handling, and exception recovery after the stack frame is active. Test signals are IPv4/IPv6 checksum selftests, network traffic under BE/LE kernels, and deliberate uaccess faults through checksum-copy callers.

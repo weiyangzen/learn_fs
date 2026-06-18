@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v2.h
+
+This header maps QMP V2 UFS PCS offsets. It defines PHY start, power-down control, TX amplitude and post-emphasis levels, RX stall/resync/min-Hibern8/signal-detect/PWM gear controls, and ready status. It contains no functions or software-managed state. UFS QMP PHY drivers integrate it through register init tables and readiness polling against a mapped PCS base. Dependencies are the include guard and shared register naming conventions. Risks include breaking UFS Hibern8 timing, PWM/HS gear behavior, or ready-status polling if offsets are wrong. Test signals include UFS PHY init, link startup, gear negotiation, Hibern8 entry/exit, and ready-status timeout absence.

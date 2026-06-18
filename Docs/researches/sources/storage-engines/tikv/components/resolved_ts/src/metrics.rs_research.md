@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resolved_ts/src/metrics.rs
+
+This file registers Prometheus metrics for the resolved-ts subsystem. The metrics cover pending command bytes, check-leader request sizes and counts, scan duration and task counts, minimum resolved-ts and safe-ts by leader/follower role, zero resolved-ts counts, memory quota usage, resolver readiness counts, follower lag histograms, and detailed timestamps for slow-region diagnosis.
+
+The metrics are exported as `lazy_static!` globals and are used by `endpoint.rs`, `scanner.rs`, `observer.rs`, `advance.rs`, and `resolver.rs`. `Endpoint::on_timeout` periodically collects `Stats` and writes gauges such as `RTS_MIN_RESOLVED_TS`, `RTS_LOCK_HEAP_BYTES_GAUGE`, and role-specific min-ts gauges. `Observer` increments and decrements pending channel bytes around scheduled command batches. `ScannerPool` records scan task lifecycle and initial backoff duration. `Resolver::resolve` increments fail-advance counters labeled by `TsSource`.
+
+No state is persisted beyond Prometheus process memory. The integration point is the global default registry via `prometheus::register_*`, so metric name stability matters for dashboards and alerts. Risks include typo compatibility, for example `RTS_MIN_LEADER_DUATION_TO_LAST_UPDATE_SAFE_TS`, and high-cardinality concerns are avoided by using fixed labels rather than region labels. Tests indirectly validate metrics through failpoint assertions of `RTS_CHANNEL_PENDING_CMD_BYTES` draining after quota-triggered re-registration.

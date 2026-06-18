@@ -1,0 +1,132 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/usb/host
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 118
+- Recursive researched files: 118
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/usb/host/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/bcma-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-atmel.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-brcm.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-dbg.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-exynos.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-fsl.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-fsl.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-grlib.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-hub.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-mem.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-mv.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-npcm7xx.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-omap.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-orion.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-platform.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-ppc-of.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-ps3.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-q.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-sched.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-sh.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-spear.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-st.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-sysfs.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-timer.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci-xilinx-of.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ehci.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-dbg.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-hub.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-mem.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-q.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-sched.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci-tds.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fhci.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/fsl-mph-dr-of.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/isp116x-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/isp116x.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/max3421-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/octeon-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/octeon-hcd.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-at91.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-da8xx.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-dbg.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-exynos.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-hub.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-mem.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-nxp.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-omap.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-platform.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-ppc-of.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-ps3.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-pxa27x.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-q.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-s3c2410.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-sa1111.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-sm501.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-spear.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci-st.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ohci.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/oxu210hp-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/pci-quirks.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/pci-quirks.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/r8a66597-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/r8a66597.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/sl811-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/sl811.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/sl811_cs.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/ssb-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-debug.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-grlib.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-hcd.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-hub.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-platform.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/uhci-q.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xen-hcd.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-caps.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-dbg.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-dbgcap.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-dbgcap.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-dbgtty.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-debugfs.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-debugfs.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-ext-caps.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-ext-caps.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-histb.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-hub.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-mem.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-mtk-sch.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-mtk.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-mtk.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-mvebu.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-mvebu.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-pci-renesas.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-pci.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-plat.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-plat.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-port.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-rcar-regs.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-rcar.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-ring.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-rzg3e-regs.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-rzv2m.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-rzv2m.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-sideband.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-tegra.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-trace.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci-trace.h`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci.c`
+- `sources/distributed-fs/ceph-client/drivers/usb/host/xhci.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

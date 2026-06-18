@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-leadtek-ltk500hd1829.c
+
+Purpose: This driver supports Leadtek LTK500HD1829 and LTK101B4029W MIPI-DSI panels using shared four-lane RGB888 video-burst setup and per-compatible vendor initialization tables. It reports fixed 720x1280 or 800x1280 modes, sequences `vcc`/`iovcc` regulators and reset GPIO, and registers with the DRM panel/DSI subsystems.
+
+Important APIs, types, and functions: `struct ltk500hd1829_cmd` stores two-byte vendor register writes. `struct ltk500hd1829_desc` maps a fixed mode to an init table and count. `ltk101b4029w_init[]` and `ltk500hd1829_init[]` contain page-based voltage, gamma, GIP, and timing configuration. `ltk500hd1829_prepare()` enables `vcc` then `iovcc`, pulses reset, writes the descriptor init sequence with `mipi_dsi_generic_write()`, exits sleep, and turns display on. `ltk500hd1829_unprepare()` sends display-off and sleep-in, waits 120 ms, then disables `iovcc` and `vcc`. `ltk500hd1829_get_modes()` duplicates descriptor mode and marks it preferred.
+
+Control flow: Probe fetches match data, resources, backlight, registers the panel, and attaches the DSI device. DSI parameters are fixed to four lanes, RGB888, video burst, low-power command mode, and no EoT. During prepare, any regulator, generic write, sleep-out, or display-on failure jumps to a cleanup label that disables already-enabled supplies. During normal unprepare, DSI sleep/display-off errors are logged but do not prevent power removal.
+
+State and persistence: Persistent software state is the descriptor and resource pointers stored in DSI drvdata. Hardware state persists only across a powered session and is dominated by the selected init table. There are no explicit enabled/prepared flags or cached brightness; external backlight state is owned by the DRM/backlight framework.
+
+Dependencies and integration points: The driver depends on DRM panel, MIPI-DSI, GPIO, regulator, OF match-data, and optional external backlight APIs. The bindings must provide `vcc`, `iovcc`, and optionally reset/backlight resources for the selected compatible. It integrates with DSI through `mipi_dsi_attach()` and with DRM through `drm_panel_funcs`.
+
+Risks: Both initialization arrays are vendor data with many undocumented register writes; copying or reordering commands can break panel power rails, gamma, or scan direction. Probe manually handles `-EPROBE_DEFER` logging for regulators instead of `dev_err_probe()` everywhere. The reset pulse is very short (`10-20 us`) and depends on panel timing tolerances. The DSI mode flags are not descriptor-specific even though the supported panels have different resolutions.
+
+Test signals: Validate that each compatible reports the expected mode and physical dimensions, DSI attach succeeds with four lanes, prepare writes all table entries without transfer errors, sleep/display-off failures still lead to power removal, and regulator sequencing is correct under error injection. Hardware tests should include repeated suspend/resume and visual checks for gamma/GIP orientation.

@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/include/asic_reg/sdma0/sdma0_4_0_sh_mask.h
+
+## Purpose
+`sdma0_4_0_sh_mask.h` defines bit positions and bit masks for SDMA0 4.0 registers. It is the field-level hardware contract used when driver code constructs, modifies, decodes, or logs SDMA register values. It complements the 4.0 offset header, which locates each register, and the 4.0 default header, which records baseline values.
+
+## Important APIs, Types, and Functions
+There are no functions or data types. The API is 1,567 preprocessor definitions with the generated naming pattern `SDMA0_REGISTER__FIELD__SHIFT` and `SDMA0_REGISTER__FIELD_MASK`. Major field families include VM controls (`VM_CNTL`, `VM_CTX_*`, `ACTIVE_FCN_ID`, `VIRT_RESET_REQ`, `VF_ENABLE`), context/public register type bitmaps, SDMA power and clock control, global `CNTL` interrupt/preemption/UTC controls, copy-engine tuning in `CHICKEN_BITS`, GB address configuration, status registers, phase quantum scheduling, power-gating FSM fields, EDC counters, atomic controls, UTCL1 redo/watermark/read/write/invalidate/XNACK/page fields, relaxed ordering controls, physical address decode, perf counters, MMHUB trust levels, IOV violation logging, and ULV controls.
+
+## Control Flow and State
+This file has no runtime control flow, but it defines how runtime code safely touches hardware state. The masks describe which bits are writable or readable for each behavior: queue enablement, ring size, swap mode, rptr writeback, VMID/privilege, IB enable/switching, doorbell enable/capture, context status, write-pointer update failures, watermarks, preemption, AQL, and mid-command replay state. GFX, PAGE, RLC0, and RLC1 queue blocks repeat the same field schema, which allows the driver to apply common logic to separate SDMA contexts while still using explicit register names.
+
+## Persistence and Dependencies
+The macros are compile-time constants, but the state they encode is persistent hardware state in SDMA registers. The header depends on the SDMA 4.0 register database and must match `sdma0_4_0_offset.h` exactly. Driver code often combines these masks with helpers such as field-preparation or read-modify-write macros; wrong masks can preserve, clear, or set unrelated hardware bits.
+
+## Integration Points, Risks, and Test Signals
+Integration points span the whole SDMA driver: firmware loading, VM/TLB invalidate handling, ring/IB setup, preemption, AQL queues, doorbells, power gating, SR-IOV, error reporting, and performance monitoring. Risks include truncated address fields (`*_ADDR_LO` fields commonly start at bit 2 or 5), incorrect VMID or privilege fields causing memory isolation failures, bad UTCL1 invalidate/XNACK masks causing hangs after VM faults, and status-mask drift that hides real idle or fault conditions. Because this is a 4.0-only field file, using it with 4.1 offsets can expose fields such as `VF_ENABLE`, `PHASE2_QUANTUM`, and PAGE queue fields that do not exist in the 4.1 headers read for this item. Test signals include field-level register programming audits, GPU VM fault/invalidation tests, SDMA copy/fill with multiple VMIDs, doorbell stress, ring preemption, AQL packet execution, perf counter selection, SR-IOV violation logging, and suspend/resume power-gating tests.

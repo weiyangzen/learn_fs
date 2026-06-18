@@ -1,0 +1,13 @@
+# sources/test-tools/syzkaller/tools/syz-declextract/declextract.go
+
+Purpose: `syz-declextract` runs a clang-based declaration extractor against a Linux kernel tree and turns discovered syscalls, ioctl/file operations, io_uring ops, netlink families, types, constants, coverage, and probe information into generated syzkaller descriptions in `sys/linux/auto.txt` plus an `.info` sidecar.
+
+Important APIs and flow: `main` loads manager config, builds a `clangtool.Config`, wires `probe` as `loadProbeInfo`, and calls `run`. `run` calls `prepare`, runs `pkg/declextract.Run`, writes generated descriptions and serialized interface info, reparses all descriptions, typechecks them, removes unused declarations, extracts constants, enriches interface metadata with manual-description and subsystem information, removes unused constants/includes, reformats through `ast.Parse`/`ast.Format`, and rewrites the auto file. `prepare` concurrently runs the clang tool, interface probing, syscall table rename map construction, and optional coverage loading. `buildSyscallRenameMap` finds `*.tbl` files for selected arches, parses syscall names to implementation names, and sorts candidates with Linux/AMD64 and 64-bit preference. `parseTblFile` filters unused, unsupported, and intentionally skipped syscalls.
+
+State and persistence: persistent outputs are `cfg.autoFile`, `cfg.autoFile+".info"`, clang cache in manager workdir, interface probe cache `interfaces.json`, and possible syz-manager side effects from `-mode iface-probe`. The in-memory state includes `declextract.Result`, parsed AST descriptions, unused node lists, coverage records, and syscall rename maps.
+
+Dependencies and integration: integrates `pkg/clangtool`, `tools/clang/declextract`, `pkg/declextract`, `pkg/compiler`, `pkg/ast`, `pkg/cover`, `pkg/ifaceprobe`, `pkg/subsystem`, manager config, Linux target metadata, and `syz-manager` iface-probe mode. It is part of syzkaller's automatic syscall description generation pipeline.
+
+Risks: generation depends on a complete kernel source/object tree, clang extractor availability, `syz-manager` probing, and parsable manual descriptions. `removeUnused` deletes nodes by type/name keys, which can collide if positions are intentionally ignored. Syscall table parsing has explicit filters and may miss unusual arch-specific mappings. Coverage JSON uses `DisallowUnknownFields`, so schema drift is fatal. Running probe can take up to 30 minutes.
+
+Test signals: `declextract_test.go` validates the clang tool wrapper, golden-cache based extraction for each fixture, description compilation, size/alignment parity for generated structs, and golden `.txt`/`.info` output comparison.

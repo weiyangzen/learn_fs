@@ -1,0 +1,22 @@
+# sources/test-tools/xfstests/tests/btrfs/233
+
+## Purpose
+FSQA Test No. 233 Test that subvolume deletion is resumed on RW mounts, that it is not performed on RO mounts and that after remounting a filesystem from RO to RW mode, it is performed. Override the default cleanup function. In this subset it primarily covers multi-device, RAID, seed/sprout, or device-management paths, mount and remount option semantics, subvolume and snapshot metadata.
+
+## Important APIs, Types, and Functions
+The fstest declaration is `auto quick subvol remount`. Requirement and capability gates: line 26: `_require_scratch`; line 27: `_require_dm_target flakey`; line 28: `_require_btrfs_command inspect-internal dump-tree`; line 31: `_require_metadata_journaling $SCRATCH_DEV`. Local helper surface: `_cleanup()` (line 15), `check_subvol_orphan_item_exists()` (line 35), `check_subvol_orphan_item_not_exists()` (line 43), `check_subvol_btree_exists()` (line 52), `check_subvol_btree_not_exists()` (line 59), `create_subvol_with_orphan()` (line 66). Important command/API calls include line 28: `_require_btrfs_command inspect-internal dump-tree`; line 30: `_scratch_mkfs >>$seqres.full 2>&1`; line 33: `_scratch_mount`; line 35: `check_subvol_orphan_item_exists()`; line 38: `$BTRFS_UTIL_PROG inspect-internal dump-tree -t 1 $SCRATCH_DEV | grep -q 'ORPHAN ORPHAN_ITEM 256'`; line 40: `[ $? -ne 0 ] && echo "subvolume orphan item is missing"`; line 43: `check_subvol_orphan_item_not_exists()`; line 49: `[ $? -eq 0 ] && echo "subvolume orphan item still exists"`; line 52: `check_subvol_btree_exists()`; line 54: `$BTRFS_UTIL_PROG inspect-internal dump-tree $SCRATCH_DEV | grep -q 'file tree key (256 ROOT_ITEM 0)'`; line 56: `[ $? -ne 0 ] && echo "subvolume btree is missing"`; line 59: `check_subvol_btree_not_exists()`; line 63: `[ $? -eq 0 ] && echo "subvolume btree still exists"`; line 68: `$BTRFS_UTIL_PROG subvolume create $SCRATCH_MNT/testsv | _filter_scratch`.
+
+## Control Flow
+The control flow follows the xfstests pattern: source the common preamble, declare `_begin_fstest auto quick subvol remount`, install cleanup if needed, enforce requirements, then formats scratch storage, mounts the test filesystem, creates or deletes subvolumes/snapshots, runs btrfs check or xfstests scratch checks, cycles mounts to force persistence. The script then performs its focused state transition and relies on explicit command failures, `_fail`, filtered stdout, content comparisons, filesystem checks, or expected output matching to detect regressions. Cleanup hooks remove temporary send streams, loop devices, scratch pool devices, or `$tmp.*` artifacts when the test defines them.
+
+## State and Persistence Behavior
+The script owns scratch filesystem state and normally reformats, mounts, unmounts, or checks it through xfstests helpers. Snapshot and subvolume roots are deliberate persistent state used to test root items, received UUIDs, cleaner behavior, and metadata references. Sync, remount, unmount, receive, or device-scan boundaries are used to separate in-memory success from on-disk or kernel-global persistence.
+
+## Dependencies and Integration Points
+This file integrates with xfstests `common/preamble`, Btrfs common helpers, scratch-device lifecycle helpers, output filters, and the Btrfs kernel interfaces reached through btrfs-progs. It also depends on the adjacent expected-output file for stable golden-output comparison: `QA output created by 233 | Create subvolume 'SCRATCH_MNT/testsv' | Delete subvolume 'SCRATCH_MNT/testsv' | Create subvolume 'SCRATCH_MNT/testsv' | Delete subvolume 'SCRATCH_MNT/testsv'`.
+
+## Risks and Edge Cases
+the main risk is silent metadata or persistence regression that only appears after remount, receive, check, or explicit content comparison. Test reliability can also depend on mkfs defaults, sector size, nodesize, mount options, compression settings, discard support, device size, and whether helper commands support the specific subcommands used by the script.
+
+## Test Signals
+Primary pass signals are successful command completion, no unexpected stderr after filtering, expected `.out` text, clean `btrfs check` or `_check_scratch_fs` results when present, and matching file digests/fssum/byte dumps after replay or remount. Any mismatch in expected output, missing qgroup/device/snapshot state, uncorrected corruption, unexpected swapon success/failure, or receive/check failure indicates a regression for this source.

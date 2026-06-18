@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/hns/hns_roce_qp.c
+
+## Purpose
+`hns_roce_qp.c` implements HNS queue-pair allocation, destruction, state modification, event delivery, WQE-buffer layout, doorbell mapping, QPN bank selection, and work-queue overflow checks. It translates RDMA-core QP creation and modification requests into HNS queue memory, context-table, and hardware-callback operations.
+
+## Important APIs, Types, And Functions
+Important types are `struct hns_roce_qp`, `struct hns_roce_qp_table`, `struct hns_roce_wq`, `struct hns_roce_bank`, `struct hns_roce_work`, and HNS uAPI create/modify structures. Entry points include `hns_roce_create_qp()`, `hns_roce_qp_destroy()`, `hns_roce_modify_qp()`, `hns_roce_qp_event()`, `hns_roce_flush_cqe()`, `hns_roce_get_send_wqe()`, `hns_roce_get_recv_wqe()`, `hns_roce_get_extend_sge()`, `hns_roce_wq_overflow()`, `hns_roce_init_qp_table()`, and `hns_roce_cleanup_qp_table()`. Major helpers include `alloc_qpn()`, `alloc_qpc()`, `hns_roce_qp_store()`, `set_rq_size()`, `set_ext_sge_param()`, `set_qp_param()`, `alloc_qp_buf()`, `alloc_qp_db()`, `alloc_kernel_wrid()`, and `hns_roce_lock_cqs()`.
+
+## Control Flow
+QP creation validates type support, records GSI/XRC details, initializes locks and deferred flush work, computes SQ/RQ sizing from kernel or userspace inputs, allocates kernel WRID arrays when needed, builds an MTR-backed WQE buffer, allocates a QPN from a bank selected by CQ affinity and load, maps user or kernel doorbells, allocates QPC/IRRL/TRRL/SCCC HEM entries, inserts the QP into the xarray and CQ/device lists, copies userspace response data, initializes optional flow control, and initializes the refcount/completion. Modification serializes on the QP mutex, checks current-state expectations and RDMA state-transition legality, validates port/pkey/MTU/atomic limits, invokes the hardware `modify_qp()` callback, and may copy response traffic-class data to userspace. Async event paths look up QPs through the xarray with a temporary refcount and translate HNS events to IB events. HIP08 CQE flush uses deferred work to move a QP to error state because mailbox operations may sleep.
+
+## State And Persistence
+QP state includes QPN, QP type, port, SQ/RQ producer-consumer counters, WQE sizes/counts, extended-SGE layout, inline data, congestion type, doorbell records/registers, MTR buffer, CQ list nodes, xarray membership, refcount/completion, and flush flags. QPN allocation is distributed across eight banks with per-bank IDAs, `next` counters, and in-use counts. State is runtime only; hardware QP context and flow-control context are recreated during creation and changed by modify callbacks.
+
+## Dependencies And Integration Points
+This file depends on RDMA core QP state validation, uverbs udata copy helpers, HNS MTR helpers from `hns_roce_mr.c`, HEM table APIs, CQ locking/list contracts, HNS database mapping helpers, congestion/flow-control hardware callbacks, the device IRQ workqueue, and capability/revision flags. CQ and QP event handling integrates with async event queues outside this file.
+
+## Risks
+`free_qpc()` releases TRRL and IRRL but does not visibly put the QPC table or SCCC table allocated by `alloc_qpc()`, which is a high-value resource-lifetime point to verify against hardware-specific cleanup. Error labels after userspace response failure remove a QP from lists/xarray before refcount initialization, so ordering is delicate. `hns_roce_modify_qp()` returns `-EINVAL` for a no-op RESET-to-RESET path because it jumps to `out` before setting `ret = 0`, which may be intentional avoidance or a surprising behavior. User error-state flush depends on record doorbells; without SQ record DB it warns and rejects. Bank selection assumes a nonzero valid bank mask. CQ lock ordering is custom and must stay consistent across QP list, CQ poll, and flush paths.
+
+## Test Signals
+Test all supported and unsupported QP types, GSI fixed QPN, XRC with/without capability, userspace and kernel SQ/RQ sizing bounds, HIP08 reserved RQ SGE behavior, extended SGE and inline-data negotiation, QPN bank distribution and exhaustion, direct-WQE mmap response, user/kernel record DB mapping, every creation error label, flow-control init failure, valid and invalid modify transitions, MTU and atomic-limit validation, userspace error-state flush with/without record DBs, async event refcount races, deferred flush work during destroy, WQE accessors, overflow checks under CQ polling, and QP table cleanup.

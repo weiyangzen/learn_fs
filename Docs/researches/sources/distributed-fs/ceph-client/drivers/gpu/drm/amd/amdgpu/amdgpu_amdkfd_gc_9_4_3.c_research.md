@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gc_9_4_3.c
+
+Purpose: this file adapts the GFX9 KFD/KGD bridge to GC 9.4.3 multi-XCC hardware. It reuses many GFX9 and Aldebaran helpers but overrides SDMA register addressing, PASID/VMID mapping, compute HQD load, debug trap-mask mapping, address watch programming, and SDMA doorbell discovery for the 9.4.3 register model.
+
+Important APIs and functions: `kgd_gfx_v9_4_3_hqd_sdma_load/dump/is_occupied/destroy` operate on `v9_sdma_mqd` and use `GET_INST(SDMA0, engine_id)` with the 4.4.2 SDMA register names. `kgd_gfx_v9_4_3_set_pasid_vmid_mapping` programs ATHUB mapping, waits up to 10 ms for update status, clears it, then programs IH LUT entries for both XCC and AID indices. `kgd_gfx_v9_4_3_hqd_load` writes MQD/HQD registers for a selected XCC and uses CP write-pointer polling rather than direct user pointer reads. Trap helpers map KFD software masks to `SPI_GDBG_PER_VMID_CNTL` fields, including wave-start and wave-end trap bits. Address watch writes TCP watch address registers per XCC and returns the control value. `kgd_gfx_v9_4_3_hqd_sdma_get_doorbell` reports the doorbell offset for active SDMA queues.
+
+Control flow: queue load acquires the target pipe/queue through GFX9's SRBM helper, writes HQD registers from the MQD, enables doorbell logic, optionally seeds CP polling with a guessed 64-bit WPTR, initializes the EOP fetcher, and marks HQD active. SDMA load follows disable-wait-program-enable ordering. Destroy disables SDMA RB enable, waits for idle, clears doorbell, re-enables RB control, and saves RPTR. The callback table combines these local routines with generic GFX9 dump/destroy/CU/VM functions and Aldebaran debug enable/launch-mode helpers.
+
+State and persistence: persistent state is hardware register state in GC, ATHUB, OSSSYS, and SDMA blocks plus saved MQD RPTR fields. PASID mappings persist until overwritten or cleared. Debug trap settings are encoded in per-VMID control values returned to the caller.
+
+Dependencies and integration: includes GC 9.4.3, ATHUB 1.8.0, OSSSYS 4.4.2, SDMA 4.4.2, GFX9 shared headers, and Aldebaran debug declarations. The table `gc_9_4_3_kfd2kgd` is the main integration point.
+
+Risks: multi-XCC/AID IH LUT indexing is subtle and easy to regress. Queue load assumes queue wrap did not invalidate the guessed WPTR. SDMA timeout failures return `-ETIME`. `clear_address_watch` is a no-op returning 0, so the broader debug path must clear via returned controls or future hardware support. Test signals include PASID mapping on both XCCs of an AID, SDMA queue lifecycle on each instance, debugger trap masks including wave-start/end, watchpoint hits, and doorbell reporting only when `CONTEXT_STATUS.SELECTED` is active.

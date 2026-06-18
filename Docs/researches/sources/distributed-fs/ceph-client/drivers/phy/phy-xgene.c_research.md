@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-xgene.c
+
+This AppliedMicro X-Gene multi-purpose PHY driver currently implements SATA-oriented SerDes initialization behind a generic PHY provider. It defines a large indirect register map for SDS, CMU, and lane RXTX registers, plus mode/clock enums and SATA tuning override storage in `struct xgene_phy_ctx`.
+
+The low layer is `sds_wr()`/`sds_rd()` polling indirect command completion, wrapped by CMU and SerDes read/write/set/clear helpers. Probe maps SDS MMIO, optionally gets a clock, reads DT override arrays such as `apm,tx-eye-tuning`, `apm,tx-amplitude`, and `apm,tx-speed`, defaults lanes to Gen3, creates a PHY, and registers custom xlate. `xgene_phy_xlate()` stores the requested mode from phandle args. Init runs `xgene_phy_hw_initialize()` for SATA only, toggles the optional clock, then computes receiver calibration averages for both lanes.
+
+Persistent state includes selected mode, optional clock, MMIO base, module parameter `preA3Chip`, and SATA tuning arrays. Dependencies are generic PHY, clk, platform MMIO, OF properties, delays, and module parameters. Risks are high: many magic register constants, indirect access timeout only logs errors, unsupported modes return `-ENODEV`, PLL calibration failure is logged but allowed to continue, and calibration loops can be expensive. Test signals are hardware PLL/calibration logs and SATA link stability.

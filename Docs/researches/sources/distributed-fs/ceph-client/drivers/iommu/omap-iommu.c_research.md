@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/iommu/omap-iommu.c
+
+## Purpose
+This file is the OMAP/TI IOMMU driver implementation. It registers OMAP IOMMU platform devices with the generic Linux IOMMU core, manages OMAP hardware page tables and TLBs, services translation faults, and exposes paging-domain operations for OMAP client devices that reference one or more IOMMU phandles in device tree.
+
+## Important APIs, Types, And Functions
+The central types are declared in `omap-iommu.h`: `struct omap_iommu` for a hardware instance, `struct omap_iommu_domain` for a generic IOMMU domain, `struct omap_iommu_device` for per-domain per-IOMMU state, and `struct iotlb_entry` for OMAP CAM/RAM TLB entries. Driver entry points are `omap_iommu_probe()`, `omap_iommu_remove()`, and `omap_iommu_init()`. Generic IOMMU hooks are collected in `omap_iommu_ops` and include `domain_alloc_paging`, `probe_device`, `release_device`, `of_xlate`, `attach_dev`, `map_pages`, `unmap_pages`, `iova_to_phys`, and `free`.
+
+Key translation helpers include `omap_iopgtable_store_entry()`, `iopgtable_clear_entry()`, `iopgtable_clear_entry_all()`, `iopgtable_lookup_entry()`, `iopgd_alloc_section()`, `iopgd_alloc_super()`, `iopte_alloc_page()`, and `iopte_alloc_large()`. Hardware control is routed through `omap2_iommu_enable()`, `omap2_iommu_disable()`, `iommu_enable()`, `iommu_disable()`, `flush_iotlb_page()`, and `flush_iotlb_all()`. Runtime/system PM support is in `omap_iommu_runtime_suspend()`, `omap_iommu_runtime_resume()`, and `omap_iommu_prepare()`. Legacy exported context helpers are `omap_iommu_save_ctx()`, `omap_iommu_restore_ctx()`, `omap_iommu_domain_activate()`, and `omap_iommu_domain_deactivate()`.
+
+## Control Flow
+At subsystem init, the driver creates the `iopte_cache` slab with 1 KiB alignment, initializes debugfs support, and registers the platform driver only if a matching OMAP IOMMU node exists. Probe validates DT-only use, allocates `struct omap_iommu`, maps MMIO registers, reads TLB-entry count and bus-error-back properties, optionally resolves DRA7 DSP syscon configuration, requests the shared IRQ, registers sysfs/IOMMU core state, enables runtime PM, and adds debugfs.
+
+Client devices are discovered through `omap_iommu_probe_device()`, which parses the `iommus` phandle array, resolves each platform IOMMU, and stores a NULL-terminated `omap_iommu_arch_data` array in `dev_iommu_priv`. `omap_iommu_attach_dev()` allows only one client per domain. It allocates one aligned L1 page directory per attached IOMMU, maps each directory for DMA, enables each IOMMU through runtime PM, flushes TLBs, and records the generic domain in the hardware instance.
+
+Mapping converts the requested size to OMAP page size encodings: 4 KiB, 64 KiB, 1 MiB, or 16 MiB. It builds an `iotlb_entry` and mirrors the page-table update into every IOMMU attached to the domain. On partial failure it clears already-installed entries. Unmap mirrors removal across all attached IOMMUs and returns zero if any instance reports an unmapped entry. Fault IRQ flow reads and clears `MMU_IRQSTATUS`, reports to the generic fault handler, disables further IRQs on unhandled faults, and logs the L1/L2 entry state for diagnosis.
+
+## State And Persistence
+Persistent runtime state lives in `struct omap_iommu`, the per-domain page directories, and slab-allocated L2 tables. Page directories are `kzalloc()` allocations attached to domains, DMA-mapped while the hardware is attached, and freed at detach/domain free. L2 tables are allocated from `iopte_cache`, DMA-mapped, linked through L1 entries, and freed when emptied. Hardware state includes `MMU_TTB`, `MMU_CNTL`, `MMU_LOCK`, CAM/RAM TLB entries, DRA7 DSP MMU syscon bits, and IRQ enable/status registers. Runtime PM suspend saves locked TLB entries in `cr_ctx` and disables/reset-idles the device; resume restores locked entries and reprograms the table base.
+
+## Dependencies And Integration Points
+The driver depends on Linux IOMMU core APIs, OF phandles, platform devices, runtime PM, DMA mapping, regmap/syscon for DRA7 DSP, OMAP platform reset/idle callbacks, debugfs helpers from the OMAP IOMMU support files, and `omap-iopgtable.h` descriptor helpers. It uses generic single-device groups and reports faults via `report_iommu_fault()`. The exported activation/context APIs preserve behavior for legacy OMAP clients such as OMAP3 ISP.
+
+## Risks
+The implementation assumes DMA and physical addresses are identical for L2 page-table mappings and warns/fails otherwise. Domain attach is single-client only, while a client can reference multiple IOMMUs, so multi-device sharing is deliberately constrained. Several paths call runtime PM and hardware register operations from mapping/TLB routines, so power-state ordering is important. Fault handling disables IRQs when faults are unhandled, which can hide later faults until recovery. Map/unmap consistency relies on mirrored programming across all attached IOMMUs; unmap does not verify every instance removed the same size. The source should be compile-checked carefully because low-level page-table and TLB code is sensitive to alignment, cache flushing, and locking.
+
+## Test Signals
+Useful checks include DT probe with each compatible string, attach/detach through a real OMAP client with one and multiple IOMMU phandles, map/unmap for all supported sizes, iova-to-phys translation for L1 section/supersection and L2 page/large-page entries, runtime suspend/resume with locked TLB context, DRA7 DSP syscon enable/disable, forced translation faults with generic fault callbacks, and DMA mapping failure injection for L1/L2 tables.

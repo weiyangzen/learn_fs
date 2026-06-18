@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath10k/ahb.c
+
+Purpose: ath10k platform/AHB bus support for Qualcomm IPQ4019 Wi-Fi. It adapts ath10k's PCI-oriented CE/HIF infrastructure to a memory-mapped platform device with OF resources, clocks, resets, TCSR/GCC control registers, and a legacy shared interrupt.
+
+Important APIs/types/functions: Platform entry points are `ath10k_ahb_probe`, `ath10k_ahb_remove`, `ath10k_ahb_init`, and `ath10k_ahb_exit`. Bus register ops are `ath10k_ahb_read32`, `ath10k_ahb_write32`, and `ath10k_ahb_get_num_banks`. Resource/power helpers include `ath10k_ahb_resource_init/deinit`, `ath10k_ahb_clock_init/enable/disable`, `ath10k_ahb_rst_ctrl_init`, `ath10k_ahb_release_reset`, `ath10k_ahb_halt_chip`, `ath10k_ahb_prepare_device`, and `ath10k_ahb_chip_reset`. HIF operations are collected in `ath10k_ahb_hif_ops`; CE bus operations are in `ath10k_ahb_bus_ops`.
+
+Control flow: Probe reads the OF match hardware revision, creates ath10k core with `ATH10K_BUS_AHB`, maps device/GCC/TCSR registers, sets 32-bit DMA masks, acquires clocks and reset controls, gets the legacy IRQ, connects the PCI-private CE state to AHB MMIO, initializes PCI-style resources/NAPI, requests IRQ, prepares the device, reads chip ID, and registers ath10k core. Device preparation enables clocks, writes target CPU clock info to scratch, deasserts resets, disables interrupts, marks host ready, and waits for target init. Runtime HIF start enables NAPI, CE interrupts, INTx, and RX posting; stop disables interrupts, synchronizes IRQ, disables NAPI, and flushes PCI-style queues. Removal unregisters core, disables IRQs, releases resources, halts chip, disables clocks, deinitializes resources, and destroys core.
+
+State/persistence: State is held in `struct ath10k_ahb` embedded after `struct ath10k_pci`: platform device, mapped MMIO regions, lengths, IRQ, clocks, and reset handles. Hardware state includes clock/reset lines, scratch registers, halt requests, CE ring resources, NAPI, and target firmware state. No disk persistence.
+
+Dependencies/integration: Depends on OF platform matching (`qcom,ipq4019-wifi`), clk/reset frameworks, DMA API, platform IRQ resources, TCSR/GCC register maps from `ahb.h`, and many `pci.c` helpers for CE setup, BMI exchange, IRQ masking, NAPI, resource setup, and HIF TX/diagnostic operations.
+
+Risks: Resource unwinding spans devm and manual `ioremap` mappings and must stay ordered. Reset/halt sequencing is hardware-sensitive; failure to halt AXI or assert resets can leave the Wi-Fi core wedged. AHB IRQ handling masks PCI-style INTx/firmware bits and schedules NAPI; incorrect pending detection can lose interrupts. Address translation in `ath10k_ahb_qca4019_targ_cpu_to_ce_addr` special-cases SRAM and must match firmware memory layout.
+
+Test signals: Platform probe on IPQ4019 DT, successful clock/reset acquisition, target init wait, valid chip ID, ath10k core registration, firmware boot, interrupts/NAPI RX/TX, clean remove/reprobe, and suspend-like power-cycle/reset loops validate this file. Debug categories `BOOT` and `AHB` are useful for sequencing failures.

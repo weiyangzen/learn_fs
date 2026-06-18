@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/uapi/asm/signal.h
+
+ARC signal ABI extension. It defines SA_RESTORER so libc can provide a userland sigreturn stub, avoiding kernel-generated stack trampolines and related TLB/cache maintenance, then includes asm-generic/signal.h. Control flow is signal.c requiring SA_RESTORER when setting up frames and placing the restorer address in blink. State is sigaction flags and handler return path. Dependencies are libc/uClibc behavior and generic signal definitions. Risks are binaries without SA_RESTORER being rejected at signal delivery, and ABI flag collision. Test signals are libc signal tests, rt_sigreturn, signal delivery without/with SA_SIGINFO, and old userspace compatibility.

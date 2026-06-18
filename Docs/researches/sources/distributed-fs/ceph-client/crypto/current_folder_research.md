@@ -1,0 +1,148 @@
+# Folder Research: sources/distributed-fs/ceph-client/crypto
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 134
+- Recursive researched files: 177
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/crypto/842.c`
+- `sources/distributed-fs/ceph-client/crypto/Kconfig`
+- `sources/distributed-fs/ceph-client/crypto/Makefile`
+- `sources/distributed-fs/ceph-client/crypto/acompress.c`
+- `sources/distributed-fs/ceph-client/crypto/adiantum.c`
+- `sources/distributed-fs/ceph-client/crypto/aead.c`
+- `sources/distributed-fs/ceph-client/crypto/aegis-neon.h`
+- `sources/distributed-fs/ceph-client/crypto/aegis.h`
+- `sources/distributed-fs/ceph-client/crypto/aegis128-core.c`
+- `sources/distributed-fs/ceph-client/crypto/aegis128-neon-inner.c`
+- `sources/distributed-fs/ceph-client/crypto/aegis128-neon.c`
+- `sources/distributed-fs/ceph-client/crypto/aes.c`
+- `sources/distributed-fs/ceph-client/crypto/af_alg.c`
+- `sources/distributed-fs/ceph-client/crypto/ahash.c`
+- `sources/distributed-fs/ceph-client/crypto/akcipher.c`
+- `sources/distributed-fs/ceph-client/crypto/algapi.c`
+- `sources/distributed-fs/ceph-client/crypto/algboss.c`
+- `sources/distributed-fs/ceph-client/crypto/algif_aead.c`
+- `sources/distributed-fs/ceph-client/crypto/algif_hash.c`
+- `sources/distributed-fs/ceph-client/crypto/algif_rng.c`
+- `sources/distributed-fs/ceph-client/crypto/algif_skcipher.c`
+- `sources/distributed-fs/ceph-client/crypto/anubis.c`
+- `sources/distributed-fs/ceph-client/crypto/api.c`
+- `sources/distributed-fs/ceph-client/crypto/arc4.c`
+- `sources/distributed-fs/ceph-client/crypto/aria_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/authenc.c`
+- `sources/distributed-fs/ceph-client/crypto/authencesn.c`
+- `sources/distributed-fs/ceph-client/crypto/blake2b.c`
+- `sources/distributed-fs/ceph-client/crypto/blowfish_common.c`
+- `sources/distributed-fs/ceph-client/crypto/blowfish_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/bpf_crypto_skcipher.c`
+- `sources/distributed-fs/ceph-client/crypto/camellia_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/cast5_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/cast6_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/cast_common.c`
+- `sources/distributed-fs/ceph-client/crypto/cbc.c`
+- `sources/distributed-fs/ceph-client/crypto/ccm.c`
+- `sources/distributed-fs/ceph-client/crypto/chacha.c`
+- `sources/distributed-fs/ceph-client/crypto/chacha20poly1305.c`
+- `sources/distributed-fs/ceph-client/crypto/cipher.c`
+- `sources/distributed-fs/ceph-client/crypto/cmac.c`
+- `sources/distributed-fs/ceph-client/crypto/compress.h`
+- `sources/distributed-fs/ceph-client/crypto/crc32.c`
+- `sources/distributed-fs/ceph-client/crypto/crc32c.c`
+- `sources/distributed-fs/ceph-client/crypto/cryptd.c`
+- `sources/distributed-fs/ceph-client/crypto/crypto_engine.c`
+- `sources/distributed-fs/ceph-client/crypto/crypto_null.c`
+- `sources/distributed-fs/ceph-client/crypto/crypto_user.c`
+- `sources/distributed-fs/ceph-client/crypto/ctr.c`
+- `sources/distributed-fs/ceph-client/crypto/cts.c`
+- `sources/distributed-fs/ceph-client/crypto/deflate.c`
+- `sources/distributed-fs/ceph-client/crypto/des_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/df_sp80090a.c`
+- `sources/distributed-fs/ceph-client/crypto/dh.c`
+- `sources/distributed-fs/ceph-client/crypto/dh_helper.c`
+- `sources/distributed-fs/ceph-client/crypto/drbg.c`
+- `sources/distributed-fs/ceph-client/crypto/ecb.c`
+- `sources/distributed-fs/ceph-client/crypto/ecc.c`
+- `sources/distributed-fs/ceph-client/crypto/ecc_curve_defs.h`
+- `sources/distributed-fs/ceph-client/crypto/ecdh.c`
+- `sources/distributed-fs/ceph-client/crypto/ecdh_helper.c`
+- `sources/distributed-fs/ceph-client/crypto/ecdsa-p1363.c`
+- `sources/distributed-fs/ceph-client/crypto/ecdsa-x962.c`
+- `sources/distributed-fs/ceph-client/crypto/ecdsa.c`
+- `sources/distributed-fs/ceph-client/crypto/echainiv.c`
+- `sources/distributed-fs/ceph-client/crypto/ecrdsa.c`
+- `sources/distributed-fs/ceph-client/crypto/ecrdsa_defs.h`
+- `sources/distributed-fs/ceph-client/crypto/essiv.c`
+- `sources/distributed-fs/ceph-client/crypto/fcrypt.c`
+- `sources/distributed-fs/ceph-client/crypto/fips.c`
+- `sources/distributed-fs/ceph-client/crypto/gcm.c`
+- `sources/distributed-fs/ceph-client/crypto/geniv.c`
+- `sources/distributed-fs/ceph-client/crypto/hash.h`
+- `sources/distributed-fs/ceph-client/crypto/hctr2.c`
+- `sources/distributed-fs/ceph-client/crypto/hmac.c`
+- `sources/distributed-fs/ceph-client/crypto/internal.h`
+- `sources/distributed-fs/ceph-client/crypto/jitterentropy-kcapi.c`
+- `sources/distributed-fs/ceph-client/crypto/jitterentropy-testing.c`
+- `sources/distributed-fs/ceph-client/crypto/jitterentropy.c`
+- `sources/distributed-fs/ceph-client/crypto/jitterentropy.h`
+- `sources/distributed-fs/ceph-client/crypto/kdf_sp800108.c`
+- `sources/distributed-fs/ceph-client/crypto/khazad.c`
+- `sources/distributed-fs/ceph-client/crypto/kpp.c`
+- `sources/distributed-fs/ceph-client/crypto/krb5enc.c`
+- `sources/distributed-fs/ceph-client/crypto/lrw.c`
+- `sources/distributed-fs/ceph-client/crypto/lskcipher.c`
+- `sources/distributed-fs/ceph-client/crypto/lz4.c`
+- `sources/distributed-fs/ceph-client/crypto/lz4hc.c`
+- `sources/distributed-fs/ceph-client/crypto/lzo-rle.c`
+- `sources/distributed-fs/ceph-client/crypto/lzo.c`
+- `sources/distributed-fs/ceph-client/crypto/md4.c`
+- `sources/distributed-fs/ceph-client/crypto/md5.c`
+- `sources/distributed-fs/ceph-client/crypto/mldsa.c`
+- `sources/distributed-fs/ceph-client/crypto/pcbc.c`
+- `sources/distributed-fs/ceph-client/crypto/pcrypt.c`
+- `sources/distributed-fs/ceph-client/crypto/proc.c`
+- `sources/distributed-fs/ceph-client/crypto/ripemd.h`
+- `sources/distributed-fs/ceph-client/crypto/rmd160.c`
+- `sources/distributed-fs/ceph-client/crypto/rng.c`
+- `sources/distributed-fs/ceph-client/crypto/rsa-pkcs1pad.c`
+- `sources/distributed-fs/ceph-client/crypto/rsa.c`
+- `sources/distributed-fs/ceph-client/crypto/rsa_helper.c`
+- `sources/distributed-fs/ceph-client/crypto/rsassa-pkcs1.c`
+- `sources/distributed-fs/ceph-client/crypto/scatterwalk.c`
+- `sources/distributed-fs/ceph-client/crypto/scompress.c`
+- `sources/distributed-fs/ceph-client/crypto/seed.c`
+- `sources/distributed-fs/ceph-client/crypto/seqiv.c`
+- `sources/distributed-fs/ceph-client/crypto/serpent_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/sha1.c`
+- `sources/distributed-fs/ceph-client/crypto/sha256.c`
+- `sources/distributed-fs/ceph-client/crypto/sha3.c`
+- `sources/distributed-fs/ceph-client/crypto/sha512.c`
+- `sources/distributed-fs/ceph-client/crypto/shash.c`
+- `sources/distributed-fs/ceph-client/crypto/sig.c`
+- `sources/distributed-fs/ceph-client/crypto/simd.c`
+- `sources/distributed-fs/ceph-client/crypto/skcipher.c`
+- `sources/distributed-fs/ceph-client/crypto/skcipher.h`
+- `sources/distributed-fs/ceph-client/crypto/sm3.c`
+- `sources/distributed-fs/ceph-client/crypto/sm4.c`
+- `sources/distributed-fs/ceph-client/crypto/sm4_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/streebog_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/tcrypt.c`
+- `sources/distributed-fs/ceph-client/crypto/tcrypt.h`
+- `sources/distributed-fs/ceph-client/crypto/tea.c`
+- `sources/distributed-fs/ceph-client/crypto/testmgr.c`
+- `sources/distributed-fs/ceph-client/crypto/testmgr.h`
+- `sources/distributed-fs/ceph-client/crypto/twofish_common.c`
+- `sources/distributed-fs/ceph-client/crypto/twofish_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/wp512.c`
+- `sources/distributed-fs/ceph-client/crypto/xcbc.c`
+- `sources/distributed-fs/ceph-client/crypto/xctr.c`
+- `sources/distributed-fs/ceph-client/crypto/xts.c`
+- `sources/distributed-fs/ceph-client/crypto/xxhash_generic.c`
+- `sources/distributed-fs/ceph-client/crypto/zstd.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

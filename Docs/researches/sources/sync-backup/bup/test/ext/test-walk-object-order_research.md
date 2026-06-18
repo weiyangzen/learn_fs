@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-walk-object-order -->
+# sources/sync-backup/bup/test/ext/test-walk-object-order
+
+Purpose: ensures object walking transfers dependencies before dependents so interrupted/missing-source cases do not leave unusable destination state. Important APIs are `bup get --ff`, `bup join`, `validate-object-links`-style object removal, Git `ls-tree`, and repository copying. Control flow creates a save, identifies a `.bupm` object likely to be late in traversal, copies the repo to a broken source with that object missing, verifies `get` and `join` fail from the broken source, then copies from the intact source and verifies `join` of the saved commit succeeds. State is the source repo, broken repo copy, destination repo, and missing object. Dependencies include Git object database layout and bup object walker ordering. Risks are relying on `.bupm` being late enough to expose ordering bugs and diagnostics varying by object type. Test signals are expected failure from broken source and successful transfer/join from intact source.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-walk-object-order -->

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/cell/spufs/file.c
+
+Purpose: defines the user-visible files inside each spufs context directory. It implements local-store access, register access, mailbox pipes, signal files, MFC DMA proxying, problem-state mmaps, attributes, debug/stat files, switch logging, and coredump reader descriptors.
+
+Important APIs and tables: `spufs_dir_contents`, `spufs_dir_nosched_contents`, and `spufs_dir_debug_contents` define the directory ABI. `spufs_coredump_read` maps coredump note names to dump/get routines. Helpers include `spufs_attr_*`, `spufs_mem_*`, `spufs_ps_fault`, mailbox callbacks and fops, `spufs_mfc_*`, attribute definitions for `npc`, `decr`, `event_mask`, `object-id`, `phys-id`, plus `spu_switch_log_notify()`.
+
+Control flow: most operations acquire a context via `spu_acquire()` or `spu_acquire_saved()` depending on whether live hardware or a stable CSA is needed. Local-store mmap faults map either vmalloc-backed saved LS or physical SPU LS. Problem-state fault handlers wait until the context is runnable before inserting PFNs. Mailbox and MFC files use wait queues and callbacks from `hw_ops`/`sched` to support blocking and poll. MFC writes validate opcode, alignment, size, tag, and class before queueing a command and tracking `tagwait`.
+
+State and dependencies: mapping pointers in `ctx` are reference-counted by per-inode `i_openers` under `mapping_lock`; switch logs are per-context ring buffers; debug/stat reads inspect scheduler and CSA fields. Risks include FIXME-noted `tagwait` locking, poll paths that sleep despite comments, sensitive mmap lifetime interactions, and ABI compatibility of directory entries. Test signals include read/write/mmap for every file, blocking mailbox/MFC poll, coredump note contents, NOSCHED directory differences, and switch log wrap behavior.

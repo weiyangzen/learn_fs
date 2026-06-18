@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/at91/sama5d3.c -->
+# sources/distributed-fs/ceph-client/drivers/clk/at91/sama5d3.c
+
+Purpose: This file provides the early device-tree clock initialization for the AT91 SAMA5D3 Power Management Controller. It builds the SoC clock tree around slow/main clocks, PLLA, UTMI, master clocks, programmable clocks, system clocks, and peripheral clocks, then publishes the result through the common clock framework using `of_clk_add_hw_provider()`.
+
+Important APIs, types, and functions: The central entry point is `sama5d3_pmc_setup()`, registered with `CLK_OF_DECLARE(..., "atmel,sama5d3-pmc", ...)` because timer clocks are needed before normal platform probing. Static tables define `mck_characteristics`, PLLA characteristics, `sama5d3_pcr_layout`, `sama5d3_systemck[]`, and `sama5d3_periphck[]`. The implementation depends on AT91 PMC helpers from `pmc.h`, including `pmc_data_allocate()`, `at91_clk_register_main_rc_osc()`, `at91_clk_register_main_osc()`, `at91_clk_register_sam9x5_main()`, `at91_clk_register_pll()`, `at91_clk_register_plldiv()`, `at91_clk_register_utmi()`, `at91_clk_register_master_pres()`, `at91_clk_register_master_div()`, `at91sam9x5_clk_register_usb()`, `at91sam9x5_clk_register_smd()`, `at91_clk_register_programmable()`, `at91_clk_register_system()`, and `at91_clk_register_sam9x5_peripheral()`.
+
+Control flow: Setup first locates `slow_clk` and `main_xtal` in `clock-names`, obtains the PMC regmap with `device_node_to_regmap()`, allocates `pmc_data`, and then registers the clock tree in dependency order: RC oscillator, crystal oscillator, main clock mux, PLLA, PLLA divider, UTMI, master prescaler/divider, USB/SMD clocks, three programmable clocks, system clocks, and peripheral clocks. Each registration failure jumps to `err_free` and frees the `pmc_data`.
+
+State and persistence behavior: Runtime state is held in registered `clk_hw` objects and the `pmc_data` arrays (`chws`, `shws`, `phws`, `pchws`). Hardware state lives in PMC registers accessed through regmap. `mck_lock` serializes master-clock register updates; peripheral PCR access uses shared `pmc_pcr_lock`. DDR-related clocks are marked `CLK_IS_CRITICAL` so the framework will not gate bootloader-enabled DDR paths without a Linux consumer.
+
+Dependencies and integration points: It integrates with the DT binding IDs in `dt-bindings/clock/at91.h`, the syscon/regmap representation of the PMC node, and AT91 common PMC code. Consumers refer to exported clock indices through `of_clk_hw_pmc_get()`.
+
+Risks and test signals: Risks are mostly table accuracy and clock ordering: wrong peripheral IDs, ranges, or parents can break UART, TCB, DDR, USB, and display consumers. Test signals include successful early boot, working TCB clocksource, stable DDR, visible `/sys/kernel/debug/clk/clk_summary` hierarchy, and DT consumers resolving all SAMA5D3 clock phandles without deferred or missing clock errors.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/at91/sama5d3.c -->

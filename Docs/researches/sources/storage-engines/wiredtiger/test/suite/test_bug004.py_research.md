@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_bug004.py
+
+Purpose: regression test for overflow keys/values when deleted during reconciliation without being instantiated, ensuring older snapshot readers still see correct versions. It targets btree file-layer behavior with small page sizes.
+
+Important APIs are `simple_key/simple_value`, `session.create` with tiny allocation/leaf pages, cursor writes, `verifyUntilSuccess`, `reopen_conn`, separate session transaction, range `truncate`, checkpoint, and snapshot cursor iteration. Control flow writes large overflow keys/values, verifies before and after reopen, starts a long-running transaction in another session, truncates a range in the main session without instantiating keys, checkpoints to free overflow blocks, then reads through the snapshot transaction and asserts original keys/values remain visible. State behavior is MVCC snapshot visibility plus overflow block lifecycle. Risks include truncate range bounds and key construction differences for row versus column formats. Test signals are exact key/value equality under the old snapshot.

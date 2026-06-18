@@ -1,0 +1,21 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+
+## Purpose
+`cmdevt.c` implements the mwifiex firmware command and event transport core. It owns command-node allocation, free/pending/scan queues, synchronous wait completion, command download to the bus-specific interface, command response processing, timeout recovery, event demultiplexing, sleep-confirm handling, host-sleep activation, enhanced power-save command preparation/response, and hardware-spec response parsing.
+
+## Important APIs, types, and functions
+Core command APIs include `mwifiex_send_cmd()`, `mwifiex_insert_cmd_to_pending_q()`, `mwifiex_exec_next_cmd()`, `mwifiex_process_cmdresp()`, `mwifiex_alloc_cmd_buffer()`, `mwifiex_free_cmd_buffer()`, `mwifiex_recycle_cmd_node()`, `mwifiex_cancel_pending_scan_cmd()`, `mwifiex_cancel_all_pending_cmd()`, and the internal `mwifiex_dnld_cmd_to_fw()`. Event and power APIs include `mwifiex_process_event()`, `mwifiex_check_ps_cond()`, `mwifiex_hs_activated_event()`, `mwifiex_process_hs_config()`, `mwifiex_process_sleep_confirm_resp()`, `mwifiex_cmd_enh_power_mode()`, `mwifiex_ret_enh_power_mode()`, `mwifiex_cmd_get_hw_spec()`, `mwifiex_ret_get_hw_spec()`, and `mwifiex_ret_wakeup_reason()`.
+
+## Control flow
+Command submission starts in `mwifiex_send_cmd()`, which rejects suspended, host-sleep-entering, surprise-removed, timed-out, reset, or manufacturing-mode-incompatible cases. It obtains a free command node, initializes sync wait fields when requested, creates a host command header, delegates preparation to uAP or STA command builders, and queues scan commands separately from normal pending commands. Normal commands are inserted into `cmd_pending_q`, main work is queued, and sync callers wait for command completion.
+
+`mwifiex_exec_next_cmd()` refuses to run if `curr_cmd` is occupied, pops the next pending command, ensures the adapter is awake, and calls `mwifiex_dnld_cmd_to_fw()`. Download assigns sequence/BSS info, sets `adapter->curr_cmd`, adjusts skb length, logs command/action, pushes USB or generic interface headers, calls `if_ops.host_to_card()`, records debug history, and arms the command timer unless the command has no response. Responses enter `mwifiex_process_cmdresp()`, which validates the response against `curr_cmd`, deletes the timer, resolves the private BSS from sequence bits, handles raw host-command responses, dispatches STA command responses, sets wait status, recycles the node, and clears `curr_cmd`.
+
+## State and persistence behavior
+Command buffers are preallocated for the adapter lifetime and recycled through free/pending queues. `adapter->seq_num`, `curr_cmd`, `cmd_pending`, `cmd_sent`, `event_cause`, debug rings, timeout markers, power-save state, host-sleep flags, firmware capabilities, band configuration, antenna/MCS capabilities, firmware API versions, region code, and permanent address are updated here. State is volatile driver state mirrored from firmware responses; no durable filesystem persistence is used.
+
+## Dependencies and integration points
+This file is the integration point between high-level driver code and transport-specific `if_ops` (`host_to_card`, `cmdrsp_complete`, `event_complete`, `wakeup`, `device_dump`, `card_reset`, `update_mp_end_port`). It calls STA/uAP command preparation and response handlers, scan queue/cancel helpers, power-save helpers, WMM queue checks, RX reorder adjustments, cfg80211 association-response delivery for host MLME, and bus-specific USB handling. `cfg80211.c`, debugfs, ethtool, and most driver features ultimately depend on `mwifiex_send_cmd()`.
+
+## Risks and test signals
+Primary risks are concurrency and lifecycle hazards: queue locking order, `curr_cmd` reuse after timeout, response arrival after timeout cancellation, sync wait completion, USB skb ownership on `-EBUSY`, command timer deletion, and reset-state command filtering. Hardware-spec parsing controls advertised capabilities; mistakes can disable host MLME, 11ac, scan gaps, or antenna/rate support. Test signals include command flood with concurrent scans, sync command timeout, surprise removal, suspend/resume, host sleep activation/cancel, USB and non-USB transport paths, hardware-spec parsing on multiple firmware API versions, and association response delivery under host MLME.

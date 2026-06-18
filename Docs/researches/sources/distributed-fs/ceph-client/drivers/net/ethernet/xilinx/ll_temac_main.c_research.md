@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/xilinx/ll_temac_main.c
+
+Purpose: main Xilinx LocalLink TEMAC Ethernet platform driver. It handles register access, indirect TEMAC configuration, LocalLink DMA descriptor rings, PHY connection, TX/RX datapath, IRQs, ethtool controls, sysfs register dump, and probe/remove.
+
+Important APIs: indirect access helpers wait on `XTE_RDY0_HARD_ACS_RDY_MASK` and serialize through `indirect_lock`. DMA accessors support big/little-endian MMIO and optional PowerPC DCR. `temac_dma_bd_init()` and release manage coherent descriptor rings and RX skb DMA mappings. `temac_device_reset()` resets MAC and DMA, allocates rings, sets default options, MAC address, and multicast table. `temac_start_xmit()` maps skb head/frags into descriptors and kicks TX tail. `temac_start_xmit_done()` frees completed TX descriptors. `ll_temac_recv()` drains completed RX descriptors, handles optional checksum complete, replenishes RX buffers, and advances DMA tail. `temac_open()` connects PHY, resets hardware, and requests TX/RX IRQs. `temac_probe()` maps resources, chooses endian/DMA mode, parses DT or platform data, sets checksum and coalescing defaults, registers MDIO, creates sysfs, and registers netdev.
+
+Control flow: probe prepares software state only; open performs hardware reset and IRQ request. TX and RX are interrupt-driven through LocalLink DMA status registers, with delayed restart work to recover when RX descriptors become scarce. PHY link changes update TEMAC speed bits through indirect registers.
+
+State and dependencies: persistent state is `struct temac_local`: descriptor rings, skb arrays, DMA indices, coalescing config, PHY/MDIO handles, locks, IRQs, feature bits, and register function pointers. Dependencies include PHYLIB, OF/platform data, DMA mapping, interrupts, sysfs, ethtool, and optional DCR.
+
+Risks and tests: descriptor ownership/barriers, RX allocation failure recovery, DMA mapping unwind for fragmented TX, indirect-register timeouts, PHY disconnect ordering, ringparam changes only while down, and endian/DCR selection are high-risk areas. Test with traffic including fragmented skbs and jumbo frames, link speed changes, MDIO scans, interrupt coalescing changes, ringparam changes, error IRQ injection, and remove after open/stop.

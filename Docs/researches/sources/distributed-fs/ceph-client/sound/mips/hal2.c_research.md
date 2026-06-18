@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/mips/hal2.c
+
+Purpose: Implements the ALSA platform driver for SGI HAL2 audio on Indy/Indigo2-class MIPS systems. It drives HAL2 indirect registers, HPC3 PBUS DMA, playback/capture PCM streams, mixer controls, detection/reset, and ALSA card registration.
+
+Important APIs/types/functions: Core structures are `struct snd_hal2`, `struct hal2_codec`, `struct hal2_pbus`, and `struct hal2_desc`. Hardware helpers include `hal2_i_read32()`, `hal2_i_write16()`, `hal2_i_write32()`, bit set/clear helpers, `hal2_compute_rate()`, `hal2_setup_dac()`, `hal2_setup_adc()`, start/stop functions, and DMA buffer allocation. ALSA callbacks are `hal2_*_open/close/prepare/trigger/pointer/ack`, `hal2_interrupt()`, `hal2_pcm_create()`, and `hal2_mixer_create()`.
+
+Control flow: Probe creates a card, allocates/initializes `snd_hal2`, requests shared HPC DMA IRQ, maps HAL2 register blocks through HPC3 extregs, resets and detects the chip, binds PBUS DMA channels, programs PBUS timing, registers low-level cleanup, creates PCM and mixer controls, then registers the card. PCM open allocates noncoherent circular hardware buffers and descriptor rings; prepare computes Bresenham clock values and configures DAC/ADC FIFO/PBUS/HAL2 registers; trigger starts/stops PBUS DMA; ack copies between ALSA buffers and the hardware buffer using ALSA indirect helpers.
+
+State and persistence: Runtime state sits in `snd_hal2`, per-codec indirect PCM tracking, DMA buffers/descriptors, PBUS control snapshots, sample-rate parameters, and current mixer values in HAL2 registers. Cleanup frees IRQ and low-level allocation through ALSA device teardown.
+
+Dependencies/integration: Depends on SGI HPC3/IP22 platform globals, HAL2 register definitions, ALSA PCM indirect helpers, noncoherent DMA APIs, and platform driver binding name `sgihal2`. Risks include busy-waiting indirect register access with no timeout, hard-coded real-world PBUS config, noncoherent DMA sync correctness, IRQ handler dereferencing substreams when interrupts arrive outside active streams, and resource leak risk in `hal2_detect()` failure after IRQ request. Test signals are HAL2 revision print, PCM playback/capture period interrupts, mixer get/put read-back, DMA descriptor wrap behavior, and probe/remove cycles.

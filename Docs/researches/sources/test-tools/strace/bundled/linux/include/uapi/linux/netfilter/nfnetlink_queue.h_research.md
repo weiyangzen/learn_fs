@@ -1,0 +1,15 @@
+# sources/test-tools/strace/bundled/linux/include/uapi/linux/netfilter/nfnetlink_queue.h
+
+Purpose: defines the userspace ABI for nfnetlink queue messages on `NETLINK_NETFILTER`. It names queue message types, packet/verdict/config payload structs, netlink attributes for queued packet metadata, queue configuration attributes, and queue/SKB behavior flags consumed by userspace packet verdict daemons and by strace's netfilter netlink decoders.
+
+Important APIs/types/functions: `enum nfqnl_msg_types` provides `NFQNL_MSG_PACKET`, `NFQNL_MSG_VERDICT`, `NFQNL_MSG_CONFIG`, and `NFQNL_MSG_VERDICT_BATCH`; `struct nfqnl_msg_packet_hdr` carries packet id, hardware protocol, and netfilter hook; `struct nfqnl_msg_verdict_hdr` carries verdict and packet id; `struct nfqnl_msg_config_cmd` and `struct nfqnl_msg_config_params` drive queue binding and copy mode. Attribute enums include `nfqnl_attr_type`, `nfqnl_vlan_attr`, and `nfqnl_attr_config`. Flag macros cover queue fail-open/conntrack/GSO/UID-GID/security-context behavior and skb checksum/GSO metadata.
+
+Control flow: the header has no executable flow, but it describes the message lifecycle. The kernel emits `NFQNL_MSG_PACKET` with `NFQA_PACKET_HDR` plus optional metadata such as timestamps, ifindexes, hardware address, conntrack data, VLAN data, L2 header, UID/GID, security context, and payload. Userspace sends `NFQNL_MSG_VERDICT` or `NFQNL_MSG_VERDICT_BATCH` with a verdict header, or sends `NFQNL_MSG_CONFIG` with command/parameter attributes to bind queues, choose `NFQNL_COPY_NONE`, `NFQNL_COPY_META`, or `NFQNL_COPY_PACKET`, and adjust queue flags and length.
+
+State/persistence behavior: there is no persistence in the header. The represented state is kernel queue configuration and transient packet queue entries; `packet_id` is the correlation key for later verdicts. Configuration flags alter kernel queue behavior for subsequent packets until changed or unbound.
+
+Dependencies/integration: includes `<linux/types.h>` and `<linux/netfilter/nfnetlink.h>`. In this repository, `src/netlink.c` includes the header and maps `NFNL_SUBSYS_QUEUE` message types through generated `xlat/nf_queue_msg_types`, while `tests/nfnetlink_queue.c` and `tests/gen_tests.in` provide decode coverage. It also integrates with conntrack UAPI via `NFQA_CT`/`NFQA_EXP` attributes without defining those nested formats itself.
+
+Risks: ABI decoding is sensitive to network byte order fields, packed structs, and attribute length/alignment. Adding attributes or flags in the bundled header requires matching xlat regeneration and decoder/test updates. `NFQA_CFG_MASK` and `NFQA_CFG_FLAGS` must be interpreted together; treating flags as absolute without the mask can misdescribe partial updates. `NFQA_SKB_CSUMNOTREADY` and `NFQA_SKB_CSUM_NOTVERIFIED` are easy to conflate.
+
+Test signals: strace should print known nfqueue message names instead of numeric fallbacks, decode packet/config/verdict structures without over-reading short payloads, and preserve unknown attribute/flag fallback output. Existing signals are the `nfnetlink_queue` pure executable entry and netlink socket diagnostic test references.

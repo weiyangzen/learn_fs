@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/dev/netlink.c
+
+Purpose: rtnetlink implementation for configuring and reporting CAN netdevices through `ip link type can`.
+
+Important APIs and functions: `can_validate()` and helpers reject invalid combinations before changes: sample point range, FD/XL data timing dependencies, TDC auto/manual exclusivity, PWM requiring XL TMS, listen-only versus restricted mode, and XL/TMS conflicts. `can_changelink()` applies ctrlmode, nominal timing, restart delay/manual restart, FD/XL data timing, PWM, and termination. `can_fill_info()` and size helpers export timing constants, clock, state, ctrlmode, restart, error counters, termination, bitrate limits, TDC, XL, and PWM attributes.
+
+Control flow and state: `changelink` runs under RTNL and forbids timing/mode/restart-delay changes while the netdev is up. It mutates `struct can_priv`, invokes driver timing callbacks, clears stale FD/XL/TDC/PWM state when top-level modes are disabled, recalculates MTU/capabilities, and uses extack diagnostics for user-visible failures. Dependencies include `can_get_bittiming()`, `can_calc_tdco()`, `can_calc_pwm()`, `can_validate_pwm_bittiming()`, `can_restart_now()`, and `can_link_ops`. Risks include complex dependency masks, stale configuration when modes are toggled, size/fill mismatches for nested attributes, and drivers with incomplete callback/constant combinations. Test signals are iproute2 netlink validation errors, dump output completeness, manual bus-off restart behavior, and FD/XL/TDC/PWM configuration matrices.

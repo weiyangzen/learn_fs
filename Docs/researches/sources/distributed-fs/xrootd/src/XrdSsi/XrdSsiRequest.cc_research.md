@@ -1,0 +1,9 @@
+# sources/distributed-fs/xrootd/src/XrdSsi/XrdSsiRequest.cc
+
+Purpose: implements common request lifecycle behavior shared by client-side and server-side SSI requests. It manages response metadata/data access, responder finish handoff, retry flagging, and cleanup for object reuse.
+
+Important APIs and control flow: constructor initializes request ID, default unbound mutex, empty responder, endpoint, timeout, and client-side flag. `CleanUp()` resets `Resp`, clears `errInfo`, endpoint, and returns the mutex pointer to the global unbound mutex. `CopyData()` validates a caller buffer, copies available data response bytes, advances `Resp.buff/blen`, unlocks, and invokes `ProcessResponseData()`. `Finished()` atomically detaches `theRespond`, then calls responder `Finished()` if present. `GetEndPoint()` and `GetMetadata()` read guarded state. `GetResponseData()` dispatches to stream `SetBuff()` for stream responses, copies ordinary data responses, or reports `ENODATA`. `ReleaseRequestBuffer()` calls the virtual buffer-release hook under lock. `SetRetry()` toggles the private retry flag.
+
+State and persistence: state is per-request and in-memory: response info, error info, responder pointer, endpoint, mutex pointer, TTL/timeout, client/server marker, and flags. The file defines global recursive `XrdSsi::ubMutex` for unbound requests.
+
+Dependencies and integration: used by `XrdSsiResponder`, `XrdSsiRRAgent`, `XrdSsiFileReq`, and client service implementations. Risks include touching request state after `Finished()` when ownership may transfer, `CopyData()` mutating `Resp.buff` pointer, lock/unlock before callbacks, and default constructor ignoring the `tmo` argument by setting `tOut` to zero. Test signals should cover data-response chunking, stream setup failure, no-responder `Finished()`, cleanup before reuse, retry flag through `XrdSsiRRAgent`, and metadata lifetime.

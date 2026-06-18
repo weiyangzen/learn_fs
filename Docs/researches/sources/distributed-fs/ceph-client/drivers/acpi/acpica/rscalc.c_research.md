@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/acpi/acpica/rscalc.c
+
+Purpose: calculates buffer sizes for ACPICA resource conversions before allocation. It determines internal `struct acpi_resource` list size from an AML resource byte stream, AML stream size from an internal resource list, and `struct acpi_pci_routing_table` size from a `_PRT` package.
+
+Important APIs, types, and functions: `acpi_rs_get_aml_length()` walks an internal resource list and returns required AML bytes. `acpi_rs_get_list_length()` walks AML descriptors and returns required internal resource bytes. `acpi_rs_get_pci_routing_table_length()` sizes a flattened PCI routing table. Helpers include `acpi_rs_count_set_bits()`, `acpi_rs_struct_option_length()`, and `acpi_rs_stream_option_length()`.
+
+Control flow: `acpi_rs_get_aml_length()` validates resource type and nonzero length, starts from `acpi_gbl_aml_resource_sizes`, then adjusts for optional flags, vendor data, resource sources, interrupt counts, GPIO/pin tables, serial bus subtype sizes, labels, and vendor payloads. It returns normally only when an `END_TAG` is found. `acpi_rs_get_list_length()` validates each AML descriptor with `acpi_ut_validate_resource()`, computes extra bytes for variable fields such as IRQ/DMA bitmasks, vendor payloads, optional source strings, extended IRQ arrays, GPIO/pin offsets, and serial bus subtype payloads, rounds each internal descriptor to native-word alignment, and stops at `END_TAG`. `_PRT` sizing validates each top-level element is a package, scans for source string/reference/null, rounds each entry to 64-bit alignment, and adds a zero-length terminator entry.
+
+State and persistence: no global state is owned here. The functions read global size tables from `rsinfo.c` and write only output size values. Allocation happens later in `rscreate.c` and `rsutils.c`.
+
+Dependencies and integration points: heavily coupled to `rsinfo.c` size arrays, `acpi_ut_get_resource_*` descriptor helpers, namespace path sizing for `_PRT` references, and conversion allocation in `rscreate.c`. Its sizing results must match `rsmisc.c` conversion behavior exactly.
+
+Risks and test signals: this is a primary memory-safety boundary. Underestimates cause conversion-time overwrites; overestimates waste memory but are safer. Risks include unsigned underflow when counts are malformed, offset arithmetic for GPIO/pin descriptors, missing `END_TAG`, zero-length internal descriptors, and serial bus subtype index validity. Tests should include malformed AML lengths, absent end tags, empty and multi-entry IRQ/DMA masks, large vendor data, all GPIO/pin/serial variable sections, and `_PRT` packages with strings, references, integers, nulls, and wrong element counts.

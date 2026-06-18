@@ -1,0 +1,42 @@
+# sources/distributed-fs/ceph-client/arch/arm/include/asm/delay.h
+
+### Purpose
+`sources/distributed-fs/ceph-client/arch/arm/include/asm/delay.h` declares ARM delay-loop
+calibration state and maps udelay/ndelay/mdelay to architecture-aware delay backends. It is part of
+the ARM kernel-architecture compatibility layer imported in the Ceph client source tree, so its
+direct consumers are kernel architecture, MM, interrupt, driver, and board-support code rather than
+Ceph protocol logic.
+
+### Important APIs, Types, And Functions
+macros: `MAX_UDELAY_MS`, `UDELAY_MULT`, `UDELAY_SHIFT`, `__delay`, `__udelay`, `__const_udelay`,
+`udelay`, `ARCH_HAS_READ_CURRENT_TIMER`; types: `delay_timer`; functions/prototypes: `__bad_udelay`,
+`__loop_delay`, `__loop_udelay`, `__loop_const_udelay`, `register_current_timer_delay`. The file is
+100 lines / 2901 bytes, and the exported surface is primarily an include-time contract for other
+kernel files.
+
+### Control Flow
+This header mostly supplies constants, declarations, or compile-time glue; runtime flow is driven by
+the C or assembly files that include it.
+
+### State, Persistence, And Dependencies
+Caller-visible state is represented by `delay_timer`. External state or implementation hooks include
+`__bad_udelay`, `__loop_delay`, `__loop_udelay`, `__loop_const_udelay`,
+`register_current_timer_delay`. There is no userspace filesystem persistence in this file;
+persistence is either kernel memory, CPU register state, hardware register state, or generated ABI
+values. Direct includes are `asm/page.h`, `asm/param.h`. It integrates with generic Linux ARM
+architecture code through include-time contracts rather than a standalone translation unit.
+
+### Integration Points
+The header is included by ARM architecture implementation files, board/platform code, low-level
+drivers, and generic Linux subsystems that need the ARM-specific version of `delay.h`. In the
+distributed filesystem tree this matters indirectly: the Ceph client can only rely on networking,
+page cache, DMA, fault handling, and scheduler primitives if these architecture hooks compile and
+behave correctly for the target ARM kernel configuration.
+
+### Risks
+the main risk is ABI drift: constants and prototypes must stay synchronized with the implementation
+files that include this header.
+
+### Test Signals
+compile coverage across representative ARM configs; ensure all include users still build with
+sparse/objtool-style diagnostics where available.

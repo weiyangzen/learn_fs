@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/stream/stream01.c
+
+Purpose: verifies `freopen()` redirects an existing stream to a new named file. The test opens `ltp_file1.txt`, writes `abc`, reopens the same `FILE *` onto `ltp_file2.txt`, writes `def`, closes, then reads both files through `read_file` and checks exact contents with `TST_EXP_EQ_STRN`. Important APIs are `SAFE_FOPEN`, `SAFE_FWRITE`, `SAFE_FREOPEN`, `SAFE_FREAD`, and `SAFE_FCLOSE`. State consists of two temporary files removed at the end of `run`. Dependencies are LTP safe stdio wrappers and a temporary directory. Risks are append-mode interactions if cleanup failed from a prior run; test signal is that first and second buffers land in different files as expected.

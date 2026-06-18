@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/clock_getres/Makefile
+
+Purpose: LTP leaf Makefile for `clock_getres()` tests. It includes standard testcase rules, adds an include path to the sibling `../utils` directory, links with pthread and realtime libraries, and delegates to generic leaf targets. The include path and libraries support clock utility helpers and threaded/time tests in that directory. State is build-only. Dependencies are pthreads, librt, and LTP utility headers. Risks are missing utility include path or libraries causing compile/link failures. Test signal is successful build of the clock_getres leaf tests.

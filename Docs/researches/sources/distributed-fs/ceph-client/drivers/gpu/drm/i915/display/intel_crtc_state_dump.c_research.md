@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_crtc_state_dump.c
+
+Purpose: debug-only KMS state dumping for `struct intel_crtc_state`, including pipe timing, link M/N values, infoframes, color/CSC/LUT state, VRR, DSC, scaler, fitter, DPLL, and current plane state. The main export is `intel_crtc_state_dump()`, which is gated by `drm_debug_enabled(DRM_UT_KMS)` and uses a DRM debug printer, so normal runtime behavior and persistence are unaffected unless KMS debug is enabled.
+
+Important APIs and helpers: `intel_output_format_name()` maps `enum intel_output_format` to user-readable strings; `snprintf_output_types()` converts the output type bitmask to comma-separated names; `intel_dump_m_n_config()`, `intel_dump_crtc_timings()`, `intel_dump_plane_state()`, `ilk_dump_csc()`, and `vlv_dump_csc()` format substructures. HDMI/DP infoframes are delegated to DRM helpers such as `hdmi_infoframe_log()`, `drm_dp_vsc_sdp_log()`, and `drm_dp_as_sdp_log()`.
+
+Control flow: `intel_crtc_state_dump()` prints the CRTC enable line and jumps directly to plane dumping when the pipe is disabled. For enabled pipes it walks feature groups in a fixed order: output identity, transcoder relationships, joiner/splitter, FDI/DP link state, PSR/replay/selective fetch, audio/infoframes/ELD, scanline/latency, VRR, requested/adjusted/pipe modes, port clock and cdclk, scalers, panel fitter, IPS/DRRS, DPLL, color/CSC/LUT, DSC, CASF, and then plane states from the supplied atomic state. Plane dumping only includes new plane states whose `plane->pipe` matches the CRTC.
+
+State and persistence: the file does not mutate driver state. It reads `intel_crtc_state`, `intel_atomic_state`, `intel_plane_state`, display runtime/platform flags, and DRM framebuffer metadata for diagnostics. The only side effects are debug logs and possible `WARN_ON_ONCE()` when an unknown output type bit remains.
+
+Dependencies and integration: used by modeset setup/verification and failure paths to compare software and hardware states. It depends on `intel_display_types.h` for state layout, `intel_hdmi.h` for infoframe enable mapping, `intel_vblank.h` and `intel_vrr.h` for derived timing values, `intel_vdsc.h` for DSC dumps, and `intel_dpll_dump_hw_state()` through included display types/core headers.
+
+Risks: output is tightly coupled to `struct intel_crtc_state`; adding state fields without updating this dump reduces debug value. `snprintf_output_types()` depends on enum values matching the string table. The gamut metadata branch logs `infoframes.drm`, which may be intentional reuse or a possible naming ambiguity. Long debug output can be noisy during modeset failures but is gated by KMS debug.
+
+Test signals: enable DRM KMS debug and exercise successful/failed atomic modesets, DP/eDP/HDMI cases, VRR/PSR/DSC/color-management configurations, and disabled CRTC cases. Useful validation is that software/hardware state mismatch reports contain enough fields to identify the mismatch and that unknown output bits trigger the one-time warning.

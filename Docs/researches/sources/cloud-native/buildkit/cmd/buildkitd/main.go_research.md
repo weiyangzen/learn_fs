@@ -1,0 +1,11 @@
+# Research: sources/cloud-native/buildkit/cmd/buildkitd/main.go
+
+Purpose: is the BuildKit daemon entrypoint and composition root. It loads/defaults configuration, configures logging/telemetry/listeners, initializes workers/frontends/cache/history/control services, and serves the gRPC API.
+
+Important APIs and control flow: package init sets exported product and trace recorder. `registerWorkerInitializer` stores OCI/containerd worker initializers by priority. `main` builds the CLI, default config, rootless/group/log/TLS/CDI/service flags, then its action loads config, applies defaults and flags, configures logrus, system tuning, debug handlers, tracer/meter providers, gRPC server interceptors, absolute root, service registration, root lock, listeners, optional cache debug DB, controller, health/reflection, entitlements, service launch, and server lifecycle with graceful stop plus telemetry shutdown in `After`. Helpers implement listener creation, systemd readiness, config defaults, rootless detection, flag application, group lookup/security descriptor dispatch, TLS credentials, worker controller assembly, platform parsing, GC policy conversion, DNS config, bool-or-auto parsing, trace collector, OTEL providers/views, CDI manager construction, and lazy GHA policy verifier creation.
+
+State and persistence: persistent state includes daemon root, lock file, cache DB, history DB, optional cache-debug DB, worker storage, policy verifier state, CDI spec scanning, and provenance env JSON input. It also mutates process-global logging, tracing, umask via platform files, and registry concurrency.
+
+Dependencies and integration: integrates almost every daemon subsystem: gRPC, worker/controller, Dockerfile/gateway frontends, remote cache import/export backends, resolver config, session manager, OpenTelemetry/Prometheus, systemd, service wrappers, CDI, policy verifier, and app defaults.
+
+Risks and test signals: risks include security of unauthenticated TCP listeners, rootless requirements, TLS config completeness, root lock contention, worker absence, and lifecycle cleanup. `main_test.go` covers proxy-network flag override only; most behavior is integration-tested elsewhere or relies on subsystem tests.

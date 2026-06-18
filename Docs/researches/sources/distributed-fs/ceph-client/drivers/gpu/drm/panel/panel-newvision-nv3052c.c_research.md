@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-newvision-nv3052c.c
+
+Purpose: This is a SPI/MIPI-DBI DRM DPI panel driver for NewVision NV3052C IPS LCD panels. It supports several 640x480 panels by combining per-compatible register tables with common gamma/GIP/interface initialization, fixed mode lists, bus format/flags, reset/power handling, and external backlight binding.
+
+Important APIs, types, and functions: `struct nv3052c_reg` stores one command/value pair. `struct nv3052c_panel_info` stores modes, physical size, bus format/flags, and panel-specific register table. `struct nv3052c` stores device, DRM panel, `mipi_dbi`, panel info, supply, and reset GPIO. `common_init_regs[]` applies shared gamma, GIP timing, pad mapping, and access-control settings. `ltk035c5444t_panel_regs[]`, `fs035vg158_panel_regs[]`, and `wl_355608_a8_panel_regs[]` customize page-1 analog/interface values. `nv3052c_prepare()` enables power, resets the chip, writes panel-specific then common registers via `mipi_dbi_command()`, and exits sleep. `nv3052c_enable()/disable()` send display-on/off. `nv3052c_get_modes()` exposes all modes and bus information.
+
+Control flow: SPI probe selects panel info, obtains `power` and reset GPIO, initializes DBI over SPI, disables DBI reads, binds backlight, adds the panel, and returns. DRM prepare handles all register programming and sleep-out. Enable waits 120 ms before backlight if a backlight is present. Remove removes the panel and calls disable/unprepare.
+
+State and persistence: The panel info pointer and DBI configuration are persistent software state. Panel registers are reprogrammed on every prepare, so they recover from power loss. `priv->dbi.read_commands = NULL` makes this a write-only DBI control path. No brightness state is held by this driver; backlight is external.
+
+Dependencies and integration points: Dependencies include SPI, DRM MIPI DBI, DRM panel/mode APIs, regulator/GPIO/backlight APIs, media bus formats, OF and SPI ID tables. Compatibles include `leadtek,ltk035c5444t`, `fascontek,fs035vg158`, and `anbernic,rg35xx-plus-panel`.
+
+Risks: The common register table uses C++-style comments in C source, acceptable in kernel C but visually inconsistent. Any panel-specific table mismatch can produce wrong VCOM/gamma/interface behavior while still probing successfully. Prepare exits sleep but does not wait the usual 120 ms until enable/backlight, so panel readiness relies on the later enable path. If a DBI command fails, reset remains deasserted while the regulator is disabled. The SPI ID `rg35xx-plus-panel` maps only through ID name, with OF data required for actual panel info in this probe path.
+
+Test signals: Validate all compatibles report their expected modes and physical sizes, RGB888 bus format, DE/pixel-drive flags, DBI SPI initialization, write-only command mode, successful register programming, display-on/off behavior, 120 ms backlight delay, and proper regulator/reset cleanup on DBI command failures.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/cc770/cc770_isa.c
+
+Purpose: legacy ISA/PC-104 bus wrapper for the shared CC770 core. It creates platform devices from module parameters and supplies memory, direct I/O-port, or indirect I/O-port register access.
+
+Important APIs and functions: module parameters `port`, `mem`, `irq`, `clk`, `cir`, `cor`, `bcr`, and `indirect` describe up to `MAXDEV` devices. `cc770_isa_probe()` reserves I/O or memory regions, maps memory, allocates a CC770 netdev, selects read/write callbacks, computes clock divisor bits, sets platform data in `struct cc770_priv`, and calls `register_cc770dev()`. `cc770_isa_remove()` unregisters and releases resources. Indirect port access is serialized by `cc770_isa_port_lock`.
+
+Control flow and state: module init walks parameter arrays, creates platform devices only for complete address/IRQ tuples, then registers a platform driver. Remove and exit unwind registered platform devices. Persistent state is the module-parameter arrays plus `cc770_isa_devs[]`; per-device state is stored in the netdev private structure. Dependencies include ISA I/O APIs, platform devices, shared CC770 helpers, and SocketCAN. Risks include misconfigured module parameters, shared IRQ behavior, correct fallback from per-device to index-0 defaults, and cleanup symmetry for direct versus indirect I/O sizes. Test signals include probe logs, insufficient-parameter errors, region conflicts, registration failures, and successful multi-device module load/unload.

@@ -1,0 +1,15 @@
+# sources/cloud-native/containerd/core/metadata/snapshot.go
+
+Purpose: wraps a backend `snapshots.Snapshotter` with metadata namespace mapping, bbolt persistence, leases, events, filtering, and garbage collection of backend snapshots no longer referenced by metadata.
+
+Important APIs and types: `snapshotter`, `newSnapshotter`, `createKey`, `getKey`, `resolveKey`, and methods `Stat`, `Update`, `Usage`, `Mounts`, `Prepare`, `View`, `Commit`, `Remove`, `Walk`, `garbageCollect`, `walkTree`, `pruneBranch`, and `Close`. Helper types include `infoPair` and `treeNode`.
+
+Control flow: public operations require namespace. Metadata snapshot names map to backend keys generated as `<namespace>/<sequence>/<key>`. `Stat` reads local labels/timestamps/parent/backend key, stats the backend key, and overlays local metadata. `Update` mutates local labels, validates them, writes timestamps and labels, and updates inherited labels on the backend inside the same transaction. `Prepare` and `View` route through `createSnapshot`, which reserves a backend key, handles `containerd.io/snapshot.ref` target deduplication, calls backend `Prepare` or `View`, then records metadata, parent child links, timestamps, labels, backend key, and lease references. `Commit` creates metadata for the committed name, moves child links from active key to committed name, removes active lease, and calls backend commit inside the transaction. `Remove` refuses snapshots with children, removes parent child links, deletes metadata, removes lease linkage, marks DB dirty, and publishes removal. `Walk` batches metadata pairs, stats backends, overlays local fields, and applies filters. `garbageCollect` builds the backend keys referenced by all namespaces, walks backend snapshot trees, and removes unreferenced branches child-first.
+
+State and persistence: stores snapshots under `v1/<namespace>/snapshots/<snapshotter>/<name>`, with backend `name`, optional metadata parent, children bucket, timestamps, and labels. Only labels with the inherited prefix are forwarded to backend snapshotters. Dirty snapshotter state is recorded for deferred backend GC.
+
+Dependencies and integration: depends on `snapshots`, metadata DB, bbolt, `boltutil`, `filters`, `labels`, namespace context, leases, events, mount types, logging, and backend `snapshots.Cleaner` when available. It is central to metadata DB snapshotter behavior.
+
+Risks: backend operations in transactions reduce inconsistency windows but can leave metadata/backend divergence if the transaction fails after backend update/commit. Target reference handling depends on backend `Walk` honoring or at least being checked against labels and parent. `Walk` batching uses `lastKey` and mutable `pairs`; pagination correctness is important for large stores. `Commit` has special rebase behavior when active metadata lacks a parent but commit options include one.
+
+Test signals: `snapshot_test.go` covers target reference deduplication, cross-namespace behavior, leases, and inherited labels; `snapshot_suite_test.go` runs the generic snapshotter suite against a native backend.

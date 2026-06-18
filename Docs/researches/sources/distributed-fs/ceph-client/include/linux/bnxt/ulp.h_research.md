@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/bnxt/ulp.h
+
+Purpose: Defines the Broadcom NetXtreme-C/E Ethernet driver interface used by upper-layer protocol devices, especially RoCE/RDMA and firmware-control auxiliary devices. It is a kernel-internal contract between the `bnxt` L2 driver, auxiliary bus children, firmware messaging, interrupt-vector allocation, and async firmware event delivery.
+
+Important APIs/types/functions: `enum bnxt_auxdev_type` identifies RDMA and firmware-control auxiliary devices. `struct bnxt_aux_priv` embeds `struct auxiliary_device` and links it back to `struct bnxt_en_dev`. `struct bnxt_msix_entry` describes allocated vectors, completion ring index, and doorbell offset. `struct bnxt_ulp_ops` is the callback vtable for upper-layer async events and IRQ stop/restart. `struct bnxt_fw_msg` carries HWRM request/response buffers and timeout. `struct bnxt_ulp` stores the upper-layer handle, RCU-protected ops pointer, async event bitmap, and requested MSI-X count. `struct bnxt_en_dev` exposes NIC, PCI, doorbell, chip, stats, state, BAR, and ULP resource accounting fields plus an operation mutex. Externs cover MSI-X/stat context getters/setters, ULP start/stop, IRQ restart, SR-IOV changes, auxiliary-device lifecycle, ULP registration, firmware message send, async-event registration, and auxiliary ID allocation.
+
+Control flow: The L2 driver initializes auxiliary devices, exports an `bnxt_en_dev`, and an upper-layer driver registers callbacks via `bnxt_register_dev()`. Runtime paths check `bnxt_ulp_registered()` with `rcu_access_pointer()`, dispatch firmware async completions through `ulp_async_notifier()` in bottom-half context, and coordinate IRQ quiesce/restart around reset or error recovery. Firmware requests flow through `bnxt_send_msg()`.
+
+State/persistence: State is volatile kernel driver state: registered ops, async event bitmap, MSI-X/stat context reservations, doorbell geometry, flags such as RoCE capability, VF, stopped, and software resource limits. `en_dev_lock` serializes ULP operations, while callback lookup uses RCU.
+
+Dependencies/integration: Depends on auxiliary bus, PCI/net device context, HWRM completion structs, and the core `bnxt` driver implementation. Integrates with RDMA/RoCE auxiliary drivers and firmware-control clients.
+
+Risks/test signals: High-risk areas are RCU callback lifetime, non-sleeping async notifier context, interrupt vector accounting across PF/VF/SR-IOV, and doorbell offset correctness. Test signals include RDMA auxiliary probe/remove, RoCE traffic through reset, firmware async-event delivery, SR-IOV VF count changes, MSI-X exhaustion, and unload/reload with KASAN/lockdep/RCU diagnostics.

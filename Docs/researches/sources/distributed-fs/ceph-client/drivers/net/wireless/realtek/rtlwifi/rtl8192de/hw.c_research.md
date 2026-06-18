@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+
+Purpose: Implements rtl8192de PCI hardware operations: DBI access, HW variable handling, MAC/LLT initialization, full hardware initialization, network type and BSSID filters, interrupt masks, poweroff/card disable, beacon registers, and suspend/resume register preservation.
+
+Important APIs/functions: Public functions include `rtl92de_read_dword_dbi()`, `rtl92de_write_dword_dbi()`, `rtl92de_get_hw_reg()`, `rtl92de_set_hw_reg()`, `rtl92de_hw_init()`, `rtl92de_set_network_type()`, `rtl92de_set_check_bssid()`, `rtl92d_linked_set_reg()`, interrupt enable/disable/update/recognized, `rtl92de_card_disable()`, beacon register setters, `rtl92de_suspend()`, and `rtl92de_resume()`. Key internals include `_rtl92de_llt_table_init()`, `_rtl92de_init_mac()`, `_rtl92de_hw_configure()`, `_rtl92de_poweroff_adapter()`, and beacon control helpers.
+
+Control flow: Hardware init marks adapter initializing, resets IQK, initializes MAC under `globalmutex_for_power_and_efuse`, downloads firmware, enables early mode/RDG as configured, loads MAC/BB/RF tables, applies BB/RF post-configuration, enables CCK/OFDM, configures protocol/EDCA/beacon/rate defaults, resets CAM, enables hardware security, captures original PHY values, programs TX power, enables ASPM backdoor, initializes DM, runs LCK, and waits for dual-MAC RF LO readiness before marking init ready. Card disable stops link/beacons, updates LEDs, halts TX/RX DMA, turns RF/BB off, resets MAC, then runs a poweroff adapter sequence that resets firmware, GPIO/LED, PLL/SPS/XTAL, and PCIe suspend state.
+
+State and persistence: Maintains `rtlpci->reg_bcn_ctrl_val`, `receive_config`, `transmit_config`, descriptor DMA base registers, irq masks/enabled flag, `being_init_adapter`, `init_ready`, `up_first_time`, ASPM support, `rtlhal->macphyctl_reg`, firmware mailbox state, RF power state, `mac->link_state`, TSF, and beacon interval. Writes large sets of volatile registers; suspend stores/restores `REG_MAC_PHY_CTRL_NORMAL`.
+
+Dependencies and integration: Depends on rtl8192d common register, firmware, DM, HW, and PHY helpers plus rtl8192de PHY/RF/SW/LED/TRX table modules. Tied to rtlwifi PCI ring structures, mac80211 interface modes, global Realtek locks, power-save code, and CAM/security helpers.
+
+Risks: Initialization is highly ordered; moving firmware, BB/RF table, CAM, TX power, or DM steps can break hardware. LLT setup has different page maps for single vs dual MAC. Multiple magic registers are written by literal offsets. `rtl92de_set_beacon_related_registers()` disables interrupts but does not re-enable them in that function. Poweroff behavior differs by interface index and dual-MAC mode. DBI access uses fixed delays with no completion polling.
+
+Test signals: Cold boot, firmware load, descriptor DMA addresses, interrupt delivery, STA/AP/ADHOC mode switching, beaconing/TSF correction, BSSID filtering, hardware crypto, suspend/resume, RF kill/card disable, dual-MAC mode, and `init_ready` failure logs around RF LO polling.

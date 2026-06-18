@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/st,stmpe.yaml
+
+Purpose: Binding for ST STMPE port expanders over I2C or SPI, describing a parent MFD with optional GPIO, keypad, ADC, PWM, touchscreen, reset, supplies, wakeup, and ADC timing controls.
+
+Important schema surface and control flow: compatible enumerates STMPE601/801/811/1600/1601/2401/2403; `reg` and `interrupts` are required. `allOf` imports SPI peripheral properties. Optional top-level controls include `vcc-supply`, `vio-supply`, reset GPIO, wakeup, autosleep timeout, sample time, ADC bit mode, reference select, and ADC frequency. Child nodes reference dedicated schemas for ADC and GPIO, matrix-keymap for keypad, PWM schema for PWM, and touchscreen schema for touch input while constraining STMPE-specific timing/current properties.
+
+State, dependencies, and integration: DT persists bus identity, interrupt wiring, power supplies, low-power timing, and enabled child functions for STMPE MFD child drivers. Dependencies include SPI/I2C, GPIO, IIO ADC, PWM, input matrix-keymap, touchscreen, regulator, and interrupt bindings. Risks include enabling child functions unsupported by a specific chip variant, invalid ADC timing enum values, and incomplete keypad `linux,keymap`. Test signals are binding validation, child schema validation, SPI property validation when used on SPI, and runtime probe of GPIO/ADC/keypad/PWM/touchscreen children.

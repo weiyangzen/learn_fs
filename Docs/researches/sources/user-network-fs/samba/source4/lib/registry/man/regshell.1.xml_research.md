@@ -1,0 +1,5 @@
+# sources/user-network-fs/samba/source4/lib/registry/man/regshell.1.xml
+
+This DocBook man page documents `regshell`, a readline-style interactive browser for Windows registry files or remote registries. It lists backend and credential options, then documents shell commands such as `ck|cd`, `ch|predef`, `list|ls`, `mkkey|mkdir`, `rmval|rm`, `rmkey|rmdir`, `pwd|pwk`, `set|update`, `help|?`, and `exit|quit`. Examples show browsing an NT4 registry file and listing a remote `HKEY_CURRENT_USER\AppEvents` path.
+
+The document describes interactive control flow rather than implementing it: open a backend, switch predefined roots, navigate keys, list contents, and mutate keys/values where supported. Persistence depends on the selected backend and commands used. Risks include documentation drift, particularly the note that `set|update` is not implemented, and remote examples requiring credentials and backend support. Test signals are manpage generation, command help parity, scripted regshell sessions, and remote/local examples.

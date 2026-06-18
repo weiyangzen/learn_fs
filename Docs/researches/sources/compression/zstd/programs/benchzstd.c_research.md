@@ -1,0 +1,26 @@
+# sources/compression/zstd/programs/benchzstd.c
+
+## Purpose
+`benchzstd.c` implements the zstd CLI benchmark path. It benchmarks compression, decompression, or both against in-memory samples loaded from files or generated synthetically. It reports throughput, compression ratio, and approximate compression memory, and it exposes the memory benchmark core used by higher-level tooling such as paramgrill and the zstd command line.
+
+## Important APIs, types, and functions
+The public entry points are `BMK_initAdvancedParams()`, `BMK_benchMem()`, `BMK_benchMemAdvanced()`, `BMK_benchFiles()`, `BMK_benchFilesAdvanced()`, and `BMK_syntheticTest()`. The result API uses `BMK_benchOutcome_t`, a tagged variant defined in the header, with `BMK_isSuccessful_benchOutcome()` and `BMK_extract_benchResult()` as the safe access pattern. Internally, `BMK_initCCtx()` maps benchmark advanced parameters and explicit `ZSTD_compressionParameters` into a reusable `ZSTD_CCtx`; `BMK_initDCtx()` prepares the decompression context. `local_defaultCompress()` and `local_defaultDecompress()` adapt zstd APIs to the generic timing harness in `benchfn.h`.
+
+`BMK_benchMemAdvancedNoAlloc()` is the core benchmark. It receives preallocated pointer/size arrays and buffers, splits each file segment into benchmark chunks, configures `BMK_benchParams_t` for compression and decompression, runs `BMK_benchTimedFn()`, tracks best observed speeds, and validates roundtrip output with `XXH64` when running both directions. `BMK_benchCLevels()` loops over compression levels and normalizes display names. `BMK_loadFiles()` loads file inputs into one contiguous sample buffer with a parallel `fileSizes` array.
+
+## Control flow
+File benchmarking starts in `BMK_benchFilesAdvanced()`: validate input count and level range, optionally load a dictionary, compute a safe sample size with `BMK_findMaxMem()`, allocate the sample buffer and per-file sizes, load inputs, then call `BMK_benchCLevels()`. Synthetic benchmarking allocates a single sample, fills it with `LOREM_genBuffer()` for negative compressibility or `RDG_genBuffer()` otherwise, then follows the same compression-level loop.
+
+Memory benchmarking starts in `BMK_benchMemAdvanced()`, which allocates arrays for source chunks, compressed chunks, decompressed result chunks, timed-function state, zstd contexts, and compressed/result buffers. It then delegates to the no-allocation core. Decode-only mode first calculates the decompressed size of every compressed segment with `ZSTD_findDecompressedSize()` and reallocates the result buffer to fit decoded output. Normal mode computes a chunk size from `adv->chunkSizeMax` and builds chunk pointer tables. Compression and decompression are timed independently until both timed states report completion.
+
+## State and persistence behavior
+The file has no persistent on-disk state beyond reading benchmark inputs. Runtime state is memory-local: zstd contexts, pointer tables, timing state, generated or loaded sample buffers, and display counters. The only externally visible state changes are writes to stdout/stderr for results and progress. Decode-only mode can copy the compressed source into the compressed buffer before timing. The result variant prevents callers from treating errors as valid benchmark data, but `BMK_extract_benchResult()` asserts rather than returning a recoverable error if misused.
+
+## Dependencies and integration points
+The implementation depends on `benchfn.h` and `timefn.h` for timing, `util.h` for file sizing and platform helpers, zstd static-linking APIs for context parameters, `datagen.h` and `lorem.h` for synthetic data, and `xxhash.h` for validation. It is integrated with the CLI through `benchzstd.h`; `BMK_syntheticTest()` and `BMK_benchFiles*()` are the command-facing entry points. It also integrates with advanced zstd compression parameters such as long-distance matching, row match finder, target compressed block size, literal compression mode, and worker count.
+
+## Risks and edge cases
+The benchmark is allocation-heavy and intentionally caps test size by probing available memory, so very large file sets may only be partially benchmarked. `BMK_loadFiles()` truncates the last loaded file if the buffer fills and sets `nbFiles = n` locally, which stops loading but does not update the caller's file count; downstream chunks for zero-sized entries must be tolerated. Decode-only mode requires frame content sizes to be known, so streams without content size cannot be benchmarked. Several internal errors call `exit()` through `CHECK_Z()`, making some parameter failures process-fatal rather than variant-returned. Throughput uses best observed timed runs, so tests should avoid comparing exact speeds.
+
+## Test signals
+Useful tests are CLI benchmark runs over one file, multiple files, decode-only compressed input with known and unknown content size, synthetic compressibility modes, dictionary benchmarking, and advanced flags such as workers, LDM, target block size, and row match finder. Regression checks should assert successful result tags, nonzero speeds for nonempty data, stable handling of empty or unreadable files, and roundtrip checksum warnings never appearing for valid zstd roundtrips.

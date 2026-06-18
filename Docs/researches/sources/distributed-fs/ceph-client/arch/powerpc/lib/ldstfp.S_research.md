@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/ldstfp.S
+
+`ldstfp.S` provides floating-point, Altivec/VMX, and VSX register access helpers for instruction emulation. It exports `get_fpr`, `put_fpr`, optional `get_vr`/`put_vr`, optional `get_vsr`/`put_vsr`, `load_vsrn`, `store_vsrn`, and conversion helpers `conv_sp_to_dp` and `conv_dp_to_sp`.
+
+The FPR and VR helpers temporarily enable the relevant MSR bit (`MSR_FP` or `MSR_VEC`), use computed branch tables of 32 store/load instructions selected by register number, then restore the original MSR and synchronize with `isync`. VSX register move helpers use 64-entry branch tables around `XXLOR`. `load_vsrn` and `store_vsrn` build a small stack frame, save LR and `vs0` when needed, enable `MSR_VSX`, load or store a vector doubleword, handle little-endian doubleword swapping with `XXSWAPD`, then restore MSR and stack. Conversion helpers preserve `fr0` while doing scalar FP load/store conversion.
+
+State changes are temporary MSR enablement and stack-saved registers. Dependencies include instruction emulation callers, MSR manipulation macros, VSX opcodes, endian configuration, and FPU/Altivec/VSX config gates. Risks are leaving FP/vector state enabled incorrectly, clobbering `vs0`/`fr0`, and missing endian swaps. Test signals include emulate-step tests, FP/VSX instruction emulation, KVM or signal-context scenarios that trigger emulated loads/stores, and endian coverage.

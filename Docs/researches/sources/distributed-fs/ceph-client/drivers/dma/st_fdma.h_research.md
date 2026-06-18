@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/dma/st_fdma.h
+
+Purpose: defines the ST FDMA driver's hardware node formats, software descriptors, channel/device state, command/status registers, SLIM DMEM access macros, request-control encodings, and constants used by `st_fdma.c`.
+
+Important APIs/types/functions: central definitions are `struct st_fdma_generic_node`, `struct st_fdma_hw_node`, `struct st_fdma_sw_node`, `struct st_fdma_driverdata`, `struct st_fdma_desc`, `enum st_fdma_type`, `struct st_fdma_cfg`, `struct st_fdma_chan`, and `struct st_fdma_dev`. Important macros include `FDMA_CMD_START`, `FDMA_CMD_PAUSE`, `FDMA_CMD_FLUSH`, `FDMA_INT_*`, `fdma_read/write`, `fchan_read/write`, `dreq_write`, `fnode_read/write`, `FDMA_NODE_CTRL_*`, and `FDMA_REQ_CTRL_*`.
+
+Control flow: this header has no standalone runtime flow. It enables `st_fdma.c` to build linked hardware node lists, command a channel through SLIM DMEM and peripheral registers, configure paced request controls, and compute status/residue from channel/node memory.
+
+State and persistence: `struct st_fdma_hw_node` is the hardware-consumed 32-byte-aligned descriptor with next pointer, control flags, byte count, source/destination, and generic 2D stride fields. `struct st_fdma_desc` wraps a virt-dma descriptor and a counted flexible array of software nodes. `struct st_fdma_chan` stores its DMA pool, slave config, request config, DREQ line, virt channel, current descriptor, and DMA status. `struct st_fdma_dev` stores the Linux device, compatible driver data, DMAengine device, SLIM remoteproc handle, IRQ, channels, DREQ allocation state, channel count, and firmware name. All state is in memory or device/firmware registers.
+
+Dependencies and integration points: includes DMAengine, DMA pool, I/O, ST SLIM remoteproc, and `virt-dma`. The access macros assume `slim_rproc->peri` and `slim_rproc->mem[ST_SLIM_DMEM].cpu_addr` are valid and that channel and DREQ command blocks are laid out at fixed offsets in SLIM DMEM. Node control and request-control bit definitions form the ABI between the Linux driver, FDMA firmware, and clients.
+
+Risks: register and DMEM accessor macros are untyped and directly compute offsets from channel IDs or DREQ lines, so invalid IDs can become out-of-bounds MMIO/DMEM accesses. `FDMA_DMA_BUSWIDTHS` in the C file uses `BIT(DMA_SLAVE_BUSWIDTH_*)` style while most DMAengine drivers use enum values as bitmasks; this should be confirmed against the local API. Flexible array structs require allocation through `kzalloc_flex` with correct node counts. Hardware node alignment is critical; changing `struct st_fdma_hw_node` layout could break firmware consumption.
+
+Test signals: compile-time layout/alignment checks, probe with all three STiH407 compatibles, transfer prep that allocates 1 and many nodes, request-control encoding for each supported bus width, SLIM DMEM register read/write smoke tests, and negative tests for invalid DREQ/channel IDs. Firmware integration tests should confirm the node ABI fields are consumed as expected.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/usb/early/xhci-dbc.c
+
+Purpose: implements early printk over the xHCI Debug Capability (DbC), including early PCI discovery, DbC context/ring setup, console writes, event processing, reset recovery, and cleanup or handoff after normal init.
+
+Important APIs/functions: external init hooks are `early_xdbc_parse_parameter`, `early_xdbc_setup_hardware`, and `early_xdbc_register_console`. Internal code includes `xdbc_map_pci_mmio`, `xdbc_find_dbgp`, `xdbc_bios_handoff`, `xdbc_mem_init`, `xdbc_start`, `xdbc_bulk_transfer`, `xdbc_handle_external_reset`, `xdbc_handle_events`, `xdbc_bulk_write`, `early_xdbc_write`, `xdbc_scrub_function`, and `xdbc_init`.
+
+Control flow: parameter parsing finds the selected xHCI PCI function, enables memory space, maps BAR MMIO with early ioremap, locates the debug extended capability, and stores DbC registers. Hardware setup hands off from BIOS, initializes a raw spinlock, allocates memblock pages for tables, buffers, event ring, IN ring, and OUT ring, writes descriptor strings and endpoint contexts, starts DbC, marks it initialized/configured, and posts an initial read. Console writes chunk output into 1024-byte packets with CRLF conversion, process events under a raw spinlock, wait for any previous OUT transfer, queue a TRB, set the cycle bit with a barrier, and ring the doorbell. Event handling consumes port status and transfer events, updates flags, reposts IN reads, and handles external reset by rebuilding contexts and restarting DbC. A subsys init hook either frees early resources or remaps MMIO for a kept console and runs a scrub thread until the connection ends.
+
+State and persistence: `static struct xdbc_state xdbc` stores PCI identity, MMIO mapping, DbC registers, DMA/memblock tables, rings, buffers, port number, flags, and lock. Flags capture initialized, configured, stalls, and in-process transfers. `early_console_keep` controls whether the console remains after boot.
+
+Dependencies and integration: depends on early PCI, memblock allocation, early and normal ioremap, xHCI register helpers, xHCI extended capability scanning, USB descriptor constants, console registration, raw spinlocks, kthreads, and xHCI DbC data structures from `xhci-dbc.h`.
+
+Risks: early boot allocation failures can leak partially allocated memblock pages in some failure branches until cleanup. PCI bus mastering/memory enablement is forced. TRB cycle handling and event dequeue pointer updates are hardware-ordering sensitive. NMI writes use trylock and can drop output. External reset recovery must not race with console writes. Device-specific endpoint IDs differ between Intel and AMD-style implementations and are handled with alternate constants.
+
+Test signals: boot with xDBC early console on supported xHCI hardware, verify early output before normal console, keep and non-keep cleanup modes, cable unplug/replug or external reset recovery, stalled endpoint handling, NMI printk behavior, and later host controller reuse. Trace output under `XDBC_TRACE` helps diagnose missed messages and event processing.

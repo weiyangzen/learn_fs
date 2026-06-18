@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/nydus-snapshotter/pkg/daemon/client.go
+
+This file defines the `NydusdClient` interface and its Unix-domain-socket HTTP implementation for controlling a running `nydusd`. It centralizes daemon API paths for daemon info, mount/umount, blob binding, metrics, failover takeover/sendfd/start/exit, runtime config updates, and v2 blob cache operations.
+
+Important APIs include `NewNydusClient`, `GetDaemonInfo`, `Mount`, `Umount`, `BindBlob`, `UnbindBlob`, `GetFsMetrics`, `GetInflightMetrics`, `GetCacheMetrics`, `UpdateConfig`, `TakeOver`, `SendFd`, `Start`, and `Exit`. `buildTransport` rewires HTTP dialing to a Unix socket, while `request` builds requests, attaches JSON content type for bodies, treats 200/204 as success, and decodes nydusd error bodies through `types.ErrorMessage`.
+
+State is mostly external: the client stores an `http.Client`, while daemon lifecycle state remains in `nydusd`. `WaitUntilSocketExisted` polls for a socket file and validates socket mode before client creation. Integration points include `pkg/daemon/daemon.go`, manager recovery/upgrade, metrics collection, fscache blob lifecycle, and auth hot reload. Risks include strict assumptions about JSON error bodies, the `decode` helper passing `&v`, socket residuals from dead daemons, and retry behavior around zombie detection. Unit tests cover daemon info, Unix socket transport, and `UpdateConfig`; mount, metrics, blob, and failover endpoints are integration-level.

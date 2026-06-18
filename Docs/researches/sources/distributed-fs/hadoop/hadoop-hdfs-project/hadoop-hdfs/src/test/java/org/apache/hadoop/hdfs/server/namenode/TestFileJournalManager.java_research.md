@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/TestFileJournalManager.java -->
+## sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/TestFileJournalManager.java
+
+Purpose: `TestFileJournalManager` validates local edit-log segment discovery, reading, recovery, corruption handling, gap behavior, remote edit-log listing, finalization error propagation, and pre-upgrade rename failure handling for `FileJournalManager`.
+
+Important APIs, types, and functions: it uses `FileJournalManager`, `NNStorage`, `StorageDirectory`, `NameNodeDirType.EDITS`, `EditLogInputStream`, `FSEditLogOp`, `JournalSet.EDIT_LOG_INPUT_STREAM_COMPARATOR`, `TestEditLog.setupEdits`, `AbortSpec`, `TXNS_PER_ROLL`, `TXNS_PER_FAIL`, `NNStorage` file-name helpers, `FileUtil`, `NativeCodeLoader`, and `IOUtils.cleanupWithLogger`. Core helpers are `getNumberOfTransactions`, `getJournalInputStream`, `corruptAfterStartSegment`, and `getLogsAsString`.
+
+Control flow: setup disables fsync for speed and creates a fresh `Configuration`. Transaction counting selects input streams from a transaction ID, optionally includes in-progress streams, skips to the current txid, reads operations, and optionally stops on gaps. Tests generate edit directories with different roll/failure patterns, instantiate a manager per storage directory, and assert readable transaction counts. Gap tests delete a finalized edits file and check counts before/at/after the gap. Corruption tests modify an in-progress file after the start segment and expect the manager to recover usable transactions. Remote-log tests mock storage directory contents and assert stringified finalized ranges. Upgrade/finalize tests force filesystem permission errors and assert exceptions plus storage-directory removal or native rename message content.
+
+State and persistence behavior: this file is all about persistent edit-log files under storage directories. It exercises finalized `edits_start-end`, `edits_inprogress_start`, corrupt in-progress segments, deleted segment gaps, storage-dir removal state in `NNStorage`, and pre-upgrade directory renames.
+
+Dependencies and integration points: depends heavily on `TestEditLog` fixtures, local filesystem permissions, native IO availability, edit-log stream ordering, NNStorage naming conventions, and the journal manager's contract with remote edit-log listing and upgrade hooks.
+
+Risks and edge cases: filesystem permission manipulation can behave differently on platforms or when tests run with elevated privileges. `corruptAfterStartSegment` uses a fixed offset and raw overwrite, which is coupled to edit-log binary layout enough to be useful but potentially brittle. Gap behavior is intentionally non-throwing in `getNumberOfTransactions` when `abortOnGap` is true; callers must interpret counts carefully. Static skip-fsync setting affects all edit-log output streams in the JVM.
+
+Test signals: exact transaction counts for normal, mixed, and failed directories; zero count at a gap; corruption recovery count; exclusion of in-progress streams; correct first op when starting mid-segment; remote finalized range lists; expected exceptions on invalid dirs, finalization errors, and pre-upgrade rename failures.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/TestFileJournalManager.java -->

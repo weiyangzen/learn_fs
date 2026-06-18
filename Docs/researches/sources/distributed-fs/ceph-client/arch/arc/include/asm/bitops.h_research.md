@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/bitops.h
+
+Purpose: ARC bit-scan helpers and generic bitops integration. Important APIs/types/functions: defines `clz`, `constant_fls`, `fls`, `__fls`, `ffs`, `__ffs`, `ffz`, and includes generic hweight/fls64/sched/lock/atomic/non-atomic/le/ext2 helpers. Control flow: ARCompact uses `norm.f` and constant folding; ARCv2 uses `fls.f`, `ffs.f`, and `__builtin_arc_fls`. State and persistence: no persistent state. Dependencies/integration: included only through `linux/bitops.h` and used broadly by kernel code. Risks: zero input semantics differ across instructions and APIs; direct inclusion is forbidden. Test signals: bitops selftests for zero, all-one, powers of two, constant expressions, and both ISA configs.

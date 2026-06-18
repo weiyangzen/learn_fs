@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rohm,bd71828-pmic.yaml
+
+Purpose: Binding for the ROHM BD71828 PMIC MFD, describing regulators, GPIOs, LEDs, charger sense resistor, 32 kHz clock output, interrupts, and optional system power control.
+
+Important schema surface and control flow: the top-level node requires compatible, register address, interrupt, and `regulators`. It supports GPIO controller cells, `clocks`/`#clock-cells = 0`, fixed `clock-output-names`, open-drain clock output, charger sense resistor selection, `gpio-reserved-ranges`, `system-power-controller`, a regulator subtree referenced through the ROHM BD71828 regulator schema, and an `leds` child referenced through the BD71828 LED schema. Additional properties are closed.
+
+State, dependencies, and integration: the persistent DT node feeds the BD71828 MFD core and its regulator, GPIO, LED, clock, power-off, charger, and interrupt subdevices. Dependencies include ROHM regulator and LED schemas, common GPIO/clock/interrupt definitions, and Linux MFD cell drivers. Risks are incorrect LED child compatibles, forgetting to reserve unavailable GPIO lines, mismatched charger sense value, and using power-off control on a board where the PMIC does not own system power. Test signals are schema validation, LED and regulator child validation, and runtime registration of GPIO, clock, LED, and regulator devices.

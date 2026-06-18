@@ -1,0 +1,15 @@
+# sources/user-network-fs/rclone/cmd/bisync/operations.go
+
+Purpose: Orchestrates a full bisync run: option finalization, workdir/listing path setup, locking, graceful shutdown, resync or normal sync execution, safety checks, listing updates, final validation, and cleanup.
+
+Important APIs/types/functions: `ErrBisyncAborted` maps critical aborts to fatal CLI exit. `bisyncRun` is the runtime state container for filesystems, options, listings, aliases, contexts, critical/retryable flags, sync cancellation, lock state, queues, comparison/check state, and conflict state. `queues` carries copy/delete/skip sets between delta application and listing modification. `Bisync` is the public package API. `runLocked`, `checkSync`, `checkAccess`, `handleErr`, `setBackupDir`, `overlappingPathsCheck`, `checkSyntax`, `debug`, `debugFn`, and `waitFor` implement the run.
+
+Control flow: `Bisync` copies user options, fills defaults, enables colors, computes compare/resync/resolve defaults, creates the workdir, derives canonical listing paths, validates syntax, takes the lock, registers signal finalization, runs `runLocked`, removes the lock, and maps critical conditions to `ErrBisyncAborted`. `runLocked` supports check-sync-only, dry-run listing copies, filter application, overlapping path checks, resync dispatch, prior-listing recovery, current listing march, delta detection, check-access, max-delete/all-changed safety aborts, applying changes, saving old listings, modifying/replacing listings, optional final check-sync, and optional empty-dir removal.
+
+State and persistence behavior: Persists workdir files named from `b.basePath`: current listings, `-new`, `-old`, `-err`, `-dry`, queue files, filter hash sidecars, and lock files. `--recover` can restore old listings after missing current listings. Critical non-resilient errors rename listings to `-err`. Graceful shutdown attempts to leave listings representing completed transfers and marks failed if cleanup cannot finish.
+
+Dependencies and integration points: This file ties together every bisync subsystem: command options, compare, resolve, resync, lockfile, march, deltas, listing, queue, check functions, rclone fs/accounting/log/operations, backup-dir handling, atexit signal hooks, and terminal output.
+
+Risks: This is the highest-level data safety path. Misclassifying errors as non-critical or retryable can lead to unsafe next runs. Signal handling depends on sync cancellation, transfer accounting, and listing rollback. Workdir/listing naming must remain stable for recovery. Overlapping path and backup-dir checks are essential because bisync uses files-from filters that can otherwise hide dangerous overlaps.
+
+Test signals: The full golden suite is the main coverage. Key scenarios include missing listings/recover, check-sync-only, all_changed, max_delete, filtersfile checks, dry_run, resync, backupdir, rmdirs, and volatile/test-func interruption. Unit tests around `waitFor`, syntax detection, and backup-dir overlap would add focused coverage.

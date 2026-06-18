@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_it821x.c
+
+`pata_it821x.c` supports ITE IT8211/IT8212 and RDC D1010 controllers. It handles both pass-through IDE mode and IT8212 smart RAID firmware mode. In smart mode, firmware owns timing and exposes RAID volumes with a restricted command set; in pass-through mode Linux programs clocks and timings directly. The `noraid` module parameter can force IT8212 bypass mode.
+
+`struct it821x_dev` is per-port state allocated in `it821x_port_start()`: smart mode, revision 0x10 errata, current 50/66 MHz clock, per-device clock preferences, cached PIO/MWDMA/UDMA timings, and last selected device. `it821x_program()`, `it821x_program_udma()`, and `it821x_clock_strategy()` manage shared clocks/timings. Pass-through callbacks set PIO/DMA modes, switch timings at DMA start/stop, and reload timing on device select. Smart callbacks filter unsupported commands, trust firmware-set modes, cap `max_sectors` to 255, apply quirks, and rewrite identify data to hide unsupported FUA/HPA/NCQ and stabilize RAID serial numbers.
+
+Probe selects RDC, pass-through, or smart port ops from vendor/device and config byte `0x50`, optionally calls `it821x_disable_raid()`, then delegates to `ata_pci_bmdma_init_one()`. Smart port start probes firmware command `0xfa` and displays RAID disk/volume state. Resume reapplies forced bypass when requested.
+
+State spans module parameter, PCI config, firmware metadata, and per-port `it821x_dev`. Dependencies are PCI, libata BMDMA/SFF, identify helpers, and firmware command I/O. Risks are high around firmware hangs on >255-sector LBA48 I/O, command filtering, revision 0x10 paired timing, ATAPI DMA filtering, and clock switching. Tests should cover smart RAID identify, unsupported command rejection, `noraid`, RDC variants, mixed master/slave pass-through modes, firmware command timeout, and suspend/resume.

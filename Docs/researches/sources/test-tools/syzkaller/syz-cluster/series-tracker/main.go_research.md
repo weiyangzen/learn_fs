@@ -1,0 +1,7 @@
+## sources/test-tools/syzkaller/syz-cluster/series-tracker/main.go
+
+This program polls lore.kernel.org archives, extracts patch series, uploads new series to syz-cluster, and creates a testing session for each saved series. Important types/functions are `SeriesFetcher`, `Update`, `handleSeries`, `seriesProcessor`, `archivesToPoll`, `sanitizeName`, and `logSeries`.
+
+`main` starts a `ManifestSource` loop, initializes polling from the last week, then every 15 minutes polls archives from the previous window. `Update` waits for manifest data, resolves each configured archive to its latest epoch URL, polls a local LKML git repo under `/git-repo/<sanitizedName>`, reads recent email messages, parses them, builds `lore.PatchSeries`, and calls `handleSeries`. `handleSeries` skips corrupted series, normalizes suspicious dates to now, builds `api.Series` metadata and patch bodies, extracts Cc addresses via `seriesProcessor`, uploads the series, and requests a session.
+
+State persists in the local git repo volume and syz-cluster database/blob storage through API calls. Dependencies include lore parsing, git polling, app config/client, and email parsing. Risks include only polling the latest epoch, repeated overlapping windows causing duplicate upload attempts, falling back to raw email when body parsing fails, trusting manifest availability, and single-threaded raw message reads. `main_test.go` covers Cc/body extraction, while manifest parsing is tested separately.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/bd71815-regulator.c
+
+Purpose: This ROHM BD71815 regulator driver registers five bucks, five configurable LDOs, two fixed LDO-style outputs, and a WLED current regulator. It adds BD71815-specific dynamic voltage scaling support for RUN, SNVS, SUSPEND, and LPSR states, plus special BUCK1/BUCK2 handling for dual voltage registers.
+
+Important APIs, types, and functions: `struct bd71815_regulator` wraps a `regulator_desc` with a `rohm_dvs_config`. Static `rohm_dvs_config` instances describe state-specific voltage and enable masks for bucks and LDOs. `set_hw_dvs_levels()` and `buck12_set_hw_dvs_levels()` are device-tree parse callbacks that call `rohm_regulator_set_dvs_levels()`. `bd7181x_buck12_get_voltage_sel()` and `bd7181x_buck12_set_voltage_sel()` implement the dual high/low selector register scheme. `bd7181x_led_set_current_limit()` wraps the regmap current helper to restore LED enable state if changing the current limit unexpectedly toggles hardware state.
+
+Control flow: `bd7181x_probe()` gets the parent regmap, optionally fetches parent firmware GPIO `rohm,vsel` for LDO4 enable, clears `RESTARTEN` so power-off can enter ship mode, and then registers each descriptor in `bd71815_regulators`. LDO4 alone receives `config.ena_gpiod`; the rest use register enable bits. Device tree parsing for each descriptor can program DVS state voltages and enable masks before the regulator is fully exposed.
+
+State and persistence behavior: The persistent state is in PMIC registers for voltage selectors, enable bits, DVS state selection, ramp settings, WLED current, and ship-mode restart control. BUCK1/BUCK2 use `_H` and `_L` selector registers. If DT specifies hardware DVS levels, `buck12_set_hw_dvs_levels()` may copy the currently selected low value into the high register, switch to the high register, program DVS levels, and enable hardware state based voltage control. Runtime voltage changes then update only RUN voltage when hardware state mode is active.
+
+Dependencies and integration points: The driver uses ROHM MFD headers, `rohm-generic` DVS helpers, the regulator core, OF regulator parsing, GPIO descriptors, and platform ID `"bd71815-pmic"`. It expects its platform device to be created by the parent PMIC/MFD and uses the parent device for regmap and firmware properties.
+
+Risks: BUCK1/BUCK2 have complex register selection semantics; wrong DVS DT properties can move control to the PMIC state machine and make software voltage changes ignore ramp behavior for non-RUN states. `ldolpsr_dvs` uses the same on masks as `dvref_dvs`, which should be checked against hardware definitions. The LED current workaround implies a hardware side effect that tests must preserve. Probe globally disables restart-to-ship-mode behavior, which affects system power behavior beyond regulator registration.
+
+Test signals: Exercise DT DVS parsing for all supported states, BUCK1/BUCK2 active/inactive selector switching, ramp delay programming, LDO4 GPIO enable, WLED current changes with enable-state preservation, regmap failure paths, and registration count `BD71815_REGULATOR_CNT`.

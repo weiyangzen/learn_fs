@@ -1,0 +1,9 @@
+# sources/storage-engines/tikv/components/resource_control/src/future.rs
+
+`future.rs` provides async wrappers that measure and optionally throttle resource use. `ControlledFuture<F>` wraps any future and, after each poll, charges elapsed CPU time to a `ResourceController` for a named group. `LimitedFuture<F>` wraps a future with a `ResourceLimiter`, measuring CPU duration and IO bytes per poll and converting limiter debt into timer delays unless `measure_only` is true.
+
+`LimitedFuture::poll` first pays existing token-bucket debt with `pre_delay` on the first poll for throttling mode. It then polls delay futures if active, samples IO bytes only when the IO limiter is finite, times the wrapped future poll, optionally replaces write IO with known request `write_bytes` on completion, and calls `resource_limiter.consume(dur, io_bytes, res.is_pending(), skip_compaction_pressure)`. Foreground non-background limiters can feed `ResourceGroupManager::record_ru_consumption` for baseline/admission logic. If the wrapped future is pending and limiter debt exists, a capped `post_delay` is scheduled, with `MAX_WAIT_DURATION` limiting any single wait to 10 seconds.
+
+`measure_only` mode is important for read/write pools: it accumulates debt and RU history but never sleeps in the pool, leaving admission control to throttle before submission. Background jobs use in-pool sleeping. `OptionalFuture` is a local helper tracking whether a timer future still needs polling. `with_resource_limiter` conditionally wraps a future or awaits it directly.
+
+Risks include poll-level accounting overhead, IO tracker noise for shared threads, double-counting if `write_bytes` were charged on pending polls, and delayed tasks occupying worker threads in throttling mode. Failpoint tests validate IO-byte delay behavior, wait duration bounds, and fallback when thread IO stats fail.

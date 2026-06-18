@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-aspeed.c
+
+Purpose: this driver supports ASPEED SD/SDIO/SDHCI controllers. It has a parent SD controller driver that owns shared SDC registers and creates child SDHCI platform devices, plus a child SDHCI driver that programs per-slot clock division, 8-bit mode, card-detect polarity adjustment, capabilities mirrors, and AST2600 phase taps.
+
+Important APIs, types, and functions: `struct aspeed_sdc` stores shared controller clock, resource, lock, and registers. `struct aspeed_sdhci` stores per-slot platform data, parent pointer, bus-width mask, clock phase map, and phase descriptor. `aspeed_sdhci_phase_to_tap()` converts degree/rate inputs into tap values and an inversion bit; `aspeed_sdhci_configure_phase()` applies DT phase maps. `aspeed_sdhci_set_clock()`, `aspeed_sdhci_set_bus_width()`, `aspeed_sdhci_readl()`, `aspeed_sdhci_probe()`, and `aspeed_sdc_probe()` are the main integration points.
+
+Control flow: the parent probe deasserts optional reset, enables the SDC clock, maps shared registers, stores driver data, and creates child platform devices for each available child node. The child probe selects AST2400/2500/2600 pdata, initializes SDHCI, derives the slot from MMIO offset relative to the parent resource, selects phase descriptors, applies DT SDHCI properties, mirrors 1.8 V and SDR104 capabilities into shared registers when requested, enables the child clock, parses MMC properties and phase maps, then registers the host. Clock setting disables SDHCI clock control, chooses a one-hot-like divider from the parent clock, configures phase taps, and calls `sdhci_enable_clk()`.
+
+State and persistence: shared state is the SDC register block guarded by `spinlock_t lock`, especially 8-bit and phase fields. Per-slot state is slot-derived masks and parsed clock phases. Clocks remain enabled while devices are bound and are disabled in remove. Optional KUnit tests are included at compile time.
+
+Dependencies and integration points: the driver uses SDHCI platform helpers, OF child device creation, common clocks, reset controls, MMC DT parsing, and shared ASPEED SDC registers. Compatibles include `aspeed,ast2400-sd-controller`, `aspeed,ast2500-sd-controller`, `aspeed,ast2600-sd-controller`, and matching child `*-sdhci` compatibles.
+
+Risks: slot calculation depends on 0x100-aligned child resources after the parent base. Shared phase and width registers require correct locking across slots. Capability mirroring is manually derived from SDHCI capability registers and DT properties. Phase conversion uses a measured maximum tap delay and clamps out-of-range requests, so board timing margins need validation. `aspeed_sdhci_readl()` flips card-present only when `MMC_CAP2_CD_ACTIVE_HIGH` is set, making card-detect polarity a key board property.
+
+Test signals: probe should report configured slot numbers, SD/SDIO clocks should divide correctly on AST2400/2500 and AST2600, 8-bit mode should toggle shared SDC bits, SDR104/1.8 V caps should mirror, phase DT values should produce expected taps, card-detect polarity should be correct, and the optional KUnit suite should pass.

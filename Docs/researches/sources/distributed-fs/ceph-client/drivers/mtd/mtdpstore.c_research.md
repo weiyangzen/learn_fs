@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/mtdpstore.c
+
+Purpose: implements the MTD backend for `pstore/blk`, storing persistent kernel oops/panic dmesg records in fixed-size zones inside one MTD partition. It binds by configured MTD name or number and exposes pstore zone operations for read, normal write, erase, and panic write.
+
+Important APIs and types: the file centers on the global `mtdpstore_context` with pstore config/device objects, the selected `struct mtd_info`, and three bitmaps: `usedmap`, `rmmap`, and `badmap`. The pstore callbacks are `mtdpstore_read()`, `mtdpstore_write()`, `mtdpstore_erase()`, and `mtdpstore_panic_write()`. Device lifetime is handled through `mtdpstore_notify_add()`, `mtdpstore_notify_remove()`, `mtdpstore_init()`, and `mtdpstore_exit()`.
+
+Control flow: module init reads `pstore_blk_get_config()`, parses `info->device`, then registers an MTD notifier. On matching MTD add, it validates size, eraseblock, write-size alignment, allocates bitmaps, fills `pstore_device_info`, and calls `register_pstore_device()`. Reads skip bad blocks, tolerate ECC errors by returning available data, classify empty zones as unused, and run a security pass. Writes reject bad/used zones with `-ENOMSG`, write through `mtd_write()`, mark the zone used, and may erase another block to keep at least one free zone available for panic logging. Erase marks a zone unused and either erases the whole eraseblock or lazily marks it removed if live zones remain. Removal flushes removed zones by read/erase/writeback before unregistering.
+
+State and persistence: log payloads persist in flash. The bitmaps are volatile rebuild aids populated through reads and writes during the active session; `badmap` is especially important because panic context cannot call `mtd_block_isbad()`. Removed zones are scrubbed lazily at unregister time if sharing an eraseblock with retained records.
+
+Dependencies and integration points: depends on MTD erase/read/write/panic_write APIs, bad-block support, `pstore_blk`, kernel bitops, and the MTD notifier chain. It currently advertises only `PSTORE_FLAGS_DMESG`.
+
+Risks and test signals: key risks are bitmap sizing and zone/eraseblock alignment, lazy removal preserving valid neighboring logs, panic write operating only from cached bad-block state, and partial/ECC read handling. Tests should exercise configuration by name and number, all validation failures, full-device security erase behavior, bad-block skip paths, deletion of one zone in a multi-zone eraseblock, ECC error reads, panic write on used/bad/free zones, and notifier remove flush ordering.

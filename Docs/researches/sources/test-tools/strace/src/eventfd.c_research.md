@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/eventfd.c
+
+Decoder for `eventfd` and `eventfd2`. The shared helper prints the initial counter and, when present, flag bits from `efd_flags`; the wrapper returns `RVAL_FD` for fd return formatting. `eventfd` has no flag argument, while `eventfd2` uses the second argument. There is no persistent state beyond syscall arguments. Dependencies are `kernel_fcntl.h`, `xlat/efd_flags.h`, and fd return conventions from `defs.h`. Risks are missing new eventfd flags or accidentally printing a flags argument for the legacy syscall. Tests should verify plain `eventfd`, `eventfd2(EFD_CLOEXEC|EFD_NONBLOCK)`, invalid flags, and successful fd return annotation.

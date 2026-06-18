@@ -1,0 +1,16 @@
+# sources/user-network-fs/gcsfuse/cfg/params.yaml
+
+## Purpose
+`params.yaml` is the declarative registry for Cloud Storage FUSE configuration fields and CLI flags. It defines machine-type groups, every generated flag/config mapping, accepted data type names, help text, defaults, deprecation metadata, hidden flags, and optimization rules used by the cfg and cmd packages. It is the source of truth for user-facing compatibility because `cfg.BuildFlagSet`, Viper binding, config unmarshalling, and generated defaults all depend on this schema.
+
+## APIs, Types, And Data Model
+The top-level `machine-type-groups` map currently defines a `high-performance` group containing GPU/TPU machine types. The `params` list describes entries with `config-path`, `flag-name`, `type`, `usage`, `default`, `deprecated`, `deprecation-warning`, `hide-flag`, and optional `optimizations`. The schema supports scalar types (`int`, `float64`, `bool`, `string`, `duration`), custom types (`octal`, `logSeverity`, `protocol`, `directPathStrategy`, `resolvedPath`), and list types (`[]string`, `[]int`). Important config families include auth, GCS connection, retries/read-stall, filesystem/FUSE behavior, file cache, metadata cache, logging/log rotation, metrics, tracing, buffered reads, streaming writes, cloud profiler, dummy I/O, workload insights, list behavior, HNS, and optimization profile selection.
+
+## Control Flow And State
+The file itself is declarative and has no runtime control flow, but it drives a multi-stage config pipeline: flags are generated and bound to Viper; defaults are installed; YAML config and CLI values are unmarshalled into `cfg.Config`; optimization metadata is applied when machine type, bucket type, or profile conditions match; validation and rationalization then normalize sentinel values such as `-1` and legacy flags. The only persisted state is the user's config file and CLI arguments; this registry is checked into source and indirectly affects logs by controlling which flags are hidden, deprecated, or optimized.
+
+## Dependencies And Integration
+This file integrates with `cfg/shared/types.go` for optimization rule shapes, `cfg/types.go` for custom decode hooks, `cfg/validate.go` and `cfg/rationalize.go` for semantic checks, and `cmd/root.go` for Cobra/Viper command construction. It also integrates with mount-time behavior in `cmd/legacy_main.go` and `cmd/mount.go` because many values become storage client, gcsx bucket, fs server, and FUSE mount options.
+
+## Risks And Test Signals
+The main risks are schema drift, misspelled config paths, defaults that conflict with validators, and compatibility regressions for deprecated flags. The documentation header says params must stay sorted, so additions need ordering discipline. Another risk is that YAML default values mix strings and native scalars, which increases generator/parser sensitivity. Tests in `cmd/datatypes_parsing_test.go`, `cmd/config_validation_test.go`, `cmd/config_rationalization_test.go`, `cfg/validate_test.go`, and `cfg/rationalize_test.go` collectively verify CLI parsing, config-file parsing, default propagation, validation failures, optimization/rationalization precedence, and representative per-family defaults.

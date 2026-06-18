@@ -1,11 +1,11 @@
 # Folder Research: sources
 
-This folder report is synthesized from accepted per-file research reports.
+This folder summary reflects merged subset A and subset B per-file research outputs.
 
-- direct_file_count: `0`
-- recursive_file_count: `34654`
-- direct_child_folder_count: `7`
+- Direct researched files: 0
+- Recursive researched files: 197363
+- Direct child folders represented: 17
 
-## Direct Files
+## Research Role
 
-- No direct researched files; this folder is represented by descendant files.
+This directory participates in the combined learn_fs filesystem research corpus through accepted source-tree-aligned file reports from both merged subsets.

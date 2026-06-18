@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gvt/dmabuf.c
+
+Purpose: exposes vGPU primary or cursor planes as DMA-BUF file descriptors by wrapping guest framebuffer memory in proxy i915 GEM objects.
+
+Important APIs/types/functions: public APIs are `intel_vgpu_query_plane()`, `intel_vgpu_get_dmabuf()`, and `intel_vgpu_dmabuf_cleanup()`. GEM object operations are `vgpu_gem_get_pages()`, `vgpu_gem_put_pages()`, and `vgpu_gem_release()` in `intel_vgpu_gem_ops`. Other helpers include `vgpu_create_gem()`, `vgpu_get_plane_info()`, `pick_dmabuf_by_info()`, `pick_dmabuf_by_num()`, `update_fb_info()`, `validate_hotspot()`, `dmabuf_obj_get()`, and `dmabuf_obj_put()`.
+
+Control flow: query validates VFIO flags, decodes the requested primary/cursor plane, checks alignment and GGTT range, reuses an existing matching dmabuf object or allocates a new one with an IDR id, and returns plane metadata plus `dmabuf_id`. `get_dmabuf` looks up the id, creates a read-only proxy GEM object, exports it via i915 PRIME, converts it to an fd, adjusts the query-held init reference, and drops the local GEM reference. GEM page population reads host GGTT PTEs for the guest framebuffer, pins guest DMA pages, builds an sg table, and unmaps on put.
+
+State and persistence: maintains `vgpu->dmabuf_obj_list_head`, `vgpu->object_idr`, per-object `kref`, `initref`, `dmabuf_id`, and copied framebuffer info. Cleanup detaches objects from the live vGPU, removes IDs, and drops any outstanding query refs while exported DMA-BUFs can release later as orphaned objects.
+
+Dependencies and risks: depends on VFIO gfx plane ABI, i915 GEM PRIME export, guest page pin/unmap helpers, framebuffer decoders, GGTT validation, DRM format modifiers, and vGPU locks. Risks include sg-table count mistakes, `fb_info->size` used as sg iteration count in put path, refcount handoff between query/get/release, orphan object lifetime after vGPU removal, unsupported modifiers, and stale framebuffer reuse matching. Test signals include probe-only query, invalid flag rejection, primary/cursor metadata correctness, duplicate query reuse, fd export success, close-time unpin/unmap, vGPU cleanup with open fds, and malformed framebuffer range rejection.

@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/kernel/alternative.c -->
+# sources/distributed-fs/ceph-client/arch/parisc/kernel/alternative.c
+
+Source read size: 122 lines, 3376 bytes.
+
+Purpose: applies PA-RISC runtime instruction alternatives for CPU/platform-specific optimization and errata handling. Important APIs/functions: boot parameter `no-alternatives`, `apply_alternatives()`, and `apply_alternatives_all()`. Control flow: compute condition mask from CPU count, cache presence, QEMU, split TLB, and IO-PDIR flush capability; iterate alternative entries, skip disabled conditions, rewrite original instructions or copy replacement sequences, special-case PxTLB local/extended-bit replacement, and disable cache static keys when hardware has no caches. State and persistence: patches kernel/module text and toggles static branches; `no_alternatives` persists after boot parameter parsing. Dependencies and integration points: `alt_instr` tables, `set_kernel_text_rw()`, cache flush/static keys, CPU/PDC capability state, modules. Risks: text patching length/sign semantics and instruction encodings are fragile; wrong condition mask can execute unsupported instructions; patching requires writable text window discipline. Test signals: boot with and without `no-alternatives`, QEMU vs hardware, SMP vs UP, no-cache configs, module alternatives, and disassembly/static-key checks after boot.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/kernel/alternative.c -->

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v5.h
+
+This header provides QMP V5 UFS PCS offsets. Its macro API mirrors the V4-era UFS control surface with start, power-down, reset, timers, PLL control, TX amplitudes, BIST, HS gear capability, debug bus, RX min-Hibern8 and signal detect, gear band controls, ready status, TX mid-term control, and multi-lane control. There is no executable logic or state. UFS PHY drivers integrate it by selecting V5 macros in generation-specific init tables. Risks are variant drift from V4 and V6, especially around RX signal-detect and gear-band offsets. Test signals include UFS link startup at supported gears, Hibern8 cycles, multi-lane behavior, and ready-status polling.

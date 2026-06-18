@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/drivers/fpga/Kconfig
+
+Purpose: this Kconfig file defines the FPGA framework build surface: the core manager framework, manager drivers, bridge drivers, regions, Device Feature List support, PCI/NIOS/MAX10 support, and vendor-specific programming drivers.
+
+Important configuration APIs: `menuconfig FPGA` gates the whole framework. `FPGA_BRIDGE`, `FPGA_REGION`, and `OF_FPGA_REGION` layer higher-level reconfiguration abstractions on top of managers. `FPGA_DFL` selects bridge and region support and enables DFL enumeration infrastructure. `FPGA_DFL_FME`, `FPGA_DFL_FME_MGR`, `FPGA_DFL_FME_BRIDGE`, `FPGA_DFL_FME_REGION`, and `FPGA_DFL_AFU` split Intel DFL support into management engine, partial-reconfiguration manager/bridge/region, and user AFU port pieces.
+
+Control flow and integration: each symbol controls object inclusion in `drivers/fpga/Makefile`. Dependencies encode platform and subsystem requirements: SPI-backed managers depend on `SPI`, syscon/regmap users select or depend on `REGMAP_MMIO`, DFL FME requires `HWMON` and `PERF_EVENTS`, and ZynqMP FPGA manager depends on `ZYNQMP_FIRMWARE` except under compile testing. The structure lets a kernel include only the core FPGA class, add bridge/region orchestration, or pull in vendor drivers as needed.
+
+State and persistence behavior: Kconfig itself has no runtime state, but it determines ABI availability. Enabling DFL AFU or FME creates char-device ioctls and sysfs groups at runtime; enabling manager and bridge drivers creates firmware-loading and bridge-control surfaces. Choice of built-in versus module affects probe ordering and whether platform firmware dependencies must be present during early boot.
+
+Dependencies and risks: dependencies are mostly explicit, but cross-symbol behavior matters. `FPGA_DFL` selects `FPGA_BRIDGE` and `FPGA_REGION`, but the FME manager/bridge/region subdrivers remain separately selectable. `FPGA_DFL_FME` requiring both `HWMON` and `PERF_EVENTS` means minimal systems without those frameworks cannot build FME even if they only need header or PR management. Incorrect config combinations can leave DFL PR management present without the child manager/bridge/region drivers that users expect.
+
+Test signals: build coverage should include `allmodconfig`, `COMPILE_TEST`, DFL built-in versus module permutations, and platform-specific configs for Xilinx firmware-backed managers, Altera SoCFPGA bridges, SPI managers, and MAX10 secure update. Runtime tests should confirm expected module aliases and that selecting a feature pulls in all required framework classes.

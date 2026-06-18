@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/input/gameport/fm801-gp.c
+
+`fm801-gp.c` provides gameport support for ForteMedia FM801 PCI audio controllers. Its private `struct fm801_gp` stores the registered `gameport` and requested resource. Unlike the minimal EMU10K1 provider, this driver supplies `fm801_gp_open()` and a cooked-read callback when `HAVE_COOKED` is defined.
+
+`fm801_gp_probe()` allocates private data and a gameport, enables PCI, fills `open`, `cooked_read`, name, physical path, parent, and I/O base from BAR0, requests a 0x10-byte region, stores PCI drvdata, writes `0x60` to `io + 0x0d` to enable joystick ports, and registers the port. `fm801_gp_cooked_read()` reads four 16-bit axis/status registers, extracts buttons from high bits, converts 13-bit axis values by shifting, returns `-1` for disconnected `0xffff`, and resets the hardware with `outw(0xff, io)`. Remove unregisters the gameport, releases the resource, frees memory, and disables PCI.
+
+State is hardware register state plus PCI drvdata; no persistence exists. Dependencies include PCI, I/O port access, gameport core, and resource management. Risks include hard-coded register layout, cooked-read availability guarded by a local define, missing managed resource cleanup, and returning success from `open()` only for raw/cooked modes. Test signals include PCI bind, cooked mode reads from analog joystick consumers, raw open acceptance, region conflict, unbind cleanup, and verifying axes/buttons under hardware or emulation.

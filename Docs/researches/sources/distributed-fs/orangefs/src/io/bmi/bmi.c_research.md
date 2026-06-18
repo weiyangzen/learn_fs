@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/orangefs/src/io/bmi/bmi.c -->
+## sources/distributed-fs/orangefs/src/io/bmi/bmi.c
+
+Purpose: Implements the top-level Buffered Message Interface dispatcher. It owns BMI initialization, method activation, generic address references, contexts, public send/receive/test calls, address lookup/reverse lookup, memory wrappers, cancellation, and error translation.
+
+Important APIs, types, and functions: Public entry points mirror `bmi.h`: `BMI_initialize/finalize`, `BMI_open_context/close_context`, `BMI_post_send`, `BMI_post_recv`, `BMI_post_sendunexpected`, list variants, `BMI_test`, `BMI_testsome`, `BMI_testcontext`, `BMI_testunexpected`, memory helpers, info helpers, `BMI_addr_lookup`, reverse lookup, range query, and cancel. Internal helpers include `activate_method()`, `construct_poll_plan()`, `grow_method_usage()`, callback implementations from `bmi-method-callback.h`, and address drop/forget drains. Static method tables are compiled under `__STATIC_METHOD_BMI_*`.
+
+Control flow and state: `BMI_initialize()` is reference-counted under `bmi_initialize_mutex`, initializes the id generator and reference list, builds the known method table, and activates server-requested methods. Clients lazily activate known methods during `BMI_addr_lookup()`. Public post calls look up `BMI_addr_t` in `cur_ref_list`, then delegate to the owning method vtable. Test calls either dispatch by operation id or adaptively poll active methods using per-method usage counters to favor recently active methods without starving others. `BMI_testunexpected()` also drains method-requested forget and force-drop queues.
+
+State and persistence behavior: Process-local state includes active/known method tables, address reference list, context occupancy array, expected/unexpected poll usage, initialization count, and deferred forget/drop lists. Address refs store method address, id string, interface pointer, BMI address, and ref count. No durable persistence exists.
+
+Dependencies and integration points: Depends on method vtables from compiled transports, `reference-list`, `op-list`, `id-generator`, `gen-locks`, `str-utils`, and `gossip`. Windows builds include `wincommon.h` and call `WSACleanup()` at finalization.
+
+Risks and test signals: Several paths trust id lookups and method callbacks; stale op ids can crash if not guarded by methods. `BMI_post_sendunexpected_list()` checks `post_send_list` before calling `post_sendunexpected_list`, likely a capability-check bug. `BMI_finalize()` assumes initialize/finalize calls are balanced. `BMI_get_info(BMI_CHECK_MAXSIZE)` has an early return path without unlocking on method error. Tests should cover multi-method activation, lazy client activation, context exhaustion/rollback, reference counting, unexpected auto-ref, address drop queues, list I/O unsupported paths, cancellation after natural completion, and errno/status translation.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/orangefs/src/io/bmi/bmi.c -->

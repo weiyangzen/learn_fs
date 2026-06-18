@@ -1,0 +1,7 @@
+# sources/storage-engines/badger/compaction.go
+
+Purpose: defines key-range and compaction-status bookkeeping used to prevent overlapping Badger compactions.
+
+Important APIs and flow: `keyRange` stores left/right keys, infinity marker, and approximate size; methods detect empty ranges, stringify, compare equality, extend bounds, and test overlap using Badger key comparison. `getKeyRange` computes an inclusive range over one or more SSTables, preserving all versions by constructing left with `math.MaxUint64` timestamp and right with timestamp 0. `levelCompactStatus` tracks active ranges and deletion size per level. `compactStatus` guards per-level statuses and active table IDs; `compareAndAdd` refuses overlapping this/next-level ranges, records ranges and tables, and accumulates deletion size; `delete` removes ranges/table IDs and fatal-errors if expected state is missing.
+
+State and persistence: state is in-memory scheduler bookkeeping; actual compaction persistence occurs elsewhere. Dependencies are `table.Table`, `y.CompareKeys`, and compaction definitions from sibling files. Risks: incorrect overlap logic can allow corrupting concurrent compactions or over-serialize work; `log.Fatal` in `delete` exits the process on bookkeeping mismatch; TODOs call out missing tests. Test signals should cover overlap boundaries, infinite/empty ranges, table ID tracking, and concurrent compaction scheduling.

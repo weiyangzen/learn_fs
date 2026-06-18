@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup08.py
+
+Purpose: verifies checkpoint timestamp metadata survives live backup and is used as the backup recovery timestamp. It models MongoDB collection/oplog tables with logged oplog and non-logged collections.
+
+Important APIs are timestamped transactions, `conn.set_timestamp`, `session.checkpoint(use_timestamp=...)`, `conn.query_timestamp('get=last_checkpoint')`, backup cursor iteration, file copy, and backup `query_timestamp('get=recovery')`. Control flow inserts timestamped data into three collection-like tables, advances stable timestamp per table, checkpoints with `use_timestamp` false/default/true scenarios, validates last checkpoint timestamp, copies files listed by a backup cursor, opens the backup, and verifies recovery timestamp equals the expected checkpoint timestamp. State behavior is stable timestamp persistence in backup metadata. Risks include exact use-stable semantics and manual file copy completeness. Test signals are timestamp equality assertions before and after recovery.

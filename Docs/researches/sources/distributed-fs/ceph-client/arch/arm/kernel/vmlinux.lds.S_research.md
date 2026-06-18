@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/kernel/vmlinux.lds.S
+
+Purpose: linker script for normal non-XIP ARM kernels. It defines the virtual layout, symbol boundaries, section ordering, special init/discard regions, unwind and exception-table placement, per-CPU data, TCM sections, BSS, debug metadata, and build-time assertions.
+
+Control flow is link-time rather than runtime: `ENTRY(stext)` starts execution, sections begin at `KERNEL_OFFSET + TEXT_OFFSET`, text/rodata/init/data/BSS are aligned according to MMU, MPU, strict RWX, cacheline, and thread constraints. Persistent integration points are exported linker symbols such as `_text`, `_stext`, `_etext`, `__init_begin`, `__init_end`, `_sdata`, `_edata`, `_end`, exception table bounds, arch info bounds, pv table bounds, and unwind sections. Dependencies include `asm/vmlinux.lds.h` macros and many config switches. Risks are section misalignment, discarded unwind data when required, empty CPU or machine records, and RWX boundary regressions. Test signals are successful link, boot, kallsyms/exception/unwind behavior, and linker ASSERT failures when required records are missing.

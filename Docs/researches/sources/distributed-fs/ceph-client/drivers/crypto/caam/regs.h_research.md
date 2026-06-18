@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/crypto/caam/regs.h
+
+Purpose: defines the register-level ABI for the Freescale/NXP CAAM block, including endian-aware MMIO helpers, DMA pointer conversions, job-ring entry layouts, and typed register overlays for controller, job ring, queue interface, RNG, RTIC, assurance, and DECO blocks.
+
+Important APIs and types: exported globals `caam_little_end`, `caam_imx`, and `caam_ptr_sz` drive `caam{16,32,64}_to_cpu()`, `cpu_to_caam{16,32,64}()`, `wr_reg32()`, `rd_reg32()`, `wr_reg64()`, `rd_reg64()`, `cpu_to_caam_dma*()`, and `caam_dma*_to_cpu()`. Job-ring helpers `jr_outentry_get()`, `jr_outentry_desc()`, `jr_outentry_jrstatus()`, and `jr_inpentry_set()` abstract 32-bit versus 64-bit descriptor pointers. Major register structs include `version_regs`, `caam_perfmon`, `caam_ctrl`, `caam_job_ring`, `caam_queue_if`, and `caam_deco`, with many `JRSTA_*`, `JRINT_*`, `MCFGR_*`, `QICTL_*`, and RNG test masks.
+
+Control flow and state: this header owns no allocator or persistent software state; it fixes how other CAAM files read and write persistent hardware state. The most delicate flow is 64-bit register access: big-endian and non-i.MX little-endian use native 64-bit helpers, while i.MX little-endian manually orders 32-bit halves because CAAM DMA-address registers are wired differently.
+
+Dependencies and integration points: depends on Linux MMIO, endian, bitops, DMA-address-width configuration, and CAAM probe code that initializes the globals before users touch registers. Job ring, queue interface, RNG, blob, and descriptor debugging code consume these layouts directly.
+
+Risks and test signals: risks include wrong global endian/platform detection corrupting register or DMA pointer programming, 32-bit/64-bit pointer-size mismatches in job rings, non-atomic 64-bit access races if used outside documented hardware semantics, and register-struct drift versus silicon revisions. Test signals include CAAM probe detecting correct endian mode, job rings handling both 32-bit and 64-bit DMA pointers, i.MX DMA addresses mapping correctly, reset and interrupt status bits decoding correctly, and RNG/job failure paths reporting expected `JRSTA_*` sources.

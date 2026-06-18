@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/common/net/message/NetMessage.c
+
+## Research
+`NetMessage.c` implements non-inline behavior for the common BeeGFS wire-message base. `__NetMessage_deserializeHeader` validates the fixed 40-byte header, exact message length, `NETMSG_PREFIX`, known header flag bits, and then extracts type, target ID, user ID, and retry sequence fields. `__NetMessage_serializeHeader` emits the same fields in wire order. Default virtuals reject incoming processing and report no supported feature flags; dummy serialize/deserialize functions log stack traces if called.
+
+Control flow is defensive: invalid header input marks the type `NETMSGTYPE_Invalid` early so dispatch can reject it. State is written into the caller-provided `NetMessageHeader`; no memory is allocated. Dependencies are `NetMessage.h`, serialization helpers, and `printk_fhgfs`. Integration points are every message type and the receive dispatcher. Risks include strict length equality rejecting framed buffers with extra bytes, protocol prefix/data-version drift, unsupported flag handling, and dummy ops hiding missing implementation until runtime. Test signals include malformed-header rejection, valid round-trip serialization, feature-flag compatibility checks, and dispatch behavior for invalid message types.

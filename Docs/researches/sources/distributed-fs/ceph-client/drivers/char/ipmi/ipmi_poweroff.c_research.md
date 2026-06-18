@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/drivers/char/ipmi/ipmi_poweroff.c
+
+Purpose: This module installs an IPMI-backed `pm_power_off` implementation. It watches for available IPMI SMIs, chooses a supported platform poweroff method, and sends the required IPMI command sequence during system powerdown or power-cycle requests.
+
+Important APIs, types, and functions: The module registers an `ipmi_smi_watcher`, creates an IPMI user with `ipmi_create_user`, sends synchronous requests with `ipmi_request_wait_for_response`, sends run-to-completion shutdown requests with `ipmi_request_in_rc_mode`, and overrides/restores `pm_power_off`. Detection/poweroff pairs include ATCA, CPI1, vendor-specific chassis fallbacks, and standard chassis control. Parameters include `ifnum_to_use` and `poweroff_powercycle`; under procfs, `dev/ipmi/poweroff_powercycle` mirrors the latter.
+
+Control flow: Initialization registers the power-cycle sysctl and watcher. When `ipmi_po_new_smi` sees a selected interface, it creates a user, sends Get Device ID, records manufacturer/product/capability/IPMI-version data, scans `poweroff_functions`, stores the selected callback, and replaces `pm_power_off`. `ipmi_poweroff_function` invokes the selected callback in run-to-completion mode. Removal or matching SMI disappearance destroys the user and restores the previous poweroff callback.
+
+Poweroff behavior: ATCA detection uses PICMG address-info and can run an additional OEM graceful-restart hook for matching hardware. CPI1 uses slot and active-event-receiver queries, sends a hotswap-control request over IPMB, asserts reset, and sets power state. Chassis poweroff uses the IPMI chassis control command, optionally first trying power cycle and falling back to power down on error. Dell and HP compatibility detectors allow chassis control on older systems that do not advertise the chassis capability bit.
+
+State and persistence behavior: Global module state records readiness, selected interface number, IPMI user pointer, previous `pm_power_off`, selected function, and cached Get Device ID fields. No data is persisted to disk. The externally visible persistent effect is the platform power state transition requested from the BMC.
+
+Dependencies and integration points: It depends on the core IPMI user API, SMI watcher API, kernel PM `pm_power_off`, module parameters, optional proc sysctl registration, completions for normal synchronous requests, and polling/run-to-completion behavior for shutdown contexts where interrupts may be disabled.
+
+Risks and edge cases: Global state is single-interface and not heavily locked, relying on watcher/module-parameter sequencing. The static halt message objects make shutdown requests intentionally single-threaded. If `ifnum_to_use` changes while ready, the code tears down the current user and attempts the requested interface. Overriding `pm_power_off` must be restored correctly on removal or SMI loss. Power-cycle requests may not be supported and fall back to power down. Shutdown-time polling assumes the lower driver can make progress without interrupts.
+
+Test signals: Cover watcher registration with existing and later SMIs, interface filtering and parameter changes, Get Device ID short/error responses, each detector path, chassis power-cycle fallback, completion-based request waits, run-to-completion polling sends, `pm_power_off` replacement/restoration, SMI removal cleanup, and proc sysctl registration failure handling.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/dsa/xrs700x/xrs700x.c
+
+Purpose: this is the transport-independent DSA core for Arrow SpeedChips XRS7003/XRS7004 switches. It detects the chip, initializes port state, registers the DSA switch, configures forwarding masks and STP behavior, exposes MIB counters and stats64, handles phylink speed selection, and offloads HSR/PRP redundancy on supported port pairs.
+
+Important APIs, types, and functions: exported objects are `xrs7003e_info`, `xrs7003f_info`, `xrs7004e_info`, `xrs7004f_info`, `xrs700x_switch_alloc()`, `xrs700x_switch_register()`, `xrs700x_switch_remove()`, and `xrs700x_switch_shutdown()`. DSA callbacks in `xrs700x_ops` include setup/teardown, STP state, phylink caps, ethtool strings/stats, stats64, bridge join/leave, and HSR join/leave. Internal helpers cover MIB accumulation, regmap-field setup, reset, BPDU and HSR supervision inbound policy filters, port setup, bridge forwarding masks, HSR/PRP configuration, and chip detection.
+
+Control flow: a transport calls `xrs700x_switch_alloc()`, assigns `priv->regmap`, then calls `xrs700x_switch_register()`. Register reads detect the expected chip ID from OF match data and set `ds->num_ports`; regmap fields are allocated for per-port state bits; per-port MIB buffers are initialized; and DSA is registered. DSA setup resets the switch, disables ports, programs forwarding masks, sets CPU ports to management mode, adds BPDU policy filters on user ports, and starts delayed MIB polling every three seconds.
+
+State and persistence: `struct xrs700x` persists the DSA switch, device, transport private pointer, regmap, regmap fields, delayed MIB work, and per-port data. Each `struct xrs700x_port` keeps accumulated MIB counters, a stats64 snapshot, a mutex, and u64 stats sync state. Hardware state includes port forwarding/management/speed fields, policy filters, forwarding masks, HSR config, and captured counters.
+
+Dependencies and integration points: it depends on DSA, phylink, bridge/STP state, regmap and regmap fields, OF match data, Linux HSR/PRP helpers, ethtool stats, stats64 synchronization, and the XRS700x register definitions/tag protocol.
+
+Risks: counter accumulation assumes periodic reads plus capture semantics; missed or wrapped 32-bit hardware counters can skew stats. HSR/PRP offload is limited to ports 1 and 2 and only HSR v1/PRP v1, with both redundant ports required before enabling hardware redundancy. Bridge forwarding masks use inverted "1 disables forwarding" semantics. BPDU and HSR supervision policy filters are enabled/disabled indirectly through STP and HSR paths. Phylink callbacks are minimal and only program selected speed on link-up.
+
+Test signals: chip-ID detection for each OF compatible, reset polling, DSA registration, STP transitions and BPDU CPU delivery, bridge join/leave forwarding masks, phylink speed changes on RMII/RGMII ports, ethtool and rtnl stats updates over multiple MIB intervals, HSR/PRP join/leave on ports 1 and 2 including feature flags and supervision forwarding, teardown cancelling delayed work, and shutdown via DSA.

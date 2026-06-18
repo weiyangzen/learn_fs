@@ -1,0 +1,22 @@
+# Folder Research: sources/test-tools/ltp/testcases/kernel/syscalls/utime
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 8
+- Recursive researched files: 8
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/Makefile`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime01.c`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime02.c`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime03.c`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime04.c`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime05.c`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime06.c`
+- `sources/test-tools/ltp/testcases/kernel/syscalls/utime/utime07.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

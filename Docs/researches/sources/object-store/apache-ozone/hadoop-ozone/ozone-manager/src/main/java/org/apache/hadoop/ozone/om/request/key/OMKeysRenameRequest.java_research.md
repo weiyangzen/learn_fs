@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/request/key/OMKeysRenameRequest.java
+
+Purpose: `OMKeysRenameRequest` implements batched rename for object-style key-table entries. It performs per-pair ACL and existence checks, supports partial rename reporting, and writes source tombstones plus destination values for successful pairs.
+
+Important APIs and types: The class extends `OMKeyRequest` and uses `RenameKeysRequest`, `RenameKeysArgs`, `RenameKeysMap`, `RenameKeysResponse`, `OmKeyInfo`, `OmRenameKeys`, `OMKeysRenameResponse`, `ResolvedBucket`, key-table cache entries, and response statuses `OK` and `PARTIAL_RENAME`.
+
+Control flow: `validateAndUpdateCache` reads volume/bucket and rename pairs, resolves bucket links, acquires the bucket lock, validates volume/bucket, gets the volume owner, iterates each pair, rejects empty names, checks DELETE ACL on source and CREATE ACL on destination, rejects existing destination, rejects missing source, updates the source `OmKeyInfo` with transaction ID, destination key name, and current modification time, tombstones the source cache entry, inserts destination cache entry, records successful and unsuccessful pairs, builds an `OmRenameKeys` payload and response with partial status if needed, releases the lock, audits renamed and unrenamed maps, and updates failure metrics on full exceptions.
+
+State and persistence behavior: Successful pairs alter only key-table cache state. Quota and namespace remain unchanged. The response wraps a map from source key name to updated destination `OmKeyInfo` so response/batch code can persist the mutations. Unlike single rename, modification time is set to `Time.now()` during validation rather than a preExecute timestamp.
+
+Dependencies and integration points: It depends on bucket link resolution, ACL infrastructure with volume/bucket owner context, metadata key naming, bucket locks, audit/metrics, response-side batch persistence, and old-client bucket-layout validation. It is for non-FSO key tables; FSO directory-aware batched rename is not represented here.
+
+Risks: If a destination exists, the code records an unrenamed pair but does not immediately `continue` before loading and possibly renaming the source, which deserves careful regression coverage because it could allow overwrite-like behavior while still reporting partial failure. Empty-name and ACL failures do continue. Partial success returns a successful OM transaction with `PARTIAL_RENAME`, so clients must inspect detailed response fields. Duplicate pairs can interact through cache state within the same batch.
+
+Test signals: `TestOMKeysRenameRequest` and `TestOMKeysRenameResponse` should cover all-success, partial failure, destination exists, source missing, ACL denial, empty names, duplicate and conflicting rename pairs, source tombstone/destination insertion, modification-time and update-ID changes, audit renamed/unrenamed maps, and old-client layout validation.

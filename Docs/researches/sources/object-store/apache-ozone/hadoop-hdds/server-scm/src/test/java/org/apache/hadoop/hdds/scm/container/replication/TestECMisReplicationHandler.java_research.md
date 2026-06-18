@@ -1,0 +1,13 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/test/java/org/apache/hadoop/hdds/scm/container/replication/TestECMisReplicationHandler.java
+
+Purpose: Tests `ECMisReplicationHandler`, the erasure-coded specialization of mis-replication repair, by extending the shared `TestMisReplicationHandler` harness with an `ECReplicationConfig(3, 2)`. The class verifies that placement-policy violations for EC containers produce bounded replicate commands for the copied indexes, and that the handler avoids repair when the container is actually under-replicated, over-replicated, already placement-satisfied, or covered by pending operations.
+
+Important APIs and types: The test uses `ECMisReplicationHandler`, `MisReplicationHandler`, `ECReplicationConfig`, `ContainerReplica`, `ContainerReplicaOp`, `PlacementPolicy`, `ContainerPlacementStatus`, `SCMException`, `InsufficientDatanodesException`, and `ReplicationManagerMetrics`. It relies heavily on `ReplicationTestUtil.createReplicas`, `MockDatanodeDetails`, and Mockito stubs for `chooseDatanodes`, `validateContainerPlacement`, and throttled replication dispatch. The EC-specific assertion keeps the replica index from the copied source and checks it on `ReplicateContainerCommand`.
+
+Control flow: `setup` delegates to the abstract base harness, which prepares a closed EC container, mocked `ReplicationManager`, network topology schema, command capture set, and metrics. Parameterized cases vary the reported mis-replication count, then the base helper asks the placement policy which replicas to copy and how many targets to choose. The file covers all-in-service sources, maintenance sources excluded from eligible copies, no-node placement failures, pending add/delete suppression, throttled source failures, and partial target selection.
+
+State and persistence behavior: No production persistence is exercised. State is in-memory test state: container metadata, replica sets with op-state and EC index, pending ops, command-capture pairs, and metrics counters. The tests confirm command side effects rather than persisted database updates.
+
+Dependencies and integration points: Integrates with the abstract mis-replication harness, `ReplicationManager.sendThrottledReplicationCommand`, placement policy target selection, and metrics for EC partial replication caused by mis-replication.
+
+Risks and test signals: Main risks are copying from invalid source states, losing EC replica indexes, issuing repair while pending ops already satisfy placement, and partial commands when placement returns fewer targets than requested. Strong signals include exact command counts, exception assertions, target/source membership checks, and metric verification for partial EC mis-replication.

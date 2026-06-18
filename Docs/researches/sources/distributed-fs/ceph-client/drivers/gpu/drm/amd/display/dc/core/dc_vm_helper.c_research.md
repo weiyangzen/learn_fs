@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/core/dc_vm_helper.c
+
+Purpose: this file is the small Display Core VM helper layer that records VMID usage per HUBP and routes physical/virtual address space programming requests to hardware sequencer callbacks. It bridges DC state, HUBBUB/HUBP system aperture setup, and DML2 GPUVM enablement.
+
+Important APIs, types, and functions: `vm_helper_mark_vmid_used()` updates the two-entry rolling usage history for one HUBP. `dc_setup_system_context()` calls `dc->hwss.init_sys_ctx()` with `struct dc_phy_addr_space_config`, caches the physical aperture in `dc->vm_pa_config`, marks it valid, enables `dc->dml2_options.gpuvm_enable`, and calls `dc_z10_save_init()`. `dc_setup_vm_context()` forwards `struct dc_virtual_addr_space_config` and a VMID to `dc->hwss.init_vm_ctx()`. `dc_get_vmid_use_vector()` ORs current/recent VMID bitmasks across all HUBPs. `vm_helper_init()` records the supported VMID count and clears usage.
+
+Control flow: initialization clears `hubp_vmid_usage` for `MAX_HUBP`. System context setup is conditional on `hwss.init_sys_ctx`; if present, the callback returns the number of VMIDs and the function records the aperture for later restore/power-gating paths. Per-VM setup has no local validation and assumes `hwss.init_vm_ctx` is present. VMID usage queries scan all HUBP slots and combine both recent history entries.
+
+State and persistence: no disk or firmware-persistent state is stored here. Persistent runtime state is `vm_helper->num_vmid`, the per-HUBP rolling VMID masks, and `dc->vm_pa_config`. `vm_helper_mark_vmid_used()` copies the usage struct by value and updates the copy, which means the intended history update is not written back to `vm_helper->hubp_vmid_usage[hubp_idx]`; if this is not optimized away by later code, VMID use tracking will remain stale.
+
+Dependencies and integration points: depends on `vm_helper.h`, `dc.h`, HWSS system/VM context callbacks, `MAX_HUBP`, DML2 configuration, and Z10 save/restore support. It is used by DC creation/resume/commit paths that must program GPUVM apertures before HUBP fetches display surfaces.
+
+Risks and test signals: the by-value update in `vm_helper_mark_vmid_used()` is the main correctness risk and should be covered by a unit or debug assertion that `dc_get_vmid_use_vector()` changes after marking a VMID. `dc_setup_vm_context()` lacks a null callback guard unlike system setup. Bounds for `hubp_idx` and VMID position are not checked here. Test signals include system aperture programming count from `init_sys_ctx`, `dc->vm_pa_config.valid`, DML2 GPUVM enablement, Z10 save/restore behavior, and VMID vector changes during multi-plane flips on different HUBPs.

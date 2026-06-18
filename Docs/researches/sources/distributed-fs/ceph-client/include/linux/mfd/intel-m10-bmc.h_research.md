@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/linux/mfd/intel-m10-bmc.h
+
+Purpose: This is the shared header for Intel MAX 10 Board Management Controller MFD devices on FPGA cards. It defines CSR maps for N3000/N6000-like cards, secure update doorbell/status fields, flash access ranges and mux controls, platform information, flash bulk operations, firmware-update state, and parent device state.
+
+Important APIs, types, and functions: Macros define system/flash memory ranges, staging area size, Nios firmware/build/MAC/telemetry offsets, RSU doorbell/auth result fields, RSU progress/status/host-state values, handshake and update timeouts, security image addresses and magic values, N6000 flash mux and FIFO controls, and flash polling timings. `struct m10bmc_csr_map` maps board-specific CSR offsets. `struct intel_m10bmc_platform_info` supplies MFD cells, handshake register ranges, and CSR map. `struct intel_m10bmc_flash_bulk_ops` abstracts flash read/write/lock/unlock. `enum m10bmc_fw_state` tracks normal and secure-update phases. `struct intel_m10bmc` stores device, regmap, platform info, optional flash ops, firmware state lock, and firmware state. Helpers include `m10bmc_raw_read`, `m10bmc_sys_read`, `m10bmc_sys_update_bits`, `m10bmc_fw_state_set`, and `m10bmc_dev_init`.
+
+Control flow, state, and persistence: Core code initializes board-specific maps and children, reads system CSRs through regmap, coordinates RSU secure update by doorbell/host-status handshakes, arbitrates flash mux access, and tracks firmware state when direct handshakes are unavailable. Persistent state includes flash images, update counters, MAC addresses, telemetry counters, BMC firmware status, and RSU result fields.
+
+Dependencies and integration points: It depends on bitfield/bits, regmap, rwsem, dev logging, MFD cells, and child drivers for secure update, HWMON, NVMEM, flash, and telemetry.
+
+Risks and test signals: Risks include board map mismatch, long timeout paths blocking update flows, flash write without lock, read returning `-EBUSY` during locked writes, stale firmware state after failed update, and incorrect interpretation of doorbell fields. Test signals include CSR map readback, RSU state-machine tests, flash mux contention tests, secure-update timeout/error injection, telemetry child reads, and rwsem/lockdep coverage around firmware state changes.

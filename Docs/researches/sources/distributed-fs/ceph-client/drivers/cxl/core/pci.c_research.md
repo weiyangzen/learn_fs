@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/cxl/core/pci.c
+
+Purpose: provides PCIe-facing helpers for CXL core. It discovers dports, waits for media readiness, decodes and validates DVSEC range registers, enables MEM/HDM decode, reads CDAT through DOE, calculates link latency/bandwidth, detects decoder reset, maps register blocks, configures GPF timeouts, and counts possible downstream ports.
+
+Important APIs, types, and functions: exported functions include `devm_cxl_add_dport_by_dev()`, `cxl_await_media_ready()`, `cxl_dvsec_rr_decode()`, `cxl_hdm_decode_init()`, `read_cdat_data()`, `cxl_pci_get_latency()`, `cxl_endpoint_decoder_reset_detected()`, `cxl_pci_setup_regs()`, `cxl_pci_get_bandwidth()`, `cxl_gpf_get_dvsec()`, `cxl_gpf_port_setup()`, and `cxl_port_get_possible_dports()`. Internal helpers include `pci_get_port_num()`, `cxl_dvsec_mem_range_valid()`, `cxl_dvsec_mem_range_active()`, `devm_cxl_enable_mem()`, `devm_cxl_enable_hdm()`, and CDAT DOE transfer/checksum helpers.
+
+Control flow: endpoint setup first reads DVSEC capabilities and range registers, waits for MEM INFO VALID and MEM ACTIVE, and caches ranges. HDM init enables MEM directly if HDM is already enabled or DVSEC emulation is active, enables HDM if DVSEC memory was disabled, or validates active DVSEC ranges against locked root decoder CFMWS windows before allowing endpoint decoder use. CDAT reading locates a DOE mailbox, reads table length, streams entries by handle, restores overwritten DWORDs, trims malformed trailing data, validates checksum, and attaches the table to the port.
+
+State and persistence behavior: `media_ready_timeout` is a module parameter. MEM Enable and HDM global enable bits are hardware state with devm cleanup actions to clear them when Linux enabled them. `port->cdat_available`, `port->cdat.table`, and `port->cdat.length` persist for the port lifetime. GPF DVSEC timeout programming writes PCI config-space timeout fields and caches `dport->gpf_dvsec`.
+
+Dependencies and integration points: depends on PCI/PCIe config access, DOE mailbox APIs, AER/CXL PCI headers, CXL register mapping, root decoder topology, HDM setup in `hdm.c`, and performance coordinate consumers in memdev sysfs. Restricted CXL host support uses RCRB component register discovery and dport link capability mapping.
+
+Risks: media-ready polling can delay probe up to the module timeout per range. DVSEC ranges are trusted only if platform root windows cover them; mistakes can expose decode outside firmware-advertised CXL ranges. CDAT parsing is sensitive to malformed DOE lengths and checksum failure. MEM/HDM enable cleanup must not disable firmware-owned decode; the code only registers cleanup when it changed the bit.
+
+Test signals: devices with absent/invalid DVSEC, zero or more than two legacy HDM ranges, media valid/active timeout, HDM already enabled, HDM disabled with and without DVSEC ranges, DVSEC range denied by root decoder, DOE absent and malformed CDAT, bad CDAT checksum, restricted CXL register setup, GPF DVSEC absent/present, and link bandwidth/latency calculations across speeds and widths.

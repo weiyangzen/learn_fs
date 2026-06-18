@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/pci-dma.c -->
+# sources/distributed-fs/ceph-client/arch/xtensa/kernel/pci-dma.c
+
+Purpose: implements Xtensa DMA cache maintenance and coherent mapping helpers for MMU systems. Important functions are `do_cache_op`, `arch_sync_dma_for_cpu`, `arch_sync_dma_for_device`, `arch_dma_prep_coherent`, and `arch_dma_set_uncached`.
+
+Control flow maps a physical DMA range to virtual addresses, using direct mapping for normal pages and `kmap_atomic` for highmem pages, then invokes cache invalidate or flush callbacks by DMA direction. CPU sync invalidates for bidirectional/from-device; device sync flushes writeback caches for bidirectional/to-device; coherent prep invalidates; MMU uncached conversion offsets from cached to bypass KSEG. Persistent state affected is data cache content and virtual address mapping used for coherent DMA. Dependencies include DMA map ops, highmem, cacheflush, page/phys mapping, and Xtensa KSEG layout. Integration points are PCI/device DMA mapping, coherent allocations, cache alias handling, and platform noMMU overrides. Risks are highmem page iteration/off-by-offset bugs, missing writeback flush, wrong uncached address translation, and `DMA_NONE` BUG. Test signals include DMA API debug, PCI device IO, highmem DMA tests, bidirectional buffer coherency, and cache writeback configurations.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/pci-dma.c -->

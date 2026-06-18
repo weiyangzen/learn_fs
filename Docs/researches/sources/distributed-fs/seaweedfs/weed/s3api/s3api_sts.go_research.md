@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/seaweedfs/weed/s3api/s3api_sts.go -->
+# sources/distributed-fs/seaweedfs/weed/s3api/s3api_sts.go
+
+Purpose: implements AWS-compatible STS HTTP endpoints for SeaweedFS: `AssumeRole`, `AssumeRoleWithWebIdentity`, `AssumeRoleWithLDAPIdentity`, `GetCallerIdentity`, and `GetFederationToken`.
+
+Important APIs/types/functions: constants define AWS STS parameter names, actions, version, and duration bounds. `validateRoleSessionName`, `computePackedPolicySize`, `parseDurationSecondsWithBounds`, and `parseDurationSeconds` validate common input. `STSHandlers` wraps `sts.STSService` plus S3 IAM. `HandleSTSRequest` dispatches by `Action`. Action handlers validate parameters, SigV4 or identity-provider credentials, trust/action permissions, optional session policies, and response XML. `prepareSTSCredentials` centralizes session ID, JWT session-token claims, role policy embedding, temporary credential generation, and assumed-role response fields. XML response/error structs model AWS response shapes, and `writeSTSErrorResponse` maps `STSErrorCode` to HTTP/XML.
+
+Control flow: `HandleSTSRequest` parses form/query data, validates API version, then dispatches. Web identity requests allow empty `RoleArn` for claim-based mode and prefer routing through IAMManager so provider account scope and max-session-duration checks run. `AssumeRole` verifies SigV4, checks `sts:AssumeRole`, validates role trust policy when a role is explicit, or falls back to caller principal for self/session context. LDAP identity finds an LDAP provider, authenticates username/password, then checks trust. `GetFederationToken` validates name/duration, rejects temporary credentials before SigV4, verifies caller permission, merges direct and IAM-manager-resolved policies, embeds optional session policy, and returns federated-user credentials. `GetCallerIdentity` verifies SigV4 and returns ARN/account/user ID.
+
+State and persistence behavior: STS credentials are stateless JWT-backed sessions plus deterministic temporary access/secret material derived from session IDs and expirations. Policies and role attachments are read from IAM manager or identity state and embedded into token claims where needed. No server-side session table is written here.
+
+Dependencies and integration: depends on SeaweedFS IAM integration, policy and role stores, STS token/credential generation, LDAP providers, SigV4 verification, request IDs, and S3 XML/error writers. It is registered by `s3api_server.go` both as explicit STS routes and fallback POST handling.
+
+Risks: security correctness depends on matching AWS validation and preserving exact auth order: rejecting temporary credentials for GetFederationToken, not bypassing IAMManager for web identity, and failing closed when policy resolution errors are not user-not-found legacy cases. Empty `RoleArn` support is intentional but widens the code path relying on downstream STS validation. XML namespace shapes and error codes are client-visible. Policy embedding can become stale but makes tokens self-sufficient.
+
+Test signals: tests cover empty RoleArn web identity, IAMManager dispatch, AssumeRole fallback/role policy embedding, GetCallerIdentity XML, GetFederationToken validation, temporary credential rejection, session-policy normalization, policy merge/dedup, default/max durations, and STS-not-ready responses.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/seaweedfs/weed/s3api/s3api_sts.go -->

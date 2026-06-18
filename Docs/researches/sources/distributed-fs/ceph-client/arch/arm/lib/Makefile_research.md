@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/lib/Makefile
+
+Purpose: defines the ARM architecture support library objects built into the kernel. It selects generic assembly helpers, MMU-only uaccess helpers, compiler-specific backtrace support, CPU-generation-specific raw 16-bit I/O routines, optional memcpy-backed uaccess, and function error injection support.
+
+Control flow is build-system selection rather than runtime logic. `lib-y` contains bitops, checksums, memory/string helpers, compiler arithmetic helpers, division, raw I/O, stack switching, and byte-swap helpers. `mmu-y` is added only with `CONFIG_MMU`; Clang gets `backtrace-clang.o` while other compilers get `backtrace.o`; ARMv3 gets older readsw/writesw routines. Dependencies are Kconfig symbols and object naming expected by the ARM kernel. Risks are missing required helper symbols, selecting the wrong backtrace ABI, or using raw I/O helpers incompatible with CPU generation. Test signals are successful ARM links across major configs and symbol presence in vmlinux.

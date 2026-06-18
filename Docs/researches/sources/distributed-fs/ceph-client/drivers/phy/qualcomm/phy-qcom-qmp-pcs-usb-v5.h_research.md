@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v5.h
+
+This header maps QMP V5 USB3 PCS offsets. It is similar to the V4 USB map but shifts several registers and adds LFPS config1 plus RX termination delay select. The macro API covers autonomous mode, LFPS IRQ/timing, RXEQ training, receiver detect, ALFPS deglitch, signal-detect startup, test control, and termination delay. There is no executable logic or persisted state. Integration is through USB QMP PHY init and power-management sequences. Risks are variant confusion with V4/V6 because the same semantic controls move by small offsets. Test signals include USB3 link bring-up, LFPS wake, receiver detection, RXEQ training, termination timing, and low-power transitions.

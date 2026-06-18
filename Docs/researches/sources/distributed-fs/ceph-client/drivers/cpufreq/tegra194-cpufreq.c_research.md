@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/tegra194-cpufreq.c
+
+Purpose: implements CPUFreq for Tegra194, Tegra234, and Tegra238 CCPLEX CPUs using BPMP-provided NDIV limits, per-core NDIV request registers or system registers, counter-based speed reconstruction, and optional OPP/interconnect bandwidth scaling.
+
+Important APIs and functions: SoC ops abstract counter reads, CPU/cluster ID extraction, and NDIV get/set. Tegra194 uses system registers `s3_0_c15_c0_4/5`; Tegra234/Tegra238 use MMIO scratch frequency and ACTMON counter registers. `tegra_cpufreq_bpmp_read_lut()` sends `MRQ_CPU_NDIV_LIMITS`, constructs a frequency table stepped around 50 MHz, and stores NDIV in `driver_data`. `tegra194_calculate_speed()` samples core/reference counters on a per-CPU workqueue, while `tegra194_get_speed()` reconciles measured frequency with the last requested NDIV table entry. Target writes NDIV to all CPUs in the policy and optionally calls `dev_pm_opp_set_opp()`.
+
+Control flow and state: probe validates match data, optionally maps MMIO, allocates LUT and CPU topology arrays, creates `read_counters_wq`, reads BPMP LUTs for all clusters, stores per-CPU physical IDs from MPIDR, probes optional OPP/ICC support, and registers the CPUFreq driver. Policy init groups CPUs by cluster width, uses a BPMP LUT or DT OPP-filtered copy, and sets 300 us transition latency. Exit removes dynamic OPP data.
+
+Dependencies and integration points: depends on BPMP firmware, ARM MPIDR topology, per-SoC system registers or CCPLEX MMIO, CPUFreq cooling, OPP-v2/interconnect APIs, hotplug online/offline callbacks, and workqueue execution on target CPUs.
+
+Risks and test signals: risks include `tegra194_get_cpu_ndiv()` passing `&ndiv` instead of `ndiv` to `smp_call_function_single()`, 32-bit multiplication overflow in counter rate calculation before widening, global workqueue/driver-data assumptions, missing cleanup for some OPP-derived tables, and cluster geometry errors causing wrong scratch offsets. Test signals include BPMP returning NULL only for absent clusters, per-CPU `cpuid/clusterid/freq_core_reg` matching MPIDR, measured speed within `MAX_DELTA_KHZ` of requested table rates, CPUFreq cooling registration, and ICC scaling disabling itself after OPP set failures.

@@ -1,0 +1,5 @@
+## sources/object-store/minio-mc/functional-tests.sh
+
+Purpose: end-to-end functional test suite for the `mc` binary, usable directly against play.min.io or under Mint with provided endpoint credentials and JSON result output. It exercises buckets, objects, recursive copy/mirror, find, watch, presigned share, metadata, storage class, SSE-C, alias config, and admin user/policy workflows.
+
+Important helpers include `assert`, `mc_cmd`, `check_md5sum`, setup/teardown, and many `test_*` functions. Control flow initializes temp config/data, creates 0B/1MB/65MB files, sets aliases, runs `run_test`, then cleans temp paths. State includes remote random buckets/objects/users and local temp data/config. Dependencies are bash, `mc`, jq, curl, md5sum, base64, MinIO/S3 credentials, and optional Mint env. Risks include live-server flakiness, random-name collisions, destructive `rb --force --dangerous`, SSE tests requiring HTTPS, and partial cleanup after failures. Test signal is broad integration coverage rather than isolated unit proof.

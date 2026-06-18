@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/venus/vutil.cc
+
+This file builds the `vutil` command-line utility used to control a running Venus process. It reads Venus configuration, locates the cache directory, pid file, run-control file, log file, and error log, writes textual control commands, signals Venus, and waits for Venus to consume the control file. Supported commands are shutdown, debug level changes, statistic reset, statistic dump, and log rotation.
+
+Important routines are `usage`, `logrotate`, and `main`. `logrotate` rotates a path through suffixes `.0` through `.9` using `rename`. `main` parses options after stripping one or two leading dashes, loads `venus.conf` through `codaconf_init`, resolves relative `pid_file` and `run_control_file` under `cachedir`, reads the Venus pid, and for each command writes a control string such as `SWAPLOGS`, `DEBUG <venus> <rpc2> <lwp>`, `STATSINIT`, or `STATS`. For shutdown it sends `SIGTERM` directly. For other commands it writes the control file, sends `SIGHUP`, then polls up to 60 seconds for Venus to unlink the control file.
+
+State and persistence are filesystem-based: pid file, control file, rotated logs, and configured log paths. There is no shared memory or RPC path; Venus command handling is signaled through files and Unix signals. Dependencies include `codaconf`, Venus default path constants, standard signal/file APIs, and `venus.private.h`.
+
+Risks include race windows around pid reuse, control-file overwrite if multiple `vutil` instances run, log rotation without fsync or locking, memory allocated for resolved relative paths and intentionally retained for process lifetime, and `strtoul` parsing that uses a shared `errno` pattern. Tests should cover command parsing aliases, relative and absolute config paths, invalid pid safety, log rotation ordering, Venus non-response timeout cleanup, failed `SIGHUP`, and shutdown refusing pid values `<= 1`.

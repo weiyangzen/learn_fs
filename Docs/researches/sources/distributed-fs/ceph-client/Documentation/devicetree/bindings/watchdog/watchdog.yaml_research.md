@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/watchdog/watchdog.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/watchdog/watchdog.yaml` defines `Watchdog Common Properties`, a Linux watchdog Devicetree binding schema. This document describes generic bindings which can be used to describe watchdog devices in a device tree. It is source-controlled ABI documentation and a dt-schema validation contract for DTS/DTB nodes that platform, MFD, PMIC, GPIO, or SoC watchdog drivers consume during probe.
+
+## Important APIs, Types, and Functions
+The exported interface is the YAML schema contract rather than C functions. The schema uses `$id` `http://devicetree.org/schemas/watchdog/watchdog.yaml#` and meta-schema `http://devicetree.org/meta-schemas/core.yaml#`. `compatible` uses no explicit compatible schema with 0 tokens: no explicit compatible tokens. Top-level properties are `$nodename`, `timeout-sec`. Required properties are none declared; nested required-property signals include none. Pattern child-node APIs are none. Important resource/provider roles: `timeout-sec` supplies the initial watchdog timeout policy. Collected limit and enum signals include `maxItems=1`. All discovered property names, including nested compositions, total 2.
+
+## Control Flow
+`dt_binding_check` loads the YAML, resolves `$ref` dependencies, validates against the core meta-schema, checks required properties, evaluates const/enum/items bounds, applies composition or conditional branches (none), compiles examples, and enforces unknown-property policy. `dtbs_check` applies the same contract to compiled board DTBs. At runtime the YAML does not execute; firmware supplies a matching node, OF/platform code matches `compatible`, maps registers or GPIOs, resolves clock/reset/interrupt/phandle resources, and the watchdog framework driver registers a watchdog device.
+
+## State and Persistence Behavior
+This file owns no mutable runtime state and persists no kernel data. Its durable state is ABI: compatible strings, timeout property names, register ordering, clock/reset names, GPIO polarity expectations, phandle cell counts, child-node regexes, and examples become long-lived DTS/DTB contracts. Runtime state belongs to the matched watchdog driver and hardware counter, including enablement, timeout programming, pretimeout handling, restart priority, reset cause reporting, and keepalive policy where supported.
+
+## Dependencies and Integration Points
+Maintainers: Guenter Roeck <linux@roeck-us.net>, Wim Van Sebroeck <wim@linux-watchdog.org>. Direct `$ref` dependencies are dt-schema core/meta schemas only. Integration points include the Linux watchdog subsystem, OF platform matching, SoC/MFD/PMIC parents, clock/reset/interrupt/GPIO/regulator providers, board DTS files, and common watchdog properties from `watchdog.yaml` where referenced. Compatible scans found driver-side references in no direct driver-side compatible hit in drivers/; in-tree DTS references in no direct arch/ DTS compatible hit. The source has 33 lines and 0 embedded example blocks.
+
+## Risks
+Primary risks are DTS ABI drift, changing required properties after boards ship, wrong compatible fallback order, timeout units that diverge from driver parsing, missing `watchdog.yaml` common-property coverage, and register/clock/interrupt/GPIO order mismatches that produce a watchdog which probes but cannot reset reliably. The closure profile allows additional top-level properties. Variant-heavy schemas need per-compatible review so a new SoC does not inherit stale constraints or bypass a required resource through an overly broad `oneOf` or conditional branch.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/watchdog/watchdog.yaml` for targeted schema validation and example compilation, then `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/watchdog/watchdog.yaml` on boards using these compatibles. High-value negative tests remove each required property, alter compatible fallback order, add an undeclared property when the schema is closed, break child-node names matched by `patternProperties`, and corrupt phandle cell counts. Runtime signals are successful watchdog probe, expected `/dev/watchdog` registration or restart-handler registration, correct timeout/ping behavior, and no DTS warnings for known boards.

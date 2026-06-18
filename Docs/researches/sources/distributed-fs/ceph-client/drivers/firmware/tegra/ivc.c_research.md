@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/firmware/tegra/ivc.c
+
+Tegra IVC ring-buffer protocol library. It implements a two-endpoint shared-memory queue with cache-line-separated ownership, explicit DMA sync for non-coherent peers, frame read/write helpers, and a reset state machine. BPMP uses it as the transport framing layer on Tegra186+.
+
+The shared header has TX-owned count/state and RX-owned count fields, each padded/aligned to 64 bytes. Exported APIs are `tegra_ivc_read_get_next_frame()`, `tegra_ivc_read_advance()`, `tegra_ivc_write_get_next_frame()`, `tegra_ivc_write_advance()`, `tegra_ivc_reset()`, `tegra_ivc_notified()`, `tegra_ivc_align()`, `tegra_ivc_total_queue_size()`, `tegra_ivc_init()`, and `tegra_ivc_cleanup()`.
+
+Read flow verifies the local TX state is established, checks whether RX appears non-empty, invalidates remote-owned counters/frame data if needed, returns an `iosys_map` for the current frame, and advances RX count when consumed. Write flow verifies channel state and space, returns the next TX frame map, flushes frame data, advances TX count, and notifies only on empty-to-non-empty transitions. Reset flow writes `SYNC`, reacts to peer `SYNC`/`ACK` in `tegra_ivc_notified()`, clears counters with memory barriers, and eventually reaches `ESTABLISHED`.
+
+State is entirely in shared memory plus local cached positions. `tegra_ivc_init()` validates alignment, non-overlap, frame-size limits, maps coherent DMA if a peer device is supplied, and records callback/data. Dependencies include `iosys_map`, DMA sync APIs, memory barriers, alignment helpers, and a caller-supplied notify callback.
+
+Risks include security-sensitive counter arithmetic: `tegra_ivc_empty()` deliberately treats over-full remote counters as empty to avoid denial-of-service behavior. Parameter overlap checks account only for `frame_size * num_frames`, while the full queue includes the header; callers should pass separated regions sized by `tegra_ivc_total_queue_size()`. `iosys_map_get_vaddr()` rejects I/O memory for DMA mapping, so peer-DMA mode is for normal memory maps. Test signals include reset handshakes for all state transitions, full/empty boundary behavior, malicious over-full counters, DMA sync on non-coherent peers, alignment rejection, and wraparound at the last frame.

@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/fs/xfs/xfs_ioctl.c
+
+Purpose: implements the native XFS file ioctl entry point and the helpers behind filesystem geometry, bulk inode reporting, file attributes, extent maps, labels, reserved blocks, growth, shutdown, scrub, handle, exchange-range, health, and media verification operations.
+
+Important APIs and functions: exported helpers include `xfs_file_ioctl`, `xfs_ioc_swapext`, `xfs_fileattr_get`, `xfs_fileattr_set`, `xfs_fsbulkstat_one_fmt`, and `xfs_fsinumbers_fmt`. Bulk request handling is split between legacy `xfs_ioc_fsbulkstat`, v5 `xfs_ioc_bulkstat`, v5 `xfs_ioc_inumbers`, and `xfs_bulk_ireq_setup`/`teardown`. Geometry helpers include `xfs_ioc_fsgeometry`, `xfs_ioc_ag_geometry`, and `xfs_ioc_rtgroup_geometry`. File-attribute mutation is decomposed into validation helpers for xflags, DAX, extent size, CoW extent size, project id, transaction allocation, and commit. `xfs_ioc_getbmap`, label helpers, EOF-block conversion, reserved-block handling, and fs-count reporting serve the corresponding switch cases.
+
+Control flow: `xfs_file_ioctl` traces the call, converts `p` to a user pointer, and dispatches by ioctl number. Read-only or information ioctls copy data out directly; mutating paths check capability, shutdown/read-only state, and use `mnt_want_write_file` around filesystem changes. User ABI handling consistently copies fixed headers in, validates flags/reserved fields, calls XFS internal APIs, and copies output headers/results back.
+
+State and persistence: persistent changes include file xflags/project/extent hints through logged inode transactions, superblock labels with primary and backup superblock writes plus block-device invalidation, reserved block counters, growfs changes, shutdown state, error injection state, blockgc EOF trimming, extent exchange/commit operations, and scrub/health side effects.
+
+Dependencies and integration: this is the ioctl bridge from VFS to XFS subsystems: bulkstat/inumbers, iwalk, fsops/growfs, rtgroups/zoned realtime geometry, quota, bmap, fsmap, scrub, handles, attrs, reflink/exchange range, health monitor, media verification, and fileattr VFS hooks.
+
+Risks and test signals: user pointer handling, flag validation, capability checks, idmapped mount behavior in bulkstat backends, DAX flag cache invalidation, realtime extent hint validation, project quota transitions, label update ordering, and write-mount bracketing are primary risk areas. Tests should cover native ioctl ABI structs, legacy and v5 bulkstat cursors, AG-only bulkstat, metadata-directory filtering, set/get fsxattr validation, label persistence across remount, growfs permission checks, shutdown/error injection gating, and malformed reserved fields.

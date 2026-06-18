@@ -1,0 +1,11 @@
+# sources/control-plane/ceph-csi/e2e/volumegroupsnapshot_base.go
+
+Purpose: shared VolumeGroupSnapshot test harness that creates PVC groups, group snapshot classes, group snapshots, clones, pods, and cleanup in a driver-neutral way.
+
+Important APIs and flow: `volumeGroupSnapshotter` defines common create/delete operations; exported `VolumeGroupSnapshotter` adds driver-specific class construction and backend validation. `newVolumeGroupSnapshotBase` builds group snapshot and volume snapshot clients. `CreatePVCs` provisions labeled PVCs with requested volume mode. `CreatePVCClones` reads the bound group snapshot content, locates each generated `VolumeSnapshot`, copies the source PVC spec, sets a snapshot data source, clears `VolumeName`, and provisions clones. `CreatePods` starts one sleeping CentOS pod per clone with either a block device or filesystem mount. `CreateVolumeGroupSnapshotClass`, `CreateVolumeGroupSnapshot`, `DeleteVolumeGroupSnapshot`, and `DeleteVolumeGroupSnapshotClass` wrap CRD operations with polling. `testVolumeGroupSnapshot` orchestrates source PVC creation, class creation, primary and additional group snapshots, clone creation, pod creation, backend validation, pod/clone/source cleanup, snapshot deletion, backend delete validation, and class deletion.
+
+State and persistence: creates Kubernetes PVCs, Pods, VolumeGroupSnapshotClasses, VolumeGroupSnapshots, generated VolumeSnapshots/Contents, and clone PVCs. Backend persistence is validated by driver-specific implementations.
+
+Dependencies and integration: depends on external-snapshotter v1beta2 group snapshot client, volume snapshot client, core Kubernetes API, shared PVC/pod helpers, and driver implementations in `volumegroupsnapshot.go`.
+
+Risks and test signals: cleanup is sequential and returns on first error, so later resources may leak when an earlier delete fails. Snapshot clone creation assumes generated VolumeSnapshot names follow SHA256 naming over group snapshot UID and volume handle. Additional group snapshots exercise create/delete churn before clone validation. Passing tests confirm group snapshot CRD readiness, source selection by labels, clone provisioning from generated snapshots, pod publishing, and backend cleanup.

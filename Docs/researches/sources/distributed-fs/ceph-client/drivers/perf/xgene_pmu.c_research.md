@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/perf/xgene_pmu.c
+
+Purpose: AppliedMicro/APM X-Gene SoC PMU driver for multiple uncore blocks: L3C, IOB/IOB slow, MCB, and MC. It supports PCP PMU v1/v2 via OF or ACPI and v3 via ACPI, exposing each hardware block as its own perf PMU.
+
+Important APIs, types, and functions: `struct xgene_pmu` owns the top-level PCP PMU interrupt registers, active masks, selected CPU, IRQ, lock, ops table, and per-type PMU lists. `struct xgene_pmu_dev` embeds each child `struct pmu`, counter bitmap, max period, attributes, and active event pointers. `struct xgene_pmu_ops` abstracts v1/v2 32-bit and v3 64-bit counter operations, interrupt masks, event type and agent-mask writes. Perf callbacks include `xgene_perf_event_init`, `add`, `del`, `start`, `stop`, `read`, `pmu_enable`, and `pmu_disable`.
+
+Control flow: top-level probe installs CPU hotplug state, allocates and initializes `xgene_pmu`, chooses ops by firmware match data, maps PCP PMU registers, requests a no-thread unbalanced IRQ, probes active MCB/MC/L3C topology from CSW/MCB registers or syscon regmaps, registers hotplug instance, walks child PMU devices from ACPI or OF, and unmasks top-level interrupts. Child discovery maps each child resource, derives names and enable masks, filters inactive L3C/MCB/MC blocks, selects version-specific sysfs groups, initializes hardware counters, and registers perf. IRQ handling reads top-level interrupt status under raw spinlock, dispatches to matching child lists, stops child counters, reads and clears overflow flags, updates and reprograms active events, then restarts counters.
+
+State and persistence: runtime state is child lists, active topology masks, counter assignment bitmaps, event pointer arrays, MMIO registers, selected CPU mask, and perf counts. No persistent storage exists. CPU offline migrates all child perf contexts and IRQ affinity to another online CPU.
+
+Dependencies and integration: integrates with perf sysfs formats/events, OF compatibles `apm,xgene-pmu*`, ACPI IDs `APMC0D5B/5C/83` and child type IDs, platform resources, syscon regmaps, cpuhotplug, and IRQ handling.
+
+Risks: topology detection fallback defaults to single MCB/MC if CSW probing fails, hiding hardware. v3 uses paired 32-bit reads for 64-bit counters and different event encodings; attr group mistakes would misprogram events. Group validation checks PMU identity but not total counter count until add time. Test signals include OF and ACPI discovery, each child PMU sysfs group, v1 single-counter behavior, v2/v3 four-counter allocation, overflow IRQ dispatch for all child types, agent-mask filtering on non-v3 IOB, and CPU hotplug migration.

@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/client/src/main/java/org/apache/hadoop/ozone/client/protocol/ClientProtocol.java
+
+Purpose: This is the main client-facing Ozone protocol interface. Implementations, especially the RPC client, expose volume, bucket, key, multipart upload, security, tenant, filesystem, ACL, snapshot, tag, KMS, and lease-recovery operations against an Ozone cluster.
+
+Important APIs and types: The interface includes volume operations (`createVolume`, `listVolumes`, quotas, owner), bucket operations (`createBucket`, storage/versioning/quota/encryption/replication/owner), key operations (`createKey`, conditional create/rewrite, stream variants, read/get info/head/list/delete/rename), multipart APIs, delegation tokens and S3 secrets, tenant administration, server defaults and KMS provider access, filesystem-style status/create/read/write/list, ACL management, S3 auth thread-local methods, replica reads, snapshots and snapshot diff jobs, times, lease recovery, and object tagging. It returns public client types such as `OzoneVolume`, `OzoneBucket`, `OzoneKeyDetails`, `OzoneOutputStream`, `OzoneDataStreamOutput`, `OzoneInputStream`, and OM helper response types.
+
+Control flow: As an interface it has no implementation control flow, but it defines the sequencing contract for many operations: create/open returns an output stream whose close commits data, multipart initiation creates upload IDs and part streams before completion, conditional writes enforce generation or ETag checks at open and commit time, list APIs use previous markers and max result limits, and snapshot diff can be submitted, queried, cancelled, or listed.
+
+State and persistence behavior: Implementations persist metadata in OM and data in datanodes through returned streams. The interface covers durable namespace mutations for volumes, buckets, keys, directories, snapshots, tenants, secrets, ACLs, quotas, tags, and leases. Thread-local S3 auth is client-side request context rather than cluster persistence.
+
+Dependencies and integration points: It is annotated with Kerberos server principal information and bridges higher-level client objects to `OzoneManagerProtocol`. It is consumed by Ozone client APIs, S3 gateway paths, filesystem adapters, admin tools, and stream classes researched in this group.
+
+Risks: The interface is very broad, so compatibility is high-risk: adding or changing methods affects all protocol implementations. Deprecated replication-type/factor overloads coexist with `ReplicationConfig` variants. Conditional write semantics require enforcement both at open and commit. Thread-local S3 auth must be cleared to avoid credential leakage across reused threads.
+
+Test signals: Integration tests should cover each method family through the RPC implementation, including pagination markers, quota and ACL results, stream close committing keys, multipart conditional completion, encryption/KMS provider retrieval, tenant state transitions, snapshot diff job lifecycle, lease recovery, tag CRUD, S3 auth isolation, and deprecated overload compatibility.

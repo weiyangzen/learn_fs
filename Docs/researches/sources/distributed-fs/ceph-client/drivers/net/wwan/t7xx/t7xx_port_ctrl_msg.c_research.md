@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_port_ctrl_msg.c
+
+This file implements the T7xx control port protocol. It parses modem control messages, translates exception and handshake messages into FSM events, handles port enumeration payloads, and runs a kernel thread that drains the control port RX queue.
+
+Important functions are `t7xx_port_enum_msg_handler`, `control_msg_handler`, `fsm_ee_message_handler`, `port_ctl_send_msg_to_md`, `port_ctl_rx_thread`, `port_ctl_init`, and `port_ctl_uninit`. Port enumeration validates head/tail patterns and version, then enables or disables channels through `t7xx_port_proxy_chl_enable_disable`. Exception messages recognize MD exception check/pass/ack IDs and append FSM events such as HS2 and exception pass events.
+
+State resides in the control port RX SKB list, its thread pointer, channel enable flags, and FSM event queue. Dependencies are CCCI/control headers from `t7xx_port_proxy.h`, `t7xx_state_monitor`, port proxy channel controls, and SKB queueing. Risks include malformed control payload lengths, stale control thread during uninit, port enumeration version mismatch, queue overflow returning `-ENOBUFS`, and control messages arriving after modem state changed. Test signals include HS1/HS2/HS3, MD exception/pass/ack, bad enumeration pattern/version, channel enable/disable messages, control thread stop, and RX backpressure.

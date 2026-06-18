@@ -1,0 +1,9 @@
+# sources/storage-engines/tikv/components/resolved_ts/src/scanner.rs
+
+`scanner.rs` performs the asynchronous initial lock scan needed before a registered region's resolver can become ready. `ScanTask` carries the observe handle, region metadata, checkpoint timestamp, optional backoff, cancellation receiver, and endpoint scheduler. `ScannerPool<T, E>` owns a Tokio multi-thread runtime and a raftstore `CdcHandle`.
+
+`spawn_task` optionally sleeps for re-registration backoff, acquires a scan concurrency semaphore, obtains a region snapshot through `capture_change(ChangeObserver::from_rts(...))`, then scans lock CF with `MvccReader::scan_locks_from_storage`. It emits batches as `Task::ScanLocks { entries: ScanEntries::Lock(..) }` and finally sends `ScanEntries::None` with the snapshot apply index. The endpoint uses that final marker to merge pending change-log events and publish a ready resolver.
+
+Snapshot acquisition retries transient raft errors with exponential backoff. Epoch mismatch and stale observe-id errors are not retried because the same metadata/observe handle cannot succeed. Cancellation is checked before and during waits so deregistration can stop obsolete scans. Only `Put` and `Delete` locks are scanned; 1PC and ingest SST are handled through tracked-index updates in change logs.
+
+State is not persisted; it is a bounded asynchronous reconstruction pass. Integration points are raftstore CDC observation, MVCC snapshots, `GLOBAL_TIMER_HANDLE`, Tokio semaphores, resolved-ts metrics, and failpoints around snapshot acquisition. Risks include stale scans racing with re-registration, scan backlogs under low concurrency, snapshot retry latency, and memory quota overflow when scanned locks are inserted. Integration and failpoint tests cover scan quota failures and split-triggered rescans.

@@ -1,0 +1,13 @@
+# sources/sync-backup/borg/src/borg/archiver/tar_cmds.py
+
+Purpose: provides `borg export-tar` and `borg import-tar`, streaming conversion between Borg archives and tar streams, including external compression filters and Borg/PAX/GNU metadata variants.
+
+Important APIs: `get_tar_filter(fname, decompress)` maps tar filename suffixes to compressor/decompressor commands. `TarMixIn.do_export_tar(...)` opens the output, chooses an external filter, and calls `_export_tar`. `_export_tar(...)` builds match/filter functions, streams archive items into `tarfile.open(..., mode="w|")`, tracks hard links with `HardLinkManager`, emits progress, converts Borg items to `TarInfo`, and writes PAX headers for timestamps, xattrs, ACLs, and optional `BORG.item.meta`. `do_import_tar(...)` and `_import_tar(...)` create a new archive from `tarfile.open(..., mode="r|")`, dispatch each member to `TarfileObjectProcessors`, update stats, and save the archive.
+
+Control flow and state: export iterates archive metadata and fetches file content chunks lazily through `archive.pipeline.fetch_many(..., ro_type=ROBJ_FILE_STREAM)` wrapped by `ChunkIteratorFileWrapper`. Progress mode first sums item sizes, creating a second metadata pass. Import creates an `Archive(create=True)` and `ChunksProcessor`; every tar member becomes a Borg item or warning, then `archive.save(comment, timestamp)` persists the archive and manifest side effects via normal archive code.
+
+Dependencies and integration: depends on Python `tarfile`, Borg archive/chunk processors, pattern matching, `create_filter_process`, `dash_open`, msgpack, JSON/stat logging helpers, and constants such as `SCHILY_XATTR` and `ROBJ_FILE_STREAM`. It sets `tarfile.TarFile.extraction_filter` to `fully_trusted_filter` on Python versions that warn when the filter is unset.
+
+Risks: export mutates `item.path` after `strip_components`, so code must avoid reusing the same item object with the original path. `BORG.item.meta` serializes all item metadata into PAX headers and may expose Borg-specific metadata. External filters are shell-command-like strings handled by helper code, so validation and error propagation live outside this file. Import trusts tar metadata and intentionally lacks exclude handling; hostile tar streams depend on `TarfileObjectProcessors` and tarfile streaming behavior for safety.
+
+Test signals: cover suffix auto-filter choices, stdout/stdin `-`, export of regular files, dirs, symlinks, hard links, devices/FIFOs, unsupported file types, PAX/BORG metadata preservation, `--strip-components`, unmatched include warnings, import of concatenated tar with `--ignore-zeros`, stats/JSON output, and external filter failure behavior.

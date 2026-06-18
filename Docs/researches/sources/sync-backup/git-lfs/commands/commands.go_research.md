@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/git-lfs/commands/commands.go -->
+# sources/sync-backup/git-lfs/commands/commands.go
+
+Purpose: shared command infrastructure for Git LFS commands: transfer manifest/client construction, lock client setup, hook install/uninstall, output/error/exit handling, repository setup, environment canonicalization, panic logging, filepath filter construction, progress meter creation, and Git version requirements.
+
+Important APIs/types/functions: globals `ErrorBuffer`, `ErrorWriter`, `OutputWriter`, `ManPages`, `tqManifest`, `cfg`, `apiClient`, `global`, `cleanupOnce`, `oldEnv`, `includeArg`, `excludeArg`; functions `getTransferManifest`, `getTransferManifestOperationRemote`, `getAPIClient`, `closeAPIClient`, `newLockClient`, `newDownloadCheckQueue`, `newDownloadQueue`, `fetchRemoteRef`, `pushRemoteRef`, `buildFilepathFilter`, `buildFilepathFilterWithPatternType`, `downloadTransfer`, `getHookInstallSteps`, `installHooks`, `uninstallHooks`, `ExitWithCode`, `Error`, `Print`, `Exit`, `ExitWithError`, `FullError`, `errorWith`, `LoggedError`, `Panic`, `Cleanup`, `doCleanup`, `requireStdin`, `requireInRepo`, `requireWorkingCopy`, `setupRepository`, `verifyRepositoryVersion`, `setupWorkingCopy`, `changeToWorkingCopy`, `canonicalizeEnvironment`, `handlePanic`, `logPanic`, `ipAddresses`, `logPanicToWriter`, `determineIncludeExcludePaths`, `determineFilepathFilterCache`, `buildProgressMeter`, and `requireGitVersion`.
+
+Control flow: commands call setup helpers to validate repo/worktree and normalize cwd. Transfer helpers lazily create API clients and manifests under a mutex. Exit paths call cleanup once before `os.Exit`. Error paths distinguish fatal stack-trace errors from plain errors. Panic logging creates timestamped log files, writes version/command/error/context/environment/IP data, and informs the user. Filepath filters merge CLI include/exclude args with config defaults and cache config.
+
+State and persistence behavior: owns global API client and manifest caches, log files under local log dir, temporary cleanup via config, old environment map after canonicalization, and output buffers mirrored to stdout/stderr. It may set `lfs.repositoryformatversion=0` in local config.
+
+Dependencies/integration points: central dependency for almost every command; integrates config, Git refs/version, transfer queue, API endpoints, locking, subprocess environment, LFS hooks, filepath filters, tracer/error packages, and generated manpage content.
+
+Risks and test signals: risks include global mutable state across commands/tests, manifest cache key collisions for empty operation/remote, panic logging exposing environment, cwd prefix checks with symlinks/case sensitivity, local config mutation during setup, and `ipAddresses` ignoring address retrieval errors. Test signals include include/exclude path tests, path filter cache config, setup in bare/non-repo/worktree, panic log creation/failure, cleanup idempotence, hook install/uninstall, and min Git version enforcement.
+<!-- END_FILE_RESEARCH: sources/sync-backup/git-lfs/commands/commands.go -->

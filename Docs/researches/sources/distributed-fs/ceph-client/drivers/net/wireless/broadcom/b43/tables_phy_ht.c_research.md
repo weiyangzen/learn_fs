@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/broadcom/b43/tables_phy_ht.c
+
+Purpose: Provides Broadcom b43 HT-PHY static calibration tables and generic HT-PHY table access helpers. It initializes the table set used by `phy_ht.c` during HT PHY bring-up and exposes one late gain-control table used by later runtime configuration.
+
+Important APIs and data: `b43_httab_read`, `b43_httab_read_bulk`, `b43_httab_write`, `b43_httab_write_few`, and `b43_httab_write_bulk` implement typed table access via `B43_HTTAB8/16/32`. `b43_phy_ht_tables_init` uploads the static HT table arrays to their hardware table ids and offsets. `b43_httab_0x1a_0xc0_late` is exported for the later update path in `phy_ht.c`. Static arrays include MCS/rate lookup data, power/gain/IQ/LO tables for multiple HT cores, and per-core coefficient/gain control tables.
+
+Control flow: Reads and writes decode the width tag, mask the address to 16 bits, write `B43_PHY_HT_TABLE_ADDR`, and read or write `B43_PHY_HT_TABLE_DATALO` plus `B43_PHY_HT_TABLE_DATAHI` for 32-bit values. Bulk operations program the table address once and stream through sequential entries. `b43_httab_write_few` is a varargs helper for small inline update sequences used by HT init code. `b43_phy_ht_tables_init` performs a fixed upload order with `httab_upload`, beginning with table ids `0x12`, `0x27`, `0x26`, `0x25`, and `0x2f`, then per-core table families `0x1a`, `0x1b`, `0x1c`, and finally additional 32-bit tables `0x1f` through `0x24`.
+
+State and persistence: The file owns no dynamic state. The static constants are immutable driver data. Writes persist only in device HT-PHY table memory/register state until the PHY is reset or reinitialized. The late exported table is read-only data that other HT code can upload later.
+
+Dependencies and integration points: Includes `b43.h`, `tables_phy_ht.h`, `phy_common.h`, and `phy_ht.h`. It depends on the common PHY register helpers and HT register definitions. `phy_ht.c` calls `b43_phy_ht_tables_init`, uses `b43_httab_read` for save/readback operations, `b43_httab_write_few` for compact init patches, and uploads `b43_httab_0x1a_0xc0_late` in a later gain table step.
+
+Risks: Varargs values in `b43_httab_write_few` are read as `int` and stored in `u32`; callers must pass values in range for the chosen width. There is no chip-specific workaround equivalent to N-PHY's BCM43224 table auto-increment handling, so this assumes HT-PHY table auto-increment is reliable. Like the other table files, buffer casts in bulk read/write require callers to pass naturally aligned arrays of matching element width. A table id or offset typo can corrupt unrelated HT calibration entries.
+
+Test signals: `BUILD_BUG_ON` validates the exported late table size. Compile coverage checks the varargs prototype and register symbols. Runtime validation should confirm HT initialization writes the expected table sequence, `b43_httab_write_few` increments addresses correctly, and HT calibration/readback paths in `phy_ht.c` see expected values after init.

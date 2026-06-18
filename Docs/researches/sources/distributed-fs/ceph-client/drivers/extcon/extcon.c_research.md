@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/extcon/extcon.c
+
+### Purpose
+`extcon.c` implements the external connector provider core. It registers `/sys/class/extcon` devices, tracks per-cable attach state, exposes cable and mutual-exclusion metadata through sysfs, stores typed connector properties, and notifies consumers through raw notifier chains plus `KOBJ_CHANGE` uevents.
+
+### Important APIs, Types, And Functions
+The file centers on `struct extcon_cable`, the static `extcon_info[]` id/type/name table, global `extcon_class`, `extcon_dev_ids`, and `extcon_dev_list`. Exported APIs include `extcon_dev_allocate()`, `extcon_dev_register()`, `extcon_dev_unregister()`, `extcon_set_state()`, `extcon_get_state()`, `extcon_set_state_sync()`, `extcon_sync()`, property get/set/capability helpers, notifier registration helpers, `extcon_get_extcon_dev()`, OF lookup helpers, and `extcon_get_edev_name()`.
+
+### Control Flow, State, And Persistence
+Registration creates the class if needed, counts `supported_cable[]` entries, allocates an IDA id, allocates per-cable sysfs groups, optional mutual-exclusion attributes, per-device notifier heads, then `device_register()`s `extconN` and adds it to the global list. State is a `u32` bitmask protected by `edev->lock`. `extcon_set_state()` validates the cable id, checks mutual-exclusion masks, clears properties on detach, and updates the bit. `extcon_sync()` reads state under the spinlock, calls the per-cable and all-cable raw notifiers, builds `NAME=` and `STATE=` environment variables from sysfs renderers using an atomic page allocation, then sends a uevent outside the lock. Unregister removes the device from the global list, unregisters the device, frees IDA/sysfs/notifier allocations, and drops the device reference.
+
+### Dependencies, Integration Points, Risks, And Test Signals
+The implementation integrates the driver core class/device model, sysfs attribute groups, IDA allocation, OF phandle lookup, raw notifier chains, spinlocks usable from IRQ context, and provider definitions from `<linux/extcon-provider.h>`. Risks include the `SUPPORTED_CABLE_MAX` 32-bit state limit, raw notifier callbacks executing with no blocking-chain serialization, property capability bits being modified without the same lock used by get/set paths, malformed supported-cable IDs indexing `extcon_info[]`, and careful lifetime requirements around device unregister and global list lookup. Test signals include attach/detach uevents, per-cable `name` and `state` files, mutual-exclusion rejection with `-EPERM`, property reset on detach, notifier ordering, OF phandle deferral, registration failure unwind, and duplicate/late consumer lookup returning `-EPROBE_DEFER`.

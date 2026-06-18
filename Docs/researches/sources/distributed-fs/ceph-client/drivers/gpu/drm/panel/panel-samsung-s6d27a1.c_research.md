@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6d27a1.c
+
+Purpose: S6D27A1 supports a Samsung 480x800 DPI RGB panel with SPI MIPI-DBI command control. It initializes panel controller state over SPI and exposes a DPI scanout mode with RGB888 bus format.
+
+Important APIs, control flow, and state: probe allocates `struct s6d27a1`, gets `vci`/`vccio`, reset GPIO, initializes `mipi_dbi`, registers custom read commands for MTP ID reads, attaches OF backlight, and adds the panel. `prepare()` enables supplies, pulses reset, sends sleep-out twice, unlocks level 2 controls, programs resolution, ASG/manual/display/power/source/panel controls, locks level 2, and logs MTP ID. `enable()` sends display on; `disable()` display off; `unprepare()` enters sleep, waits 120 ms, asserts reset, and disables regulators. `get_modes()` returns the 480x800 mode, 8 bpc, RGB888 bus format, and negative pixel-data edge.
+
+Dependencies, integration, risks, and tests: dependencies are SPI, DRM MIPI DBI, regulator/GPIO/backlight APIs, media bus format helpers, and `samsung,s6d27a1`. Risks are undocumented command values, no return checking for most `mipi_dbi_command()` calls, reliance on custom read-command whitelist for ID reads, and panel-specific DPI bus flags. Test signals include readable MTP ID, correct 480x800 scanout, external backlight binding, no DBI init errors, and stable suspend/resume.

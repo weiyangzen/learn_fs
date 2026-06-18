@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/tun.c
+
+Purpose: C kselftest harness for TUN/TAP multi-queue lifetime behavior and virtio-net UDP tunnel GSO/GRO metadata through TAP plus Geneve. It verifies both writing prebuilt tunnel packets into a TAP device and receiving tunnel-originated UDP GSO packets from TAP with correct virtio-net header fields.
+
+Important APIs/types/functions: uses `kselftest_harness.h`, Linux `/dev/net/tun` ioctls (`TUNSETIFF`, `TUNSETQUEUE`, `TUNSETVNETHDRSZ`, `TUNSETOFFLOAD`), `SIOCGIFFLAGS`, `SIOCSIFFLAGS`, `SIOCSIFHWADDR`, UDP `sendmsg()` with `UDP_SEGMENT`, and helper APIs from `tuntap_helpers.h`. `struct geneve_setup_config` feeds YNL-generated rtnetlink requests for Geneve creation. `tun_attach`, `tun_detach`, `tun_alloc`, `tun_delete`, and `tun_open` manage the device. `parse_udp_tunnel_vnet_packet()` validates virtio, Ethernet, outer IP, UDP/Geneve, inner Ethernet/IP/UDP headers.
+
+Control flow: fixture `tun` creates two multiqueue TAP fds on the same device and runs delete/detach/close ordering tests, including expected `EINVAL` after deleting before detach. Fixture `tun_vnet_udptnl` is variant-expanded across Geneve 4in4, 6in4, 4in6, and 6in6 and many size/GSO cases. Setup opens a TAP/TUN with `IFF_VNET_HDR`, `IFF_MULTI_QUEUE`, `IFF_NO_PI`, offload features `TUN_F_CSUM`, UDP tunnel GSO, and USO, then configures local/neighbor/routes on the TAP and Geneve device. `send_gso_packet` builds a complete virtio-net tunnel frame and writes it into TAP, expecting segmented UDP receives on the inner socket. `recv_gso_packet` sends a UDP GSO message into the Geneve path and reads/parses frames from TAP, checking `gso_size`/`gso_type` unless the variant is expected to fall back to non-GSO.
+
+State and persistence: state is process-local fixture data plus kernel TAP/Geneve links, routes, neighbor entries, and UDP sockets. Teardown closes sockets, deletes Geneve, and deletes TAP. No persistent files are written.
+
+Dependencies and integration: requires generated YNL rtnetlink headers/libraries, CAP_NET_ADMIN, `/dev/net/tun`, Geneve support, virtio-net header definitions including `virtio_net_hdr_v1_hash_tunnel`, and UDP tunnel offload support. `ynl.mk` helps build the generated dependencies. Integrated with kselftest harness and `XFAIL_ADD` for oversized or no-GSO receive cases.
+
+Risks: many checks depend on precise kernel offload semantics and support for newer virtio-net tunnel header fields. Header construction is manual, so checksum, offset, or length bugs could cause false negatives. Route readiness is polled with `MAX_RETRIES`; slow setups may fail. The code uses `strcpy` into `ifr_name` from controlled fixed buffers, so misuse outside the test could be risky.
+
+Test signals: normal fixture assertions validate ioctl/link behavior, exact received payload byte counts, MSS segment counts, tunnel header parse success, and virtio GSO fields. XFAIL entries document currently expected failures for oversized and no-GSO-too-large receive/send combinations.

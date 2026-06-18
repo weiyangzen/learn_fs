@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbserver/datadistributor/TCInfo.cpp
+
+Purpose: implements storage-server, machine, machine-team, and server-team metric/state helpers used by `DDTeamCollection`. It turns storage metrics and health stats into team load, space, CPU, lagging-server, storage-queue, and in-flight accounting decisions.
+
+Important APIs and functions: `TCServerInfoImpl::updateServerMetrics()` polls a server endpoint and updates lag/version/storage-queue signals. `serverMetricsPolling()` periodically combines storage metrics and health stats. `TCServerInfo` implements metrics access, store-type updates, desired-DC updates, queue-duration detection, team removal, space/load helpers, and destructor cleanup. `TCMachineInfo`, `TCMachineTeamInfo`, and `TCTeamInfo` implement locality grouping, stringification, membership, in-flight counters, load/read/cpu/space scoring, healthy-space checks, optimality checks, and metric refresh across team members.
+
+Control flow: server metric polling races a metrics RPC with interface-change, removal, and retry-delay futures. Successful replies set `metrics` and notify `updated`; failures delay and retry, respecting the failure monitor to avoid tight loops. After each metrics update, version staleness and lag thresholds add/remove lagging zones in the collection. Optional storage-queue rebalancing tracks queue duration and emits `longStorageQueue` with throttling. Team methods aggregate per-server metrics and apply penalties for in-flight bytes or missing replies.
+
+State and persistence: objects are in-memory DD control-plane state. `TCServerInfo` stores last known interface/class, store type, in-flight counters, metrics replies, health stats, queue timing, team memberships, AsyncVars, and promises. `TCTeamInfo` stores server refs, sorted IDs, health/configuration status, priority, UID, and eligibility counters. No database writes occur here; persistence is handled by callers such as team collection and transaction processors.
+
+Dependencies and integration: integrates with `DDTeamCollection` for lagging-zone accounting and wiggle checks, `IDDTxnProcessor` for health stats, `StorageServerInterface` RPCs, `IFailureMonitor`, server knobs, `IDataDistributionTeam`, and Flow actor primitives.
+
+Risks: many methods assume metrics are present and assert otherwise, so callers must refresh before scoring. Missing health stats count as 100% CPU, intentionally conservative but potentially noisy. `getLoadAverage()` doubles load when some replies are missing, a heuristic that can skew team selection. Lagging-zone cleanup in the destructor depends on `collection` still being valid unless `cancel()` has cleared it.
+
+Test signals: no local unit tests in this file, but team-collection and DD tests should cover server metric polling, queue-triggered relocation, load-based team selection, and lagging-server accounting. Focused tests would help around interface-change races, failure-monitor retry, and queue hysteresis thresholds.

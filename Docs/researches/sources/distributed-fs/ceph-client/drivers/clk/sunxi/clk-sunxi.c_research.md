@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/clk/sunxi/clk-sunxi.c
+
+Central legacy Sunxi clock-registration file for many Allwinner SoCs. It defines factor calculators, mux/divider setup helpers, and multi-output PLL divider registration used by older DT compatibles.
+
+The file groups several patterns. Factor calculators derive `n/k/m/p` for PLL1, PLL5/6, AHB, APB1, CLK_OUT, and display clocks, then pass `factors_data` to `sunxi_factors_register()`. `sunxi_mux_clk_setup()` registers simple mux clocks with optional critical flag. `sunxi_divider_clk_setup()` registers divider-table clocks and adds clkdev aliases. `sunxi_divs_clk_setup()` first registers a base factor PLL, derives or reads its name, then registers up to four leaf outputs as fixed-factor or divider composite clocks, optionally with gates and critical flags. Many setup functions are connected with `CLK_OF_DECLARE()`.
+
+State persists in clock control registers mapped by OF. A single global `clk_lock` serializes shared register updates. Early-boot registrations have no remove path; some helper-allocated subcomponents are intentionally long-lived. It depends on `clk-factors.h`, CCF mux/divider/fixed-factor/composite/gate helpers, OF clock providers, clkdev aliases, and many Allwinner compatible strings. It supplies root PLLs and bus clocks used by the rest of the Sunxi clock tree.
+
+The file is dense with SoC-specific arithmetic, so boundary rates and field widths are the main risk. Error paths sometimes leak mappings or helper allocations after partial registration, typical for early boot but still relevant for static analysis. `sunxi_divs_clk_setup()` has complex name derivation and parent propagation rules; PLL5 DDR is intentionally protected from automatic reparenting. Test signals include CCF rate summaries across supported SoCs, boot with unused-clock disabling, DT compatible coverage, and set/round/recalc consistency for each factor table.

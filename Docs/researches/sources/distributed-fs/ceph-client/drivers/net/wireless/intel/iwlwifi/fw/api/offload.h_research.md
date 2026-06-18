@@ -1,0 +1,11 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h -->
+## sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h
+
+`offload.h` defines a small protocol-offload firmware notification ABI. The command group IDs in `enum iwl_prot_offload_subcmd_ids` cover WoWLAN wake packet notification, WoWLAN information notification, D3 end notification, and stored beacon notification. This file only defines the stored beacon payloads; the WoWLAN info/wake structures are declared elsewhere.
+
+The stored beacon ABI is split into a common header and two versions. `iwl_stored_beacon_notif_common` records firmware/system receive timing (`system_time`, `tsf`, `beacon_timestamp`), band, channel, internal firmware rate, and `byte_count`. `iwl_stored_beacon_notif_v2` appends a fixed `MAX_STORED_BEACON_SIZE` data buffer. Current `iwl_stored_beacon_notif` adds a `sta_id` and padding before the same fixed-size beacon buffer. All structures are packed and represent notification wire format.
+
+Control flow is firmware-to-host notification after low-power/offload operation: firmware stores a beacon, wakes or informs the host through the protocol offload group, and the driver parses either v2 or current notification based on the firmware notification version. State is transient; the actual persistent low-power/offload state is in the firmware and power-management code, while this header only encodes one notification record. Integration points are WoWLAN/D3 resume paths, beacon filtering/offload diagnostics, station association state via `sta_id`, and receive-rate decoding through other API headers.
+
+Risks are trusting `byte_count` without capping to `MAX_STORED_BEACON_SIZE`, parsing the wrong version and misreading `sta_id` as frame data, and mishandling TSF/system timestamps during resume diagnostics. Test signals include version-specific notification parsing, `byte_count` boundary tests at 0/600/overlength, resume from D3 with stored beacon data, and ensuring the beacon payload is handed to management-frame parsers only within the validated byte count.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/acpi-cpufreq.c
+
+Purpose: x86 ACPI Processor P-states cpufreq driver. It translates ACPI `_PSS/_PCT/_PSD` performance data into cpufreq policies and changes CPU frequency via MSRs or system I/O, with optional boost control and fast-switch support.
+
+Important APIs/types/functions: `struct acpi_cpufreq_data` stores resume flag, access type, ACPI performance CPU, frequency-domain mask, and read/write function pointers. Key helpers include boost MSR state/set functions, frequency extraction from MSR/I/O status, `drv_read()`/`drv_write()` CPU-affine access, `get_cur_freq_on_cpu()`, `acpi_cpufreq_target()`, `acpi_cpufreq_fast_switch()`, `acpi_cpufreq_cpu_init()`, `acpi_cpufreq_cpu_exit()`, and platform probe/remove. The cpufreq driver object provides verify, target_index, fast_switch, bios_limit, init, exit, resume, name, and attrs.
+
+Control flow: late init registers a platform driver probe. Probe refuses when ACPI is disabled or another cpufreq driver is active, allocates per-CPU ACPI performance storage, initializes boost support, and registers the cpufreq driver. Per-policy init registers ACPI performance data, handles shared-policy masks and BIOS quirks, validates P-state access method, builds a descending frequency table from ACPI states, resolves boost/max frequency through CPPC/DMI when available, initializes current frequency access, notifies SMM, marks resume, and enables fast switch when safe. Frequency transitions write the requested ACPI control value to one CPU or all CPUs in the policy mask, optionally verify the resulting frequency in strict mode, and update cached state.
+
+State and persistence: per-CPU `acpi_perf_data` stores ACPI performance tables and current ACPI state; per-policy `acpi_cpufreq_data` stores masks and callbacks; module parameter `acpi_pstate_strict` affects verification and boost ratio use; boost enabled state is tracked in `cpufreq_driver`. State is runtime only, rebuilt on driver load and per-policy hotplug.
+
+Dependencies and integration: depends on ACPI processor performance library, CPPC optional helpers, x86 CPU feature/vendor detection, MSR access, SMP call functions, cpufreq core, DMI quirks, CPU hotplug, and platform driver registration. Exposes `freqdomain_cpus` and optional legacy AMD `cpb` sysfs attributes.
+
+Risks: CPU-affine MSR/I/O access must match policy shared-type semantics. BIOS quirks and incorrect `_PSD` data require overrides; wrong masks can leave CPUs at unintended frequencies. Strict mode adds transition latency and can return `-EAGAIN`. Fast switch bypasses cross-CPU writes and is disabled for unsafe shared policies. Boost control touches global/vendor MSRs and must be kept coherent across CPU offline/resume.
+
+Test signals: boot on Intel EST, AMD/Hygon HW P-state, and I/O-port ACPI platforms; CPU hotplug; shared policy masks and `freqdomain_cpus`; target frequency changes with/without strict verification; fast-switch path; suspend/resume first target rewrite; boost/CPB sysfs behavior; DMI blacklist and AMD `_PSD` override paths; module unload frees per-CPU data.

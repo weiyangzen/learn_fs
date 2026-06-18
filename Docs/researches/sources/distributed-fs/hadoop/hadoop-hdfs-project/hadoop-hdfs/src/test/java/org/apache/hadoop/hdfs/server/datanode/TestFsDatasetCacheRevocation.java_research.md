@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/TestFsDatasetCacheRevocation.java
+
+Purpose: tests FsDataset cache revocation semantics when a client has a short-circuit mmap reference to a cached replica.
+
+Important APIs and types: `NativeIO.POSIX.CacheManipulator`, `NoMlockCacheManipulator`, `TemporarySocketDirectory`, `DomainSocket`, `MiniDFSCluster`, `DistributedFileSystem`, `CachePoolInfo`, `CacheDirectiveInfo`, `FsDatasetSpi`, `FSDataInputStream.read` with `ByteBuffer`, and cache verification helpers from `DFSTestUtil`/`TestFsDatasetCache`.
+
+Control flow: setup saves/restores the native cache manipulator, disables domain socket bind-path validation, and creates a temporary socket directory. `getDefaultConf` enables short-circuit reads, configures domain socket path, small cache-report intervals, locked memory capacity, and block size. `testPinning` assumes native code and non-Windows, sets a long revocation timeout and short polling, caches a file, mmaps it, removes the cache directive, waits briefly, and verifies the block remains cached until `releaseBuffer`, after which cache usage drops to zero. `testRevocation` sets a very short revocation timeout, keeps the mmap held after directive removal, waits, and verifies the dataset uncaches despite the outstanding client reference.
+
+State and persistence behavior: cache state lives in FsDataset locked-memory accounting and cache directive state in the NameNode. Integration points include short-circuit domain sockets, mmap buffer lifecycle, cache reports, and revocation timeout/polling. Risks include native-code availability, Windows exclusion, timing sleeps, and global native cache manipulator restoration. Signals are expected cache bytes/replica counts before and after directive removal and buffer release.

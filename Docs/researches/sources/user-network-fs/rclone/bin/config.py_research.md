@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/bin/config.py
+
+Purpose: demonstration and test utility for rclone's remote configuration APIs. It simulates `rclone config create` and `rclone config update` either through `rclone rc --loopback` or a running RC server, then drives the state-machine prompts by reading returned options and submitting user-selected results.
+
+Important APIs: `rpc` dispatches local loopback or HTTP RC calls; `parse_parameters` parses `name=value`; `ask` renders option help/examples and handles exclusive choices; `create_or_update` loops until returned `State` is empty. `password` and `authorize` are placeholders. State changes occur through rclone config APIs, potentially writing real remote configuration. Dependencies include `rclone`, optional `requests`, JSON, and interactive stdin. Risks include clear-text parameter handling, manual prompt behavior, unimplemented subcommands, and local RC authentication assumptions. Test signal is manual/API experimentation rather than automated tests.

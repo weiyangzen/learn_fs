@@ -1,0 +1,3 @@
+## sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/PathIsNotDirectoryException.java
+
+`PathIsNotDirectoryException` represents ENOTDIR-style failures and extends `PathExistsException` with the fixed message "Is not a directory". It has no state beyond the inherited path string and formatting metadata. Integration is with listing, mkdir parent validation, and operations that require an existing directory. Risks are mostly taxonomy-related because it extends `PathExistsException`, so broad EEXISTS handlers may catch it. Tests should cover operations against regular files where directories are expected and assert both type and formatted message.

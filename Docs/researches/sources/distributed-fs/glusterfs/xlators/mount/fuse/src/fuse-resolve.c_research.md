@@ -1,0 +1,16 @@
+# sources/distributed-fs/glusterfs/xlators/mount/fuse/src/fuse-resolve.c
+
+## Purpose
+Implements the FUSE bridge resolver that converts FUSE inode numbers, parent/name pairs, GFIDs, and open file descriptors into current Gluster `loc_t` and `fd_t` objects before resuming a filesystem operation. It also handles graph-switch FD migration so operations continue on the active subvolume instead of stale graph state.
+
+## APIs, Types, and Functions
+Public entry points include `fuse_resolve_and_resume()`, `fuse_resolve_continue()`, `fuse_resolve_entry_init()`, `fuse_resolve_inode_init()`, `fuse_resolve_fd_init()`, `fuse_gfid_set()`, and `fuse_migrate_fd_task()`. Lookup callbacks `fuse_resolve_entry_cbk()` and `fuse_resolve_gfid_cbk()` link resolved inodes into the inode table and mark new links with `LOOKUP_NOT_NEEDED`. Resolver paths include `fuse_resolve_parent_simple()`, `fuse_resolve_parent()`, `fuse_resolve_inode_simple()`, `fuse_resolve_inode()`, `fuse_resolve_gfid()`, and `fuse_resolve_fd()`. `FUSE_FD_GET_ACTIVE_FD` protects active-FD selection with the base FD lock.
+
+## Control Flow, State, and Persistence
+Resolution starts in `fuse_resolve_and_resume()`, which optionally inserts `"gfid-req"` into `state->xdata`, records the resume function, and calls `fuse_resolve_all()`. `fuse_resolve_all()` walks at most two resolver slots, `state->resolve` and `state->resolve2`, switching `state->resolve_now` and `state->loc_now` before invoking `fuse_resolve()`. `fuse_resolve()` prefers FD resolution, then parent/name resolution, then GFID/inode resolution, and finally advances to the next slot. Parent and inode fast paths reuse hints from the current inode table when `inode_needs_lookup()` is false. Misses fall back to asynchronous `lookup` FOPs by GFID or parent/name, and callbacks resume the state machine. FD resolution checks `fuse_fd_ctx_t`, compares the active FD's subvolume against `state->active_subvol`, launches `synctask_new()` for `fuse_migrate_fd_task()` when needed, and reports `EBADF` if migration failed. Persistent state is in inode-table links, inode context flags, FD context `activefd` and `migration_failed`, loc fields, and the request state's xdata.
+
+## Dependencies and Integration
+Depends on `fuse-bridge.h`, Gluster inode/fd/loc APIs, FOP stack macros, `dict_t`, `synctask_new()`, UUID helpers, and graph/subvolume state. It integrates directly with the FUSE request handling path: callers initialize one or two resolves, then the resolver resumes the original FOP through `fuse_fop_resume()`.
+
+## Risks and Test Signals
+Key risks are stale inode hints across graph switches, incorrect `inode_ref`/`inode_unref` balance, missed `loc_wipe()` cleanup after asynchronous lookup, FD migration races around `activefd`, and ambiguous root parent/name lookups that intentionally force a conservative lookup. FD migration failure maps to `EBADF`, which can surface as user-visible operation failure during graph changes. Test signals include graph-switch tests with open FDs, parent/name lookups after readdirplus, missing-entry lookups under root, two-loc operations such as rename/link, GFID-request creation, and fault injection for failed lookup or failed synctask creation.

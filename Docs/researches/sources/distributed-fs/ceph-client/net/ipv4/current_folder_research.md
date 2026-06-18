@@ -1,0 +1,122 @@
+# Folder Research: sources/distributed-fs/ceph-client/net/ipv4
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 108
+- Recursive researched files: 135
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/net/ipv4/Kconfig`
+- `sources/distributed-fs/ceph-client/net/ipv4/Makefile`
+- `sources/distributed-fs/ceph-client/net/ipv4/af_inet.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ah4.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/arp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/bpf_tcp_ca.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/cipso_ipv4.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/datagram.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/devinet.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/esp4.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/esp4_offload.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fib_frontend.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fib_lookup.h`
+- `sources/distributed-fs/ceph-client/net/ipv4/fib_notifier.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fib_rules.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fib_semantics.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fib_trie.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fou_bpf.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fou_core.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fou_nl.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/fou_nl.h`
+- `sources/distributed-fs/ceph-client/net/ipv4/gre_demux.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/gre_offload.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/icmp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/igmp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/igmp_internal.h`
+- `sources/distributed-fs/ceph-client/net/ipv4/inet_connection_sock.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/inet_diag.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/inet_fragment.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/inet_hashtables.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/inet_timewait_sock.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/inetpeer.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_forward.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_fragment.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_gre.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_input.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_options.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_output.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_sockglue.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_tunnel.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_tunnel_core.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ip_vti.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ipcomp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ipconfig.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ipip.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ipmr.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ipmr_base.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/metrics.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/netfilter.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/netlink.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/nexthop.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/ping.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/proc.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/protocol.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/raw.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/raw_diag.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/route.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/syncookies.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/sysctl_net_ipv4.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_ao.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_bbr.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_bic.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_bpf.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_cdg.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_cong.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_cubic.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_dctcp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_dctcp.h`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_diag.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_fastopen.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_highspeed.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_htcp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_hybla.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_illinois.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_input.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_ipv4.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_lp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_metrics.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_minisocks.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_nv.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_offload.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_output.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_plb.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_recovery.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_scalable.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_sigpool.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_timer.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_ulp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_vegas.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_vegas.h`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_veno.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_westwood.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tcp_yeah.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/tunnel4.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp_bpf.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp_diag.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp_offload.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp_tunnel_core.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp_tunnel_nic.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/udp_tunnel_stub.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/xfrm4_input.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/xfrm4_output.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/xfrm4_policy.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/xfrm4_protocol.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/xfrm4_state.c`
+- `sources/distributed-fs/ceph-client/net/ipv4/xfrm4_tunnel.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

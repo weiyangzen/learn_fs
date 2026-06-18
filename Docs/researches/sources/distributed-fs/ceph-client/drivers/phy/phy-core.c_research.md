@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-core.c
+
+This is the generic PHY framework core. It registers the `phy` class, creates/destroys `struct phy` devices, manages OF/non-OF lookup, provider registration, devres wrappers, runtime PM helpers, regulator handling for optional `phy-supply`, debugfs directories, and exported consumer operations such as `phy_init()`, `phy_power_on()`, `phy_set_mode_ext()`, `phy_configure()`, and `phy_validate()`.
+
+Global state includes `phy_provider_list`, non-DT `phys` lookup entries, `phy_ida`, and `phy_debugfs_root`, protected by `phy_provider_mutex` where needed. Per-PHY state includes a mutex, operation table, `init_count`, `power_count`, optional regulator, device object, debugfs dentry, and current mode attribute. Control flow for consumers obtains a PHY by OF phandle or lookup table, pins the provider module, takes a device reference, and optionally creates a stateless device link. Init/power calls take runtime PM references, serialize through the PHY mutex, and call provider callbacks only on first init/power transition.
+
+Dependencies are device core, OF, modules, IDA, debugfs, PM runtime, regulators, and devres. Risks include underflow if consumers call `phy_exit()`/`phy_power_off()` more times than init/power-on, provider lookup deferral semantics, stale non-DT lookup entries if drivers forget removal, and error unwind around module/device references. Test signals are broad in-tree user coverage rather than local unit tests.

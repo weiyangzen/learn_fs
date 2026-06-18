@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/vfio_pci_igd.c
+
+This file adds Intel integrated graphics device-specific VFIO regions. It exposes a read-only IGD OpRegion/VBT region and read-only host/LPC bridge config regions needed by guest graphics stacks, while virtualizing the OpRegion PCI config pointer to prevent userspace from modifying host firmware addresses.
+
+Important types and functions include `struct igd_opregion_vbt`, `vfio_pci_igd_rw()`, `vfio_pci_igd_release()`, `vfio_pci_igd_opregion_init()`, `vfio_pci_igd_cfg_rw()`, `vfio_pci_igd_cfg_init()`, `vfio_pci_is_intel_display()`, and `vfio_pci_igd_init()`. Registered regions use `vfio_pci_core_register_dev_region()` with Intel vendor-specific region subtypes.
+
+Control flow reads the physical OpRegion address from config offset `0xfc`, remaps the standard 8 KiB OpRegion, validates the signature and size, optionally maps extended VBT based on OpRegion version and RVDA/RVDS fields, registers a read-only VFIO region, writes the physical address into `vconfig`, and marks the config bytes as virtual-only. Reads patch OpRegion 2.0 with extended VBT to appear like contiguous 2.1-style data by modifying the reported version and RVDA exposure. Bridge config regions are discovered at domain 0 bus 0 function 0 and function 0x1f.0 and exposed through aligned config reads.
+
+State is held in per-region data: mapped OpRegion pointer, optional extended VBT mapping, and referenced host/LPC `pci_dev` objects. Release callbacks unmap memory and put device references. There is no persistent storage outside the VFIO device lifetime.
+
+Dependencies include PCI config access, `memremap/memunmap`, VFIO vendor region metadata, Intel host bridge layout assumptions, and `vfio_pci_config.c` virtual config maps. Risks include platform assumptions for domain/bus/function, malformed firmware OpRegion sizes, extended VBT address interpretation differences between OpRegion 2.0 and 2.1+, and reads spanning patched boundaries. Test signals include IGD devices with/without extended VBT, invalid signatures, bridge absence, partial reads around version/RVDA boundaries, region release, and verification that writes to these regions fail.

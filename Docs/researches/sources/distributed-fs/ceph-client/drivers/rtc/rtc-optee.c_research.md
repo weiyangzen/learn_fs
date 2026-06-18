@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/rtc/rtc-optee.c
+
+Purpose: implements an RTC backed by an OP-TEE pseudo trusted application. It maps RTC class operations to TEE invoke commands for time, offset correction, alarm, alarm wait events, wake-alarm status, and feature/range discovery.
+
+Important APIs/types/functions: protocol structs `optee_rtc_time`, `optee_rtc_alarm`, and `optee_rtc_info` define shared-memory payloads. `struct optee_rtc` stores TEE context, primary and alarm-wait sessions, shared memory, feature flags, alarm kthread, and RTC device. RTC callbacks call PTA commands `GET_TIME`, `SET_TIME`, `GET/SET_OFFSET`, `READ/SET/ENABLE_ALARM`. `optee_rtc_wait_alarm()` blocks in a second session, `optee_rtc_cancel_wait_alarm()` cancels it, and `optee_rtc_handle_alarm_event()` reports RTC alarm IRQs from a kthread. `optee_rtc_read_info()` validates info version and programs RTC range/features.
+
+Control flow: probe opens an OP-TEE context, opens the primary PTA session, allocates shared memory large enough for info/time/alarm payloads, reads info/features, and if alarm is supported creates a kthread, opens a second session for blocking waits, and enables wakeup if the PTA reports wake alarm support. It registers the RTC, clears unsupported feature bits after registration, then starts the alarm thread. Remove cancels wait, stops the thread, disables wakeup, closes sessions, frees shared memory, and closes context. Suspend sends wakeup status to OP-TEE based on `device_may_wakeup()`.
+
+State and persistence: RTC time, offset, alarm, pending state, feature bits, and wake behavior are persisted and enforced by the secure PTA. Driver state includes session IDs, shared memory, features, and the lifetime of the alarm wait thread. No hardware registers are directly accessed.
+
+Dependencies and integration: depends on the TEE client bus, OP-TEE implementation match, the RTC PTA UUID, kernel shared memory allocation, kthreads, RTC class feature bits, and PM sleep hooks.
+
+Risks and test signals: shared memory is reused across operations without an explicit per-callback mutex, so concurrent RTC operations could overwrite payloads. Probe creates `alarm_task` before opening the second session; error unwind stops it only under alarm feature handling. `rtc_year_days()` is called with secure-world month values that appear already in `struct rtc_time` zero-based form only if the PTA follows Linux semantics. Test feature combinations, info version mismatch, range conversion, unsupported correction/alarm paths, concurrent set/read operations, alarm thread cancellation during remove, second-session open failure, wakeup suspend command failure, and TEE ret versus transport ret mapping.

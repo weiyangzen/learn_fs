@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/debug/stacktrace.go
+
+Purpose: returns the current goroutine stack trace as a string. API: `DumpStacktrace() string`. Control flow allocates an initial 1 KiB buffer, repeatedly calls `runtime.Stack` for the current goroutine, doubles the buffer until the stack fits, and returns the captured bytes. State is local buffer only. Dependencies are `runtime`. Integration points are panic/error diagnostics and debug logging. Risks: repeated allocation for very deep stacks, current-goroutine-only capture (`all=false`), and no truncation policy. No direct tests in this subset.

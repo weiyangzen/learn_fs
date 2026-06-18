@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/auo,a030jtn01.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/auo,a030jtn01.yaml
+
+Purpose: Devicetree binding schema for AUO A030JTN01 3.0" (320x480 pixels) 24-bit TFT LCD panel. It accepts compatible values `auo,a030jtn01`. It documents a MIPI-DSI panel node and constrains the supplies, GPIOs, backlight, timing, and graph endpoint data needed by panel drivers.
+
+Important APIs/types/functions: this is a dt-schema contract rather than executable code. It uses `$id`, `$schema`, references `panel-common.yaml#`, `/schemas/spi/spi-peripheral-props.yaml#`, local `properties` (`compatible`, `reg`), required fields (`compatible`, `reg`, `power-supply`, `reset-gpios`), compatible matching, and `unevaluatedProperties: false`. Conditional/allOf fragments count: 0; these are used for inherited common-panel requirements, bus-specific SPI/LVDS constraints, or compatible-specific allowances.
+
+Control flow: validation selects the schema by the panel compatible, applies the referenced common panel schema, checks required power/reset/control properties, and rejects properties outside the declared set. Example count is 1; examples usually place the panel below a DSI or SPI bus, set `reg` when the bus has addressable children, attach regulators and GPIOs, and connect `port`/`ports` endpoints to a display controller or bridge. For LVDS-style files, `data-mapping`, physical dimensions, `panel-timing`, and one or two ports are part of the display pipeline contract.
+
+State and persistence behavior: the schema stores no mutable runtime state. It constrains DTS source that persists board-specific panel wiring, power rails, reset/enable GPIOs, optional backlight, rotation, and display graph links. At boot, panel, bridge, DRM, regulator, GPIO, SPI/DSI, and backlight drivers turn that static description into runtime probe and power-sequencing state.
+
+Dependencies/integration points: integrates with `panel-common.yaml#` or the referenced LVDS/dual-panel schema, graph endpoint bindings, regulator and GPIO bindings, optional backlight nodes, bus bindings for SPI or DSI `reg` addressing, and the Linux DRM panel driver selected by the compatible string. Compatible fallback pairs are the handoff between board-specific panel names and shared controller drivers.
+
+Risks: required rails and GPIO names encode driver expectations, so renaming or omitting them can make probe fail even when the physical panel is present. Compatible fallback order must be exact for shared controller drivers. `additionalProperties: false` catches typos but also requires schema updates for new wiring. Display graph endpoint mistakes, missing backlights, wrong LVDS data mapping, or incomplete timing data can pass driver probe but produce a blank or unstable panel.
+
+Test signals: run `make dt_binding_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/auo,a030jtn01.yaml` and `make dtbs_check` for boards using the compatible. Useful negative tests are missing each required property, malformed `reg`, extra typo properties, absent `port`/`ports` endpoints, invalid compatible fallback order, omitted regulators/GPIOs, and LVDS timing or data-mapping mismatches where applicable.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/panel/auo,a030jtn01.yaml -->

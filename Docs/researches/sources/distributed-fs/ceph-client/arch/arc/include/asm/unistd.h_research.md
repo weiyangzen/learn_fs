@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/unistd.h
+
+Kernel-facing ARC syscall-number header. It includes UAPI unistd.h, requests legacy stat64/clone/vfork/fork syscall wrappers, and defines NR_syscalls from __NR_syscalls. Control flow is entry.S bounds-checking r8 against NR_syscalls and dispatching sys_call_table. State is compile-time syscall table sizing. Dependencies are generated uapi/asm/unistd_32.h and generic syscall table generation. Risks are table/count mismatch and obsolete __ARCH_WANT_* expectations during syscall cleanup. Test signals are syscall table build, ENOSYS for out-of-range syscalls, clone/vfork/fork ABI tests, and strace syscall numbering.

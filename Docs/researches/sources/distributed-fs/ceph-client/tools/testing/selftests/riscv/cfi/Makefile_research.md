@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/cfi/Makefile
+
+Purpose: conditionally builds the RISC-V control-flow integrity selftest `cfitests`. It adds kernel headers/tools includes, requires `-march=rv64gc_zicfilp_zicfiss -fcf-protection=full`, selects a cross GCC when needed, probes compiler support with a no-op build, and only defines `TEST_GEN_PROGS` if supported. State is output binary or a skipped build message. Dependencies are a CFI-capable RISC-V compiler, glibc/kernel headers with CFI/shadow-stack prctls, and `lib.mk`. Risks are silent skip on unsupported toolchains, hard-coded rv64 march, and dependence on glibc enabling landing pads/shadow stack for the binary. Test signals are build presence and runtime `cfitests` output.

@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/test/java/org/apache/hadoop/hdds/scm/pipeline/TestPipelinePlacementPolicy.java
+
+Purpose: comprehensive unit suite for `PipelinePlacementPolicy`, covering rack-aware node choice, space filtering, load balancing, heavy-node exclusion, fallback behavior, placement validation, single-healthy-rack behavior, pipeline-count calculations, and default pipeline-limit filtering.
+
+Important APIs and types: uses `PipelinePlacementPolicy`, `MockNodeManager`, `PipelineStateManagerImpl`, `NetworkTopologyImpl`, `NodeSchemaManager`, `DatanodeDetails`, `NodeStatus`, `Pipeline`, `PipelineID`, `ReplicationConfig`, `RatisReplicationConfig`, `ContainerPlacementStatus`, `SCMException`, and SCM placement configuration keys.
+
+Control flow: initialization builds a rack-aware topology with ten datanodes, sets pipeline load limits and free-space minimums, creates DB-backed pipeline state manager, and instantiates the policy. Tests choose anchors, select same-rack and different-rack nodes, verify single-node rack placement, assert insufficient space errors for huge requirements, repeatedly create pipelines to test lowest-load selection, check fallback without rack awareness, simulate heavy nodes by adding more than the configured RATIS/THREE limit to node-manager and state-manager mappings, validate placement satisfaction/mis-replication across rack distributions, exercise skewed racks with stale or overloaded first rack, count only RATIS/THREE pipelines for load, and ensure the default pipeline limit is honored when the config is unset.
+
+State and persistence behavior: selected pipelines are inserted into both `MockNodeManager` pipeline mappings and the DB-backed `PipelineStateManager`. Heavy-node simulation mutates load state repeatedly. Topology membership drives rack calculations and validation; removing a node from topology makes placement validation treat it as unavailable/dead. The policy itself is mostly stateless and derives decisions from node manager, topology, configuration, and state manager.
+
+Dependencies and integration points: integrates network topology schemas, SCM DB/HA stubs, node-manager healthy node lists, datanode pipeline counts, Ratis replication configs, and container placement status logic. It also uses Ozone capacity constants for space tests.
+
+Risks and edge cases: tests depend on deterministic enough node ordering from mock node manager and topology. `insertHeavyNodesIntoNodeManager` creates pipelines with random extra datanodes that may not belong to topology, which is acceptable for load counting but not full placement realism. Some tests rebuild `nodeManager` without rebuilding `stateManager`, so state-manager node-manager references can diverge in narrowly scoped tests. The suite relies on static `NodeSchemaManager` reinitialization.
+
+Test signals: high-value coverage for placement correctness under rack awareness, one-rack fallback, capacity filtering, load limits, validation output, and exact definition of "current RATIS THREE pipeline count."

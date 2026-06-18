@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/landlock/landlock06.c
+
+Purpose: tests `LANDLOCK_ACCESS_FS_IOCTL_DEV` behavior from ABI 5. Setup requires ABI >= 5, creates a sandbox file, opens it and `/dev/zero`, then enforces a ruleset allowing `IOCTL_DEV` under the mounted sandbox. The forked run checks several `ioctl()` operations: `FIONREAD` on the regular file and `FIOCLEX`, `FIONCLEX`, `FIONBIO`, and `FIOASYNC` on `/dev/zero`, documenting operations that should remain allowed. State is two open file descriptors and a Landlock layer. Dependencies are root/CAP_SYS_ADMIN, mount device, and non-vfat filesystem. Risks are ioctl policy subtleties across device/file types. Test signal is all listed `ioctl()` calls passing.

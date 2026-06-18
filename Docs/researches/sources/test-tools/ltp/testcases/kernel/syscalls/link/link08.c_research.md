@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/link/link08.c
+
+Purpose: negative `link()` coverage for directory source (`EPERM`), cross-device link (`EXDEV`), read-only filesystem (`EROFS`), and symlink loop (`ELOOP`). Setup creates a directory source and constructs a deep self-referential symlink path; LTP mounts a read-only filesystem at `mntpoint`. Cases call `link(oldpath, newpath)` and verify errno. State includes a directory, symlink loop tree, and read-only mount. Dependencies are root, rofs mount setup, and path traversal behavior. Risks include filesystem or kernel differences for linking directories and loop depth. Test signal is exact errno for each scenario.

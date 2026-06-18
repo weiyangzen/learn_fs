@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/powermac/backlight.c
+
+Purpose: shared PowerMac backlight coordination for keyboard/PMU brightness events and legacy 0-15 brightness APIs.
+
+Important APIs and control flow: global `pmac_backlight` stores the active internal display backlight and `pmac_backlight_mutex` protects pointer use. `pmac_has_backlight_type` searches the OF `backlight-control` property. Interrupt-context functions queue work for key brightness changes or PMU legacy brightness setting. Workers check `kernel_backlight_disabled`, update `backlight_properties.brightness`, clamp to bounds, and call `backlight_update_status`. Legacy getters/setters scale between 0-15 and the driver's max brightness. Disable/enable use an atomic nesting counter.
+
+State, dependencies, and risks: state includes work items, queued direction/brightness integers, atomic disable count, mutex, and exported backlight pointer. Dependencies include Linux backlight class, OF backlight node, PMU/ADB event producers, and driver-provided update_status. Risks include coalesced key events losing intermediate changes, disable counter imbalance, one global backlight assumption, and no protection for queued integer races by design. Test signals are brightness key handling, PMU legacy brightness mapping, module users respecting the mutex, and backlight grab/release behavior on old PowerBooks.

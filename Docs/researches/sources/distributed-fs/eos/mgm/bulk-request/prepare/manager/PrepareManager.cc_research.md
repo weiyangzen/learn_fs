@@ -1,0 +1,9 @@
+## sources/distributed-fs/eos/mgm/bulk-request/prepare/manager/PrepareManager.cc
+
+Purpose: implements XRootD prepare and query-prepare handling for EOS MGM, including authorization, workflow trigger dispatch, per-file validation, bulk-request hooks, and structured query responses.
+
+Important prepare flow: maps identity unless a VID is supplied, handles stall/redirect macros, counts files, derives action from prepare flags after removing QoS bits, and sets events (`sync::prepare`, `sync::abort_prepare`, `sync::evict_prepare`). For each path it namespace-maps, redirects, checks non-empty path, file existence, parent workflow xattrs, prepare permission, and for stage requests existing retrieve request count. It records per-file errors through `addFileToBulkRequest()`, saves the bulk request before workflow dispatch, returns `SFS_DATA` with generated reqid for stage, and triggers workflows through `FSctl(SFS_FSCTL_PLUGIN)` with `mgm.pcmd=event` parameters and security identity.
+
+Query flow: builds a `FileCollection` from paths, maps identity, checks file existence, stat flags for tape/online state, retrieve request/error xattrs, prepare permission, and fills `QueryPrepareResponse` entries before returning `SFS_DATA`.
+
+State/dependencies: owns `IMgmFileSystemInterface`, mutable `mPrepareAction`, logging/stat macros, XRootD structures, `EosCtaReporter`, xattr helpers, and MGM macros. Risks include macro-heavy control flow, `goto` for per-file error continuation, saving bulk requests before workflow execution, mutable action state across calls, and raw pointers into Xrd linked lists stored before workflow trigger. Tests need broad branch coverage with mocked filesystem: invalid flags, empty opts on tape, missing workflow tags, access failures, max request IDs, persistence failure, workflow failure, and query xattr/stat combinations.

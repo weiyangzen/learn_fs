@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c
+
+Implements the HNS3 virtual-function acceleration-engine driver. It registers the VF `hnae3_ae_algo`, initializes PCI/MMIO, command queues, MSI/MSI-X vectors, misc IRQ, TQPs, RSS, VLAN, GRO, devlink, and the service workqueue used for mailbox, reset, and periodic maintenance.
+
+Important APIs are the `hclgevf_ops` table plus `hclgevf_init_hdev()`, `hclgevf_reset_hdev()`, `hclgevf_uninit_hdev()`, `hclgevf_cmd_send()`, `hclgevf_ae_get_hdev()`, vector map/unmap/get/put callbacks, MAC/VLAN/RSS/channel callbacks, reset callbacks, and link/media/status callbacks. Runtime control flows from module init to AE init, PF mailbox configuration queries, queue setup, client registration, then service work. Vector 0 IRQ classifies reset and mailbox events; reset work coordinates PF-pushed, VF-requested, full, and FLR paths; periodic work sends keepalives, refreshes link/mode/stats, retries VLAN deletes, syncs MAC tables, and applies promisc changes.
+
+State is held in `struct hclgevf_dev`: PCI resources, command state, reset counters/bitmaps, service state bits, mailbox response/ARQ, vector accounting, RSS shadow config, VLAN delete-failure bitmap, MAC pending lists, NIC/RoCE handles, and devlink. Hardware state is replayed after reset from software shadows where possible.
+
+Dependencies include HNAE3 core/client interfaces, common HCLGE command/RSS/TQP helpers, mailbox ABI, PCI/MSI APIs, RTNL, workqueues, timers, register dump, and devlink. Main risks are reset concurrency, command-queue disable windows, MAC/VLAN shadow divergence after PF mailbox failure, vector lifecycle leaks, and RSS/channel consistency. Test signals include VF probe/remove, PF mailbox queries, link changes, reset injection, MAC/VLAN replay, RSS/channel ethtool operations, register dumps, and RoCE-capable VF registration.

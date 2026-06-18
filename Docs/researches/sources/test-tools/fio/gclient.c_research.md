@@ -1,0 +1,13 @@
+# sources/test-tools/fio/gclient.c
+
+Purpose: gfio network-client callback and result-rendering implementation. It translates fio client protocol events into GTK UI updates, ETA graphs, log rows, disk-utilization panels, and detailed end-result pages.
+
+Important APIs/types/functions: exports `gfio_client_ops` and `gfio_display_end_results`. Important callbacks include `gfio_text_op`, `gfio_disk_util_op`, `gfio_thread_status_op`, `gfio_update_client_eta`, `gfio_update_all_eta`, `gfio_probe_op`, `gfio_quit_op`, `gfio_add_job_op`, `gfio_update_job_op`, timeout/start/stop/job-start/removed handlers. Result helpers build windows, menus, disk-util pages, latency bucket/percentile graphs, I/O depth tables, CPU/resource summaries, and per-direction read/write/trim status.
+
+Control flow: fio client networking invokes `gfio_client_ops` callbacks as PDUs arrive. Text PDUs append rows to the global log and open the log view for errors. Probe and add-job replies populate host/job metadata and advance `gui_entry` state. ETA callbacks format rates/IOPS with `num2str`, update progress bars, and append graph samples. Thread-status callbacks store end results and immediately render them if the results window is open; otherwise rendering is triggered lazily. Disk-util PDUs are accumulated and displayed in the results notebook. Update-job replies set status fields used by the options dialog.
+
+State and persistence behavior: state is in GTK widgets/models, `gfio_client` fields (`du`, `nr_du`, `results`, `nr_results`, option list, update-job status), graph objects, and per-entry result windows. Nothing is written to disk by this file. UI updates are wrapped with `gdk_threads_enter`/`leave` because callbacks can run off the GTK main thread.
+
+Dependencies/integration: depends on fio protocol types from `client.h`/`server` via `fio.h`, stats helpers (`sum_thread_stats`, latency distributions, percentiles), graph/printing helpers, GTK/GDK/Cairo, gfio shared structs, and helper widgets. It is wired into `gfio.c` connection management through `gfio_client_ops`.
+
+Risks and test signals: memory ownership of accumulated PDUs/results and generated strings is manual; repeated result rendering can duplicate pages; GTK thread locking must match the networking thread model; graph drawing depends on GTK2/GTK3 draw-event compatibility; and protocol endian conversion must be applied before use. Test signals should include simulated probe/add-job/ETA/text/disk-util/thread-status PDUs, multi-client aggregate ETA, results printing, closing/reopening results windows, update-job apply replies, and timeout/removal cleanup.

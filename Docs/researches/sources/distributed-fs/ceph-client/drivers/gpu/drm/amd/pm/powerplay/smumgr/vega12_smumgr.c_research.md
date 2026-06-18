@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/pm/powerplay/smumgr/vega12_smumgr.c
+
+Purpose: Vega12 SMU9 PowerPlay manager. It manages SMU table buffer allocation, table transfers, feature masks split across low/high 32-bit messages, DPM-running detection, tools-log address setup, and SMU function registration.
+
+Important APIs and functions: `vega12_copy_table_from_smc()` and `vega12_copy_table_to_smc()` validate `TABLE_COUNT` entries, set driver DRAM address registers via SMU messages, transfer tables, and synchronize HDP. `vega12_enable_smc_features()` splits a 64-bit feature mask into low/high halves and sends enable or disable messages for both. `vega12_get_enabled_smc_features()` reconstructs the 64-bit feature mask from low/high responses. `vega12_smu_init()` allocates PPTABLE, WMTABLE, PMSTATUSLOG, AVFS fuse override, OverDrive, and SMU metrics buffers. `vega12_start_smu()` requires `smu9_is_smc_ram_running()` and sets the PM status log tools address.
+
+Control flow: the backend is allocated after firmware availability is confirmed. Each table buffer is allocated in VRAM with page alignment, then version and size are recorded. On failure, labels free already-created buffers. Table-manager calls use `rw` as read-from-SMC vs write-to-SMC selector. Fini frees all table BOs and nulls the backend.
+
+State and persistence: `struct vega12_smumgr` caches table metadata and BO mappings. Hardware-visible state is created by SMU table transfers, enabled-feature messages, and tools-address messages. There is no per-table protocol ID field; `table_id` is sent directly, so local enum values must match the SMU interface contract.
+
+Dependencies and integration: integrates with `smu9_smumgr`, `vega12/smu9_driver_if.h`, AMDGPU BO/HDP helpers, CGS firmware lookup, and PowerPlay manager callbacks. Risks include low/high feature-mask bit shifts, direct table ID assumptions, absent explicit SMU interface-version verification compared with Vega10, and cleanup correctness on mid-init failures. Test signals are table transfer round-trips, feature toggling above and below bit 32, DPM-running checks, allocation failure injection, and suspend/resume with PM status logging enabled.

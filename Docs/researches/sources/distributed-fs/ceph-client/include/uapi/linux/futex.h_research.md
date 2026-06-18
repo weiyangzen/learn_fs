@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/futex.h
+
+This UAPI header defines futex syscall operation codes, futex2 flags, vector wait structures, robust futex list structures, owner/waiter bits, wake-op encoding macros, and requeue/bitset constants. It is a core userspace synchronization ABI used by threading libraries.
+
+Important exports include operations `FUTEX_WAIT`, `WAKE`, `FD`, `REQUEUE`, `CMP_REQUEUE`, `WAKE_OP`, `LOCK_PI`, `UNLOCK_PI`, `TRYLOCK_PI`, `WAIT_BITSET`, `WAKE_BITSET`, `WAIT_REQUEUE_PI`, `CMP_REQUEUE_PI`, and `LOCK_PI2`, plus private and realtime flags. Futex2 exports include size flags, NUMA/MPOL/private bits, `FUTEX_WAITV_MAX`, and `struct futex_waitv`. Robust futex exports include `struct robust_list`, `struct robust_list_head`, `FUTEX_WAITERS`, `FUTEX_OWNER_DIED`, `FUTEX_TID_MASK`, `ROBUST_LIST_LIMIT`, `FUTEX_BITSET_MATCH_ANY`, and wake-op composition macros.
+
+Control flow is syscall based around userspace memory: user code performs atomic operations in userspace and calls futex only to block, wake, requeue, or participate in PI locking. The kernel validates user addresses, hashes futex keys, manages wait queues and PI rtmutex state, and scans robust lists at thread exit to mark owner death. State is split between user memory words and kernel wait queues/PI state; robust list head is per-thread user memory registered with the kernel. Persistence is only process/thread lifetime.
+
+Dependencies include `linux/compiler.h`, `linux/types.h`, scheduler, rtmutex priority inheritance, memory management/user access, robust-list registration syscalls, and libc pthread implementations. Integration points include glibc/musl pthread mutexes/conds, JVMs, runtimes, databases, and sandboxed synchronization primitives.
+
+Risks include ABI immutability of robust structs, user memory races, priority-inheritance deadlocks, time namespace/realtime clock behavior, wake-op encoding mistakes, NUMA futex2 compatibility, and security exposure from arbitrary user addresses. Test signals include futex selftests, pthread stress tests, PI mutex tests, robust owner-death tests, waitv tests, timeout/realtime tests, 32-bit compat tests, and race/fuzz testing under sanitizers.

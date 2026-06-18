@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/venus/vsg.h
+
+`vsg.h` declares the Volume Storage Group types used by Venus replicated-volume communication. `class vsgent` privately inherits `RefCountedObject`, is created and owned by `vsgdb`, and is also a friend of `mgrpent` and `Mgrp_Wait` so those components can coordinate connection lifetime and waits. The type stores `nhosts`, `max_vsg`, a fixed `hosts[VSG_MEMBERS]` array, a list of `mgrpent` entries, the owning `RealmId`, and a list hook linking all VSGs.
+
+The public API exposes `Put`, `GetMgrp`, `KillMgrps`, `KillUserMgrps`, `KillMgrpMember`, host count and max-index accessors, `GetHosts`, and `print`. `CmpHosts` compares the full fixed host array with `memcmp`, so callers must keep array ordering and zero-fill conventions stable. `class vsgdb` stores all VSG entries, provides `GetVSG` for lookup/create by host array and realm, provides `KillUserMgrps` for global per-user cleanup, and prints state.
+
+This header is a small but important integration contract between replicated volumes, user authentication, RPC2 mgroup management, and Venus diagnostics. State is in-memory and reference-counted, but instances hold live communication resources through `mgrpent` lists. The exported global `VSGDB` and `VSGDBInit` make initialization order significant for any code that may resolve replicated server groups.
+
+Risks include private inheritance hiding generic refcount operations except through friend classes and `Put`, dependence on `dllist_head` intrusive list discipline, and exact structural host comparison. Any change to `VSG_MEMBERS`, realm identity, or list ownership affects `vsg.cc`, `mgrp`, and replicated volume code. Test signals should check initialization, duplicate `GetVSG` reuse, reference release and destructor cleanup, host copy semantics, per-user mgroup removal, and print output for live diagnostic commands.

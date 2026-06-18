@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmdt/shmdt02.c
+
+Purpose: negative `shmdt()` test for invalid addresses. Setup uses `PROBE_FREE_ADDR()` for a non-attached page-aligned address and derives an unaligned address by adding `SHMLBA - 1`. Two table cases call `shmdt()` on those pointers and expect `EINVAL`. No SysV shared-memory object is created; state is only address values in the process. Dependencies are `tse_newipc.h`, `SHMLBA`, and LTP expectation macros. Risks are platform alignment rules or address-probe behavior. Test signal is `TST_EXP_FAIL(shmdt(...), EINVAL)` for both non-attached and unaligned addresses.

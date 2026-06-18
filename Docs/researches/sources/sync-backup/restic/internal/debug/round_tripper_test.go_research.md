@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/debug/round_tripper_test.go
+
+Purpose: tests sensitive-header redaction and restoration used by HTTP debug dumps. APIs under test are `redactHeader` and `restoreHeader`. Control flow builds headers with authorization-like values, redacts them, verifies sensitive values are replaced while non-sensitive values remain, then restores originals and verifies round-trip equality. State is local `http.Header` maps and saved original values. Dependencies include `net/http` and testing helpers. Risks covered are important operational/privacy concerns: debug logging must not leak credentials and must not permanently mutate the request headers passed to the real transport. Missing signal: full dump/EOF wrapper behavior is not directly asserted.

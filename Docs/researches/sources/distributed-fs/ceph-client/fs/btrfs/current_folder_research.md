@@ -1,0 +1,144 @@
+# Folder Research: sources/distributed-fs/ceph-client/fs/btrfs
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 130
+- Recursive researched files: 143
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/fs/btrfs/Kconfig`
+- `sources/distributed-fs/ceph-client/fs/btrfs/Makefile`
+- `sources/distributed-fs/ceph-client/fs/btrfs/accessors.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/accessors.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/acl.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/acl.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/async-thread.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/async-thread.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/backref.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/backref.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/bio.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/bio.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/block-group.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/block-group.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/block-rsv.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/block-rsv.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/btrfs_inode.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/compression.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/compression.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ctree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ctree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/defrag.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/defrag.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/delalloc-space.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/delalloc-space.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/delayed-inode.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/delayed-inode.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/delayed-ref.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/delayed-ref.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/dev-replace.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/dev-replace.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/dir-item.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/dir-item.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/direct-io.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/direct-io.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/discard.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/discard.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/disk-io.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/disk-io.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/export.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/export.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent-io-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent-io-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent_io.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent_io.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent_map.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/extent_map.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/fiemap.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/fiemap.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/file-item.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/file-item.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/file.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/file.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/free-space-cache.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/free-space-cache.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/free-space-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/free-space-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/fs.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/fs.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/inode-item.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/inode-item.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/inode.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ioctl.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ioctl.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/locking.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/locking.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/lru_cache.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/lru_cache.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/lzo.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/messages.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/messages.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/misc.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ordered-data.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ordered-data.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/orphan.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/orphan.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/print-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/print-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/props.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/props.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/qgroup.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/qgroup.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/raid-stripe-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/raid-stripe-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/raid56.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/raid56.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ref-verify.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ref-verify.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/reflink.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/reflink.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/relocation.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/relocation.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/root-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/root-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/scrub.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/scrub.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/send.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/send.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/space-info.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/space-info.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/subpage.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/subpage.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/super.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/super.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/sysfs.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/sysfs.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/transaction.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/transaction.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/tree-checker.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/tree-checker.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/tree-log.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/tree-log.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/tree-mod-log.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/tree-mod-log.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ulist.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/ulist.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/uuid-tree.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/uuid-tree.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/verity.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/verity.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/volumes.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/volumes.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/xattr.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/xattr.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/zlib.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/zoned.c`
+- `sources/distributed-fs/ceph-client/fs/btrfs/zoned.h`
+- `sources/distributed-fs/ceph-client/fs/btrfs/zstd.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/accel/qaic/qaic_data.c
+
+Purpose: implements the QAIC datapath ioctls and DBC ring processing. It allocates/imports DRM GEM BOs, maps them for device DMA, converts userspace slice descriptions into DBC request elements, submits BOs to request FIFOs, handles completions from response FIFOs, and exposes wait/performance/detach operations.
+
+Important APIs and types: exported functions include `get_dbc_req_elem_size`, `get_dbc_rsp_elem_size`, `qaic_create_bo_ioctl`, `qaic_mmap_bo_ioctl`, `qaic_gem_prime_import`, `qaic_attach_slice_bo_ioctl`, `qaic_execute_bo_ioctl`, `qaic_partial_execute_bo_ioctl`, `qaic_wait_bo_ioctl`, `qaic_perf_stats_bo_ioctl`, `qaic_detach_slice_bo_ioctl`, IRQ handlers, and DBC lifecycle helpers. Internal hardware formats are `dbc_req` and `dbc_rsp`; object state is `qaic_bo` and `bo_slice`.
+
+Control flow: BO creation builds a private GEM object and SG table; PRIME import delays DMA mapping until slicing. Attach validates DBC ownership, semaphore fields, doorbell alignment, offsets, direction, and queue capacity, then maps the BO and pre-encodes one or more `dbc_req` entries per slice. Execute copies encoded requests into the circular request FIFO under `req_lock`, assigns request IDs under `xfer_lock`, writes the tail register to commit, and records timing data. The threaded IRQ drains response FIFO entries, matches request IDs to queued BOs, counts slice completions, syncs DMA for CPU, completes waiters, and releases GEM refs. Polling mode simulates interrupts by repeatedly checking response FIFO state.
+
+State and persistence: persistent in-memory state includes DBC coherent request/response queues, ring head/tail registers, BO slicing metadata, DMA mappings, per-BO completions, queued transfer lists, request IDs, and profiling timestamps. Reset and DBC release empty queues, complete waiters, detach BOs, and free coherent memory.
+
+Dependencies and integration: uses DRM GEM/PRIME, DMA mapping, SG helpers, SRCU channel locks, PCI MMIO registers, QAIC UAPI slice/execute structs, sysfs DBC state, and SSR helpers. `qaic_control.c` activates DBCs; `qaic_drv.c` creates DBCs and IRQs.
+
+Risks and test signals: important risks are SG slicing math, request FIFO wraparound, partial-execute last-entry rewriting, BO refcount balance, DMA sync direction, completion ordering for multi-slice BOs, SSR blocking via `ssr_dbc`, and races between execute/wait/detach/release. Test zero-size and page-aligned BOs, imported dma-bufs, invalid semaphores, ring-full paths, shared single-MSI mode, polling mode, PCI read returning `U32_MAX`, concurrent users, and reset while BOs are in flight.

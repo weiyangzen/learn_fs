@@ -1,0 +1,114 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 100
+- Recursive researched files: 100
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/adi,axi-spi-engine.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/airoha,en7581-snand.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/allwinner,sun4i-a10-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/allwinner,sun6i-a31-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/amlogic,a1-spifc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/amlogic,a4-spifc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/amlogic,a4-spisg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/amlogic,meson-gx-spicc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/amlogic,meson6-spifc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/andestech,ae350-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/apple,spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/arm,pl022-peripheral-props.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/aspeed,ast2600-fmc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/atmel,at91rm9200-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/atmel,quadspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/axiado,ax3000-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/brcm,bcm2835-aux-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/brcm,bcm2835-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/brcm,bcm63xx-hsspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/brcm,bcm63xx-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/brcm,spi-bcm-qspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/cdns,qspi-nor-peripheral-props.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/cdns,qspi-nor.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/cdns,xspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/cirrus,ep9301-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/faraday,ftssp010.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/fsl,dspi-peripheral-props.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/fsl,dspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/fsl,espi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/fsl,spi-fsl-qspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/fsl,spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/fsl-imx-cspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/hpe,gxp-spifi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/ibm,spi-fsi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/ingenic,spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/loongson,ls2k-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/marvell,armada-3700-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/marvell,mmp2-ssp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/marvell,orion-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mediatek,spi-mt65xx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mediatek,spi-mtk-nor.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mediatek,spi-mtk-snfi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mediatek,spi-slave-mt27xx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/microchip,mpfs-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mikrotik,rb4xx-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mxicy,mx25f0a-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/mxs-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nuvoton,npcm-pspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nuvoton,wpcm450-fiu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nvidia,tegra114-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nvidia,tegra20-sflash.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nvidia,tegra20-slink.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nvidia,tegra210-quad-peripheral-props.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nvidia,tegra210-quad.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nxp,imx94-xspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nxp,lpc3220-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/nxp,sc18is.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/omap-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/qca,ar934x-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/qcom,spi-geni-qcom.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/qcom,spi-qcom-qspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/qcom,spi-qpic-snand.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/qcom,spi-qup.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/ralink,mt7621-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/realtek,rtl-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/realtek,rtl9301-snand.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/renesas,hspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/renesas,rspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/renesas,rzv2h-rspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/renesas,rzv2m-csi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/renesas,sh-msiof.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/rockchip-sfc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/samsung,spi-peripheral-props.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/samsung,spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/snps,dw-apb-ssi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/socionext,f-ospi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/socionext,synquacer-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/socionext,uniphier-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-cadence.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-controller.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-fsl-lpspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-gpio.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-mux.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-nxp-fspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-peripheral-props.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-pl022.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-rockchip.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-sg2044-nor.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-sifive.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-sunplus-sp7021.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-xilinx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/spi-zynqmp-qspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/sprd,sc9860-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/sprd,spi-adi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/st,ssc-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/st,stm32-qspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/st,stm32-spi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/st,stm32mp25-ospi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/ti,qspi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/spi/xlnx,zynq-qspi.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

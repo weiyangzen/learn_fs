@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/thermal/qcom/qcom-spmi-temp-alarm.c
+
+Purpose: Qualcomm QPNP SPMI PMIC temperature alarm driver. It handles GEN1, GEN2 revisions, and TEMP_ALARM_LITE blocks, optionally reads a real ADC channel, otherwise estimates temperature from over-temperature stages, configures PMIC shutdown/threshold registers from thermal trips, and updates the thermal framework on alarm IRQs.
+
+Important APIs/types/functions: `struct spmi_temp_alarm_data` holds variant ops, stage maps, threshold sync/config callbacks, and stage reader. `struct qpnp_tm_chip` stores regmap/base, thermal zone, variant data, current temp/stage, threshold map, lock, ADC, and revision flags. `qpnp_tm_get_temp()` returns default temperature before init, ADC value when available, or stage-estimated temperature with hysteresis. `qpnp_tm_update_critical_trip_temp()` selects GEN1/GEN2 threshold sets and optional stage2 shutdown override. GEN2 rev2 uses `TEMP_DAC_STG*` via `qpnp_tm_gen2_rev2_set_temp_thresh()`. LITE uses warning/shutdown maps via `qpnp_tm_lite_set_temp_thresh()`.
+
+Control flow: probe gets parent regmap, base, IRQ, optional IIO ADC, validates PMIC type/subtype/revision, selects variant data, syncs hardware thresholds and initial stage, registers thermal zone before hardware init so trip data is available, configures trip thresholds, force-enables the alarm block, adds hwmon, requests IRQ, and triggers an initial update. IRQ handling simply updates the thermal zone; reads and set-trip paths perform detailed register work under `chip->lock`.
+
+State/persistence: `temp_thresh_map`, `stage`, `temp`, `initialized`, and `require_stage2_shutdown` mirror hardware state and revision constraints. Hardware threshold, DAC, LITE, and alarm enable registers persist in the PMIC. Dependencies: SPMI regmap, optional IIO channel named `thermal`, thermal OF trips, hwmon.
+
+Risks: no-ADC mode reports estimates with hysteresis rather than real temperature; stage2 shutdown override is revision-sensitive; LITE trip 1 is software-only; trip ordering validation is critical for programmable variants. Test signals include subtype/revision selection, ADC and no-ADC reads, critical trip programming, TEMP_DAC bounds, LITE thresholds, IRQ update, default pre-init temperature, and lock-protected concurrent trip/read paths.

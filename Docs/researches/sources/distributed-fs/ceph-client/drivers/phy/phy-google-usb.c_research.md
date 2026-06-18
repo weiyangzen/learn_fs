@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-google-usb.c
+
+This platform driver exposes a Google USB2 PHY as a generic PHY provider and registers a Type-C orientation switch. Its state is split between `struct google_usb_phy`, holding shared regmap/MMIO/orientation/mutex/switch data, and one `google_usb_phy_instance` for clocks, resets, and the created `struct phy`.
+
+Probe resolves a syscon regmap plus offset from `google,usb-cfg-csr`, maps `usbdp_top`, creates one USB2 PHY, gets two clocks (`usb2`, `usb2_apb`) and two resets, registers an OF provider with a custom `google_usb_phy_xlate()`, enables runtime PM, and registers a Type-C switch. `google_usb2_phy_init()` programs reference frequency and PLL feedback divider, sets VBUS-valid based on orientation, enables clocks, deasserts resets, and sets `PHY_ENABLE`. Exit reverses enable, asserts resets, and disables clocks. Orientation changes update cached orientation and, if runtime active, set or clear `SYS_VBUSVALID` under `phy_mutex`.
+
+Dependencies are regmap/syscon, platform MMIO, clk/reset bulk APIs, runtime PM, generic PHY, and Type-C mux APIs. Risks include runtime PM only gating orientation writes while init/exit also touch registers, fixed PLL constants, xlate relying on one-cell indices, and no remove-time PHY shutdown beyond managed resources. Test signals are probe-time errors and hardware behavior; there is no local unit test.

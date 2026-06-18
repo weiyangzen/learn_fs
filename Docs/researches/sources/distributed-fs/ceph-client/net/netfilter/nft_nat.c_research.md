@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_nat.c
+
+Purpose: implements generic nftables `nat` expression for SNAT and DNAT, including IPv4/IPv6 address ranges, protocol port ranges, netmap mode, and inet-family dispatch.
+
+Important APIs/types/functions: `struct nft_nat` stores register indexes, manipulation type, family, and range flags. `nft_nat_setup_addr()`, `nft_nat_setup_proto()`, and `nft_nat_setup_netmap()` build an `nf_nat_range2`. `nft_nat_eval()` calls `nf_nat_setup_info()` for the current conntrack. `nft_nat_validate()` enforces family, NAT chain dependency, and hook masks for SNAT vs DNAT.
+
+Control flow: init requires type and at least address or proto range, maps userspace SNAT/DNAT to `NF_NAT_MANIP_SRC/DST`, validates family compatibility with table family, parses address and proto min/max registers, sets NAT range flags, merges user flags, and gets conntrack namespace support. Eval builds range from current registers; netmap combines current packet address with configured min/max mask; verdict becomes the return from `nf_nat_setup_info()`. Inet eval only runs when packet family matches configured family or family is inet.
+
+State/persistence: expression state is fixed register/family/type metadata and conntrack namespace reference. NAT mappings persist in conntrack entries, not in the expression. Dependencies include nf_conntrack, nf_nat, IP header access, NAT base-chain semantics, and inet conditional registration. Risks include calling eval with null conntrack, address-family/register length mismatch, netmap mask errors, invalid hook acceptance, and inet no-op behavior for mismatched packet family. Test signals: SNAT/DNAT hook validation, IPv4/IPv6 address and port ranges, min-only range defaults, netmap, inet mixed traffic, no-ct behavior, dump/restore, and module init rollback.

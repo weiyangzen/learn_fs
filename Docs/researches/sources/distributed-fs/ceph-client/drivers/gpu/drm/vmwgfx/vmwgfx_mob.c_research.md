@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/vmwgfx/vmwgfx_mob.c
+
+Purpose: Manages guest-backed Memory OBjects (MOBs) and object-table bases. It builds 32-bit or 64-bit page tables for buffer pages, binds/unbinds MOBs to device IDs, and initializes the SVGA object tables needed for guest-backed surfaces, contexts, shaders, screen targets, and DX contexts.
+
+Important APIs/types/functions: `struct vmw_mob` stores the page-table BO, page count, page-table depth, root DMA page, and device ID. Static `pre_dx_tables` and `dx_tables` describe enabled object tables based on SM4/DX support. `vmw_otables_setup()` selects and allocates table metadata, `vmw_otable_batch_setup()` creates one backing BO and calls `vmw_setup_otable_base()` for each enabled table, and `vmw_otables_takedown()` destroys them. `vmw_mob_create()`, `vmw_mob_bind()`, `vmw_mob_unbind()`, and `vmw_mob_destroy()` are the external MOB lifecycle functions.
+
+Control flow: Object-table setup page-aligns table sizes, allocates one waitable system BO, then installs each table base with `SVGA_3D_CMD_SET_OTABLE_BASE64`. Larger tables get a MOB page table built by `vmw_mob_pt_populate()` and `vmw_mob_pt_setup()`. MOB binding uses direct depth-0 mapping for one data page; otherwise it allocates and fills multilevel page tables with `vmw_mob_build_pt()`, increments FIFO resource accounting, and emits `SVGA_3D_CMD_DEFINE_GB_MOB64`. Unbind emits `SVGA_3D_CMD_DESTROY_GB_MOB`, fences the page-table BO, and decrements FIFO accounting.
+
+State and persistence: Page-table BOs are pinned/populated through TTM and released on MOB destroy. Object-table `page_table` pointers indicate active table bases. MOB IDs persist on the device until destroyed. Page-table depth constants differ for 32-bit vs 64-bit kernels.
+
+Dependencies and integration points: Depends on TTM reservation/pinning, vmwgfx BO scatter-gather iteration, SVGA3D commands, FIFO resource accounting, and capability-driven object table sizing. Risks include BUG_ONs for page-table depth, reservation failures treated as impossible in helpers, command-reserve failure during takedown leaving device state active, and correctness of DMA address iteration. Test signals: 32/64-bit builds, DX and pre-DX initialization, multi-page MOBs, OTable teardown under command pressure, and BO move/unbind paths.

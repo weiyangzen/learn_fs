@@ -1,0 +1,126 @@
+# Folder Research: sources/distributed-fs/ceph-client/tools/testing/selftests/bpf
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 112
+- Recursive researched files: 1586
+- Direct child folders represented: 7
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/Makefile`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/autoconf_helper.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bench.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bench.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_arena_alloc.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_arena_common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_arena_htab.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_arena_list.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_arena_strsearch.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_atomic.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_experimental.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_kfuncs.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_legacy.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_rand.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_sockopt_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpf_util.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpftool_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/bpftool_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/btf_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/btf_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cap_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cap_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cgroup_getset_retval_hooks.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cgroup_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cgroup_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cgroup_iter_memcg.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/cgroup_tcp_skb.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/config`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/disasm.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/disasm.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/disasm_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/disasm_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/flow_dissector_load.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/flow_dissector_load.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/generate_udp_fragments.py`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/ima_setup.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/io_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/io_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/ip_check_defrag_frags.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/jit_disasm_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/jit_disasm_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/json_writer.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/json_writer.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/netcnt_common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/netlink_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/netlink_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/network_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/network_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/sdt-config.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/sdt.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/sysctl_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/sysctl_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/task_local_storage_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_bpftool_build.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_bpftool_synctypes.py`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_btf.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_cpp.cpp`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_doc_build.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_ftrace.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_iptunnel_common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_kmod.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_lirc_mode2.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_lirc_mode2_user.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_loader.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_lru_map.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_maps.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_maps.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_progs.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_progs.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_select_reuseport_common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_sockmap.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_tag.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_tcp_hdr_options.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_tcpbpf.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_tcpnotify.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_tcpnotify_user.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_verifier.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_xdp_features.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_xdping.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_xsk.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/testing_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/testing_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/trace_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/trace_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/unpriv_helpers.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/unpriv_helpers.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/uprobe_multi.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/uptr_test_common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/urandom_read.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/urandom_read_aux.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/urandom_read_lib1.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/urandom_read_lib2.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/usdt.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/usdt_1.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/usdt_2.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/verify_sig_setup.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/veristat.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/veristat.cfg`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/vmtest.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdp_features.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdp_features.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdp_hw_metadata.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdp_metadata.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdp_synproxy.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdping.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xdping.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xsk.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xsk.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xsk_prereqs.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xsk_xdp_common.h`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xskxceiver.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/xskxceiver.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

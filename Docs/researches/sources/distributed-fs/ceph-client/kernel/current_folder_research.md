@@ -1,0 +1,131 @@
+# Folder Research: sources/distributed-fs/ceph-client/kernel
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 117
+- Recursive researched files: 686
+- Direct child folders represented: 21
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/kernel/Makefile`
+- `sources/distributed-fs/ceph-client/kernel/acct.c`
+- `sources/distributed-fs/ceph-client/kernel/async.c`
+- `sources/distributed-fs/ceph-client/kernel/audit.c`
+- `sources/distributed-fs/ceph-client/kernel/audit.h`
+- `sources/distributed-fs/ceph-client/kernel/audit_fsnotify.c`
+- `sources/distributed-fs/ceph-client/kernel/audit_tree.c`
+- `sources/distributed-fs/ceph-client/kernel/audit_watch.c`
+- `sources/distributed-fs/ceph-client/kernel/auditfilter.c`
+- `sources/distributed-fs/ceph-client/kernel/auditsc.c`
+- `sources/distributed-fs/ceph-client/kernel/backtracetest.c`
+- `sources/distributed-fs/ceph-client/kernel/bounds.c`
+- `sources/distributed-fs/ceph-client/kernel/capability.c`
+- `sources/distributed-fs/ceph-client/kernel/cfi.c`
+- `sources/distributed-fs/ceph-client/kernel/compat.c`
+- `sources/distributed-fs/ceph-client/kernel/configs.c`
+- `sources/distributed-fs/ceph-client/kernel/context_tracking.c`
+- `sources/distributed-fs/ceph-client/kernel/cpu.c`
+- `sources/distributed-fs/ceph-client/kernel/cpu_pm.c`
+- `sources/distributed-fs/ceph-client/kernel/crash_core.c`
+- `sources/distributed-fs/ceph-client/kernel/crash_core_test.c`
+- `sources/distributed-fs/ceph-client/kernel/crash_dump_dm_crypt.c`
+- `sources/distributed-fs/ceph-client/kernel/crash_reserve.c`
+- `sources/distributed-fs/ceph-client/kernel/cred.c`
+- `sources/distributed-fs/ceph-client/kernel/delayacct.c`
+- `sources/distributed-fs/ceph-client/kernel/dma.c`
+- `sources/distributed-fs/ceph-client/kernel/elfcorehdr.c`
+- `sources/distributed-fs/ceph-client/kernel/exec_domain.c`
+- `sources/distributed-fs/ceph-client/kernel/exit.c`
+- `sources/distributed-fs/ceph-client/kernel/exit.h`
+- `sources/distributed-fs/ceph-client/kernel/extable.c`
+- `sources/distributed-fs/ceph-client/kernel/fail_function.c`
+- `sources/distributed-fs/ceph-client/kernel/fork.c`
+- `sources/distributed-fs/ceph-client/kernel/freezer.c`
+- `sources/distributed-fs/ceph-client/kernel/gen_kheaders.sh`
+- `sources/distributed-fs/ceph-client/kernel/groups.c`
+- `sources/distributed-fs/ceph-client/kernel/hung_task.c`
+- `sources/distributed-fs/ceph-client/kernel/iomem.c`
+- `sources/distributed-fs/ceph-client/kernel/irq_work.c`
+- `sources/distributed-fs/ceph-client/kernel/jump_label.c`
+- `sources/distributed-fs/ceph-client/kernel/kallsyms.c`
+- `sources/distributed-fs/ceph-client/kernel/kallsyms_internal.h`
+- `sources/distributed-fs/ceph-client/kernel/kallsyms_selftest.c`
+- `sources/distributed-fs/ceph-client/kernel/kallsyms_selftest.h`
+- `sources/distributed-fs/ceph-client/kernel/kcmp.c`
+- `sources/distributed-fs/ceph-client/kernel/kcov.c`
+- `sources/distributed-fs/ceph-client/kernel/kexec.c`
+- `sources/distributed-fs/ceph-client/kernel/kexec_core.c`
+- `sources/distributed-fs/ceph-client/kernel/kexec_elf.c`
+- `sources/distributed-fs/ceph-client/kernel/kexec_file.c`
+- `sources/distributed-fs/ceph-client/kernel/kexec_internal.h`
+- `sources/distributed-fs/ceph-client/kernel/kheaders.c`
+- `sources/distributed-fs/ceph-client/kernel/kprobes.c`
+- `sources/distributed-fs/ceph-client/kernel/kstack_erase.c`
+- `sources/distributed-fs/ceph-client/kernel/ksyms_common.c`
+- `sources/distributed-fs/ceph-client/kernel/ksysfs.c`
+- `sources/distributed-fs/ceph-client/kernel/kthread.c`
+- `sources/distributed-fs/ceph-client/kernel/latencytop.c`
+- `sources/distributed-fs/ceph-client/kernel/module_signature.c`
+- `sources/distributed-fs/ceph-client/kernel/notifier.c`
+- `sources/distributed-fs/ceph-client/kernel/nscommon.c`
+- `sources/distributed-fs/ceph-client/kernel/nsproxy.c`
+- `sources/distributed-fs/ceph-client/kernel/nstree.c`
+- `sources/distributed-fs/ceph-client/kernel/padata.c`
+- `sources/distributed-fs/ceph-client/kernel/panic.c`
+- `sources/distributed-fs/ceph-client/kernel/params.c`
+- `sources/distributed-fs/ceph-client/kernel/pid.c`
+- `sources/distributed-fs/ceph-client/kernel/pid_namespace.c`
+- `sources/distributed-fs/ceph-client/kernel/pid_sysctl.h`
+- `sources/distributed-fs/ceph-client/kernel/profile.c`
+- `sources/distributed-fs/ceph-client/kernel/ptrace.c`
+- `sources/distributed-fs/ceph-client/kernel/range.c`
+- `sources/distributed-fs/ceph-client/kernel/reboot.c`
+- `sources/distributed-fs/ceph-client/kernel/regset.c`
+- `sources/distributed-fs/ceph-client/kernel/relay.c`
+- `sources/distributed-fs/ceph-client/kernel/resource.c`
+- `sources/distributed-fs/ceph-client/kernel/resource_kunit.c`
+- `sources/distributed-fs/ceph-client/kernel/rseq.c`
+- `sources/distributed-fs/ceph-client/kernel/scftorture.c`
+- `sources/distributed-fs/ceph-client/kernel/scs.c`
+- `sources/distributed-fs/ceph-client/kernel/seccomp.c`
+- `sources/distributed-fs/ceph-client/kernel/signal.c`
+- `sources/distributed-fs/ceph-client/kernel/smp.c`
+- `sources/distributed-fs/ceph-client/kernel/smpboot.c`
+- `sources/distributed-fs/ceph-client/kernel/smpboot.h`
+- `sources/distributed-fs/ceph-client/kernel/softirq.c`
+- `sources/distributed-fs/ceph-client/kernel/stacktrace.c`
+- `sources/distributed-fs/ceph-client/kernel/static_call.c`
+- `sources/distributed-fs/ceph-client/kernel/static_call_inline.c`
+- `sources/distributed-fs/ceph-client/kernel/stop_machine.c`
+- `sources/distributed-fs/ceph-client/kernel/sys.c`
+- `sources/distributed-fs/ceph-client/kernel/sys_ni.c`
+- `sources/distributed-fs/ceph-client/kernel/sysctl-test.c`
+- `sources/distributed-fs/ceph-client/kernel/sysctl.c`
+- `sources/distributed-fs/ceph-client/kernel/task_work.c`
+- `sources/distributed-fs/ceph-client/kernel/taskstats.c`
+- `sources/distributed-fs/ceph-client/kernel/torture.c`
+- `sources/distributed-fs/ceph-client/kernel/tracepoint.c`
+- `sources/distributed-fs/ceph-client/kernel/tsacct.c`
+- `sources/distributed-fs/ceph-client/kernel/ucount.c`
+- `sources/distributed-fs/ceph-client/kernel/uid16.c`
+- `sources/distributed-fs/ceph-client/kernel/uid16.h`
+- `sources/distributed-fs/ceph-client/kernel/umh.c`
+- `sources/distributed-fs/ceph-client/kernel/up.c`
+- `sources/distributed-fs/ceph-client/kernel/user-return-notifier.c`
+- `sources/distributed-fs/ceph-client/kernel/user.c`
+- `sources/distributed-fs/ceph-client/kernel/user_namespace.c`
+- `sources/distributed-fs/ceph-client/kernel/utsname.c`
+- `sources/distributed-fs/ceph-client/kernel/utsname_sysctl.c`
+- `sources/distributed-fs/ceph-client/kernel/vhost_task.c`
+- `sources/distributed-fs/ceph-client/kernel/vmcore_info.c`
+- `sources/distributed-fs/ceph-client/kernel/watch_queue.c`
+- `sources/distributed-fs/ceph-client/kernel/watchdog.c`
+- `sources/distributed-fs/ceph-client/kernel/watchdog_buddy.c`
+- `sources/distributed-fs/ceph-client/kernel/watchdog_perf.c`
+- `sources/distributed-fs/ceph-client/kernel/workqueue.c`
+- `sources/distributed-fs/ceph-client/kernel/workqueue_internal.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup02.py
+
+Purpose: stress-tests concurrent checkpoints, backups, and insert/update workload. It uses background thread helpers to run for 10 seconds by default or 60 seconds in long-test mode.
+
+Important APIs and types are `threading.Event`, `queue.Queue`, `wtthread.checkpoint_thread`, `backup_thread`, `op_thread`, and WiredTiger connection/session table creation. Control flow creates three tables, starts checkpoint and backup threads, queues insert work, starts operation worker threads, then repeatedly queues update work with changing values until time expires. The `finally` block joins the queue, signals all threads done, and joins workers. State behavior includes concurrent data mutations, checkpoint generation, and backup directory churn. Dependencies are thread helper classes that own most operation semantics. Risks are concurrency timing, queue draining on exceptions, and backup/checkpoint races. Test signal is successful completion without exceptions or deadlock.

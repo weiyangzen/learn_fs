@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/functional/CloseableTaskPoolSubmitter.java
+
+`CloseableTaskPoolSubmitter` is a small public unstable adapter from `ExecutorService` to `TaskPool.Submitter` with lifecycle management. It lets callers pass an executor to `TaskPool` and close the adapter when the pool should be shut down.
+
+The API consists of a constructor requiring a non-null `ExecutorService`, `getPool()`, `submit(Runnable)`, and `close()`. `submit()` delegates directly to `pool.submit(task)`. `close()` calls `ExecutorService.shutdown()` and then sets the field to null; it is idempotent in the sense that repeated close calls do nothing after the first.
+
+The object has one mutable state field, `pool`, with no synchronization or volatile semantics. It does not await termination, force shutdown, reject submissions after close with a custom error, or guard against `submit()` after close; post-close submission will fail with a null dereference. Dependencies are Java concurrency and Hadoop audience/stability annotations. It integrates with `TaskPool.Builder.executeWith()` and appears in S3A IO statistics integration tests, where listing tasks execute in a pool while preserving the caller's statistics context. Risks are lifecycle-related: callers must own the executor policy, await termination if needed, and avoid concurrent close/submit races. Test signals are indirect through `TestTaskPool` and S3A tests such as `ITestS3AIOStatisticsContext`.

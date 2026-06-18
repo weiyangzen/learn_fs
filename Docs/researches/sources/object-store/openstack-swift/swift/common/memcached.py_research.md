@@ -1,0 +1,13 @@
+# sources/object-store/openstack-swift/swift/common/memcached.py
+
+Purpose: implements Swift's eventlet-compatible, consistent-hash memcache client with per-server connection pools, JSON serialization, TLS support, retry/failover, and server error suppression.
+
+Important APIs/types/functions: `md5hash`, `sanitize_timeout`, and `set_msg` support protocol encoding. `MemcacheConnPool` owns socket/file creation for one server. `MemcacheCommand` stores method, original key, memcache command bytes, hash key, and logging prefix. `MemcacheRing` exposes `set`, `get`, `incr`, `decr`, `delete`, `set_multi`, and `get_multi`. `load_memcache` merges proxy/filter config with optional `memcache.conf` and returns a configured ring.
+
+Control flow: `MemcacheRing.__init__` builds weighted hash points for each server, per-server pools, error tracking maps, timeout settings, and sample-rate logging. `_get_conns` picks servers from the ring after the key hash, skips currently error-limited servers, acquires a pooled connection under pool timeout, and yields up to the configured try count. Operations send ASCII memcached protocol commands under IO timeout, parse response lines, return connections on success, and route exceptions through `_exception_occurred`, which logs, closes sockets, returns a placeholder to the pool, and may error-limit the server. `incr`/`decr` add missing keys and retry the increment to handle concurrent creation. Multi operations force all keys to the server selected by `server_key`.
+
+State and persistence: in-memory state includes the consistent hash ring, connection pools, per-server recent error timestamps, error-limited deadlines, and logger config. Memcached itself stores transient cache entries; JSON is the active serialization flag, while pickled entries are treated as misses.
+
+Dependencies and integration: depends on Swift concurrency sockets/SSL/pools/timeouts, config parsing, Swift utils for MD5, socket parsing, human-readable sizes, and timing stats, plus Swift memcache exception classes. Used by proxy middleware and services for auth, listings, rate limits, shard state, and other cache-backed coordination.
+
+Risks: memcache protocol parsing must handle partial/empty reads; error-limiting can reduce cache availability if thresholds are too low; `set_multi` assumes values are bytes when `serialize=False`; item-size warnings are advisory only; consistent hash changes still remap keys when server list changes; TLS config errors surface at connection time. Tests should cover hashing stability, timeout sanitization above 30 days, JSON round trips, pickle flag miss behavior, incr add races, server failover/error limiting, connection pool timeout handling, TLS config loading, and multi-key ordering.

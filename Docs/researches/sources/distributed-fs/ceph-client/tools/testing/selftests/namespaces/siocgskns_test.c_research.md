@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/tools/testing/selftests/namespaces/siocgskns_test.c
+
+**Purpose:** Tests the `SIOCGSKNS` socket ioctl, which returns a file descriptor for the network namespace associated with a socket, and verifies its interaction with active references, `listns`, nsfs handles, owner user namespaces, and resurrection of inactive namespace trees.
+
+**Important APIs and flow:** Basic tests call `ioctl(sock, SIOCGSKNS)` on IPv4/IPv6 TCP/UDP/raw sockets and compare the returned namespace FD with `/proc/self/ns/net`. Lifecycle tests create sockets in child net namespaces, pass socket FDs to parents via `SCM_RIGHTS`, let children exit, and use `SIOCGSKNS` to recover active netns FDs. Other tests verify behavior across `setns()`, non-socket rejection, multiple sockets, `listns` visibility, owner lookup through `NS_GET_USERNS`, and reopening via synthetic `struct nsfs_file_handle`. The final multilevel test builds nested user namespaces plus a net namespace and asserts repeated `SIOCGSKNS` calls resurrect and drop the full owner chain.
+
+**State, dependencies, integration:** The socket FD is the key persistent user-space handle; namespace FDs obtained from `SIOCGSKNS` become active references. The file depends on `linux/sockios.h`, `linux/nsfs.h`, `FD_NSFS_ROOT`, `FILEID_NSFS`, `setup_userns()`, `sys_listns()`, and SCM_RIGHTS messaging. It integrates socket lifetime with namespace active-ref accounting and nsfs file-handle lookup.
+
+**Risks and test signals:** Raw sockets may require privileges; unsupported `SIOCGSKNS`, `NS_GET_ID`, `NS_GET_USERNS`, or `open_by_handle_at` paths skip. Some tests intentionally close namespace FDs to prove socket-only state is insufficient until `SIOCGSKNS` reacquires refs. Passing signals socket-owned network namespaces can be located, made visible, reopened, released, and resurrected with correct owner propagation.

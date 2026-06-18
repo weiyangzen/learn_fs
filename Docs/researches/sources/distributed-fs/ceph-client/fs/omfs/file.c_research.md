@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/omfs/file.c
+
+Purpose: implements OMFS regular-file extent tables, block mapping, read/write address-space operations, truncate behavior, and file inode operations.
+
+Important APIs and functions: exports `omfs_file_operations`, `omfs_file_inops`, `omfs_aops`, `omfs_make_empty_table`, and `omfs_shrink_inode`. Internal mapping helpers include `omfs_max_extents`, `omfs_grow_extent`, `find_block`, `omfs_get_block`, `omfs_read_folio`, `omfs_readahead`, `omfs_writepages`, `omfs_write_begin`, `omfs_write_failed`, `omfs_bmap`, `omfs_truncate`, and `omfs_setattr`.
+
+Control flow: reads and writes call `omfs_get_block`, which reads the inode's inline extent table at `OMFS_EXTENT_START`, validates the table owner, scans extents for the logical block, follows continuation tables if present, and maps the corresponding physical block. If create is requested and no mapping exists, `omfs_grow_extent` first tries to extend the previous extent by allocating the immediate next block; otherwise it allocates a new contiguous range and inserts a new extent before the terminator. Truncate currently only supports freeing data when the resulting inode size is zero; it walks extent tables, clears allocated ranges, resets tables to an empty terminator, and frees continuation blocks.
+
+State and persistence behavior: file layout is persisted in `struct omfs_extent` records embedded in the inode block and optional continuation blocks. Extent tables use a terminator entry whose fields are all ones, with `e_blocks` adjusted as new blocks are added. Allocation state is synchronized through the bitmap code. Dirty extent buffers and inode metadata are persisted through buffer and inode writeback; `simple_fsync` handles fsync at the file operations level.
+
+Dependencies and integration points: uses Linux block helpers (`block_read_full_folio`, `block_write_begin`, `mpage_readahead`, `mpage_writepages`, `generic_block_bmap`), OMFS bitmap allocation/free, directory corruption helper `omfs_is_bad`, and inode writeback in `inode.c`. The VFS `setattr` path handles size changes and calls `omfs_truncate`.
+
+Risks: sparse files and nonzero truncation are explicitly not supported; holes return unmapped blocks until writes append at the end, so random writes beyond EOF are risky. Continuation block creation is marked TODO, but traversal supports existing continuations; growing past the inline extent-table capacity returns `-EIO`. `omfs_shrink_inode` clears ranges without propagating `omfs_clear_range` errors. `omfs_grow_extent` mutates the bitmap before the extent table is safely persisted, so writeback failure can leak or orphan blocks.
+
+Test signals: sequential write/read, extent coalescing through exact next-block allocation, allocation of a new extent when contiguity fails, growth to max inline extents, existing continuation-table read/truncate, truncate-to-zero after writes, unsupported truncate-to-nonzero, write failure rollback via `omfs_write_failed`, bmap output, mmap read/write, and ENOSPC behavior.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/cli/autoconf/expand_comprehensive_test.go
+
+Purpose: comprehensive `--expand-auto` validation across all AutoConf-supported fields with a daemon-populated cache. It documents the intended split: daemon startup/background tasks perform network fetches, while CLI expansion reads cached AutoConf data.
+
+Important functions: `TestExpandAutoComprehensive`, `testAllAutoConfFieldsResolve`, `testBootstrapCommandConsistency`, `testWriteOperationsFailWithExpandAuto`, `testConfigShowExpandAutoComplete`, `testMultipleExpandAutoUsesCache`, `testCLIUsesCacheOnlyDaemonUpdatesBackground`, `loadTestDataComprehensive`, and `startDaemonAndWaitForAutoConf`. The helper starts a daemon and polls an atomic request counter instead of sleeping blindly.
+
+Control flow creates mock AutoConf data with `SystemRegistry`, `DNSResolvers`, and `DelegatedEndpoints`, starts a daemon, then runs `ipfs config FIELD --expand-auto`, `ipfs bootstrap list --expand-auto`, and `ipfs config show --expand-auto`. It parses JSON outputs and requires exact mock URLs for delegated routers and IPNS publishers. Write operations with `--expand-auto` must fail because expansion is read-only. State is cache content, request counters, and CLI JSON output. Dependencies include `httptest`, `atomic.Int32`, Kubo harness, and fixture JSON. Risks include strict request-count assumptions if background refresh timing changes and hard-coded fallback/mock endpoint expectations. Test signal is high-value for cache-only CLI behavior and field consistency.

@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/syzkaller/pkg/report/testdata/linux/report/130 -->
+# sources/test-tools/syzkaller/pkg/report/testdata/linux/report/130
+
+Purpose: This fixture drives `TestParse` for a KASAN memory-safety report and locks in the normalized title `KASAN: use-after-free Read in aead_recvmsg` plus type `KASAN-USE-AFTER-FREE-READ`. It is a parser-regression input, not executable kernel code. The source is `7513` bytes across `126` lines, with content hash prefix `13975c13cc48` used here only as a read-verification signal.
+
+Important APIs/types/functions: The consuming code is syzkaller `pkg/report` test infrastructure: `parseReport`, `parseHeaderLine`, `TestParse`, `TestGuiltyFile`, `TestRawGuiltyFile`, `Reporter.Parse`, `Reporter.Symbolize`, `ReportToGuiltyFile`, and Linux reporter logic in `extractGuiltyFileRaw`/`extractGuiltyFileImpl`. This fixture's visible stack/source cues include `aead_recvmsg`, `dump_stack`, `arch_local_irq_restore`, `show_regs_print_info`, `af_alg_make_sg`, `print_address_description`; source-path cues include no kernel source paths were intentionally exposed in the body.
+
+Control flow: The harness reads metadata lines until the first blank line, then treats the rest as the kernel log/report body. For this `parse fixture`, the key body signal begins with: `2017/11/27 07:13:57 executing program 2:`. The expected parsed crash metadata is derived from header/body matching rather than from any runtime state in the fixture itself.
+
+State and persistence behavior: The file persists expected parser state as headers: `TITLE: KASAN: use-after-free Read in aead_recvmsg; ALT: bad-access in aead_recvmsg; TYPE: KASAN-USE-AFTER-FREE-READ; START: [   53.730124] BUG: KASAN: use-after-free in aead_recvmsg+0x1758/0x1bc0`. If a `REPORT:` block is present, `ParseTest.Report` must match the extracted report bytes; otherwise the log body itself is the regression oracle. Flags are `START=[   53.730124] BUG: KASAN: use-after-free in aead_recvmsg+0x1758/0x1bc0`, `ALT=bad-access in aead_recvmsg`, and these control whether the result is considered corrupted, panicked, suppressed, or tied to an executor.
+
+Dependencies and integration points: The fixture depends on syzkaller's Linux oops pattern tables, console-prefix stripping, optional symbolization, guilty-file ignore rules for generic kernel helper paths, and crash type normalization in `pkg/report/crash`. Kernel paths/functions in the body integrate it with Linux subsystem-specific parsing without requiring a checked-out kernel tree.
+
+Risks and test signals: an intentionally empty guilty file must remain empty rather than falling back to a misleading helper path, alternate-title generation must remain stable. A passing test means the parsed title/type/frame/corruption fields or guilty-file value still matches this fixture exactly; failures usually indicate a Linux report-regex, stack-frame ranking, console-prefix, or generic-helper ignore-list regression.
+<!-- END_FILE_RESEARCH: sources/test-tools/syzkaller/pkg/report/testdata/linux/report/130 -->

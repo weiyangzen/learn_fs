@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/hdds/upgrade/TestScmDataDistributionFinalization.java
+
+Purpose: integration coverage for SCM-side `STORAGE_SPACE_DISTRIBUTION` finalization and deleted-block summary accounting in SCM HA. It verifies empty and non-empty clusters, old-format vs new-format deletion transactions, leader transfer, transaction removal, and block deletion service confirmation.
+
+Important APIs/types/functions: `init`, `testFinalizationEmptyClusterDataDistribution`, `testFinalizationNonEmptyClusterDataDistribution`, `generateDeletedBlocks`, `findLastTx`, `waitForScmsToFinalize`, `waitForScmToFinalize`, `flushDBTransactionBuffer`, `getRowsInTable`. It uses `MiniOzoneHAClusterImpl`, `StorageContainerManager`, `DeletedBlockLogImpl`, `SCMDeletedBlockTransactionStatusManager`, `SCMHADBTransactionBuffer`, `DeletedBlocksTransaction`, `DeletedBlock`, `Table`, and `TestDataUtil`.
+
+Control flow: `init` builds a 3-SCM/3-DN HA cluster at `HBASE_SUPPORT`, shortens heartbeats, command/container/pipeline reports and deletion intervals, creates a bucket, and optionally launches finalization asynchronously. The empty-cluster test finalizes, waits for all SCM checkpoints, asserts empty summaries, injects old-format transactions without size data, removes them, injects new-format transactions with size data, checks aggregate transaction/block/byte/replicated-byte counts, waits for deletion service cleanup, and exercises summary behavior when old and already-removed transactions are removed. The non-empty test stops SCM block deletion services, injects old-format txs before finalization, finalizes, writes/deletes an actual RATIS key, waits for non-empty summary, transfers leadership to verify summary replication, restarts deletion services, closes the container to allow deletion, waits summary count to zero, then transfers leadership back and confirms empty summary.
+
+State and persistence: real SCM metadata DB deleted block TX table, HA transaction buffer flushes, deleted-block status manager summaries, SCM finalization checkpoint, SCM leadership, container state, and block deletion service state. The helper directly iterates RocksDB-backed tables and flushes HA buffers.
+
+Dependencies and integration points: SCM HA/Ratis, Ozone client key deletion, block manager/deleted block log, protobuf summary objects, `TestHddsUpgradeUtils`, `GenericTestUtils.waitFor`, and `TestDataUtil`.
+
+Risks: annotated flaky for empty-cluster path. Uses randomized block IDs and direct DB-table inspection. Exact accounting differs for old-format entries with `SIZE_NOT_AVAILABLE`, so future schema changes need careful updates. Repeated `setTimeDuration` for block deletion interval is redundant but harmless.
+
+Test signals: verifies empty/non-empty summary equality, exact total transaction count, block count, logical size, replicated size, last tx presence, leader-transfer consistency, deletion-service clearing, and post-upgrade SCM/DN conditions.

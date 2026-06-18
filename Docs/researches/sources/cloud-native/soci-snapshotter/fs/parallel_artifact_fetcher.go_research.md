@@ -1,0 +1,11 @@
+# sources/cloud-native/soci-snapshotter/fs/parallel_artifact_fetcher.go
+
+Purpose: implements the layer artifact fetcher used by parallel pull/unpack mode, fetching missing compressed layer blobs into a temporary ingest file with optional ranged concurrent requests and asynchronous digest verification.
+
+Important APIs and flow: `newParallelArtifactFetcher` wraps the base artifact fetcher with a layer unpack job, chunk size, and compressed verifier. `Fetch` first tries the local content store and returns `(rc, true, nil)` on hit. On miss it resolves zero-size descriptors when needed, downloads to the job ingest path, starts async digest verification, and returns `(rc, false, nil)`. `fetchFromRemoteAndWriteToTempDir` refuses pre-existing ingest files, creates/truncates the file to descriptor size, decides whether multiple fetches are useful by checking ORAS blob range support, dispatches one full request or multiple range requests, rewinds the file, and starts verification. `multiRequestFetchWrite` uses an errgroup, per-range download semaphore acquisition, `FetchRange`, and `io.NewOffsetWriter`. `writeToFileRange` uses `io.CopyN` for exact range length and drains remaining response data.
+
+State and persistence: writes a temporary ingest file under the layer unpack job, preallocates it with `Truncate`, and hands the same file back as the read source. It uses unpack-job download semaphores and optional verifier state. It does not commit to content store directly; the parallel unpacker can store from the ingest reader.
+
+Dependencies and integration: depends on content store `store.BasicStore`, remote resolver storage/ORAS blob store, layer unpack job resource controller, errgroup, descriptor metadata, and async verifier. It is created by `filesystem.premount`.
+
+Risks and test signals: concurrent writes to one `os.File` through offset writers rely on independent offsets and exact range boundaries. `multiRequestFetchWrite` acquires semaphores before goroutine launch; if a later acquire fails, already-started goroutines still run. `asyncVerifyBlobDigest` opens a file and passes it to the verifier; lifecycle depends on verifier closing/consuming it. No direct tests are listed for this file in the subset.

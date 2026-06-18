@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/input/mouse/sentelic.c
+
+`sentelic.c` implements the Sentelic Finger Sensing Pad PS/2 protocol. It detects FSP hardware, reads/writes proprietary registers, configures relative or absolute/semi-MT reporting by hardware revision, decodes 4-byte packets, and exposes sysfs controls for registers, page selection, scroll zones, on-pad click flags, and version.
+
+Important functions include `fsp_reg_read()`, `fsp_reg_write()`, page helpers, command sanitizers, version/revision/serial queries, `fsp_activate_protocol()`, `fsp_process_byte()`, `fsp_detect()`, and `fsp_init()`. Initialization reads hardware IDs, allocates `struct fsp_data`, installs psmouse callbacks, enters IntelliMouse 4-byte mode, configures older hardware for relative/scroll/OPC behavior or newer hardware for absolute continuous packets, sets input capabilities, and creates sysfs files.
+
+State tracks version, revision, buttons, flags, scroll booleans, last register read, and last multitouch finger. Dependencies are psmouse activation/deactivation, libps2 byte commands, input/input-mt, and constants from `sentelic.h`. Risks include fragile command sequences, register values colliding with PS/2 commands/rates, sysfs writes mutating hardware, version-mode mismatch, and firmware workarounds for stuck finger bits/noisy finger-up packets. Test signals include ID/version logs, sysfs lifecycle and register ops, scroll/OPC toggles, 4-byte packet mode, older relative events, newer semi-MT events, reconnect, and cleanup disabling features.

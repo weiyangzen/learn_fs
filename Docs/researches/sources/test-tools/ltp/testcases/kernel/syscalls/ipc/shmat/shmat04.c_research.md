@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmat/shmat04.c
+
+Purpose: regression test for a SysV shared-memory attach-count leak caused by VMA merge/removal paths after `mprotect()`. The test creates a three-page segment, attaches it, records `shm_nattch`, applies `mprotect(PROT_NONE)` to the middle page, then restores write permission over two pages to trigger merge behavior. After `shmdt`, it checks `shm_nattch` is zero and removes the segment. Important APIs are `SAFE_SHMGET`, `SAFE_SHMAT`, `SAFE_MPROTECT`, `SAFE_SHMCTL(IPC_STAT/IPC_RMID)`, and `TST_EXP_EQ_LU`. State is one segment and mutable VMAs. Dependencies include page size and SysV IPC. Risk is kernel-version-specific VMA behavior; test signal is final `shm_nattch == 0`.

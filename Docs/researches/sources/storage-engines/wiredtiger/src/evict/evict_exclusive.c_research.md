@@ -1,0 +1,13 @@
+# sources/storage-engines/wiredtiger/src/evict/evict_exclusive.c
+
+Purpose: controls exclusive eviction access for a single btree/file. It prevents the normal eviction server and urgent-queue paths from walking or queuing pages in a tree while schema, close, verify, or whole-file eviction operations need stable ownership.
+
+Important APIs and functions: `__wti_evict_lock_handle_list` acquires the connection dhandle read lock using a custom yield/sleep loop that aborts quickly when `evict->pass_intr` is set. `__wti_evict_set_saved_walk_tree` maintains the eviction server's saved walk dhandle and adjusts `session_inuse` counts so the handle cannot disappear while saved. `__wt_evict_file_exclusive_on` increments `S2BT(session)->evict_disabled`, interrupts an active eviction pass, clears saved walks for the current tree, removes all queued entries for the btree from ordinary and urgent queues, and waits for `btree->evict_busy` to drain. `__wt_evict_file_exclusive_off` atomically decrements `evict_disabled` without taking the walk lock to avoid a documented lock-order deadlock.
+
+Control flow: callers acquire exclusive mode before whole-file eviction or sensitive tree operations. The first entrant takes `evict_walk_lock`; nested entrants just increment `evict_disabled` and return. Exclusive-on clears prefetch references, increments `pass_intr`, runs the saved-walk clear under the pass lock, scans all queue arrays under queue locks, then waits until in-flight dispatch operations release the btree. Exclusive-off releases the counter and logs.
+
+State and persistence behavior: all direct state is in-memory synchronization state: `evict_disabled`, `pass_intr`, `walk_tree`, dhandle `session_inuse`, queue entries, page LRU flags, and btree `evict_busy`. It protects persistence-sensitive operations by ensuring normal eviction cannot reconcile or discard pages from the tree concurrently.
+
+Dependencies and integration points: integrates with the connection dhandle lock, eviction pass lock, queue helpers, prefetch clearing, verbose logging, schema/open/close paths, and `__wt_evict_file`. It is tightly coupled to `evict_queue.c` queue clearing and to the eviction server's saved-walk behavior in `evict_thread.c`.
+
+Risks and test signals: this file is lock-order sensitive. Tests should stress concurrent open/close/schema operations with active eviction, nested exclusive acquisition, urgent queue entries for the same tree, prefetch references, interrupted eviction walks, and diagnostic assertions on `evict_ref`. Deadlock tests should specifically cover the pass-lock versus walk-lock ordering described in `__wt_evict_file_exclusive_off`.

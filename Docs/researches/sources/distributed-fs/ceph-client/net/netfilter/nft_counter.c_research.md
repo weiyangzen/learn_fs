@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_counter.c
+
+Purpose: provides nftables packet/byte counters as both stateful expressions and named objects. The counter observes each packet and accumulates `skb->len` and packet count with per-CPU storage.
+
+Important APIs/types/functions: `struct nft_counter` holds per-CPU `u64_stats_t` counters; `struct nft_counter_percpu_priv` points to the percpu allocation. `nft_counter_do_eval()` updates counters under `local_bh_disable()` and per-CPU `u64_stats_sync`. `nft_counter_fetch()`, `nft_counter_reset()`, and `nft_counter_fetch_and_reset()` aggregate and optionally reset for dump. Offload support is represented by `nft_counter_offload()` and `nft_counter_offload_stats()`.
+
+Control flow: init allocates per-CPU counters and seeds the current CPU from optional netlink packet/byte values. Eval increments local CPU fields. Dump aggregates all possible CPUs using seqcount retry; reset uses `nft_counter_lock` to serialize fetch and subtract. Clone snapshots aggregate totals into a new percpu counter. Hardware offload stats are folded into the local CPU counter.
+
+State/persistence: counters are runtime state with optional initial values and reset-on-dump behavior. No module init function appears here; exported `nft_counter_type`, `nft_counter_obj_type`, and `nft_counter_init_seqcount()` are integrated by core nf_tables code. Risks include 32-bit torn reads if seqcounts are wrong, reset races, negative totals due to signed accumulator type, and offload stats double-accounting if drivers report deltas incorrectly. Test signals include concurrent traffic on multiple CPUs, dump/reset semantics, initial value load, clone preserving totals, object and expression parity, offload stats injection, and KCSAN-style checks around `u64_stats_sync`.

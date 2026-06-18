@@ -1,0 +1,11 @@
+# sources/cloud-native/soci-snapshotter/fs/remote/resolver.go
+
+Purpose: resolves OCI layer descriptors into remote blob fetchers and implements HTTP range fetching, redirect handling, size discovery, retry/auth client adaptation, multipart parsing, and custom remote handlers.
+
+Important APIs and flow: `Resolver.Resolve` converts blob config into durations/retry counts, calls `resolveFetcher`, and wraps the fetcher in a `blob`. `resolveFetcher` first tries configured handlers that return a custom `Fetcher`; otherwise it creates an HTTP fetcher. `newHTTPFetcher` validates digest/hosts, derives Docker pull scope, adapts `socihttp.AuthClient` retry/timeout settings while reusing global transports, constructs distribution blob URLs, follows redirect/range probe, and returns the first usable host/mirror. `httpFetcher.fetch` sends GET Range requests, squashes regions, optionally enters single-range mode, handles 200 full-body, 206 single or multipart, retries URL refresh on 401/403, and falls back to single-range on 400 multi-range rejection. `check` probes `bytes=0-1` and refreshes URL on 403. `GetHeader` tries HEAD, ranged GET, and full GET to discover size; `ParseSize` reads `Content-Length` or `Content-Range`; `remoteFetcher` adapts custom handlers to the internal multipart interface.
+
+State and persistence: HTTP fetcher state includes round tripper, auth scope, registry URL, mutable real redirected URL, digest, and single-range flag protected by mutexes. No local persistence; network requests may update auth/redirect caches in the transport.
+
+Dependencies and integration: used by `layer.Resolver.resolveBlob` and `blob.Refresh`. Integrates containerd Docker host/reference handling, SOCI auth/retry HTTP client, retryablehttp, common metrics for registry GET latency, ORAS registry references, and custom handler plugins.
+
+Risks and test signals: correctness depends on registry-specific Range and redirect behavior. The fallback full GET in `GetHeader` can fetch an entire blob just to learn size. URL refresh on 403 assumes refreshed redirects can repair authorization/storage URLs. Tests cover mirror selection, check success/failure, retryable transport behavior, user-agent preservation, size parsing, and HEAD-to-GET fallback, but not every status path or auth-client clone branch.

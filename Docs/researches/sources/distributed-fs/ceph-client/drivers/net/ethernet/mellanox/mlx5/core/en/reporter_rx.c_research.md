@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx5/core/en/reporter_rx.c
+
+Purpose: Implements the mlx5e devlink health reporter for RX-side failures. It reports and recovers RQ CQE errors, ICOSQ CQE errors, RX timeouts, and exposes diagnose/dump data for RQs, ICOSQs, RX resources, RSS TIR/RQT numbers, and optional PTP RX queues.
+
+Important APIs and functions: `mlx5e_reporter_rx_create()` and `mlx5e_reporter_rx_destroy()` register the `"rx"` `devlink_health_reporter_ops`. `mlx5e_reporter_rx_timeout()`, `mlx5e_reporter_rq_cqe_err()`, and `mlx5e_reporter_icosq_cqe_err()` build `mlx5e_err_ctx` records and call `mlx5e_health_report()`. Recovery is split across `mlx5e_rx_reporter_err_rq_cqe_recover()`, `mlx5e_rx_reporter_err_icosq_cqe_recover()`, `mlx5e_rx_reporter_timeout_recover()`, and the generic `mlx5e_rx_reporter_recover()`.
+
+Control flow: Error entry points attach a context-specific recover function and dump function. RQ CQE recovery deactivates the RQ, flushes it from ERR state, clears `MLX5E_RQ_STATE_RECOVERING`, reactivates, increments recovery stats, and schedules NAPI. ICOSQ recovery takes `icosq_recovery_lock`, validates the hardware SQ state is ERR, deactivates regular and XSK RQs, waits for ICOSQ flush, transitions the SQ to ready, resets producer/consumer counters, frees missing RX descriptors, and reactivates queues. Timeout recovery loops on `netdev_trylock()` until channels close or lock acquisition succeeds, then calls EQ/channel recovery under `priv->state_lock`.
+
+State and persistence: The reporter stores only `priv->rx_reporter`; queue state lives in RQ/ICOSQ bitfields, counters, CQ/EQ objects, and hardware RQ/SQ state. The string table must remain aligned with `MLX5E_RQ_STATE_*`. Recoveries mutate queue enabled/recovering bits and stats but do not persist outside live kernel/hardware state.
+
+Dependencies and integration: Uses devlink health, mlx5 core RQ/SQ query and state transition helpers, `health.h` fmsg/dump helpers, `rx_res`/RSS getters, PTP channel state, NAPI triggers, and `netdev_lock`. It is called from RX datapath/CQE timeout paths and is consumed by devlink userspace health tooling.
+
+Risks: Deadlock avoidance depends on try-lock loops and channel-active checks. ICOSQ recovery assumes CQ draining reaches `cc == pc`; timeout leaves the reporter unable to reset counters. XSK and PTP queues add branch coverage. Diagnose helpers mostly ignore nested helper return values, so malformed devlink output is possible if lower helpers fail. Tests should exercise RQ CQE, ICOSQ CQE, timeout, XSK-enabled channels, PTP RX, closed netdev, and devlink diagnose/dump paths.

@@ -1,0 +1,121 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/dev-support/jdiff/hadoop_0.19.1.xml lines 6140-12392
+
+## Scope
+
+This chunk is a generated JDiff public API snapshot for Hadoop 0.19.1, not executable Java implementation code. It starts in the tail of `org.apache.hadoop.fs.RawLocalFileSystem`, then covers public API metadata for filesystem stream contracts, trash handling, FTP/Kosmos/S3 filesystem adapters, permissions, shell commands, the embedded HTTP server, and a large portion of the core `org.apache.hadoop.io` serialization/file-format package. It ends after `org.apache.hadoop.io.SequenceFile.Sorter.RawKeyValueIterator`, so later `org.apache.hadoop.io` APIs are outside this chunk.
+
+The XML records compatibility data: package, class/interface names, inheritance, implemented interfaces, constructors, methods, parameters, return types, declared exceptions, fields, visibility, abstract/static/final/synchronized/native flags, deprecation text, and embedded Javadoc contracts. Because this range begins inside `RawLocalFileSystem`, the opening class metadata for that type is in an earlier chunk.
+
+## Purpose and Major API Surface
+
+The visible `RawLocalFileSystem` tail exposes local-output completion, close/string/status operations, and Unix-style `setOwner`/`setPermission` behavior that delegates to `chown` and `chmod`. `Seekable` defines positional input streams through `seek(long)`, `getPos()`, and `seekToNewSource(long)`. `Syncable` defines `sync()` for flushing buffered stream state to underlying devices. `Trash` provides user trash management under `.Trash/current`, checkpointing, expunging old checkpoints, and a superuser emptier runnable.
+
+`org.apache.hadoop.fs.ftp` contains `FTPException`, `FTPFileSystem`, and `FTPInputStream`. `FTPFileSystem` is a `FileSystem` backed by Apache Commons Net `FTPClient`, with initialize/open/create/delete/list/status/mkdir/rename/working-directory APIs and public constants for logging, buffer size, and block size. Its create contract warns that the returned stream must be closed before using other APIs on the filesystem or later invocations can block. `append` is explicitly unsupported, and the one-argument `delete(Path)` is deprecated in favor of `delete(Path, boolean)`. `FTPInputStream` adapts an FTP input stream to `FSInputStream`, tracking position, synchronized reads, close, and unsupported mark/reset style behavior.
+
+`org.apache.hadoop.fs.kfs.KosmosFileSystem` is a `FileSystem` backed by KFS. It exposes URI/name/working-directory methods, directory and file probes, list/status, create/open/rename/delete, replication and block-size accessors, file locking, block-location lookup, and local-copy/local-output hooks. As with FTP and S3, append is documented as unsupported.
+
+`org.apache.hadoop.fs.permission` defines the filesystem permission model. `AccessControlException` is the checked permission failure type. `FsAction` is an enum-like permission action with implication and boolean operations (`and`, `or`, `not`) plus octal and symbolic fields. `FsPermission` is a `Writable` for user/group/other action triples, short-mode encoding, immutable creation, umask application, configuration-backed umask getters/setters, default permissions, and symbolic string parsing. `PermissionStatus` combines user, group, and `FsPermission`, supports immutable construction, umask application, binary read/write, static component serialization, and string formatting.
+
+The `org.apache.hadoop.fs.s3` package documents the legacy block-based S3 filesystem. `Block` is block metadata. `FileSystemStore` is the storage backend contract for versioning, INode and block storage/retrieval/deletion, shallow/deep subpath listing, test purge, and diagnostic dump. `INode` stores file type and block pointers and can serialize/deserialize itself; it exposes `FILE_TYPES` and a reusable `DIRECTORY_INODE`. `MigrationTool` is a `Tool` that rewrites block metadata when migrating old S3 filesystem versions without touching data files. `S3Credentials` extracts AWS credentials from URI or `Configuration`. `S3Exception`, `S3FileSystemException`, and `VersionMismatchException` represent S3 communication, fatal filesystem, and on-disk version compatibility failures. `S3FileSystem` is the block-based `FileSystem`, with permission arguments documented as ignored and append unsupported.
+
+`org.apache.hadoop.fs.s3native.NativeS3FileSystem` is the native-object S3 filesystem. Unlike the block-based S3 adapter, its documentation states that it stores files in native S3 form readable by other S3 tools. It exposes initialize, create/open/delete/list/mkdir/rename/status, working-directory, URI, and logging APIs. Its `listStatus` Javadoc is operationally important: listing a file makes one S3 call, while listing a directory makes up to `(n / 1000) + 2` S3 calls for `n` direct children. Append is unsupported.
+
+`org.apache.hadoop.fs.shell` contributes shell command plumbing. `Command` is an abstract `Configured` base with protected `args`, abstract `getCommandName()` and path-level `run(Path)`, and public `runAll()` to execute over every source path. `CommandFormat` parses command options and enforces argument format. `Count` implements the count command, with command matching, name, path execution, and public `NAME`, `USAGE`, and `DESCRIPTION` constants for counting directories, files, bytes, quota, and remaining quota.
+
+`org.apache.hadoop.http` covers servlet/filter integration and the embedded status web server. `FilterContainer` adds named filters with class names and init parameters. `FilterInitializer` is the extension point for initializing filters. `HttpServer` wraps Jetty (`org.mortbay.jetty.Server`, `SocketListener`, `WebApplicationContext`) and exposes default webapps/servlets, context addition, attributes, public/internal servlet registration, filter definition/path mapping, webapp path lookup, port/thread control, SSL listener configuration, start/stop, and mutable server/filter/context fields. `addInternalServlet` is marked deprecated as a temporary method. `HttpServer.StackServlet` is an `HttpServlet` with `doGet` for stack dumps.
+
+The `org.apache.hadoop.io` section begins with serialization class registries and array helpers. `AbstractMapWritable` tracks byte-to-class and class-to-byte mappings, is `Configurable`, and serializes those mappings for map-like Writables. `ArrayFile` extends `MapFile`; its `Reader` provides index-based seek, next, key, and get operations, while its `Writer` has constructors for writable element classes and optional compression/progress. `ArrayWritable` wraps arrays of a fixed Writable value class and supports read/write, get/set, and Java array conversion.
+
+Primitive and binary writable types include `BinaryComparable`, `BooleanWritable`, `BytesWritable`, `ByteWritable`, `DoubleWritable`, `FloatWritable`, `IntWritable`, `LongWritable`, and nested raw comparators. These classes provide mutable set/get methods, `Writable` read/write, equality/hash/compare/string behavior, and optimized `WritableComparator` subclasses over serialized bytes. `BytesWritable` distinguishes logical length from backing capacity, has deprecated `get()` and `getSize()` in favor of `getBytes()` and `getLength()`, preserves data during resizing, and sorts like `memcmp`.
+
+Buffering and stream utilities include deprecated `org.apache.hadoop.io.Closeable` as an alias for `java.io.Closeable`, `CompressedWritable` for lazily inflated compressed Writable payloads, `DataInputBuffer` and `DataOutputBuffer` reusable in-memory `DataInput`/`DataOutput` implementations, `InputBuffer` and `OutputBuffer` reusable stream buffers, and `IOUtils` helpers for byte copying, exact reads/skips, cleanup, and close of streams/sockets. `IOUtils.NullOutputStream` discards written bytes.
+
+Dynamic serialization helpers include `DefaultStringifier`, `GenericWritable`, `ObjectWritable`, `RawComparator`, `MapWritable`, and `MultipleIOException`. `DefaultStringifier` converts objects to/from Base64 encoded serialized strings using `SerializationFactory` and can store/load single objects or arrays in `Configuration`. `GenericWritable` wraps one of a fixed subclass-provided type set, trading flexibility for smaller per-record type encoding than `ObjectWritable`. `ObjectWritable` serializes Writables, strings, primitive types, and arrays with declared-class metadata and is `Configurable`. `RawComparator<T>` extends `Comparator<T>` with byte-range comparison. `MapWritable` implements `Map<Writable, Writable>` with serialized class mapping support. `MultipleIOException` wraps a list of `IOException`s or returns a convenient single `IOException`.
+
+`MapFile` and its nested reader/writer define an indexed, sorted file-based map. A map directory contains `data` and `index` sequence files; the index is loaded into memory, so key size matters. Static helpers rename/delete map directories, rebuild corrupt indexes with `fix`, and expose `INDEX_FILE_NAME` and `DATA_FILE_NAME`. `MapFile.Reader` opens data/index readers, supports reset, approximate middle key, final key, seek, next, get, closest-key lookup including a `before` option, and close. `MapFile.Writer` creates sorted maps over key classes or comparators, configures index interval globally or per writer, closes, and appends only keys greater than or equal to the previous key.
+
+Hash/null wrappers include `MD5Hash`, `MD5Hash.Comparator`, `NullWritable`, and `NullWritable.Comparator`. `MD5Hash` is a fixed-length `WritableComparable` with constructors from bytes or hex, static digest helpers for byte arrays, ranges, strings, UTF8, and streams, half/quarter digest projections, hex parsing, and raw comparison. `NullWritable` is a singleton zero-state `WritableComparable`, useful where a key or value position carries no payload.
+
+`SequenceFile` is the central flat binary key/value file format. Its static API gets/sets configured compression type and creates writers through many overloads spanning default filesystem lookup, explicit `FileSystem`, path, key/value classes, buffer size, replication, block size, compression type, codec, metadata, progress callback, and raw key/value writer construction. `SYNC_INTERVAL` defines sync-point spacing. `SequenceFile.CompressionType` enumerates compression modes. `SequenceFile.Metadata` is a `Writable` map of `Text` keys/values with get/set, serialization, equality, hash, and string behavior. `SequenceFile.Reader` opens files, exposes key/value class names and classes, compression flags, codec, metadata, current-value retrieval, object and Writable iteration, raw record/key/value reads, seek, sync, syncSeen, position, and close. `SequenceFile.Sorter` sorts and merges SequenceFiles using WritableComparable keys or a `RawComparator`, configurable merge factor, memory budget, progress reporting, sort-to-file, sort-and-iterate, merge overloads, attribute cloning, and writing records from raw iterators. `SequenceFile.Sorter.RawKeyValueIterator` exposes current raw key/value, `next()`, `close()`, and progress.
+
+## Control Flow and Behavioral Contracts
+
+The XML contains no bodies, but its public contracts imply several flows. Seekable streams are positioned with `seek`, report offsets with `getPos`, and may switch replicas/sources with `seekToNewSource`; callers must not seek past EOF according to the interface documentation. Syncable writers expose an explicit durability/liveness boundary through `sync`.
+
+Trash flow constructs a `Trash` against a `Configuration` or explicit `FileSystem`, moves deleted paths under the user's home `.Trash/current` while preserving original paths, periodically checkpoints `current`, and expunges older checkpoints. The design intentionally avoids full trash enumeration, filesystem date support, and cross-host clock synchronization.
+
+Concrete `FileSystem` adapters follow the Hadoop `FileSystem` lifecycle: initialize with a `URI` and `Configuration`, resolve a working directory, create/open streams, list/status paths, create directories, rename/delete, and return `FileStatus`/`BlockLocation` metadata. Optional append is consistently documented as unsupported for FTP, KFS, S3, and native S3 in this chunk. FTP create has a stricter sequencing contract: close the returned stream before invoking other `FTPFileSystem` APIs.
+
+S3 block filesystem flow splits namespace metadata from data blocks. `S3FileSystem` talks to a `FileSystemStore`; files are represented by `INode` metadata containing `Block` pointers. Migration rewrites block metadata for all files without rewriting data files. Native S3 flow instead uses S3-native objects and has listing costs tied directly to S3 pagination.
+
+Permission flow converts between symbolic actions, short Unix modes, umask-adjusted effective permissions, and binary `Writable` encodings. `PermissionStatus` combines principal names and permissions so filesystem metadata can be serialized as a single unit.
+
+Shell command flow creates a command object with captured arguments, parses options with `CommandFormat`, and dispatches `run(Path)` once per source path through `runAll()`. `Count` plugs into this base to implement the quota/size/count command.
+
+HTTP server flow constructs a Jetty server, adds default apps and servlets, registers contexts/servlets/filters, starts the listener, and later stops it. Attributes are set on the web application context for JSP/servlet access. Filter registration includes both container-level definition and path mapping.
+
+Writable flow is stable binary serialization: mutate object state with setters, write fields to `DataOutput`, reconstruct with `readFields(DataInput)`, and use raw comparators where possible to avoid object allocation in sort-heavy paths. Primitive Writable comparators must preserve the same ordering as object `compareTo`.
+
+MapFile flow writes sorted key/value records into a `data` file and periodic index entries into an `index` file. Readers load the index, seek close to a requested key, then scan data through `SequenceFile.Reader`. The writer enforces nondecreasing key order; callers must sort updates externally, often through `SequenceFile.Sorter`, before appending.
+
+SequenceFile flow writes flat binary records with optional compression and sync markers. Readers can iterate typed objects, skip values, pull raw key/value bytes, seek to known writer positions, or sync forward from arbitrary positions to a sync marker. Sorter flow spills sorted runs, merges with configurable fan-in and memory, optionally deletes inputs, and returns raw iterators or writes final files.
+
+## State, Persistence, and Side Effects
+
+The XML file itself is persistent API compatibility metadata. The documented runtime APIs persist filesystem metadata, permissions, Writable objects, MapFiles, SequenceFiles, S3 inode/block records, and configuration-encoded stringified objects.
+
+External side effects are significant. Filesystem implementations touch local files, FTP servers, KFS, and Amazon S3. `RawLocalFileSystem.setOwner` and `setPermission` invoke OS-level ownership/permission commands. Trash moves, checkpoints, and deletes filesystem content. S3 migration rewrites metadata. Native S3 listing can perform many remote calls. HTTP server methods bind sockets, register web applications, publish servlets/filters, and expose stack traces through `StackServlet`. Shell commands iterate over filesystem paths and can print or report failures.
+
+Mutable in-memory state includes working directories, filesystem URIs, FTP client/input-stream position, KFS locks, permission objects, class-ID maps inside `AbstractMapWritable`, backing arrays and capacities in bytes/buffers, wrapped objects in `GenericWritable`/`ObjectWritable`, map entries in `MapWritable`, digest bytes in `MD5Hash`, sequence file reader positions and sync-state, sorter memory/factor/progress settings, MapFile index contents, and Jetty server/context/filter lists.
+
+Threading contracts are selective. Some stream and reader APIs are marked synchronized (`FTPInputStream.read/close`, many `MapFile.Reader` methods, `MapFile.Writer.close/append`, and multiple `SequenceFile.Reader` methods), but most containers and filesystem wrappers are not documented as globally thread-safe. Reusing mutable Writables across reads is expected by Hadoop APIs but requires caller discipline.
+
+## Dependencies and Integration Points
+
+The filesystem APIs integrate with `org.apache.hadoop.fs.FileSystem`, `Path`, `FileStatus`, `BlockLocation`, `FSDataInputStream`, `FSDataOutputStream`, `FSInputStream`, `FileSystem.Statistics`, `Configuration`, `Configured`, `Progressable`, and `FsPermission`. FTP depends on Apache Commons Net `FTPClient` and Commons Logging. KFS depends on the Kosmos filesystem backend. S3 APIs depend on Amazon S3 semantics, URI/configuration credential lookup, Java `File` temp block transfers, and Hadoop `Tool` for migration.
+
+Permissions depend on Hadoop `Writable`, Java `DataInput`/`DataOutput`, Unix mode conventions, and `Configuration` for umask persistence. Shell commands integrate with Hadoop CLI dispatch, `Configuration`, and filesystem path operations.
+
+The HTTP layer integrates with servlet APIs (`javax.servlet`, `javax.servlet.http.HttpServlet`) and Jetty 6-era Mortbay classes (`Server`, `SocketListener`, `WebApplicationContext`). It also uses Commons Logging and map/list collections for filter and context state.
+
+The `org.apache.hadoop.io` APIs are foundational dependencies for MapReduce, SequenceFile/MapFile storage, RPC payloads, sorting, and configuration persistence. They integrate with Java streams, byte arrays, `DataInput`/`DataOutput`, `InputStream`/`OutputStream`, `Closeable`, `Comparator`, `Map`, `TreeMap`, `MessageDigest`/MD5, Hadoop `Configuration`, `Configurable`, `ReflectionUtils`-style instantiation through class metadata, compression codecs, and `SerializationFactory`.
+
+Compatibility tooling depends on the exact JDiff XML attributes. Public signature changes, removed overloads, altered generic type strings, changed synchronization/deprecation flags, or changed documented contracts in these APIs would alter the Hadoop 0.19.1 API surface.
+
+## Risks and Compatibility Notes
+
+This chunk is partial at the start. It should not be used alone to summarize all of `RawLocalFileSystem`; only its visible tail is covered here. The `org.apache.hadoop.io` package also continues beyond this chunk in later lines.
+
+Filesystem adapter behavior is backend-sensitive. FTP stream sequencing can deadlock/block if callers ignore the close-before-next-API rule. S3 and native S3 have different persistence formats, so migration and interoperability assumptions must not be mixed. Native S3 directory listing can cause large remote-call counts. Permission parameters are documented as ignored by the block-based S3 filesystem in this snapshot.
+
+Append is a compatibility trap: several filesystems expose the method because of the `FileSystem` contract, but explicitly document it as unsupported. Callers must handle `IOException`/unsupported behavior rather than assuming append works everywhere.
+
+Permission serialization and umask behavior are compatibility-sensitive. Changes to octal encoding, symbolic parsing, `FsAction` implication logic, static umask configuration keys, or `PermissionStatus` read/write order can break filesystem metadata compatibility.
+
+HTTP server APIs expose mutable Jetty internals and a deprecated temporary internal-servlet method. Changes to context/filter mapping, default app setup, port selection, SSL listener configuration, or stack servlet behavior can break NameNode/DataNode-style web UIs and operational diagnostics.
+
+Writable and comparator compatibility is high risk. Binary read/write order, class-ID mappings, raw comparator byte interpretation, primitive endianness, BytesWritable length/capacity semantics, MD5 hex parsing, and NullWritable singleton behavior are all used by persisted files and sort paths. Raw comparators must match object comparison exactly.
+
+MapFile and SequenceFile are persistent file formats. Changes to `data`/`index` names, index interval behavior, sorted append requirements, sync marker handling, metadata serialization, compression flags/codecs, raw iterator contracts, or seek/sync positioning can break old data and MapReduce shuffle or storage workflows.
+
+Dynamic wrappers (`GenericWritable`, `ObjectWritable`, `DefaultStringifier`, `MapWritable`) depend on class names and configured serialization implementations. Missing classes, class-ID drift, generic raw types, or configuration changes can make persisted values unreadable.
+
+## Test Signals
+
+JDiff validation should confirm this XML chunk remains well-formed across all listed package/class/interface boundaries and preserves signatures, constructors, fields, implemented interfaces, visibility, exceptions, static/final/abstract/synchronized flags, deprecation markers, and Javadoc contracts. Chunk-aware validation should account for the partial `RawLocalFileSystem` start.
+
+Filesystem tests should cover Seekable seek/getPos/source-switch behavior, Syncable sync propagation, Trash move/checkpoint/expunge/emptier behavior, FTP initialize/open/create/close sequencing/list/status/mkdir/rename/delete, unsupported append paths, KFS status/block-location/lock/release/local-copy behavior, S3 block filesystem create/open/list/status/delete/rename/migration/version mismatch, native S3 create/open/list pagination/status/delete/rename, and permission arguments documented as ignored where applicable.
+
+Permission tests should round-trip `FsPermission` and `PermissionStatus` through `DataOutput`/`DataInput`, verify `FsAction` implication/and/or/not, short and symbolic parsing, default permissions, umask get/set/apply behavior, immutable factory behavior, string formatting, and access-control exception wrapping/unwrapping.
+
+Shell and HTTP tests should cover `CommandFormat` option parsing and argument bounds, `Command.runAll()` success/failure aggregation over multiple paths, `Count.matches` and count output behavior, filter initializer/container registration, servlet/context addition, attribute get/set, filter path mapping, default apps/servlets, port selection with `findPort`, thread setting, SSL listener setup, start/stop lifecycle, and `StackServlet.doGet` output.
+
+Writable tests should round-trip primitive Writables, BytesWritable size/capacity mutations, arrays, compressed writables, map writables, generic/object writables, MD5 hashes, NullWritable, and buffer classes. Comparator tests should compare object ordering against raw byte ordering for every optimized comparator in this chunk, including increasing and decreasing long comparators.
+
+IO utility and buffer tests should exercise `copyBytes` overloads, exact `readFully` and `skipFully`, cleanup/close behavior with multiple close failures, null output writes, input/output buffer reset/getPosition/getLength, and direct writes from `DataInput` or `InputStream` into reusable buffers.
+
+DefaultStringifier and dynamic serialization tests should store/load single objects and arrays from `Configuration`, cover empty-array failure, verify configured `SerializationFactory` use, and test missing or incompatible classes in `ObjectWritable`, `GenericWritable`, and `MapWritable`.
+
+MapFile tests should write sorted entries, reject or fail on out-of-order append according to implementation behavior, verify index interval configuration, read `midKey` and `finalKey`, seek exact and nearest keys, use `getClosest` before/after modes, reset readers, rebuild corrupt indexes with `fix` dry-run and write modes, and preserve `data`/`index` filenames.
+
+SequenceFile tests should create writers through representative overloads, cover no compression, record compression, and block compression, verify metadata persistence, sync interval/sync marker behavior, seek to writer positions, sync from arbitrary positions, typed and raw iteration, skip-value reads, current-value retrieval, deprecated raw `next(DataOutputBuffer)` compatibility, sorter memory/factor/progress settings, sort-and-iterate, merge fan-in and input deletion, clone-file-attributes, and raw iterator progress/close behavior.

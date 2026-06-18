@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/fs/xfs/xfs_exchrange.c
+
+## Purpose
+`xfs_exchrange.c` implements XFS range exchange and commit-range ioctls. It validates two regular files, flushes and invalidates the affected pagecache, reserves quota, and swaps the underlying extent mappings through `xfs_exchmaps`, with optional freshness checks for staged commit workflows.
+
+## Important APIs, types, and functions
+Public entry points are `xfs_ioc_exchange_range`, `xfs_ioc_start_commit`, `xfs_ioc_commit_range`, `xfs_exchrange_ilock`, `xfs_exchrange_iunlock`, and `xfs_exchrange_estimate`. `struct xfs_exchrange` carries the two files, offsets, length, public flags, and the sampled file2 identity/ctime/mtime/generation used by `__XFS_EXCHANGE_RANGE_CHECK_FRESH2`. Core helpers include `xfs_exchange_range`, `xfs_exchrange_contents`, `xfs_exchrange_prep`, `xfs_exchange_range_checks`, `xfs_exchrange_check_rtalign`, `xfs_exchrange_mappings`, `xfs_exchrange_reserve_quota`, and `xfs_exchange_range_finish`.
+
+## Control flow
+The ioctl wrappers copy arguments, reject nonzero padding or unsupported flags, resolve `file1_fd`, and call `xfs_exchange_range` with `file2` as the ioctl target. `xfs_exchange_range` rejects cross-mount, non-regular, directory, append-only, and insufficiently opened files; runs `remap_verify_area`; sets private cmtime update flags; wraps the operation in `file_start_write`/`file_end_write`; and sends fsnotify modify events after success. `xfs_exchrange_contents` verifies the filesystem feature and shutdown state, takes IO/MMAP locks on both inodes, prepares both files, exchanges mappings, and removes write-sensitive file privileges. Preparation checks EOF/range/alignment rules, handles realtime allocation-unit divisibility, waits for DIO, writes dirty cache ranges, attaches dquots, flushes/unmaps cached mappings, and cancels speculative CoW ranges. The mapping phase estimates reservation needs, starts a transaction, locks and joins both inodes, verifies forks, reserves quota with one blockgc retry on `EDQUOT`/`ENOSPC`, performs dry-run exit or updates timestamps, calls `xfs_exchange_mappings`, optionally marks the transaction synchronous, commits, and swaps incore sizes for `TO_EOF`.
+
+## State and persistence
+The durable state change is the logged extent-map exchange, inode timestamp updates, optional on-disk size exchange, and quota accounting adjustments. Runtime state includes paired IO/MMAP/ILOCK ordering, transaction reservations, quota retry bookkeeping, and temporary private flag bits. `START_COMMIT` persists nothing; it copies an opaque freshness blob to userspace containing mount fsid, file2 inode/generation, and ctime/mtime. `COMMIT_RANGE` revalidates that blob under metadata locking and fails with `-EBUSY` if file2 changed or the fsid differs.
+
+## Dependencies and integration points
+The file bridges VFS file semantics, XFS inode locking, quota, reflink/CoW cleanup, exchange-map deferred work, realtime allocation geometry, log transactions, pagecache writeback, fsnotify, and ioctl dispatch in `xfs_ioctl.c`. Scrub repair code and `xfs_exchmaps_item.c` reuse the lock and estimate helpers. `xfs_exchrange.h` exposes the ioctl and helper contracts.
+
+## Risks and test signals
+Risks cluster around atomicity and locking: same-file overlap detection, realtime allocation units that are not powers of two, partial EOF-block exchanges, stale freshness blobs, dry-run side effects, quota retry correctness, and incore size swapping after commit. Test signals include exchange within one file, cross-file exchange, `TO_EOF`, `DSYNC`, `DRY_RUN`, immutable/swap/append files, files with CoW fork preallocations, realtime files with unusual extent sizes, quota exhaustion followed by blockgc, concurrent writes between start and commit, crash recovery of the logged exchange, and fsnotify/timestamp behavior.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/access/access03.c
+
+Purpose: verifies `access()` returns `EFAULT` for an invalid pathname address under each access mode and for both root and nobody. The testcase table passes `(void *)-1` with `F_OK`, `R_OK`, `W_OK`, and `X_OK`; `verify_access` runs the root check, forks, drops the child to nobody, and repeats. Important APIs are `access`, `SAFE_FORK`, `SAFE_SETUID`, and LTP expected-failure macros. State is process credentials only; no filesystem fixtures are created. Dependencies are root and a nobody account. Risks are architecture-specific bad-address handling, but the test encodes expected kernel ABI behavior. Test signal is `EFAULT` in all variants.

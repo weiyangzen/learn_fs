@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/sfc/tc_encap_actions.c
+
+Purpose: implements SFC TC tunnel encapsulation metadata, neighbour binding, generated VXLAN/Geneve headers, and rule readiness updates when neighbour state changes.
+
+Important APIs and functions: `efx_tc_init_encap_actions()`, `efx_tc_destroy_encap_actions()`, and `efx_tc_fini_encap_actions()` manage neighbour and encap rhashtables. `efx_tc_flower_create_encap_md()` validates tunnel info, binds the route/neighbour, checks that the egress device is on the switch, generates the outer header, and allocates MAE encap metadata. `efx_tc_flower_release_encap_md()` releases the refcounted encap object. `efx_tc_netevent_event()` handles neighbour updates; `efx_tc_unregister_egdev()` invalidates encap users when an egress netdev unregisters.
+
+Control flow: creating encap metadata identifies VXLAN/Geneve and IPv4/IPv6 mode, rejects options, deduplicates by rhashtable key, binds a neighbour with route lookup, links encap users to the neighbour, resolves destination m-port, generates Ethernet/IP/UDP/tunnel headers, and writes them to firmware. Neighbour events update cached hardware address and validity, schedule work, switch user rules to fallback while headers change, update MAE encap metadata, then switch ready rules back to the primary action set.
+
+State and dependencies: `struct efx_neigh_binder` holds net namespace, destination key, cached MAC, TTL, egdev reference, refcount, user list, RCU-visible rhashtable linkage, and work item. `struct efx_tc_encap_action` holds tunnel key, generated header, neighbour pointer, refcount, users, firmware id, and destination m-port. Dependencies include route lookup, ARP/ND tables, netevent notifier, tunnel-key actions, MAE encap APIs, representor lookup, and the TC mutex.
+
+Risks and test signals: risks are route/neighbour lifetime, refcount failures during scheduled work, egress device unregister races, leaking stale Ethernet headers, unsupported tunnel options, and IPv6-disabled builds. Test VXLAN and Geneve over IPv4/IPv6, unresolved then resolved neighbours, neighbour MAC change, egress device removal, fallback rule updates, repeated shared encap references, and module teardown with live encap entries.

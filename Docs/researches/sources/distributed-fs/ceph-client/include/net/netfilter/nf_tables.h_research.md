@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/net/netfilter/nf_tables.h
+
+Purpose: This is the central internal nftables contract. It defines packet metadata, the register VM, expression/set/object/chain/table/flowtable types, generation-mask transaction rules, tracing, garbage collection, and per-net nftables state.
+
+Important APIs/types/functions: Core data types include `nft_pktinfo`, `nft_data`, `nft_regs`, `nft_ctx`, `nft_set`, `nft_set_ops`, `nft_expr_type`, `nft_expr_ops`, `nft_rule`, `nft_rule_blob`, `nft_chain`, `nft_chain_type`, `nft_base_chain`, `nft_table`, `nft_object`, `nft_object_type`, `nft_flowtable`, `nft_traceinfo`, transaction structs, `nft_trans_gc`, and `nftables_pernet`. Important helpers parse/dump data and registers, allocate/destroy expressions and elements, bind/deactivate sets and chains, validate chains and set elements, register expression/object/chain/flowtable types, run `nft_do_chain`, manage generation masks, and queue GC transactions.
+
+Control flow: Netlink control operations build `nft_ctx`, parse attributes, create transaction objects, stage updates in the next generation, validate dependencies/loops, commit by switching generation state and RCU rule blobs, notify userspace, and asynchronously destroy old objects. Datapath hooks fill `nft_pktinfo`, execute compact rule blobs expression by expression, update registers/verdicts, jump/goto chains with bounded stack depth, evaluate sets/objects, and optionally trace.
+
+State and persistence: Rulesets are runtime per-net state in `nftables_pernet`: table lists, commit/destroy/set/binding/module/notify lists, commit mutex, handles, timestamp, GC sequence, validation state, and destroy work. Tables own chains, sets, objects, and flowtables. Objects use two-bit generation masks for atomic readers. Rule blobs and set elements are RCU-managed; sets track refs, pending updates, element counts, timeouts, and GC intervals.
+
+Dependencies/integration: Depends on netfilter hooks, nfnetlink/uapi nftables, netlink policy parsing, rhashtable, generic pernet IDs, flow offload, conntrack-facing expressions, modules, RCU, per-cpu stats, and all nft expression backends.
+
+Risks/test signals: High-risk areas are transaction abort/commit symmetry, generation mask correctness, RCU lifetime of blobs/elements, set extension offsets, loop/dependency validation, bound anonymous sets/chains, per-net module references, flowtable hook cleanup, and trace notification reentrancy. Test atomic ruleset replacement, failed batch rollback, concurrent packet evaluation, set timeouts/GC, anonymous set binding, object updates, chain jumps/gotos, netdev ingress hooks, flowtable offload, module unload, and nft monitor trace output.

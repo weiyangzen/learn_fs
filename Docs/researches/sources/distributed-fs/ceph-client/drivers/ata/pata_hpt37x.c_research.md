@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/ata/pata_hpt37x.c
+
+`pata_hpt37x.c` is the libata PCI BMDMA driver for non-N-series HighPoint HPT37x/HPT30x PATA controllers: HPT370, HPT370A, HPT371, HPT372, HPT372A, HPT302, and HPT374. It maps PCI device/revision IDs to the correct port operations, transfer masks, cable detection, clock table, DPLL policy, and reset/DMA workarounds.
+
+Important types are `struct hpt_clock`, mapping an `XFER_*` mode to a 32-bit timing word, and `struct hpt_chip`, describing chip name, base clock divisor, and timing tables for 33/40/50/66 MHz slots. `hpt37x_find_mode()` reads the chosen table from `host->private_data`. `hpt37x_set_mode()` writes masked PCI timing fields, while `hpt37x_set_piomode()` and `hpt37x_set_dmamode()` select PIO or DMA modes. Mode filters blacklist known-bad Maxtor/IBM/WDC cases and mask Marvell-bridge SATA modes. Cable detection differs between normal functions and HPT374 function 1.
+
+Probe is handled by `hpt37x_init_one()`: enable PCI, reject revisions owned by sibling drivers, choose `ata_port_info`, program PCI latency/cache defaults, handle HPT371 single-channel and HPT374 topology quirks, detect bus clock with `hpt37x_pci_clock()`, optionally calibrate DPLL with `hpt37x_calibrate_dpll()`, and call `ata_pci_bmdma_init_one()`. Runtime reset checks enable bits and resets channel state; DMA stop paths clear stuck engines before/after generic `ata_bmdma_stop()`.
+
+State lives mostly in PCI config registers and the host-private timing-table pointer. Dependencies are PCI config/I/O access, libata SFF/BMDMA helpers, and the SCSI host template via `ATA_BMDMA_SHT()`. Main risks are wrong clock/DPLL selection, timing-mask mistakes, incorrect sibling-driver revision routing, and compatibility blacklists. Test signals include probe by revision, fallback when BIOS clock data is absent, DPLL failure, cable detection, blacklisted drive negotiation, SATA bridge filtering, and DMA timeout recovery.

@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/dce/dce_link_encoder.c
+
+## Purpose
+This file implements the DCE110 link encoder backend for AMD DC, with optional DCE6 variants. It validates stream output modes, initializes AUX/HPD/DIG state, calls VBIOS transmitter and DAC tables for PHY control, programs DisplayPort link training and compliance patterns, connects DIG backends to frontends, manages DP MST payload allocation, and exposes HPD helpers.
+
+## Important APIs and Functions
+The main vtable is `dce110_lnk_enc_funcs`, with a no-HPD variant and optional DCE6 variants. Public entry points include `dce110_link_encoder_construct()`, `dce110_link_encoder_hw_init()`, `dce110_link_encoder_setup()`, `dce110_link_encoder_enable_tmds_output()`, `dce110_link_encoder_enable_dp_output()`, `dce110_link_encoder_enable_dp_mst_output()`, `dce110_link_encoder_enable_lvds_output()`, `dce110_link_encoder_enable_analog_output()`, `dce110_link_encoder_disable_output()`, `dce110_link_encoder_dp_set_lane_settings()`, `dce110_link_encoder_dp_set_phy_pattern()`, `dce110_link_encoder_update_mst_stream_allocation_table()`, HPD helpers, PSR helpers, and output validation helpers. Internal helpers wrap VBIOS calls (`link_transmitter_control()`, `link_dac_encoder_control()`), register programming (`configure_encoder()`, `setup_panel_mode()`, `enable_phy_bypass_mode()`), and DP PHY patterns.
+
+## Control Flow
+Construction fills the base `link_encoder`, selects HPD/no-HPD functions, sets supported signal bits, maps transmitters to preferred DIG engines, stores register tables, defaults HDMI 6G support, and overrides capability bits from VBIOS `get_encoder_cap_info()`. `hw_init()` optionally initializes DAC, runs `TRANSMITTER_CONTROL_INIT`, initializes AUX receiver window and HPD selection, and handles LVDS brightness command setup. Output enable flows configure mode-specific DIG state with `setup()`, program lane count/scrambler for DP, and invoke VBIOS `TRANSMITTER_CONTROL_ENABLE`; disable invokes DAC disable where needed, skips inactive DIGs, calls `TRANSMITTER_CONTROL_DISABLE`, then clears DP training state for DP signals. DP pattern programming dispatches by requested test pattern to training pattern, D102, PRBS, symbol error, 80-bit custom, CP2520 HBR2, or normal video passthrough paths.
+
+## State and Persistence
+State lives in `struct dce110_link_encoder`: base metadata, register tables for link/AUX/HPD, feature flags, connector/transmitter IDs, HPD GPIO, and preferred/analog engines. Hardware state is persistent in DIG, DP, AUX, HPD, and BIOS-controlled PHY registers. The MST allocation table writes up to four stream allocation rows and waits for the SAT update and 16-MTP keepout bits to clear.
+
+## Dependencies and Integration Points
+The implementation depends on `reg_helper.h`, `link_encoder.h`, `stream_encoder.h`, `dc_bios_types.h`, GPIO service APIs, generated DCE11 register headers, DC debug flags, and BIOS command tables. It integrates with link validation, stream encoder IDs for MST, panel mode ownership from PSP caps, PSR programming, HPD IRQ filtering, and VBIOS PHY programming.
+
+## Risks and Test Signals
+Risks include BIOS-table failure paths that only log and break to debugger, generation-specific register absence such as DCE6 missing `DP_DPHY_SCRAM_CNTL`, direct magic values for DP panel mode and HBR2 compliance, and a likely bug in `dce110_link_encoder_enable_hpd()` where the local `hpd_enable` is queried before being loaded from `value`, and the modified `value` is not written back. MST update polling lacks an explicit failure report after retry exhaustion. Test signals include DP/DVI/HDMI/LVDS/VGA mode validation, DP link training at HBR/HBR2/HBR3, MST allocation updates with 1-4 streams, compliance pattern generation, HPD filter/read tests, PSR fast-training checks, and suspend/resume with BIOS reinitialization.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/racer/fs_racer_file_list.sh
+
+Purpose: directory traversal pressure worker. It takes `DIR`, repeatedly starts ten concurrent `ls -R $DIR/` processes with output and errors redirected away, waits for them, then sleeps one second. Dependencies are Bash, `ls`, background jobs, and `wait`; the unused `MAX` assignment is harmless. State is read-only from this script, but it observes a namespace being mutated by the other racer workers. Risks are high process churn, unquoted paths, and indefinite execution. Test signal is absence of hangs, crashes, or traversal pathologies when recursive listing races with create, remove, rename, and link operations.

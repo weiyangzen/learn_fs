@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/fpga/fpga-mgr.c
+
+Purpose: generic FPGA manager framework. It registers FPGA manager devices, serializes programming, loads images from firmware, linear buffers, or scatter-gather tables, drives low-level manager callbacks through parse/init/write/complete phases, and exposes manager name, state, and status through sysfs.
+
+Important APIs and functions: exported APIs include `fpga_image_info_alloc`, `fpga_image_info_free`, `fpga_mgr_load`, `fpga_mgr_get`, `of_fpga_mgr_get`, `fpga_mgr_put`, `fpga_mgr_lock`, `fpga_mgr_unlock`, `__fpga_mgr_register_full`, `__fpga_mgr_register`, `fpga_mgr_unregister`, `__devm_fpga_mgr_register_full`, and `__devm_fpga_mgr_register`. Core loading helpers include `fpga_mgr_parse_header_mapped`, `fpga_mgr_parse_header_sg_first`, `fpga_mgr_parse_header_sg`, `fpga_mgr_prepare_sg`, `fpga_mgr_buf_load_sg`, `fpga_mgr_buf_load_mapped`, `fpga_mgr_buf_load`, and `fpga_mgr_firmware_load`.
+
+Control flow: callers fill `struct fpga_image_info` with an SG table, buffer, or firmware name. `fpga_mgr_load` seeds `header_size` from low-level ops and selects a load path. The framework parses headers, calls `write_init`, writes data through either `write_sg` or repeated `write`, optionally skips headers and honors parsed `data_size`, then calls `write_complete`. State transitions move through firmware request, parse header, write init, write, write complete, operating, or error variants.
+
+State and persistence: global state is the `fpga_manager` class and IDA. Per-manager state includes low-level ops, private data, compat ID, owner module, class device, `ref_mutex`, and current framework state. Image info is devm-managed and may contain firmware name, buffer, SG table, flags, header/data sizes, timeouts, and overlay references. No configuration persists except hardware state changed by low-level drivers.
+
+Dependencies and integration points: depends on firmware loader, scatterlist mapping, highmem helpers, device classes, OF lookup, mutexes, and low-level manager drivers such as iCE40, Lattice sysCONFIG, Microchip, SoCFPGA, Arria10, and Stratix10. `fpga-region.c` is the primary orchestrator consumer.
+
+Risks and test signals: risks include header-size growth loops for SG parsing, malformed parsed `data_size`, low-level drivers with only `write_sg` requiring page conversion, status string indexing assuming valid states, and callers needing explicit `fpga_mgr_lock`. Test signals are KUnit manager tests, sysfs state/status, firmware request failures, buffer and SG programming paths, low-level callback error transitions, and absence of refcount/module leaks on get/put/register/unregister.

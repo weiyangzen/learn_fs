@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/riscv/net/Makefile -->
+# sources/distributed-fs/ceph-client/arch/riscv/net/Makefile
+
+Purpose: wires the RISC-V eBPF JIT sources into the kernel build. Important build variables are `obj-$(CONFIG_BPF_JIT)`, `CONFIG_ARCH_RV64I`, `bpf_jit_core.o`, `bpf_jit_comp64.o`, and `bpf_jit_comp32.o`. Control flow is Kbuild-only: when BPF JIT is enabled, the common core is built, then the RV64 backend is selected for RV64I and the RV32 backend otherwise. There is no runtime state or persistence. Dependencies are the architecture Kconfig symbols and the BPF JIT compiler implementation files in the same directory. Integration is with the top-level `arch/riscv` build and net/BPF subsystem. Risks are selecting the wrong backend for an ABI, missing common object when backend functions are referenced, or build coverage gaps when only one word size is compiled in CI. Test signals: `allyesconfig`/`allmodconfig` for RV32 and RV64, `CONFIG_BPF_JIT=n`, and link tests for exported JIT hooks.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/riscv/net/Makefile -->

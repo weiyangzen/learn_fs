@@ -1,0 +1,15 @@
+## sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/ChecksumFileSystem.java
+
+Purpose: `FileSystem` wrapper that provides client-side CRC32 checksums by creating and verifying hidden sibling `.crc` files alongside raw data files.
+
+Important APIs and types: extends `FilterFileSystem`; `getChecksumFile`, `isChecksumFile`, `getChecksumFileLength`, `getBytesPerSum`, `setVerifyChecksum`, `setWriteChecksum`, `open`, `create`, `createNonRecursive`, `rename`, `delete`, filtered listing methods, and `reportChecksumFailure`. Internal `ChecksumFSInputChecker` extends `FSInputChecker`; `ChecksumFSOutputSummer` extends `FSOutputSummer`; `FSDataBoundedInputStream` prevents seeking/skipping past EOF.
+
+Control flow: configuration loads local bytes-per-checksum and validates it positive. `open()` uses `ChecksumFSInputChecker` when verification is enabled, otherwise opens raw data, then wraps in a bounded stream. The input checker opens the data stream and corresponding `.crc` file, validates the `crc\0` header and bytes-per-sum, and reads checksum chunks aligned to data chunks; missing checksum files disable checksum validation. Vectored reads validate checksum ranges by reading both data and `.crc` ranges and combining futures. `create()` ensures parents, writes data through `ChecksumFSOutputSummer`, and creates the checksum file with header and per-chunk CRCs; when checksum writing is disabled it deletes any stale checksum file. Metadata operations such as permission, owner, ACL, and replication are applied to the data file and then the checksum file when present. Rename and delete keep checksum siblings in sync. Listings filter out checksum files.
+
+State and persistence behavior: persistent state is in the raw filesystem as paired data files and hidden `.crc` files. Runtime state includes `bytesPerChecksum`, `verifyChecksum`, and `writeChecksum`; stream classes hold open data/checksum streams and checksum buffers.
+
+Dependencies and integration points: uses raw `FileSystem`, `FilterFileSystem`, `FSInputChecker`, `FSOutputSummer`, `DataChecksum`, `CRC32`, `FileUtil`, ACL/permission classes, vectored read utilities, IO statistics, and stream capability plumbing.
+
+Risks: checksum/data operations are not atomic across sibling files, so rename, delete, create, and metadata updates can leave stale or missing `.crc` files after partial failure. Missing checksum files silently disable validation except for warning cases. Append, truncate, and concat are unsupported. Vectored checksum validation has complex buffer slicing and EOF adjustment behavior. Default checksum file filtering can hide files whose names match `.x.crc` even if user-created.
+
+Test signals: cover checksum file naming and length math, read validation success/failure, missing or corrupt checksum headers, positioned reads, vectored reads with partial final chunks, create with and without checksum writing, stale checksum deletion, metadata propagation, rename/delete failure cases, listing filters, `hasPathCapability`, and unsupported append/truncate/concat.

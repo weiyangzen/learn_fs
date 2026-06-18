@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx4/en_netdev.c
+
+## Purpose
+Implements the mlx4 Ethernet `net_device` lifecycle and most runtime control-plane behavior. It creates and destroys netdev instances, allocates and swaps RX/TX resources, opens and closes ports, configures QPs/CQs/steering, manages MAC/VLAN/multicast/promiscuous filters, handles feature changes, XDP, traffic classes, VF controls, VXLAN tunnel offload, bonding notifications, statistics collection, and restart recovery.
+
+## Important APIs, Types, and Functions
+Primary entry points are `mlx4_en_init_netdev`, `mlx4_en_destroy_netdev`, `mlx4_en_start_port`, `mlx4_en_stop_port`, `mlx4_en_reset_config`, `mlx4_en_try_alloc_resources`, `mlx4_en_safe_replace_resources`, `mlx4_en_setup_tc`, `mlx4_en_alloc_tx_queue_per_tc`, and `mlx4_en_netdev_event`. Netdev ops are collected in `mlx4_netdev_ops` and `mlx4_netdev_ops_master`. Important workers include `mlx4_en_do_set_rx_mode`, `mlx4_en_restart`, `mlx4_en_linkstate_work`, `mlx4_en_do_get_stats`, and `mlx4_en_service_task`. Optional RFS support uses `struct mlx4_en_filter` and asynchronous flow attach work.
+
+## Control Flow
+Netdev initialization allocates an Ethernet device with maximum queue counts, initializes private locks/work items/lists, reads MAC and MTU capabilities, allocates inactive CQs/rings, assigns netdev ops/features/ethtool ops/XDP metadata ops, programs initial port settings, starts periodic stats/service tasks, and registers the netdev. Open clears stats, starts the port, and refreshes link state. Port start activates RX rings/CQs, reserves the base QP, configures RSS and drop QPs, activates TX CQs/rings, programs port MTU/pause/VXLAN/default QPN, initializes the port, attaches steering and broadcast rules, schedules RX mode work, schedules NAPI for any pending completions, starts queues, and attaches the device. Stop reverses the sequence: close port, stop queues, mark port down, remove promiscuous/multicast/flow rules, destroy drop QP, deactivate/free TX buffers, release RSS steering and MAC QP, and deactivate RX rings/CQs.
+
+## State and Persistence Behavior
+Most runtime state lives in `struct mlx4_en_priv`: port status, `state` flags, current MAC, active VLAN bitmap, multicast and ethtool flow lists, RSS map, ring arrays, CQs, profile pointer, stats, PFC bitmap, XDP programs, timestamp config, private flags, and delayed work. Hardware state is programmed through mlx4 commands for port init/close, QP allocation and state, multicast/unicast steering, VLAN filters, VXLAN steering, CQ moderation, VF attributes, PHV, and QP rate limits. Reconfiguration uses temporary `mlx4_en_priv`/profile copies so resource allocation can fail without immediately destroying the active configuration.
+
+## Dependencies and Integration Points
+Depends on Linux netdevice, rtnetlink, NAPI, BPF/XDP, VLAN, VXLAN UDP tunnel, devlink port, RFS, bonding notifier, DCB, and mlx4 core command/CQ/QP/flow APIs. It integrates with `en_rx.c` for RX ring allocation, activation, RSS, drop QP, and buffer sizing; TX helpers in other mlx4_en files; `en_port.c` for VLAN and stats commands; `en_resources.c` for QP context and multicast loopback; `en_ethtool.c` for reset and moderation; and timestamp helpers.
+
+## Risks
+This file is lifecycle-sensitive: start and stop ordering must prevent packets, NAPI, interrupts, work items, and TX completions from touching freed rings or QPs. Resource replacement must preserve XDP program references and queue counts while avoiding leaks on partial allocation. RX mode work races with port teardown unless `state_lock` and workqueue flushing are respected. Flow steering behavior differs across A0, B0, and device-managed steering modes. XDP changes can reduce normal TX rings to fit `MAX_TX_RINGS`, and MTU is constrained by page-sized XDP buffers. Bonding notifier logic assumes two Ethernet ports and init-net devices.
+
+## Test Signals
+Cover netdev register/unregister, ifup/ifdown, repeated MTU changes, feature toggles for RXFCS/RXALL/VLAN/loopback, XDP attach/swap/detach and oversized MTU rejection, mqprio setup, channel and ring count changes under load, TX timeout restart, RFS flow steering, unicast/multicast/promiscuous/allmulti transitions, VLAN add/delete, VXLAN port sync, VF mac/vlan/rate/spoof/link/stat ops on master, bonding mode transitions, PTP timestamp reset interactions, and leak/race checks during failed port start.

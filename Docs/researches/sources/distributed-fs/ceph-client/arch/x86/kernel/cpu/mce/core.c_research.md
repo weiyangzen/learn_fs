@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/x86/kernel/cpu/mce/core.c
+
+Purpose: implements the generic x86 Machine Check Architecture runtime: record preparation, polling, #MC exception handling, severity-driven recovery/panic, notifier dispatch, timers, boot/hotplug setup, sysfs controls, suspend/shutdown behavior, and debugfs hooks.
+
+Important APIs and flow: `mce_prep_record*()` fills common/per-CPU `struct mce` fields. `mce_log()` queues records into the genpool and schedules work. `machine_check_poll()` scans configured banks, reads status/auxiliary registers, tracks storms, logs eligible corrected/deferred events, and clears banks. `do_machine_check()` is the core #MC path: handles ancient CPU redirection, gathers MCG state, finds fatal banks with `mce_no_way_out()`, coordinates broadcast MCEs through monarch/subject state (`mce_start()`, `mce_end()`, `mce_reign()`), scans banks, logs records, clears state, and either panics or schedules task work for user/kernel-recoverable memory failures. `mcheck_cpu_init()` and `mca_bsp_init()` initialize bank counts, vendor features, MCG control, bootlog polling, timers, and CR4.MCE. Device init registers the machinecheck bus, per-CPU devices, bank sysfs attributes, CPU hotplug callbacks, and syscore PM callbacks.
+
+State and persistence: central state includes `mca_cfg`, `mce_flags`, per-CPU bank arrays/counts/poll masks/timers/last errors, global CE-disabled banks, monarch synchronization atomics, queued genpool records, sysfs-configurable bank masks and policy flags, and debugfs fake-panic state. APEI may persist fatal records through ERST; core itself keeps runtime state only.
+
+Dependencies and integration: integrates with vendor MCE files, severity grading, genpool/notifier dispatch, legacy mcelog, memory failure/hwpoison, APIC CMCI/threshold code, CPU hotplug, syscore PM, tracepoints, kexec crash handling, TDX auxiliary data, and debugfs/sysfs.
+
+Risks and test signals: this code runs in #MC/NMI-like contexts, so locking, instrumentation, duplicate shared-bank reporting, and recovery decisions are high risk. Signals include MCE injection, CMCI/deferred threshold tests, memory_failure recovery tests, sysfs policy changes, suspend/resume, CPU hotplug, bootlog processing, fake panic debugfs coverage, and panic-path console output stability.

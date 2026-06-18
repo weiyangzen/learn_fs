@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/Kbuild
+
+Purpose: top-level ARC architecture kbuild traversal. Important APIs/types/functions: adds `kernel/`, `mm/`, and `net/` to `obj-y`; adds `boot` to `subdir-` for cleaning. Control flow: build-system directory inclusion only. State and persistence: no runtime state. Dependencies/integration: controls which ARC architecture subtrees participate in kernel build and clean. Risks: missing subtree entries produce unresolved symbols or incomplete architecture support. Test signals: ARC allmodconfig/defconfig builds and `make clean` behavior for boot artifacts.

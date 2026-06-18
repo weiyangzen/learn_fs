@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/include/asm/tlbflush.h -->
+# sources/distributed-fs/ceph-client/arch/parisc/include/asm/tlbflush.h
+
+Source read size: 69 lines, 1984 bytes.
+
+Purpose: declares and wraps PA-RISC TLB invalidation primitives. Important APIs: `flush_tlb_all()`, `flush_tlb_all_local()`, `smp_flush_tlb_all()`, `__flush_tlb_range()`, `flush_tlb_range()`, `flush_tlb_kernel_range()`, `flush_tlb_mm()`, and `flush_tlb_page()`. Control flow: range wrappers pass either a process space id or kernel space id into `__flush_tlb_range()`. `flush_tlb_mm()` currently always flushes the whole TLB, with a disabled context-switch optimization kept as a documented broken path. `flush_tlb_page()` purges entries for one VMA address. State and persistence: no owned state, but operations mutate processor and system TLB state across CPUs. Dependencies and integration points: depends on `linux/mm.h`, scheduler state, `asm/mmu_context.h`, `purge_tlb_entries()`, PA-RISC space IDs, and `cache.c` implementation. Risks: PA-RISC space/protection IDs can go out of sync; range flush broadcasts are slow and serialized on some buses; wrong mm/context handling can manifest as userspace access faults. Test signals: fork/exec/mmap/munmap stress, SMP TLB shootdown tests, kernel vmap/ioremap invalidation, page-fault selftests, and compatibility workloads with many short-lived processes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/include/asm/tlbflush.h -->

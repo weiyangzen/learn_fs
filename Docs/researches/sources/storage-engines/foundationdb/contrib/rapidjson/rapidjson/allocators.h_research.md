@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/contrib/rapidjson/rapidjson/allocators.h
+
+Purpose: defines RapidJSON's allocator concept plus two concrete allocator implementations used by the parser and DOM: a CRT-backed allocator and a monotonic memory-pool allocator.
+
+Important APIs/types/functions: the documented `Allocator` concept requires `kNeedFree`, `Malloc(size_t)`, `Realloc(void*, size_t, size_t)`, and static `Free(void*)`. `CrtAllocator` wraps `std::malloc`, `std::realloc`, and `std::free`, normalizing zero-size allocation to `NULL`. `MemoryPoolAllocator<BaseAllocator>` exposes constructors for default chunks or a user-supplied first buffer, destructor, `Clear()`, `Capacity()`, `Size()`, `Malloc()`, `Realloc()`, no-op `Free()`, and private `AddChunk()`. Its internal `ChunkHeader` stores capacity, used size, and next pointer.
+
+Control flow: `MemoryPoolAllocator::Malloc()` aligns requested size, lazily allocates a chunk when no head exists or the head lacks capacity, returns memory after the aligned header, and advances the current chunk size. `Realloc()` handles null/new-zero cases, refuses to shrink, expands in place only when the original allocation is the most recent block and capacity permits, otherwise allocates a new block and copies the old bytes without freeing the original. `Clear()` walks allocated chunks and frees all non-user chunks, then resets the user buffer size if present.
+
+State and persistence: allocator state is in-memory only: a singly linked list of chunks, the configured chunk capacity, optional user buffer pointer, and optional owned base allocator. Memory allocated from the pool persists until `Clear()` or destruction; individual `Free()` calls intentionally do nothing when using the pool.
+
+Dependencies and integration: includes `rapidjson.h` for namespace/macros, alignment, assertions, and allocation helpers. It is the default allocator for `GenericValue`/`GenericDocument` in `document.h`, and interacts with parser stack/data structures that rely on amortized append allocation and stable pointers.
+
+Risks: `MemoryPoolAllocator` is monotonic and can retain memory longer than callers expect; `Realloc()` can duplicate live data and leave old blocks stranded until pool reset. The default constructor leaves `baseAllocator_` null until the first `AddChunk()`, but `Clear()` calls `baseAllocator_->Free()` for non-user chunks, so correct operation assumes chunks were only created after `AddChunk()` initialized the base allocator. It is not thread-safe. User-supplied buffers must exceed `sizeof(ChunkHeader)` and remain alive for the allocator lifetime. The closing include-guard comment says `RAPIDJSON_ENCODINGS_H_`, which is stale but not functional.
+
+Test signals: RapidJSON allocator tests should cover zero-size CRT behavior, pool allocation alignment, user-buffer first allocation and non-freeing destruction, chunk growth beyond default capacity, in-place and copying `Realloc()`, `Clear()` capacity/size behavior, and DOM parse/build workloads using both `MemoryPoolAllocator` and `CrtAllocator`.

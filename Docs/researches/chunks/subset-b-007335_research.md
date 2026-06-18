@@ -1,0 +1,119 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/dev-support/jdiff/hadoop_0.20.2.xml lines 37730-43882
+
+## Scope
+
+This chunk is a generated JDiff public API snapshot for Hadoop 0.20.2. It is XML API metadata, not Java implementation source. The range starts in the tail of `org.apache.hadoop.mapred.JobHistory.ReduceAttempt`, covers a large legacy `org.apache.hadoop.mapred` API span from task history and job identity through JobTracker/TaskTracker, record readers, old MapReduce contracts, sequence-file formats, skip-bad-record controls, task logs, and text formats, then continues into `org.apache.hadoop.mapred.jobcontrol` and ends inside `org.apache.hadoop.mapred.join.ArrayListBackedIterator`.
+
+The XML records compatibility-visible structure: classes/interfaces, inheritance, implemented interfaces, methods, constructors, parameters, checked exceptions, public/protected fields, static/final/abstract/synchronized flags, deprecation state, and Javadoc. Control flow and persistence notes below are inferred from signatures and embedded documentation because method bodies are not present in the JDiff file.
+
+## Purpose and Major API Surface
+
+The visible `JobHistory.ReduceAttempt` tail exposes static `logKilled` overloads for reduce-attempt lifecycle logging. The complete `JobHistory.Task` block logs task/TIP start, finish, finish-time updates, and failures, including an overload that records the failed attempt responsible for a task failure. `JobHistory.TaskAttempt` is a base class for map/reduce attempt records. `JobHistory.Values` defines common persisted history values: `SUCCESS`, `FAILED`, `KILLED`, `MAP`, `REDUCE`, `CLEANUP`, `RUNNING`, `PREP`, and `SETUP`.
+
+`JobID`, `TaskID`, and `TaskAttemptID` are old-API identity wrappers over the newer `org.apache.hadoop.mapreduce` IDs. They support construction from component parts, downgrade from new API IDs, `DataInput` reads, `forName(String)` parsing, typed access to parent IDs, and regex-pattern generation with nullable wildcard components. Their Javadoc makes the string layout part of the compatibility contract, while warning applications to use constructors/parsers instead of hand parsing.
+
+`JobPriority`, `JobStatus`, `TIPStatus`, and `TaskCompletionEvent.Status` define scheduler and lifecycle enums/constants. `JobPriority` has `VERY_HIGH`, `HIGH`, `NORMAL`, `LOW`, and `VERY_LOW`. `JobStatus` is a synchronized, cloneable `Writable` data carrier for job id, setup/map/reduce/cleanup progress, run state, start time, username, scheduling info, and priority; public states are `RUNNING`, `SUCCEEDED`, `FAILED`, `PREP`, and `KILLED`. `TIPStatus` covers `PENDING`, `RUNNING`, `COMPLETE`, `KILLED`, and `FAILED`. Task completion statuses include `FAILED`, `KILLED`, `SUCCEEDED`, `OBSOLETE`, and `TIPFAILED`.
+
+`JobProfile` and `JobQueueInfo` are `Writable` metadata records. `JobProfile` tracks the submitting user, `JobID`, job configuration file, tracking URL, job name, and queue name, with deprecated string-id compatibility APIs. `JobQueueInfo` stores queue name and scheduling information, returning `"N/A"` when scheduling info is unset.
+
+`JobTracker` is the central old MapReduce coordinator. It implements `MRConstants`, `InterTrackerProtocol`, `JobSubmissionProtocol`, `TaskTrackerManager`, and `RefreshAuthorizationPolicyProtocol`. Its public API covers startup/shutdown, protocol versioning, restart/recovery state, instrumentation class configuration, address/port/start-time identity, service loop, submission counts, job lists, task-tracker collections and blacklists, topology/rack node lookups, job progress listeners, queue manager access, build version, task-tracker heartbeats, heartbeat interval calculation, filesystem name, tracker error reporting, new job ids, job submission, cluster status, job kill/fail/init/priority, job profile/status/counters, task reports, task completion events, diagnostics, task lookup/kill, assigned tracker lookup, system dir, local job-file path, queue queries, service ACL refresh, and a debugging `main`. Nested `JobTracker.IllegalStateException` represents submission before readiness, and nested `State` exposes `INITIALIZING` and `RUNNING`.
+
+The chunk contains the old record-reader/input surface. `KeyValueLineRecordReader` reads lines as `Text` key/value pairs separated by configurable `key.value.separator.in.input.line`, with a static byte-level `findSeparator` helper and synchronized `next`, `getPos`, and `close`. `KeyValueTextInputFormat` creates those readers and documents whole-line-as-key behavior when the separator is absent. Deprecated `LineRecordReader` emits `(LongWritable offset, Text line)` and has constructors from `Configuration`/`FileSplit` and raw streams; nested `LineReader` is deprecated in favor of `org.apache.hadoop.util.LineReader`. Deprecated `TextInputFormat` wraps line reading for plain text files and splitability checks.
+
+The old mapper/reducer contracts are present. Deprecated `Mapper` extends `JobConfigurable` and `Closeable`; its `map(key, value, OutputCollector, Reporter)` can emit zero or more intermediate pairs and use `Reporter` for progress/counters/status. `MapRunnable` is an expert hook for custom map-driving behavior, while `MapRunner` is the default implementation. `Reducer` defines `reduce(key, Iterator values, OutputCollector, Reporter)` and its Javadoc documents shuffle, sort/grouping, secondary-sort comparator hooks, and the fact that reducer output is not re-sorted. `MapReduceBase` supplies no-op `configure(JobConf)` and `close()`.
+
+Output and shuffle-facing contracts include `OutputCollector.collect`, deprecated `OutputFormat.getRecordWriter`/`checkOutputSpecs`, `RecordWriter.write`/`close`, deprecated `OutputCommitter` bridging old `mapred.JobContext`/`TaskAttemptContext` methods to final new `mapreduce` methods, deprecated `Partitioner.getPartition`, and `RawKeyValueIterator` for sort/merge iteration over raw `DataInputBuffer` keys and values. `OutputLogFilter` filters `_logs` paths from output listings. `MapFileOutputFormat`, `SequenceFileOutputFormat`, `SequenceFileAsBinaryOutputFormat`, `SequenceFileAsTextInputFormat`, and `TextOutputFormat` provide concrete file output/input adapters.
+
+Sequence-file APIs cover several modes. `SequenceFileInputFormat` lists sequence-file statuses and creates readers. `SequenceFileRecordReader` exposes key/value classes, reusable key/value creation, synchronized `next`, protected `next(key)` and `getCurrentValue`, split progress, seek, and close. `SequenceFileAsBinaryInputFormat.SequenceFileAsBinaryRecordReader` reads raw key/value bytes into `BytesWritable` while exposing stored class names. `SequenceFileAsBinaryOutputFormat` writes raw `BytesWritable` payloads while letting the logical sequence-file key/value classes be configured separately; protected `WritableValueBytes` adapts `BytesWritable` to `SequenceFile.ValueBytes`. `SequenceFileAsTextRecordReader` converts sequence-file keys and values to `Text` through `toString()`.
+
+`SequenceFileInputFilter` samples sequence-file records using a configured filter class. Its nested `Filter` is `Configurable` and accepts/rejects keys. `FilterBase` stores configuration. `MD5Filter` accepts records where `MD5(key) % frequency == 0`; `PercentFilter` accepts by configurable frequency/period; `RegexFilter` accepts keys matching a configured regex pattern.
+
+`SkipBadRecords` is a static configuration utility for old MapReduce's bad-record skipping mode. It configures the number of failed attempts before skip mode starts, automatic map/reduce processed-record counter increments, skip output path, maximum mapper skip records, and maximum reducer skip groups. Its public counter names are `COUNTER_GROUP`, `COUNTER_MAP_PROCESSED_RECORDS`, and `COUNTER_REDUCE_PROCESSED_GROUPS`.
+
+Task execution and observability surfaces include `TaskAttemptContext`, `TaskCompletionEvent`, `TaskGraphServlet`, `TaskLog`, `TaskLogAppender`, `TaskLogServlet`, `TaskReport`, and `TaskTracker`. Deprecated `TaskAttemptContext` bridges to new `mapreduce.TaskAttemptContext` while exposing old `TaskAttemptID`, `JobConf`, progressible, and `progress()`. `TaskCompletionEvent` is a `Writable` record with event id, attempt id, runtime, status, map/reduce flag, id-within-job, tracker HTTP endpoint, equality/hash, and deprecated string-id accessors. `TaskGraphServlet` emits SVG graphics for task status. `TaskReport` is a `Writable` task status snapshot with progress, state, diagnostics, counters, current `TIPStatus`, start/finish times, successful attempt, and running attempts.
+
+`TaskLog` resolves task log, real log, and index files; syncs logs; cleans old logs; computes task log length; and builds command lists to capture stdout/stderr or debug output. `TaskLog.LogName` enumerates `STDOUT`, `STDERR`, `SYSLOG`, `PROFILE`, and `DEBUGOUT`. `TaskLogAppender` is a Log4j `FileAppender` that activates per-task logging, appends/flushed/closes output, and configures task id plus total log file size. `TaskLogServlet` builds task-log URLs and serves log requests.
+
+`TaskTracker` is the worker daemon. It implements the child/task-facing and tracker-facing APIs for storage cleanup, shutdown/close, connection to JobTracker (`InterTrackerProtocol`), report address, JVM manager access, server retry loop, child `getTask(JVMId)`, status updates, diagnostics, next-record ranges for skipping, ping, commit pending/can-commit/done, shuffle/filesystem/fatal errors, map completion event retrieval, lost map output notification, idle checks, memory-manager access, and a startup `main`. Nested `TaskTracker.MapOutputServlet` serves map outputs over Jetty to reducers.
+
+`org.apache.hadoop.mapred.jobcontrol.Job` and `JobControl` model client-side dependency DAGs of old MapReduce jobs. A `Job` has a `JobConf`, `JobClient`, dependency list, assigned JobControl id, assigned MapReduce `JobID`, message, and integer states `WAITING`, `READY`, `RUNNING`, `SUCCESS`, `FAILED`, and `DEPENDENT_FAILED`; dependencies can only be added while waiting, and `submit()` moves ready jobs into running or failed state. `JobControl` implements `Runnable`, assigns group-unique ids, keeps jobs in state-specific tables, exposes getters for waiting/running/ready/successful/failed jobs, supports addJob/addJobs, stop/suspend/resume, allFinished, and a loop that checks running jobs, updates waiting jobs, and submits ready jobs.
+
+The range ends with `org.apache.hadoop.mapred.join.ArrayListBackedIterator`, a `ResetableIterator` implementation backed by an `ArrayList`. It supports `hasNext`, `next(Writable)`, `replay(Writable)`, `reset`, `add(Writable)`, and `close`; the tail of the class is outside this chunk.
+
+## Control Flow and Behavioral Contracts
+
+Job history flow is event-oriented. Task and attempt helper methods append lifecycle records for starts, finishes, failures, kills, updates, attempt types, errors, counters, and split locations. Later history readers interpret values using the shared `JobHistory.Keys`, `RecordTypes`, and `Values` schema from neighboring chunks, so logging order and enum names are externally visible.
+
+Job submission/control flow centers on `JobTracker`. Clients request a new `JobID`, submit the job, and then query profile/status/counters/reports/events/diagnostics or issue kill/fail/priority commands. TaskTrackers heartbeat with status and receive `HeartbeatResponse` instructions; child task JVMs talk to TaskTracker for task payloads, status, commit coordination, diagnostics, and map completion events. Queue APIs and listener registration provide scheduler and UI integration points.
+
+Old map task flow is: an `InputFormat` creates `InputSplit`s and a per-split `RecordReader`; `MapRunner` repeatedly reads keys/values, invokes `Mapper.map`, and sends output through `OutputCollector`; `Reporter` communicates liveness, status, input split, and counters. Reduce flow receives shuffled and sorted map outputs, groups by comparator/partitioning policy, invokes `Reducer.reduce`, and writes results through an `OutputCollector`/`RecordWriter`. The documented shuffle/sort/secondary-sort behavior is a compatibility contract for old applications.
+
+Output commit flow is: `OutputFormat.checkOutputSpecs` validates output on submission; `OutputCommitter.setupJob` and `setupTask` prepare temporary locations; task attempts write via `RecordWriter`; `needsTaskCommit` determines whether promotion is required; successful attempts call `commitTask`, failures call `abortTask`, and final job cleanup runs through `cleanupJob`. The old `OutputCommitter` also implements final new-API bridge methods that delegate to the old signatures, making it a key old/new API adapter.
+
+Sequence-file flow depends on byte ranges and reusable writable objects. Readers are constructed for a `FileSplit`, create caller-owned key/value instances, fill them on each synchronized `next`, expose byte position/progress, and close underlying readers. Binary variants preserve raw bytes and logical class names; text variants stringify key/value pairs; filters wrap sequence-file input and decide acceptance from keys.
+
+Skip-bad-record flow begins after a configurable number of task failures. When enabled, tasks report the next record/group range to the TaskTracker before processing. If the task crashes, the TaskTracker knows the last reported range and later attempts skip it, subject to configured maximum skip counts and application-maintained counters.
+
+JobControl flow is a local dependency scheduler layered over `JobClient`. A job starts in `WAITING`, becomes `READY` once dependencies are successful or absent, becomes `DEPENDENT_FAILED` if a dependency fails, and moves from `READY` to `RUNNING` through submission. The `JobControl.run` loop periodically checks running jobs, updates waiting jobs, and submits ready jobs until stopped/suspended or all work finishes.
+
+## State, Persistence, and Side Effects
+
+Many types define `Writable` state: `JobProfile`, `JobQueueInfo`, `JobStatus`, `TaskCompletionEvent`, `TaskReport`, ID types through their parents, file splits/readers in adjacent APIs, and sequence/text readers through reusable Hadoop writable keys and values. Their field ordering and enum names are binary and log compatibility surfaces.
+
+`JobTracker` owns persistent and live cluster state: job maps, tracker tables, blacklists, queues, topology, recovery status, submission counters, task reports, completion events, diagnostics, and service ACL policy. Its methods have distributed side effects such as starting/stopping services, accepting submissions, killing jobs/tasks, refreshing authorization policy, and reacting to tracker errors.
+
+`TaskTracker` owns node-local state and side effects: temporary storage, running child JVMs, local task logs, map output serving, status update records, commit coordination, skipped record ranges, map output loss reports, and memory management. `cleanupStorage`, `shutdown`, and `close` explicitly mutate local disk/process state.
+
+Record readers and writers mutate caller-provided objects and stream positions. `LineRecordReader`, `KeyValueLineRecordReader`, `SequenceFileRecordReader`, binary/text sequence readers, and `TextOutputFormat.LineRecordWriter` are stateful, often synchronized around `next`, `write`, `getPos`, or `close`. They depend on exact byte offsets, split boundaries, separator bytes, compression/splittability, and `DataOutputStream` behavior.
+
+Task logs are persistent local files with index files and web-accessible URLs. `TaskLog.syncLogs`, capture-command builders, appender size limits, log-name enums, and log servlet parameters are part of the operational surface for debugging, profiling, and user log retrieval.
+
+`SkipBadRecords` persists behavior in `Configuration`/`JobConf` keys and counter names, and can write skipped records to an output path, by default under output `_logs`. The feature relies on application/framework counter increments and TaskTracker-maintained range state.
+
+`JobControl` state is process-local rather than cluster-persistent: its tables of jobs by state, assigned group ids, thread state, and dependency lists exist in the client application. The submitted MapReduce job id is still stored as a `JobID` assigned by the framework.
+
+## Dependencies and Integration Points
+
+This chunk is centered on the legacy `org.apache.hadoop.mapred` package while repeatedly bridging to `org.apache.hadoop.mapreduce`. `JobID`, `TaskID`, `TaskAttemptID`, `TaskAttemptContext`, and `OutputCommitter` expose old signatures on top of new API base classes. Many old interfaces are deprecated in favor of newer `mapreduce` equivalents but remain contractually visible in this 0.20.2 API snapshot.
+
+Filesystem integration uses `org.apache.hadoop.fs.FileSystem`, `Path`, path filters, map-file/sequence-file readers and writers, task local storage, output directories, and log files. Network and topology integration appears through `InetSocketAddress`, `org.apache.hadoop.net.Node`, task-tracker host names, tracker HTTP endpoints, Jetty servlets, and map-output HTTP serving.
+
+Cluster protocol integration is exposed by `InterTrackerProtocol`, `JobSubmissionProtocol`, `TaskTrackerManager`, `RefreshAuthorizationPolicyProtocol`, `HeartbeatResponse`, `TaskTrackerStatus`, `JobInProgress`, `TaskInProgress`, `JvmTask`, `JVMId`, `MapTaskCompletionEventsUpdate`, and queue/scheduler manager types. Security integration is represented by `MapReducePolicyProvider`, `PolicyProvider`, `Service`, and service ACL refresh.
+
+Serialization and data model dependencies include `Writable`, `WritableComparable`, `BytesWritable`, `Text`, `LongWritable`, `DataInput`, `DataOutput`, `DataInputBuffer`, `SequenceFile.ValueBytes`, Java `Iterator`, `Collection`, `ArrayList`, `Vector`, `Map`, and standard checked exceptions. Logging uses Commons Logging and Log4j; progress/liveness uses `Progressable` and `Reporter`; servlet integration uses `HttpServletRequest`/`HttpServletResponse`.
+
+## Risks and Compatibility Notes
+
+The range starts inside `JobHistory.ReduceAttempt` and ends inside `ArrayListBackedIterator`, so adjacent chunks are required for complete per-class documentation. This chunk also includes generated API metadata only; implementation details such as actual configuration key names for some helpers must be verified in Java source when changing behavior.
+
+Old `mapred` APIs are compatibility-sensitive even when deprecated. Removing deprecated string-id methods, changing enum constants, altering `Writable` serialization, changing synchronized behavior, or replacing legacy container return types can break existing Hadoop 0.20-era applications, history parsers, RPC clients, or serialized job metadata.
+
+`JobTracker` and `TaskTracker` expose high-risk distributed coordination paths. Heartbeat response ids, recovery state, topology resolution, blacklisting, commit authorization, lost map output handling, task kill/fail semantics, queue queries, service ACL refresh, and shutdown/cleanup behavior can race with task execution or client polling.
+
+Record readers/writers are byte-level compatibility surfaces. Line splitting, CR/LF handling, split-start behavior, custom separator bytes, reusable writable mutation, progress reporting, raw sequence-file class names, and compressed data handling all need regression protection.
+
+Output commit and task log behavior are operationally risky. Incorrect commit/abort ordering can corrupt output under speculative execution, while changes to task-log paths, index files, capture commands, or servlet URL generation can break debugging and web UI integration.
+
+Skip-bad-record mode depends on counters and reported ranges lining up exactly with application processing. Asynchronous mappers/reducers must disable automatic counter increments and maintain counters themselves; otherwise skip ranges can point at the wrong records or groups.
+
+JobControl is simple but stateful and synchronized only on selected methods. Dependency mutation after a job leaves `WAITING`, suspension/resume behavior, and external polling of returned `ArrayList`s are likely compatibility and concurrency risk points.
+
+## Test Signals
+
+JDiff-level tests should verify the full XML remains well formed and preserves all public/protected class/interface names, inheritance, implemented interfaces, constructors, methods, parameter types, checked exceptions, fields, flags, deprecation strings, and embedded Javadoc contracts across this line range.
+
+Identity and status tests should cover `JobID`, `TaskID`, and `TaskAttemptID` parsing, downgrade behavior, regex generation with null wildcard parts, `Writable` reads, malformed string failures, map/reduce bit preservation, and deprecated string-id compatibility. `JobStatus`, `JobProfile`, `JobQueueInfo`, `TaskCompletionEvent`, and `TaskReport` need serialization round trips, enum/state coverage, equality/hash behavior where exposed, progress fields, priority, queue/scheduling info, diagnostics, and runtime/status fields.
+
+JobTracker/TaskTracker integration tests should exercise startup/readiness, illegal submission before running, job id allocation and submission, job kill/fail/init/priority, cluster status detail mode, queue APIs, task reports and diagnostics, task completion event pagination, tracker blacklisting, topology lookup, heartbeat intervals, task heartbeat/status updates, commit authorization, shuffle/fs/fatal errors, map output lost, map completion event serving, shutdown/cleanup, memory-manager access, and service ACL refresh.
+
+Old MapReduce contract tests should run mapper/reducer jobs through `MapRunner`, `Reporter`, `OutputCollector`, `RecordReader`, `RawKeyValueIterator`, `Partitioner`, `OutputFormat`, `RecordWriter`, and `OutputCommitter`, including progress/counter/status updates, secondary sort/grouping comparators, commit/abort paths, and deprecated API bridge methods.
+
+Input/output format tests should cover text line offsets, CR/LF variants, split boundaries, key/value separator search, missing separators, custom separator bytes, empty keys/values, UTF-8 `Text`, `TextOutputFormat.LineRecordWriter` separators/null handling, `OutputLogFilter`, `MapFileOutputFormat` reader lookup through a partitioner, and sequence-file binary/text/filter record readers and writers.
+
+Sequence-file filter tests should cover configured filter-class selection, `MD5Filter` frequency math, `PercentFilter` periodic acceptance, `RegexFilter` pattern acceptance, configuration propagation through `FilterBase`, raw byte preservation in binary readers/writers, logical class-name configuration, and `WritableValueBytes` compressed/uncompressed write paths.
+
+Skip-bad-record tests should cover attempts-before-skipping defaults and setters, automatic mapper/reducer counter increments on/off, explicit application counter increments, skip output path default/null/custom behavior, mapper/reducer maximum skip thresholds including `0` and `Long.MAX_VALUE`, TaskTracker next-record-range reporting, and deterministic task crash retries.
+
+Task log and servlet tests should cover log file/index resolution, real log location resolution, sync/cleanup, task log length, stdout/stderr/debug capture command construction, `LogName.toString`, appender activation/flush/close/size limits, task-log URL generation, TaskLogServlet responses, TaskGraphServlet SVG output, and MapOutputServlet serving map outputs to reducers.
+
+JobControl tests should cover dependency DAG transitions from `WAITING` to `READY`, `RUNNING`, `SUCCESS`, `FAILED`, and `DEPENDENT_FAILED`; inability to add dependencies after waiting; assigned JobControl id and assigned framework JobID; `submit()` success/failure; `JobControl` addJob/addJobs, state-specific getters, suspend/resume/stop, allFinished, and run-loop behavior when dependencies fail or complete.

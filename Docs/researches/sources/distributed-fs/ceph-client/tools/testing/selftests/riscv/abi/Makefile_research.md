@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/abi/Makefile
+
+Purpose: builds the static RISC-V ABI pointer-masking selftest. It adds `tools/include`, sets `TEST_GEN_PROGS := pointer_masking`, includes `../../lib.mk`, and explicitly links `pointer_masking.c` statically. State is the output executable. Dependencies are RISC-V headers with tagged-address control constants or local fallbacks, static libc/toolchain support, and kselftest. Risks are static link failures in minimal cross toolchains and running only on kernels/hardware with pointer masking support. Test signals are successful build and harness output from `pointer_masking`.

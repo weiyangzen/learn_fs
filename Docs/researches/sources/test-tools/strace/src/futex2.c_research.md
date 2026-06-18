@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/futex2.c
+
+Decoder for futex2 syscalls: `futex_waitv`, `futex_wake`, `futex_wait`, and `futex_requeue`. It prints futex2 size/flag combinations, waiter arrays capped by `FUTEX_WAITV_MAX`, masks, counts, timeouts, and clock ids. State is syscall arguments and local array-print count. Dependencies are `<linux/futex.h>`, `futex2_sizes`, `futex2_flags`, classic `futexbitset`, timespec64, and clock xlat tables. Risks are waiter-array overrun/truncation, flag-size mask composition, and new futex2 ABI changes. Tests should cover waitv arrays, excessive waiter counts, wake masks, wait timeouts, requeue two-waiter inputs, unknown flags, and bad waiter pointers.

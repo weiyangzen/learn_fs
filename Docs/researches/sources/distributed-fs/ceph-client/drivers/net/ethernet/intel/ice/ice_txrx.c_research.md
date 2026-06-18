@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/ice/ice_txrx.c
+
+Purpose: implements the main transmit and receive datapath for the ice driver. It allocates and frees descriptor rings, services NAPI TX/RX completion, maps SKBs and XDP frames to hardware descriptors, handles checksum/TSO/VLAN/timestamp offloads, programs Flow Director dummy packets, and manages interrupt moderation.
+
+Important APIs and functions: exported entry points include `ice_start_xmit()`, `ice_select_queue()`, `ice_napi_poll()`, `ice_setup_tx_ring()`, `ice_setup_rx_ring()`, `ice_free_tx_ring()`, `ice_free_rx_ring()`, `ice_alloc_rx_bufs()`, `ice_clean_ctrl_tx_irq()`, `ice_clean_ctrl_rx_irq()`, `ice_xdp_xmit()`, and `ice_prgm_fdir_fltr()`. Major internal paths are `ice_clean_tx_irq()`, `ice_clean_rx_irq()`, `ice_tx_map()`, `ice_tx_csum()`, `ice_tso()`, `ice_tstamp()`, and descriptor-count/linearization helpers.
+
+Control flow: TX starts at `ice_start_xmit()`, pads too-short frames, selects the ring from `skb->queue_mapping`, computes descriptor needs, optionally linearizes, prepares VLAN/TSO/checksum/eswitch/PTP context descriptors, DMA maps skb data/frags, writes descriptors, sets `next_to_watch`, updates BQL, and rings the tail. RX NAPI checks DD bits, processes header-split and payload buffers through libeth XDP buffers, runs XDP, builds SKBs for passed packets, fills checksum/hash/PTP/protocol metadata via `ice_txrx_lib.c`, submits GRO, refills descriptors, finalizes XDP TX/redirect, updates stats, and handles writeback-on-ITR if work remains.
+
+State and persistence: ring state is held in `next_to_use`, `next_to_clean`, descriptor memory, `tx_buf`/RX fill queue entries, page-pool pointers, XDP program pointers, timestamp rings, BQL accounting, per-ring stats, and q_vector DIM samples. Hardware-visible persistence is descriptor DMA memory and tail register updates. Time-based TX optionally writes a separate timestamp descriptor ring.
+
+Dependencies and integration: integrates with netdev NDOs, NAPI, DMA mapping, page pools/libeth, XDP and AF_XDP paths, PTP timestamp allocation, DCB DSCP queue selection, eswitch target selection, Flow Director control VSI, tracepoints from `ice_trace.h`, and register helpers for GLINT interrupt control.
+
+Risks: this is hot-path, memory-order-sensitive code. Barriers before tail writes and descriptor reads are critical. DMA error unwinding must not leak mappings. TX timestamp rings are RCU-freed and require pointer/flag ordering. XDP locking differs depending on `ice_xdp_locking_key`. Descriptor-count mistakes can cause queue stalls or hardware max-buffer violations. RX refill failures intentionally force another poll pass.
+
+Test signals: stress TCP/UDP, TSO/GSO, fragmented SKBs, VLAN offload, DCB DSCP mapping, PTP TX/RX timestamps, XDP PASS/DROP/TX/REDIRECT, AF_XDP zero-copy, Flow Director programming, busy-poll, multi-ring q_vectors, DIM changes, queue stop/wake, DMA mapping failures, MTU extremes, reset cleanup, and link-down TX behavior. Observe ethtool stats, BQL behavior, tracepoints, packet counters, and skb checksum correctness.

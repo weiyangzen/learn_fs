@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/vce_v3_0.c
+
+Purpose: Implements VCE 3.x encode support for VI-era hardware. It handles harvested VCE instances, up to three rings when firmware supports it, physical or VM ring modes, per-instance register selection via `GRBM_GFX_INDEX`, firmware boot, clock-gating state reporting, and multi-stage soft reset.
+
+Important APIs and functions: Exports `vce_v3_0_ip_block`, `vce_v3_1_ip_block`, and `vce_v3_4_ip_block`. Key helpers include `vce_v3_0_get_harvest_config`, `start`, `stop`, `mc_resume`, `firmware_loaded`, `check_soft_reset`, `pre_soft_reset`, `soft_reset`, `post_soft_reset`, `set_vce_sw_clock_gating`, VM IB/flush/pipeline helpers, and ring pointer accessors protected by `adev->grbm_idx_mutex`. Two ring function tables support physical and VM modes.
+
+Control flow: early init reads harvest fuses, disables the block if both instances are harvested, runs shared VCE early setup, starts with three rings, and installs funcs/IRQs. SW init registers the VISLANDS VCE trap, allocates memory for two firmware stack/data regions, reduces to two rings if firmware is older than 52.8.3, resumes firmware memory, and initializes rings. HW init overrides VCE clock gating, sets clocks, and ring-tests all active rings. Start iterates live VCE instances, selects instance registers through `GRBM_GFX_INDEX`, programs ring buffers, MC cache windows, VCPU clock/reset, waits for firmware loaded, and clears busy.
+
+State and persistence: Driver state includes `adev->vce.harvest_config`, `num_rings`, `fw_version`, `srbm_soft_reset`, `ring[]`, IRQ, idle work, PM/CG flags, and `grbm_idx_mutex`. Hardware state includes per-instance VCE registers selected through GRBM, cache BAR/offset/size registers, VCE status bits, ring pointers/base/size, VCE clock-gating registers, SRBM reset bits, and SMC PG status for clock-gating queries.
+
+Dependencies and integration points: Uses shared VCE parser/test/fence helpers, VM-mode VCE CS parser, GFX/SMU/OSS/VCE register headers, VISLANDS interrupt IDs, DPM clock hooks, and ring core VM callbacks. VM mode is selected for `CHIP_STONEY` and newer; older chips use physical mode.
+
+Risks: GRBM instance selection must always be restored to default and protected by the mutex; missed restoration affects unrelated register access. Harvest configuration changes ring/instance mapping and can disable the block. Firmware version gates three-ring support. `check_soft_reset` uses VCE status bits for both instances and sets both VCE0/VCE1 reset bits when either appears busy. Some offsets in `mc_resume` use narrower masks for instance 1 and should be kept consistent with firmware memory layout.
+
+Test signals: Ring tests for active rings, firmware loaded bit per live instance, harvest fuse behavior, VM IB/flush tests where VM mode is active, clock-gating state readback, SRBM reset logs, and trap IRQ processing for rings 0..2. Failure signals include both-instances-harvested `-ENOENT`, firmware loaded timeout, idle wait timeout, unhandled interrupt source data, and reset/resume failures.

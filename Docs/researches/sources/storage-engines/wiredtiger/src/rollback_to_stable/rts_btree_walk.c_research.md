@@ -1,0 +1,15 @@
+# sources/storage-engines/wiredtiger/src/rollback_to_stable/rts_btree_walk.c
+
+Purpose: selects which btrees and pages need rollback-to-stable and drives the tree walk that invokes page-level rollback. It also implements RTS work-queue plumbing for parallel btree processing.
+
+Important APIs and functions: `__wti_rts_btree_walk_btree_apply` evaluates a metadata entry and either processes or queues a btree. `__wti_rts_btree_walk_btree` rolls back the currently open btree. `__wti_rts_btree_work_unit`, `__wti_rts_pop_work`, and `__wti_rts_work_free` support worker threads. Internal helpers include `__rts_btree_walk_page_skip`, `__rts_btree_walk`, `__rts_btree`, `__rts_btree_int`, and `__rts_push_work`.
+
+Control flow: metadata-level apply ignores non-btree, metadata, and history-store URIs, reads checkpoint metadata, computes maximum durable start/stop timestamp, detects prepared updates, captures newest transaction/write generation, and checks whether a cached dhandle is modified. If the object is dirty, has timestamps beyond stable, contains prepared updates, or was checkpointed with transactions newer than the recovery snapshot, it runs or queues rollback. The tree walk uses `WT_READ_NO_EVICT`, `WT_READ_VISIBLE_ALL`, `WT_READ_WONT_NEED`, and `WT_READ_SEE_DELETED`, emits progress periodically, and calls `__wti_rts_btree_abort_updates` on leaf refs. The page-skip callback skips stable on-disk pages and stable committed fast-deleted pages but instantiates unstable or prepared deleted pages.
+
+State and persistence behavior: this file does not directly rewrite records; it opens/releases dhandles, enqueues `WT_RTS_WORK_UNIT` entries, increments progress counters, updates skip/process stats, and after a successful btree walk resets `btree->rec_max_txn` and `btree->rec_max_timestamp` so later reconciliation sees only stable data. It can truncate history-store entries for skipped non-timestamped btrees.
+
+Dependencies and integration points: integrates with metadata checkpoint config parsing, handle-list locks, RTS thread-group condition variables, tree-walk APIs, page visibility checks from `rts_visibility.c`, page mutation from `rts_btree.c`, and history truncation from `rts_history.c`. It treats logged btrees and checkpoint handles as out of scope, and handles missing/corrupt files as skip conditions.
+
+Risks: skip decisions are high impact because a false skip leaves unstable data behind. The checkpoint write-generation/newest-transaction test is recovery-specific and depends on correct metadata. Page-delete locking must restore the ref state exactly. Queue management must not lose work under concurrent RTS worker threads. Progress reporting relies on approximate page position and should not affect tree-walk state.
+
+Test signals: useful coverage includes metadata-only skip decisions, dirty cached handles, prepared fast truncate pages, deleted-page skip cases, missing file and corruption skip handling, threaded and single-thread RTS paths, non-timestamped history-store truncation, progress counter movement, and logged/checkpoint handle no-op behavior.

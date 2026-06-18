@@ -1,0 +1,13 @@
+# sources/distributed-fs/glusterfs/xlators/performance/open-behind/src/open-behind.c
+
+Purpose: implements the maintained `open-behind` translator, which replies to selected `open` calls before the backend open is issued and delays or cancels that backend open until a later operation requires it.
+
+Important APIs, types, and functions: `ob_conf_t` stores `use_anonymous_fd`, `lazy_open`, and `read_after_open`. `ob_inode_t` tracks per-inode pending first open, first fd, open count, trigger state, and queued stubs. `ob_open_and_resume_inode/fd`, `ob_open_behind`, `ob_open_dispatch`, `ob_stub_dispatch`, `ob_open_completed`, and `ob_fdclose` implement the state machine. `OB_POST_FD`, `OB_POST_INODE`, and `OB_POST_FLUSH` decide whether to use anonymous fds, queue a stub, trigger the first open, or forward directly.
+
+Control flow: first non-synchronous `open` stores a referenced fd and a copied-frame stub, immediately unwinds success to the caller, and either dispatches the backend open immediately or keeps it lazy. Later reads/fstats/seeks may proceed on anonymous fds if configured, while writes, locks, fsync, truncate, xattr mutations, unlink/rename/setattr, or read-after-open trigger the backend open and queue their call stubs until open completion. If the fd is closed before a lazy open is triggered, `ob_fdclose` cancels and destroys the pending open stub.
+
+State and persistence: all state is in memory in per-inode ctx and fd ctx error values. `open_count` resets behavior once all fds close. Backend open failures are stored via `fd_ctx_set`; future fd operations see the error through `ob_open_and_resume_fd`. No disk persistence.
+
+Dependencies and integration: depends on Gluster defaults/call-stub APIs, inode/fd ctx, frame copy/destroy, anonymous fd helpers, ACL xattr constants, statedump, and xlator registration. It requires exactly one child and exposes `open-behind`, `use-anonymous-fd`, `lazy-open`, `read-after-open`, and `pass-through` options.
+
+Risks: correctness depends on careful lock boundaries because stubs are allocated outside inode locks and resumed after state changes. `OB_POST_FLUSH` contains a suspicious switch layout where the common macro is unreachable-looking after `break`, so flush behavior needs close regression coverage. Anonymous fd reads/fstats avoid backend open but may not preserve all fd side effects. Setxattr bypasses open-behind for POSIX ACL and SELinux xattrs. Tests should cover open-read-close cancellation, read-after-open on/off, use-anonymous-fd on/off, backend open failure propagation, concurrent operations while first open is preparing, fdclose races, and operations that must force synchronous open.

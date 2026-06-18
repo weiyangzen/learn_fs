@@ -1,0 +1,5 @@
+# sources/user-network-fs/samba/source4/lib/policy/pypolicy.c
+
+`pypolicy.c` exposes a small subset of `samba-policy` to Python as `samba.policy`. It wraps `gp_get_gpo_flags()`, `gp_get_gplink_options()`, and `gp_ads_to_dir_access_mask()`, and exports constants for GPO and link flags. The wrappers allocate a temporary talloc context, call the C helper, convert NULL-terminated string arrays to Python lists, and translate NTSTATUS failures to Python exceptions.
+
+There is no persistent state beyond module constants. Integration is mainly for Python tooling that needs symbolic flag names or access-mask conversion without driving full GPO management. Risks include constant naming mistakes: the module adds `GPO_MACHINE_USER_DISABLE` instead of the expected `GPO_FLAG_MACHINE_DISABLE`, and `GPLINK_OPT_ENFORCE ` has a trailing space in the exported Python name. Input parsing uses signed `int` for flag masks in two wrappers. Test signals should import the module, verify exact constant names, compare flag list outputs, and validate mask conversion for each ADS access bit.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/cachestat/cachestat02.c
+
+Purpose: verifies `cachestat()` counts cached pages in POSIX shared memory objects. Setup gets page size and allocates page data; run creates unique `/cachestat_<pid>.bin` shm objects for page counts `1..512`, truncates and writes them, calls `cachestat`, and checks cache plus evicted equals page count. Important APIs are `shm_open`, `SAFE_FTRUNCATE`, `SAFE_WRITE`, `cachestat`, and `shm_unlink`. State is shared-memory objects, their page-cache residency, and allocated counters/range buffers. Dependencies are POSIX shm and `-lrt` linkage. Risks are stale shm objects if interrupted and cache timing. Test signal is expected page count from cachestat for every tested size.

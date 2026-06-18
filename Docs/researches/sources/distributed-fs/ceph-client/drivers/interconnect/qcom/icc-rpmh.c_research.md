@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/interconnect/qcom/icc-rpmh.c
+
+Purpose: shared Qualcomm RPMh interconnect provider implementation. It turns SoC-specific `qcom_icc_desc` topology tables into Linux interconnect providers, aggregates ICC bandwidth requests into per-BCM bucket state, commits RPMh BCM votes, initializes BCM metadata from command DB, and optionally programs static NoC QoS registers.
+
+Important APIs/types/functions: exported entry points are `qcom_icc_pre_aggregate()`, `qcom_icc_aggregate()`, `qcom_icc_set()`, `qcom_icc_bcm_init()`, `qcom_icc_rpmh_probe()`, and `qcom_icc_rpmh_remove()`. Internal helpers include `qcom_icc_set_qos()` and `qcom_icc_rpmh_configure_qos()`. The code operates on `struct qcom_icc_provider`, `struct qcom_icc_node`, `struct qcom_icc_bcm`, `struct icc_provider`, `struct icc_node`, and command-DB `struct bcm_db` data.
+
+Control flow: probe gets the matched descriptor, allocates the provider and `icc_onecell_data`, installs ICC callbacks, obtains the BCM voter, initializes every BCM through command DB, creates or reuses each qnode's `icc_node`, names it, adds it to the provider, links it to target nodes, and stores it in onecell data. If the descriptor carries a regmap config, probe obtains a parent regmap or maps local MMIO, optionally gets QoS clocks, programs all `qosbox` entries, then registers the provider and populates child devices. Bandwidth updates call pre-aggregate to clear per-node bucket sums and queue BCMs, aggregate to update tagged buckets, and set to commit the voter.
+
+State and persistence: state is runtime-only and per provider. Static SoC qnodes retain their `icc_node` pointer across probe. Per-node `sum_avg` and `max_peak` arrays are reset before each aggregate pass. BCMs cache command-DB addresses, aux data, list heads, scaling, linked nodes, dirty state, and wake/sleep list membership for the BCM voter.
+
+Dependencies/integration: integrates Linux ICC core, OF platform matching/population, regmap/MMIO, bulk clocks, Qualcomm command DB, `bcm-voter`, and `icc-common` extended xlate support. SoC-specific RPMh topology files supply descriptors consumed here.
+
+Risks and test signals: `qcom_icc_rpmh_probe()` ignores `qcom_icc_bcm_init()` return values, so missing command-DB entries can leave later vote behavior dependent on partially initialized BCMs. QoS programming is best-effort for most failures, except clock probe defer. Test probe/unwind with missing command DB, invalid aux data, parent versus local regmap, missing clocks with and without `qos_requires_clocks`, child NoC population failure, repeated aggregate/set cycles, multi-bucket tags, `init_avg/init_peak`, and remove ordering after provider registration.

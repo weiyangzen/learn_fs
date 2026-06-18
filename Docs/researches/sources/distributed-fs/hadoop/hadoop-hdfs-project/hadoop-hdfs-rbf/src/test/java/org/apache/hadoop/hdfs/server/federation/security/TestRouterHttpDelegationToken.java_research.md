@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/security/TestRouterHttpDelegationToken.java
+
+Purpose: tests WebHDFS/HTTP delegation-token operations against a secure Router configured with a no-auth test filter.
+
+Important APIs/types/functions: `RouterHDFSContract`, `RouterWebHDFSContract`, `RouterConfigBuilder`, `Router`, `WebHdfsFileSystem`, `WebHdfsTestUtil`, `DelegationTokenIdentifier`, `Token`, WebHDFS op params (`GetOpParam`, `PutOpParam`, `TokenArgumentParam`, `RenewerParam`, `UserParam`), `AuthenticationFilterInitializer`, `AuthenticationFilter`, `PseudoAuthenticationHandler`, `FilterContainer`, and nested `NoAuthFilterInitializer`/`NoAuthFilter`.
+
+Control flow: setup initializes security, configures router HTTP/RPC/security services and a no-auth HTTP filter that injects pseudo-auth settings, starts the router contract cluster, and obtains a WebHDFS client. `testGetDelegationToken()` requests a token for a renewer and decodes the identifier. `testRenewDelegationToken()` obtains and renews a token, asserting a positive renewal time. `testCancelDelegationToken()` obtains then cancels a token and verifies subsequent renewal/cancel behavior through WebHDFS helper calls. Helpers build operation URLs and parse token identifiers.
+
+State and persistence behavior: token state lives in the router secret manager backing the secure contract cluster; HTTP authentication state is test-filter driven. Integration points include Router HTTP endpoints, WebHDFS token operations, delegation-token manager, and security configuration. Risks include static contract cluster cleanup, no-auth filter hiding authentication issues, and token lifecycle timing. Test signals are non-null decoded identifiers, valid renewal timestamps, and expected failures after cancellation.

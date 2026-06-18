@@ -1,0 +1,30 @@
+# sources/user-network-fs/samba/source3/smbd/files.c
+
+## Purpose
+`files.c` owns smbd's `files_struct` lifecycle, pathref fsp creation, embedded `smb_filename` to fsp links, fd/pathref helpers, open-file lookup, close-all operations, and stream/base fsp relationships. It is the central in-memory open-file table for a server connection and the lower implementation used by `filename.c` to walk paths safely.
+
+## Important APIs, Types, And Functions
+`fsp_new()`, `file_new()`, `create_internal_fsp()`, `create_internal_dirfsp()`, and `open_internal_dirfsp()` allocate and initialize fsps, bind SMB-visible handles through `fsp_bind_smb()`, and add fsps to `sconn->files`. `fsp_set_gen_id()` provides internal-open generation ids outside the 32-bit real-handle range. `fsp_bind_smb()` creates an `smbXsrv_open`, connects it to the request/session/tcon, sets `fnum`, and installs the request chain fsp.
+
+The pathref family includes `openat_pathref_fsp()`, `openat_pathref_fsp_rootdir()`, `open_stream_pathref_fsp()`, `openat_pathref_fsp_nosymlink()`, `openat_pathref_fsp_lcomp()`, `openat_pathref_fsp_dot()`, `synthetic_pathref()`, and `parent_pathref()`. These functions use `SMB_VFS_OPENAT()`, `fd_openat()`, `vfs_stat_fsp()`, `SMB_VFS_FSTATAT()`, O_PATH/O_SEARCH/O_NOFOLLOW semantics, optional `openat2` `RESOLVE_NO_SYMLINKS`, and case-insensitive retry through `smb_vfs_openat_ci()`.
+
+Ownership helpers are `fsp_attach_smb_fname()`, `fsp_set_smb_fname()`, `smb_fname_fsp_unlink()`, `move_smb_fname_fsp_link()`, and `reference_smb_fname_fsp_link()`. They maintain `struct fsp_smb_fname_link`, ensure destructors clear dangling pointers, and determine whether freeing an `smb_filename` should close an embedded fsp. Lookup and close APIs include `files_forall()`, `file_find_fd()`, `file_find_dif()`, `file_find_di_first()`, `file_find_di_next()`, `file_find_one_fsp_from_lease_key()`, `file_find_subpath()`, `file_close_conn()`, `file_close_user()`, `file_fsp_get()`, and `file_fsp_smb2()`.
+
+## Control Flow
+Allocation begins with `fsp_new()`: allocate `files_struct`, create a separate fd handle, initialize lock mode and fd, link it at the head of `sconn->files`, increment file counters, and later bind it to SMB state if the open is not internal. Pathref open flows allocate an fsp, attach a full `smb_filename`, open relative to a directory fsp, stat the resulting object, set flags and file id, and link the newly opened fsp back into the caller's `smb_filename`. Destructors ensure freeing pathref-backed filenames closes and frees the embedded fsp unless the caller explicitly unlinks or references without close ownership.
+
+`openat_pathref_fsp_nosymlink()` is the full path walker. It splits the path into components, rejects `.`/`..` and vetoed components, optionally tries a direct no-symlink open, then walks component by component with openat. It detects symlinks with O_PATH/O_NOFOLLOW behavior, reads reparse data, tracks unparsed path length, closes intermediate dirfsps, and returns either a linked final pathref or `NT_STATUS_STOPPED_ON_SYMLINK`. `openat_pathref_fsp_lcomp()` is the optimized last-component path that can fall back to `GETREALFILENAME_CACHE` and directory real-name lookup after ENOENT on case-insensitive shares.
+
+Close control flow walks `sconn->files` with `files_forall()`. Alternate stream fsps and base fsps can reference each other, so `close_file_in_loop()` may need two passes: first breaks base/stream links and closes stream fsps, then closes the now-normal base fsps. `fsp_unbind_smb()` removes notify registrations, SMB open compatibility links, request chain refs, and SMB2 chained fsp refs before `fsp_free()` removes the object from lists and frees handle/lease/fsp-name links.
+
+## State And Persistence
+The file manages per-process/per-connection in-memory state only: `sconn->files`, `sconn->num_files`, `conn->num_files_open`, `sconn->fsp_fi_cache`, `files_max_open_fds`, fd handle refcounts, lease refcounts, `smbXsrv_open` compatibility pointers, notify state, and base/stream links. Durable-handle state is partly represented through `fsp->op->global->durable`, which is cleared on tree disconnect. Case-insensitive last-component lookup uses the global smbd memcache `GETREALFILENAME_CACHE`, keyed by parent file id plus uppercased requested name.
+
+## Dependencies And Integration Points
+`files.c` sits under SMB1 and SMB2 open paths, `filename.c`, VFS modules, share-mode and lease code, notify code, fd-handle code, SMBXSRV open tables, security/access checks, memcache, loadparm, and reparse helpers. It calls VFS operations such as `SMB_VFS_OPENAT`, `SMB_VFS_FSTAT`, `SMB_VFS_FSTATAT`, `SMB_VFS_READLINKAT`, `SMB_VFS_PARENT_PATHNAME`, and file-id derivation. It also uses protocol structures from `globals.h` for SMB2 request lookup and chained fsp compatibility.
+
+## Risks
+The highest risks are fd leaks or double closes around embedded pathref destructors, stream/base error paths, symlink stop handling, and intermediate dirfsp cleanup. Security risks include accidentally following symlinks while path-walking, requiring read permission instead of execute/search permission when O_PATH/O_SEARCH is unavailable, stale case-insensitive cache entries, veto-file bypasses, and returning an fsp across the wrong session/tcon in SMB2 handle lookup. The open-file singleton cache must be invalidated when list order changes or fsps are freed.
+
+## Test Signals
+Tests should exercise allocation failure cleanup, internal opens, SMB-bound opens, fsp name replacement, pathref destructor ownership, move/reference fsp links, root/dot pathrefs, multi-component path walking, no-symlink openat2 fallback, O_PATH unavailable behavior, symlink metadata/unparsed lengths, case-insensitive cache hit/miss/delete paths, vetoed components, named stream opens and missing stream creation, parent pathrefs, file lookup by fd/file-id/gen-id/lease key, subpath detection, durable close on tree disconnect, two-pass stream close, SMB2 persistent/volatile id validation, and max-open-files initialization.

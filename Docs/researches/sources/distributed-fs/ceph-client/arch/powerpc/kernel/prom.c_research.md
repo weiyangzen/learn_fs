@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/kernel/prom.c
+
+Purpose: this file performs early PowerPC flattened device-tree parsing and boot-time platform discovery. It establishes memory limits and memblock state, reserves kernel/initrd/crash/fadump/DT memory, scans CPU features and boot CPU identity, initializes early MMU and firmware feature state, handles transactional-memory boot policy, and exports chip-id lookup helpers.
+
+Important APIs and state: early parameters include `mem=` and `ppc_tm=`. Global state includes `chip_id_lookup_table`, `iommu_is_off`, `iommu_force_on`, TCE allocation bounds, `ppc64_rma_size`, `boot_cpu_node_count`, `first_memblock_size`, and `boot_cpu_count`. Major functions are `move_device_tree()`, CPU feature scanners for `ibm,pa-features` and `ibm,pi-features`, `early_init_dt_scan_cpus()`, `early_init_dt_scan_chosen_ppc()`, memory validators and dynamic-memory scanning, `early_init_dt_add_memory_arch()`, reservation helpers, `tm_init()`, `early_init_devtree()`, relocatable `early_get_first_memblock_info()`, `of_get_ibm_chip_id()`, `cpu_to_chip_id()`, and `arch_match_cpu_phys_id()`.
+
+Control flow: `early_init_devtree()` verifies the FDT, scans model and firmware debug nodes, parses `/chosen`, appends fadump args, scans memory, initializes jump labels, parses early params, sets initial memory limits, reserves kernel and crash regions, enforces memory caps, permits memblock resize, moves the FDT if it overlaps restricted areas, scans CPU features and boot CPU data, initializes early MMU, firmware and paravirt features, pkeys, PS3 flags, PLPKS, and transactional memory. Later callers use chip-id helpers against the live device tree.
+
+State and persistence: memblock additions/reservations and `memory_limit` shape the physical memory map for the rest of boot. CPU feature bits are mutated in `cur_cpu_spec` and user-visible feature masks. Boot CPU logical/physical ids and hardware description strings are persisted. Chip-id lookup can be cached by core index.
+
+Dependencies and integration points: depends on libfdt, OF flat tree helpers, memblock, crash/fadump/kdump, RTAS/OPAL/pseries/powernv firmware probes, MMU setup, CPU feature tables, dynamic reconfiguration memory, ultravisor, pkeys, PLPKS, SMP boot data, and initrd handling.
+
+Risks: this code runs before normal allocators and full diagnostics, so failures often panic. Firmware property parsing must handle endian and cell-size conventions exactly. Moving the FDT must avoid memory limits, crashkernel, initrd, and non-memory. `iommu_is_off` restricts usable memory below 2 GiB on PPC64. Incorrect CPU feature mutation affects user ABI and facility availability.
+
+Test signals: early boot logs should identify model, memory, boot CPU, and feature setup without panics. Validate `mem=`, crashkernel/fadump, initrd overlap, relocatable kernel first-block discovery, dynamic LMB memory on pseries, TM disabled/enabled policy, chip-id lookup, SMP boot CPU mapping, and firmware feature detection on pseries, powernv, and BookE-style systems.

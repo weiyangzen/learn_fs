@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/int/test_git.py -->
+# sources/sync-backup/bup/test/int/test_git.py
+
+Purpose: comprehensive integration tests for bup's Git abstraction layer. Important APIs include `git.is_suitable_git`, `require_suitable_git`, `mangle_name`, `demangle_name`, `_encode_packobj`, `_decode_packobj`, `PackWriter`, `PackIdxV2Writer`, `PackIdxV2`, `PackIdxList`, `establish_default_repo`, `check_repo_or_die`, `get_commit_items`, `list_refs`, `catpipe`, `auto_midx`, `parse_git_int`, `git_config_get`, and `repo_config_file`. Helpers are `local_writer()`, `check_establish_default_repo_variant()`, and `_create_idx()`.
+
+Control flow validates Git version classification and override env behavior, bup filename mangling for `.bup*` suffixes and chunked metadata, pack object encoding/decoding including compression level validation, pack writing/aborting/index lookups, source pack name lookup, long pack offsets, repository establishment and failure exit codes for invalid repo paths, commit creation/parsing with timezone offsets, listing refs filtered by heads/tags including blob/tree tags, catpipe data and metadata modes, midx refresh closing deleted file descriptors on `/proc/self/fd` systems, Git integer parsing with suffixes and bounds, and config-file typed reads using `sample.conf`.
+
+State includes temporary bup repos, pack/idx/midx files, global `git.repodir`, environment `BUP_DIR`, generated commits/refs/tags, and sample config values. Dependencies are Git, `/proc/self/fd` for one skipped test, pytest, WvTest, and bup helpers. Risks are global repo state leakage, file descriptor leaks, Git version output changes, config parsing differences, and exact exit-code assumptions. Test signals are WvTest equality checks, raised `ConfigError`/`SystemExit`, object existence lookups, parsed commit fields, and descriptor state after midx refresh.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/int/test_git.py -->

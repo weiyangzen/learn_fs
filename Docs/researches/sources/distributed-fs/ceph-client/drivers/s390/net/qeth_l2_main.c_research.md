@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/s390/net/qeth_l2_main.c
+
+Purpose: implements the qeth layer 2 discipline: MAC/VLAN registration, TX header construction, rx-mode synchronization, BridgePort control and notifications, switchdev learning_sync support, VNIC characteristics, netdevice setup, online/offline transitions, and IPA control-event consumption.
+
+Important APIs and functions: the exported discipline is `qeth_l2_discipline`. Netdev operations are `qeth_l2_iqd_netdev_ops` and `qeth_l2_osa_netdev_ops`. MAC/VLAN helpers include `qeth_l2_send_setdelmac()`, `qeth_l2_register_dev_addr()`, `qeth_l2_set_mac_address()`, `qeth_l2_vlan_rx_add_vid()`, and `qeth_l2_vlan_rx_kill_vid()`. Bridge/switchdev paths include `qeth_l2_pnso()`, `qeth_l2_dev2br_an_set()`, `qeth_l2_bridge_setlink()`, `qeth_bridgeport_query_ports()`, `qeth_bridgeport_setrole()`, and `qeth_bridgeport_an_set()`. VNICC flows use `qeth_l2_vnicc_query_chars()`, `qeth_l2_vnicc_set_state()`, and `qeth_l2_vnicc_init()`.
+
+Control flow: online setup detects dev-to-bridge support, queries BridgePort commands, registers the device MAC, initializes VNICC, transitions to `CARD_STATE_SOFTSETUP`, enables qeth threads, and registers or reattaches the netdev. TX maps the skb to an output queue, fills an L2 or L2 TSO qeth header, marks VLAN/cast/checksum flags, and delegates to `qeth_xmit()`. Rx mode work snapshots netdev unicast/multicast lists, compares them with the cached hash table, issues add/delete MAC IPA commands, and updates promiscuous mode.
+
+State and persistence: live state is stored in `card->info.dev_addr_is_registered`, `card->rx_mode_addrs`, `card->options.sbp`, `card->options.vnicc`, `card->info.pnso_mode`, qdio queues, and `qeth_priv.brport_features`. Desired VNICC and BridgePort values can be cached while offline and recovered on next online setup; MAC/rx-mode caches are drained offline.
+
+Dependencies and integration: integrates with qeth IPA commands, adapter parameters, CHSC PNSO, switchdev notifiers, bridge port attributes, workqueues, qdio, NAPI, netdevice VLAN and MAC callbacks, and userspace uevents for BridgePort host notifications.
+
+Risks: BridgePort, VNICC, and learning_sync are mutually exclusive and guarded across sysfs/netlink paths; missed checks can produce invalid hardware state. PNSO address notification overflow requires flushing bridge FDB state and re-enabling notifications, with stale workqueue entries called out as a recovery risk. MAC registration errors can leave the netdev unable to validate addresses. Work items hold netdev references for bridge learning updates and must release them on every path.
+
+Test signals: L2 bring-up/offline/recovery, MAC address changes including duplicate/unauthorized errors, VLAN add/delete errors, multicast list churn, promiscuous mode fallback through BridgePort reflect, switchdev learning_sync enable/disable and overflow recovery, BridgePort role and host notification uevents, VNICC set/get/timeout recovery, IQD queue selection, and TSO/checksum/VLAN header inspection.

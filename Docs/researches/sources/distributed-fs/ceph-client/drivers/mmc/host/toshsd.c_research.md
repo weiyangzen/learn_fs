@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/toshsd.c
+
+Purpose: this is a legacy Toshiba PCI Secure Digital host driver. It drives the Toshiba-specific PCI/MMIO SD controller directly, using PIO data transfers, card-detect interrupts, PCI config-space clock/power/LED controls, and simple suspend/resume powerdown.
+
+Important APIs, types, and functions: `struct toshsd_host` comes from `toshsd.h` and stores the PCI device, MMC host, lock, current request/command/data, scatterlist mapping iterator, and MMIO base. MMC operations are `toshsd_request()`, `toshsd_set_ios()`, `toshsd_get_ro()`, and `toshsd_get_cd()`. Core helpers are `toshsd_init()`, `__toshsd_set_ios()`, `toshsd_irq()`, `toshsd_thread_irq()`, `toshsd_cmd_irq()`, `toshsd_data_end_irq()`, `toshsd_start_cmd()`, `toshsd_start_data()`, and `toshsd_powerdown()`.
+
+Control flow: PCI probe enables the device, allocates an MMC host, requests PCI regions, maps BAR0, sets 4-bit and OCR capabilities plus clock limits, initializes the controller, requests a shared threaded IRQ, and registers the host. Requests reject absent cards, store `host->mrq`, initialize PIO scatterlist iteration for data, enable the activity LED, and write command/argument registers. The hard IRQ handles errors, card insertion/removal, command response completion, data-end completion, and wakes the threaded IRQ for FIFO read/write readiness. The thread transfers one block-sized chunk through `SD_DATAPORT` using 32-bit repeated IO and updates the scatterlist iterator. Completion clears request pointers, LED state, and calls `mmc_request_done()`.
+
+State and persistence: runtime state is the current MMC request, command/data pointers, SG iterator, and controller register contents. PCI config space carries clock-stop, divider mode, power, card-detect, and LED setup. Suspend masks interrupts, disables SD/SDIO clocks, powers down the card, stops the PCI clock, saves PCI state, and enters D3hot; resume restores PCI state, reenables the device, and reinitializes hardware.
+
+Dependencies and integration points: the driver uses PCI core APIs, raw MMIO accessors, MMC host APIs, scatterlist mapping iterators, shared/threaded IRQs, and register constants from `toshsd.h`. It binds PCI vendor/device `0x1179:0x0805`.
+
+Risks: no DMA is used, so throughput and CPU use depend on interrupt-per-block PIO. The STOP command path fakes immediate completion for `MMC_STOP_TRANSMISSION`, while multi-block normal data uses auto CMD12 register setup. Non-timeout errors reinitialize the controller inside IRQ handling and then rely on later IOS restoration. The threaded handler returns `IRQ_NONE` for a spurious data IRQ after potentially completing an errored command. Clock division from `HCLK` cannot produce common full SD/MMC rates.
+
+Test signals: probe on the matching PCI device, card insert/remove interrupts and polling state, PIO read/write integrity for single and multi-block transfers, response decoding for R2 and short responses, timeout/CRC/error register logging and recovery, write-protect reporting, LED activity, and suspend/resume restoring enumeration and clock/power state.

@@ -1,0 +1,14 @@
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/dma/ioat/dma.h -->
+# sources/distributed-fs/ceph-client/drivers/dma/ioat/dma.h
+
+Purpose: provides the private IOAT DMA driver contract shared by PCI init, descriptor preparation, runtime cleanup, and sysfs support. It defines device/channel/ring state, common conversions, ring math, MMIO helpers, operation prototypes, and exported globals.
+
+Important APIs and control flow: `struct ioatdma_device` wraps the PCI device, MMIO base, completion and super-extended descriptor pools, embedded `dma_device`, capability/version data, channel index table, DCA provider, IRQ mode, and MSI-X errata shadows. `struct ioatdma_chan` embeds `dma_chan`, per-channel MMIO base, completion writeback buffer, tasklet/timer, kobject, ring cursors, locks, descriptor chunks, and interrupt coalescing state. `struct ioat_ring_ent` overlays all IOAT hardware descriptor formats with DMAEngine descriptor metadata, callback length/result storage, debug ID, and optional SED pointer. Inline helpers convert DMAEngine objects to IOAT containers, read channel status/errors, issue suspend/reset commands, classify status bits, compute ring active/pending/space counts, map transfer length to descriptor count, fetch ring entries, and program chain address registers.
+
+State and persistence behavior: the header fixes in-memory layout rather than owning state directly. Runtime state persists in channel objects allocated by `init.c`, coherent descriptor chunks allocated by `dma.c`, and DMA pools referenced by device fields. Bit definitions in `ioatdma_chan.state` gate shutdown, active cleanup, pending reset, kobject lifetime, and normal run state. Ring counters are 16-bit and masked against a power-of-two ring size.
+
+Dependencies and integration points: depends on Linux DMAEngine, dmapool, PCI IDs, interrupt definitions, circular-buffer helpers, and local `registers.h`/`hw.h`. It is the shared include for `dma.c`, `init.c`, `prep.c`, and `sysfs.c`; exported prototypes become the internal link points between those translation units.
+
+Risks and test signals: risks include layout coupling between unioned descriptor pointers and raw hardware formats, ring arithmetic relying on power-of-two sizes, channel-number derivation assuming 0x80-byte channel windows, source-count conversion macros requiring caller-side bounds, and `ioat_set_chainaddr()` always using v2 offsets despite compatibility macros existing. Test signals include clean compile with DEBUG and non-DEBUG descriptor IDs, correct channel lookup for all enumerated channels, ring counter wraparound under high transfer counts, successful RAID source-count encoding, and status helpers matching observed `CHANSTS` hardware states.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/dma/ioat/dma.h -->

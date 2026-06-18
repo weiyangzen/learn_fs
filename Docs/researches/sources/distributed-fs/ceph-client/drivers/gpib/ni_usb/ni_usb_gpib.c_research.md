@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/drivers/gpib/ni_usb/ni_usb_gpib.c
+
+## Purpose
+`ni_usb_gpib.c` is the Linux-GPIB adapter driver for National Instruments and compatible USB-to-GPIB devices. It binds USB interfaces, exposes one `gpib_interface` named `ni_usb_b`, translates Linux-GPIB read/write/command/control operations into the NI USB bulk/control protocol, manages status monitoring through interrupt URBs and vendor requests, and handles USB suspend/resume and unplug races.
+
+## Important APIs, types, and functions
+- Module and bus entry points are `ni_usb_init_module()`, `ni_usb_exit_module()`, `ni_usb_driver_probe()`, `ni_usb_driver_disconnect()`, `ni_usb_driver_suspend()`, and `ni_usb_driver_resume()`.
+- Linux-GPIB attach/lifecycle hooks are `ni_usb_attach()` and `ni_usb_detach()`, with board operations collected in `ni_usb_gpib_interface`.
+- Core GPIB operations are `ni_usb_read()`, `ni_usb_write()`, `ni_usb_command()`, `ni_usb_take_control()`, `ni_usb_go_to_standby()`, `ni_usb_request_system_control()`, `ni_usb_interface_clear()`, `ni_usb_remote_enable()`, `ni_usb_update_status()`, `ni_usb_line_status()`, `ni_usb_primary_address()`, `ni_usb_secondary_address()`, `ni_usb_parallel_poll()`, and `ni_usb_t1_delay()`.
+- USB transport helpers include `ni_usb_send_bulk_msg()`, `ni_usb_receive_bulk_msg()`, the nonblocking variants, `ni_usb_receive_control_msg()`, `ni_usb_bulk_complete()`, `ni_usb_timeout_handler()`, and `ni_usb_stop()`.
+- Protocol parsing and framing helpers include `ni_usb_timeout_code()`, `ni_usb_parse_status_block()`, `parse_board_ibrd_readback()`, `ni_usb_parse_register_read_block()`, `ni_usb_parse_termination_block()`, `ni_usb_parse_reg_write_status_block()`, and `ni_usb_write_registers()`.
+
+## Control flow
+USB probe stores matching interfaces in the global `ni_usb_driver_interfaces[]` array under `ni_usb_hotplug_lock`; actual Linux-GPIB binding happens later in `ni_usb_attach()`, which chooses an unused probed interface, assigns endpoints by product ID, runs model-specific readiness/serial-number setup, starts the interrupt URB, disables then enables monitor bits, programs TNT4882/NEC7210-compatible registers through `ni_usb_init()`, and records board identity.
+
+Bulk GPIB I/O follows a send-command/receive-status pattern. Reads build an IBRD command block with EOS, timeout code, length complement, and holdoff/end-clear register writes; they then receive packed 15- or 30-byte data blocks plus status and parse them with `parse_board_ibrd_readback()`. Writes and command transfers build padded bulk payloads, append a termination block, receive a status block, translate NI error codes to Linux errors, and update `board->status`. Command transfers are chunked to 16 bytes because USB-B adapters reject longer command batches. Register-oriented operations use `ni_usb_write_registers()` to bulk-write `(device,address,value)` triplets and check the returned count/status.
+
+Status monitoring is split between synchronous polling and interrupt URBs. `ni_usb_set_interrupt_monitor()` arms a vendor wait request for selected IBSTA bits, `ni_usb_interrupt_complete()` parses an interrupt status block, clears monitored bits, wakes waiters, and resubmits the URB, while `ni_usb_soft_update_status()` updates Linux-GPIB status flags and pushes device-clear/trigger events. Suspend disables monitor bits, shuts hardware down, and kills URBs; resume resubmits the interrupt URB, reruns model-specific ready/init flows, restores monitor bits, and reapplies IFC/REN state when needed.
+
+## State and persistence behavior
+All persistent driver state is runtime memory. `struct ni_usb_priv` stores the bound USB interface, endpoint numbers, EOS settings, monitored status bits, bulk and interrupt URBs, the interrupt buffer, four mutexes, a bulk timeout timer/context, product ID, and remembered REN state. The file also maintains a global probed-interface array protected by `ni_usb_hotplug_lock`. Hardware state is programmed into adapter subdevices over USB; there is no disk persistence. On detach/disconnect, the code clears interface data, kills URBs, nulls `bus_interface`, and frees the private object.
+
+## Dependencies and integration points
+The driver depends on Linux USB core APIs, timers/completions/mutexes, Linux-GPIB core types in `gpibP.h`, NEC7210 register semantics, and TNT4882 register definitions. It integrates with user-visible GPIB operations through `gpib_register_driver()` and with USB hotplug through `usb_register()`. Supported devices include NI USB-B, USB-HS, USB-HS+, Keithley/Measurement Computing compatible IDs, and MC USB-488 devices listed in the USB ID table.
+
+## Risks and edge cases
+Concurrency is the main risk: disconnect, suspend, interrupt URB completion, bulk transfers, and GPIB operations all coordinate through multiple mutexes plus `ni_usb_hotplug_lock`. Error paths in `ni_usb_attach()` often return after allocating private state or URBs without central cleanup. Bulk timeout handling shares one `bulk_urb` and timer context, so stale completion/timer ordering must be correct. `ni_usb_line_status()` intentionally uses trylock/nonblocking bulk helpers because it can be called from wait paths, which means callers must tolerate `-EBUSY`. Protocol parsing assumes exact response lengths and magic bytes for several model variants; unexpected but harmless firmware differences may become hard errors. Several void GPIB hooks cannot report USB/register failures.
+
+## Test signals
+Useful validation includes attach/detach for each supported product ID, unplug during read/write/command, suspend/resume with REN and controller state restored, long reads across extended data blocks, command chunking above 16 bytes, EOS/EOI handling, no-listener/no-bus/timeout NI error-code translation, interrupt monitor wakeups for SRQ/ATN/CIC/LACS/TACS/DCAS/DTAS, `line_status()` under concurrent transfer load, and fault injection for URB submission, allocation, short reads, malformed status blocks, and USB reset/configuration failures.

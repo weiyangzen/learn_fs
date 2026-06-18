@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/bpf/bpftool/iter.c
+
+`iter.c` implements `bpftool iter`, currently centered on `bpftool iter pin OBJ PATH [map MAP]`. The command loads an iterator-capable BPF object, attaches the first program as a BPF iterator, and pins the resulting `bpf_link` into bpffs. Its exported entry point is `do_iter()`, which dispatches `pin` and `help` through the common bpftool command selector.
+
+The important control path is `do_pin()`. It requires an object file and pin path, optionally parses `map MAP` with `map_parse_fd(..., BPF_F_RDONLY)`, populates `union bpf_iter_link_info` for map-targeted iterators, opens the object with `bpf_object__open()`, loads it with `bpf_object__load()`, selects the first program via `bpf_object__next_program()`, attaches with `bpf_program__attach_iter()`, ensures bpffs is mounted for the target with `mount_bpffs_for_file()`, and pins the link with `bpf_link__pin()`.
+
+State is short-lived: object, link, and optional map file descriptors are owned by this function and released on all labeled exit paths. Persistent state is only the pinned link at the requested bpffs path after success; the in-process `bpf_link` is destroyed after pinning. Dependencies include libbpf object/program/link APIs, `main.h` argument macros, map fd parsing from `map.c`/shared helpers, and bpffs mount helpers.
+
+Risks are mostly operational: only the first program in the object is used, so multi-program objects depend on layout; map iterator setup only accepts one optional map target; attach failures are reported after load, so verifier diagnostics depend on global debug flags; and pinning needs bpffs permissions and mount behavior controlled by global options. Test signals include successful pinning of a simple task iterator, a map iterator using `map id` and `map pinned`, failure paths for objects with no programs, invalid map specs, bpffs mount refusal, and JSON help behavior.

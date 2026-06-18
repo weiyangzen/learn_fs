@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/gcc_compat.h
+
+Compiler-compatibility header defining attributes and feature fallbacks used across strace, such as format checking, noreturn, fallthrough, packed/aligned, printf-like declarations, and diagnostic helpers. It has no runtime control flow or state, but it strongly affects compile-time checking and generated code assumptions. Dependencies are compiler feature macros and project portability conventions. Risks are incorrect feature detection across GCC/Clang versions, attributes changing ABI/layout, and fallthrough/noreturn annotations hiding real bugs. Test signals are warning-clean builds across supported compilers, configure-feature matrix builds, and code paths relying on the declared attributes.

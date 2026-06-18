@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/tools/contract/AbstractContractDistCpTest.java
+
+Purpose: This abstract contract suite validates a filesystem implementation's compatibility with Hadoop DistCp in both local-to-remote and remote-to-local directions. It covers deep directory copies, incremental update/delete behavior, missing-file tracking, large files, direct versus rename-based writes, iterator listing mode, single-file copies, update of existing files, zero-byte skip logic, modification-time-based update decisions, and DistCp job ID propagation.
+
+Important APIs and types: It extends `AbstractFSContractTestBase` and uses `FileSystem`, `Path`, `DistCp`, `DistCpOptions`, `Job`, `CopyMapper.Counter`, `SimpleCopyListing`, `CopyListingFileStatus`, `SequenceFile.Reader`, `RemoteIterator`, `LocatedFileStatus`, `ContractTestUtils`, `RemoteIterators`, and `ToolRunner`. Override hooks include `shouldUseDirectWrite`, `getDefaultDistCPSizeKb`, `getDepth`, and `getWidth`.
+
+Control flow: `setup` creates isolated fully qualified local and remote paths per concrete class and test method. Helper methods initialize a fixed input/output tree, create files with deterministic datasets, run DistCp with standard list-status thread settings, and verify contents. Update tests first perform a baseline copy, mutate the source by deleting files/subtrees and adding a new file, then run DistCp with `syncFolder`, `deleteMissing`, or `trackMissing`. File update tests manipulate modification times to force skip versus copy decisions.
+
+State and persistence behavior: The suite writes real files/directories on the local filesystem and the filesystem under contract. It persists DistCp tracking listings as sequence files, modifies file timestamps, and inspects MapReduce counters from completed local jobs. Teardown logs remote IO statistics.
+
+Dependencies and integration points: This file integrates Hadoop filesystem contract tests, DistCp copy listing and mapper logic, local MapReduce execution, object-store-specific direct-write options, and filesystem metadata semantics such as rename, listFiles recursion, timestamps, zero-byte files, and content reads.
+
+Risks: Large-file tests can be expensive for object stores; size is configurable by `scale.test.distcp.file.size.kb`. Modification-time tests use a fixed offset and are sensitive to timestamp precision. The helper calculating `Math.min(modTimeSourceUpd - offset, 0)` can set a very old or zero timestamp, which assumes target filesystem accepts it. Direct-write behavior depends on subclass overrides.
+
+Test signals: Signals include successful completed DistCp jobs, verified copied byte contents, expected destination tree existence/nonexistence, `COPY`, `SKIP`, and `BYTESCOPIED` counter ranges, presence of tracking sequence files, iterator-mode log output, expected recursive file counts, non-null DistCp job ID config, and exact content replacement or skip decisions after timestamp manipulation.

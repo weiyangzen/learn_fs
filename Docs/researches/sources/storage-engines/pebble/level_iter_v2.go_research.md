@@ -1,0 +1,13 @@
+# sources/storage-engines/pebble/level_iter_v2.go
+
+Purpose: `levelIterV2` is the newer level iterator implementing `iterv2.Iter`. Unlike v1, it exposes both point keys and span boundaries through an `iterv2.InterleavingIter`, producing a continuous keyspace partition across files and gaps so a v2 merging iterator can reason about range deletion coverage without eagerly opening every file.
+
+Important APIs/types/functions: `newLevelIterV2` and `init` configure the iterator. `findFileGE`, `findFileLT`, `initTableBounds`, `fileEndKey`, and `loadFile` select and open per-file iterators. Positioning and movement methods implement `SeekGE`, `SeekPrefixGE`, `SeekLT`, `First`, `Last`, `Next`, `NextPrefix`, and `Prev`. Span/error/lifecycle methods include `Span`, `Error`, `Close`, `SetBounds`, `SetContext`, `TreeStepsNode`, and `String`. Synthetic boundary helpers `maybeEmitBoundaryFwd`, `maybeEmitBoundaryBwd`, and `emitBoundary` represent gaps and bounds without opening a table.
+
+Control flow: each loaded file is assigned an interleaving range from its smallest point key to the next file's smallest point key, extending across gaps. Forward seeks either load the target file or emit a boundary at the next file start or upper bound. Backward seeks load the previous relevant file or emit a lower-bound boundary. `Next` and `Prev` advance within the current per-file `InterleavingIter`; when exhausted, they load the adjacent file or synthesize/clear boundary state. Prefix iteration tracks `prefixExhausted` so the final nonmatching boundary may be returned once and subsequent `Next` returns nil. `TrySeekUsingNext` is supported only in forward, valid-state cases and is disabled when a file changes or the iterator was at a synthetic boundary.
+
+State and persistence behavior: mutable state includes current file, current span, direction, prefix, error, synthetic-boundary flag, scratch boundary KV, and bounds. It closes and reuses a single embedded interleaving iterator. It reads table data through callbacks and does not persist changes.
+
+Dependencies and integration points: integrates with manifest level iteration, `internal/iterv2`, keyspan fragment iterators, table `newIters`, comparer prefix logic, treesteps, and invariants. It deliberately does not support `RelativeSeek` and ignores maximum suffix properties pending investigation.
+
+Risks and test signals: risks cluster around synthetic boundary correctness, gaps between files, bounds falling in gaps, prefix exhaustion, direction changes, and consistency between `files.Current()` and `iterFile`. Randomized and datadriven v2 tests compare against an `iterv2.TestIter` model over point keys, range deletions, and injected file-boundary spans.

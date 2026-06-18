@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/cmd/archive/files/files.go
+
+Purpose: adapts rclone `fs.DirEntry` and `fs.Object` values into `mholt/archives.FileInfo` / `io/fs` compatible objects for archive creation. It also maps selected rclone metadata into tar headers.
+
+Important APIs: `metadataToHeader` fills tar mode, uid, gid, names, atime/ctime defaults; `newFileInfo` constructs an `io/fs.FileInfo` with archive name and optional prefix; `newFile` opens an rclone object through `operations.Open`, attaches accounting transfer, and obtains a read-at seeker; `NewArchiveFileInfo` returns an `archives.FileInfo` with an `Open` callback for files. State includes per-file transfer accounting and cached tar header fields. Dependencies include archive/tar, `mholt/archives`, rclone metadata/accounting/operations. Risks include permissive fallback metadata, directory `Open` returning an error, read-at-seeker buffering cost, missing close on error path after `WithReadAtSeeker`, and platform semantics for uid/gid/mode. Tests are indirect through archive create/list/extract integration.

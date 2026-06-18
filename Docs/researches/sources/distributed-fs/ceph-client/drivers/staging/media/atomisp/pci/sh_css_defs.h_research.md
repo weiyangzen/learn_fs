@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_defs.h
+
+Purpose: `sh_css_defs.h` is a shared macro contract for the AtomISP CSS host and firmware-side pipeline generator. It defines bit depths, gain/fraction shifts, sensor and continuous-mode geometry limits, Bayer downscaling factor encodings, shading/morph/statistics table dimensions, viewfinder sizing rules, and ISP internal width/height calculations. The file is intentionally macro-heavy because many values must be usable in preprocessor expressions and must match ISP/SP firmware assumptions.
+
+Important APIs/types/functions: this header exports constants rather than C functions. Key groups are `SH_CSS_*_SHIFT` fixed-point precision values, `SH_CSS_BDS_FACTOR_*` plus `PACK_BDS_FACTOR()`, ISP pipe version macros, RGB gamma and CCM bit-depth definitions, sensor and continuous sensor limits, morph table layout macros, shading table sizing macros such as `_ISP_SCTBL_WIDTH_PER_COLOR()`, ISP2401 shading variants, 3A grid sizing macros, VF output sizing macros, and internal frame geometry macros like `__ISP_INTERNAL_WIDTH()` and `_ISP_MAX_INPUT_WIDTH()`.
+
+Control flow and state: there is no runtime control flow or persistence. The effective behavior is compile-time branching on hardware constants such as `ISP_VMEM_DEPTH` and expression composition in later binary selection/configuration code. Runtime users feed frame dimensions, decimation factors, crop flags, and mode bits into these macros to derive aligned buffers and firmware-visible sizes.
+
+Dependencies and integration: it includes `<linux/math.h>` for helpers like `DIV_ROUND_UP()` and `isp.h` for `ISP_VEC_NELEMS`, `HIVE_ISP_DDR_WORD_BYTES`, and VMEM/DDR geometry. It is used by parameter packing, shading, MIPI, binary description, and internal ABI code. The comments explicitly note that it cannot include some VAMEM headers because it is visible to ISP/pipeline generator code.
+
+Risks: many macros have implicit assumptions about vector width, word size, even crop positions, and firmware ABI compatibility. Because they are macros, callers can pass expressions with side effects or values that underflow, especially in crop/padding calculations. Changes to constants can silently alter buffer sizes and break HMM allocations, SP DMEM layouts, or firmware expectations.
+
+Test signals: valuable tests are compile-time build coverage across ISP2400/ISP2401 constants, static assertions in consumers, binary selection tests that validate BDS masks, and runtime stream setup tests for maximum/minimum resolutions, shading table sizes, 3A grid dimensions, DVS envelope handling, and internal width alignment.

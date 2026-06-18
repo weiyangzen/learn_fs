@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/samba/source4/libcli/raw/interfaces.h -->
+# sources/user-network-fs/samba/source4/libcli/raw/interfaces.h
+
+Purpose: `interfaces.h` is the central typed contract for Samba source4's raw SMB client layer. It defines the request/response unions passed between raw SMB packet builders/parsers, composite client helpers, SMB2 adapters, and NTVFS backends. The file intentionally preserves SMB wire-level distinctions: old SMB commands, AndX forms, trans2/nttrans levels, SMB2-specific structs, Unix extensions, EA/security descriptor payloads, and generic aliases.
+
+Important APIs, types, and functions: Key types include `smb_wire_string`, `smb2_handle`, `smb2_lease_break`, `smb_handle_or_path`, and `smb_handle`. Major unions include `smb_seek`, `smb_unlink`, `smb_mkdir`, `smb_rename`, `smb_tcon`, `smb_sesssetup`, `smb_fileinfo`, `smb_setfileinfo`, `smb_fsinfo`, `smb_setfsinfo`, `smb_open`, `smb_read`, `smb_write`, `smb_lock`, `smb_close`, `smb_lpq`, `smb_ioctl`, `smb_flush`, `smb_notify`, search first/next/close/data unions, `smb_trans2`, `smb_nttrans`, `smb_echo`, and `smb_shadow_copy`. The `SMB_OPEN_OUT_FILE` macro abstracts the per-level location of output handles.
+
+Control flow: This header does not execute control flow; it drives dispatch in implementation files through each union's `generic.level` or equivalent enum. Callers fill an `in` branch and a level, raw send functions encode that branch into SMB, recv functions populate the matching `out` branch, and composite/adapter layers can reuse the same union shapes for SMB1, SMB2, or NTVFS paths.
+
+State and persistence behavior: The definitions are transient request containers. They do not own durable filesystem state, but many fields carry stateful protocol handles, search handles, lock arrays, lease/oplock state, durable handle data, and session/tree identifiers indirectly through caller-owned request structures. `smb_wire_string.private_length` preserves wire lengths for compliance tests while `s` remains the semantic string.
+
+Dependencies and integration points: It includes raw SMB constants, common SMB definitions, GUID/security/lease generated NDR types, and EA/security descriptor structs used by parser helpers. Integration is broad: `rawfile.c`, `rawreadwrite.c`, `rawfileinfo.c`, `rawfsinfo.c`, `rawsearch.c`, SMB2 getinfo/create/ioctl code, NTVFS CIFS passthrough, torture tests, and server-side trans2/nttrans parsers share these layouts.
+
+Risks: Because this is an ABI-like internal contract, changing enum values, field widths, branch names, or handle placement can silently corrupt wire encoding. Several enums intentionally equal SMB info-level constants; reordering or renumbering would break dispatch. Some branches include SMB2 fields in a header mostly used by SMB1 raw code, so implementers must check which implementation actually supports a level. Many `const char *` and blob pointers are caller-owned; lifetime assumptions are external.
+
+Test signals: Good coverage comes from raw torture suites for open, read, write, search, qfileinfo, setfileinfo, ACLs, streams, oplocks, and Unix extensions. Compile-time coverage is also meaningful because most raw modules include this header. Compatibility tests should confirm generic aliases map to the intended specific levels and that wire-string lengths are preserved for compliance cases.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/samba/source4/libcli/raw/interfaces.h -->

@@ -1,0 +1,11 @@
+## sources/storage-engines/foundationdb/fdbserver/workloads/PerpetualWiggleStatsWorkload.cpp
+
+`PerpetualWiggleStatsWorkload` verifies storage wiggle metric restore/reset behavior when perpetual wiggle is enabled, disabled, and toggled while the data distributor is intentionally dead. It builds a `DDTeamCollectionTester` wrapper to reach protected `StorageWiggler` behavior, writes synthetic `StorageWiggleMetrics` to system metadata, and checks that `restoreStats()` and `finishWiggle()` honor configuration state.
+
+Important APIs and types include `DDTeamCollection`, `StorageWiggler`, `StorageWiggleMetrics`, `StorageWiggleData::updateStorageWiggleMetrics`, `ManagementAPI::changeConfig`, `setDDMode`, `takeMoveKeysLock`, `DDTxnProcessor`, `ReadYourWritesTransaction`, and `BulkLoadTaskCollection`. `storageWiggleStatsEqual` compares finished counters and smoothed duration totals with a small floating tolerance.
+
+Setup on client 0 disables DD, takes the move-keys lock to force current DD shutdown, disables storage migration, and waits 30 seconds. `_start` constructs a synthetic primary `DDTeamCollectionTester`, sets minimal configuration fields, then runs three scenarios: restore followed by disabling perpetual wiggle resets metrics; disabling then enabling while DD is dead causes restored metrics to reset; and `finishWiggle()` after disabling does not overwrite reset stats. Each scenario calls `prepareTestEnv`, which enables perpetual wiggle and writes random metrics through a RYW transaction.
+
+State persists in the cluster configuration and storage wiggle metadata. The workload also mutates DD mode and the move-keys lock, so cleanup is important; it re-enables DD at the end of `_start`. Risks include early `co_return` inside tester helper methods if `changeConfig` fails, which can skip some assertions; reliance on arbitrary delays for read windows and DD death; and constructing a DDTeamCollection outside a full DD lifecycle.
+
+Integration points are DD internals, management configuration, system-key metadata, and perpetual storage wiggle persistence. Test signals are assertions comparing metrics before and after restore/reset, plus configuration-change success assertions in setup and preparation. `check` returns true, so failed invariants surface through asserts during execution.

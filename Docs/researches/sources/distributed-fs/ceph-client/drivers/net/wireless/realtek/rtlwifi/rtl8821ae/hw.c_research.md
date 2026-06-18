@@ -1,0 +1,47 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+
+## Purpose
+
+`hw.c` is the main PCIe hardware control implementation for the rtlwifi RTL8821AE/RTL8812AE driver. It binds mac80211-facing operations to Realtek register programming, firmware H2C commands, PCIe DMA setup, EFUSE/EEPROM parsing, WoWLAN preparation, rate-adaptation programming, beacon/media-state control, interrupt masking, RF power-state checks, CAM security-key programming, and Bluetooth coexistence initialization.
+
+The file supports two closely related chips behind runtime `rtlhal->hw_type` checks: `HARDWARE_TYPE_RTL8821AE` and `HARDWARE_TYPE_RTL8812AE`. Most exported functions are called through the per-chip `rtlpriv->cfg->ops` table declared by the surrounding rtlwifi core; many static helpers encode chip-specific register sequences.
+
+## Important APIs, Types, and Functions
+
+Public hardware API implemented here includes `rtl8821ae_get_hw_reg()`, `rtl8821ae_set_hw_reg()`, `rtl8821ae_hw_init()`, `rtl8821ae_card_disable()`, interrupt enable/disable/recognition/mask updates, media/beacon/QoS controls, rate-table updates, GPIO radio checking, hardware security configuration, CAM key programming, BT coexistence initialization, suspend/resume stubs, promiscuous receive filtering, WoWLAN pattern programming, and exported beacon stop/resume helpers.
+
+The hardware-variable switchboard reads and writes MAC address, BSSID, media status, slot/SIFS timing, RCR, EFUSE counters, firmware power-save state, RPWM, AID, TSF correction, NAV upper bound, keep-alive H2C state, and join-BSS firmware reports. Static helpers cover reserved-page download, firmware LPS entry/exit, firmware clock on/off, LLT writes and table setup, MAC initialization, DBI/MDIO PCIe access, ASPM/LTR/L1 setup, PCIe DMA hang recovery, WoWLAN resume initialization, adapter poweroff, chip-version detection, EFUSE power-table parsing, PA/LNA/RFE/BT parsing, legacy and firmware rate adaptation, and wake-frame CAM writes.
+
+Core data dependencies are `struct rtl_priv`, `struct rtl_hal`, `struct rtl_pci`, `struct rtl_mac`, `struct rtl_phy`, `struct rtl_ps_ctl`, `struct rtl_efuse`, `struct rtl_sta_info`, `struct rtl_int`, and `struct rtl_wow_pattern` from the rtlwifi stack and mac80211.
+
+## Control Flow
+
+Adapter initialization starts in `rtl8821ae_hw_init()`. It sets `being_init_adapter`, asks `get_hw_reg(HAL_DEF_WOWLAN)` whether remote wake is enabled, disables ASPM through interface ops, and determines whether the MAC is already powered by reading `REG_CR`. If the adapter is resuming from WoWLAN with the MAC still functional, `_rtl8821ae_wowlan_initialize_adapter()` reads wake reason, recovers PCIe DMA if needed, restores descriptor addresses, disables firmware WoWLAN mode, reinitializes LLT/RQPN if marked, releases DMA, and returns early when successful. Otherwise initialization checks for PCIe DMA hang, powers off stale MAC state, runs `_rtl8821ae_init_mac()`, downloads firmware, configures MAC/BB/RF, applies 1T config for RTL8812AE in RF_1T1R mode, sets MAC defaults, switches to 2.4 GHz, resets CAM, enables hardware security, writes the MAC address, enables ASPM backdoor, initializes BT coexistence, releases DMA, initializes dynamic management, and reports media-status mapping to firmware.
+
+Power-save flow is mediated by `rtl8821ae_set_hw_reg()`. `HW_VAR_FW_LPS_ACTION` calls `_rtl8821ae_fwlps_enter()` or `_rtl8821ae_fwlps_leave()`. Entering firmware LPS marks `ppsc->fw_current_inpsmode`, sends firmware power mode, optionally allows software clock changes, and drives RPWM to RF-off or low-power RF-off. Leaving LPS wakes firmware via RPWM/CPWM acknowledgement, sends active firmware power mode, clears firmware power-save status, and disables software clock changes. `_rtl8821ae_set_fw_clock_off()` refuses to clock off when firmware is not ready, FW PS is inactive, RF is already off, or any PCIe TX ring has queued frames; otherwise it writes `REG_PCIE_HRPWM` and may reschedule `fw_clockoff_timer`.
+
+WoWLAN suspend flow in `rtl8821ae_card_disable()` branches between normal poweroff and WoWLAN preparation. Normal poweroff clears link state, sets media status to unspecified, and runs `_rtl8821ae_poweroff_adapter()`. WoWLAN mode clears firmware wake event state, optionally switches firmware image, reallocates TX packet boundaries for reserved pages, sends global/security information, downloads reserved page packets, enables firmware WoWLAN/keep-alive/disconnect-decision controls for connected station mode, pauses RX DMA, resets TRX rings, clears PCI PME status, preserves MCU state across PERST, enables remote wake control, stops PCIe TX DMA, and clears hardware ROF status if used.
+
+Rate programming starts in `rtl8821ae_update_hal_rate_tbl()`. With firmware RA masks enabled, `rtl8821ae_update_hal_rate_mask()` derives a bitmap from station supported rates, HT MCS masks, VHT MCS map, wireless mode, RSSI level, RF type, channel width, SGI capability, and macid. It translates the rate index through `rtl_mrate_idx_to_arfr_id()` and sends a seven-byte `H2C_8821AE_RA_MASK` command. Without RA masks, `rtl8821ae_update_hal_rate_table()` writes the local ARFR table directly.
+
+EEPROM/EFUSE flow starts with `rtl8821ae_read_eeprom_info()`. Chip version detection sets RF path shape and `rtlhal->hw_rof_enable`; boot source and autoload state come from `REG_9346CR`; successful autoload calls `_rtl8821ae_read_adapter_info()`. Adapter-info parsing allocates `HWSET_MAX_SIZE`, calls `rtl_get_hwinfo()`, parses TX power tables, PA/LNA/RFE type, BT coexistence, board type, channel plan, crystal cap, thermal meter, antenna diversity, OEM ID, and LED open-drain state, then frees the buffer.
+
+## State and Persistence Behavior
+
+This file persists device state in both hardware registers and rtlwifi software structures. Hardware-persistent state includes MAC address, BSSID, RCR receive filters, beacon control, TSF, EDCA, CAM entries, LLT/RQPN packet buffer topology, descriptor base addresses, security engine state, interrupt masks, firmware RPWM/CPWM state, WoWLAN pattern CAM, and PCIe DBI/MDIO ASPM/LTR/L1 settings. Software state mirrors or coordinates hardware through `rtlpci->receive_config`, `rtlpci->reg_bcn_ctrl_val`, `rtlpci->irq_mask[]`, `rtlpci->irq_enabled`, `rtlhal->mac_func_enable`, `rtlhal->fw_ready`, `rtlhal->fw_ps_state`, `rtlhal->fw_clk_change_in_progress`, `rtlhal->allow_sw_to_change_hwclc`, `rtlhal->re_init_llt_table`, `ppsc->rfpwr_state`, `ppsc->fw_current_inpsmode`, `ppsc->hwradiooff`, `rtlefuse` calibration fields, and `rtlpriv->sec.key_buf/key_len`.
+
+Several operations use locking because they cross interrupt, timer, or RF power-state contexts. `_rtl8821ae_return_beacon_queue_skb()` protects beacon TX ring dequeue and DMA unmap with `irq_th_lock`. Firmware clock transitions use `fw_ps_lock`. Hardware radio switch checks use `rf_ps_lock` and `rfchange_inprogress`. Timed persistence exists via `fw_clockoff_timer`, which retries firmware clock-off while TX queues are non-empty or a clock transition is in progress.
+
+## Dependencies and Integration Points
+
+The file depends on rtlwifi common headers (`wifi.h`, `efuse.h`, `base.h`, `regd.h`, `cam.h`, `ps.h`, `pci.h`, `pwrseqcmd.h`) and chip-local headers (`reg.h`, `def.h`, `phy.h`, `dm.h`, `fw.h`, `led.h`, `hw.h`, `pwrseq.h`). It integrates with mac80211 station/interface state, rtlwifi PCI interface ops, firmware command helpers, PHY/DM helpers, CAM helpers, Bluetooth coexistence, Linux PCI config-space helpers, DMA APIs, timers, spinlocks, delays, and logging APIs.
+
+## Risks and Edge Cases
+
+Most risks are sequencing-sensitive. Initialization and WoWLAN paths directly pause, reset, and release TX/RX DMA; missed ordering can leave rings inconsistent with descriptor base registers. `_rtl8821ae_dynamic_rqpn()` resets parts of MAC/BB and reinitializes LLT while polling hardware readiness with bounded loops; timeout paths usually log and continue rather than fully failing. Firmware power-save depends on CPWM acknowledgement and software flags staying synchronized with firmware.
+
+The EEPROM autoload failure path logs `Autoload ERR!!` but does not call `_rtl8821ae_read_adapter_info()` with fallback defaults from this top-level function, leaving later defaults dependent on earlier initialization. Security CAM programming assumes `rtlpriv->sec.key_len[]` and `key_buf[]` were already updated by higher layers. AP pairwise key allocation can fail when CAM is full. `rtl8821ae_bt_reg_init()` assigns `reg_bt_sco` twice, first to `3` and then to `0`, which looks like either a stale comment or a missing assignment to another BT coexistence field. Exported underscore-prefixed beacon helpers can let callers bypass higher-level media-state sequencing.
+
+## Test Signals
+
+Useful validation signals include successful probe with `rtl8821ae_hw_init()` returning zero, firmware download success, no LLT polling failures, no PCIe DMA hang warnings after repeated suspend/resume, stable association in station mode, AP/adhoc beacon transmission after media-state transitions, correct interrupt delivery after mask updates, successful WoWLAN wake reason reporting, CAM key install/delete behavior across WEP/TKIP/AES and AP/client modes, rate-mask H2C traces under HT/VHT stations, hardware radio switch transitions without stuck `rfchange_inprogress`, LED state updates through media and power transitions, and no WARN_ONCE reports from invalid ACI/channel group/wake-pattern writes.

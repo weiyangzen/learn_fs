@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/sprd,sc2731.yaml
+
+Purpose: Schema for Spreadtrum/Unisoc SC27xx PMICs connected over SPI, describing the PMIC interrupt controller, addressable child space, regulators, RTC, ADC, EIC, charger, and other MFD subblocks.
+
+Important schema surface and control flow: `compatible` enumerates supported SC27xx variants; `reg`, `interrupts`, `interrupt-controller`, `spi-max-frequency`, `#address-cells = 1`, `#size-cells = 0`, and `#interrupt-cells = 1` are part of the top-level contract. The `regulators` subtree is delegated to the Spreadtrum regulator schema. Pattern properties allow child nodes at register offsets, with compatible-specific references for MFD subdevices such as ADC, RTC, charger, and EIC-style controllers.
+
+State, dependencies, and integration: DT persists SPI addressing, IRQ demultiplexing, PMIC child register layout, and regulator configuration for Spreadtrum MFD child drivers. Dependencies include SPI peripheral semantics, regulator, IIO, RTC, power-supply, and interrupt-controller schemas. Risks include incorrect `#interrupt-cells` for PMIC child interrupts, SPI frequency mismatch, and variant-specific child blocks described with the wrong compatible. Test signals are schema validation, SPI child resource translation, interrupt-domain registration, and runtime probe of regulator and PMIC subdevices.

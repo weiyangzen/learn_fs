@@ -1,0 +1,15 @@
+# sources/distributed-fs/tahoe-lafs/src/allmydata/test/test_encode.py
+
+Purpose: validates immutable CHK encoding and decoding edge cases. It covers URI extension block validation, encoder output shape for segment boundary cases, fake bucket reader/writer behavior used to inject corruption or peer loss, and full no-network upload/download round trips for data sizes near segment and hash-tree boundaries.
+
+Important APIs and types include `FakeBucketReaderWriterProxy`, `ValidatedExtendedURIProxy`, `Encode`, `Roundtrip`, `make_data`, `flip_bit`, and `LostPeerError`. The tests exercise `encode.Encoder`, `upload.Data`, `upload.EncryptAnUploadable`, `checker.ValidatedExtendedURIProxy`, `uri.pack_extension`, CHK verifier caps, `IStorageBucketWriter`, `IStorageBucketReader`, and `download_to_data`.
+
+Control flow in the fake bucket proxy stores blocks, plaintext hashes, crypttext hashes, block hashes, share hashes, and URI extension data in memory, while modes such as `lost`, `lost-early`, `bad block`, `bad crypttext hashroot`, `bad crypttext hash`, `bad blockhash`, `bad sharehash`, `missing sharehash`, and `bad uri_extension` alter reader behavior. `ValidatedExtendedURIProxy` builds minimal and optional UEB dictionaries, computes the expected UEB hash, and accepts consistent values while rejecting missing or inconsistent fields. `Encode.do_encode` feeds encrypted upload data into `Encoder`, sets fake shareholders and a servermap, starts encoding, and checks verifycap type, closed peers, block counts, and hash-chain lengths.
+
+State and persistence are in-memory for unit-level encoding tests: fake peers hold per-segment blocks and hash vectors, and the encoder's shareholder map controls writes. `Roundtrip` creates a temporary no-network grid and persists real shares in test storage directories, then downloads through normal node APIs. No long-lived external state is used.
+
+Dependencies include Zope interface implementation, Twisted Deferreds and `Failure`, Foolscap eventual scheduling, Tahoe immutable encoder/upload/checker modules, hash utilities, assertion helpers, URI extension packing, storage bucket interfaces, and no-network grid fixtures.
+
+Risks covered include off-by-one segment sizing, tail segment parameter calculation, block hash tree width around powers of two, share hash chain lengths for 100 shares rounded to 128 leaves, UEB tampering and missing fields, lost peers during write/read, and corruption in blocks or hash roots. Residual risk is that fake peers do not emulate all storage-server semantics such as leases or remote serialization; the roundtrip tests provide the broader signal.
+
+Test signals include accept/reject DeferredLists for UEB dictionaries, expected `KeyError` or `checker.BadURIExtension` on malformed UEBs, exact numbers of segments and hash entries for data lengths 51, 74, 75, 76, 99, 100, 101, 124, and 125, successful close of every fake shareholder, and full plaintext recovery from real grid uploads for the same boundary sizes.

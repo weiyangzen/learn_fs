@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rockchip,rk808.yaml
+
+Purpose: Binding for the Rockchip RK808 I2C PMIC MFD, covering regulators, RTC, power button, clock outputs, DVS GPIOs, wakeup support, and system power-off integration.
+
+Important schema surface and control flow: `compatible`, `reg`, `interrupts`, and `#clock-cells` are required; `#clock-cells` is fixed at 1 and `clock-output-names` may contain two entries. The schema permits the deprecated Rockchip-specific power-controller flag and the generic replacement, `wakeup-source`, `dvs-gpios` with up to two host GPIO specifiers for buck DVS, regulator input supplies from `vcc1-supply` through `vcc12-supply` plus `vddio-supply`, and a `regulators` object limited to `DCDC_REG1-4`, `LDO_REG1-8`, and `SWITCH_REG1-2`.
+
+State, dependencies, and integration: the DT node persists all board-specific rail topology and optional DVS behavior consumed by RK808 MFD, regulator, RTC, input, and clock drivers. Dependencies are the common regulator schema, Rockchip clock binding, GPIO/pinctrl/interrupt bindings, and PMIC-specific Linux drivers. Risks include forgetting `#clock-cells`, using deprecated power-controller spelling, DVS GPIO polarity errors, and missing input supplies that can cause regulator registration failures on real boards. Test signals are `dt_binding_check`, the example, regulator registration with expected child names, clock provider registration, RTC/power-key interrupts, and suspend/resume DVS behavior.

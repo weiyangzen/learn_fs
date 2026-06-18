@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/fs/contract/AbstractContractMultipartUploaderTest.java
+
+Purpose: `AbstractContractMultipartUploaderTest` validates Hadoop `MultipartUploader` implementations: starting uploads, putting parts, completing, aborting, concurrent upload policy, invalid handles, and path capabilities.
+
+Important APIs and types: it uses `MultipartUploader`, `UploadHandle`, `PartHandle`, `PathHandle`, `BBUploadHandle`, `FileSystem.createMultipartUploader()`, `CommonPathCapabilities.FS_MULTIPART_UPLOADER`, `CompletableFuture`, MD5 `MessageDigest`, `DurationInfo`, and `FutureIO.awaitFuture`. Subclasses must implement `partSizeInBytes()`, `finalizeConsumesUploadIdImmediately()`, and `supportsConcurrentUploadsToSamePath()`, and may override payload count or consistency delay.
+
+Control flow: `setup()` assumes multipart upload capability and creates two uploader instances. `teardown()` aborts any active upload, aborts all uploads under the test path, logs statistics, closes uploaders, and delegates to the base teardown. Helpers generate deterministic payloads from part numbers, upload parts with alternating uploaders, complete with random or specified uploaders, validate file length and MD5 digest, and abort uploads. Tests cover single-part upload, multipart upload, empty parts and empty blocks, reverse-order and non-contiguous part maps, abort behavior, abort-all-under-path, invalid empty handles, complete with no parts, invalid upload IDs, directory collision at completion, concurrent uploads to the same path, and capability declaration.
+
+State and persistence behavior: uploads create pending remote state before completion. `activeUpload` and `activeUploadPath` are tracked so teardown can abort leftovers. Completed uploads are validated through file status length and full-file digest. Concurrent upload tests may wait for eventual consistency before validating the second completed upload.
+
+Dependencies and integration points: this file integrates async uploader APIs with the synchronous test suite through `awaitFuture`. It relies on `ContractTestUtils.verifyPathExists`, base path assertions, Apache Commons digest/IO helpers, and per-filesystem subclass policy hooks.
+
+Risks: random uploader selection can expose cross-uploader bugs but can also make intermittent failures harder to reproduce. MD5 validation reads whole uploaded files into memory, acceptable for contract-sized payloads but not scalable. The contract allows different finalization models, so subclass hook accuracy is critical. Eventual consistency delays must be tuned by concrete filesystem tests.
+
+Test signals: pass indicates multipart upload supports deterministic assembly by part number, cross-uploader completion where expected, empty data handling, robust abort and invalid-handle rejection, no file creation after abort, directory collision failure, declared concurrency behavior, and `FS_MULTIPART_UPLOADER` path capability.

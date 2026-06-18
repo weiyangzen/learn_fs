@@ -1,0 +1,19 @@
+# sources/distributed-fs/juicefs/pkg/meta/tkv.go
+
+## Purpose
+`tkv.go` is the main JuiceFS metadata engine implementation backed by a transactional key/value store. It defines the generic `tkvClient`/`kvtxn` contracts, the `kvMeta` engine, key encodings, transaction retry policy, and almost all filesystem metadata operations: lookup, attribute mutation, create/unlink/rmdir/rename/link, directory listing, file chunk writes, copy range, quotas, dir stats, garbage collection, changelog, JSON dump/load, clone, ACL, Kerberos delegation token, and directory fetch pagination.
+
+## Important APIs, Types, and Functions
+Core interfaces are `kvtxn`, `iterKvTxn`, `tkvClient`, and optional `tkvChangelogClient`. `kvMeta` embeds `baseMeta` and implements `Meta` and `engine`. Key helpers include `fmtKey`, `inodeKey`, `entryKey`, `chunkKey`, `sliceKey`, `delfileKey`, lock/session/quota/ACL/token keys, `packCounter`, `parseCounter`, `packEntry`, `packDirStat`, and `packQuota`. The high-value operation methods are `txn`, `doInit`, session methods, `genLog`, `ScanChangelog`, `doCleanupChangelog`, `doMknod`, `doUnlink`, `doBatchUnlink`, `doRmdir`, `doRename`, `doLink`, `doReaddir`, `doWrite`, `CopyFileRange`, `doCleanupSlices`, `doCompactChunk`, quota methods, `DumpMeta`, `LoadMeta`, clone methods, ACL methods, and token methods.
+
+## Control Flow and State
+All mutations funnel through `m.txn`, which checks read-only mode, applies per-inode batch locking, retries backend write conflicts up to a configurable limit, records transaction metrics, and backs off with randomized sleeps. Read paths use `simpleTxn`, `get`, or `scanValues` where possible. The keyspace is prefix-oriented: inode records and their entries/chunks/xattrs/parent links live under `A`, deleted files under `D`, slice refs under `K`, delayed/trash slices under `L`, sessions under `SE`/`SI`/legacy `SH`, dir stats under `U`, quotas under `QD`/`QU`/`QG`, ACLs under `R`, and extension keys under `X...`. Filesystem operations load parent and inode attrs, enforce permissions/flags/quota, update entries and attrs atomically, then perform out-of-transaction callbacks for stat/quota/cache/data-delete side effects.
+
+## State and Persistence Behavior
+Persistent state is entirely KV encoded, with counters stored little-endian and timestamp-like values stored big-endian. Changelog entries are written inside mutating transactions when enabled and use backend transaction ids, with special TiKV sharding delegated through `tkvChangelogClient`. File data metadata is append-only slice records per chunk plus reference counters, with delayed slice cleanup and negative refs driving object deletion. Open-but-unlinked files become sustained session entries. `DumpMeta` can scan a full snapshot into a tree, while `LoadMeta` imports JSON dumps into an empty database with batched writes and hardlink parent reconstruction.
+
+## Dependencies and Integration Points
+This file is the central integration point between backend adapters (`memkv`, `badger`, `etcd`, `fdb`, `tikv`), `baseMeta`, ACL package, open-file cache, quota/stat accounting, changelog consumers, metadata backup/dump code, and object-slice garbage collection. Backend-specific behavior enters via `tkvClient.config`, `rewind`, `shouldRetry`, `scan`, `reset`, and optional changelog methods.
+
+## Risks and Test Signals
+Major risks are transaction conflict storms, inconsistent post-transaction stat/quota updates, malformed key/value panics, append-only chunk bloat, slice reference underflow, hardlink parent drift, changelog id gaps, large directory memory pressure, and backend-specific scan consistency. Tests should exercise cross-backend `testMeta`, create/delete/rename/link semantics, sustained cleanup, chunk copy/refcounts, quota edge cases, ACL id reuse, dump/load round trips, changelog cleanup, and retries under conflicts.

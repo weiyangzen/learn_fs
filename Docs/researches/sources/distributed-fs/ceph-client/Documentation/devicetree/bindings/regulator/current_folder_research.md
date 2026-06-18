@@ -1,0 +1,147 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 133
+- Recursive researched files: 133
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/active-semi,act8600.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/active-semi,act8846.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/active-semi,act8865.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/active-semi,act8945a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/adi,adp5055-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/adi,max77503-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/adi,max77541-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/adi,max77675.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/adi,max77857.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/allwinner,sun20i-d1-system-ldos.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/anatop-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/awinic,aw37503.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/brcm,bcm59054.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/brcm,bcm59056.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/dlg,da9121.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/dlg,da9210.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/dlg,da9211.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/dlg,slg51000.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/fcs,fan53555.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/fitipower,fp9931.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/fixed-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/google,cros-ec-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/gpio-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/infineon,ir38060.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/lltc,ltc3676.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/max77650-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/max8660.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/max8893.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max14577.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max20086.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max20411.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77620-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77686.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77693.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77802.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77826.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77838.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max77843.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max8952.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max8973.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/maxim,max8997.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6316b-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6316c-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6316d-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6331-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6332-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6357-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6358-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6363-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6397-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mediatek,mt6873-dvfsrc-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/microchip,mcp16502.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/motorola,cpcap-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mps,mp5416.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mps,mp8859.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mps,mp886x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mps,mpq2286.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mps,mpq7920.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mps,mpq7932.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mt6315-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mt6359-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/mt6360-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/nxp,pca9450-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/nxp,pf0900.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/nxp,pf5300.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/nxp,pf8x00-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/onnn,fan53880.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/pfuze100.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/pwm-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,qca6390-pmu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,rpm-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,rpmh-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,sdm845-refgen-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,smd-rpm-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,spmi-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,usb-vbus-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom,wcn3990-pmu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/qcom-labibb-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/raspberrypi,7inch-touchscreen-panel-regulator-v2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/raspberrypi,7inch-touchscreen-panel-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/regulator-output.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/renesas,raa215300.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt4801-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt4803.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt4831-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt5133.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt5190a-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt5739.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt5759-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt6160-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt6190.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rt6245-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rtmv20-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rtq2134-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rtq2208.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/richtek,rtq6752-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd71815-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd71828-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd71837-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd71847-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd72720-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd9576-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd96801-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/rohm,bd96802-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mpa01.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mpg10-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mpg11-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mps11.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mps13.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mps14.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mps15.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mpu02.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s2mpu05.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/samsung,s5m8767.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/silergy,sy8106a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/silergy,sy8824x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/silergy,sy8827n.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/siliconmitus,sm5703-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/socionext,uniphier-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/sprd,sc2731-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/st,stm32-booster.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/st,stm32-vrefbuf.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/st,stm32mp1-pwr-reg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/ti,tps62360.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/ti,tps62864.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/ti,tps62870.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/ti,tps65132.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/ti,tps65185.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/ti,tps65219.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/vctrl-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/vqmmc-ipq4019-regulator.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/regulator/wlf,arizona.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

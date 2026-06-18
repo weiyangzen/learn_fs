@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/vsock/timeout.h
+
+Purpose: declaration header for the vsock timeout helper. APIs: exposes `TIMEOUT` default of 10 seconds and function prototypes for alarm handling, begin/check/end, and microsecond sleep. Control flow: included by blocking helper code so loops can be bounded without duplicating signal logic. State: implementation owns the timeout flag. Dependencies: `useconds_t` availability from included system headers in consumers. Integration: common to control, util, diagnostic, and main vsock tests. Risks: header does not document non-nesting beyond implementation comments, so misuse can cause premature timeout clearing. Test signals: consistent timeout constant across test programs.

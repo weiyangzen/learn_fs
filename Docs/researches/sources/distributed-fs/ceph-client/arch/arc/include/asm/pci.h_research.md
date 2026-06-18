@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/pci.h
+
+Purpose: ARC PCI core constants for resource assignment. Important APIs/types/functions: defines `PCIBIOS_MIN_IO` as `0x100`, `PCIBIOS_MIN_MEM` as `0x100000`, and `pcibios_assign_all_busses()` as true. Control flow: macro-only policy consumed by PCI setup. State and persistence: PCI bus/device state is managed by the PCI core, not this header. Dependencies/integration: used when `CONFIG_PCI` is enabled and platform PCI host support enumerates devices. Risks: minimum resource windows and forced bus assignment must match platform firmware/host bridge expectations. Test signals: PCI enumeration, BAR resource assignment, config-space access, and DMA-capable PCI device tests.

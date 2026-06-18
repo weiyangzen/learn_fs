@@ -1,0 +1,15 @@
+## sources/object-store/apache-ozone/hadoop-ozone/recon/src/main/java/org/apache/hadoop/ozone/recon/scm/ReconStorageContainerSyncHelper.java
+
+Purpose: this helper performs targeted incremental reconciliation between authoritative SCM container state and Recon's local container metadata. It focuses on states Recon can safely converge without active SCM ownership: OPEN, QUASI_CLOSED, CLOSED, and DELETED.
+
+Important APIs and types: constructed with `StorageContainerServiceProvider`, `OzoneConfiguration`, `ReconContainerManager`, and `ReconScmContainerSyncMetrics`. Main API is `syncWithSCMContainerInfo`. Internals include `syncContainersForState`, `reconcileExistingContainer`, `reconcileToQuasiClosed`, `reconcileToClosed`, `syncDeletedContainers`, `processDeletedPage`, `retireContainerToDeleted`, `batchedAddMissingContainers`, `addContainerInfoFallback`, `getContainerCountPerCall`, and `safeContainerWithPipelineBatchSize`.
+
+Control flow: a sync cycle scans OPEN add-only from `pass2OpenStartContainerId`, then full paginated QUASI_CLOSED and CLOSED scans, then a DELETED ID scan. For each live-state page, absent containers are fetched in bounded `ContainerWithPipeline` sub-batches and added; present containers are reconciled forward through valid local transitions. DELETED sync scans only SCM's DELETED list, never DELETING, and drives existing Recon containers through minimal valid transitions to DELETED in one call sequence. Missing non-OPEN containers can be added via `getListOfContainerInfos` fallback without a pipeline.
+
+State and persistence: `pass2OpenStartContainerId` is an in-memory monotonic cursor for OPEN scans. Container lifecycle updates and additions persist through `ReconContainerManager`. Metrics store per-state drift and duration plus overall facade status. There is no durable cursor, so OPEN add-only scans restart from ID 1 after Recon restart.
+
+Dependencies and integration points: invoked by `ReconStorageContainerManagerFacade` periodically and through manual `triggerSCMContainerSync`. It relies on `StorageContainerServiceProvider` RPCs for counts, ID pages, CWP batches, and fallback infos. It relies on `ReconContainerManager.transitionOpenToClosing` to keep open-container pipeline counts correct.
+
+Risks and edge cases: the OPEN cursor skips existing higher IDs after a cycle and is not persisted; it assumes OPEN IDs increase monotonically and that later transitions will catch missed containers in non-OPEN states. Batch-size calculations protect Hadoop IPC limits for ID and CWP payloads, but misestimated proto sizes could still matter at very large scale. DELETED retirement logs only sampled transitions. Fallback adds are intentionally disabled for OPEN containers because pipeline tracking would be incomplete.
+
+Test signals: `TestReconStorageContainerManagerFacade` and `TestReconSCMContainerSyncIntegration` reference facade-triggered sync. Important coverage includes state transition matrices, CWP sub-batching at IPC limits, fallback for non-OPEN containers with no viable pipeline, DELETED retirement from every source state, and metric updates on partial failure.

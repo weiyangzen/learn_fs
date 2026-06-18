@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/cx231xx/cx231xx-dif.h
+
+Purpose: static DIF band-pass-filter coefficient data for the cx231xx analog intermediate-frequency path. The file defines a small table-entry type and a large in-header `Dif_set_array[]` mapping IF frequencies to DIF BPF coefficient register writes.
+
+Important APIs/types/functions: `struct dif_settings` contains `if_freq`, `register_address`, and `value`. `Dif_set_array[]` is a static array of register programming triples. Each supported IF frequency has entries for `DIF_BPF_COEFF01` through `DIF_BPF_COEFF36`, with paired coefficient registers packed into 32-bit values and a final `DIF_BPF_COEFF36` terminator-style register value for that frequency. The array is included into any translation unit that includes this header rather than exported as a separately compiled object.
+
+Control flow: this header has no executable control flow. Sibling DIF implementation code is expected to select entries whose `if_freq` matches the requested analog standard/tuner IF, then write each `register_address`/`value` pair through the cx231xx register or I2C helpers. The table is ordered by increasing IF frequency from 3.0 MHz through 16.0 MHz in 100 kHz steps.
+
+State and persistence: no runtime state is mutated here. The static table is read-only by convention but not declared `const`, so every object including the header gets a private writable copy. Hardware persistence occurs only after consumers write these values into DIF BPF registers.
+
+Dependencies and integration: includes `cx231xx-reg.h` for `DIF_BPF_COEFF*` register addresses. It is part of analog tuner/DIF configuration used by cx231xx initialization and standard switching, especially when `cx231xx_dif_set_standard()` is asked to program IF filtering rather than use baseband bypass.
+
+Risks: because `Dif_set_array[]` is defined in a header as `static` and not `const`, including it in multiple C files duplicates several thousand table entries in the built objects. The table has no explicit sentinel or count macro; consumers must use `ARRAY_SIZE()` in the including translation unit or otherwise know the length. Register values are hand-imported coefficient data with no validation, so a single transposed frequency/register/value silently misprograms the analog filter. Comments near some high-frequency blocks contain typo-like labels such as `113000000` while the actual `if_freq` field is `13000000`, so comments should not be parsed as data. Lack of `const` also permits accidental writes to calibration data.
+
+Test signals: compile consumers with `-Wmissing-prototypes`/sparse-style checks to catch duplicate or unused static data; verify `cx231xx_dif_set_standard()` can locate every intended IF frequency from 3.0 MHz to 16.0 MHz; compare programmed `DIF_BPF_COEFF*` values against vendor coefficient files; tune analog standards that use common IFs such as 3.25 MHz, 4.0 MHz, and 4.5 MHz; measure analog lock/video quality after standard changes; check object size impact if the header is included by more than one C file.

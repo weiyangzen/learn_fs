@@ -1,0 +1,7 @@
+# sources/cloud-native/moby/daemon/events/events.go
+
+Purpose: in-process event service for the daemon. It stores a bounded recent event history and broadcasts new `api/types/events.Message` values through `moby/pubsub`.
+
+Important APIs and control flow: `New` allocates a 256-message ring-like slice and a publisher with a 100 ms publish timeout and 1024 channel buffer. `Subscribe` returns a copy of all buffered events, a listener channel, and a cancel closure. `SubscribeTopic` computes a topic predicate from `Filter`, returns buffered events matching since/until/topic, and subscribes either to that topic or all events. `Log` builds local-scope messages with current UTC seconds/nanoseconds. `PublishMessage` increments metrics, appends or evicts the oldest buffered message, unlocks, then publishes. `loadBufferedEvents` walks the buffer backward, stops below `since`, skips after `until`, and prepends matches to preserve chronological order. `Close` closes all subscriber channels.
+
+State, dependencies, and risks: protected state is `events []Message` and the pubsub publisher. Metrics track subscribers and event count. Slow subscribers can miss live events because publish has a timeout. `Evict` decrements metrics unconditionally, so callers must avoid double eviction. Tests cover broadcast, non-blocking publish with unread subscribers, buffer trimming, time filtering, and zero-time behavior.

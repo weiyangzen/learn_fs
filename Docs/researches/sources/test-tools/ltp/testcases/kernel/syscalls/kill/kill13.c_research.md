@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill13.c
+
+Purpose: CVE-2018-10124 reproducer for signed overflow when negating `INT_MIN` in kill PID handling. The test only runs with `CONFIG_UBSAN_SIGNED_OVERFLOW` and taint checking enabled, because normal `kill(INT_MIN, 0)` returns `ESRCH` whether or not the overflow bug exists. It calls `TST_EXP_FAIL2(kill(INT_MIN, 0), ESRCH)` and relies on UBSAN taint detection to catch the bug. State is none beyond kernel taint state. Dependencies are UBSAN signed-overflow instrumentation. Risks are TCONF on non-UBSAN kernels and no behavioral distinction without taint. Test signal is expected `ESRCH` plus no warning/taint regression.

@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/kernel/vmlinux-xip.lds.S
+
+Purpose: linker script for execute-in-place ARM kernels. It separates ROM-resident text/rodata/init code from RAM-copied writable data, establishes `_xiprom`, `_exiprom`, `__data_loc`, `_edata_loc`, and adjusted `LOAD_OFFSET`, and keeps XIP-specific MPU constraints.
+
+Control flow is link/load-time: code starts at `XIP_VIRT_ADDR(CONFIG_XIP_PHYS_ADDR)`, ROM sections remain executable in place, then data is assigned RAM VMAs with file LMAs for copy/decompression. It explicitly defines `.data.ro_after_init`, init data, per-CPU data, TCM sections, BSS, and debug metadata. Dependencies include XIP address macros, ARM linker section macros, MPU alignment constants, and optional `CONFIG_XIP_DEFLATED_DATA`. Risks are wrong ROM/RAM split, data copy size errors, MPU-region alignment failures, and BSS too small for decompression stack. Test signals include link ASSERTs, XIP boot, writable data relocation, and strict checks for `_xiprom`/`_exiprom` alignment on MPU builds.

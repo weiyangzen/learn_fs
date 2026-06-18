@@ -1,0 +1,9 @@
+# sources/user-network-fs/samba/source4/dsdb/pydsdb.c
+
+Purpose: Python C extension module `dsdb`, exposing selected Samba DSDB/SAMDB internals to Python provisioning, administration, tests, KCC tooling, and maintenance scripts.
+
+Important APIs/functions: wrappers cover server site lookup, schema conversion and lookup (`attid`, LDAP display names, search/system/link flags, syntax OIDs, class mandatory attributes), DRSUAPI attribute conversion/normalization, NTDS GUID/invocation ID getters/setters, partition/NC/well-known DN helpers, RODC/PDC checks, RID set creation/allocation, DNS scavenging, tombstone garbage collection, GKDI root key creation, UDV loading, functional-level checks, DC OS version mapping, and many constants. `py_dsdb_methods[]` defines the exported names; `MODULE_INIT_FUNC(dsdb)` registers constants and strings.
+
+Control flow/state: wrappers parse Python arguments, extract `ldb_context` or DN objects through pyldb helpers, allocate temporary talloc contexts, call DSDB primitives, translate `LDB`, `WERROR`, or `NTSTATUS` errors into Python exceptions, and return Python scalars, sets, DNs, ldb `MessageElement`s, or NDR Python objects. AD DC-only maintenance functions are gated by `AD_DC_BUILD_IS_ENABLED`; otherwise they raise `NotImplementedError`.
+
+Dependencies/integration: Python C API, pyldb, NDR Python helpers, SAMDB/DSDB schema modules, KCC garbage/DNS cleanup, GKDI, flag mapping, loadparm Python conversion, and security/Kerberos constants. Risks include reference ownership mistakes, converting arbitrary Python bytes to schema syntaxes, privileged maintenance effects exposed to scripts, and build-configuration divergence. Test signals: Python import in AD DC/non-AD DC builds, exception translation, schema lookup error cases, RID/DNS/tombstone methods against provisioned test databases, and constant availability expected by Python code.

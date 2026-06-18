@@ -1,0 +1,10 @@
+
+# sources/object-store/apache-ozone/hadoop-ozone/s3gateway/src/main/java/org/apache/hadoop/ozone/s3/util/S3Utils.java
+
+Purpose: central stateless utility class for S3 gateway encoding, storage-class replication resolution, exception wrapping, payload-signature classification, chunked-upload validation, ETag formatting, canonical-user ID generation, and Content-MD5 validation.
+
+Important APIs and control flow: `urlDecode`/`urlEncode` use UTF-8 JDK encoders. `resolveS3ClientSideReplicationConfig` prioritizes explicit S3 storage-class headers, then client replication config, then bucket defaults. `toReplicationConfig` parses `S3StorageType.valueOf`; `STANDARD_IA` may use an `ECReplicationConfig` string override. `wrapOS3Exception` converts `OS3Exception` to `WebApplicationException` with XML entity and HTTP status. `hasUnsignedPayload` and `hasMultiChunksPayload` classify `x-amz-content-sha256`. `validateMultiChunksUpload` checks optional `Content-Encoding` for `aws-chunked` and requires `x-amz-decoded-content-length`. `validateSignatureHeader` supplies `UNSIGNED-PAYLOAD` only for unsigned requests; signed requests require the SHA header. `validateContentMD5` decodes base64, enforces 16 bytes, compares to server hex, and distinguishes invalid digest from bad digest.
+
+State, dependencies, integration: no mutable state. Depends on S3 constants and error table, commons-codec/lang, HDDS replication configs, JAX-RS headers/responses, and Java base64/URL codecs. Integrated by endpoint upload paths, signature filters, XML error responses, and listing/response helpers.
+
+Risks and test signals: `S3StorageType.valueOf` is case-sensitive and accepts only enum names. Multi-chunk detection assumes all streaming algorithms share the `STREAMING` prefix. MD5 comparison assumes lower-case server hex. Tests in this subset cover chunk parsing, digest behavior, encoding object names, and endpoint flows that rely on these utilities; direct `S3Utils` unit coverage is not in the listed files.

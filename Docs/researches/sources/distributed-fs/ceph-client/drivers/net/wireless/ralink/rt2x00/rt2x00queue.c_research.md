@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+
+## Purpose
+`rt2x00queue.c` is the shared queue, skb, descriptor, and queue-state engine for rt2x00 devices. It allocates queue entries, prepares RX buffers, maps and unmaps DMA, builds generic TX descriptors from mac80211 metadata, handles beacon skb updates, maintains circular queue indices, starts/stops/pauses/wakes queues, and provides allocation/initialization/free helpers used by both MMIO and USB transports.
+
+## Important APIs, Types, And Functions
+Key APIs include `rt2x00queue_alloc_rxskb()`, `rt2x00queue_map_txskb()`, `rt2x00queue_unmap_skb()`, `rt2x00queue_free_skb()`, frame alignment and L2 padding helpers, `rt2x00queue_write_tx_frame()`, `rt2x00queue_clear_beacon()`, `rt2x00queue_update_beacon()`, `rt2x00queue_for_each_entry()`, `rt2x00queue_get_entry()`, `rt2x00queue_index_inc()`, queue pause/unpause/start/stop/flush helpers, `rt2x00queue_init_queues()`, `rt2x00queue_initialize()`, `rt2x00queue_uninitialize()`, `rt2x00queue_allocate()`, and `rt2x00queue_free()`. Internal descriptor builders split work into sequence generation, legacy PLCP, HT fields, crypto, and common TX flags.
+
+## Control Flow
+RX allocation computes data plus descriptor plus wireless-info size, reserves alignment and crypto head/tail room, maps DMA when `REQUIRE_DMA` is set, and stores DMA state in `struct skb_frame_desc`. TX write first builds a `struct txentry_desc` while mac80211 control data is still intact, then reclaims driver data in the skb control block, strips or copies IV/EIV as required, aligns or pads the frame, and enters `queue->tx_lock`. It refuses full queues, claims the current `Q_INDEX` entry by setting `ENTRY_OWNER_DEVICE_DATA`, writes transport-specific data, tracks BAR frames for later block-ack handling, marks data pending, advances `Q_INDEX`, lets the chip driver write the hardware descriptor, and kicks the hardware unless burst/threshold logic says to wait.
+
+Descriptor construction interprets mac80211 flags for ACK, RTS/CTS, fragmentation, more frames, timestamp insertion, retry limits, rate mode, MCS/HT width/short GI/STBC/AMPDU, software sequence assignment, PLCP lengths, and crypto. Beacon update obtains a fresh beacon from mac80211, builds a TX descriptor, and calls the hardware driver's `write_beacon()`. Queue iteration snapshots index ranges under `index_lock`, then walks the circular span without holding the lock for callbacks. Start/stop serialize with `status_lock` and call driver `start_queue`/`stop_queue`, while mac80211 queue stop/wake is applied for AC queues.
+
+## State And Persistence
+State lives in `struct data_queue` and `struct queue_entry`: flags, `length`, `count`, `index[Q_INDEX_MAX]`, watchdog counters, WMM parameters, frame/descriptor sizes, per-entry skb pointers, private transport data, and last-action timestamps. Queue arrays are allocated as one contiguous block for RX, TX queues, beacon, and optional ATIM. RX skbs persist while queues are initialized; TX skbs belong to entries until completion or cleanup. No state survives driver removal.
+
+## Dependencies And Integration Points
+The queue layer is deeply integrated with mac80211 skb metadata, rt2x00lib DMA/TX/RX completion routines, crypto helpers, BAR tracking, debugfs frame dumps, Linux DMA APIs, and chip transport hooks such as `write_tx_data`, `write_tx_desc`, `kick_queue`, `start_queue`, `stop_queue`, `flush_queue`, `clear_entry`, `write_beacon`, and `clear_beacon`. MMIO and USB transports differ below this layer but share the queue model.
+
+## Risks
+Queue index corruption is the highest-impact risk. `Q_INDEX`, `Q_INDEX_DMA_DONE`, and `Q_INDEX_DONE` must be advanced by the correct producer/consumer path, and `queue->length` must remain consistent with ownership bits. TX setup mutates skb layout for crypto, headroom, DMA alignment, and L2 padding; mistakes break descriptors or payload parsing. Sequence generation has known comments about beacon sequence behavior and devices that cannot toggle hardware sequencing per frame. BAR tracking allocates in atomic context and intentionally degrades to failed BAR status if allocation fails. Flush may warn if hardware completion does not drain entries, and pause/wake races must remain serialized with txdone.
+
+## Test Signals
+Strong test signals include TX under all AC queues, full-queue threshold pause/wake, DMA map/unmap accounting, RX skb recycling, encrypted TX/RX with IV stripping/copying, fragmented frames, RTS/CTS and CTS-to-self, AMPDU/BAR behavior, beacon update/clear, queue start/stop during radio transitions, flush with and without drop, watchdog timeout detection through `last_action`, KASAN/KMSAN for skb headroom mutations, and lockdep coverage for `tx_lock`, `index_lock`, and `status_lock`.

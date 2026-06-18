@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/usb/typec/ucsi/ucsi.c
+
+Purpose: Implements the generic USB Type-C Connector System Software Interface core. It is transport-agnostic and turns UCSI commands/events into Type-C ports, partners, cables, plugs, altmodes, USB role switches, USB PD objects, power_supply updates, and debug/trace signals.
+
+Important APIs/types/functions: exported APIs include `ucsi_create`, `ucsi_register`, `ucsi_unregister`, `ucsi_destroy`, `ucsi_send_command`, `ucsi_notify_common`, `ucsi_sync_control_common`, `ucsi_connector_change`, `ucsi_resume`, and driver-data helpers. Key internal paths are `ucsi_init`, `ucsi_reset_ppm`, `ucsi_register_port`, `ucsi_handle_connector_change`, `ucsi_register_partner`, `ucsi_unregister_partner`, `ucsi_register_altmodes`, `ucsi_pwr_opmode_change`, `ucsi_partner_change`, `ucsi_dr_swap`, and `ucsi_pr_swap`.
+
+Control flow and state: transports create a UCSI instance with `ucsi_operations`, then `ucsi_register` reads the version and queues `ucsi_init_work`. Init resets the PPM, enables basic notifications, reads capabilities, allocates connectors, registers each Type-C port, then enables supported notifications. CCI notifications call `ucsi_notify_common`, which completes pending command/ack completions and schedules connector work. Connector work reads connector status with ACK, reacts to change bits, registers/unregisters partner/cable/plug/altmode/PD objects, updates roles/orientation/mode, and starts deferred partner tasks for PDOs, identity, cable details, connector capability, and altmode checks.
+
+Persistence behavior: all state is in memory: `ucsi` caches version/capabilities/notification mask/flags and owns connectors; each connector caches capability/status bitmaps, role switch, partner/cable/plug, altmode arrays, PD capabilities, PDO/RDO data, telemetry, workqueue, and partner retry tasks. No disk persistence exists.
+
+Dependencies/integration points: relies on transport ops for register/command I/O, Type-C class APIs, USB role switch, USB PD capability APIs, power_supply helper, optional DP/TBT altmode helpers, debugfs, tracing, workqueues, mutexes, completions, and version-gated UCSI bitfield macros.
+
+Risks: command serialization depends on `ppm_lock`, completion flags, and transport correctness. Connector event coalescing uses a single `EVENT_PENDING` bit, so bad firmware notification ordering can delay or drop perceived changes. Deferred partner tasks intentionally retry busy/timeouts but need cleanup on unregister. Role-swap completions depend on connector change events arriving within 5 seconds. Error ACK semantics avoid acknowledging connector changes on command errors, which is correct but can expose firmware quirks.
+
+Test signals: UCSI init/reset logs, trace `ucsi_run_command` and connector events, hotplug/unplug, role swaps, PD and non-PD partners, cable/plug identity, DP/TBT altmode discovery, USB4 partner flags, suspend/resume notification restoration, PPM timeout reset recovery, debugfs commands, and teardown with pending partner tasks.

@@ -1,0 +1,13 @@
+## sources/distributed-fs/juicefs/pkg/chunk/disk_cache.go
+
+Purpose: implements JuiceFS disk cache and cache manager, including raw cache files, staging files for writeback, space/inode pressure cleanup, cache scanning, consistent hashing across cache directories, checksum/tier metadata, and device health integration.
+
+Important APIs/types/functions: `cacheStore` manages one cache directory with capacity, max items, free-ratio policy, key index, pending memory pages, raw/stage fullness flags, checksum mode, uploader callback, active IO tracking, and disk-cache state machine. Key methods include `newCacheStore`, `checkErr`, `flushPage`, `cache`, `load`, `exist`, `stage`, `uploaded`, `cleanupFull`, `uploadStaging`, `scanCached`, and `scanStaging`. `cacheManager` distributes keys across stores via consistent hashing and falls back to legacy hashing for reads. `CacheManager` abstracts cache/stage/load/remove/stats behavior. `cacheFile` wraps an on-disk cache file and validates optional CRC32C checksums plus optional tier ID.
+
+Control flow: new stores create directories/lock files, adjust capacity by free ratio, and start background goroutines for lock checks, pending flush, free-space cleanup, expiry cleanup, scans, staging scans, and IO timeout checks. `cache` queues a `Page` for async disk flush. `flush` writes pending pages to temp files and atomically renames. `stage` writes a staging file, optionally hard-links it into raw cache with negative size, and background upload later calls `uploaded` to make it positive. `cleanupFull` removes entries from the eviction iterator to meet byte/item/free-space targets. `scanCached` rebuilds index state from files; hard-linked stage/raw files are treated as negative staging entries.
+
+State and persistence: raw cache files live under `raw/chunks/...`; writeback files live under `rawstaging/chunks/...`; `.lock` stores a UUID for consistent hashing identity. Files can contain data, checksum trailer, and optional one-byte tier ID. Metrics track writes, evictions, staging counts, and bytes.
+
+Dependencies and integration points: uses filesystem APIs, `fastwalk`, consistent hashing, murmur3/FNV hashing, humanize logging, Prometheus metrics, OS helpers from `utils_*.go`, `Page`, eviction indexes, and disk-cache state from `disk_cache_state.go`.
+
+Risks and test signals: high concurrency and persistence risk: hard links, negative sizes, stale scans, IO timeouts, page refcounts, full-disk cleanup, and checksum-level differences must stay coherent. `checkErr` can transition disks to unstable/down. Tests cover metrics, scanning, checksums, staging metrics, path expansion, cache file format variants, and disk state behavior.

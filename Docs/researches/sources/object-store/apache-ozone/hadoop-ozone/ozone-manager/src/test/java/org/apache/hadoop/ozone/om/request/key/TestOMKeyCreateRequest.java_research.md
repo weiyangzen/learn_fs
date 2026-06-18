@@ -1,0 +1,15 @@
+## sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/test/java/org/apache/hadoop/ozone/om/request/key/TestOMKeyCreateRequest.java
+
+**Purpose:** Tests `OMKeyCreateRequest` for object-store layout, including preallocation, replication validation, open-key cache insertion, overwrite behavior, optimistic create/rewrite preconditions, expected ETag checks, metadata/tags/ACL handling, filesystem path normalization, namespace quota errors, multipart create errors, reserved snapshot path rejection, and SCM allocation behavior for empty or unspecified sizes.
+
+**Important APIs/types/functions:** Uses `CreateKeyRequest`, `KeyArgs`, `OMKeyCreateRequest`, `OMClientResponse`, `OmKeyInfo`, `OmBucketInfo`, `OzoneLockProvider`, replication configs (`RatisReplicationConfig`, `ECReplicationConfig`), `PrefixManagerImpl`, and `OMRequestTestUtils`. Key helpers are `preExecuteTest`, `doPreExecute`, `createKeyRequest`, `createKeyRequestWithExpectedETag`, `checkResponse`, `createAndCheck`, `checkCreatedPaths`, `checkIntermediatePaths`, `getOpenKey`, and `getOzoneKey`.
+
+**Control flow:** Tests build create requests with various replication/data-size/precondition metadata, run `preExecute` to validate replication, set modification time/client ID, and possibly preallocate SCM blocks. They then seed required volume/bucket/existing key state and call `validateAndUpdateCache` to inspect open-key table entries or error statuses. Path tests enable filesystem paths and walk normalized key scenarios through preExecute and validate/update.
+
+**State and persistence behavior:** Successful creates populate `openKeyTable` with `OmKeyInfo` containing latest version locations, metadata, tags, ACLs, creation/modification times, and expected generation if applicable. Some tests manually promote open keys to `keyTable` to simulate commit before overwrite. Bucket namespace quotas and existing key generation/ETag metadata drive success or errors without creating open-key rows on failure.
+
+**Dependencies and integration points:** Integrates OM create logic with SCM block allocation mocks, lock-provider combinations, replication validation, prefix/path normalization, bucket ACL inheritance, client ACL ignore config, and filesystem path support. It also exercises snapshot-reserved name rules using `.snapshot`.
+
+**Risks:** Important risks include allocating blocks for empty keys, incorrect EC/RATIS block counts, stale metadata/tags on overwrite, ACL inheritance leaks from ACCESS scope, wrong status for generation/ETag failures, open-key rows left behind on errors, and filesystem path normalization accepting unsafe paths.
+
+**Test signals:** Assertions inspect block location counts and IDs, open-key table presence/absence, response statuses (`OK`, `KEY_ALREADY_EXISTS`, `KEY_NOT_FOUND`, `ETAG_*`, `INVALID_PATH`, `NOT_A_FILE`, quota errors), metadata/tag equality, ACL inclusion/exclusion, creation/modification time semantics, and Mockito verification that SCM allocation is not called for empty/missing data sizes.

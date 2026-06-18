@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph/src/rgw/rgw_kmip_client_impl.cc
+
+See the grouped research section in `Docs/researches/groups/subset-b-006989_research.md` for the complete report.
+
+This implementation provides RGW's concrete KMIP manager: TLS/KMIP handle builder, connection/handle pool, worker thread, intrusive request queue, request encoding, BIO send/receive, response validation, and output extraction. It implements create, locate, and get request logic, using configured KMIP address, cert/key/CA, username/password, and AES-256 symmetric key attributes. State is in-memory handle/queue/request data; key persistence is remote KMIP state. Dependencies include OpenSSL, a C KMIP library, Ceph config/threading/logging, and RGW KMIP abstractions. Risks include unsupported declared operations, unclear intrusive `Request` ownership, hostname verification, double-join concerns, and shutdown `-666`. Tests should cover TLS failures, default port, credentials, buffer growth, create/locate/get success, protocol errors, unsupported ops, shutdown, reuse, and key zeroization.

@@ -1,0 +1,38 @@
+# sources/distributed-fs/ceph-client/drivers/ata/libata-sff.c
+
+## Purpose
+`libata-sff.c` implements libata support for legacy taskfile-style ATA controllers: SFF PIO register access, ATA/ATAPI PIO host-state-machine handling, interrupt handling, reset/classification, PCI SFF resource setup, and optional PCI IDE bus-master DMA (BMDMA). It provides reusable `ata_port_operations` for old PATA/IDE-style controllers and controllers that still expose SFF taskfile registers.
+
+## Important APIs, Types, And Functions
+The exported SFF port operations are collected in `ata_sff_port_ops`; BMDMA variants are `ata_bmdma_port_ops` and `ata_bmdma32_port_ops`. Important exported helpers include `ata_sff_check_status`, `ata_sff_pause`, `ata_sff_dma_pause`, `ata_sff_wait_ready`, `ata_sff_dev_select`, `ata_sff_irq_on`, `ata_sff_tf_load`, `ata_sff_tf_read`, `ata_sff_exec_command`, `ata_sff_data_xfer`, `ata_sff_data_xfer32`, `ata_sff_hsm_move`, `ata_sff_queue_work`, `ata_sff_queue_delayed_work`, `ata_sff_queue_pio_task`, `ata_sff_flush_pio_task`, `ata_sff_qc_issue`, `ata_sff_qc_fill_rtf`, `ata_sff_port_intr`, `ata_sff_interrupt`, `ata_sff_lost_interrupt`, `ata_sff_freeze`, `ata_sff_thaw`, `ata_sff_prereset`, `ata_sff_dev_classify`, `ata_sff_wait_after_reset`, `ata_sff_softreset`, `sata_sff_hardreset`, `ata_sff_postreset`, `ata_sff_drain_fifo`, `ata_sff_error_handler`, `ata_sff_std_ports`, PCI helpers, and BMDMA helpers.
+
+Key state types are `struct ata_port`, `struct ata_link`, `struct ata_device`, `struct ata_queued_cmd`, `struct ata_taskfile`, `struct ata_ioports`, `struct ata_host`, `struct pci_dev`, and BMDMA PRD entries. The global `ata_sff_wq` serializes delayed PIO tasks for SFF controllers.
+
+## Control Flow
+PIO/nodata issue starts in `ata_sff_qc_issue`. It selects the target device, optionally marks polling mode, writes the taskfile with `ata_tf_to_host`, and initializes the SFF host state machine (`HSM_ST_FIRST`, `HSM_ST`, or `HSM_ST_LAST`). Depending on protocol and flags, the rest is driven by interrupts through `ata_sff_port_intr`/`ata_sff_hsm_move` or by delayed work through `ata_sff_pio_task`.
+
+`ata_sff_hsm_move` is the central state machine. In `HSM_ST_FIRST`, it sends the first ATA PIO data block or ATAPI CDB after validating DRQ/error status. In `HSM_ST`, it transfers ATA sectors or ATAPI byte chunks while watching status, ireason, DRQ, ERR, and DF. In `HSM_ST_LAST`, it validates final status, completes the queued command, and returns to idle. In `HSM_ST_ERR`, it completes with error and may freeze the port so EH can reset. `ata_pio_sector`, `ata_pio_sectors`, `__atapi_pio_bytes`, and `atapi_pio_bytes` implement the scatterlist/page-level PIO transfers.
+
+Interrupt flow enters `ata_sff_interrupt`, which locks the host, checks each port’s active command, skips polling commands, invokes the selected per-port interrupt function, handles spurious shared IRQs by checking optional IRQ-pending hooks, and may retry if clearing status shows an in-flight command is now ready. `ata_sff_lost_interrupt` is an EH-side recovery probe that detects a non-busy command with no IRQ and reuses normal port interrupt handling.
+
+Reset flow uses `ata_sff_prereset` to wait for non-busy status before softreset, `ata_devchk` to detect PATA master/slave presence by writing shadow-register patterns, `ata_bus_softreset` to pulse SRST, `ata_sff_wait_after_reset` to wait for device readiness, `ata_sff_dev_classify` to read taskfile signatures, and `ata_sff_postreset` to restore device control state. `sata_sff_hardreset` wraps SATA link hardreset while still using SFF readiness/classification helpers.
+
+BMDMA flow extends SFF. `ata_bmdma_qc_prep` builds a PRD table, `ata_bmdma_qc_issue` handles DMA protocols by loading the taskfile, programming PRD table/direction through `ata_bmdma_setup`, starting DMA with `ata_bmdma_start`, and then letting `ata_bmdma_port_intr` stop the engine and merge DMA status with the SFF state machine. Error cleanup stops DMA in `ata_bmdma_error_handler` and `ata_bmdma_post_internal_cmd`.
+
+PCI setup flow maps command/control BARs in `ata_pci_sff_init_host`, allocates and prepares two-port hosts in `ata_pci_sff_prepare_host`, requests legacy or native interrupts in `ata_pci_sff_activate_host`, and exposes one-shot helpers `ata_pci_sff_init_one` and `ata_pci_bmdma_init_one`. BMDMA additionally maps BAR4, sets a 32-bit DMA mask, detects simplex mode, and records per-port BMDMA MMIO addresses.
+
+## State And Persistence
+The file mutates volatile controller and libata runtime state: taskfile shadow registers, device-control `ATA_NIEN`/`ATA_SRST` bits, `ap->ctl`, `ap->last_ctl`, `ap->hsm_task_state`, `ap->sff_pio_task_link`, active queued-command offsets (`curbytes`, `cursg`, `cursg_ofs`), error masks, EH descriptions/actions, idle IRQ counters, BMDMA PRD memory, port DMA masks, host flags such as `ATA_HOST_SIMPLEX`, and per-port PIO32 flags. Hardware state persists only in controller registers until reset/power changes; no durable storage is written.
+
+Initialization state includes the global SFF workqueue created by `ata_sff_init` and destroyed by `ata_sff_exit`, delayed work initialized per port by `ata_sff_port_init`, and PCI devres-managed BAR/IRQ mappings. BMDMA port startup allocates coherent PRD tables when DMA masks advertise DMA support.
+
+## Dependencies And Integration Points
+This file depends on libata core for queued command allocation/completion, EH/reset orchestration, SATA SCR handling, port descriptors, taskfile helpers, and command classification. It integrates with Linux PCI devres, IRQ APIs, DMA coherent allocation, DMA masks, MMIO/PIO register accessors, workqueues, highmem page mapping, scatterlists, tracing (`trace_ata_*`), and SCSI registration through host activation helpers. Low-level drivers inherit these operations and override selected hooks (`sff_check_altstatus`, `sff_set_devctl`, `sff_irq_check`, `bmdma_*`, reset hooks) for chipset quirks.
+
+## Risks And Edge Cases
+Timing is fragile. SFF requires 400ns pauses, correct alternate-status reads to avoid clearing shared IRQ status, and a DMA stop transition delay. Incorrect HSM transitions can complete corrupt data, freeze ports unnecessarily, or leave DRQ asserted. PIO transfers must respect page boundaries and alignment assumptions; ATAPI ireason validation catches devices that request the wrong direction or impossible byte counts. Reset/classification handles phantom devices, diagnostic failures, absent pull-down resistors returning `0xff`, and master/slave double-select quirks.
+
+BMDMA has additional risk from 32-bit address truncation, 64K PRD boundary splits, controllers that cannot represent 64K as zero, simplex mode, posted MMIO writes, and error status races. Interrupt handling must cope with shared IRQs, polling commands, spurious IRQ status, and the fact that clearing status can race active completion. PCI helpers assume two-port IDE layout and may mark ports dummy when BARs are disabled.
+
+## Test Signals
+Useful signals include boot and I/O tests on PIO-only PATA, PCI IDE BMDMA, legacy-mode PCI IDE, native-mode PCI IDE, ATAPI optical devices, and SATA controllers using SFF-style registers; PIO read/write with odd byte counts and scatterlists crossing page boundaries; ATAPI CDB interrupt and no-CDB-interrupt devices; forced polling mode; lost-interrupt and spurious shared-IRQ injection; softreset/hardreset/classification across master/slave combinations; BMDMA PRD boundary tests at 64K splits and dumb-controller mode; simplex fallback tests; DMA error/timeout conversion; and lockdep/KASAN/trace validation around HSM transitions and workqueue flushes.

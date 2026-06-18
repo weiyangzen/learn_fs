@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/rt1320-sdw.c
+
+## Purpose
+SoundWire SDCA ASoC driver for RT1320/RT1321 amplifier and microphone functions. It handles multi-port SDW enumeration, two regmaps including 16-bit MBQ volume controls, chip-version-specific blind initialization and MCU patching, DSP firmware and RAE loading, R0/T0 calibration workflows, amplifier playback, AEC/feedback capture, DMIC capture, brown-out control, and runtime PM/regcache synchronization.
+
+## APIs, Types, and Functions
+The file registers an `sdw_driver` with `rt1320_read_prop()`, `rt1320_update_status()`, probe/remove, and PM ops. Initialization helpers include `rt1320_io_init()`, `rt1320_vab_preset()`, `rt1320_vc_preset()`, `rt1321_preset()`, and `rt1320_load_mcu_patch()`. Firmware/control helpers include `rt1320_data_rw()`, `rt1320_fw_param_protocol()`, `rt1320_process_fw_param()`, `rt1320_check_fw_ready()`, `rt1320_check_power_state_ready()`, `rt1320_dspfw_load_code()`, `rt1320_rae_load()`, `rt1320_invrs_load()`, `rt1320_set_advancemode()`, `rt1320_calibrate()`, `rt1320_r0_load()`, and `rt1320_t0_load()`. ASoC controls cover playback/capture volume, capture switches, R0 calibration/load, DSP FW update, RAE update, temperature, RX channel select, and brown-out.
+
+## Control Flow
+Probe creates MBQ and normal SDW regmaps, parses device properties, initializes mute/brown-out/default flags, registers two DAIs, and enables runtime PM. `read_prop` calls `sdw_slave_read_prop()` for lane mapping, enables lane control, advertises source ports 4/8/10 and sink port 1, creates DP0 properties, disables wake capability, and sets a longer clock-stop timeout. On attach, `io_init` enables both regmaps, reads version and device id once, checks the amp function-status initialization bit, applies the proper RT1320 VAB/VC or RT1321 preset, reloads DSP firmware if it had already been loaded, and handles RT1320 VA-to-VB ROM detection. DAPM PDE events move microphone PDE11 and amplifier PDE23 between PS0 and PS3 and wait for actual power-state convergence. `hw_params` maps AIF1 playback to DP1, AIF1 capture to DP4, and AIF2 DMIC capture to DP8/DP10 for RT1320 or DP8 for RT1321, then programs sample-frequency controls.
+
+## State and Persistence
+`struct rt1320_sdw_priv` stores component, normal/MBQ regmaps, slave, bus params, init flags, version/device id, brown-out state, mute state, R0 and temperature calibration values, DSP firmware name, completion flags for calibration/FW/RAE, reload work, and BRA message state. Regmap caches persist software-visible state across suspend; resume syncs both regmaps after SoundWire reinitialization. Firmware, R0, T0, and RAE state lives in hardware/DSP memory and must be reloaded or restored after function reinitialization.
+
+## Dependencies and Integration
+Depends on SoundWire SDCA, SoundWire bulk/BRA transfer support, `rt-sdw-common.h` DMIC control macros, regmap SDW/MBQ APIs, runtime PM, DMI strings, request_firmware, ALSA SoC DAI/DAPM/control/TLV APIs, and firmware files under `realtek/rt1320/`. It binds RT1320 class 0/1 and RT1321 class 1 SDW ids and exposes DAIs `rt1320-aif1` and `rt1320-aif2`.
+
+## Risks and Test Signals
+Risks include complex firmware-name dependence on DMI or `realtek,dspfw-name`, unvalidated firmware section counts versus fixed `sec[10]`, fallback from BRA to per-register writes being slow and error-light, controls that only act when DAPM bias is OFF, many waits that can timeout on firmware or PDE state, and device-id-specific DMIC channel mapping. Test signals include RT1320 VAB/VC and RT1321 attach, normal and MBQ regcache sync, DP1/DP4/DP8/DP10 stream setup, supported and rejected rates, PDE state waits, DSP firmware load and mismatch handling, RAE file parsing, R0 calibration/load and T0 load controls, brown-out writes, capture mute/volume behavior, suspend/resume after unattach, and work cancellation on remove.

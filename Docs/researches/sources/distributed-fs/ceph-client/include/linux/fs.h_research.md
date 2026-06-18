@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/include/linux/fs.h
+
+## Purpose
+This header is the central VFS contract for Linux filesystem, inode, file, address-space, permission, writeback, mount, direct-I/O, mmap, and simple filesystem helpers. It defines the object model and function tables that real filesystems, stacked filesystems, character/block devices, and generic VFS code share.
+
+## APIs, types, and control flow
+Major objects include `struct inode`, `struct file`, `struct address_space`, `struct kiocb`, `struct file_ra_state`, `struct file_system_type`, `struct file_operations`, `struct inode_operations`, and `struct address_space_operations`. Important flows are: open creates a `struct file` with `f_mode`, `f_op`, path, credentials, mapping, refcount, and position state; reads/writes pass through VFS helpers to file operations and `kiocb` flags; page-cache operations call address-space ops for read, writeback, direct IO, migration, swap, and invalidation; inode operations implement lookup, create, unlink, rename, getattr/setattr, ACLs, tmpfile, xattrs, and directory offset contexts. Helper layers cover idmapped ownership translation, timestamp access/update including multigrain ctime, inode state helpers, i_size ordering, mmap compatibility between old `mmap` and new `mmap_prepare`, write-freeze protection, write denial for executables, fasync ownership, name acquisition, char-device registration, simple filesystem operations, directory emit helpers, and RWF-to-IOCB validation.
+
+## State and persistence
+Persistent runtime state is extensive: inode dirty/lifetime flags, link counts, ownership, size, timestamps, locks, write/read/direct-IO counts, mapping page-cache xarray, mmap trees, writeback errors, file credentials/path/position/refcount, superblock/filesystem registrations, and per-mount idmaps. Synchronization relies on inode `i_lock`, `i_rwsem`, address-space invalidate and mmap locks, atomics, seqcounts, RCU, module refs, superblock freeze writers, and lockdep subclasses.
+
+## Dependencies and integration points
+The header pulls in dcache, path, mount, superblock, mm, credentials, idmaps, xarray/maple tree, workqueues, unicode, block, security, fsnotify, fanotify, DAX, IMA, file locking, and uapi flags. It is consumed by nearly every filesystem and by subsystems such as block devices, overlay/backing files, proc/sys/debugfs-style simple files, io_uring, AIO, mmap, writeback, freeze/thaw, and permission/security hooks.
+
+## Risks and test signals
+Risks include lock-order violations, unbalanced file/inode references, stale idmapped uid/gid translation, i_size races on 32-bit, incorrect dirty-state transitions, writeback error loss, RWF flag acceptance without filesystem support, direct-IO/writeback races, freeze protection leaks, backing-file path confusion, incorrect mmap hook combinations, and simple helper misuse outside their assumptions. Tests should cover VFS xfstests, lockdep/KCSAN, idmapped mount ownership changes, lazytime/multigrain timestamp behavior, O_DIRECT and buffered fallback, `RWF_NOWAIT/ATOMIC/DONTCACHE` validation, file range clone/dedupe, fsnotify suppression modes, executable write denial, char-device registration, simple filesystem create/remove/rename, and disabled optional subsystems.

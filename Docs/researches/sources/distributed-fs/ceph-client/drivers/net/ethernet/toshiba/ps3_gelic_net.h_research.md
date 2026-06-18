@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/toshiba/ps3_gelic_net.h
+
+Purpose: Defines the shared PS3 Gelic hardware contract and runtime data structures used by the wired and wireless Gelic netdevs. It captures descriptor counts, MTU/frame sizing, virtual interrupt bits, descriptor status/error bits, LV1 network control codes, internal VLAN identities, card/port abstractions, and shared datapath prototypes.
+
+Important APIs and types: `struct gelic_hw_regs` is the packed hardware descriptor layout with payload, next-descriptor pointer, DMA command/status, result/valid sizes, and data status/error. `struct gelic_descr`, `struct gelic_descr_chain`, `struct gelic_card`, and `struct gelic_port` define the software view of descriptor rings, the shared adapter, and per-netdev private storage. Enums encode RX/TX descriptor status, descriptor DMA ownership states, LV1 control commands such as `GELIC_LV1_GET_MAC_ADDRESS`, `GELIC_LV1_SET_NEGOTIATION_MODE`, `GELIC_LV1_POST_WLAN_CMD`, and port/VLAN IDs. Inline helpers map netdevs and ports back to `gelic_card`, PS3 bus IDs, device IDs, and port-private data.
+
+Control flow and integration: The header has no executable flow, but it is the ABI between `ps3_gelic_net.c` and `ps3_gelic_wireless.c`. Ethernet and wireless both embed `struct gelic_port` in their `net_device` private area, while wireless appends `struct gelic_wl_info` behind `gelic_port::priv`. The shared function declarations let wireless reuse Ethernet open/stop/TX/multicast/timeout/netpoll and driver-info logic.
+
+State and persistence: `struct gelic_card` is the central mutable state: NAPI instance, both netdev pointers, RX OOM timer, aligned LV1 interrupt status, IRQ mask, PS3 bus device, internal VLAN table, TX/RX chains, TX lock and DMA progress flag, timeout work, waitqueue, up/down user reference count, cached Ethernet link status/mode, IRQ, and descriptor array. This state is runtime-only and reconstructed on probe; LV1 hardware state is controlled through IDs and masks stored here.
+
+Dependencies and integration points: Pulls in Linux netdev, ethtool, DMA, skb, timer, mutex/spinlock, waitqueue, PS3 bus, and Gelic wireless declarations indirectly through users. Constants are tightly coupled to LV1 hypervisor ABI and Gelic firmware behavior.
+
+Risks: Hardware fields are big-endian and packed; accidental host-endian access will corrupt descriptor ownership or sizes. Descriptor arrays require 32-byte alignment and `irq_status` requires 8-byte alignment, enforced in the C file with `BUILD_BUG_ON`. `port_priv()` depends on the flexible `long priv[]` layout, so appended private structures must preserve alignment. Misspelled legacy constants such as `RESPONCE` are ABI names and should not be "fixed" casually.
+
+Test signals: Compile both Ethernet-only and wireless-enabled builds; validate descriptor alignment assertions; exercise all declared shared operations through Ethernet and wireless netdevs; verify internal VLAN routing constants against LV1 firmware on PS3; run sparse/endian checks over descriptor field usage.

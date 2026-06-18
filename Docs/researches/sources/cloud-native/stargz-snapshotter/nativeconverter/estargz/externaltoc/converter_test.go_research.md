@@ -1,0 +1,9 @@
+# sources/cloud-native/stargz-snapshotter/nativeconverter/estargz/externaltoc/converter_test.go
+
+Purpose: Unit-tests external TOC eStargz conversion without requiring a daemon. It validates both standard eStargz conversion and keep-diff-id lossless conversion on the shared hello image fixture.
+Important APIs/types/functions: `TestLayerConvertFunc`, `TestLayerConvertLossLessFunc`, and helper `rootFS`. Tests use containerd `converter.DefaultIndexConvertFunc`, `images.Walk`, `images.Config`, `images.RootFS`, gzip readers, OCI manifests, and the eStargz TOC digest annotation.
+Control flow: each test prepares a sample image, converts it with Docker-to-OCI enabled, calls the returned finalize callback, confirms the generated TOC image reference has the `-esgztoc` suffix, walks the converted image to collect layers and TOC annotations, reads the external TOC manifest from content, and verifies every converted layer has a corresponding external TOC layer annotation. The lossless test additionally compares rootfs diffIDs and recomputes layer diffIDs by gzip-decompressing converted layers.
+State and persistence: all content is stored in the fixture content store. Tests mutate only in-memory maps of layer digests, wanted diffIDs, and discovered TOC digests.
+Dependencies and integration points: exercises the converter package through containerd's index converter rather than calling lower-level helpers directly, which gives coverage for multi-descriptor traversal and annotation propagation.
+Risks: assertions confirm presence and mapping but do not fetch/decode TOC blobs, test error paths, or cover duplicate layer digests/platform-specific TOC manifests. The gzip-only diffID check assumes converted lossless layers are gzip.
+Test signals: strong signal that the public converter constructors produce a usable external TOC image and preserve rootfs diffIDs in lossless mode.

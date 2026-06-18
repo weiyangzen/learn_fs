@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/alpha/kernel/core_wildfire.c
+
+**Purpose:** Implements Wildfire platform core-logic discovery and PCI support. Wildfire systems are multi-QBB machines, so this file probes hardware topology, builds QBB/PCA/hose masks and maps, initializes PCI controllers per detected hose, programs DMA windows, handles PCI config cycles, flushes PCI TLBs, and provides the Wildfire machine-check handoff.
+
+**Important APIs/types/functions:** Exported or machine-vector functions include `wildfire_init_arch()`, `wildfire_machine_check()`, `wildfire_kill_arch()`, `wildfire_pci_tbi()`, and `wildfire_pci_ops`. Global topology state includes `wildfire_hard_qbb_map[]`, `wildfire_soft_qbb_map[]`, `wildfire_hard_qbb_mask`, `wildfire_soft_qbb_mask`, `wildfire_gp_mask`, `wildfire_hs_mask`, `wildfire_iop_mask`, `wildfire_ior_mask`, `wildfire_pca_mask`, `wildfire_cpu_mask`, and `wildfire_mem_mask`. Key helpers are `wildfire_hardware_probe()`, `wildfire_init_qbb()`, `wildfire_init_pca()`, `wildfire_init_hose()`, `mk_conf_addr()`, `wildfire_read_config()`, and `wildfire_write_config()`.
+
+**Control flow:** `wildfire_init_arch()` expands the global I/O range, probes hardware through fast QSD/QSA/GP/IOP/NE/FE registers, initializes all discovered QBBs, and sets a direct PCI DMA map from 1 GiB to 3 GiB. The probe establishes hard-to-soft QBB mappings, detects HS/GP presence, CPU/memory populations, IOP/IOR masks, and PCA existence by checking IOP hose init and NE/FE identity registers. For each existing PCA, both hoses are initialized with `pci_controller` resources, two direct DMA windows, an ISA SG window at 8 MiB, and a 128 MiB PCI SG window at 3 GiB. TLB invalidation is a read from `pci_flush_tlb`.
+
+**State and persistence behavior:** The file owns in-memory hardware topology masks/maps and mutates Wildfire PCI window CSRs and Linux PCI/resource state. It does not save/restore SRM state like TITAN/TSUNAMI and `wildfire_kill_arch()` is empty. Debug configuration printing is enabled by `DEBUG_DUMP_CONFIG`, so boot may emit probed topology.
+
+**Dependencies and integration points:** Depends on `<asm/core_wildfire.h>` register structures and existence macros, Alpha PCI/IOMMU helpers, system vector setup in `sys_wildfire.c`, and generic PCI scanning in `pci.c`. IRQ and machine-check routing are largely elsewhere, but this file calls `process_mcheck_info()` after minimal synchronization.
+
+**Risks:** Topology discovery is hardware-specific and uses magic identity masks; bad decoding can skip hoses or expose nonexistent ones. Window 3 has a FIXME about scaling, and no reboot restore exists. Machine-check handling contains a FIXME for clearing PCI errors. Config access inherits the non-concurrent assumptions from similar Alpha core logic files.
+
+**Test signals:** Wildfire boot logs should show correct hard/soft QBB maps, resource masks, and PCI hose count. Validate PCI enumeration across all detected hoses, DMA through direct and SG windows, correct `pci_controller->index` encoding `(qbb << 3) + hose`, and graceful behavior on absent PCAs/QBBs. Injected PCI errors should demonstrate current reporting limitations.

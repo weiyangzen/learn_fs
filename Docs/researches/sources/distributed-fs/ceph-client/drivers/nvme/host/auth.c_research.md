@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/nvme/host/auth.c
+
+Purpose: Implements NVMe host-side in-band DH-HMAC-CHAP authentication for admin and I/O queues, including optional secure concatenation that derives/replaces NVMe/TCP TLS PSKs.
+
+Important APIs and flow: Per-queue `struct nvme_dhchap_queue_context` tracks buffers, keys, DH transform, sequence numbers, challenges, responses, status, and auth result. `nvme_queue_auth_work()` performs the protocol: send negotiate, receive/validate challenge, parse hash/DH group, generate DH public/session key if needed, compute host response, send reply, receive success1, optionally compute/validate controller response, optionally send success2, and run secure concatenation. `nvme_auth_negotiate()` queues work; `nvme_auth_wait()` waits and clears sensitive state. `nvme_ctrl_auth_work()` authenticates admin first and reauthenticates authenticated I/O queues unless concatenation only needs admin. `nvme_auth_init_ctrl()`, `nvme_auth_stop()`, `nvme_auth_free()`, `nvme_init_auth()`, and `nvme_exit_auth()` manage controller and global workqueue/mempool lifecycle.
+
+State and persistence behavior: Runtime state includes parsed host/controller DHCHAP keys, per-queue contexts, a global auth workqueue, and a 4 KiB slab/mempool for messages. Sensitive keys and session material are freed with zeroing. Secure concatenation can create/update a generated TLS PSK in the NVMe keyring and revoke the previous generated key.
+
+Dependencies and integration points: Depends on NVMe fabrics auth send/receive commands, common auth crypto helpers, NVMe keyring TLS PSK helpers, controller options (`dhchap_secret`, `dhchap_ctrl_secret`, `concat`, `tls_key`), blk queues for admin/connect commands, and NVMe controller state transitions.
+
+Risks and test signals: Failure handling sends failure2 when possible but leaves some failures as soft-state during reauth. `ctrl->transaction++` is not visibly locked here. Tests should cover invalid challenge payloads, unsupported hash/DH groups, bidirectional auth, secure concatenation with existing TLS keys, I/O queue authentication, reset/stop races, mempool exhaustion, auth command NVMe status versus errno, and sensitive cleanup after all exits.

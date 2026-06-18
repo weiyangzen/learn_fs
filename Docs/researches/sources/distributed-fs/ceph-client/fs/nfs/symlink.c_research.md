@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs/symlink.c
+
+Purpose: implements NFS symlink body caching and inode operations. The key functions are `nfs_symlink_filler`, which invokes protocol `readlink`, and `nfs_get_link`, which satisfies VFS `get_link` from page cache with RCU-aware handling.
+
+Control flow revalidates mapping state, reads folio zero from the symlink inode when needed, stores the symlink target in page cache, and returns `folio_address` with a delayed `page_put_link` cleanup. In RCU lookup, it avoids blocking and returns `-ECHILD` if the cached folio is missing or stale. State is limited to the inode page cache and folio uptodate flag; there is no persistent metadata beyond normal NFS attribute cache behavior. Dependencies are VFS symlink inode operations, `read_cache_folio`, NFS protocol `readlink`, and NFS mapping revalidation helpers. Risks include RCU pathwalk correctness, stale symlink data after server changes, page-size target limits, and proper folio reference release. Test signals: repeated symlink lookup cache hits, RCU pathwalk fallback, server-side target changes with revalidation, and readlink RPC failures.

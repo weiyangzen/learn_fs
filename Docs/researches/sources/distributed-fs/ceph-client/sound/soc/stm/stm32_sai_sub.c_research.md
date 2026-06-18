@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/sound/soc/stm/stm32_sai_sub.c
+
+## Purpose
+`stm32_sai_sub.c` implements each STM32 SAI sub-block, A or B, as an ASoC CPU DAI with DMAengine PCM support. It configures TDM/I2S/left/right-justified/DSP formats, optional IEC60958 S/PDIF playback, SAI kernel/master clock routing, sub-block synchronization, DMA FIFO access, and runtime register cache handling.
+
+## Important APIs, Types, And Functions
+The central state is `struct stm32_sai_sub_data`, which keeps the sub-block regmap, DMA parameters, DAI driver copy, active substream, parent `stm32_sai_data`, sync provider node, SAI clocks, physical register base, direction, master/slave mode, S/PDIF mode, slot/frame/data sizes, IEC958 status bytes, and locks. Important DAI callbacks are `stm32_sai_dai_probe()`, `stm32_sai_set_sysclk()`, `stm32_sai_set_dai_fmt()`, `stm32_sai_set_dai_tdm_slot()`, `stm32_sai_startup()`, `stm32_sai_hw_params()`, `stm32_sai_trigger()`, `stm32_sai_shutdown()`, and `stm32_sai_pcm_new()`. Clock helpers include `stm32_sai_set_parent_clk()`, `stm32_sai_set_parent_rate()`, `stm32_sai_configure_clock()`, and the local mclk provider callbacks. S/PDIF support is handled through IEC958 controls and `stm32_sai_pcm_process_spdif()`.
+
+## Control Flow
+Probe allocates sub-block state, derives A/B id from OF match data, gets parent SAI data, selects the clock-rate strategy, parses MMIO/regmap/direction/SPDIF/sync/clock properties, requests the shared parent IRQ, registers DMAengine PCM, registers the component/DAI, and enables PM runtime. DAI probe fills DMA FIFO address and maxburst, then programs RX/TX direction and sync mode. Startup records the active substream, constrains S/PDIF streams to stereo S32_LE, enables the SAI kernel clock, clears pending flags, and enables error IRQs appropriate to master or slave mode. `hw_params()` computes slot/frame layout or S/PDIF status, programs data size/FIFO threshold, and configures clocks when the SAI is master. Trigger enables or disables DMA and SAI bits. Shutdown masks IRQs, disables the SAI clock, releases exclusive clock rates when appropriate, and clears the active substream under the IRQ lock. Suspend/resume switches regcache cache-only mode and syncs registers through the parent peripheral clock.
+
+## State And Persistence
+The driver persists register configuration in regmap cache and hardware registers. Runtime stream state is `sai->substream`, `sai->data_size`, slot/frame fields, clock exclusivity (`sai_ck_used`, `mclk_rate`), and the IEC958 channel-status buffer. `ctrl_lock` protects IEC958 control bytes, while `irq_lock` protects substream stop races. Device-managed allocations handle most lifetime, but `np_sync_provider` is explicitly `of_node_put()` on error/remove.
+
+## Dependencies And Integration Points
+The file integrates with the STM32 parent SAI platform device through `stm32_sai_data`, OF compatibles `st,stm32-sai-sub-a` and `st,stm32-sai-sub-b`, `dma-names` for `tx` or `rx`, optional `st,iec60958`, optional `st,sync`, `sai_ck` and optional/exported MCLK clocks, the common clock framework, regmap, DMAengine PCM, ASoC component/DAI registration, and shared parent IRQ delivery.
+
+## Risks And Edge Cases
+Clock configuration is sensitive to active streams sharing the same SAI kernel clock; `clk_rate_exclusive_get()`/`put()` balance and set_sysclk shutdown paths need coverage. S/PDIF is playback-only and disallows mmap because the PCM process hook rewrites DMA buffer samples to inject IEC958 status bits. Divider calculations can reject valid-looking rates when the parent clock cannot produce an accurate frequency within tolerance. Sync setup rejects self-references and unsupported external sync on F4. DMA maxburst falls back to 1 for small FIFOs or `no_dma_burst`. The stop path writes bitwise negated masks as values for `regmap_update_bits()`, which works because the mask limits affected bits but is easy to misread or break during refactoring.
+
+## Test Signals
+Test regular playback and capture, S/PDIF playback, mono-in-stereo-slot behavior, TDM slot masks, all supported DAI formats and clock polarities, master and slave configurations, internal and external sync, MCLK provider and consumer modes, F4 versus H7 divider widths, DMA burst fallback, overrun/underrun/frame-sync IRQs, IEC958 control get/put and sample-rate status updates, suspend/resume regcache sync, and probe failures for missing `dma-names`, `sai_ck`, invalid sync indices, and unsupported S/PDIF capture.

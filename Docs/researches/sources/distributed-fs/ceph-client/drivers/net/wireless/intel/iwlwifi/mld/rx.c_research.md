@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+
+Purpose: implements the MLD RX MPDU data path and monitor/sniffer receive path: firmware descriptor parsing, PHY/radiotap metadata construction for legacy/VHT/HE/EHT/UHR-related status, station lookup, duplicate and PN validation, crypto status handling, SKB construction, reorder integration, RX queue synchronization, and no-data sniffer reporting.
+
+Important APIs/functions: `iwl_mld_rx_mpdu()`, `iwl_mld_pass_packet_to_mac80211()`, `iwl_mld_sync_rx_queues()`, `iwl_mld_handle_rx_queues_sync_notif()`, and `iwl_mld_handle_phy_air_sniffer_notif()` are exported to notification dispatch and aggregation code. KUnit-visible helpers include `iwl_mld_is_dup()`. Major static helpers fill PHY data, signal, VHT/HE/EHT radiotap fields, LSIG, RX rate/status, SKB fragments, station-related counters, management protection status, crypto flags, and AMPDU state.
+
+Control flow: `iwl_mld_rx_mpdu()` rejects hardware restart and malformed packet lengths, extracts descriptor PHY data, allocates a small SKB plus optional monitor space, fills band/frequency early, looks up station/link under RCU, drops duplicates, updates monitor AMPDU state, marks CRC/overrun failures, records TSF/boottime for management frames, fills rate/signal/radiotap status, processes crypto, builds the SKB from copied head plus optional stolen page fragment, diverts time-sync frames, runs reorder handling, and finally calls mac80211. Sniffer PHY notifications either produce zero-length PSDU radiotap packets immediately or cache PHY data for the next MPDU.
+
+State and persistence: uses `mld->monitor` PHY/radiotap/AMPDU state, `mld->rxq_sync` wait queue/cookie/state, station duplicate data, PTK PN arrays, BAID last RX timestamps, low-latency counters, scan pass-all state, and per-link average beacon energy. It persists only in kernel memory.
+
+Dependencies and integration: depends on mac80211 RX status/SKB APIs, iwl firmware RX descriptors, aggregation/reorder (`agg.c`), station/link maps, time sync, PTP for monitor timestamps, debugfs monitor configuration, firmware rate bit definitions, and notification routing from `notif.c`.
+
+Risks: this is security- and correctness-sensitive. PN validation is skipped on default queue/multicast/non-data and relies on per-queue PTK PN state for RSS queues. Duplicate detection must handle A-MSDU subframes and same-PN allowance correctly. SKB construction steals RX pages and adjusts padding/MIC/FCS lengths, so length arithmetic and checksum validation are high risk. Radiotap EHT/HE bit mapping is macro-heavy and sensitive to spec/firmware layout drift. RX queue sync uses a one-second timeout and cookie matching; stale notifications are expected and checked.
+
+Test signals: KUnit should exercise duplicate detection, same-PN A-MSDU behavior, rate/status decoding for CCK/OFDM/HT/VHT/HE/EHT/UHR, invalid descriptor lengths, crypto status branches including BIGTK management protection, monitor no-PSDU cases, cached sniffer PHY release, RXQ sync cookie/second-response handling, and SKB fragment offset calculation.

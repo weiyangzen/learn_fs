@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/fs/jfs/jfs_txnmgr.c
+
+## Purpose
+`jfs_txnmgr.c` implements the JFS transaction manager. It allocates transaction IDs and transaction locks, records metadata changes as typed lock records, drives commit logging through the log manager, updates persistent and working allocation maps after commits, handles anonymous transactions from write paths, provides lazy commit and sync kernel threads, and coordinates quiesce/resume barriers.
+
+## Important APIs, types, and functions
+Public entry points include `txInit()`, `txExit()`, `txBegin()`, `txBeginAnon()`, `txEnd()`, `txLock()`, `txMaplock()`, `txLinelock()`, `txCommit()`, `txFreeMap()`, `txEA()`, `txFreelock()`, `txAbort()`, `txLazyUnlock()`, `txQuiesce()`, `txResume()`, `jfs_lazycommit()`, and `jfs_sync()`. Major private paths are `txLockAlloc()`, `txLockFree()`, `txRelease()`, `txUnlock()`, `txLog()`, `diLog()`, `dataLog()`, `dtLog()`, `xtLog()`, `mapLog()`, `txForce()`, `txUpdateMap()`, `txAllocPMap()`, `txLazyCommit()`, and `LogSyncRelease()`.
+
+## Control flow
+`txInit()` sizes and allocates global `TxBlock` and `TxLock` tables, builds freelists, initializes wait queues, watermarks, anonymous lists, and the lazy unlock queue. `txBegin()` blocks behind log sync/quiesce barriers and low tlock conditions, reserves a `tblock`, assigns a monotonically increasing log transaction id, and increments `log->active`. `txBeginAnon()` performs the same barrier/low-lock throttling for anonymous write-path updates without allocating a `tblock`.
+
+`txLock()` either reuses an existing lock for the same transaction, transfers anonymous locks to a real transaction, allocates and initializes a tlock, marks metapages `nohomeok`, binds the lock to a metapage or in-memory inode, and initializes line-lock overlays based on inode, xtree, dtree, or data logging type. `txMaplock()` records allocation-map updates without a metapage. `txCommit()` sorts inodes by descending inode number to avoid deadlock, inherits anonymous tlocks, calls `diWrite()` to lock/log on-disk inode pages, emits typed log records through `txLog()`, writes the `LOG_COMMIT` record, waits or schedules group commit through `lmGroupCommit()`, forces careful updates when needed, updates maps for forced commits, releases tlocks for other transactions, and either unlocks immediately or leaves lazy cleanup to `jfs_lazycommit()`.
+
+`txLog()` dispatches each tlock to `diLog()`, `dataLog()`, `dtLog()`, `xtLog()`, or `mapLog()`. These functions choose `LOG_REDOPAGE`, `LOG_NOREDOPAGE`, `LOG_NOREDOINOEXT`, or `LOG_UPDATEMAP`, prepare line vectors and maplocks, and disable lazy commit when the map update points directly into mutable xtree data. After commit durability, `txUpdateMap()` applies allocation and free operations to persistent and/or working maps, handles inode create/delete pmap updates, invalidates freed metapages, and clears XAD new/extended state where appropriate.
+
+## State and persistence behavior
+Transaction state is global in `TxAnchor`, `TxBlock`, and `TxLock`. `TxAnchor` tracks free transaction blocks, free locks, low-water waits, lock pressure, anonymous inode lists, and the lazy unlock queue. `tblock->xflag` carries commit intent such as sync, force, map update type, inode create/delete/truncate, lazy, page, and inode. `tlock->type` and line-lock overlays describe the metadata after-image or allocation-map operation to log. Persistent state changes occur in two stages: after-images and commit records are written to the journal first, then allocation maps and home metadata are allowed to reach disk in a replay-safe order.
+
+## Dependencies and integration points
+The file depends on JFS inode, dinode, imap, dmap, metapage, superblock, log manager, extent-tree, directory-tree, Linux vmalloc, kthreads, wait queues, freezer, and VFS inode state. It is called from most mutating JFS operations. It calls `lmLog()`/`lmGroupCommit()` for journal persistence, `metapage_nohomeok()`/`metapage_homeok()` for write ordering, `dbUpdatePMap()`/`dbFree()` for block maps, `diUpdatePMap()` for inode maps, and `jfs_flush_journal()` for pressure and barriers.
+
+## Risks
+This is one of the most concurrency-sensitive JFS files. Risks include exhausting transaction locks, deadlocking on page locks or inode commit mutexes, losing anonymous tlocks during transfer to real transactions, allowing lazy commits while maplocks point into mutable xtree pages, failing to clear `nohomeok`, freeing a tblock still referenced by lazy commit, or updating persistent maps before commit durability. The disabled pre-commit data flush notes a historical uninitialized-data exposure concern for non-journaled file data. Several invariants are enforced only by `assert()`/`BUG()` or debug dumps.
+
+## Test signals
+Signals include high-concurrency create/unlink/rename/truncate workloads, tlock exhaustion that wakes `jfsSyncThread`, lazy versus synchronous commit ordering, directory and xtree splits/merges, inode extent allocation/free, EA/ACL extent replacement, file deletion with zero links, truncation crash recovery, forced commits for imap updates, `txQuiesce()` during remount/freeze, abort paths after `diWrite()` failure, and proc debug counters for transaction starts, waits, lock allocation, and low-lock pressure.

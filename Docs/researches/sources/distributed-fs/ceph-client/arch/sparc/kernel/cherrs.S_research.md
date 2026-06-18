@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sparc/kernel/cherrs.S -->
+# sources/distributed-fs/ceph-client/arch/sparc/kernel/cherrs.S
+
+Purpose: UltraSPARC Cheetah/Cheetah+ low-level trap vectors and handlers for fast ECC, correctable ECC, deferred errors, and instruction/data cache parity errors.
+
+Important APIs and control flow: boot-time patched vectors disable relevant caches in the DCU and branch to C handlers or assembly logging paths. Cheetah+ parity vectors enter trap frames and call `cheetah_plus_parity_error`; TL1 variants check whether interrupt globals are already in use, repair cache parity by clearing D-cache or I-cache tags/data when recoverable, or call fatal paths when not. `__cheetah_log_error` stamps TL1 into AFSR, indexes `cheetah_error_log` by CPU and trap level, stores AFSR/AFAR, captures matching D-cache, I-cache, and E-cache diagnostic state via ASIs, then dispatches to the correct C handler (`cheetah_fecc_handler`, `cheetah_cee_handler`, or `cheetah_deferred_handler`) through normal trap entry.
+
+State, dependencies, and risks: state includes DCU control, ESTATE error-enable, AFSR/AFAR, cache diagnostic arrays, TL/PIL/PSTATE, `dcache_parity_tl1_occurred`, `icache_parity_tl1_occurred`, and `cheetah_error_log`. Dependencies include SPARC64 trap entry/return labels, ASI constants, cache sizes/line sizes, Cheetah/Jalapeno configuration ASIs, and C handlers. Risks are extreme: register clobbering, recursive errors if reporting is not disabled, cache corruption during logging, wrong CPU log indexing, and unrecoverable TL1 interrupt-global conflicts. Test signals are mostly hardware/error-injection: ECC/parity trap handling, cache re-enable/retry, error log population, `/proc/cpuinfo` parity counters, and boot on Cheetah/Jalapeno variants.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sparc/kernel/cherrs.S -->

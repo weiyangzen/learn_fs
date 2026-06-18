@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v3.h
+
+This header defines QMP V3 UFS PCS offsets for PHY start, power-down, TX amplitudes, RX symbol resync, min-Hibern8, signal-detect controls, ready status, TX mid-term control, and multi-lane control. It has no runtime behavior or persisted state. UFS PHY drivers consume these macros in init tables or direct register sequences. Dependencies are only compile-time inclusion and the mapped PCS base. Risks focus on Hibern8 timing, signal-detect setup, and multi-lane enablement. Test signals include UFS link startup, multi-lane operation, Hibern8 cycles, and successful ready-status polling.

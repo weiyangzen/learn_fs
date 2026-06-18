@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/mm/run_mmap.sh
+
+Purpose: orchestrates the two mmap layout binaries with the correct stack rlimit. Control flow saves the original `ulimit -s`, runs `./mmap_default`, sets stack to unlimited, runs `./mmap_bottomup`, then restores the original limit. State is shell process resource limit, which affects child mmap policy. Dependencies are POSIX shell, `ulimit`, and the two built binaries in the working directory. Risks include not restoring the limit if the script exits early, relative path assumptions, and lack of `set -e` meaning a failure in `mmap_default` may not prevent continuing. Test signals are the exit status and harness output of both child programs.

@@ -1,0 +1,22 @@
+# sources/test-tools/syzkaller/syz-cluster/pkg/report/testdata/patch_test_infra_err.in.json
+
+## Purpose
+JSON input fixture for patch-test reply fixture for infrastructure error path.
+
+## Important APIs, Types, and Functions
+Maps directly to api.SessionReport fields such as id, type, moderation, series, tests, findings, links, and error.
+
+## Control Flow
+email_test.go unmarshals it and passes it to report.Render for golden comparison.
+
+## State and Persistence
+Checked-in test fixture only; represents report state normally produced by services.
+
+## Dependencies and Integration Points
+Integrates api.SessionReport, app.EmailConfig, embedded text templates, and reporter-generated report data.
+
+## Risks and Edge Cases
+Risks include template/schema drift and golden files masking regressions if regenerated without review.
+
+## Test Signals
+email_test.go golden-tests user-visible email bodies.

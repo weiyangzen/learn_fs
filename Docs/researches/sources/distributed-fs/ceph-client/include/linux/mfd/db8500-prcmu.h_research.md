@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/linux/mfd/db8500-prcmu.h
+
+Purpose: This file defines DB8500 PRCMU firmware constants and public firmware API prototypes for ST-Ericsson Ux500 power, reset, clock, wakeup, regulator, ABB, modem, and mailbox coordination. It is the DB8500-specific backend included by the generic `dbx500-prcmu.h` wrapper.
+
+Important APIs, types, and functions: It defines registers such as DSI reset and line value bits, plus many firmware enums: power states, retention states, ARM/GEN clock schemes, romcode read/write values, AP power-state transitions, deprecated hardware-accelerator state, AP transition status/error codes, DVFS status, mailbox IDs, clock names, regulator IDs, and modem states. The exported `db8500_prcmu_*` functions include early init, power-state transitions, EPOD state changes, wakeup enable/configuration, ABB event readout, ABB read/write/masked write, direct register read/write/update, DDR/APE/ARM OPP controls, clock rate/enable/disable, reset control, modem reset, watchdog/thermal helpers, and IRQ registration paths.
+
+Control flow, state, and persistence: Runtime flow goes through firmware mailboxes shared by the ARM side and the XP70 PRCMU firmware. Calls encode target states, wait for mailbox completions or status codes, and sometimes coordinate AP deep sleep and reset handshakes. Persistent or externally visible state is in PRCMU firmware memory, power-domain state, clocks, wakeup masks, ABB events, and hardware register blocks. Several operations cross suspend/resume and reset boundaries.
+
+Dependencies and integration points: The header depends on interrupt and bitops APIs and is consumed by Ux500 platform power management, clock, regulator, reset, thermal, watchdog, modem, and IRQ code. It is wrapped by `dbx500-prcmu.h` for SoC selection.
+
+Risks and test signals: Risks include firmware ABI drift, obsolete enum aliases, blocking in wrong context while waiting for firmware responses, incomplete error handling for mailbox status values, and using deprecated hardware accelerator paths instead of regulator APIs. Test signals include suspend/resume cycles, DVFS/OPP transition traces, wakeup-source tests, ABB read/write error injection, PRCMU IRQ delivery, watchdog reset tests, and clock rate verification.

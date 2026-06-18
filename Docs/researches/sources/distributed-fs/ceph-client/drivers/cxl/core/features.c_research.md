@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/cxl/core/features.c
+
+Purpose: provides common CXL feature discovery, get/set feature mailbox transfers, and fwctl-mediated userspace access to non-kernel-exclusive CXL features. It separates kernel-owned RAS features from vendor/user features and records feature metadata in `struct cxl_features_state`.
+
+Important APIs, types, and functions: exported APIs are `to_cxlfs()`, `devm_cxl_setup_features()`, `cxl_get_feature()`, `cxl_set_feature()`, `cxl_feature_info()`, and `devm_cxl_setup_fwctl()`. The exclusive feature UUID table covers patrol scrub, ECS, soft/hard PPR, cacheline/row/bank/rank sparing. Internal discovery uses `cxl_get_supported_features_count()` and `get_supported_features()`. fwctl dispatch is handled by `cxlctl_fw_rpc()`, `cxlctl_validate_hw_command()`, `cxlctl_get_supported_features()`, `cxlctl_get_feature()`, and `cxlctl_set_feature()`.
+
+Control flow: setup first checks mailbox feature capability, allocates a features state, asks the device for the supported feature count, then pages through `GET_SUPPORTED_FEATURES` responses according to mailbox payload size. It validates entry counts and output byte multiples before caching the table. `cxl_get_feature()` and `cxl_set_feature()` split large feature payloads across mailbox-sized transfers using offsets and CXL transfer flags. fwctl registration is skipped when every feature is kernel-exclusive; otherwise fwctl exposes read and validated write RPCs.
+
+State and persistence behavior: `cxlds->cxlfs` points to devm-owned state until `free_cxlfs()` clears it and frees entries. `cxl_set_feature()` forcibly strips caller transfer bits and adds `CXL_SET_FEAT_FLAG_DATA_SAVED_ACROSS_RESET`, so callers that use it request persistent device feature updates. fwctl user contexts are stateless; open and close are no-ops.
+
+Dependencies and integration points: depends on mailbox command execution from `mbox.c`, UAPI payload layouts from `<uapi/fwctl/cxl.h>`, fwctl core registration, and CXL feature UUID definitions. `edac.c` queries `cxl_feature_info()` and uses `cxl_get_feature()`/`cxl_set_feature()` for kernel-exclusive RAS controls. `mbox.c` sets `cxl_mbox->feat_cap` while walking the CEL.
+
+Risks: feature discovery treats malformed output as allocation/discovery failure and may disable all feature support. Pointer arithmetic on `void *` payload buffers is compiler-extension dependent but common in kernel code. fwctl write validation must remain aligned with `effects` semantics; allowing immediate configuration/data/policy/log changes at too-low scope would expose unsafe hardware mutation. The supported-features fwctl response hides mutability of exclusive features but still reports their existence.
+
+Test signals: validate devices with zero, read-only, and read-write feature capabilities; feature lists larger than mailbox payload; malformed `num_entries` or odd byte counts; get/set feature payloads that require multi-packet transfer; fwctl rejection of exclusive UUIDs, background effects, reserved effects, and insufficient scopes; teardown clearing `cxlds->cxlfs`.

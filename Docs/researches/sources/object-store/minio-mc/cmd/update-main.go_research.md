@@ -1,0 +1,5 @@
+## sources/object-store/minio-mc/cmd/update-main.go
+
+Purpose: implements `mc update`, release discovery, checksum/signature verification, download, and in-place binary replacement. Key APIs are `mcVersionToReleaseTime`, `releaseTagToReleaseTime`, `GetCurrentReleaseTime`, environment detectors, `getUserAgent`, `DownloadReleaseData`, `parseReleaseData`, `getUpdateInfo`, `getUpdateTransport`, `getUpdateReaderFromURL`, `doUpdate`, `updateMessage`, and `mainUpdate`.
+
+Control flow compares current release time from `Version` or executable mtime with official sha256sum metadata, builds an archive URL or Docker pull message, and applies `selfupdate` with SHA256. Optional minisign verification is enabled by `MC_UPDATE_MINISIGN_PUBKEY`. State touched is the running executable; release state is fetched over HTTPS using `globalRootCAs`. Integration points include terminal coloring, proxy/TLS transport, progress reader, env, and `selfupdate`. Risks are high because failed writes affect the executable; permission, rollback, checksum, custom URL, FIPS URL, and source-build semantics need careful tests. Existing direct tests are absent here.

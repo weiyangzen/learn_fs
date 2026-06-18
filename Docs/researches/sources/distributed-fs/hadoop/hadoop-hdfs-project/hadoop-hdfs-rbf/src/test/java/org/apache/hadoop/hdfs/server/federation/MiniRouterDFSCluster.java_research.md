@@ -1,0 +1,11 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/MiniRouterDFSCluster.java
+
+`MiniRouterDFSCluster` is the core RBF test fixture that builds an in-process federated HDFS deployment with multiple nameservices, optional HA namenodes, datanodes, and one Router per namenode context. It supplies client/admin handles and lifecycle helpers used throughout Router tests.
+
+Important types are `RouterContext` and `NamenodeContext`. `RouterContext` owns a `Router`, configuration, bound RPC/HTTP ports, `FileContext`, DFS client, admin client, and helper methods for Router-backed `FileSystem` and proxy-provider variants. `NamenodeContext` owns namenode identity, bound addresses, `FileContext`, DFS client, and configuration suffix logic.
+
+Important cluster APIs include constructors for HA/non-HA shapes, `addRouterOverrides`, `addNamenodeOverrides`, `generateNamenodeConfiguration`, `generateClientConfiguration`, `generateRouterConfiguration`, `configureNameservices`, datanode/storage/rack setters, context lookup methods, `startCluster`, `startRouters`, `registerNamenodes`, `waitNamenodeRegistration`, `waitActiveNamespaces`, HA transition helpers, `shutdown`, `stopRouter`, fixture path helpers, `createTestDirectoriesNamenode`, `deleteAllFiles`, `installMockLocations`, and `waitClusterUp`.
+
+State and persistence include in-memory lists of nameservices/namenode/router contexts, a `MiniDFSCluster`, generated `Configuration` objects, static random selection, mount mappings in `MockResolver`, Router/namenode state, and HDFS namespace contents. Configuration generation binds random ports, mock resolver classes, Router heartbeat/cache intervals, monitor-namenode lists, default nameservice, and safemode disabled for tests.
+
+Dependencies include `MiniDFSCluster`, `MiniDFSNNTopology`, Router services, resolver interfaces, HA transition APIs, `MockResolver`, HDFS clients, and federation test utilities. Risks include broad mutable static-like fixture state, random router/namenode selection causing nondeterministic coverage, caught startup exceptions that log but do not always rethrow, and test assumptions tied to mock resolvers rather than real state-store-backed mount tables. Test signal is foundational: this fixture underpins contract tests and many federation integration tests.

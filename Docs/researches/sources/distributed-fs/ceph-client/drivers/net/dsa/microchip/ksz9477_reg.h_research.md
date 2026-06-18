@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/dsa/microchip/ksz9477_reg.h
+
+Purpose: defines the KSZ9477-family register map and bit fields used by the switch core, ACL implementation, PTP/HSR support, PHY/SGMII access, QoS, VLAN, ALU, MIB, mirroring, policing, shaping, and queue-management code. It is definitions-only, but it is the hardware contract for the implementation files in this subset.
+
+Important APIs, types, and functions: the key macro API is register constants plus masks/shifts, including chip IDs and revision fields, global interrupt masks, serial/refclock controls, operation/MTU/LUE/MAC controls, VLAN table controls, ALU and static ALU controls, HSR ALU and port map controls, PTP clock/trigger/timestamp registers, `PORT_CTRL_ADDR(port, addr)`, per-port default VID/control/status/PHY/SGMII/MAC/MIB/ACL/MRI/QM/LUE/PTP registers, and aliases such as `P_BCAST_STORM_CTRL`, `P_PRIO_CTRL`, `P_MIRROR_CTRL`, `S_MIRROR_CTRL`, and `S_FLUSH_TABLE_CTRL`.
+
+Control flow: no control flow executes in this header. The macro layout structures caller behavior by splitting global blocks and per-port blocks. Core code uses `PORT_CTRL_ADDR()` and aliases to address per-port registers, polls busy bits such as `VLAN_START`, `ALU_START`, `ALU_STAT_START`, `MIB_COUNTER_READ`, `PORT_ACL_WRITE_DONE`, and `PORT_ACL_READ_DONE`, and uses masks/shifts to compose table entries and mode fields.
+
+State and persistence: all definitions refer to hardware state. Persistent areas include the VLAN table at `0x0400`, dynamic and static ALU entries at `0x0410` through value registers, HSR tables, PTP clock/timestamp state, per-port PHY registers, MIB counters, ACL tables, priority/authentication controls, mirroring, policing/WRED, shaping, queue membership, and port LUE state. The header itself stores no software state.
+
+Dependencies and integration points: depends on common kernel bit macros such as `BIT()`, `GENMASK()`, and field helpers used by C files. `ksz9477.c`, `ksz9477_acl.c`, and `ksz9477_tc_flower.c` include it directly; common KSZ code also consumes many aliases and constants when building chip data.
+
+Risks: mask/shift mistakes are high impact because they silently program wrong hardware fields. Several constants are reused across related hardware concepts, such as ACL byte-enable/action/ruleset fields and ALU static/direct controls, so semantic drift can break multiple subsystems. `PORT_CTRL_ADDR(port, addr)` assumes the KSZ9477 per-port window addressing pattern; using it for global registers would target the wrong address. The register file spans features not fully implemented in this subset, so definitions can be stale without compile-time detection if unused.
+
+Test signals: build coverage for all users of renamed or changed macros, register-level tests or hardware traces showing correct addresses for global versus per-port accesses, VLAN/ALU/ACL busy-bit polling completion, correct MIB counter indexes and queue limits, SGMII MMD access with expected device/register addresses, and feature tests for ACL priority, mirroring, HSR, PTP, and queue split using the defined masks.

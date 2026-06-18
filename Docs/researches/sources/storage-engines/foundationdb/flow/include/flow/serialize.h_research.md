@@ -1,0 +1,24 @@
+# sources/storage-engines/foundationdb/flow/include/flow/serialize.h
+
+## Purpose
+This header is Flow's core serialization interface. It defines the generic `serializer`, `save`, and `load` dispatch path, binary-serializable trait specializations, STL/container serialization overloads, protocol-version framing helpers, binary archive implementations, packet-buffer writing, and object-serializer integration. It is on the wire-format boundary for network messages, persistent encoded values, object serializer support, and tuple-style key serialization helpers.
+
+## Important APIs, Types, and Functions
+Key template APIs are `is_binary_serializable<T>`, `BINARY_SERIALIZABLE(T)`, `Serializer<Archive, T>`, `save`, `load`, `operator<<`, `operator>>`, and variadic `serializer`. `scalar_traits<ProtocolVersion>` stores a protocol version as its `versionWithFlags()` `uint64_t`. Container overloads cover `std::string`, `std::vector`, `std::deque`, `std::array`, `std::set`, `std::map`, `boost::container::flat_map`, `std::unordered_set` file identifiers, and `std::variant`. Version option types are `_IncludeVersion`, `_AssumeVersion`, and `_Unversioned`, with helpers `IncludeVersion`, `AssumeVersion`, and `Unversioned`.
+
+Archive implementations include `BinaryWriter`, `OverWriter`, `_Reader<Impl>`, `ArenaReader`, and `BinaryReader`. Network output support is provided by `SplitBuffer`, `SendBuffer`, `PacketBuffer`, `PacketWriter`, `ISerializeSource`, `MakeSerializeSource`, and `SerializeSource<T>`. `PacketBuffer::markForWipe` and `PacketWriter::packetWriterMarkForWipe` integrate sensitive-data wiping when the relevant knob is enabled.
+
+## Control Flow
+Generic serialization resolves through `Serializer<Archive, T>::serialize`; by default it calls `t.serialize(ar)`, while binary and enum specializations use `serializeBinaryItem`. Variadic `serializer` saves or loads arguments in order and statically enforces "appears last" properties, notably for Arena-like trailing parameters. Versioned writers call `vo.write(*this)` in the constructor; readers call `vo.read(*this)` and then may initialize `ObjectReader`/`ArenaObjectReader` when the protocol version carries the object-serializer flag. Container loads read a length, clear existing state, reserve where possible, and deserialize each element in order. `PacketWriter` writes into the current `PacketBuffer` until it crosses the boundary, then allocates/chains another buffer via private boundary methods.
+
+## State and Persistence Behavior
+The file defines durable binary layout conventions: integer lengths are serialized as `int` or `int32_t`, variants store a `uint8_t` index, binary items are raw copied according to host ABI assumptions used by Flow, and protocol version inclusion determines how future readers interpret the stream. `BinaryWriter` stores bytes in an `Arena` and can materialize a `Standalone<StringRef>` or arena-owned `StringRef`. `BinaryReader` and `ArenaReader` maintain cursor state, optional checkpoint/rewind state, and an arena for copied reads. `PacketBuffer` is reference counted and can zero a contiguous sensitive range before freeing memory.
+
+## Dependencies and Integration Points
+The header depends on Flow's `Arena`, `Error`, `FastAlloc`, `FileIdentifier`, `ObjectSerializer`, `ProtocolVersion`, and `network` facilities. It integrates with `TraceEvent` for invalid/future protocol versions and Valgrind undefined-memory checks. `g_network` is used for packet enqueue timing. `ObjectWriter` and `ObjectReader` are the integration point for file-identifier-aware object serialization; `HasFileIdentifier<T>` controls whether that path is taken.
+
+## Risks
+Wire compatibility is the major risk. Changing trait specializations, container ordering, length widths, or protocol-version handling can break mixed-version clusters or persistent data. Binary serialization transmits host-layout bytes for approved scalar types, so adding non-packed structs to `BINARY_SERIALIZABLE` would risk padding and undefined bytes. Several loads trust serialized lengths enough to reserve memory; malformed input paths rely on archive assertions and surrounding validation. Variant indices are limited to `uint8_t`, and `loadVariant` asserts on invalid indexes. Packet buffer wiping merges ranges into a contiguous union, which is conservative for wiping but may wipe more than the exact sensitive spans.
+
+## Test Signals
+Relevant tests should round-trip all supported containers, enums, `ProtocolVersion`, object-serializer-flagged payloads, and versioned/unversioned archives. Compatibility tests should decode old serialized bytes with current readers and reject invalid/future protocol versions. Packet tests should exercise boundary-crossing writes, `SplitBuffer` overwrite paths, reference counting, and sensitive-data wipe behavior. Valgrind or sanitizer runs are useful for catching undefined data sent through `serializeBytes` and raw binary serialization.

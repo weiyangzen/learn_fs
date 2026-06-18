@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/sh/intc/core.c
+
+Purpose: central registration and lifecycle code for SH INTC controllers. It converts platform `struct intc_desc` hardware descriptors into Linux IRQ domains, irq chips, register tables, virtual subgroup mappings, syscore PM hooks, and an `intc` bus device.
+
+Important APIs and functions: exported priority helpers manage default/per-IRQ levels. `register_intc_controller` allocates `intc_desc_int`, maps memory windows, builds register index arrays, allocates priority/sense lists, initializes irqdomain, registers each vector, handles duplicate vectors through chained redirects, initializes subgroups, and records the controller. `intc_suspend/resume` preserve wakeup/enable state around syscore PM. `register_intc_devs` registers syscore ops and exposes controller devices with a `name` attribute.
+
+Control flow: architecture code calls `register_intc_controller` during init. The core maps descriptors, selects mask/priority handles via `handle.c`, installs chip handlers, disables IRQs initially, and then finalizes subgroup data. During suspend/resume it walks active IRQs belonging to each INTC chip.
+
+State and dependencies: global `intc_list`, `intc_big_lock`, controller count, per-IRQ priorities, radix trees, mapped windows, register arrays, domain, and device objects. Dependencies include IRQ core, irqdomain, radix tree, syscore, device model, and descriptor data from platform code. Risks include allocation failure cleanup, `BUG_ON(k > 256)` register encoding limit, descriptor inconsistencies, duplicate vector redirection, no unregister path, and suspend state mismatch. Test signals are controller registration logs, correct IRQ domain associations, interrupt delivery, subgroup finalization, sysfs `intc/name`, and suspend/resume wake IRQ behavior.

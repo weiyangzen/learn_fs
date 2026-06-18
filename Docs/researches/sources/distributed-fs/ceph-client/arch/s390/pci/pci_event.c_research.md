@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/pci/pci_event.c -->
+# sources/distributed-fs/ceph-client/arch/s390/pci/pci_event.c
+
+Purpose: This file handles s390 zPCI firmware event payloads for PCI function errors and availability changes. It translates content-code data fields into PCI error recovery, permanent failure notification, device creation, configuration, deconfiguration, reservation, and rescanning.
+
+Important APIs/types/functions: Event payload structures are `struct zpci_ccdf_err` and `struct zpci_ccdf_avail`. Public handlers are `zpci_event_error` and `zpci_event_availability`. Error-recovery helpers include `zpci_event_attempt_error_recovery`, `zpci_event_notify_error_detected`, `zpci_event_do_error_state_clear`, `zpci_event_do_reset`, `zpci_event_io_failure`, `is_passed_through`, and `is_driver_supported`. Availability helpers include `zpci_event_hard_deconfigured` and `zpci_event_reappear`.
+
+Control flow: Error events refresh the current function handle via CLP, ignore stale events, find the PCI device, log the CCDF, and branch on the PCI event code. FMB-related events are informational, permanent-failure events notify the driver, and recoverable events run the PCI error-recovery sequence: lock the device, freeze channel state, reject passthrough/no-driver/no-ERS cases, call `error_detected`, optionally unblock load/store and DMA, optionally hot-reset the zPCI device and call `slot_reset`, then call `resume` and emit ERS uevents on success. Availability events branch by PEC: create/scan configured or standby devices, refresh handles, deconfigure configured devices, hard-remove devices that transitioned to standby/reserved, rescan multiple-device changes, or mark functions reserved.
+
+State and persistence: The file mutates `struct zpci_dev` state (`CONFIGURED`, `STANDBY`, `RESERVED`), function handles, zdev references, PCI device `error_state`, and driver-visible ERS state. It uses `state_lock`, `device_lock`, and PCI device locking to serialize state changes and recovery with probe/remove/userspace access.
+
+Dependencies and integration points: It depends on CLP handle/state lookup, zPCI bus removal/scanning, zPCI enable/disable/reset helpers, PCI ERS driver callbacks, PCI uevents, passthrough KVM/vfio association (`zdev->kzdev`), SCLP event delivery, and `pci_report.c` status reporting.
+
+Risks and test signals: Stale function handles can cause recovery of the wrong function if not filtered. Lock ordering among zdev state locks, PCI device locks, and remove/rescan paths must remain deadlock-free. Driver callback return semantics are subtle, especially `NONE`, `NEED_RESET`, and aborting results. Tests should cover recoverable load/store-blocked events, reset-required events, permanent failures, passthrough devices, unbound drivers, reserved/reappearing functions, queued stale events, multi-device rescan PEC 0x0306, and status reports emitted for each recovery outcome.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/pci/pci_event.c -->

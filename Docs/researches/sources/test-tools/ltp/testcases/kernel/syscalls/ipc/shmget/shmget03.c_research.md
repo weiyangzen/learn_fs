@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmget/shmget03.c
+
+Purpose: drives `shmget()` to `ENOSPC` by exhausting `SHMMNI`, the maximum number of shared-memory segments. Setup reads current used segments with `GET_USED_SEGMENTS()`, reads `PATH_KERN_SHMMNI`, allocates an ID array, and creates segments until the limit is reached. The test then attempts one more segment and expects `ENOSPC`. State is deliberately large SysV shm allocation recorded in `queues`; cleanup removes each segment and frees the array. Dependencies are procfs/sysctl visibility and lack of concurrent shared-memory changes. Risks are high limits causing expensive setup and environmental races. Test signal is the final extra `shmget()` failing with `ENOSPC` and successful cleanup.

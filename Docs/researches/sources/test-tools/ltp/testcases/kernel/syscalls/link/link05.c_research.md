@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/link/link05.c
+
+Purpose: stress/positive `link()` test creating 999 hard links to one file. Setup creates a pid-derived base file name. The test loops from 1 to 999 creating `fname_N`, stats the original and each link, and verifies link counts are greater than one and match; cleanup unlinks all created links. State is many directory entries pointing to one inode. Dependencies are filesystem hard-link support and a link-count limit above 1000. Risks are filesystems with low max hard links or quota limitations. Test signal is all links created and link counts matching, with partial cleanup on failure.

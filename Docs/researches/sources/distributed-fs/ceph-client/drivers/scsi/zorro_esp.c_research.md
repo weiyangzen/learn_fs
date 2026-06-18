@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/zorro_esp.c
+
+Purpose: Amiga Zorro ESP/NCR5C9x SCSI front-end for several accelerator boards. It supplies board-specific register access, IRQ-pending checks, DMA programming, and probe/remove glue for the shared `esp_scsi` core.
+
+Important APIs and functions: board register structs describe Blizzard, CyberStorm, and Fastlane DMA layouts. `zorro_esp_write8/read8`, IRQ helpers, DMA length limiters, and board-specific `zorro_esp_send_*_dma_cmd` implementations populate `struct esp_driver_ops`. `zorro_esp_probe` identifies Zorro II/III addressing, fixes the shared Blizzard/Fastlane ID case, maps ESP and DMA registers, allocates the ESP command block, requests `IRQ_AMIGA_PORTS`, validates optional SCSI presence, and registers via `scsi_esp_register`. `zorro_esp_remove` unregisters ESP and frees mappings, IRQ, DMA buffer, and private data.
+
+Control flow: probe selects `zorro_driver_data`, maps device resources, attaches ops to `struct esp`, then the common ESP core drives SCSI command sequencing. DMA send functions handle protocol message phases via PIO fallback, cache synchronization, register address staging, transfer-count setup, and ESP command issue.
+
+State and dependencies: state includes `zorro_esp_priv` with board base, Zorro III flag, and Fastlane control shadow; `struct esp`; coherent command block; and Zorro drvdata. Dependencies include Zorro resources, Amiga cache/DMA helpers, `esp_scsi`, SCSI midlayer, and DMA mapping. Risks are hardware-specific address bit semantics, cache coherency on m68k, unsupported Oktagon PDMA, shared product IDs, and cleanup after partial probe. Test signals include board-specific probe logs, successful SCSI option register echo, target scan, DMA/PIO fallback transfers, and Fastlane Z3 behavior.

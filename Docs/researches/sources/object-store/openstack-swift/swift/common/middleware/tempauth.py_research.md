@@ -1,0 +1,15 @@
+# sources/object-store/openstack-swift/swift/common/middleware/tempauth.py
+
+Purpose: Provides Swift's simple built-in authentication and authorization middleware. It parses configured users, issues tokens through `/auth/` endpoints, validates request tokens, installs `swift.authorize` and `swift.clean_acl`, and enforces account/container/object access rules including account ACLs and reseller roles.
+
+Important APIs and types: `TempAuth` is the middleware. Key methods include `__call__()`, `get_groups()`, `groups_from_fernet()`, `groups_from_compressed_fernet()`, `groups_from_memcache()`, `authorize()`, `denied_response()`, `handle_get_token()`, and `_create_new_token()`. Constants and helpers include `DEFAULT_TOKEN_LIFE`, reseller-prefix parsing, `clean_acl`, `parse_acl`, `referrer_allowed`, and `acls_from_account_info`.
+
+Control flow: Initialization reads reseller prefixes, account rules, user entries (`user_` and base64 `user64_`), optional Fernet keys, token lifetime, auth prefix, and storage URL behavior. Normal requests bypass if an override is set, route auth-prefix paths to `handle()`, otherwise validate S3 auth details or `X-Auth-Token`/`X-Storage-Token`. Valid groups set `REMOTE_USER`, logging user id, authorization callback, and reseller flags. Invalid definitive tokens return 401; unrelated prefixes fall back or deny depending on reseller configuration. Auth endpoint GETs validate account/user/key headers and return a reusable or newly created token plus storage URL.
+
+State and persistence: User credentials and groups are in static middleware config. Token state is either persisted in memcache (`reseller/token/...` and `reseller/user/...`) or embedded in Fernet/possibly compressed Fernet tokens. Account ACLs are stored in account sysmeta through `X-Account-Access-Control` translation to an internal sysmeta header.
+
+Dependencies and integration points: Depends on memcache, optional cryptography Fernet, account metadata lookups, Swift ACL helpers, reseller-prefix configuration, and S3 middleware-provided `check_signature`. It is usually early in the proxy pipeline and is expected to collaborate with downstream middleware via `swift.authorize`, `swift_owner`, `reseller_request`, and access-logging fields.
+
+Risks: Auth behavior differs for empty versus non-empty reseller prefixes, definitive versus fallback tokens, and service-token composition. Memcache absence is fatal unless active Fernet tokens are configured. Account ACL parsing is authoritative and rejects unknown keys. Token group reuse depends on set equality and token lifetime. Dot accounts and account PUT/DELETE admin restrictions are subtle security boundaries.
+
+Test signals: Exercise token issuance formats (`/v1/account/auth`, `/auth`, `/v1.0`), wrong user/key paths, memcache reuse and expiration, Fernet and compressed Fernet validation, S3 auth path rewriting, service token group merge, reseller admin/reader behavior, `.admin` with `require_group`, account ACL read-only/read-write/admin grants, referrer ACLs, OPTIONS pass-through, and invalid ACL rejection.

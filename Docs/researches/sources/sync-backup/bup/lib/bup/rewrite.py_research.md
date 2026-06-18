@@ -1,0 +1,9 @@
+## sources/sync-backup/bup/lib/bup/rewrite.py
+
+Purpose: rebuilds saves from one repository into another, optionally rewriting split layout, applying excludes, and repairing missing objects/metadata. It is the core engine behind `bup get --rewrite` and `--repair`.
+
+Important APIs and control flow: `Rewriter(split_cfg, db)` manages a SQLite mapping table keyed by split settings. `append_save()` resolves `latest`, walks a VFS save in DFS postorder via `_vfs_walk_dir_recursively()`, feeds entries to `_rewrite_save_item()`, then writes a new commit with repair trailers. `_previous_conversion()` reuses prior conversions when the destination still has the mapped oid. `_rewrite_link()` handles symlink metadata/blob restoration, mismatch detection, and repair. Replacement helpers create explanatory blobs for missing files, trees, and symlinks.
+
+State, dependencies, and persistence: durable memoization lives in a SQLite database, either caller-supplied or temporary under XDG cache. Destination persistence is through repo writes and final commit refs outside this module. It depends heavily on `bup.vfs`, `bup.tree.Stack`, `bup.metadata`, `bup.hashsplit`, `bup.repair`, and `commit_message()`. Excludes invalidate remembered directory-tree conversions but not file conversions.
+
+Risks and edge cases: correctness depends on VFS ordering, immutable metadata discipline, split configuration identity, and not reusing destructive repair blobs whose content includes contextual repair IDs. Non-repair rewrites raise on missing objects; destructive repairs replace whole files/trees rather than attempting partial reconstruction. Test signals are strong in `test-get-excludes`, `test-get-repair-bupm`, `test-get-repair-symlinks`, and `test-get-rewrite-missing`, covering contextual excludes, missing bupm metadata, symlink blob repair, missing split trees, repair IDs, and trailer accumulation.

@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_netdev.h
+
+This header defines CCMNI netdev state for T7xx. `struct t7xx_ccmni` is per WWAN link and stores the link index, usage count, netdev, and controller pointer. `struct t7xx_ccmni_ctrl` owns the DPMAIF control object, up to `NIC_DEV_MAX` link instances, callbacks, modem state, FSM notifier, dummy NAPI netdev, RX NAPI array, and NAPI user count.
+
+Constants set the default link count, maximum links, MTU ceiling, watchdog timeout, and NAPI poll budget. The API is `t7xx_ccmni_init`/`t7xx_ccmni_exit`, called from modem init/exit. Persistent state is tied to the PCI device and is cleaned during modem exit. Dependencies include DPMAIF, netdevice, PCI, and FSM types. Risks are array bounds on link IDs, mismatch between `CCMNI_MTU_MAX` and hardware MTU, and NAPI pointers becoming invalid if DPMAIF queues are torn down first. Tests should cover link ID bounds, MTU settings, notifier registration lifetime, and init failure cleanup.

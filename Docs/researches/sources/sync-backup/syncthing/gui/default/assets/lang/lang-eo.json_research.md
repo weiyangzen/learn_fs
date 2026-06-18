@@ -1,0 +1,15 @@
+# sources/sync-backup/syncthing/gui/default/assets/lang/lang-eo.json
+
+Purpose: Esperanto localization catalog for the Syncthing AngularJS web GUI. It translates the full base English GUI namespace into Esperanto for the same device, folder, connection, authentication, versioning, discovery, and warning surfaces covered by `lang-en.json`.
+
+Important APIs/types/functions: this is static JSON consumed by angular-translate. The important contract is exact key coverage, value strings, interpolation placeholder preservation, and the nested `theme.name` object. Dynamic entries include device/folder sharing prompts, remove confirmations, path warnings, upgrade text, receive-encrypted warnings, edited path text, deleted/updated file messages, and documentation-link text.
+
+Control flow: selecting locale `eo` causes the configured static loader to fetch `assets/lang/lang-eo.json`; angular-translate then resolves keys from this catalog before consulting the English fallback. Interpolation values supplied by attributes such as `translate-value-device`, `translate-value-folder`, `translate-value-name`, and `translate-value-version` are inserted into the Esperanto strings with escaping enabled.
+
+State and persistence behavior: no mutable state or persistence logic exists in this file. Its translations are static assets, but they label and confirm operations that mutate Syncthing state, including folder/device sharing, rate limits, watcher settings, authentication setup, ignored item lists, upgrade choices, and file restoration. I parsed the complete JSON: it contains 558 top-level entries and 561 scalar leaf values, with one nested `theme.name` object.
+
+Dependencies and integration points: depends on the AngularJS translation stack, the `validLangs` locale list, exact English source keys, and template/controller interpolation names. It integrates with the same GUI views as the base catalog and currently has complete top-level coverage relative to `lang-en.json`, so normal runtime should not need English fallback for known keys.
+
+Risks: key coverage is complete, but translator quality and placeholder preservation remain the main risks. Some long Esperanto text may overflow dense controls or modals. Because this catalog is a full translation rather than a regional English override, stale technical terminology can confuse configuration workflows around receive-encrypted folders, block indexing, ownership/extended attributes, QUIC/TCP connection labels, and versioning cleanup. A complete placeholder scan found 25 placeholder-bearing entries and zero variable mismatches.
+
+Test signals: `jq` should parse the file; key diff against `lang-en.json` should show zero missing and zero extra top-level keys; placeholder validation should remain clean. GUI smoke tests should switch to Esperanto and inspect add/remove device, add/remove folder, connection status, ownership/extended-attribute settings, receive-encrypted warnings, restore versions, ignored items, and theme selection for interpolation, fallback absence, and layout fit.

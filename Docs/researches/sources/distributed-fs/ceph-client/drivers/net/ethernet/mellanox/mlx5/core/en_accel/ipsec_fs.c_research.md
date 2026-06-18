@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ipsec_fs.c
+
+Purpose: constructs and manages the mlx5 flow-steering graph for IPsec crypto and packet offload on RX/TX, including policies, SAs, status checks, packet reformat, counters, RoCE bypass, switchdev/uplink representative handling, and devcom multi-port events.
+
+Important APIs/types/functions: exported APIs are `mlx5e_accel_ipsec_fs_init/cleanup`, `mlx5e_accel_ipsec_fs_add_rule/del_rule`, `mlx5e_accel_ipsec_fs_add_pol/del_pol`, `mlx5e_accel_ipsec_fs_modify`, `mlx5e_ipsec_fs_tunnel_allowed`, stats read, and MPV event helpers. Key local flows include `rx_create/destroy/get/put`, `tx_create/destroy/get/put`, address/SPI/proto match builders, `setup_modify_header`, packet transport/tunnel reformat builders, `rx_add_rule`, `tx_add_rule`, `rx_add_policy`, and `tx_add_policy`.
+
+Control flow and state: init allocates TX, RX IPv4, RX IPv6, optional ESW TX/RX contexts, counters, mutexes, namespaces, and optional RoCE steering. RX creation builds SA decrypt, status, SA selector, policy, miss, and RoCE tables, then connects TTC/default destinations. TX creation builds status counter, SA encrypt, policy/chains, miss handling, and RoCE TX tables. Table contexts are refcounted under `ft.mutex`; add-rule obtains the right RX/TX context, installs rule/counter/reformat/modify-header resources, and blocks TC for packet offload. Delete removes rules and puts the table ref. Modify installs a shadow rule before deleting the old one to reduce traffic interruption.
+
+Dependencies and integration: depends on mlx5 flow table/chains APIs, TTC, eswitch, FDB switchdev helpers, packet reformat hardware capabilities, IPsec attrs from `ipsec.c`, ASO status metadata, RoCE IPsec FS library, and hardware counters.
+
+Risks and test signals: many error paths must free counters, rules, modify headers, packet reformats, chain tables, and eswitch blocks in reverse order; IPv6 mask setup is subtle; packet offload blocks TC and encap modes; status rules must classify auth/trailer/replay drops correctly. Test add/delete/modify RX/TX SAs and policies for crypto/packet offload, block/allow policies, priorities with chains, transport/tunnel, UDP encap, ESW uplink rep, RoCE events, stats counters, and failure injection at every flow-resource allocation.

@@ -1,0 +1,13 @@
+# sources/test-tools/liburing/test/timeout.c
+
+Purpose: broad regression suite for io_uring timeout operations. It covers relative, absolute, immediate-argument, counted, linked, drained, removable, updatable, multishot, CQ overflow, SQPOLL, eventfd, and process-exec cancellation behavior.
+
+Important APIs/types/functions: `msec_to_ts`, `t_prep_timeout`, `test_single_timeout*`, `test_multi_timeout*`, `test_timeout_flags*`, `test_update_timeout`, `test_update_multishot_timeouts`, `test_timeout_link_cancel`, `test_not_failing_links`, `test_timeout_multishot*`, `test_eventfd`, `io_uring_prep_timeout`, `io_uring_prep_timeout_remove`, `io_uring_prep_timeout_update`, `IORING_TIMEOUT_IMMEDIATE_ARG`, `IORING_TIMEOUT_ABS`, `IORING_TIMEOUT_MULTISHOT`, `IORING_TIMEOUT_ETIME_SUCCESS`, `IOSQE_IO_LINK`, and `IOSQE_IO_DRAIN`.
+
+Control flow: main creates a normal ring and optionally an SQPOLL ring. It first establishes basic timeout support, then runs single relative and immediate timeouts, two-timeout ordering, absolute timeouts, timeout removal and not-found removal, `io_uring_enter` wait-for-many behavior, counted timeout completion, link/drain flag combinations, multishot behavior, and wait helper behavior. The ring is reinitialized after tests that may leave helper timeouts behind. If timeout update is supported, it checks nonexistent updates, invalid flags, immediate/1 ms/1 s updates, absolute and async updates, linked updates, multishot updates, and SQPOLL update. It ends with eventfd teardown, queue-exit cancellation, exec-triggered cancellation, and `ETIME_SUCCESS` linked behavior.
+
+State/persistence behavior: state is mostly ring-local timeout requests and CQ/SQ flags. `test_timeout_link_cancel` forks a child that submits linked timeout/NOP then `exec`s `exec-target.t`, forcing full cancellation visible to the parent ring. `test_eventfd` registers an eventfd then exits a ring with an async timeout to catch teardown bugs.
+
+Dependencies/integration: uses raw `io_uring_enter`, eventfd, fork/exec/wait, SQPOLL, helper executable discovery, and timing windows measured by `gettimeofday`. It integrates with multiple kernel feature levels by setting `not_supported`, `no_modify`, `no_multishot`, and `no_immediate`.
+
+Risks/test signals: timing bounds are intentionally loose but still flaky under extreme load. Several subtests skip implicitly when operations return `-EINVAL`. Failures include wrong CQE order, wrong result codes (`-ETIME`, `-ECANCELED`, `-ENOENT`, `-EINVAL`), missing `IORING_CQE_F_MORE`, no CQ overflow after multishot saturation, update not shortening timeout, or linked operations being canceled incorrectly.

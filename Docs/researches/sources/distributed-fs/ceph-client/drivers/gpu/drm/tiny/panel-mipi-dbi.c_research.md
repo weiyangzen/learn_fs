@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/tiny/panel-mipi-dbi.c
+
+Purpose: This is a generic SPI DRM driver for MIPI DBI-compatible display panels whose mode, pixel format, and controller initialization sequence are supplied by device tree plus a firmware binary. It avoids a panel-specific C file for simple DBI panels while preserving the standard tiny DRM KMS object layout.
+
+Important APIs, types, and functions: `struct panel_mipi_dbi_config` defines the firmware format: 15-byte magic, version, and command stream. `panel_mipi_dbi_check_commands()` validates magic, version, command lengths, and delay encoding. `panel_mipi_dbi_commands_from_fw()` names firmware as `<first-compatible>.bin`. `panel_mipi_dbi_commands_execute()` runs commands, treating DCS NOP with one parameter as a millisecond delay. `panel_mipi_dbi_get_mode()` parses `panel-timing`, constrains timing fields to DBI-compatible bounds, and sets DBI offsets. `panel_mipi_dbi_get_format()` maps DT `format` strings to RGB565 or RGB888 plus XRGB8888 fallback.
+
+Control flow: SPI probe allocates DRM/DBI state, parses the fixed panel mode, gets `power` and `io` regulators, backlight, optional reset and nonexclusive dc GPIO, initializes SPI DBI, optionally disables reads for `write-only`, loads/validates firmware commands, determines format and tx buffer size, initializes DBI device state, creates exact mode config and KMS objects, registers DRM, stores drvdata, and starts client setup with RGB565 or RGB888 fourcc. Atomic enable powers/resets through DBI helpers, executes firmware commands only after a real reset/power-on, and enables backlight.
+
+State and persistence: Persistent state includes DBI helper state, regulators, optional GPIOs, backlight, mode offsets, pixel format/bpp, tx buffer, and `driver_private` command list. Hardware state comes entirely from the firmware command stream plus DBI power/reset helper behavior.
+
+Dependencies and integration points: Binds to `panel-mipi-dbi-spi`. Depends on OF `panel-timing`, firmware loader, regulators named `power` and `io`, backlight, SPI, MIPI DBI helpers, DRM GEM DMA vmap/fbdev helpers, and system sleep PM. Multiple panels may share a dc GPIO only when on the same SPI bus due to nonexclusive GPIO acquisition.
+
+Risks: Missing or malformed firmware prevents probe. The firmware name is derived from the first compatible string and limited by the local buffer. Only simple timing shapes are accepted: width/height required, no flags, no front/sync values beyond back porch and pixel clock semantics. Firmware commands are trusted after validation but not semantically checked. Write-only panels lose readback/debug capability.
+
+Test signals: Validate firmware magic/version/overflow rejection, delay command execution, RGB565 and RGB888 format selection, old DT default format path, panel-timing bounds, write-only mode, regulator/backlight sequencing, suspend/resume, and successful split between multiple compatibles with distinct firmware files.

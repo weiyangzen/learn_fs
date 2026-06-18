@@ -1,0 +1,15 @@
+# sources/storage-engines/rocksdb/util/io_dispatcher_test.cc
+
+Purpose: provides an extensive regression suite for `IODispatcher`, `ReadSet`, block prefetching, cache interaction, read-scoped block buffers, direct I/O, async I/O fallback, coalescing, and prefetch memory accounting.
+
+Important APIs/types/functions: defines `ReadTrackingFS`, `ReadTrackingRandomAccessFile`, `ControlledAsyncFS`, `ControlledAsyncRandomAccessFile`, `ControlledAsyncHandle`, fixture `IODispatcherTest`, `TestReadScopedBlockBufferProvider`, `InvalidReadScopedBlockBufferProvider`, `CreateAndOpenSST`, `CollectBlockHandles`, `NewFileWriter`, and `NewFileReader`. Tests drive `NewIODispatcher`, `SubmitJob`, `ReadSet::ReadIndex`, `ReadSet::ReadOffset` indirectly through block handles, `ReleaseBlock`, and block-based table iterators.
+
+Control flow: the fixture creates real SST files with many data blocks, reopens them through tracking filesystems, collects data block handles from the table index, submits dispatcher jobs, and verifies returned `Block` objects or iterator values. Tracking filesystems record `MultiRead` and `ReadAsync` calls. Controlled async tests defer completion until `Poll` or `AbortIO` to model io_uring ordering and released-handle races.
+
+State and persistence behavior: tests write temporary per-thread SST files and destroy the directory in teardown. Fixture vectors intentionally retain options, comparators, env options, statistics, and table readers so returned `BlockBasedTable` objects do not reference destroyed dependencies. Provider tests track live allocations and outstanding bytes to verify cleanup after block/reset/readset lifetimes.
+
+Dependencies/integration points: integrates the dispatcher with block-based table builder/reader, cache, direct reads, mmap reads, compression, `ReadScopedBlockBufferProvider`, `RandomAccessFileReader`, `FileSystemWrapper`, sync points, DB test utilities, and RocksDB statistics tickers. It also exposes `RocksDbIOUringEnable` for async test enablement when compiled with io_uring.
+
+Risks: some async tests are skipped when io_uring is unavailable, so platform coverage differs. Tests create large random-value SSTs and can be relatively heavy. Several assertions depend on exact cache and coalescing behavior, making them sensitive to table format or block sizing changes. The fixture's lifetime retention is required because block table readers store references to options.
+
+Test signals: coverage includes basic and multi-file reads, statistics accounting, sync versus async reads, block content validation, cache pin cleanup on `ReadSet` destruction, coalescing thresholds, sorted-handle sort skipping, request offset validation, memory limit queuing, release-triggered dispatch, zero memory limit, partial prefetch, oversized block fallback, memory release after moved-out blocks, read-scoped cache bypass and provider ownership, invalid provider failure, direct I/O alignment, regular iterator and MultiScan provider propagation, async abort on release, stray completion safety, range remainder release, and async `NotSupported` sync fallback.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/mvsas/mv_init.c
+
+Purpose: owns PCI probing/removal, Scsi_Host and libsas HA setup, DMA resource allocation, interrupt registration, sysfs attributes, and module lifecycle for the Marvell `mvsas` driver.
+
+Important APIs/types/functions: `mvs_init()`/`mvs_exit()` attach/release the libsas transport and register/unregister the PCI driver. `mvs_pci_init()` performs device enablement, region requests, DMA mask setup, host allocation, per-core `mvs_info` allocation/init, `scsi_add_host()`, `sas_register_ha()`, IRQ registration, interrupt enablement, and scan. `mvs_pci_remove()` unwinds those resources. Helpers include `mvs_alloc()`, `mvs_free()`, `mvs_ioremap()`, `mvs_pci_alloc()`, `mvs_prep_sas_ha_init()`, `mvs_post_sas_ha_init()`, `mvs_phy_init()`, and the shared `mvs_interrupt()` handler. Sysfs exposes `driver_version` and writable `interrupt_coalescing`.
+
+Control flow: module init attaches `mvs_transport_ops` to libsas, then registers `mvs_pci_driver`. Probe chooses a chip descriptor from `mvs_pci_table`, prepares one Scsi_Host with a `sas_ha_struct`, allocates one or two `mvs_info` cores, initializes SAS addresses, calls the chip dispatch `chip_init()`, builds the libsas phy/port arrays, registers SCSI and SAS hosts, requests a shared IRQ, enables interrupts, and scans. The interrupt handler checks status through chip dispatch and either runs per-core ISR directly or schedules a tasklet depending on config.
+
+State and persistence: state is runtime: global `mvs_stt`, module parameter-like `interrupt_coalescing`, PCI drvdata pointing to `sas_ha_struct`, per-core `mvs_info`, DMA rings/buffers/pools, reserved-tag bitmap, and libsas phy/port/device structures. No persistent storage is written; default SAS addresses are synthesized in `mvs_init_sas_add()`.
+
+Dependencies and integration points: depends on PCI, DMA API, SCSI midlayer, libsas, SAS ATA attributes, per-chip dispatch tables, and common `mv_sas.c` task/device operations. The PCI ID table maps Marvell, Areca, Adaptec/TTI, and OCZ devices to 64xx or 94xx chip descriptors.
+
+Risks and test signals: several probe failure paths jump to `err_out_regions` without freeing already allocated HA/core resources, making fault-injection cleanup important. `mvs_free()` destroys `mvi->dma_pool` without a null check. Synthetic SAS addresses are fixed, which can collide across adapters. `interrupt_coalescing_store()` returns `strlen(buffer)` rather than `size`. Tests should cover probe/remove for each chip family, one-core and two-core adapters, tasklet and non-tasklet builds, sysfs coalescing writes including invalid values, DMA allocation failure injection, IRQ sharing, and libsas scan/remove ordering.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/eos/mgm/proc/admin/NodeCmd.cc
+
+Purpose: Implements protobuf-backed node administration for listing, removing, status inspection, configuration, state changes, and proxygroup membership.
+
+Important APIs/types/functions: `NodeCmd::ProcessRequest()` dispatches `NodeProto` oneof cases. `FormatNodeStatusValue()` masks base64/zbase64, very long, and binary values for status output. `LsSubcmd()` renders `FsView::PrintNodes()` in listing, monitoring, IO, SYS, or FSCK formats. `RmSubcmd()` normalizes node names, verifies heartbeat silence and empty filesystems, deletes shared hash config, unregisters the node, and removes config entries. `StatusSubcmd()` prints sorted node config keys. `ConfigSubcmd()` applies selected node keys or delegates `configstatus` to `ConfigFsSpecific()`. `SetSubcmd()` registers/sets node status with root or same-node `sss` identity. `ProxygroupSubcmd()` adds/removes/clears comma-separated proxy groups.
+
+Control flow: Node names are normalized to `/eos/host:port/fst`, defaulting port 1095. Mutations require root or `sss`; `SetSubcmd()` and `ProxygroupSubcmd()` also compare the authenticated `tident` host to the target node unless `EOS_SKIP_SSS_HOSTNAME_MATCH` is set. Config with wildcard node name applies to all nodes. Filesystem-specific config gathers fsids under a node then stores per-filesystem config and autosaves.
+
+State and persistence behavior: Node and filesystem state live in `FsView::mNodeView`, `mIdView`, shared hashes, and the config engine. Remove deletes node shared hash and matching global config values then autosaves. Config writes node config members for known keys or per-filesystem `configstatus` through `StoreFsConfig()`. Set/proxygroup also write the current master id as node `manager`.
+
+Dependencies and integration points: Depends on `common/Constants.hh`, `IConfigEngine`, `XrdMgmOfs`, `ProcInterface`, `MessagingRealm`, namespace `IFsView`, and `FsView` globals. It coordinates with FST heartbeats, filesystem config status, MGM master identity, and CBOX sync constants.
+
+Risks: `StatusSubcmd()` checks `mNodeView` before taking the lock, then takes a write lock for read-only output. Several success paths set no explicit `retc`, relying on default zero. `ConfigSubcmd()` takes a read lock while calling `SetConfigMember()` for node configs, which may be a locking/design concern depending on `FsNode`. The hostname match bypass environment variable is operationally useful but weakens same-node `sss` protection. Comma-list proxygroup editing is manual string parsing.
+
+Test signals: Name normalization, listing formats and JSON conversion, root/sss authorization, same-host `sss` match and bypass, remove blocked by recent heartbeat or non-empty filesystem, shared hash delete failure, config key validation and persistence, `configstatus=empty` blocked by remaining files, CBOX forbid sync remove/set validation, node registration on set/proxygroup, manager field update, status masking for base64/binary/long values, and proxygroup add/remove/clear with invalid characters.

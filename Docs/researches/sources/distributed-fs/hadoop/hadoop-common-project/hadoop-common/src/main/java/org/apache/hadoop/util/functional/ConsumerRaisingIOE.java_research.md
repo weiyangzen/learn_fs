@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/functional/ConsumerRaisingIOE.java
+
+`ConsumerRaisingIOE<T>` is a checked-IO version of `java.util.function.Consumer`. Its `accept(T)` method allows `IOException`, making it a natural callback type for operations over `RemoteIterator`, file statuses, stream entries, and other Hadoop FS values.
+
+The default `andThen()` composes two checked consumers. Its control flow first invokes the current consumer, then invokes `next.accept(t)` only if the first call succeeds. Either stage may throw `IOException`; unchecked exceptions also pass through. The implementation does not null-check `next`, so null composition fails when the chain is invoked.
+
+There is no state or persistence. The interface depends only on `IOException` and is integrated most visibly through `RemoteIterators.foreach()`, where each iterator element is passed to a consumer and the iterator is cleaned up in a `finally` block. Risks are the usual callback risks: side effects in the first consumer are not rolled back if the second fails, and exception propagation determines whether iterator cleanup happens at the calling utility layer. Test signals are indirect through `TestRemoteIterators`, which exercises `foreach()` conversion to lists and checked iterator handling, and broader S3A listing tests that use `RemoteIterators.foreach()`.

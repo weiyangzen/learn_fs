@@ -1,0 +1,11 @@
+## sources/storage-engines/foundationdb/fdbserver/workloads/Ping.cpp
+
+`PingWorkload` measures request/reply latency and payload broadcast behavior between tester clients or workers. It defines a serializable `PingWorkloadInterface` containing a `RequestStream<LoadedPingRequest>`, optionally persists each client interface in the database, and runs pingers plus a local ponger for the configured duration.
+
+Important APIs are `LoadedPingRequest`, `LoadedReply`, `RequestStream`, `BinaryWriter`/`BinaryReader`, `getWorkers`, `ActorCollection`, `poisson`, `PerfIntCounter`, and `PerfDoubleCounter`. Options select worker pings, registered tester-interface pings, broadcast mode, payload sizes, actor count, logging, and parallel broadcast behavior.
+
+Setup persists the client interface under `Ping/Client/<clientId>` unless pinging workers or registration is disabled. Normal `pinger` fetches all persisted interfaces, starts `actorCount` poisson-paced actors, chooses random peer streams, sends `LoadedPingRequest`, optionally requests a payload reply, and records message count, total latency, and max latency. `workerPinger` uses worker `debugPing` streams instead. `payloadSender` periodically spawns a broadcast `payloadPinger` through an actor collection, sending the same ping ID to every endpoint and waiting for all replies. `ponger` continuously receives local requests and replies with optional payload.
+
+State persists only interface records in normal keyspace. Runtime state is latency counters and payload buffers. Risks include divide-by-zero in average latency metrics if no messages complete, indefinite actors being stopped only by outer timeout, database-stored interfaces becoming stale if registration fails, and broadcast mode not counting messages in the same metric path. `registerInterface=false` with non-worker peer pinging would leave `fetchInterfaces` unable to find records.
+
+Integration points are tester clients, worker debug ping endpoints, FDB serialization of interfaces, and simulation networking. Test signals are `Messages`, average latency, and max latency metrics; `check` always returns true, so workload failures surface through actor errors or missing interface assertions/retries rather than explicit validation.

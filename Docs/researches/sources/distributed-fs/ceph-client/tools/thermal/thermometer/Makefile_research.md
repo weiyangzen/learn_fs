@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/thermal/thermometer/Makefile
+
+Purpose: builds the `thermometer` sampling tool. Control flow: derives `srctree`, includes `tools/thermal/lib`, links with `libthermal_tools` and libconfig, defines `VERSION`, and uses a generic `%: %.c` compile/link rule. State/persistence: creates the `thermometer` binary; `clean` removes it. Dependencies: local helper library and libconfig. Integration: sibling consumer of `tools/thermal/lib`. Risks: comment says cgroup tools despite being thermal; build requires the helper library already available in the specified search path. Test signals: successful build and clean target behavior.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/ttm/ttm_pool.c
+
+Purpose: TTM page-pool implementation for TT backing pages, DMA mappings, cache-attribute pooling, backup/restore, shrinker integration, debugfs, and global pool manager lifecycle.
+
+Important APIs and functions: exports `ttm_pool_alloc()`, `ttm_pool_free()`, `ttm_pool_init()`, `ttm_pool_fini()`, and `ttm_pool_debugfs()`. It also implements `ttm_pool_restore_and_alloc()`, `ttm_pool_drop_backed_up()`, `ttm_pool_backup()`, `ttm_pool_mgr_init()`, and `ttm_pool_mgr_fini()`. Internal helpers allocate/free DMA or normal pages, map/unmap DMA addresses, apply x86 caching transitions, manage `ttm_pool_type` LRUs, shrink pooled pages, split high-order pages for swap, and resume partial restores.
+
+Control flow: allocation chooses the largest feasible order, first tries a matching pool type, falls back to system allocation, stages caching transitions, maps DMA addresses, and commits pages into the TT. Restore allocation tracks `ttm_pool_tt_restore` snapshots so interrupted shmem copy-in can resume. Free walks page ranges, drops backup handles or returns pages to pools, then shrinks pools above per-node limits. Backup rejects already backed-up TT, low swap capacity, or DMA-alloc pools, optionally purges pages, otherwise writes pages to shmem handles and frees pages. Global manager init creates per-cache/order global pools, debugfs files, optional fault-injection hooks, and a NUMA-aware shrinker.
+
+State and dependencies: state includes per-pool `dev`, `nid`, `alloc_flags`, cache/order pool types, global pool arrays, per-node limits and allocated counts, `shrinker_list`, `pool_shrink_rwsem`, TT page and DMA arrays, backup handles, and restore snapshots. It depends on DMA API, list_lru, shrinker, debugfs, shmem backup, page cache attribute APIs, NUMA, and TTM TT/BO.
+
+Risks and test signals: comments flag illegal DMA API abuse in converting coherent vaddr to page. High-risk areas include cache restoration, DMA unmap symmetry, partial backup failure, high-order splitting, reclaim locking, and pool-type lifetime versus concurrent shrinkers. KUnit pool tests cover allocation/free basics but not all backup fault paths.

@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfsd/Makefile
+
+Purpose: builds the `nfsd` kernel object and conditionally includes server protocol, ACL, pNFS, localio, debugfs, and generated XDR sources. It also defines an `xdrgen` developer target for regenerating NFSv4.1 XDR code.
+
+Control flow is build-time: `trace.o` is first, then core service/control/export/auth/cache/stats/vfs/netlink objects, followed by Kconfig-selected NFSv2, ACL, NFSv4, pNFS layouts, localio, and debugfs objects. `ccflags-y += -I$(src)` supports trace headers. State is object composition and generated source dependencies. Integration points include `Kconfig`, generated `nfs4xdr_gen.{h,c}`, and documentation XDR specs. Risks include trace macro ordering, missing generated XDR regeneration after `.x` edits, unresolved symbols when feature Kconfig selections change, and localio/debugfs optional object drift. Test signals: builds for core NFSD, NFSv4, ACLs, pNFS block/SCSI/flexfile, localio, debugfs, and running `make xdrgen` after XDR spec changes.

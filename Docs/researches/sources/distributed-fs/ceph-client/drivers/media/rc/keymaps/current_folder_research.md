@@ -1,0 +1,155 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/media/rc/keymaps
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 141
+- Recursive researched files: 141
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-adstech-dvb-t-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-alink-dtu-m.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-anysee.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-apac-viewcomp.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-astrometa-t2hybrid.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-asus-pc39.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-asus-ps3-100.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-ati-tv-wonder-hd-600.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-ati-x10.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia-a16d.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia-cardbus.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia-dvbt.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia-m135a.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia-m733a-rm-k6.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia-rm-ks.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avermedia.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-avertv-303.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-azurewave-ad-tu700.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-beelink-gs1.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-beelink-mxiii.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-behold-columbus.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-behold.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-budget-ci-old.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-cec.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-cinergy-1400.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-cinergy.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-ct-90405.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-d680-dmb.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-delock-61959.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dib0700-nec.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dib0700-rc5.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-digitalnow-tinytwin.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-digittrade.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dm1105-nec.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dntv-live-dvb-t.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dntv-live-dvbt-pro.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dreambox.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dtt200u.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dvbsky.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dvico-mce.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-dvico-portable.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-em-terratec.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-encore-enltv-fm53.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-encore-enltv.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-encore-enltv2.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-evga-indtube.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-eztv.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-flydvb.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-flyvideo.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-fusionhdtv-mce.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-gadmei-rm008z.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-geekbox.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-genius-tvgo-a11mce.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-gotview7135.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-hauppauge.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-hisi-poplar.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-hisi-tv-demo.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-imon-mce.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-imon-pad.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-imon-rsc.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-iodata-bctv7e.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-it913x-v1.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-it913x-v2.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-kaiomy.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-khadas.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-khamsin.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-kworld-315u.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-kworld-pc150u.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-kworld-plus-tv-analog.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-leadtek-y04g0051.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-lme2510.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-manli.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-mecool-kii-pro.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-mecool-kiii-pro.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-medion-x10-digitainer.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-medion-x10-or2x.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-medion-x10.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-minix-neo.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-msi-digivox-ii.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-msi-digivox-iii.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-msi-tvanywhere-plus.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-msi-tvanywhere.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-mygica-utv3.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-nebula.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-nec-terratec-cinergy-xs.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-norwood.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-npgtech.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-odroid.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pctv-sedna.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pine64.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pinnacle-color.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pinnacle-grey.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pinnacle-pctv-hd.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pixelview-002t.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pixelview-mk12.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pixelview-new.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pixelview.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-powercolor-real-angel.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-proteus-2309.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-purpletv.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pv951.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-rc6-mce.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-real-audio-220-32-keys.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-reddo.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-siemens-gigaset-rc20.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-snapstream-firefly.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-streamzap.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-su3000.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-tanix-tx3mini.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-tanix-tx5max.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-tbs-nec.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-technisat-ts35.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-technisat-usb2.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-terratec-cinergy-c-pci.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-terratec-cinergy-s2-hd.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-terratec-cinergy-xs.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-terratec-slim-2.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-terratec-slim.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-tevii-nec.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-tivo.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-total-media-in-hand-02.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-total-media-in-hand.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-trekstor.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-tt-1500.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-twinhan-dtv-cab-ci.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-twinhan1027.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-vega-s9x.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-videomate-m1f.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-videomate-s350.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-videomate-tv-pvr.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-videostrong-kii-pro.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-wetek-hub.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-wetek-play2.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-winfast-usbii-deluxe.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-winfast.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-x96max.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-xbox-360.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-xbox-dvd.c`
+- `sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-zx-irdec.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

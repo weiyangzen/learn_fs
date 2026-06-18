@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/control-plane/rook/deploy/examples/monitoring/externalrules.yaml -->
+# sources/control-plane/rook/deploy/examples/monitoring/externalrules.yaml
+
+Purpose: Prometheus alert rules for Ceph-backed persistent volume capacity usage in external monitoring setups.
+Important APIs/types/functions: `PrometheusRule` `prometheus-ceph-rules`, group `persistent-volume-alert.rules`, alerts `PersistentVolumeUsageNearFull` and `PersistentVolumeUsageCritical`, PromQL joining kubelet volume stats, PVC info, and StorageClass provisioner labels for RBD/CephFS CSI, thresholds `> 0.75` and `> 0.85`, and warning/critical labels.
+Control flow: Prometheus Operator loads the rules; Prometheus evaluates usage/capacity ratios for PVCs provisioned by Ceph CSI drivers and fires alerts after `5s`. State is alert evaluation state in Prometheus/Alertmanager. Dependencies are kubelet volume stats, kube-state-metrics `kube_persistentvolumeclaim_info` and `kube_storageclass_info`, Prometheus Operator, and provisioner label patterns. Risks: short `for: 5s` can be noisy, missing `cluster` labels break joins, non-RBD/CephFS provisioners are excluded, and high-cardinality joins may be expensive. Test signals: `promtool` validates rules, synthetic full PVC triggers alerts, and normal PVCs remain inactive.
+<!-- END_FILE_RESEARCH: sources/control-plane/rook/deploy/examples/monitoring/externalrules.yaml -->

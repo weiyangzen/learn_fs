@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/lib/fs/filesystem.cc
+
+Purpose: implements the public asynchronous `FileSystem` facade for libhdfspp. It constructs `FileSystemImpl`, resolves effective users, connects to NameNodes, opens files, exposes metadata/mutation/snapshot APIs, converts block-location protobufs into public objects, and implements recursive listing/find behavior.
+
+Important APIs and functions: `FileSystem::New`, `get_effective_user_name`, `FileSystemImpl::Connect`, `ConnectToDefaultFs`, `CancelPendingConnect`, `Open`, `GetBlockLocations`, `GetListing`, `Find`, permission/replication validators, mutators such as `Mkdirs`, `Delete`, `Rename`, `SetPermission`, `SetOwner`, and snapshot calls. `FindSharedState` and `FindOperationalState` hold recursive search state.
+
+Control flow: construction creates an `IoService`, random client name, `NameNodeOperations`, bad DataNode tracker, and event handlers. `Connect` resolves HA or single NameNode configuration, stores `cluster_name_`, then delegates to `NameNodeOperations::Connect`. Most filesystem APIs validate cheap client-side invariants and forward to `nn_`. `Open` first retrieves full block locations and returns a `FileHandleImpl` on success. `GetListing` paginates via `GetListingShim`; `Find` starts from `/`, expands path globs before name matching, and launches additional async listings for matched directories.
+
+State and persistence: persistent state is in-memory only: `io_service_`, `options_`, `client_name_`, `cluster_name_`, `nn_`, `bad_node_tracker_`, swappable connect callback, and event handlers. `Find` uses shared atomics and a mutex to coordinate outstanding async listing requests. Destruction stops the `IoService`; callers must close open files before destroying the filesystem.
+
+Dependencies and integration: depends on `NameNodeOperations`, `FileHandleImpl`, HDFS public types, URI/name-node resolution helpers, `BadDataNodeTracker`, Boost ASIO, platform user/glob helpers, and libhdfs event hooks. It is the integration point between public HDFS API calls and generated NameNode RPC operations.
+
+Risks and test signals: async callbacks frequently capture `this`, so object lifetime during shutdown/cancel is critical. `CancelPendingConnect` swaps callbacks and posts cancellation, which should be tested for races with successful connection. `GetListing` assumes non-empty `path` before `path.back()`. Recursive `Find` has concurrent callback ordering, outstanding-counter, pagination, and user-abort behavior that need stress tests. High-bit checks on protobuf int64-compatible fields and validation of permission/replication ranges are important boundary tests.

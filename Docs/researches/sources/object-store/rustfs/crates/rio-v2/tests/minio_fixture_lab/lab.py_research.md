@@ -1,0 +1,11 @@
+# sources/object-store/rustfs/crates/rio-v2/tests/minio_fixture_lab/lab.py
+
+Purpose: this Python CLI captures real MinIO backend fixtures for rio-v2 compatibility validation. It can initialize a fixture layout, add an externally prepared case, or run a disposable local MinIO matrix covering SSE-S3, SSE-KMS, and SSE-C in singlepart and multipart shapes.
+
+Important APIs and control flow: data classes define `LabPaths`, `MinioLauncher`, `FixtureCase`, and KMS config. `discover_minio_launcher` chooses an explicit binary, `minio.exe` under a root, a bundled default binary, or `minio` from `PATH`. `build_default_cases` creates six stable case IDs. `build_request_record` builds encryption headers, including KMS context base64 and SSE-C key/MD5. `S3Client` implements enough SigV4 signing and S3 requests for bucket creation, object upload, multipart upload, completion, and `HEAD`. `capture_case` creates deterministic plaintext, starts MinIO with temporary disks and optional local TLS certs, waits for health/S3 readiness, uploads the case, captures HEAD metadata, stores backend files plus JSON manifests, and cleans workdirs unless requested.
+
+State and persistence: fixture artifacts are persisted under `artifacts/minio-fixture-lab` by default, with `layout.json`, per-case `manifest.json`, optional `request.json`, `head.json`, `plaintext.sha256`, and copied backend disk files. Temporary runtime state lives under `_runner` and is deleted by default.
+
+Dependencies and integration points: uses standard-library subprocess, urllib, XML, OpenSSL CLI for local TLS certs, a MinIO binary, and MinIO KMS secret-key env configuration. Generated fixtures are consumed by `minio_generated_fixtures.rs` and by developers validating DARE/S2 metadata behavior.
+
+Risks and test signals: defaults point to a platform-specific MinIO binary path and fixed admin credentials; captures are local-only but still run a server process. The custom SigV4 implementation must match S3 canonicalization for these request shapes. KMS secret configuration must be stable for reproducible sealed metadata. Unit tests in `test_lab.py` cover launcher selection, case matrix, request headers, multipart XML, and KMS env parsing, but not live MinIO capture.

@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph/src/rgw/rgw_restore.cc
+
+## Purpose
+`rgw_restore.cc` implements the RGW cloud-tier restore coordinator. It persists restore work as sharded `RestoreEntry` records, runs a background `RestoreWorker` that scans those records under per-shard locks, invokes SAL object restore hooks for cloud-s3/cloud-s3-glacier tiers, updates restore-related object attributes, sends restore notifications, and exposes list/status helpers for administrative inspection.
+
+## Important APIs, Types, and Functions
+`RestoreEntry::{dump,decode_json,generate_test_instances}` provide JSON/debug and encoding support for queued restore work. `Restore::initialize()` creates `restore.N` shard object names from `rgw_restore_max_objs`, initializes a SAL `Restore` implementation, and creates a `RestoreWaiterRegistry`. `start_processor()`, `stop_processor()`, `wake_worker()`, and `RestoreWorker::entry()` own the background loop. `choose_oid()` hashes bucket/object/instance into a restore shard. `process(RestoreWorker*)` randomizes the shard start point and calls `process(index, max_secs)`. `process(index, max_secs)` takes a `RestoreSerializer` lock, lists entries, processes each entry, trims completed records, and re-adds entries still in `RestoreAlreadyInProgress`. `process_restore_entry()` loads the bucket and object, verifies status and tier, calls `Object::restore_obj_from_cloud()`, updates status, notifies waiters, and emits `ObjectRestoreCompleted`. `restore_obj_from_cloud()` is the request-time path that publishes `ObjectRestoreInitiated`, marks the object in progress, enqueues a `RestoreEntry`, and wakes the worker for cloud-s3 tiers.
+
+## Control Flow
+Incoming restore requests call `restore_obj_from_cloud()`: validate bucket/object, reserve notification, set `RGW_ATTR_RESTORE_STATUS` to `RestoreAlreadyInProgress`, append an entry to the chosen restore shard, optionally wake the worker, and commit the initiated notification. The worker periodically scans all shards from a random offset. For each shard it tries a bounded lock, paginates restore entries, and processes until entries end, time expires, or shutdown begins. Completed entries are removed by trimming to the final marker; still-in-progress entries are appended back after trim.
+
+`process_restore_entry()` first filters temporary restores to their source zone. It then loads bucket/object state, checks that the persisted status is still in progress, derives target placement and storage class, resolves the placement tier, requires an S3-style cloud tier, and delegates the actual restore. The SAL object method returns `in_progress` and size by reference. If work remains asynchronous, the entry is requeued. If work finishes, the entry becomes `CloudRestored` and completion notification is sent.
+
+## State and Persistence Behavior
+Persistent state is split between sharded restore-entry objects managed by `sal_restore` and object attributes such as `RGW_ATTR_RESTORE_STATUS`, `RGW_ATTR_RESTORE_EXPIRY_DATE`, `RGW_ATTR_DELETE_AT`, `RGW_ATTR_INTERNAL_MTIME`, `RGW_ATTR_RESTORE_TYPE`, and `RGW_ATTR_RESTORE_VERSIONED_EPOCH`. Restore shard locks use `RestoreSerializer` with the `restore_process` lock name. `update_cloud_restore_exp_date()` atomically rewrites restore expiry/delete-at attrs for temporary restores. `finalize()` resets the SAL handle, clears shard names, and shuts down waiters.
+
+## Dependencies and Integration Points
+This file depends on SAL `Driver`, `Bucket`, `Object`, `PlacementTier`, `Restore`, `RestoreSerializer`, notification publishing, zone/zonegroup placement configuration, Ceph object encoding, `RGWFormatterFlusher`, and `RestoreWaiterRegistry`. It is tied to lifecycle/cloud-tier code through `Object::restore_obj_from_cloud()` and to GET/read-through behavior through waiter notification.
+
+## Risks
+The restore queue relies on trim-and-readd semantics. Errors after processing but before trim/readd can duplicate work or leave stale entries for a later pass. `process_restore_entry()` logs `bucket->get_name()` when bucket loading fails, but `bucket` may be null on that path. Notification publication failures are mostly logged without undoing restore state. Waiter notification only happens when `!in_progress`, so a failed attempt marked in-progress by the backend could leave GET waiters to timeout.
+
+## Test Signals
+Tests should cover request enqueueing, shard hash stability, worker lock contention, pagination/trim/requeue behavior, temporary restores constrained to source zone, missing bucket/object handling, non-S3 tier rejection, status attr decode, failed backend restore setting `RestoreFailed`, expiry-date updates, list/status formatting, initiated/completed notification paths, worker wake for cloud-s3, shutdown, and waiter completion on success/failure.

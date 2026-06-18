@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/error_prints.c
+
+Common diagnostic printing implementation for non-trace output. `verror_msg` formats optional errno text, program invocation name, and message bodies to stderr; exported helpers include `error_msg`, `error_msg_and_die`, `error_msg_and_help`, `perror_msg`, and `perror_msg_and_die`. Fatal helpers exit after printing, and `error_msg_and_help` appends usage guidance. State is external process state: `errno`, stderr, program name, and exit status. Dependencies are libc stdio/errno/varargs plus declarations in `error_prints.h`. Risks are clobbering errno before formatting, format-string annotation drift, and inconsistent fatal exit paths. Tests should verify prefixes, errno suffixes, variadic formatting, and death behavior.

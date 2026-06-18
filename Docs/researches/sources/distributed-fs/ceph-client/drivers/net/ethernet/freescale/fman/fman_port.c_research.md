@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/freescale/fman/fman_port.c
+
+## Purpose
+Implements the Freescale DPAA Frame Manager port driver. It owns Rx/Tx FMan port register programming for BMI, QMI, and Rx hardware parser blocks, exposes the port configuration/runtime API used by DPAA Ethernet MAC code, and registers the `fsl-fman-port` platform driver for FMan v2/v3 Rx and Tx port device-tree nodes.
+
+## Important APIs, Types, and Functions
+Internal register maps include `fman_port_rx_bmi_regs`, `fman_port_tx_bmi_regs`, `fman_port_qmi_regs`, and `fman_port_hwp_regs`. Runtime state is carried in `struct fman_port`, `struct fman_port_cfg`, `struct fman_port_dts_params`, and buffer-pool helper structures. Exported entry points are `fman_port_config`, `fman_port_init`, `fman_port_cfg_buf_prefix_content`, `fman_port_disable`, `fman_port_enable`, `fman_port_bind`, `fman_port_get_qman_channel_id`, `fman_port_get_device`, `fman_port_get_hash_result_offset`, `fman_port_get_tstamp`, and `fman_port_use_kg_hash`. Important internal paths include `init_bmi_rx`, `init_bmi_tx`, `init_qmi`, `init_hwp`, `set_ext_buffer_pools`, `verify_size_of_fifo`, `fill_soc_specific_params`, and the platform `fman_port_probe`.
+
+## Control Flow and State
+Probe allocates `struct fman_port`, binds the parent FMan device, reads `cell-index`, determines port type/speed from compatible strings and 10G properties, maps the port register resource, and stores driver data. `fman_port_config` allocates a transient `cfg`, copies caller queue/pool parameters, reads FMan revision, selects SoC limits/default resource budgets, and records BMI/QMI/HWP register bases. `fman_port_init` builds buffer-prefix offsets, orders external buffer pools, validates margins/FIFO sizing, passes resource parameters to core FMan, writes hardware registers, optionally initializes KeyGen hashing, then frees `cfg` to mark init complete. Enable/disable toggles QMI/BMI enable bits and polls busy status. Persistent state lives in device registers, `struct fman_port` fields, and FMan/QMan/KeyGen configuration; `cfg` is only valid between config and init.
+
+## Dependencies and Integration Points
+Depends on `fman.h` for FMan revision/resources, `fman_sp` for buffer-prefix layout and pool ordering, `fman_keygen` for PCD hashing, platform/of APIs for device-tree binding, and DPAA MAC code through `fman_port_bind`. QMan channel IDs come from the parent FMan for Tx ports. Rx ports integrate with external buffer pools and optional KeyGen distribution; Tx ports integrate with confirmation/error queues and QMI dequeue configuration.
+
+## Risks and Test Signals
+Risks include invalid revision-specific defaults, FIFO sizing that is too small for max frame and pool margins, incorrect 10G port speed detection, use of API calls before/after the `cfg` lifecycle window, QMI/BMI disable timeouts, and register bit drift for FMan errata workarounds. Test signals include DT probe of v2/v3 Rx/Tx ports, `fman_port_config` then `fman_port_init` success, link bring-up through DPAA Ethernet, hash-result/timestamp offset reads, Tx confirmation behavior, Rx buffer depletion behavior, and debug logs for BMI/QMI busy or HWP start/stop timeouts.

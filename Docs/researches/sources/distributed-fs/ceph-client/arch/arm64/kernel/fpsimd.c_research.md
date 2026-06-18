@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/arm64/kernel/fpsimd.c
+
+Purpose: Implements arm64 floating point, Advanced SIMD, SVE, SME, FPMR, kernel NEON, EFI FP, CPU PM, and hotplug state management. The file's central design is lazy ownership of vector registers: each task records the last CPU holding its state, and each CPU records the last bound `cpu_fp_state` in `fpsimd_last_state`.
+
+Important APIs and state: exported entry points include `cpu_enable_fpsimd()`, `cpu_enable_sve()`, `cpu_enable_sme()`, `fpsimd_thread_switch()`, `fpsimd_restore_current_state()`, `fpsimd_flush_thread()`, `fpsimd_preserve_current_state()`, `kernel_neon_begin/end()`, SVE/SME prctl helpers, and trap handlers `do_sve_acc()`, `do_sme_acc()`, `do_fpsimd_acc()`, `do_fpsimd_exc()`. State lives in `task->thread` fields (`uw.fpsimd_state`, `sve_state`, `sme_state`, `svcr`, VL arrays, `fp_type`, `fpsimd_cpu`) plus per-CPU `fpsimd_last_state` and global `vl_info` / `vl_config`.
+
+Control flow: context switch saves current user or kernel FP state, then marks the next task foreign unless the CPU already contains its valid state. Return-to-user loads only when `TIF_FOREIGN_FPSTATE` is set. SVE/SME traps allocate backing storage, migrate FPSIMD into vector state, set task flags, and disable user traps. Vector length changes allocate replacement buffers first, flush live state, preserve the effective FPSIMD subset, then replace buffers.
+
+Dependencies and integration: integrates with cpufeature, syscall/prctl ABI, signal frame formats, KVM guest FP binding, EFI runtime calls, CPU PM notifiers, hotplug callbacks, KASAN/MTE-adjacent state, and arch exception entry. The code relies on precise preemption, IRQ, and softirq exclusion via `get_cpu_fpsimd_context()`.
+
+Risks and test signals: high risk areas are lazy state corruption, SVE/SME VL mismatch, allocation failure on trap, PREEMPT_RT differences, nested kernel NEON, EFI hardirq/NMI use, and CPU suspend loss of registers. Test signals include SVE/SME prctl and ptrace ABI tests, context-switch stress with signal delivery, KVM FP tests, kernel crypto NEON tests, CPU hotplug/suspend, EFI runtime smoke tests, and fault injection around allocation failures.

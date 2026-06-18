@@ -1,0 +1,17 @@
+## sources/distributed-fs/openafs/src/external/c-tap-harness/tests/tap/basic.c
+
+Purpose: implementation of the C TAP helper library used by individual tests. It prints TAP plans and assertions, supports lazy planning, skip and bailout behavior, diagnostics, temporary test-file helpers, fatal allocation wrappers, diagnostic log-file draining, and registered cleanup callbacks.
+
+Important APIs/types/functions: exported `testnum` tracks the next TAP test number. Planning APIs are `plan()`, `plan_lazy()`, and `skip_all()`. Assertion APIs include `ok()`, `okv()`, `skip()`, `ok_block()`, `skip_block()`, `is_bool()`, `is_int()`, `is_string()`, `is_hex()`, and `is_blob()`. Error/diagnostic APIs are `bail()`, `sysbail()`, `diag()`, and `sysdiag()`. Memory wrappers are `bcalloc()`, `bmalloc()`, `brealloc()`, `breallocarray()`, `bstrdup()`, and `bstrndup()`. File helpers are `test_file_path()`, `test_tmpdir()`, and corresponding free functions. Cleanup APIs register either legacy two-argument or data-bearing cleanup callbacks.
+
+Control flow: `plan()` or `plan_lazy()` initializes counters, records the primary PID, line-buffers stdout, and registers `finish()` with `atexit()`. Every assertion flushes stderr, drains complete lines from registered diag files, prints the TAP status line, increments `testnum`, and updates `_failed` when appropriate. `finish()` drains diagnostics, closes diagnostic files, calculates success from planned/running/failed counts, invokes cleanup functions in registration order, suppresses summaries in forked children, emits a lazy plan if needed, and prints final TAP diagnostics about count mismatches or failures.
+
+State and persistence: state is static and process-local: `_planned`, `_failed`, `_process`, `_lazy`, `_aborted`, linked lists of cleanup functions, and linked lists of diagnostic files. Diagnostic-file readers persist `FILE *`, a dynamically resized line buffer, and a read position; incomplete lines are rewound until complete. `test_tmpdir()` creates a `tmp` directory under `C_TAP_BUILD` or current directory and `test_tmpdir_free()` attempts to remove it.
+
+Dependencies: standard C/POSIX (`stdio`, `stdlib`, `string`, `errno`, `unistd`, `sys/stat` or Windows aliases), plus `tests/tap/basic.h`. It uses `atexit()`, `getpid()`, `setvbuf()`, `access()`, `mkdir()`, and `rmdir()`.
+
+Integration points: consumed by C tests in the C TAP harness. The runner in `runtests.c` parses the output generated here. `test_file_path()` relies on `C_TAP_BUILD` and `C_TAP_SOURCE`, which the runner sets. Diagnostic file handling lets background helpers log into files while the TAP stream receives ordered `#` diagnostics.
+
+Risks: global counters mean tests are not thread-safe. `atexit()` cleanup is fork-aware for summaries but cleanup functions are still called in non-primary processes with `primary` false, so callbacks must handle that. `bcalloc()` does not normalize zero sizes the same way as the runner's `x_calloc()`. `is_blob()` assumes non-NULL buffers when `len > 0`. Diagnostic-file handling intentionally waits for newline-terminated lines and may defer useful output until a newline appears.
+
+Test signals: output tests should verify plan/lazy plan, failure summaries, diagnostic prefixes, skip lines, bailout exit 255, planned count mismatch diagnostics, cleanup order and primary flag, environment-based file lookup, temporary directory creation/removal, and memory-wrapper bailout behavior under injected allocation failure.

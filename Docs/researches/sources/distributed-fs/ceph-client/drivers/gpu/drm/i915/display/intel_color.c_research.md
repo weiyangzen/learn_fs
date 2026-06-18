@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_color.c
+
+## Purpose
+Implements i915 display color management across legacy GMCH, ILK/IVB/BDW/HSW/SKL/GLK/ICL/TGL+, and Xe display generations. It validates DRM color properties, assigns degamma/gamma LUTs around CSC blocks, converts DRM CTM blobs into hardware coefficient formats, programs pipe/plane color registers, reads hardware color state back, and selects platform-specific hook tables used by atomic commit and modeset paths.
+
+## Important APIs, types, and functions
+`struct intel_color_funcs` is the internal dispatch table for `color_check`, no-arm/arm/post-update programming, LUT load/read/equality, CSC readout, config readout, and newer plane color programming. Public entry points include `intel_color_init_hooks()`, `intel_color_init()`, `intel_color_crtc_init()`, `intel_color_check()`, `intel_color_prepare_commit()`, `intel_color_commit_noarm()`, `intel_color_commit_arm()`, `intel_color_load_luts()`, `intel_color_get_config()`, `intel_color_lut_equal()`, `intel_color_assert_luts()`, `intel_color_plane_program_pipeline()`, and `intel_color_plane_commit_arm()`. Key helpers convert CTM coefficients (`ilk_csc_convert_ctm()`, `ctm_to_twos_complement()`, VLV/CHV CSC converters), resize or synthesize LUT blobs (`create_linear_lut()`, `create_resized_lut()`), and pack/unpack many hardware LUT formats.
+
+## Control flow
+Initialization selects a hook table in `intel_color_init_hooks()` based on GMCH/display generation and creates a GLK linear degamma LUT in `intel_color_init()` when required. `intel_color_check()` marks color changes caused by C8 planes, then calls the generation-specific checker (`i9xx_color_check()`, `vlv_color_check()`, `chv_color_check()`, `ilk_color_check()`, `ivb_color_check()`, `glk_color_check()`, `icl_color_check()`). These checkers validate LUT sizes/tests, reject unsupported combinations such as YCbCr+CTM on older hardware, derive enable/mode bits, assign pre/post CSC blobs, convert CSC matrices, and request affected plane updates. Commit is split: LUTs may be preloaded or loaded through DSB in `intel_color_prepare_commit()`, CSC coefficient writes happen in no-arm hooks, mode/control registers are armed in arm hooks, and ICL disarms sticky CSC self-arming in `icl_color_post_update()`.
+
+## State and persistence behavior
+Persistent state is stored in `intel_crtc_state`: `gamma_enable`, `csc_enable`, `wgc_enable`, `cgm_mode`, `gamma_mode`, `csc_mode`, `pre_csc_lut`, `post_csc_lut`, CSC matrices, `dsb_color`, `preload_luts`, and plane color blobs. Hardware state persists in MMIO palettes, CSC registers, CGM/WGC blocks, 3D LUT control/data registers, and DSB command buffers until latched or reset. Blob references are managed with `drm_property_replace_blob()` and released after temporary resized blobs are assigned.
+
+## Dependencies and integration points
+The file depends on DRM color helpers, i915 display state, `intel_de` MMIO helpers, DSB, VRR push handling, plane register definitions, and display runtime capabilities from `DISPLAY_INFO()`. It integrates with CRTC initialization (`drm_crtc_enable_color_mgmt()`), atomic checking, vblank/DSB commit sequencing, hardware state readout, plane HDR color pipeline programming, and connector/output-format decisions.
+
+## Risks and test signals
+Risk concentrates around generation-specific LUT sizes, precision loss, CTM clamping, limited-range handling, C8 palette interactions, single vs double-buffered register latching, PSR/DC5 workarounds on SKL/ICL, DSB posted write behavior, and incomplete hardware readout for ICL multi-segment gamma. Useful tests include DRM atomic color property validation, IGT color/CTM/gamma tests across display generations, suspend/resume and PSR scenarios, C8 plane commits, YCbCr output checks, hardware state checker comparisons through `intel_color_lut_equal()`, and vblank timing tests for LUT loads.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/int/test_hashsplit.py -->
+# sources/sync-backup/bup/test/int/test_hashsplit.py
+
+Purpose: tests bup's rolling hash and content-defined chunk splitting implementations. Important APIs are `bup.hashsplit`, `_helpers`, `HashSplitter`, `RecordHashSplitter`, `BUP_BLOBBITS`, `fanout`, and `BytesIO`. Control flow checks sample split outputs, rolling sum values, fanout behavior, file splitting against temporary inputs, split boundary calculations for several bit settings, object-oriented `HashSplitter` iteration, and short-read behavior. State is in-memory byte streams, temporary files, generated blobs/trees, and splitter counters. Dependencies include C helper bindings, Python hashsplit wrapper, math, and WvTest. Risks are algorithm compatibility because expected boundaries encode historical behavior, especially the documented ignored bit between levels, and short reads from file-like objects. Test signals are exact chunk boundaries, fanout levels, object IDs/counts, and stable iteration results.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/int/test_hashsplit.py -->

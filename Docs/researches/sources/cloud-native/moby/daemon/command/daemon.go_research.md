@@ -1,0 +1,13 @@
+# Research: sources/cloud-native/moby/daemon/command/daemon.go
+
+## sources/cloud-native/moby/daemon/command/daemon.go
+
+Purpose: orchestrates dockerd startup, runtime configuration, API serving, reload, shutdown, BuildKit, cluster startup, listener/TLS setup, managed containerd, logging, tracing, proxy environment, middleware, routers, and CDI enablement.
+
+Important types and APIs: `daemonCLI`, `newDaemonCLI`, `(*daemonCLI).start`, `setOTLPProtoDefault`, `initBuildkit`, `reloadConfig`, `stop`, `shutdownDaemon`, `loadDaemonCliConfig`, `defaultAPISocketPath`, `normalizeHosts`, `buildRouters`, `initMiddlewares`, `getContainerdDaemonOpts`, `newAPIServerTLSConfig`, `checkTLSAuthOK`, `loadListeners`, `createAndStartCluster`, `validateAuthzPlugins`, `systemContainerdRunning`, `configureDaemonLogs`, `configureProxyEnv`, `overrideProxyEnv`, `initializeContainerd`, and `cdiEnabled`.
+
+Control flow is staged. Config is loaded/merged/validated, TLS config is built, system requirements are checked, proxy/logging/rootless settings are applied, daemon roots and pidfile are created, listeners are opened, containerd is detected or started, signal traps and HTTP shutdown are prepared, tracing/CDI/GPU/plugin store/middleware are initialized, `daemon.NewDaemon` starts the core daemon, metrics and cluster start, swarm containers restart, BuildKit starts, routers and gRPC are wired, API listeners serve, systemd readiness is sent, and shutdown stops cluster processing, daemon, BuildKit, context, API, containerd, and tracing.
+
+State includes `daemonCLI` fields, daemon config, pidfile, daemon root/exec root, managed containerd address, plugin store, cluster object, API TLS config, authz middleware, BuildKit state, OTEL globals, proxy environment variables, and HTTP server goroutines. Persistent behavior includes config-file merge, pidfile lifecycle, CDI spec directory filtering, swarm state through `createAndStartCluster`, and daemon data root setup.
+
+Dependencies are extensive across daemon packages, BuildKit, containerd, TLS, listeners, routers, authorization, OpenTelemetry/OpenCensus, CDI, rootless/homedir, pflag, and system runtime. Risks include startup ordering regressions, unauthenticated TCP listener warnings and future hard-fail behavior, context reuse after registry/containerd operations, config reload partial application, shutdown timeouts, userns/containerd-snapshotter incompatibility, CDI permission filtering, proxy env override side effects, and broad cross-platform differences. Tests in this subset cover Linux listener activation and userns snapshotter conflict; many other paths depend on integration tests.

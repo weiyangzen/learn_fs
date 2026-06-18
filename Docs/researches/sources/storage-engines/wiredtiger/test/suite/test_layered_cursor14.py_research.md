@@ -1,0 +1,11 @@
+# sources/storage-engines/wiredtiger/test/suite/test_layered_cursor14.py
+
+Purpose: broad layered cursor iteration coverage on a follower. It stresses forward and backward scans, duplicate keys in stable plus ingest, tombstone skipping, direction changes, scans after `search` and `search_near`, reset behavior, empty tables, ingest-only/stable-only data, interleaved stable and ingest key spaces, and positioned updates mid-scan.
+
+Important APIs and functions: `test_layered_cursor14` is a `WiredTigerTestCase` decorated with `@disagg_test_class`. It uses `cursor.next`, `cursor.prev`, Python cursor iteration, `search`, `search_near`, `reset`, `update`, `remove`, transaction timestamps, `session.checkpoint`, and `disagg_advance_checkpoint`. Helper methods produce formatted keys/values, insert into leader stable or follower ingest, remove ingest rows, open follower cursors, and walk expected next/prev sequences.
+
+Control flow: setup creates leader and follower layered URIs. Population helpers generate all-stable, all-ingest, and split even/odd layouts. Tests then execute scans from unpositioned cursors, scans after positioning calls, zigzag next/prev transitions, searches around tombstones, and many search_near cases where only one constituent has the nearest key or both constituents are on one side of the probe.
+
+State and persistence behavior: checkpointed leader rows become stable constituent data; follower writes and deletes become ingest constituent state. Tombstones are deliberately applied to ingest keys to hide stable data. The cursor's internal constituent positions are repeatedly reused across direction switches and transaction-free operations, making stale alternate-cursor state a central risk.
+
+Dependencies and integration: depends on disaggregated leader/follower test infrastructure, WiredTiger cursor positioning semantics, timestamped transactions, and layered merge logic. Risks include duplicate visible rows when a key exists in both constituents, skipped rows after direction changes, stale search_near side choice, tombstone visibility, and positioned write interactions. Test signals are complete list equality, key/value equality, `WT_NOTFOUND` at edges, and relational assertions around nearest keys.

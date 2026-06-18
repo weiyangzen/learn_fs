@@ -1,0 +1,7 @@
+# sources/distributed-fs/openafs/src/config/stds.h
+
+This installed portability header defines OpenAFS fixed-width types, integer helpers, annotation macros, formatting macros, and shared wire/disk structures. It intentionally avoids requiring `afsconfig.h` before inclusion and instead includes `afs/param.h` and `sys/types.h`.
+
+Important types include `afs_int16/32/64`, `afs_uint16/32/64`, `afs_size_t`, `afs_offs_t`, `afs_foff_t`, `afs_fsize_t`, `afs_hyper_t`, `b64_string_t`, `afsUUID`, and `afs_time64`. Important macros cover 64-bit arithmetic (`FillInt64`, `SplitInt64`, `RoundInt64ToInt32`), hyper arithmetic (`hcmp`, `hadd32`, `hshlft`), network-byte-order aliases, printf format strings, `static_inline` portability, pointer/integer casts, compiler attributes, fallthrough, struct initializer compatibility, and `AFS_RXGK_*` feature gates.
+
+There is no runtime control flow or persistence; all behavior is compile-time type and macro selection. Dependencies include platform macros from `param.h`, optional compiler feature macros, and networking headers for hton/ntoh users. Integration is repository-wide because these types are used on the wire and on disk. Risks include macro side effects, assumptions about 32-bit `int`, lossy pointer casts under non-64-bit pointer environments, and old compiler branches. Test signals are ABI layout checks, format-string warning-free builds, and cross-platform serialization tests.

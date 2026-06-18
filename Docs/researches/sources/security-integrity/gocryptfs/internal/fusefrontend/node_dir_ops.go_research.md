@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/fusefrontend/node_dir_ops.go -->
+# sources/security-integrity/gocryptfs/internal/fusefrontend/node_dir_ops.go
+
+- Purpose: Implements forward-mode mkdir/rmdir/opendir, including diriv creation/removal choreography, long-name sidecars, permission workarounds, and empty-directory handling.
+- Important APIs/types/functions: `const dsStoreName = ".DS_Store"`, `func haveDsstore(entries []fuse.DirEntry) bool`, `func (n *Node) mkdirWithIv(dirfd int, cName string, mode uint32, context *fuse.Context) error`, `func (n *Node) Mkdir(ctx context.Context, name string, mode uint32, out *fuse.EntryOut) (*fs.Inode, syscall.Errno)`, `func (n *Node) Rmdir(ctx context.Context, name string) (code syscall.Errno)`, `func (n *Node) Opendir(ctx context.Context) (errno syscall.Errno)`.
+- Control flow and state: uses explicit locking/atomic state for concurrency-sensitive paths; participates in directory-IV based name encryption state; handles long-name sidecar metadata and cleanup. Source size is 9315 bytes across 308 lines, read as part of this work item.
+- Dependencies and integration points: standard library: context, fmt, io, runtime, syscall; external/internal modules: golang.org/x/sys/unix, github.com/hanwen/go-fuse/v2/fs, github.com/hanwen/go-fuse/v2/fuse, github.com/rfjakob/gocryptfs/v2/internal/cryptocore, github.com/rfjakob/gocryptfs/v2/internal/nametransform, github.com/rfjakob/gocryptfs/v2/internal/syscallcompat, github.com/rfjakob/gocryptfs/v2/internal/tlog. It integrates with the surrounding gocryptfs package through the source path `sources/security-integrity/gocryptfs/internal/fusefrontend/node_dir_ops.go` and the declarations listed above.
+- Risks and review notes: FUSE/syscall code is race-prone; fd ownership, symlink safety, and errno translation are primary review points.
+- Test signals: No direct tests in this file; rely on package integration tests and callers.
+<!-- END_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/fusefrontend/node_dir_ops.go -->

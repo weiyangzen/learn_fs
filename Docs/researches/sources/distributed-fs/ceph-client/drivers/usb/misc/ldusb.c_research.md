@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/usb/misc/ldusb.c
+
+Purpose: Generic character driver for LD Didactic raw interrupt-report devices. It emulates Windows HID-style raw interrupt report access for many LD educational/lab devices.
+
+Important APIs and types: `struct ld_usb`, module parameters for ring/write buffer sizing and minimum interrupt intervals, callbacks, `ld_usb_open()`, `ld_usb_read()`, `ld_usb_write()`, `ld_usb_poll()`, probe/release/disconnect, and optional control-endpoint fallback for output reports.
+
+Control flow: probe allocates state, applies a firmware workaround for old CASSY/COM3LAB devices, finds the last interrupt-IN endpoint and optional interrupt-OUT endpoint, allocates a ring buffer of reports, URBs, and buffers, sets intervals, and registers `/dev/ldusb%d`. Open is exclusive and starts continuous interrupt-IN polling. The IN callback copies each report and actual length into a ring buffer, resubmits until overflow or shutdown, and wakes readers. Reads wait for a complete ring entry, copy at most one report, advance tail, and restart polling after overflow. Writes wait for the output path, truncate to configured capacity, and either send HID `SET_REPORT` over control endpoint or submit an interrupt-OUT URB.
+
+State and persistence: ring contents, overflow flag, busy flags, and open/disconnected state are volatile. Disconnect poisons URBs, deregisters the node, and defers freeing while open. Risks include ring overflow stopping input until a read restarts the URB, truncation semantics on writes/reads, no autosuspend integration, legacy `printk()` errors, and control fallback using fixed report parameters. Test signals include each supported VID/PID, endpoint variants, blocking/nonblocking read/write, poll, overflow recovery, old-firmware workaround, and disconnect while waiting.

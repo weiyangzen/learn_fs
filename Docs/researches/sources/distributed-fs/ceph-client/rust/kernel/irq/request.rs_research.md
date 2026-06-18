@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/rust/kernel/irq/request.rs
+
+Purpose: provides Rust RAII wrappers for registering hard IRQ and threaded IRQ handlers against a bound kernel device. It translates Rust handler traits into `request_irq` / `request_threaded_irq` callbacks and ensures `free_irq` runs before the pinned registration storage can disappear.
+
+Important APIs/types/functions: `IrqReturn`, `ThreadedIrqReturn`, `Handler`, `ThreadedHandler`, `IrqRequest<'a>`, `Registration<T>`, `ThreadedRegistration<T>`, `RegistrationInner`, `try_synchronize`, `synchronize`, `handle_irq_callback`, `handle_threaded_irq_callback`, and `thread_fn_callback`. `Handler` and `ThreadedHandler` are implemented for `Arc<T>` and `Box<T, A>` so shared or heap-owned handler state can be installed directly.
+
+Control flow: an unsafe device-side producer creates `IrqRequest::new(dev, irq)`. `Registration::new` or `ThreadedRegistration::new` pin-initializes the handler first, then creates a `Devres<RegistrationInner>` whose initialization calls the relevant C registration function with a cookie pointing at the pinned Rust registration. C callbacks cast the cookie back, recover the bound device from `Devres`, and invoke the Rust trait method. Drop of `RegistrationInner` calls `free_irq`, which waits for active callbacks to finish.
+
+State and persistence behavior: no durable state is persisted. Runtime state is the IRQ number, callback cookie, device-managed registration, and handler object. The critical invariant is address stability: `_pin: PhantomPinned` and pin-init keep the cookie pointer valid for the full registration lifetime. `Devres` also accounts for device unbind; `try_synchronize` may fail with `ENODEV` if the devres payload is inaccessible.
+
+Dependencies and integration points: depends on `crate::device::{Bound, Device}`, `crate::devres::Devres`, IRQ `Flags`, `Arc`, allocator-aware `Box`, `CStr`, and generated `bindings`. It integrates with the Linux IRQ subsystem through `request_irq`, `request_threaded_irq`, `synchronize_irq`, and `free_irq`.
+
+Risks: callbacks run in interrupt context for hard handlers, so handler implementations must avoid sleeping and must use interior synchronization appropriate for IRQ context. The callback cookie cast is only sound while pinned storage is alive; any change to initialization ordering or pinning would be high risk. `ThreadedHandler::handle` defaults to `WakeThread`, which is convenient but may create avoidable thread wakeups if a driver forgets to override it. Device access relies on the invariant that IRQ callbacks are removed before device unbind completes.
+
+Test signals: compile-time type checking covers trait bounds and pin-init shape. Runtime confidence should come from driver KUnit or integration tests that register/unregister shared IRQs, trigger threaded wakeups, exercise device unbind while IRQs are quiesced, and call both synchronization methods. Edge tests should cover immediate callback execution during registration and devres invalidation paths returning `ENODEV`.

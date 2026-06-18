@@ -1,0 +1,38 @@
+# sources/distributed-fs/ceph-client/fs/ext4/super.c
+
+## Purpose
+`super.c` is the ext4 superblock, mount, remount, journal, quota, and module-lifecycle hub. It registers ext4, and optionally ext2/ext3 compatibility frontends, implements the VFS `super_operations`, parses the new mount API `fs_context`, loads and validates on-disk superblock metadata, wires JBD2 journaling, initializes allocator/orphan/quota/sysfs state, and commits persistent superblock updates during mount, sync, freeze, unfreeze, error handling, and unmount.
+
+## Important APIs, Types, And Functions
+The primary VFS entrypoints are `ext4_init_fs_context()`, `ext4_get_tree()`, `ext4_fill_super()`, `ext4_reconfigure()`, `ext4_kill_sb()`, and the `ext4_sops` table. `struct ext4_fs_context` carries parsed mount parameters, option masks, quota filenames, journal device/ioprio, reserved uid/gid, lazy inode-table settings, stripe geometry, and debug knobs. `ext4_param_specs[]` and `ext4_mount_opts[]` map user options to tokens and `EXT4_MOUNT*` bits.
+
+Mount construction centers on `__ext4_fill_super()`. It calls helpers such as `ext4_load_super()`, `ext4_init_metadata_csum()`, `ext4_set_def_opts()`, `parse_apply_sb_mount_options()`, `ext4_check_opt_consistency()`, `ext4_check_feature_compatibility()`, `ext4_block_group_meta_init()`, `ext4_handle_clustersize()`, `ext4_check_geometry()`, `ext4_group_desc_init()`, `ext4_load_and_init_journal()`, `ext4_calculate_overhead()`, `ext4_setup_super()`, `ext4_percpu_param_init()`, `ext4_mb_init()`, `ext4_register_li_request()`, `ext4_init_orphan_info()`, `ext4_enable_quotas()`, `ext4_orphan_cleanup()`, and `ext4_register_sysfs()`.
+
+Journal handling is implemented by `ext4_load_journal()`, `ext4_open_inode_journal()`, `ext4_open_dev_journal()`, `ext4_get_journal_blkdev()`, `ext4_init_journal_params()`, `set_journal_csum_feature_set()`, `ext4_mark_recovery_complete()`, `ext4_clear_journal_err()`, `ext4_force_commit()`, and `ext4_sync_fs()`. Error reporting flows through `__ext4_error()`, `__ext4_error_inode()`, `__ext4_error_file()`, `__ext4_std_error()`, `ext4_handle_error()`, `save_error_info()`, `update_super_work()`, and `ext4_commit_super()`.
+
+Other important exported or shared helpers include buffer I/O wrappers (`ext4_read_bh*()`, `ext4_sb_bread*()`), group descriptor accessors and checksum functions, inode cache lifecycle functions, lazy inode-table initialization (`ext4_lazyinit_thread()` and request helpers), quota operations, `ext4_statfs()`, `ext4_freeze()`, and `ext4_unfreeze()`.
+
+## Control Flow
+Module init initializes extent-status, pending trees, post-read processing, pageio, system zones, sysfs/procfs, mballoc, inode caches, fast-commit dentry caches, then registers ext3/ext2 aliases and ext4. Mount starts with `ext4_init_fs_context()`, option parsing through `ext4_parse_param()`, and `get_tree_bdev()` invoking `ext4_fill_super()`.
+
+`ext4_fill_super()` allocates `ext4_sb_info`, chooses the superblock block, then delegates to `__ext4_fill_super()`. That function reads the superblock, validates checksums, applies defaults and persistent `s_mount_opts`, checks requested options, initializes geometry and feature compatibility, reads group descriptors, configures journal or no-journal mode, builds xattr caches and overhead accounting, reads the root inode, marks the filesystem mounted, sets reserved clusters and system zones, initializes extents/per-cpu counters/mballoc/flex_bg/lazyinit/orphan/quota paths, performs orphan cleanup and recovery completion, sets ratelimits, and finally publishes sysfs/procfs entries. Failure labels unwind resources in reverse order.
+
+Remount uses `ext4_reconfigure()` and `__ext4_remount()`. It snapshots old options, validates immutable option changes, applies safe option changes under writepages exclusion, updates journal parameters, handles read-write/read-only transitions, validates group descriptor checksums before read-write remount, rejects unprocessed orphan state on read-write remount, manages quotas and lazyinit requests, and restores the old state on failure.
+
+## State And Persistence Behavior
+Persistent state is stored in `struct ext4_super_block` through `s_es`, group descriptors, journal superblocks, quota inodes/files, orphan metadata, and feature flags. `ext4_update_super()` copies in-memory counters, write timestamps, lifetime write statistics, and first/last error records into the on-disk superblock, then refreshes the metadata checksum. `ext4_commit_super()` writes the superblock synchronously with FUA when barriers are enabled.
+
+Runtime state lives in `struct ext4_sb_info`: option masks, journal pointer, external journal file, buffer heads, group descriptor and flex_bg arrays under RCU, per-cpu counters, orphan list and locks, workqueues, ratelimit states, DAX state, dummy encryption policy, fast-commit queues, mballoc state, xattr caches, and lazyinit request pointers. `update_super_work()` defers journal-safe superblock error/stat updates when immediate writes would violate lock ordering.
+
+Crash consistency depends on JBD2 feature negotiation, recovery flags, orphan cleanup, and read-only/freeze transitions. `ext4_freeze()` flushes the journal and clears recovery/orphan-present flags only when safe; `ext4_unfreeze()` sets them again. `ext4_mark_recovery_complete()` clears recovery state after successful recovery, especially for read-only mounts.
+
+## Dependencies And Integration Points
+This file binds ext4 to the VFS, block layer, buffer cache, JBD2, quota subsystem, fscrypt, fsverity, Unicode/casefolding, DAX, procfs/sysfs, fserror reporting, tracepoints, mballoc, extents, orphan file/list handling, fast commits, fsmap, and NFS export operations. It exposes mount parameters to the VFS new mount API and publishes `/proc/fs/ext4/<dev>/options`, allocator stats, fast-commit info, and sysfs attributes through `sysfs.c`.
+
+## Risks And Edge Cases
+The mount path is security- and integrity-critical: malformed superblocks, invalid block sizes, unsupported feature flags, corrupt group descriptor checksums, mismatched external journals, quota option conflicts, DAX/data-journal incompatibilities, unprocessed orphan lists, and journal recovery on read-only devices all have explicit rejection paths. Error handling intentionally avoids recursive journal/error paths and may force emergency read-only state without setting `SB_RDONLY`, which callers must understand.
+
+The option parser has many compatibility cases for ext2/ext3 and legacy options; regressions can silently alter mount behavior. Remount restores old state on failure, but changes involving quota, system zones, MMP, and journal parameters have complicated partial-progress behavior. A notable review signal is the initial assignment of `s_resgid` from `ext4_get_resuid(es)`, which should be checked against expected reserved-GID semantics. Lazyinit scheduling uses global state and locks, so request lifetime and unmount races are important.
+
+## Test Signals
+Useful tests include mount matrices for read-only/read-write, journal/no-journal, external journals, ext2/ext3 aliases, data modes, DAX, bigalloc, metadata checksums, casefold/encryption/verity features, MMP, and unsupported feature flags. Fault-injection tests should cover superblock read/write errors, journal load/recovery failures, corrupt group descriptors, orphan cleanup failures, quota enable/disable failures, remount rollback, freeze/unfreeze, and sysfs/procfs visibility after mount/unmount. Runtime signals include ext4 tracepoints, rate-limited kernel messages, `statfs`, `/proc/fs/ext4/*`, sysfs error counters, journal abort state, and e2fsck validation after crash/recovery scenarios.

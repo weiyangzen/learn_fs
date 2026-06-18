@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/sandbox_stats_windows_test.go
+
+This test file validates the Windows sandbox stats conversion logic without requiring live Windows containerd tasks. It constructs fake hcsshim statistics, sandbox store objects, container store objects, and prior CPU sample caches to exercise `getUsageNanoCores`, `toPodSandboxStats`, and `saveSandBoxMetrics`.
+
+`TestGetUsageNanoCores` confirms first-sample behavior returns zero and later samples derive nanocores from cumulative CPU deltas over wall-clock nanoseconds. `Test_criService_podSandboxStats` drives the conversion path with table cases: no pod metric errors, pod totals include sandbox plus running containers, running init containers are included, stopped init containers are excluded, prior cache enables nonzero nanocore rates, nil or empty sandbox stats model HostProcess pods, missing container CPU does not fail, and missing pod stats does fail. Helper functions `sandboxPod`, `windowsStat`, `memoryStat`, and `newContainer` produce compact test fixtures.
+
+`Test_criService_saveSandBoxMetrics` verifies persistence behavior for the stats caches. Nil pod stats, nil Windows stats, nil CPU, and nil `UsageCoreNanoSeconds` are skipped. Valid pod CPU stores sandbox samples, and valid container CPU stores container samples. Risks covered include nil-heavy Windows metrics and store update side effects. Remaining gaps are integration-level HCN network stats, actual containerd task metric requests, PID counting, and snapshot writable-layer lookup behavior.

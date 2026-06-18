@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/pm/powerplay/hwmgr/smu7_powertune.c
+
+Purpose: implements SMU7 PowerTune support for discrete AMD GPUs, especially Polaris10/11/12 and VegaM. It programs DIDT and GC CAC hardware tables, toggles SMC CAC, enables/disables power containment, and applies power-limit/TDP adjustment settings through SMC messages.
+
+Important APIs and functions: `smu7_enable_didt_config()` enters RLC safe mode, iterates shader engines through `mmGRBM_GFX_INDEX`, selects ASIC-specific `gpu_pt_config_reg` tables, programs GC CAC/DIDT registers, enables DIDT blocks, and sends Polaris11-specific DPM DIDT / MC blackout messages. `smu7_disable_didt_config()` reverses DIDT runtime enable. `smu7_program_pt_config_registers()` is the table walker for direct, SMC indirect, DIDT indirect, and GC CAC indirect register writes. `smu7_enable_smc_cac()` / `smu7_disable_smc_cac()` maintain `smu7_hwmgr::cac_enabled`. `smu7_enable_power_containment()` sets TDC and package-power feature bits and initializes `hwmgr->default_power_limit` / `power_limit`; `smu7_set_power_limit()` sends `PPSMC_MSG_PkgPwrSetLimit` with `n << 8`; `smu7_power_control_set_level()` computes OverDrive target TDP from platform TDP adjustment and CAC/TDP tables.
+
+Control flow and state: DIDT setup is table-driven and guarded by platform caps for SQ/DB/TD/TCP ramping. Polaris11 has kicker and efuse-dependent MC blackout branches. Runtime state is mostly hardware/SMC-resident, with driver mirrors in `cac_enabled`, `power_containment_features`, and `pp_hwmgr` power-limit fields. Error paths must restore `grbm_idx_mutex`, `mmGRBM_GFX_INDEX`, and RLC safe mode.
+
+Dependencies and integration: uses `smum_send_msg_to_smc*`, CGS register APIs, AtomBIOS efuse reads, ASIC ID helpers, `smu7_hwmgr`, PP table CAC/TDP data, and platform caps. It is called by SMU7 hwmgr lifecycle and OverDrive/power-limit paths.
+
+Risks and test signals: ASIC table selection and register masks are hardware-critical; bad branch selection can program unsafe tuning values. Power limit units must match SMC firmware. Test boot/resume on Polaris/VegaM, DIDT enable/disable, power-limit sysfs changes, SMC failure handling, and no GRBM index leakage on errors.

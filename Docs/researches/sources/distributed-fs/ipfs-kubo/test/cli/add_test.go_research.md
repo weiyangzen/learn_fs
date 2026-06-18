@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/cli/add_test.go
+
+Purpose: large CLI integration suite for `ipfs add`, import defaults, configuration overrides, UnixFS traversal behavior, and fast provide behavior. It uses the Kubo CLI harness to create isolated repos, start daemons, execute commands, and inspect resulting DAGs or logs.
+
+Important functions: `waitForLogMessage`, `TestAdd`, `TestAddFastProvide`, and deterministic directory helpers `createDirectoryForHAMTLinksEstimation`, `createDirectoryForHAMTBlockEstimation`, and `createDeterministicFiles`. The tests cover CID version and hash selection from `Import.CidVersion` and `Import.HashFunction`, CLI override precedence, raw leaf behavior, `--pin-name` validation, `--max-file-links`, hidden file inclusion, empty directory inclusion/exclusion, and symlink preservation versus `--dereference-args` and `--dereference-symlinks`.
+
+Control flow is subtest-heavy and parallelized. Most tests allocate a new node, mutate config, start a daemon, run `ipfs add`, and validate CIDs, `ipfs ls`, `ipfs get`, pin output, or daemon logs. State is per-test repo contents, generated files, pins, UnixFS DAGs, and daemon stderr buffers. Dependencies include config optional fields, harness helpers, deterministic random file generation, and PB node inspection. Risks include timing-sensitive fast-provide log waits, filesystem symlink behavior, and expensive large-file generation. Test signals are strong end-to-end regressions for CLI/config precedence and traversal semantics.

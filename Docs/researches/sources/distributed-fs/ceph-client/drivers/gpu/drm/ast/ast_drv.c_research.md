@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/ast/ast_drv.c
+
+Purpose: AST PCI DRM driver core. It defines module parameters, DRM driver ops, PCI matching/probe/remove/shutdown, chip/config detection, MMIO/VGA enablement, and power-management suspend/resume paths.
+
+Important functions are `ast_device_init`, `__ast_device_set_tx_chip`, `ast_is_vga_enabled`, `ast_enable_vga`, `ast_enable_mmio`, `ast_open_key`, `ast_detect_chip`, `ast_pci_probe`, `ast_pci_remove`, `ast_pci_shutdown`, `ast_drm_freeze`, `ast_drm_thaw`, `ast_drm_resume`, and PM callbacks. The PCI table matches ASPEED display-class AST2000/AST2100 IDs, while revision/SCU bits identify actual generations.
+
+Control flow: probe removes conflicting framebuffer apertures, enables PCI, maps BAR1 and I/O registers, enables VGA if needed, unlocks extended registers, enables MMIO, detects config mode from DT/P2A/defaults and chip generation from PCI revision/SCU revision, dispatches to the generation-specific constructor, registers DRM, and starts clients. Suspend freezes mode config and powers PCI down; thaw/resume re-enables VGA/MMIO, reposts GPU, and resumes modes.
+
+State persists in PCI drvdata, `ast_device` fields, VGA/MMIO decode bits, module `modeset` parameter, chip/config decisions, and PM-saved PCI state. Dependencies are PCI, aperture helpers, DRM shmem/fbdev helpers, generation constructors, DT SCU revision properties, and P2A bridge access. Risks include broad device matching relying on runtime detection, P2A availability assumptions, repeated `ast_enable_mmio` managed action registration during thaw, BAR length validation edge cases, and POST on resume failing display recovery. Test signals are probe on every generation, module parameter disabling via DRM helper macro, conflicting framebuffer removal, suspend/resume, shutdown, and correct generation constructor dispatch.

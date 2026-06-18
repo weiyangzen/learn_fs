@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/uapi/asm/sigcontext.h
+
+Signal context ABI for ARC. It defines struct sigcontext containing user_regs_struct regs and user_regs_arcv2 v2abi. Control flow is signal.c saving/restoring these fields into ucontext during signal delivery and rt_sigreturn. State is user stack signal frame content. Dependencies are UAPI ptrace register ABI and SA_SIGINFO/ucontext users. Risks are ABI immutability, partial population when SA_SIGINFO is not used, and user tampering during sigreturn; signal.c forces STATUS_U on restore to mitigate kernel-mode returns. Test signals are signal handler ucontext inspection, rt_sigreturn, ARCv2 extra regs, altstack, and core dump compatibility.

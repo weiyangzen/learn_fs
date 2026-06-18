@@ -1,0 +1,15 @@
+# sources/distributed-fs/openafs/src/afs/afs_call.c
+
+Purpose: Implements the kernel-side AFS syscall/operation dispatcher and daemon lifecycle control. It is the main bridge from `afsd` startup/configuration calls into cache-manager initialization, daemon thread startup, runtime knobs, AFSDB handling, and shutdown.
+
+Important APIs and functions: `afs_syscall_call`/`afs_syscall64_call` dispatch `AFSOP_*` operations. `afs_InitSetup` initializes stats, RX, and resources. Platform-specific `afs_DaemonOp` and `afsd_thread` variants start callback, main AFS, background, truncate, check-server, rxevent, and listener daemons. Optional sockproxy helpers copy packet lists between user space and kernel space. `afs_CheckInit` reports startup readiness, `afs_shutdown` coordinates teardown, and `shutdown_afstest` resets startup flags.
+
+Control flow: Startup is staged by `afs_initState`: RX/resource setup happens before basic cache init; `AFSOP_BASIC_INIT`, cache files, volume/cell info, root volume, and `AFSOP_GO` complete cache-manager readiness. Daemon operations either run in the calling process or spawn kernel threads depending on platform macros. The syscall dispatcher first enforces privileged access except MTU/mask queries, then branches through configuration operations such as add cell, set primary cell, cache init, interface advice, dynroot/fakestat settings, RX packet/MTU/fragment tuning, entropy seeding, volume TTL, and sockproxy handling.
+
+State and persistence: Maintains global startup/shutdown flags (`afs_initState`, `afs_termState`, `afs_cold_shutdown`, `afs_shuttingdown`), daemon-running booleans, cache sizing globals, root volume name, RX bind host, callback interface addresses, and runtime tunables. It initializes persistent cache metadata indirectly through cache, volume, and cell-info init calls, but does not itself own those file formats.
+
+Dependencies and integration points: Integrates almost every cache-manager subsystem: RX, resources, daemons, background queue, callback server, cache init, dynroot, cells, AFSDB, vnode/dcache packages, NFS exporter, ICL logs, OS networking, platform syscall copyin/copyout, and shutdown hooks for all packages.
+
+Risks: This file is heavily platform-conditional and uses user-kernel copy boundaries, so size checks and pointer handling are critical. Startup order is encoded in numeric state transitions and sleeps; missed wakeups or duplicate starts can hang initialization. Shutdown depends on daemon cooperation and correct `afs_termState` progression. Many branches allocate temporary buffers and must free them on all copy/error paths.
+
+Test signals: Exercise full `afsd` startup sequence, duplicate daemon starts, cache initialization idempotence, add-cell/add-cell2/alias/set-thiscell, interface refresh and RX bind behavior, root-volume and cache-file setup, privileged access rejection, MTU/mask queries for unprivileged users, AFSDB handler shutdown code, runtime knob validation, sockproxy copy bounds, cold and warm shutdown ordering, and post-shutdown reinitialization flags.

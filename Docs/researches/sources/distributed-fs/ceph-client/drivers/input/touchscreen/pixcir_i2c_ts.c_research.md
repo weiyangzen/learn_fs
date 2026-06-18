@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/input/touchscreen/pixcir_i2c_ts.c -->
+# sources/distributed-fs/ceph-client/drivers/input/touchscreen/pixcir_i2c_ts.c
+
+Purpose: I2C driver for Pixcir touchscreen controllers, including two-finger devices without hardware IDs and TangoC-style five-finger devices with hardware IDs. It configures power and interrupt modes, parses coordinate reports, manages optional GPIOs, and supports wakeup behavior.
+
+Important APIs/types/functions: `struct pixcir_i2c_chip_data` describes max fingers and hardware-ID support. `struct pixcir_i2c_ts_data` stores client, input, ATTB/reset/enable/wake GPIOs, chip data, touchscreen properties, and a `running` flag. `pixcir_ts_parse()` reads and decodes reports, `pixcir_ts_report()` assigns/report slots, `pixcir_ts_isr()` drains reports while ATTB remains asserted, `pixcir_reset()`, `pixcir_set_power_mode()`, `pixcir_set_int_mode()`, `pixcir_int_enable()`, `pixcir_start()`, `pixcir_stop()`, PM callbacks, and `pixcir_i2c_ts_probe()` implement lifecycle.
+
+Control flow: probe resolves chip data from OF or I2C ID, creates input, requires touchscreen size properties, initializes MT slots, gets ATTB and optional reset/wake/enable GPIOs, requests a falling-edge threaded IRQ, resets the controller, sets idle power mode, stops interrupt generation, registers input, and stores client data. Open enables optional power GPIO, configures level-touch active-low interrupt mode, sets `running` before enabling interrupt generation, and returns. The ISR loops while running: writes register index zero, reads a report sized by max fingers and ID support, transforms coordinates, reports slots by hardware ID or assigned positions, and exits once ATTB deasserts, emitting a final sync if needed. Stop disables interrupt generation, clears `running`, synchronizes IRQ, and disables optional enable GPIO. PM starts/stops the device differently depending on wakeup-source and input open state.
+
+State and persistence: controller power mode is set to idle during probe; interrupt mode/generation and GPIO enable state follow input open and PM. Runtime state includes only chip description, touchscreen transform, GPIOs, and running flag.
+
+Dependencies/integration: depends on I2C/SMBus, GPIO consumer API, input MT assignment helpers, touchscreen properties, IRQ synchronization, OF/I2C IDs (`pixcir,pixcir_ts`, `pixcir,pixcir_tangoc`, `pixcir_ts`, `pixcir_tangoc`), and PM wakeup policy.
+
+Risks and test signals: `running` is shared between open/close and the threaded IRQ with barriers but no lock, so stop/ISR races should be tested. Test missing ATTB GPIO, optional GPIO polarity, no-size property rejection, hardware ID slot exhaustion, ATTB stuck low causing repeated reads, wakeup suspend when input is closed, failed interrupt disable on stop, reset timing, and active-low interrupt configuration.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/input/touchscreen/pixcir_i2c_ts.c -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/openafs/src/WINNT/afsd/lanahelper.cpp
+
+Purpose: discovers Windows NetBIOS LANA adapters and builds the NetBIOS/UNC server name used by the OpenAFS SMB gateway. It maps network-adapter GUIDs to friendly names, identifies loopback adapters, honors OpenAFS registry configuration, and formats names such as `AFS` or `<hostname>-AFS`.
+
+Important APIs/types/functions: `lana_ShellGetNameFromGuidW` can use the Network Connections shell folder, though `lana_GetNameFromGuid` currently forces the undocumented `netman.dll` `HrLanConnectionNameFromGuidOrPath` path. `lana_FindLanaByName` reads `Services\NetBios\Linkage` `LanaMap` and `Bind`, filters IPv4 `_Tcpip_` bindings, extracts GUIDs, and returns `LANAINFO` entries. `lana_FindLoopback`, `lana_OnlyLoopback`, and `lana_IsLoopback` enumerate/reset NetBIOS adapters and compare known loopback MAC patterns or the `ForceLanaLoopback` registry override. `lana_GetUncServerNameEx` is the main policy routine for selecting LANA/gateway settings and building the name. `lana_GetUncServerNameDynamic`, `lana_GetUncServerName`, `lana_GetAfsNameString`, and `lana_GetNetbiosName` are formatting wrappers.
+
+Control flow: name generation starts by reading `LanAdapter`, `IsGateway`, optional `NoFindLanaByName`, and `NetbiosName` from the OpenAFS service-parameter registry. If no LANA is configured, it optionally looks for an adapter named `AFS`, then a loopback adapter when not configured as a gateway. If the chosen adapter is loopback and not a gateway, the configured suffix becomes the whole NetBIOS name; otherwise the helper prefixes the local computer name and appends the suffix. Wrapper functions convert this char buffer to `TCHAR`.
+
+State/persistence: registry values are persistent configuration inputs. No durable state is written. Returned `LANAINFO` and GUID-name strings are heap-allocated for callers to free. NetBIOS reset has process-local adapter initialization effects.
+
+Dependencies/integration: depends on Windows registry, NetBIOS `Netbios` NCB calls, shell/COM APIs, `netman.dll`, network adapter binding registry layout, `AFSREG_CLT_SVC_PARAM_SUBKEY`, and `lanahelper.h`. AFSD SMB startup and UI/display code use these helpers to decide the UNC name.
+
+Risks: the primary friendly-name path uses an undocumented `netman.dll` export and may fail on modern Windows. COM initialization/uninitialization is unconditional inside the shell helper and may interact poorly with callers that already initialized COM with a different apartment. Several string copies use fixed `MAX_NB_NAME_LENGTH` buffers and older `_tcscpy`/`strncat` patterns. Loopback detection by MAC prefix is fragile. `lana_FindLanaByName` can return without closing the registry key on zero `LanaMap` data. The code assumes ANSI conversion for GUID/friendly names.
+
+Test signals: cover registry-configured LANA and gateway values, missing registry defaults, loopback-only machines, machines with no NetBIOS adapters, long host/suffix names, failure to load `netman.dll`, Unicode builds, and `LANA_NETBIOS_NAME_SUFFIX/FULL/IN/NO_RESET` combinations.

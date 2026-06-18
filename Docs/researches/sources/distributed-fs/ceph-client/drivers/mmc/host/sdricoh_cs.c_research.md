@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/sdricoh_cs.c
+
+Purpose: this legacy PCMCIA/CardBus driver supports Ricoh Secure Digital readers found behind some Ricoh RL5c476 II bridges. It implements a simple MMC host using direct MMIO polling and PIO transfers rather than the SDHCI core.
+
+Important APIs, types, and functions: `struct sdricoh_host` stores device/MMC pointers, mapped I/O base, backing PCI device, and APP_CMD state. Register helpers wrap byte/word/long MMIO with verbose debug. `sdricoh_reset()` initializes controller registers. `sdricoh_mmc_cmd()` sends commands and handles APP_CMD opcode adjustment. `sdricoh_blockio()` performs 32-bit FIFO-style PIO reads/writes. `sdricoh_request()`, `sdricoh_set_ios()`, and `sdricoh_get_ro()` implement `mmc_host_ops`. `sdricoh_init_mmc()`, `sdricoh_pcmcia_probe()`, and `sdricoh_pcmcia_detach()` bridge PCMCIA identification to PCI MMIO mapping and MMC registration.
+
+Control flow: PCMCIA probe scans PCI devices for the Ricoh bridge ID, tries to map BAR0 of the matching PCI device, checks the controller version register, allocates an MMC host, sets static frequency/OCR/capability limits, resets the controller, and calls `mmc_add_host()`. Requests clear status, set block size/data mode for data commands, issue the command, read short or 136-bit response registers, transfer each block through a single scatterlist page mapping, finish data mode, poll for transfer completion, and call `mmc_request_done()`. Suspend is a no-op; resume resets the controller.
+
+State and persistence: persistent state is minimal: mapped MMIO, PCI reference, MMC host, and the `app_cmd` latch that marks the command following `MMC_APP_CMD`. Hardware power/mode registers are reprogrammed by reset and set-ios. Data transfer state is synchronous within `sdricoh_request()`; there are no IRQs, DMA mappings, workqueues, or persistent request objects.
+
+Dependencies and integration points: the driver uses the PCMCIA core for device matching, PCI APIs for CardBus bridge discovery and BAR mapping, Linux MMC host APIs, highmem page mapping, scatterlist helpers, and polling helpers. The module parameter `switchlocked` inverts the read-only interpretation for machines with reversed lock status.
+
+Risks: the PCI scan binds indirectly through a PCMCIA function and can pick the first matching Ricoh bridge that passes version probing. The request path assumes simple scatterlist layout and maps `data->sg` page offsets per block rather than walking arbitrary SG entries. It is entirely polling-based with one-second command/data timeouts, so slow or wedged hardware blocks request context. Error checking is sparse, busy handling is marked FIXME, and frequency/voltage handling is mostly delegated to fixed controller behavior.
+
+Test signals: test on the target Ricoh CardBus hardware with both known product strings, version register `0x4000`, read/write single and multi-block PIO, APP_CMD/ACMD command sequences, 136-bit response commands, write-protect with both `switchlocked` values, suspend/resume reset, detach cleanup with PCI ref release, and timeout behavior on card removal or unresponsive media.

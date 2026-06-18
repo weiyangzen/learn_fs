@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/stream/stream02.c
+
+Purpose: checks that a FIFO created with `mknod()` can be opened by `fopen()` in `r+`, `w+`, and `a+` modes. `run` creates `ltp_file_node` as `S_IFIFO | 0666`, loops over mode strings, expects `fopen` to return non-NULL, closes successful streams, and unlinks the FIFO. Important APIs are `SAFE_MKNOD`, `fopen`, `TST_EXP_PASS_PTR_NULL`, and `SAFE_FCLOSE`. State is one temporary FIFO. Dependencies are tmpdir support and filesystem FIFO support. Risks are blocking semantics for FIFOs on unusual libc/filesystem combinations; test signal is pass for all modes without unexpected NULL stream.

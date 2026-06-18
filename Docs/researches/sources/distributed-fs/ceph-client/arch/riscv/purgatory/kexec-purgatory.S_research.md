@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/riscv/purgatory/kexec-purgatory.S -->
+# sources/distributed-fs/ceph-client/arch/riscv/purgatory/kexec-purgatory.S
+
+Purpose: embeds the linked RISC-V purgatory image into the kernel as read-only data. Important symbols are `kexec_purgatory` and `kexec_purgatory_size`. Control flow is assembler data emission only: align, `incbin` the built `arch/riscv/purgatory/purgatory.ro`, mark the end, align again, and store the blob size as a quad. State is the binary blob and size symbol used by kexec file loading; no runtime mutation here. Dependencies include the Makefile-produced `purgatory.ro` path and the kernel kexec loader's symbol lookup expectations. Risks include stale or missing included binary, alignment mismatches, wrong size calculation, and build path assumptions. Test signals: successful `kexec-purgatory.o` assembly, `nm/objdump` symbol sizes, kexec loading of embedded blob, and rebuilds after purgatory object changes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/riscv/purgatory/kexec-purgatory.S -->

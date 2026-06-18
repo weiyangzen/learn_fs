@@ -1,0 +1,19 @@
+# sources/object-store/apache-ozone/hadoop-hdds/container-service/src/main/java/org/apache/hadoop/ozone/container/ec/reconstruction/ECReconstructionCoordinator.java
+
+## Purpose
+`ECReconstructionCoordinator` implements the datanode-side workflow for reconstructing missing replicas in an erasure-coded container group. It lists block metadata from healthy source replicas, calculates safe block-group lengths, creates target RECOVERING containers, decodes and streams missing chunks, issues putBlock, closes the targets, and cleans up partial targets on failure.
+
+## Important APIs and Types
+The main public method is `reconstructECContainerGroup(long, ECReplicationConfig, SortedMap<Integer,DatanodeDetails>, SortedMap<Integer,DatanodeDetails>)`. `reconstructECBlockGroup` is `@VisibleForTesting` and handles one block group. Helper APIs include `calcBlockLocationInfoMap`, `getECBlockOutputStream`, `rebuildInputPipeline`, `getBlockDataMap`, `calcEffectiveBlockGroupLen`, and `getTermOfLeaderSCM`. It owns `ECContainerOperationClient`, read/write executor pools, `BlockInputStreamFactory`, `TokenHelper`, `ContainerClientMetrics`, and `ECReconstructionMetrics`.
+
+## Control Flow
+Container reconstruction rebuilds an input pipeline from source nodes, lists blocks from each source, drops orphaned stripes missing a putBlock entry for any source index, creates block-location info using the minimum observed block-group length, creates RECOVERING containers on all targets, reconstructs each block group, closes successfully created targets, and increments success metrics. Any exception increments failure metrics, attempts to delete only target containers created by the current task when they are UNHEALTHY or RECOVERING, and rethrows. Block reconstruction separates missing indexes into those that require data reconstruction and those that only need empty block metadata. It opens `ECBlockReconstructedStripeInputStream`, creates target output streams, loops over recovered chunks, writes non-empty buffers, waits for futures, and finally executes putBlock on all target streams.
+
+## State and Persistence
+Local state includes reusable byte buffers, thread pools, RPC client manager, and metrics counters. Remote persistent state changes happen on target datanodes: RECOVERING containers are created, chunks and block metadata are written, and containers are closed or deleted. Tokens are generated per container/block with `TokenHelper`. The coordinator mutates the retrieved `OzoneClientConfig` to enable checksum verification during reconstruction reads.
+
+## Dependencies and Integration Points
+The coordinator is constructed by `DatanodeStateMachine` and used by `ECReconstructionCoordinatorTask`, which is submitted by `ReconstructECContainersCommandHandler` through the replication supervisor. It depends on Ozone client EC read/write streams, SCM block/pipeline types, datanode RPC calls, security token signing, executor configuration from `OzoneClientConfig`, and metrics from `ContainerClientMetrics` and `ECReconstructionMetrics`.
+
+## Risks and Test Signals
+Important risks are partial remote side effects, orphan block filtering correctness, minimum-length recovery semantics for inconsistent block lengths, and future/write failure handling. A null block from `ECContainerOperationClient.listBlock` conversion failure would be unsafe if not filtered before dereference. The write executor is memoized and only shut down if initialized; read executor is always shut down in `close`. Tests in `TestContainerCommandsEC` cover full/partial stripe reconstruction, missing indexes, retry-triggered failures, orphan blocks, and cleanup-on-failure. `TestECContainerRecovery`, `TestReconstructECContainersCommandHandler`, and `TestReplicationSupervisor` provide integration and scheduling signals.

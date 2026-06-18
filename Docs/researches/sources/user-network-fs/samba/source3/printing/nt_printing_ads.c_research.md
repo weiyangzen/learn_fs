@@ -1,0 +1,13 @@
+# sources/user-network-fs/samba/source3/printing/nt_printing_ads.c
+
+Purpose: implements Active Directory publication support for Samba printers when `HAVE_ADS` is enabled. It maps local spoolss printer metadata into AD `printQueue` attributes, stores/retrieves the AD object GUID in the printer registry data, publishes/unpublishes LDAP entries, and checks configured printers that are marked published. Without ADS support it provides compatibility stubs returning `WERR_NOT_SUPPORTED`, `WERR_OK`, or `false`.
+
+Important APIs and functions: `nt_printer_guid_store()` writes `SPOOL_DSSPOOLER_KEY/objectGUID` through internal winreg as `REG_SZ`, while `nt_printer_guid_get()` reads either the current string form or legacy `REG_BINARY`. `nt_printer_dn_lookup()` constructs a printer DN under the local machine account using escaped server CN and share name. `nt_printer_publish()` updates the local `PRINTER_ATTRIBUTE_PUBLISHED` bit via `winreg_update_printer_internal()` before calling `nt_printer_publish_ads()` or `nt_printer_unpublish_ads()`. `check_published_printers()` iterates printable services and republishes those already flagged. `is_printer_published()` is a registry-backed query helper.
+
+Control flow: publish/update actions set the local attribute, connect as the machine account to ADS, build LDAP modifications from `spoolss_PrinterInfo2`, and modify or add the printer entry. Successful ADS publication attempts to retrieve the AD GUID and persist it locally. Unpublish looks up the printer on the server and deletes the LDAP DN. Republish scanning uses loadparm services plus winreg printer fetches.
+
+State and persistence: AD state lives in LDAP printQueue objects; local state lives in Samba winreg printer metadata under `DsSpooler`. The GUID storage path intentionally uses `REG_SZ` for Vista compatibility but retains binary read compatibility.
+
+Dependencies and integration: depends on ADS/LDAP helpers, secrets/machine credentials, loadparm, generated spoolss types, winreg spoolss helpers, NDR GUID conversion, and Samba messaging/session context. It integrates with spoolss server operations that publish printers and with startup or maintenance checks that re-publish configured shares.
+
+Risks: DN construction and LDAP escaping are security-sensitive. ADS failures can leave the local published bit set without an AD object. `nt_printer_info_to_mods()` does not check every `ads_mod_str()` return, so allocation or LDAP-mod construction failures may be partially masked. Empty-string attributes are deliberately skipped to avoid LDAP errors. Tests should cover ADS-disabled stubs, GUID read/write in both formats, publish-add versus publish-modify, unpublish missing entries, and failure behavior when winreg succeeds but ADS fails.

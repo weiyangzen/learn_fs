@@ -1,0 +1,9 @@
+# Research: sources/storage-engines/rocksdb/db/wal_edit.h
+
+- **Purpose:** Declares WAL metadata/edit classes that are embedded in `VersionEdit` and replayed by `VersionSet` to remember live WAL files and their durable synced sizes.
+- **Important APIs/types/functions:** Defines `WalNumber`, `WalMetadata`, persisted enum `WalAdditionTag`, `WalAddition`, `WalDeletion`, `WalAdditions`, and `WalSet`. Public operations include metadata synced-size accessors, WAL addition/deletion encode/decode/debug methods, `WalDeletion::IsEmpty/Reset`, `WalSet::AddWal`, `AddWals`, `DeleteWalsBefore`, `Reset`, `GetMinWalNumberToKeep`, `GetWals`, and `CheckWals`.
+- **Control flow:** The header documents a two-stage WAL lifecycle: creation writes a `WalAddition` without synced size; sync/close writes a `WalAddition` with size; obsoletion writes a cutoff through `WalDeletion`. `WalSet` consumes these events under external synchronization.
+- **State and persistence behavior:** `WalMetadata` uses `uint64_t::max()` as the sentinel for unknown synced size. `WalAdditionTag` is explicitly persisted and part of the user-visible format contract. `WalSet` stores a sorted map from log number to metadata plus a monotonically increasing in-memory minimum WAL number to keep.
+- **Dependencies and integration points:** Depends on JSON event logging, RocksDB namespace/status/env declarations, STL map/vector/unordered_map, and port headers. Used by `VersionEdit` encoding, `VersionSet` WAL replay, MANIFEST rewrite, and WAL integrity checks.
+- **Risks:** The class comment states modifications to `WalAddition`/`WalDeletion` may need corresponding `VersionEdit` and tests changes. `WalSet` is not thread-safe; DB mutex or equivalent serialization is required. The unknown-size sentinel must not be confused with a real file size.
+- **Test signals:** Interface behavior is validated by `wal_edit_test.cc`; persistence behavior is validated by `version_set_test.cc` WAL and atomic-group cases.

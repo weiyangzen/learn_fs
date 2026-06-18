@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/virtual-cpufreq.c
+
+Purpose: implements a paravirtual CPUFreq driver for `qemu,virtual-cpufreq` MMIO devices. It lets guest vCPUs read available performance values, write requested performance, group policies by host-provided performance domains, and provide a virtualization-specific frequency-invariance source.
+
+Important APIs and functions: MMIO offsets expose current performance, requested performance, performance table length/selection/readback, and performance domain. Probe maps the resource and validates each possible CPU's table length. `virt_cpufreq_get_freq_info()` either creates a discrete CPUFreq table or sets continuous min/max limits when the table length is one. `virt_cpufreq_get_sharing_cpus()` groups CPUs with equal `perf_domain`. Target and fast-switch paths write `REG_SET_PERF_STATE_OFFSET`; the slow target wraps writes in CPUFreq transition notifications. `virt_scale_freq_tick()` reads current performance and updates `arch_freq_scale` through `topology_set_scale_freq_source()`.
+
+Control flow and state: a global MMIO base and per-CPU table length are retained. Policy init sets `dvfs_possible_from_any_cpu = false` to force host-visible writes from the affected vCPU thread, enables fast switch, and installs the virtual scale-frequency source. Exit clears the source and frees any allocated table.
+
+Dependencies and integration points: depends on platform DT compatible, arch topology frequency scaling, CPUFreq core fast-switch/transition APIs, scheduler capacity constants, and host/VMM emulation of the documented register layout.
+
+Risks and test signals: risks include global base pointer for a single device, no explicit locking around table select/read register pairs, freeing `policy->freq_table` even in one-entry continuous mode where it remains NULL, reliance on host current-perf units matching max performance, and rejecting table lengths above 64. Test signals include MMIO region per-CPU stride correctness, policy sharing masks matching perf_domain values, fast-switch writes from the target vCPU, `arch_freq_scale` changing with host current performance, and correct behavior for both discrete and continuous performance tables.

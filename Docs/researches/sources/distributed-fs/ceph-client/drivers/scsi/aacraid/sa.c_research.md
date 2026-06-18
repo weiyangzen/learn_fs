@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/aacraid/sa.c
+
+Purpose: implements the SA/ARM-based AAC hardware miniport for older Drawbridge-style controllers. It provides doorbell interrupt handling, mailbox synchronous commands, adapter notification/start/health operations, register mapping, and initialization of the common AAC communication layer for SA hardware.
+
+Important APIs/types/functions: `aac_sa_intr()`, `aac_sa_disable_interrupt()`, `aac_sa_enable_interrupt()`, `aac_sa_notify_adapter()`, `sa_sync_cmd()`, `aac_sa_interrupt_adapter()`, `aac_sa_start_adapter()`, `aac_sa_check_health()`, `aac_sa_ioremap()`, and `aac_sa_init()`. It uses SA register accessors, `SaDbCSR` interrupt masks, `DoorbellReg_p/s`, mailbox registers, `aac_command_normal()`, `aac_response_normal()`, `aac_rx_deliver_producer()`, and common adapter initialization.
+
+Control flow: `aac_sa_init()` maps registers, checks self-test/panic/kernel-up state, waits up to `startup_timeout`, installs the adapter operation table, disables/enables supported interrupts, calls `aac_init_adapter()`, requests a shared IRQ, records debug mapping information, enables interrupts, and sends the init-struct base address with `aac_sa_start_adapter()`. Runtime IRQ handling reads primary doorbells and the inverted mask, handles firmware printf, adapter command-ready and response-ready events, and clears not-full doorbells. Synchronous commands write mailbox command/parameters, clear and ring doorbell 0, poll for completion for up to 30 seconds, then read mailbox return words.
+
+State and persistence: the file owns mapped SA registers and the operation table. Hardware-visible state includes doorbell bits, interrupt mask bits, mailbox command/status words, and the init-structure base address. It does not implement restart support, returning `-EINVAL` from `aac_sa_restart_adapter()`.
+
+Dependencies and integration: depends on common FIB/queue initialization from `aac_init_adapter()`, common RX producer delivery, SCSI/PCI setup in `linit.c`, and doorbell event definitions shared in `aacraid.h`.
+
+Risks and test signals: restart is unsupported, so SCSI host reset cannot recover SA hardware through this miniport. `sa_sync_cmd()` polls with a 30-second timeout and returns no detailed firmware status on timeout. Interrupt handling uses an `else if` chain, so if multiple doorbell bits are set only the first recognized event is processed per interrupt. Test startup timeout, self-test and kernel-panic detection, doorbell priority when multiple bits are set, printf acknowledgment, command/response queue drains, sync command timeout, IRQ request failure, producer delivery, and shutdown/remove paths.

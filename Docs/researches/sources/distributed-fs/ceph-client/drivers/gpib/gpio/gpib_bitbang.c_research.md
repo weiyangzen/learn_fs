@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpib/gpio/gpib_bitbang.c
+
+Purpose: implements a GPIO-driven GPIB controller, mainly for Raspberry Pi hardware with optional SN75160/SN75161 transceivers. It bit-bangs IEEE-488 handshakes using GPIO lines and IRQs rather than a GPIB controller ASIC.
+
+Important APIs and functions: `bb_interface` registers read, write, command, controller, address, EOS, status, line-status, and lifecycle callbacks. `bb_read` arms DAV interrupts and accepts bytes by toggling NRFD/NDAC. `bb_write` arms NRFD/NDAC interrupts and sends data by toggling DAV/EOI. Interrupt handlers `bb_DAV_interrupt`, `bb_NRFD_interrupt`, `bb_NDAC_interrupt`, and `bb_SRQ_interrupt` implement the handshake. `bb_command` updates software talker/listener state from command bytes. Attach/detach paths allocate private state, map pin profiles, acquire GPIO descriptors, request IRQs, and release resources.
+
+Control flow: attach selects `elektronomikon`, `gpib4pi-1.1`, or `yoga` pin maps, configures optional transceiver control pins, sets idle line levels, and requests disabled IRQs. Reads switch data lines to input, assert NRFD readiness, and wait for the DAV ISR to collect bytes until length, EOI/EOS, timeout, or signal. Writes switch to output, reject no-listener conditions when NRFD/NDAC are both high, and wait for NRFD/NDAC ISR progression. Controller operations manipulate active-low ATN/IFC/REN and software state.
+
+State and persistence: `struct bb_priv` tracks IRQs, interrupt modes, active transfer buffers/counters, EOS settings, direction, busy flags, debug counters, software talker/listener states, and handshake phase. Global GPIO descriptor arrays and mutable `gpios_vector` represent pin mappings. State is in-memory and reset on detach/module unload.
+
+Dependencies and integration: depends on `gpibP.h`, `gpib_state_machines.h`, Linux GPIO descriptor and machine lookup APIs, IRQ type control, waitqueues, spinlocks, and common GPIB registration. It implements line status directly from active-low GPIO values.
+
+Risks: file comments list major limitations: Raspberry Pi focus, no non-master device mode with SN7516x, no parallel poll, no return-to-local, and no device support. `check_for_eos` appears inverted relative to `REOS` naming: `bb_read` sets `eos_check = (eos_flags & REOS) == 0`, while `check_for_eos` returns early when `eos_check` is true. Global `gpios_vector` is mutated by attach and may not reset cleanly across pin-map changes. `sprintf` into a fixed buffer is safe for current names but unnecessary. IRQ sequencing relies on edge/level reconfiguration and may be fragile under missed GPIO interrupts.
+
+Test signals: hardware tests with each pin map, with and without SN7516x, read/write/command transfers under timeout and signal interruption, EOI/EOS detection, SRQ wait behavior, no-listener detection, repeated attach/detach, line-status polarity, and debug counters for idle/out-of-order interrupts. Static tests should review GPIO descriptor cleanup on partial attach failures.

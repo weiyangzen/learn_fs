@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/test-appliance/files/etc/systemd/system/gce-fetch-gs-files.service
+
+- Purpose: systemd unit for GCS bootstrap files; it runs gce-fetch-gs-files after networking to fetch certificates/configuration before server units need them. The file is 17 lines/584 bytes and is researched as source path `sources/test-tools/xfstests-bld/test-appliance/files/etc/systemd/system/gce-fetch-gs-files.service`.
+- Important APIs/types/functions: systemd unit sections `Unit, Service, Install` with directives Description=GCE self-signed cert fetch from GCS; After=local-fs.target network-online.target network.target; After=rsyslog.service google-network-setup.service google-accounts-daemon.service; Wants=local-fs.target network-online.target network.target; Wants=google-network-setup.service google-accounts-daemon.service; Type=oneshot; ExecStart=/usr/local/lib/gce-fetch-gs-files; WantedBy=multi-user.target.
+- Control flow: systemd evaluates ordering/conditions, then runs /usr/local/lib/gce-fetch-gs-files; install targets connect it to boot or timer activation.
+- State and persistence: unit state is managed by systemd; side effects come from the invoked helper scripts, marker files, timers, and service logs rather than this declarative file.
+- Dependencies/integration: integrates with appliance boot, network-online/local-fs targets, GCE metadata/bootstrap files, LTM/KCS binaries, cleanup timers, or KVM one-shot startup depending on the unit.
+- Risks and test signals: ordering mistakes can race network, local filesystems, or fetched certificates; validate with `systemctl status`, boot logs, and whether expected result/shutdown/server artifacts appear.

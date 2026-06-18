@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/tools/testing/selftests/net/netfilter/nft_interface_stress.sh
+
+Purpose: stress test for nftables netdevice notifier callbacks and flowtable device tracking while interfaces are rapidly renamed, listed, monitored, created, and deleted under traffic.
+
+Important APIs and tools: requires `nft`, `iperf3`, namespace helpers, veth routing topology, netdev-family ingress chains, IP flowtables, `nft list ruleset`, `nft monitor`, dummy devices, kernel taint, and optional kmemleak.
+
+Control flow: records initial taint, sets runtime to 80 percent of kselftest timeout capped at 48 seconds, creates client/router/server namespaces and routed IPv4 topology. It loads a ruleset with ten pairs of netdev ingress chains bound to `rc0..rc9`/`rs0..rs9` and ten flowtables using matching device names, then starts a loop renaming `rcN`/`rsN` modulo 10. In parallel it continuously lists the ruleset and runs `nft monitor`, while iperf3 transfers traffic through the router. After killing stress processes, it attempts wildcard flowtable devices (`wild*`) and concurrently creates/deletes 100 dummy devices in several patterns. It then checks that a previously clean kernel did not become tainted, throughput was nonzero, and kmemleak is empty if available.
+
+State and persistence: temporary namespaces, nft rules, rename/list/monitor background processes, dummy devices, and iperf server; cleanup removes namespaces. Dependencies include nft support for netdev hooks, flowtables, wildcard devices, iperf3, debugfs kmemleak if checked. Risks include `#!/bin/bash -e` making unexpected command failures fatal, background wait behavior after killed infinite loops, and environment-sensitive throughput. Test signals are taint/kmemleak/throughput checks and kselftest pass/fail/skip exits.

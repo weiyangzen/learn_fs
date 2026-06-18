@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs_common/common.c
+
+Purpose: shared NFS status translation helpers. It maps NFSv2/v3 status values to Linux errnos via `nfs_stat_to_errno`, NFSv4 status values via `nfs4_stat_to_errno`, and Linux errnos back to NFSv4 LOCALIO statuses via `nfs_localio_errno_to_nfs4_stat`.
+
+Control flow is table lookup with fallback behavior: unknown v2/v3 statuses become `-EIO`; unknown small/out-of-range NFSv4 statuses become `-EREMOTEIO`; other NFSv4 recovery statuses return negative protocol status for higher recovery logic; localio fallback is `NFS4ERR_SERVERFAULT`. State is static constant mapping tables only. Dependencies include `linux/nfs_common.h`, `linux/nfs4.h`, exported GPL symbols, and both client and server users. Risks include semantic mismatches when multiple NFS errors map to one errno, localio reverse mappings that differ from normal client mappings, and protocol recovery statuses that must not be collapsed too early. Test signals: XDR decode error paths, representative NFSv2/v3/v4 status conversion, unknown status handling, LOCALIO errno conversion, and module symbol use from client and server code.

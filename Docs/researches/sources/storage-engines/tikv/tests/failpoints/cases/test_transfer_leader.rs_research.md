@@ -1,0 +1,3 @@
+# sources/storage-engines/tikv/tests/failpoints/cases/test_transfer_leader.rs
+
+See the grouped report section in `Docs/researches/groups/subset-b-008947_research.md` for the full source-aligned research. Summary: this file validates leader transfer under slow apply, unsynced max timestamp, pending lock cleanup, entry-cache warmup, long-uncommitted proposal ticking, and transferee-applied metadata changes. It uses PD operators, raft message filters, warmup failpoints, direct in-memory pessimistic lock insertion, lock CF checks, and conf-change/split/merge/witness scenarios to prove transfers are accepted or rejected safely.

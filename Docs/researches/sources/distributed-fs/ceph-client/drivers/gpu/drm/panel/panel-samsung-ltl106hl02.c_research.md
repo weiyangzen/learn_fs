@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-ltl106hl02.c
+
+Purpose: Samsung LTL106HL02-001 is a straightforward 1920x1080 video-mode DSI panel. It controls one `power` regulator, optional reset GPIO, an OF-described backlight, and exposes one fixed preferred mode.
+
+Important APIs, control flow, and state: probe allocates `struct samsung_ltl106hl02`, gets resources, configures four-lane RGB888 DSI with video and LPM flags, attaches OF backlight, adds the panel, and uses `devm_mipi_dsi_attach()`. `prepare()` enables the regulator, optionally toggles reset, exits DCS sleep, waits 70 ms, sets display on, waits 5 ms, and returns the DSI multi-context accumulated error. `unprepare()` sends display off, waits 50 ms, enters sleep, waits 150 ms, asserts reset if present, and disables the regulator. `get_modes()` delegates to `drm_connector_helper_get_modes_fixed()`.
+
+Dependencies, integration, risks, and tests: dependencies are MIPI DSI multi-context helpers, DRM fixed mode helper, regulator/GPIO/backlight APIs, and `samsung,ltl106hl02-001`. Risks are minimal command sequencing with no panel-specific init, no rollback if display-on fails after regulator enable, and optional reset path differences across boards. Test signals include fixed-mode enumeration, external backlight binding, correct regulator/reset polarity, DSI attach/remove, and reliable resume from sleep.

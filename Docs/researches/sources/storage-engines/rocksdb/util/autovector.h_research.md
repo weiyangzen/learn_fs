@@ -1,0 +1,11 @@
+# sources/storage-engines/rocksdb/util/autovector.h
+
+Purpose: implements `autovector<T,kSize>`, a small-vector-like container that stores up to `kSize` elements in inline stack storage and overflows into `std::vector<T>`. It targets RocksDB hot paths where most vectors are small and heap allocation should be avoided.
+
+Important APIs and types: public container aliases mirror STL vector types. The nested `iterator_impl` provides random-access iterator operations over logical indices. Main methods include `only_in_stack`, `size`, `resize`, `empty`, `capacity`, `reserve`, `operator[]`, `at`, `front`, `back`, `push_back`, `emplace_back`, `pop_back`, `clear`, copy/move constructors, assignment, and forward/reverse iterators. Inline storage is `alignas(alignof(value_type)) char buf_[kSize * sizeof(value_type)]`, with `values_` pointing at it.
+
+Control flow and state: elements below `kSize` are placement-new constructed in `buf_`; additional elements live in `vect_`. `resize` constructs or destroys inline elements and resizes/clears overflow storage. `clear` destroys inline elements and clears the vector. Copy assignment assigns overflow first and placement-constructs inline elements. Move assignment moves `vect_`, then placement-constructs and moves inline elements from the source while setting source `num_stack_items_` to zero.
+
+Dependencies and integration: depends on standard algorithms/iterators/vector and RocksDB `port/lang.h`. Integration search shows use in async file reader handles and many small-list RocksDB internals.
+
+Risks and test signals: this is manual lifetime code. `push_back(T&&)` uses default construction plus move assignment for inline storage, so `T` must be default constructible in that path, unlike a perfect placement construction. Iterator dereference asserts `size() >= index_` before `operator[]` asserts, so dereferencing `end()` still relies on later bounds checks. Move assignment does not destroy existing inline elements before overwriting if the target already held inline values, which is a potential leak or lifetime bug for non-trivial `T`. `autovector_test.cc` covers push/pop, emplace, resize, copy, iterators, and performance smoke paths.

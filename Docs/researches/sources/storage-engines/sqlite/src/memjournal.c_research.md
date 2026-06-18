@@ -1,0 +1,15 @@
+# sources/storage-engines/sqlite/src/memjournal.c
+
+Purpose: implements an in-memory rollback journal used for `:memory:` databases, `journal_mode=MEMORY`, and small temporary journals that may later spill to disk. It provides a `sqlite3_file` implementation that starts as a linked list of heap chunks and can be converted in-place into a real VFS file.
+
+Important types and APIs: `FileChunk` holds linked chunk data; `FilePoint` is a cursor with logical offset and chunk pointer; `MemJournal` subclasses `sqlite3_file` and stores chunk size, spill threshold, first chunk, endpoint, readpoint, open flags, underlying VFS, and journal filename. Public entry points are `sqlite3JournalOpen()`, `sqlite3MemJournalOpen()`, conditional `sqlite3JournalCreate()`, `sqlite3JournalIsInMemory()`, and `sqlite3JournalSize()`.
+
+Control flow: `sqlite3JournalOpen()` zeroes the supplied file object. With `nSpill==0` it immediately delegates to `sqlite3OsOpen()`. Otherwise it installs `MemJournalMethods`, chooses chunk size from `nSpill` or the default, and records the VFS/name/flags. `memjrnlWrite()` appends into chunks, truncating back to `iOfst` for the limited atomic-write rewrite case. If a positive spill threshold is exceeded, `memjrnlCreateFile()` opens the underlying file, writes all chunks sequentially, frees chunks on success, and leaves the same `sqlite3_file` storage now owned by real VFS methods. If conversion fails, it restores the saved `MemJournal` copy so rollback data remains available.
+
+State and persistence: before spilling, persistence is heap-only and `memjrnlSync()` is a no-op. The endpoint tracks logical size and last chunk. The readpoint accelerates sequential reads by caching the chunk used by the previous read. `memjrnlTruncate()` frees chunks after the truncation point and resets the read cache. Once spilled, all subsequent calls go through the real VFS because `pJfd->pMethods` has changed.
+
+Dependencies and integration points: the pager/journal layer calls `sqlite3JournalOpen()` with VFS, flags, and spill policy. Atomic-write and batch-atomic-write builds use `sqlite3JournalCreate()` to force materialization. The implementation depends on `sqlite3OsOpen()`, `sqlite3OsWrite()`, `sqlite3OsClose()`, `sqlite3_malloc()`, `sqlite3_free()`, and the `sqlite3_io_methods` contract.
+
+Risks: the journal assumes append-mostly writes; unexpected random writes are handled by truncating to the write offset, which is only valid for the documented journal patterns. `memjrnlRead()` returns `SQLITE_IOERR_SHORT_READ` for reads past endpoint and depends on chunk traversal invariants. Spill failure recovery is critical: losing the saved in-memory chunks would break rollback. The `kv` of `nSpill` as both threshold and chunk size for positive values means unusual thresholds change allocation shape.
+
+Test signals: cover `nSpill<0`, `nSpill==0`, and positive spill modes; write/read across chunk boundaries; truncate to zero and mid-file; force OOM during chunk allocation and during spill open/write; test `sqlite3JournalCreate()` under atomic-write builds; and verify `sqlite3JournalSize()` is at least both VFS file size and `MemJournal`.

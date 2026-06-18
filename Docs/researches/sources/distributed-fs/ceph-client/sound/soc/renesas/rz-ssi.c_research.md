@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/soc/renesas/rz-ssi.c
+
+Purpose: Renesas RZ/G2L SSIF-2 ASoC CPU DAI and PCM component driver. It exposes one stereo playback/capture DAI named `rz-ssi-dai`, supports 8-48 kHz S16/S24/S32 I2S, and can run either DMA or interrupt-driven PIO.
+
+Important APIs, types, and functions: `struct rz_ssi_priv` owns MMIO, clocks, reset, IRQs, DMA channels, duplex flags, and cached hw params. `struct rz_ssi_stream` tracks the ALSA substream, DMA ring positions, period counter, FIFO depth, running state, error counters, DMA channel, and selected transfer function. Key DAI callbacks are `rz_ssi_startup`, `rz_ssi_shutdown`, `rz_ssi_dai_hw_params`, `rz_ssi_dai_set_fmt`, and `rz_ssi_dai_trigger`. PCM callbacks are `rz_ssi_pcm_open`, `rz_ssi_pcm_pointer`, and `rz_ssi_pcm_new`. Probe wires clocks `ssi`, `ssi_sfr`, `audio_clk1`, `audio_clk2`, named IRQs, optional DMA channels `tx`, `rx`, or `rt`, runtime PM, and the platform driver for `renesas,rz-ssi`.
+
+Control flow: `hw_params` validates stereo and sample width, enforces identical params while a duplex peer is running, software-resets the SSI, then calls `rz_ssi_clk_setup` to choose master clock/divider and program word lengths. Trigger start initializes stream state, configures DMA or falls back to PIO, queues initial transfers, and enables TX/RX with duplex coordination. PIO IRQs move frames through FIFO registers and update ALSA periods. DMA callbacks update pointers and continuously submit one-period DMA descriptors. Error IRQs stop, clear flags, refill a few descriptors/FIFO chunks, and restart.
+
+State and persistence: State is in runtime memory and hardware registers only. `hw_params_cache`, stream buffer positions, `dup` flags, DMA channel handles, and error counters are reset across stream lifecycle. Runtime suspend asserts the reset; resume deasserts it, with reg state rebuilt by ALSA callbacks.
+
+Dependencies and integration: Depends on ALSA SoC, DMAEngine, device tree clocks/IRQs/resets, `pm_runtime`, and Renesas SSIF registers. It integrates with generic ASoC machine links as a CPU DAI and uses managed PCM buffers rather than a separate dmaengine PCM component.
+
+Risks and edge cases: Full duplex is delicate because hardware reset affects both directions; the driver requires identical params and has special `one_stream_triggered` sequencing. Clock selection only accepts exact dividers in `ckdv`. DMA fallback mutates both stream transfer callbacks globally. `irq_rt` shares playback DMA channel semantics when only a combined request line exists. Pointer accounting assumes period-sized DMA descriptors and can misreport if callbacks arrive after stop, though guards reduce that.
+
+Test signals: Boot/probe should show DMA enabled or PIO fallback and register the DAI. Playback/capture at 16/24/32-bit stereo rates should advance periods without underrun/overrun logs. Duplex should reject mismatched rates/formats and start both directions without stuck LRCK. Suspend/resume and STOP/START loops should not leave SSI busy or FIFOs uncleared.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/media/pci/mgb4/mgb4_vout.c
+
+- Purpose: Implements MGB4 V4L2 output devices: serializer setup, timing programming, vb2 output queues, DMA writes to FPGA frame queues, loopback exclusion, sysfs/debugfs, and endpoint lifecycle.
+- Important APIs/types/functions: Configuration tables for two outputs, serializer I2C arrays, V4L2 timing cap, queue/file/ioctl ops, `dma_transfer`, output IRQ `handler`, `ser_init`, `fpga_init`, `mgb4_vout_create`, and `mgb4_vout_free`.
+- Control flow: Create allocates endpoint, requests output IRQ, initializes FPGA defaults and serializer, registers V4L2/vb2 output node, adds sysfs/debugfs. Open rejects devices whose source is loopback input rather than self-output, then snapshots current resolution. Stream-on writes padding, enables FPGA output queue, primes first frame by DMA to the current FPGA address, and enables IRQ. IRQ schedules DMA work for subsequent queued buffers. Stream-off disables IRQ/hardware, cancels work, clears padding, and returns buffers.
+- State and persistence: State includes width, height, pixel clock, padding, buffer list, serializer client, V4L2/vb2 objects, and FPGA registers. No disk persistence.
+- Dependencies and integration points: Depends on V4L2/vb2 DMA-SG, XDMA user IRQs, MGB4 DMA/CMT/I2C/sysfs/io helpers, and vin loopback source selection.
+- Risks: Open-time loopback check prevents V4L2 output while hardware loopback uses the output. `start_streaming()` assumes at least one queued buffer due to vb2 minimum but direct list access is sensitive. Freeing serializer on GMSL3/no-serializer paths may need valid-client checks.
+- Test signals: Test output streaming/write/MMAP/DMABUF, source loopback EBUSY, pclk/timing changes, DMA queue sentinel errors, underrun behavior, and unload during active output.

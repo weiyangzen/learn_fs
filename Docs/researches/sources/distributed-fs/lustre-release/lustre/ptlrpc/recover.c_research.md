@@ -1,0 +1,13 @@
+# sources/distributed-fs/lustre-release/lustre/ptlrpc/recover.c
+
+Purpose: coordinates client import recovery by selecting replay requests, resending in-flight requests after replay, waking delayed requests, reacting to abrupt disconnects, and activating/deactivating imports.
+
+Important APIs/types/functions: key functions are `ptlrpc_replay_next()`, `ptlrpc_resend()`, `ptlrpc_wake_delayed()`, `ptlrpc_request_handle_notconn()`, `ptlrpc_set_import_active()`, `ptlrpc_import_in_recovery_disconnect()`, `ptlrpc_recover_import()`, and `ptlrpc_import_in_recovery()`. It manipulates import fields such as `imp_committed_list`, `imp_replay_list`, `imp_sending_list`, `imp_delayed_list`, `imp_replay_cursor`, `imp_last_replay_transno`, `imp_peer_committed_transno`, `imp_known_replied_xid`, and import flags.
+
+Control flow: replay starts by freeing newly committed requests, then picks the next committed-open replay request or normal replay-list request whose transno exceeds the last replayed transno. Resend replay marks `MSG_RESENT`, ensures the request is on the unreplied list, updates known replied XID, clears the resend flag, and calls `ptlrpc_replay_req()`. After replay completes, `ptlrpc_resend()` walks the sending list in `LUSTRE_IMP_RECOVER` state and resends eligible timed-out or disallowed-during-replay requests. Not-connected handling marks the import disconnected, starts reconnect if allowed, and marks the failed request for resend. Explicit activation clears deactive state and invokes recovery; deactivation sets deactive state, sends events, and invalidates the import.
+
+State/persistence: all state is in-memory import/request state. Recovery progress is tracked by transaction numbers, list cursors, flags, and wait queues; no durable log is written here.
+
+Dependencies/integration: depends on import state transitions, OBD events, PTLRPC replay/resend/unreplied helpers, message flag accessors from `pack_generic.c`, request wait queues, pinger-driven reconnects, and administrative interfaces such as lctl activation/deactivation.
+
+Risks/test signals: replay ordering and cursor handling are correctness-critical for recovery after reconnects. Races with repeated manual recovery, committed-list cleanup, and not-connected failures can cause duplicate or skipped requests if flags/lists are mishandled. Tests should cover committed-list replay before normal replay, resend replay of the last transno, unreplied-list repair, sending-list resend rules, delayed wakeups, import deactivation invalidation, activation wait timeout, new UUID connection priority, and recovery-state predicates with and without disconnect counted as recovery.

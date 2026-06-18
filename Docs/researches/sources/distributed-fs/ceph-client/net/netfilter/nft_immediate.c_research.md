@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_immediate.c
+
+Purpose: implements the nftables `immediate` expression that copies an immediate value or verdict into a destination register, including jump/goto chain binding and offload of simple accept/drop verdicts.
+
+Important APIs/types/functions: `struct nft_immediate_expr` is used from nf_tables core. `nft_immediate_eval()` calls `nft_data_copy()`. `nft_immediate_init()` parses `NFTA_IMMEDIATE_DATA`, determines value vs verdict by destination register, validates register storage, and binds jump/goto chains. Lifecycle functions `activate`, `deactivate`, and `destroy` handle bound-chain transaction semantics.
+
+Control flow: init acquires data and optional chain binding. Activate holds data references and, for bound chains, activates all expressions in the target chain and clears pending deletion state. Deactivate handles prepare-error, prepare, commit, and abort-style phases differently: unbinds or deactivates bound chains, deletes chain list entries, and decrements use counts where appropriate. Destroy releases bound-chain rules if construction failed or a bound chain was deleted. Validate recurses into jump/goto chains with level tracking. Offload maps immediate verdict accept/drop to flow actions or records register constants for later offload expressions.
+
+State/persistence: expression state is immediate data, register length, and references to chains/data objects. Dependencies include nf_tables transaction phases, chain binding, data init/release/hold, rule activation, and flow offload context. Risks include chain use count imbalance, recursion validation bugs, incorrect data release on commit vs rollback, and offload accepting only simple verdicts. Test signals: immediate scalar values, verdict accept/drop, jump/goto to bound chains, transaction rollback at each phase, recursive chain validation, delete bound chain cleanup, dump round trip, and offload register propagation.

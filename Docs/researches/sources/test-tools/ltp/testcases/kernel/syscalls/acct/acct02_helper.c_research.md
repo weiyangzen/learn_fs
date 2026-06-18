@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/acct/acct02_helper.c
+
+Purpose: tiny helper program used only by `acct02` to generate a predictable process accounting record. It sleeps for one second and exits with status 128. Important APIs are `sleep` and `return` from `main`; there is no LTP harness in this file. State is only process runtime and exit status. Dependencies are that the helper is built and executable in the test environment. Risks are minimal; if it is missing or renamed, `acct02` cannot find an accounting entry with command name `acct02_helper`. Test signal is indirect through `acct02` parsing its accounting record.

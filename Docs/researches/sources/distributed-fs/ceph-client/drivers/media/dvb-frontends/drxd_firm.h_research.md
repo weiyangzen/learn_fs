@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/dvb-frontends/drxd_firm.h
+
+Purpose: Declares the constants and firmware table symbols shared by `drxd_hard.c` and `drxd_firm.c`. It is the central firmware-contract header for driver version encoding, host-interface timing, DVB-T bandwidth constants, equalizer TPS power presets, AGC defaults, oscillator scan parameters, diversity impulse-response lengths, and all exported initialization table arrays.
+
+Important APIs/types/functions: Version macros `VERSION_MAJOR`, `VERSION_MINOR`, and `VERSION_PATCH` are packed by `DRXD_init()` into `SC_RA_RAM_DRIVER_VERSION__AX`. `DRXD_MAX_RETRIES` bounds HI/SC command polling; `HI_I2C_DELAY` and `HI_I2C_BRIDGE_DELAY` seed host-interface timing. `EQ_TD_TPS_PWR_*` constants tune A2 equalizer TPS power per constellation/hierarchy. `DRXD_DEF_AG_PWD_*`, `DRXD_DEF_AG_AGC_SIO`, and `DRXD_FE_CTRL_MAX` constrain AGC setup. Bandwidth constants encode 8/7/6 MHz values used for IF-increment and system-clock calculations. Extern declarations expose all `DRXD_*` firmware tables and microcode-length symbols.
+
+Control flow: This header has no executable flow. It influences initialization and tuning through constants read by `CDRXD()`, `DRXD_init()`, `HI_Command()`, `SC_WaitForReady()`, `CorrectSysClockDeviation()`, and `DRX_Start()` in `drxd_hard.c`. The extern table declarations let `SetDeviceTypeId()` bind `struct drxd_state` table pointers to chip-specific arrays from `drxd_firm.c`.
+
+State and persistence: The header defines persistent driver identity, default hardware-control register values, and table symbol names. It does not own mutable state. The `DRXD_OSCDEV_*` constants participate in oscillator-deviation tracking by enabling/disabling SC sample-rate scans; the driver may persist measured oscillator deviation through the board callback declared in `drxd.h`.
+
+Dependencies/integration: Includes Linux `types.h` and `drxd_map_firm.h`. It bridges generated/curated register-map constants with the hard driver and static firmware-table file. Any change to an extern declaration must match the actual table object and every pointer assignment in `SetDeviceTypeId()`.
+
+Risks and test signals: Changing retry limits, timing delays, bandwidth constants, or version encoding can alter probe latency, I2C bridge reliability, lock acquisition, and reported firmware/driver compatibility. Validate command timeout behavior, oscillator correction, 6/7/8 MHz tuning, A2 hierarchy/constellation presets, and both consumer/pro AGC defaults. The `DRXD_A2_microcode` and `DRXD_B1_microcode` declarations lack definitions in the read source set and appear stale relative to external firmware loading; avoid adding uses without confirming link coverage.

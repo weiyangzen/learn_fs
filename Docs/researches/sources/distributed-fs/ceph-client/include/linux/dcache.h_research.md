@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/dcache.h
+
+Purpose: Defines the VFS dentry cache data structures and public dcache helpers used by filesystems, path lookup, mount handling, aliasing, pruning, and overlay/stacked filesystem interactions.
+
+Important APIs, types, and functions: Core types are `struct qstr`, `union shortname_store`, `struct dentry`, `struct dentry_operations`, `enum dentry_flags`, and `struct name_snapshot`. Extern APIs allocate and attach dentries (`d_alloc*`, `d_instantiate*`, `d_add`, `d_splice_alias`, `d_obtain_alias/root`), hash/unhash and move them (`d_rehash`, `d_drop`, `d_move`, `d_exchange`), search aliases/lookups, shrink/prune caches, create roots/tmpfiles, build paths, and snapshot names. Inline helpers cover refcounts (`dget`, `dget_dlock`, `dput`), hashed/unlinked state, lookup completion, mount/managed flags, type checks, inode access, real/backing inode lookup, and child/sibling iteration.
+
+Control flow: Filesystem lookup code allocates or finds a dentry keyed by parent and `qstr`, validates via optional `dentry_operations`, instantiates positive or negative results, and later pathwalk uses flags and operations for revalidation, automount, transit management, and real-dentry resolution. Refcounting, RCU lookup fields, lockref, seqlock, rename lock, hash lists, LRU lists, alias lists, and child lists coordinate lookup, rename, prune, and reclaim.
+
+State and persistence: Dentries are an in-memory cache only. They persist while referenced, hashed, pinned as roots/mountpoints, or protected by filesystem flags. Names may be inline or external; positive dentries alias inodes while negative dentries cache misses. Filesystems may attach `d_fsdata` and callbacks but on-disk persistence remains with inode/filesystem code.
+
+Dependencies and integration points: Depends on locks, RCU, hlist/list, string hashing, wait queues, lockref, inodes, superblocks, files, paths, and mounts. It is central to VFS path resolution, NFS export reconnects, overlay real inode handling, fsnotify parent watch flags, tmpfiles, and shrinker pressure.
+
+Risks and test signals: Risks include incorrect refcount use on zero-count dentries, RCU lookup races, mis-set entry type flags, stale negative dentries, aliasing bugs for exportable filesystems, rename/mountpoint races, and misuse of `d_backing_inode()` by normal filesystems. Test parallel lookup and rename, negative-to-positive transitions, shrink under pressure, mountpoint/autofs handling, overlay `d_real()`, NFS disconnected dentries, encrypted no-key names, tmpfile creation, and lockdep on nested dentry locks.

@@ -1,0 +1,7 @@
+# sources/cloud-native/cri-o/server/container_checkpoint.go
+
+This file implements the CRI `CheckpointContainer` endpoint. It gates checkpointing on config support, validates the container exists, constructs checkpoint metadata and options, delegates to the server's lower-level checkpoint implementation, and returns an empty CRI response on success.
+
+The key API is `(*Server).CheckpointContainer`. Control flow first checks `s.config.CheckpointRestore()` and returns `"checkpoint/restore support not available"` if disabled. It then resolves the container by short ID, returning gRPC NotFound status on failure. It logs the operation, creates `metadata.ContainerConfig{ID: req.GetContainerId()}`, creates `lib.ContainerCheckpointOptions{TargetFile: req.GetLocation(), KeepRunning: true}`, calls `s.ContainerCheckpoint`, logs success, and returns `CheckpointContainerResponse`.
+
+State/persistence is delegated to checkpoint creation: the target file from the request may be written by lower layers, and `KeepRunning` preserves the running container for forensic use. Dependencies include checkpointctl metadata, CRI API types, gRPC status codes, CRI-O internal lib checkpoint options, and logging. Integration points are kubelet/CRI checkpoint API, CRIU/checkpointctl, and server config. Risks include keeping containers running by default, limited request validation in this wrapper, and lower-layer errors passing through without CRI status normalization. Tests cover enabled success, invalid container ID, and disabled checkpoint/restore behavior.

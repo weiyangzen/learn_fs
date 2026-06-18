@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/isp_v4_1_1.c
+
+Purpose: implements ISP 4.1.1 hardware glue for amdgpu, including firmware declaration, ACPI platform discovery, MFD child creation, generic PM domain wiring, GPIO lookup tables for the OMNI5C10 camera path, and suspend/resume/fini hooks exposed through `struct isp_funcs`.
+
+Important APIs and functions: `isp_v4_1_1_set_isp_funcs()` installs the static `isp_v4_1_1_funcs`; `isp_v4_1_1_hw_init()` is the main setup path; `isp_v4_1_1_hw_fini()` removes MFD devices and frees allocations; `isp_v4_1_1_hw_suspend()` and `_resume()` force runtime PM on children. PM-domain callbacks `isp_poweron()`, `isp_poweroff()`, and `isp_set_performance_state()` call SMU/DPM helpers to ungate/gate the ISP block and set high ISP XCLK/ICLK.
+
+Control flow and state: init validates MMIO size, locates the ACPI ISP4 device, conditionally installs GPIO lookup tables for HID `OMNI5C10`, initializes `isp->ispgpd`, allocates three `mfd_cell` entries, and creates resources for ISP registers, PHY0, IRQ mappings, I2C, and GPIO. It first hotplugs capture and I2C children, adds MFD children of type `mfd_device` into the PM domain, then hotplugs the pinctrl/GPIO child outside the domain. Persistent driver state lives in `struct amdgpu_isp` allocations (`isp_cell`, `isp_res`, `isp_i2c_res`, `isp_gpio_res`, `isp_pdata`) and the generic PM domain object.
+
+Dependencies and integration: depends on Linux MFD, GPIO lookup, PM runtime/genpd, ACPI camera discovery via `amdgpu_acpi_get_isp4_dev()`, amdgpu IRQ mapping, and SMU DPM power/clock calls. It integrates with child drivers named `amd_isp_capture`, `amd_isp_i2c_designware`, and `amdisp-pinctrl`.
+
+Risks and test signals: init deliberately returns success when no valid ISP platform is detected, so tests should distinguish absent ISP from failed ISP setup. Failure cleanup frees allocations but does not call `pm_genpd_remove()` after `pm_genpd_init()` failure paths that occur later. The GPIO lookup tables are global side effects and are only added, not removed in fini. Test signals include successful ACPI discovery, correct IRQ mappings for all eight WPT sources, MFD child probe ordering, runtime PM suspend/resume of children, high performance state clock programming, and teardown without leaked child devices.

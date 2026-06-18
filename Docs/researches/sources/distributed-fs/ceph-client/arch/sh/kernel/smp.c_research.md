@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/smp.c
+
+Purpose: implements SuperH SMP boot, CPU hotplug, IPI dispatch, and SMP TLB shootdowns.
+
+Important APIs and control flow: `register_smp_ops()` installs platform SMP operations. Boot prep initializes MM context and calls `mp_ops->prepare_cpus()`. `smp_prepare_boot_cpu()` maps logical/physical CPU0 and marks it online/possible. Hotplug paths disable CPUs, migrate IRQs, flush cache/TLB, clear mm CPU masks, and mark dead state. `start_secondary()` enables MMU, attaches `init_mm`, initializes traps, notifies CPU start, calibrates delay, stores CPU info, marks online, and enters idle. `__cpu_up()` patches `stack_start`, flushes icache, calls `mp_ops->start_cpu()`, and waits for online. IPI helpers send reschedule, call-function, single-call, and timer messages; `smp_message_recv()` dispatches them. MMU TLB flush functions use local flushes, context invalidation, or synchronous IPIs based on mm sharing.
+
+State, dependencies, and risks: state includes CPU maps, `mp_ops`, per-CPU `cpu_state`, `cpu_data`, `stack_start`, and mm context ASIDs. Dependencies include platform SMP ops, head startup code, IRQ migration, clockevents broadcast, cache/TLB local primitives, and generic SMP call functions. Risks include start timeout, missing `mp_ops`, CPU0 hotplug prohibition, TLB shootdown races, and stack_start shared data requiring icache/wmb ordering. Test signals are SMP boot, CPU hotplug, IPI stress, TLB shootdown under multithreaded mmap/munmap, and clockevent broadcast.

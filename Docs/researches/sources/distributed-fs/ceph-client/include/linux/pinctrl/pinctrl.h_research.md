@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/pinctrl/pinctrl.h
+
+Purpose: declares the core provider-side pinctrl interface: pin and group descriptors, GPIO range mapping, controller operations, registration APIs, and function metadata.
+
+Important APIs and types: `struct pingroup` and `PINCTRL_PINGROUP()` describe named pin groups. `struct pinctrl_pin_desc`, `PINCTRL_PIN()`, and `PINCTRL_PIN_ANON()` describe controller pins. `struct pinctrl_gpio_range` maps GPIO number ranges to controller pin ranges. `struct pinctrl_ops` exposes group enumeration, group pin lookup, debug display, and DT map parsing/freeing. `struct pinctrl_desc` ties together pins, `pctlops`, `pmxops`, `confops`, module owner, optional generic pinconf custom params/items, and `link_consumers`. Registration APIs include `pinctrl_register_and_init()`, `pinctrl_enable()`, legacy `pinctrl_register()`, `pinctrl_unregister()`, and devm variants. GPIO range and lookup helpers include `pinctrl_add_gpio_range()`, `pinctrl_add_gpio_ranges()`, `pinctrl_remove_gpio_range()`, `pinctrl_find_and_add_gpio_range()`, `pinctrl_find_gpio_range_from_pin()`, and `pinctrl_get_group_pins()`. `struct pinfunction`, `PINCTRL_PINFUNCTION()`, and `PINCTRL_GPIO_PINFUNCTION()` describe selectable mux functions.
+
+Control flow: a controller driver builds a `pinctrl_desc`, registers and initializes a `pinctrl_dev`, adds GPIO ranges if needed, then enables the device. Pinctrl core uses `pctlops` to enumerate groups, resolve firmware mappings through `dt_node_to_map()`, map GPIO requests to pin numbers, and expose debugfs. Function metadata is consumed with `pinmux_ops` to select mux functions over groups.
+
+State and persistence: this header defines provider descriptors and callback contracts; runtime state is in pinctrl core (`pinctrl_dev`, maps, GPIO ranges, device links) and in hardware registers programmed by controller drivers. `link_consumers` influences suspend/resume ordering but no durable data is stored here.
+
+Dependencies and integration points: depends on bits, types, device model, OF, GPIO chips, modules, seq files, pinmux, and pinconf. It is the shared contract among pinctrl providers, GPIO controllers, Device Tree parsers, debugfs, module refcounting, and PM dependency ordering.
+
+Risks and test signals: risks include incorrect group/pin arrays, GPIO range off-by-one errors, callbacks returning pointers with insufficient lifetime, missing `dt_free_map()`, using legacy registration paths incorrectly, and suspend ordering bugs when consumer links are absent. Test controller registration/unregistration, devm cleanup, group lookup, GPIO-to-pin mapping, DT parsing/freeing, debugfs reads, OF-disabled builds, and suspend/resume with pinctrl consumers.

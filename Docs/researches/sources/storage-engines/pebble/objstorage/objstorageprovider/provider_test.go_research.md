@@ -1,0 +1,11 @@
+# sources/storage-engines/pebble/objstorage/objstorageprovider/provider_test.go
+
+Purpose: This file is the high-level behavioral test suite for `objstorageprovider.Provider`, especially local objects, remote/shared objects, cold-tier blobs, readahead modes, remote backings, attach flows, not-exist handling, and parallel sync/crash behavior. The central test, `TestProvider`, is data-driven over `testdata/provider` and exercises provider open/close, create, read, remove, list, local link/copy, save/close remote backing handles, and attach.
+
+Important APIs and helpers: Tests use `DefaultSettings`, `Open`, `Provider.Create`, `OpenForReading`, `Remove`, `List`, `Lookup`, `RemoteObjectBacking`, `AttachRemoteObjects`, `SetCreatorID`, `UsePreallocatedReadHandle`, and remote test stores created with `remote.NewInMem`, `remote.WithLogging`, and `remote.MakeSimpleFactory`. Helper functions `genData`, `checkData`, and `xor` produce deterministic byte patterns while tolerating invariant builds that mangle write buffers.
+
+Control flow and state: The data-driven harness keeps multiple providers indexed by directory, a current provider, stored remote backings, and live backing handles. Opening with a creator ID enables remote shared storage and ref checking. Reads may configure speculative or informed readahead and exercise either pooled or preallocated read handles. `TestParallelSync` creates/removes many objects while concurrent goroutines call `Sync`, then crash-clones local storage to check persisted objects.
+
+Persistence and integration: These tests are the broadest signal that local directory metadata, remote object catalog state, ref markers, remote locators, and provider metadata survive close/reopen. They also cover external custom object names and multi-locator attachment between providers.
+
+Risks and test signals: The suite is sensitive to log ordering and remote ref-marker semantics. It intentionally enables ref checking regardless of build tags so shared object tests do not depend on invariant builds. It covers missing local/remote underlying files via `Provider.IsNotExistError`, and validates crash durability for local sync, but shared crash simulation is explicitly limited.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/android/binder/freeze.rs
+
+Purpose: implements Binder freeze notification support for the Rust Binder driver. It lets one process register interest in freeze-state changes for a remote binder node, receive `BR_FROZEN_BINDER`, acknowledge notifications with `BC_FREEZE_NOTIFICATION_DONE`, and clear listeners with `BC_CLEAR_FREEZE_NOTIFICATION`.
+
+Important APIs/types/functions: `FreezeCookie` is the ordered key for listener lookup. `FreezeListener` records the watched `Node`, cookie, last reported frozen state, pending/clearing flags, and duplicate listener counts. `FreezeMessage` is a `DeliverToRead` work item that writes freeze or clear-complete replies. `Process::request_freeze_notif`, `freeze_notif_done`, `clear_freeze_notif`, `prepare_freeze_messages`, and `find_freeze_recipients` are the main entry points. `FreezeMessages::send_messages` batches cross-process work delivery.
+
+Control flow: registration reads a `BinderHandleCookie`, validates the handle, reserves an RBTree node and message allocation, adds the listening process to the target node's freeze list, installs or updates the cookie entry, and queues an initial `FreezeMessage`. Message delivery checks duplicate-clear counters first, suppresses duplicate frozen states, marks notifications pending, and emits either `BR_FROZEN_BINDER` with `BinderFrozenStateInfo` or `BR_CLEAR_FREEZE_NOTIFICATION_DONE`. Freeze completion either drains pending duplicates or queues another message when the clear state or frozen state changed while userspace was processing the previous notification.
+
+State and persistence: listener state is held in `ProcessNodeRefs.freeze_listeners`, per-handle cookies live in `NodeRefInfo.freeze`, and target nodes keep an owner-lock-protected `freeze_list` of listening processes. This is volatile per-open Binder fd state, cleaned on process exit by `FreezeListener::on_process_exit` and process release.
+
+Dependencies and integration points: depends on `Process`, `Node`, `Thread`, Binder UAPI structs/constants, kernel `RBTree`, `ListArc`, `UniqueArc`, and the shared `DeliverToRead` queueing model. `process.rs` invokes `prepare_freeze_messages` during `BINDER_FREEZE` transitions and `Node` supplies add/remove/list APIs.
+
+Risks: duplicate cookie handling is subtle because userspace can clear and recreate a listener before acknowledgements arrive. Lock ordering crosses `node_refs` mutex and node owner spinlocks; new code must avoid adding reverse acquisitions. Allocation failures are deliberately pushed before state mutation during registration, but later notification batching can race with listener removal and must tolerate dropped notifications.
+
+Test signals: exercise request, duplicate request, clear, done-before-clear, clear-before-done, process-exit cleanup, and freeze/unfreeze transitions across multiple binder contexts. Debug logs should not show invalid-cookie warnings in valid flows, and userspace should receive at most one state change until it sends the corresponding done command.

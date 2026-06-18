@@ -1,0 +1,9 @@
+# sources/control-plane/rook/pkg/daemon/ceph/client/mirror_health.go
+
+Purpose: periodically reads RBD mirroring health/status and writes it into CephBlockPool or CephBlockPoolRadosNamespace custom-resource status fields.
+
+Important APIs/types: `mirrorChecker` stores command context, interval, controller-runtime client, cluster info, object namespaced name, monitored pool spec, and target object type. `NewMirrorChecker()` configures the checker and respects `monitoringSpec.StatusCheck.Mirror.Interval`. `CheckMirroring()` runs an immediate check and then repeats on a timer until context cancellation. `CheckMirroringHealth()` reads mirror status, mirror info, and optional snapshot schedule status. `UpdateStatusMirroring()`, `updatePoolStatusMirroring()`, `updateRadosNamespaceStatusMirroring()`, and `toCustomResourceStatus()` implement CR status updates.
+
+Control flow and persistence: the checker persists status by calling `reporting.UpdateStatus()` on Kubernetes API objects. Pool status updates fetch the pool and initialize status if nil. Rados namespace status updates use `RetryOnConflict`, fetch the namespace and parent pool, and clear mirroring status if parent pool status checks are disabled. `toCustomResourceStatus()` carries forward existing `LastChanged`, sets `LastChecked` when fresh data exists, and always records detail strings, usually errors.
+
+Dependencies and integration: depends on `mirror.go` query functions, controller-runtime client, Kubernetes API errors, retry utilities, Rook reporting helpers, and ceph CRD status types. Risks include `CheckMirroringHealth()` continuing after errors and returning nil, possible nil `mirrorInfo` use when `mirrorStatus` is non-nil but info failed, timer-based loop using `time.After` each iteration, and status freshness semantics around empty snapshot schedules. Tests cover `toCustomResourceStatus()` only; Kubernetes update paths and error cases are untested.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/xrootd/src/XrdCl/XrdClChannel.cc
+
+Purpose: implements `Channel`, the client-side connection abstraction tying a URL, transport handler, stream, poller, task manager, and job manager together.
+
+Important APIs/types: internal `TickGeneratorTask`, `Channel` constructor/destructor, `Send`, `Tick`, `Finalize`, `ForceDisconnect`, session-scoped force disconnect, `ForceReconnect`, `NbConnectedStrm`, `SetOnDataConnectHandler`, `CanCollapse`, `DecFileInstCnt`, `QueryTransport`, event handler registration/removal, and `SetSelf`.
+
+Control flow/state: construction initializes transport channel data, creates/configures a `Stream`, and registers a periodic tick task at `TimeoutResolution`. Destruction invalidates the tick task, destroys the stream, and finalizes transport channel data. Most methods forward to `Stream` or `TransportHandler`, making `Channel` an orchestration/lifetime boundary. Persistent runtime state includes `pChannelData`, `pStream`, task registration, and a self shared pointer passed to stream. Dependencies include stream, transport, poller/task/job managers, redirector registry, and defaults. Risks: tick task lifetime races, force-disconnect session filtering, query routing split at ID 2000, and self-reference management. Test signals: construction/destruction task invalidation, send forwarding, timeout ticks, forced reconnect/disconnect, query routing, and event handler forwarding.

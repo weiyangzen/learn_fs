@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/io_trapped.c
+
+Purpose: implements trapped I/O regions where accesses to specially mapped pages fault and are emulated against real I/O or memory resources.
+
+Important APIs and control flow: `register_trapped_io()` validates page-aligned descriptors, checks that resources are all IO or all MEM, maps descriptor pages with `PAGE_NONE`, prints overrides, sets magic, and links into `trapped_io` or `trapped_mem`. `match_trapped_io_handler()` maps resource offsets to virtual trap pages. `lookup_tiop()` walks kernel page tables to identify the owning descriptor for a faulting address. `from_device()` and `to_device()` emulate reads/writes through `copy_word()` using minimum bus width. `handle_trapped_io()` rejects disabled/nonmatching/user faults, reads the faulting instruction, and invokes `handle_unaligned_access()` with custom memory accessors.
+
+State, dependencies, and risks: persistent state is trapped descriptor lists, `trapped_lock`, magic fields, and the `noiotrap` boot option. Dependencies include VM page-table layout, unaligned access emulation, raw I/O accessors, resource flags, and optional I/O-port/IOMEM configs. Risks include fixed `TRAPPED_PAGES_MAX`, exact resource-start matching, page-table assumptions, and emulation bugs for unsupported instruction widths. Test signals are board drivers using trapped I/O, fault emulation on read/write widths, `noiotrap`, and invalid descriptor rejection.

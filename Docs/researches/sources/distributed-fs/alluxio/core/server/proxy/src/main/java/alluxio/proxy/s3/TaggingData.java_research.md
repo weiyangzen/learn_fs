@@ -1,0 +1,9 @@
+# sources/distributed-fs/alluxio/core/server/proxy/src/main/java/alluxio/proxy/s3/TaggingData.java
+
+Purpose: `TaggingData` is the Jackson XML model for S3 bucket/object tagging payloads and the serialization format stored in object xattrs. It represents `<Tagging><TagSet><Tag><Key>...` documents while maintaining a transient map view for efficient lookup and mutation.
+
+Important APIs/types are `deserialize(byte[])`, `serialize(TaggingData)`, `getTagMap`, `addTags`, `clear`, and private nested `TagSet`/`TagObject` XML POJOs. Control flow during construction or XML unmarshalling runs `setTagSet`, normalizes null tag sets to an empty `TagSet`, validates constraints, and repopulates the transient map from the XML list. `addTags` updates both list and map, overwriting duplicate keys only for programmatic additions; XML duplicates are rejected during validation.
+
+State and persistence are XML bytes produced by a static `XmlMapper`, wrapped in protobuf `ByteString` by `serialize`, and later stored by `S3RestUtils.populateTaggingInXAttr` under the tagging xattr key. Validation depends on the static configuration snapshot `PROXY_S3_TAGGING_RESTRICTIONS_ENABLED`: when enabled it enforces at most 10 tags, key length <= 128, value length <= 256, and no duplicate keys. All validation failures are wrapped in `IllegalArgumentException` with an `S3Exception` cause to match Jersey/Jackson exception paths.
+
+Dependencies include Alluxio configuration, `S3Exception`/`S3ErrorCode`, Jackson XML annotations, and protobuf. Integration is with Put/Get object and bucket tagging handlers via xattrs. Risks include the static restriction flag not reflecting runtime configuration changes, no character-set validation beyond length/duplicate rules, and `addTag` doing list scans for each inserted tag. Test signals are indirect through S3 handler tests and tag xattr flows; no direct test in this subset covers XML duplicate or length validation.

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fsconfig.c
+
+Decoder for `fsconfig`. It prints filesystem context fd, command from `fsconfig_cmds`, key string, value string or address depending on command, and auxiliary integer. State is syscall arguments only. Dependencies are `<linux/mount.h>`, key/string printers, fd formatting, and mount API xlat tables. Risks are command-specific value interpretation (`SET_STRING`, `SET_BINARY`, `SET_PATH`, `SET_PATH_EMPTY`, `SET_FD`), null keys/values, and new fsconfig commands. Tests should cover every command class, bad strings, binary pointer printing, fd/path commands, and unknown commands.

@@ -1,0 +1,9 @@
+# sources/object-store/openstack-swift/swift/common/middleware/s3api/controllers/obj.py
+
+Purpose: Implements S3 object GET, HEAD, PUT, DELETE, and copy behavior over Swift object operations.
+
+Important APIs and control flow: `_gen_head_range_resp` synthesizes partial-content headers for HEAD range requests because Swift does not handle Range on HEAD. `GETorHEAD` expands S3 multipart-style ETag conditionals, updates the ETag comparison header to S3 sysmeta, validates versionId and partNumber, checks versioning container state, fetches the Swift object, adjusts non-SLO part-number behavior, strips the body for HEAD, maps `x-amz-meta-deleted` to `NoSuchKey`, and honors response header overrides such as `response-content-type`. `PUT` enforces object-name length, rejects copy-source-range with copy-source on regular object copy, checks copy source, supplies default content-type, performs the Swift request, appends S3 copy XML, removes user metadata from copy responses, and returns 200. `DELETE` handles versioning availability, builds multipart-manifest delete queries, drains synchronous SLO deletes, resets request input for possible follow-up operations, restores older versions when deleting a null delete marker, and treats missing keys as successful after bucket existence validation.
+
+State, dependencies, and integration: Persistent state is Swift object data, SLO manifests, object versioning containers, and S3 ETag sysmeta. It depends on request helpers, versioning feature registration, timestamps, and SLO delete helpers.
+
+Risks and test signals: Conditional ETag compatibility and version delete semantics are subtle. Tests should cover HEAD ranges, partNumber for SLO and non-SLO objects, versionId disabled/enabled paths, response header overrides, object copy metadata stripping, copy-source invalid headers, multipart delete draining, restore-on-delete, and NoSuchKey versus NoSuchBucket behavior.

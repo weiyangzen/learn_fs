@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v7.h
+
+This header defines the QMP V7 USB3 PCS offsets for the same compact control set as V6: power-state config, autonomous mode control, LFPS RX termination IRQ clear, LFPS high-count value, RXEQ DFE time, and receiver-detect delay low/high registers. It has no runtime behavior, persistence, or direct dependencies beyond the include guard and consumer drivers. Integration is through V7 USB QMP PHY tables. Risks are variant confusion with V6 because the exported names and offsets currently align closely, making copy-paste changes easy to miss when hardware diverges. Test signals include USB3 bring-up, LFPS wake, RXEQ training, receiver detection, and suspend/resume on V7 PHYs.

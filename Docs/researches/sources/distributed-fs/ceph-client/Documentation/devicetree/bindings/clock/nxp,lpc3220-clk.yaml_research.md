@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/clock/nxp,lpc3220-clk.yaml
+
+Purpose: YAML Devicetree schema for `NXP LPC32xx Clock Controller`. It documents and validates nodes with compatibles `nxp,lpc3220-clk`. Devicetree binding for the NXP LPC32xx Clock Controller.
+
+Important APIs/types/functions: This file is a schema contract rather than runtime code. Its externally visible API is the accepted `compatible` set (`nxp,lpc3220-clk`), required properties (`compatible`, `reg`, `#clock-cells`, `clocks`, `clock-names`), and provider/consumer ABI described by `compatible` nxp,lpc3220-clk, `reg` max 1 item(s), `#clock-cells` 1, `clocks` min 1 item(s), `clock-names` min 1 item(s). clock provider uses `#clock-cells = 1`; MMIO `reg` is max 1 item(s).
+
+Control flow: There is no executable control flow. Validation flows through `dt-schema`: the YAML document is loaded against the core meta-schema, a DTS node's `compatible` selects this binding, `required` enforces mandatory fields, and plain property constraints handle variant-specific shape. The examples exercise nodes such as clock-controller and provide schema smoke coverage.
+
+State and persistence behavior: The binding persists hardware description in DTS and compiled DTB files. Clock, reset, and power-domain identifiers referenced by consumers become stable ABI between board DTS files, dt-binding headers, and Linux providers. The schema stores no runtime state; boot-time state appears when the matched driver maps `reg`, registers providers, and applies any parent clock, assigned-clock, reset, or power-domain relationships encoded in the node.
+
+Dependencies and integration points: Depends on core Devicetree meta-schema only, with driver/header coupling implied by compatible strings. Integration is primarily with NXP clock and block-controller drivers expose clock/reset/power-domain outputs to i.MX or LPC device nodes. Downstream device nodes consume the exported resources through phandles, so `#clock-cells`, `#reset-cells`, `#power-domain-cells`, `clock-names`, and header-defined IDs must remain synchronized with provider drivers and DTS users. Key control inputs modeled here are parent input clocks, named parent inputs.
+
+Risks: The main risk is ABI drift: changing compatible strings, provider cell counts, required properties, or header IDs can break existing DTS files or driver probing. A wrong `reg` range can bind the driver to the wrong MMIO block, and missing parent clocks, power domains, resets, supplies, or assigned-clock data can defer probe or leave hardware ungated. Because this schema forbids unknown properties, new board-specific properties need explicit schema support.
+
+Test signals: Run Devicetree schema checks such as `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/clock/nxp,lpc3220-clk.yaml` and DTS validation for boards using `nxp,lpc3220-clk`. Good signals include clean example validation, no unresolved `$ref` or include paths, provider cell counts matching dt-binding headers, and boot logs showing the matching clock/reset driver registering expected providers without probe deferral.

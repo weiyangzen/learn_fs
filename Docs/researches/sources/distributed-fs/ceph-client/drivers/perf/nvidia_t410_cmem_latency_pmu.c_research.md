@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/perf/nvidia_t410_cmem_latency_pmu.c
+
+Purpose: This driver exposes NVIDIA Tegra410 CPU memory latency counters. It aggregates cycle, read request, and accumulated outstanding request counters across 14 memory-latency PMU instances and three memory controllers per instance.
+
+Important APIs, types, and functions: `struct cmem_lat_pmu` stores PMU registration state, device identity, broadcast and per-instance MMIO bases, associated/active CPU masks, hotplug node, and logical event slots. `read_counter_fn[]` maps event IDs to cycle, request, and accumulated-outstanding read functions. Key functions include event/group validation, event init/add/del/start/stop/read, per-event update, broadcast clock-gate/control writes, PMU enable/disable, sysfs identifier/format/events/cpumask groups, CPU hotplug callbacks, socket CPU association, probe/remove, and module init/exit.
+
+Control flow: Probe requires an ACPI companion, parses ACPI UID as socket, allocates state and name `nvidia_cmem_latency_pmu_%u`, fills perf callbacks, maps 14 instance resources plus one broadcast resource, associates CPUs by NUMA node, adds a hotplug instance, clears hardware counters by enabling clock gate, writing clear, and disabling clock gate, then registers the PMU. Event init validates type, event number, no sampling/per-process/per-task usage, requested CPU in associated mask, active CPU availability, and group schedulability. PMU enable enables clock gate and counters if any logical event is active. PMU disable disables counters, updates each active event before clearing, clears hardware, and disables clock gate.
+
+State and persistence: Active logical events are tracked in a 32-bit bitmap and pointer array. Hardware counters reset on broadcast clear. Previous counts are stored in perf event state and reset to zero after PMU disable because hardware starts from zero on re-enable. No persistent storage exists.
+
+Dependencies and integration points: Supports ACPI ID `NVDA2021`, platform resources, perf PMU core, dynamic CPU hotplug, ACPI UID, and CPU NUMA node association. Sysfs exposes `events/cycles`, `rd_req`, `rd_cum_outs`, `format/event`, `identifier`, `cpumask`, and `associated_cpus`.
+
+Risks: `cmem_lat_pmu_event_update()` returns immediately if `PERF_HES_STOPPED` is set. `cmem_lat_pmu_disable()` calls update after `cmem_lat_pmu_stop()` may have set stopped for individual events, so some disable-time accounting can be skipped depending on perf callback ordering. Overflow status only logs warnings and does not compensate. Reads sum many registers without locking against hardware clear/disable beyond perf PMU serialization. CPU association assumes socket equals NUMA node.
+
+Test signals: Verify ACPI enumeration creates the socket-specific PMU and maps all 15 resources. Run each event and compare request/outstanding movement under memory load. Exercise PMU enable/disable cycles and confirm counts are not lost. Trigger CPU hotplug on associated CPUs. Check dmesg for overflow warnings under stress.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/shmctl05.c
+
+Purpose: race regression for use-after-free of a SysV shm file via `remap_file_pages()` while a shm ID is removed and reallocated. It uses `tst_fuzzy_sync_pair`, a worker thread repeatedly doing `shmctl(IPC_RMID)` and `shmget()` on key `0xF00F`, and the main side repeatedly attaching and invoking raw `__NR_remap_file_pages` until the ID disappears. State is a rapidly reused SysV shm ID, one mapping, and fuzzy-sync race windows. Dependencies are `remap_file_pages`, `__NR_shmctl`, pthread/fuzzy-sync helpers, and a minimum runtime of 40 seconds. Risks are intentional race non-determinism and syscall availability. Test signal is no crash plus acceptable `EIDRM` or `EINVAL` from remap.

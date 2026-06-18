@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/video/fbdev/geode/gx1fb_core.c -->
+## sources/distributed-fs/ceph-client/drivers/video/fbdev/geode/gx1fb_core.c
+
+Purpose: implements the PCI fbdev core for AMD/Cyrix Geode GX1 systems using the GX1 display controller and CS5530 video device. It owns framebuffer registration, mode validation, memory/register mapping, palette handling, blanking dispatch, module options, and driver bind/unbind.
+
+Important APIs, types, and functions: `gx1_modedb` is the supported mode table up to 1280x1024. `gx1_line_delta()` rounds scanline pitch to 1024, 2048, or 4096 bytes. `gx1fb_check_var()` validates resolution, optional panel bounds, 8/16 bpp formats, and framebuffer capacity. `gx1fb_set_par()` selects pseudo/truecolor visual, programs `fix.line_length`, and calls `par->dc_ops->set_mode()`. `gx1fb_setcolreg()` updates either the software pseudo-palette or the hardware palette through `dc_ops`. `gx1fb_blank()` delegates DPMS behavior to `vid_ops`. `gx1fb_map_video_memory()` enables PCI, maps the CS5530 BAR, maps the GX1 display-controller region, discovers framebuffer size, and maps framebuffer memory. `gx1fb_probe()` wires `gx1_dc_ops` and `cs5530_vid_ops`, selects a mode, clears VRAM, sets hardware state, and registers the framebuffer.
+
+Control flow: module init parses boot/module options and registers a PCI driver unless fb modesetting is disabled. Probe removes conflicting apertures, allocates `fb_info`, fills `geodefb_par`, maps resources, resolves a mode with `fb_find_mode()`, zeroes VRAM, calls check/set, then registers fbdev. Runtime callbacks go from fbdev core to local check/set/palette/blank functions and then into Geode display/video operation tables. Remove unregisters the framebuffer and releases mappings and color map.
+
+State and persistence: persistent driver state lives in `fb_info`, `geodefb_par`, `info->cmap`, and the 16-entry pseudo-palette stored after `geodefb_par` in the framebuffer allocation. Module parameters `mode`, `crt`, and `panel` select initial mode and output policy. No suspend/resume path is implemented here.
+
+Dependencies and integration points: depends on fbdev core, PCI, aperture conflict removal, GX1 helpers from `geodefb.h`/`display_gx1.h`, and CS5530 video operations from `video_cs5530.c`. Hardware dependencies include `gx1_gx_base()`, `gx1_frame_buffer_size()`, `gx1_dc_ops`, and CS5530 display register BAR layout.
+
+Risks: resource cleanup is fragile on partial failures: `gx1fb_map_video_memory()` returns immediately after several request/map failures without undoing prior successful resources, and the error path releases `pci_release_region(pdev, 1)` for `vid_regs` even though `gx1fb_map_video_memory()` requested BAR 0 for video. `gx1fb_check_var()` contains a timing-parameter FIXME, so invalid sync timings may reach hardware. Panel parsing assumes a simple `<x><separator><y>` shape and only reports a warning before falling back to CRT.
+
+Test signals: useful tests are PCI probe/remove under success and forced failure at each mapping step, fb mode setting for every entry in `gx1_modedb`, invalid overlarge modes and bpp values, palette updates in 8 bpp and 16 bpp, DPMS blank modes through `cs5530_vid_ops`, and module/boot option parsing for `mode`, `crt`, and `panel`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/video/fbdev/geode/gx1fb_core.c -->

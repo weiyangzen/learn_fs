@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/vfio_pci_intrs.c
+
+This file implements VFIO PCI interrupt setup and delivery for INTx, MSI, MSI-X, PCIe error, and request channels. It translates VFIO `SET_IRQS` operations into Linux IRQ allocation, eventfd signaling, virqfd mask/unmask hooks, and optional IRQ bypass producers.
+
+Important state is `struct vfio_pci_irq_ctx`, stored in `vdev->ctx` xarray by vector. It contains trigger eventfd, mask/unmask virqfds, IRQ name, masked state, and IRQ bypass producer. Public entry points are `vfio_pci_intx_mask()`, `vfio_pci_intx_unmask()`, and `vfio_pci_set_irqs_ioctl()`. Internal paths cover INTx request/free, MSI/MSI-X vector allocation, vector signal replacement, block setup, disable, and context-trigger setup for error/request eventfds.
+
+Control flow is serialized by `vdev->igate`, with fast IRQ state protected by `vdev->irqlock`. INTx enable allocates vector 0 context, establishes initial mask state from virtual INTx disable, sets `irq_type` before `request_irq()`, and handles PCI 2.3 DisINTx versus IRQ-chip masking. INTx handler masks and signals userspace. MSI/MSI-X enable allocates vectors with memory decode temporarily enabled, then attaches eventfds per vector. Dynamic MSI-X can allocate a Linux IRQ at a vector on demand. Disabling tears down virqfds, IRQs, eventfds, and frees vectors.
+
+State persists while interrupts are configured. `vdev->irq_type` selects the active interrupt family; `ctx->masked` records INTx automask state; eventfds hold userspace notification channels. Error and request triggers are RCU-protected eventfd wrappers managed through the core helper.
+
+Dependencies include Linux IRQ/MSI APIs, eventfd, irq_bypass, virqfd, VFIO IRQ validation in core, PCI memory decode helpers, and config-space INTx virtualization. Risks include eventfd replacement with in-flight IRQs, shared INTx false positives, DisINTx state drifting from virtual state, dynamic MSI-X vector caching after reset, unsupported mask/unmask for MSI/MSI-X, and teardown races during close/reset. Test signals include VFIO `SET_IRQS` permutations, INTx mask/unmask eventfds, MSI-X dynamic allocation, vector replacement, disable by zero-count trigger, AER error signaling, request eventfd loopback, and close while interrupts fire.

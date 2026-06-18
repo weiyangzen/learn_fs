@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/ntb/hw/intel/ntb_hw_gen4.c
+
+Purpose: Implements Intel Gen4/Gen5/Gen6 NTB support for ICX, later SPR-class Gen4 revisions, GNR, and DMR devices under the shared Intel NTB PCI driver.
+
+Important APIs, types, and functions: `gen4_reg`, `gen4_pri_reg`, `gen4_b2b_reg`, and `gen4_sec_xlat` define register views. `get_ppd0()` selects the proper PPD0 offset for Gen4/5/6. `gen4_poll_link()` clears slot DLL status and DB interrupt status, then updates cached link status from MMIO. `gen4_init_dev()` sets errata flags for ICX, decodes topology from PPD1, initializes B2B NTB state, disables link initially, and initializes IRQs. `intel_ntb4_mw_set_trans()` programs xlat/limit and optional base-index registers; `intel_ntb4_link_enable()` programs LTR, snoop control, link control, and PPD link-training; `intel_ntb4_link_disable()` reverses snoop/link state and selects idle LTR; `intel_ntb4_mw_get_align()` reports BAR-size or page alignment depending on errata.
+
+Control flow: Main probe dispatch calls `gen4_init_dev()` after PCI setup. Gen4 init reads topology, sets register views and resources, sets zero-length incoming limits, clears incoming translations, masks doorbells, disables the link, then remaps vectors and allocates IRQs. Link enable ignores requested speed/width, optionally programs active/idle LTR values, sets E2I/I2E snoop bits, clears link-disable, sets PPD link-training, verifies the training bit, and marks `dev_up`.
+
+State and persistence behavior: Shared `intel_ntb_dev` holds cached link status, topology, resource counts, generation register pointers, DB masks, and `dev_up`. Hardware state persists in GEN4 NTB control, link control/status, PPD link-training, LTR registers, IM xlat/limit/base-index, doorbell mask/status, and interrupt vector registers.
+
+Dependencies and integration points: Depends on `linux/log2.h` for `__ilog2_u64`, common Intel helpers, and Gen3 DB helpers/ops for DB semantics. `intel_ntb4_ops` is selected by the main PCI driver for ICX, GNR, and DMR IDs, and reuses Gen3 DB read/clear/peer DB methods plus common SPAD callbacks.
+
+Risks and edge cases: ICX sets `NTB_HWERR_BAR_ALIGN` and `NTB_HWERR_LTR_BAD`, forcing BAR-size alignment and skipping LTR programming; later devices permit page alignment. `get_ppd0()` returns `ULLONG_MAX` for unexpected devices, so callers rely on earlier generation checks. `intel_ntb4_link_enable()` verifies only that the PPD training bit latched, not that the link actually becomes active. `intel_ntb4_mw_set_trans()` computes base index from `size`/`mw_size`; non-power-of-two sizes would be rounded by `__ilog2_u64` if callers pass them despite size_align being 1.
+
+Test signals: Validate ICX and SPR/GNR/DMR topology decoding, link enable/disable transitions, LTR programming/skipping, MW translation alignment differences, base-index readback on ICX, vector remap and link interrupt delivery, Gen3-style DB operations, and debugfs output for cached and live link/error registers.

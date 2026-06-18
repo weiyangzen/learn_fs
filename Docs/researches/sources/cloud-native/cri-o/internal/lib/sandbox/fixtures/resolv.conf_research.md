@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/sandbox/fixtures/resolv.conf
+
+Purpose: expected resolver output fixture for normal DNS server/search/option rendering. It contains a two-entry `search` line, two nameservers, and retry/timeout options. There are no functions or state transitions; the file is static data. It integrates with `ParseDNSOptions` tests as the canonical output for explicit DNS configuration. State is only fixture content plus temporary generated output. Risks are false failures if formatting intentionally changes, such as line ordering or option spacing. Test signal is byte-for-byte comparison in `infra_test.go`.

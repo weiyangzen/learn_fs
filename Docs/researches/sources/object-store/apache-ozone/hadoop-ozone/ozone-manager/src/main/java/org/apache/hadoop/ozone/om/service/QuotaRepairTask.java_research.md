@@ -1,0 +1,17 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/service/QuotaRepairTask.java
+
+Purpose: `QuotaRepairTask` is an asynchronous repair operation that recomputes bucket used-bytes and namespace counts from OM metadata and submits a Ratis `QuotaRepair` request containing only the needed deltas. It can repair all buckets or a supplied list of bucket keys.
+
+Important APIs and types: `repair()` and `repair(List<String>)` start the asynchronous task and return `CompletableFuture<Boolean>`. `getStatus()` exposes the static `RepairStatus` JSON-like status. Internal helpers create an active DB checkpoint, prepare bucket maps, recalculate counts, and submit the final request. `CountPair` stores atomic space and namespace totals; `RepairStatus` records task id, start/finish times, errors, and per-bucket diffs.
+
+Control flow: only one repair may run because `IN_PROGRESS` is a static `AtomicBoolean`. `repairTask()` creates a fixed thread pool sized for three table families and their worker threads, opens an active DB checkpoint via `createActiveDBCheckpoint()`, calls `repairActiveDb()`, builds a `QuotaRepairRequest`, and submits it through Ratis. Cleanup shuts down the executor, removes the temporary checkpoint directory, and clears `IN_PROGRESS`.
+
+Counting algorithm: `prepareAllBucketInfo()` loads selected buckets or all bucket table entries, copies original bucket info, resets mutable used counters, and indexes each bucket by OBS name prefix and FSO volume/bucket object-ID prefix. `repairCount()` initializes count maps for key, file, and directory tables, then scans OBS key table, FSO key table, and directory table concurrently. `recalculateUsages()` batches table key/value rows into an `ArrayBlockingQueue`; worker tasks call `extractCount()`, which derives the first two path components as the bucket prefix, increments namespace by one, and increments space for `OmKeyInfo` values by replicated size. Counts are merged into `OmBucketInfo` objects and converted to delta fields.
+
+State and persistence behavior: the scan is done against a checkpoint metadata manager, avoiding long reads over a mutating active DB. Persistent updates are not local writes; the built `QuotaRepairRequest` goes through `OzoneManagerRatisUtils.submitRequest()`. The request also carries `supportOldQuota` flags for buckets with legacy quota defaults and a volume-level old-quota flag for full repairs.
+
+Dependencies and integration points: the class depends on OM metadata tables, `OmMetadataManagerImpl.createCheckpointMetadataManager`, `DBCheckpoint`, `OmBucketInfo`, `OmKeyInfo`, and protocol `BucketQuotaCount`. It is likely invoked by OM admin commands or internal repair paths rather than as a periodic `BackgroundService`.
+
+Risks: temporary checkpoint cleanup deletes and recreates `temp-repair-quota` under the DB parent directory; any unexpected reuse of that path would be destructive. `executor.shutdown()` assumes the executor was created, which is true after `repairTask()` starts but worth preserving. Interrupt handling in `recalculateUsages()` resets the interrupt flag but does not fail the repair immediately. Prefix parsing assumes OM key path shape `/<volume>/<bucket>/...` for both name and ID forms.
+
+Test signals: `TestQuotaRepairTask` covers full and bucket-scoped repairs. Broader quota tests should validate old-quota compatibility, OBS/FSO mixed counts, directory namespace inclusion, and failure status serialization.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/acpi/acpica/utcopy.c
+
+Purpose: `utcopy.c` translates ACPI objects between internal operand-object form, external `union acpi_object` API form, and deep internal copies. It is central to method return values, user-supplied arguments, packages, references, buffers, strings, and object duplication.
+
+Important APIs/types/functions: External-facing helpers are `acpi_ut_copy_iobject_to_eobject()`, `acpi_ut_copy_eobject_to_iobject()`, and `acpi_ut_copy_iobject_to_iobject()`. Static helpers handle simple object conversion, package-to-package conversion, package tree callbacks, and deep-copy details. Supported simple types include integer, string, buffer, package, local name/reference subsets, processor, and power-resource objects depending on direction.
+
+Control flow: Internal-to-external conversion lays out the top-level `union acpi_object`, package element arrays, and variable data in one caller-provided buffer; package traversal uses `acpi_ut_walk_package_tree()` with callbacks that advance `free_space` and `length`. External-to-internal conversion recursively builds package objects and copies string/buffer contents into new allocations. Internal-to-internal copy creates a destination operand object, copies fixed fields while preserving destination refcount/next-object, then deep-copies strings/buffers, creates new OS mutex/semaphore objects for mutex/event copies, and increments references for reference targets/region handlers.
+
+State and persistence behavior: The file allocates new operand objects, package element arrays, string/buffer data, OS synchronization primitives, and external result buffers. It updates reference counts of referenced internal objects and expects callers to release returned objects with `acpi_ut_remove_reference()`.
+
+Dependencies and integration points: It depends on namespace type lookup, package tree walking, object creation/deletion, interpreter EISA/string utilities, OS mutex/semaphore allocation, allocation macros, and public ACPICA buffer-size logic. It feeds method evaluation, argument conversion, namespace object copying, and public result APIs.
+
+Risks and test signals: High-risk paths include package size/layout accounting, recursive external package conversion depth, null package elements, unsupported reference classes, partially failed deep copies, refcount leaks for references/region handlers, and copying mutex/event OS resources. Tests should round-trip strings/buffers/integers/packages, nested packages, null elements, name references, allocation failure cleanup, internal mutex/event copies, unsupported object type errors, and buffer length matching with `acpi_ut_get_object_size()` callers.

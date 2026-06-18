@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/omapdrm/dss/hdmi5.c
+
+Purpose: Implements the OMAP5/DRA7 HDMI platform driver, DRM bridge, component binding, power sequencing, hotplug IRQ handling, EDID access, and HDMI audio platform integration.
+
+Important APIs/functions: `hdmi5_probe()` allocates `struct omap_hdmi`, parses lane DT data, initializes wrapper/PHY/core blocks, requests the IRQ, gets the `vdda` regulator, enables runtime PM, registers an OMAP DSS output, and adds a component. `hdmi5_bind()` attaches the DSS master, initializes the HDMI PLL, registers `omap-hdmi-audio`, and creates debugfs. Bridge callbacks attach to the next bridge, set mode timings, enable/disable the full HDMI pipeline, and read EDID through `drm_edid_read_custom()`. Audio callbacks track startup/shutdown/config/start/stop and restore audio when display output is enabled.
+
+Control flow: Probe initializes hardware sub-block handles but does not fully power video. Bridge `mode_set` stores the adjusted videomode and programs TV pixel clock. Bridge `atomic_enable` derives HDMI/DVI mode and AVI infoframe from connector state, powers core/regulator/runtime PM, computes and configures the PLL, configures PHY, sets PHY LDOON, configures HDMI5 core and wrapper, enables the DISPC manager, starts wrapper video, enables connect/disconnect IRQs, and optionally restores audio. Disable reverses IRQ, video, manager, PHY, PLL, and core power. EDID reads temporarily power the core if needed and force wrapper no-idle around DDC.
+
+State and persistence: Driver state lives in `struct omap_hdmi`: locks, DSS pointer, output/bridge, wrapper, PHY, core, PLL, runtime/core/display flags, cached HDMI config, audio config, audio platform device, and audio playing/configured flags protected by mutex plus `audio_playing_lock`. No disk persistence exists.
+
+Dependencies/integration: Depends on DRM bridge/atomic/EDID helpers, OMAP DSS manager callbacks, DISPC clock programming, HDMI common wrapper/PHY/PLL/core helpers, runtime PM, regulators, OF graph lane parsing, Linux component framework, and `omap-hdmi-audio`.
+
+Risks and test signals: Failure unwinding in full power-on must leave regulators/runtime PM/PLL/PHY balanced. The IRQ handler handles simultaneous connect/disconnect by forcing RXDET low around PHY LDOON, which needs hardware regression coverage. Audio start can occur before video and is replayed later. Test OMAP5/DRA7 HDMI hotplug, EDID reads when disabled, HDMI versus DVI sinks, interlaced/double-clock modes, audio reconfiguration across modesets, runtime suspend, and error paths for PLL/PHY timeouts.

@@ -1,0 +1,15 @@
+# sources/cloud-native/soci-snapshotter/snapshot/snapshot.go
+
+Purpose: this is the core containerd snapshotter implementation. It extends overlayfs snapshot behavior with remote SOCI lazy mounts, local and parallel pull fallbacks, restart restoration, idmapped mounts, and cleanup of snapshot directories.
+
+Important APIs and types: exported errors distinguish `ErrNoIndex`, `ErrNoZtoc`, `ErrDeferToContainerRuntime`, and `ErrNoNamespace`. `FileSystem` is the backing abstraction with remote `Mount`/`Check`/`Unmount`, local `MountLocal`, parallel `MountParallel`, idmap mount creation, and image cleanup. `SnapshotterConfig` and options configure async remove, min layer size, invalid restart mounts, parallel pull/unpack, and fallback mode. `NewSnapshotter` creates metadata DB, validates d_type support, detects `userxattr`, and restores remote mounts.
+
+Control flow: standard snapshotter methods use containerd `storage.MetaStore` transactions. `Prepare` creates an active snapshot. Without the target snapshot label, it behaves like overlayfs and may set up idmapped parent mounts. With the target label, it records namespace labels, attempts remote mount unless skipped by parallel pull or min layer size, commits successful remote snapshots internally, and returns `ErrAlreadyExists` to signal that the target snapshot is already committed. On `ErrNoIndex`, it either defers to container runtime or uses parallel-pull fallback. On `ErrNoZtoc`, it falls back to local layer materialization. Local or parallel success is committed as a non-remote target. `Mounts` and `View` return bind mounts for single-layer/no-parent cases and overlay mounts for layered cases.
+
+State and persistence: metadata lives in `<root>/metadata.db`; snapshot directories live under `<root>/snapshots/<id>/fs` and optional `work`. Remote snapshots are marked with `containerd.io/snapshot/remote`; SOCI-backed snapshots get source labels including namespace and index presence. `idmapped` is process-local and affects generated parent paths. Async removal leaves directories for later `Cleanup`.
+
+Dependencies and integration points: integrates containerd mount/snapshots/storage/namespaces/snapshotters labels, overlayutils, continuity disk usage, mountinfo, idtools, SOCI `fs/source` labels, and common metrics.
+
+Risks: `Remove` calls `fs.CleanImage` with the manifest digest label after committing metadata removal; if that cleanup fails, the snapshot is already gone. `restoreRemoteSnapshot` force-unmounts any mount under the snapshot root at startup, so incorrect root configuration has high blast radius. Concurrent zTOC or filesystem failures are surfaced through fallback semantics that depend on exact sentinel errors. The `idmapped` map is not persisted, so restart behavior for idmapped derived paths needs care. `allowInvalidMountsOnRestart` can leave unusable committed snapshots that require manual cleanup.
+
+Test signals: `snapshot_test.go` covers remote prepare/commit/overlay behavior, availability checks across remote layer chains, and overlay compatibility. The containerd snapshotter suite is reused for baseline overlay semantics.

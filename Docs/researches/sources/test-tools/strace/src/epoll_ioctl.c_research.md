@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/epoll_ioctl.c
+
+Ioctl subdecoder for epoll file descriptors, currently handling `EPIOCSPARAMS` and `EPIOCGPARAMS` style `struct epoll_params` commands. `print_struct_epoll_params` prints busy-poll fields and reserved values; `epoll_ioctl` chooses entry-only, exit-only, or value-changed formatting based on ioctl direction and syscall success. It depends on `<linux/eventpoll.h>`, `<linux/ioctl.h>`, `umove_or_printaddr`, and generic ioctl return flags. State is only tracee memory and enter/exit status. Risks are kernel-header drift in `struct epoll_params`, nonzero reserved fields, and incorrectly printing output on failed read ioctls. Tests should exercise set/get parameters, bad pointers, failed ioctls, and nonzero reserved data.

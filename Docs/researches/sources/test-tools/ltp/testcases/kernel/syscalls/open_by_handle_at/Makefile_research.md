@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/open_by_handle_at/Makefile
+
+Purpose: generic build leaf for `open_by_handle_at` tests. Important APIs/types/functions: LTP `testcases.mk` and `generic_leaf_target.mk`. Control flow: delegates target discovery/build to standard LTP make infrastructure. State/persistence: standard build artifacts only. Dependencies/integration: pairs with `name_to_handle_at` lapi helpers used by the C files. Risks: no special build flags; runtime capability/filesystem needs are encoded in test metadata. Test signals: successful build produces both open-by-handle tests.

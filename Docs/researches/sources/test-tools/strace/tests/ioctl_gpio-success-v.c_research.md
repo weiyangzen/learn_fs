@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/strace/tests/ioctl_gpio-success-v.c -->
+# sources/test-tools/strace/tests/ioctl_gpio-success-v.c
+
+Purpose: `ioctl_gpio-success-v.c` GPIO v1/v2 ioctl decoder test for chip, line info, handles, events, line values, and v2 config attributes. Wrapper chain: ioctl_gpio-success-v.c -> ioctl_gpio-success.c -> ioctl_gpio.c. Variant effect: VERBOSE expands nested structures, arrays, strings, or long returned buffers; INJECT_RETVAL enables the syscall-injection success path and appends injected return markers.
+
+Important APIs/types/functions: Primary APIs and data surfaces are GPIO_GET_CHIPINFO_IOCTL, GPIO_GET_LINEINFO_IOCTL, GPIO_GET_LINEINFO_WATCH_IOCTL, GPIO_GET_LINEINFO_UNWATCH_IOCTL, GPIO_GET_LINEHANDLE_IOCTL, GPIO_GET_LINEEVENT_IOCTL, GPIOHANDLE_*_IOCTL, GPIO_V2_GET_LINEINFO_IOCTL, GPIO_V2_GET_LINE_IOCTL, GPIO_V2_LINE_*_IOCTL, gpiochip_info, gpioline_info, gpiohandle_request/data/config, gpioevent_request, gpio_v2_line_info/request/values/config/attribute. Local include directives/macros observed in this source are `ioctl_gpio-success.c` and `VERBOSE=1`. Locally visible function entry points include `none in wrapper; inherited main/control flow from included implementation`.
+
+Control flow: optional injection locks on GPIO_GET_CHIPINFO_IOCTL; main prints an unknown GPIO command, then calls focused helpers for each v1 and v2 ioctl. Helpers test NULL, bad pointers, known flags, unknown flags, padding, too-large line/attr counts, output-side fd fields, and value masks. For wrapper sources, preprocessing first applies the listed macros and then compiles the included base body; runtime control flow is therefore inherited from `ioctl_gpio.c` with only the selected xlat, verbosity, injection, pid namespace, or string-length behavior changed.
+
+State and persistence behavior: no persistence; errstr is global, tail-allocated GPIO structs are mutated. VERBOSE expands full 64-line sequences; default mode truncates long sequences. INJECT_RETVAL marks success expectations. The tests intentionally avoid durable state; they rely on deterministic local buffers, tail-page allocation, raw syscall/ioctl return capture, and expected-output printing for the strace test harness.
+
+Dependencies and integration points: tests.h, linux/gpio.h, sys/ioctl.h, XLAT helpers, ioctl-success.sh for injected variants. Integration is through strace's testsuite: the compiled binary prints the expected trace, the shell harness or test runner captures strace output, and reconciliation compares symbolic ioctl/syscall decoder output against these expectations.
+
+Risks: GPIO UAPI v1/v2 evolution, line/attribute max constants, padding display, and xlat/verbose mode splits are fragile. Wrapper files add risk that the include chain, macro value, or test name drifts from the harness entry that invokes it, producing correct C but mismatched expected output.
+
+Test signals: Expected output validates all covered GPIO structs, known/unknown flags, array truncation, padding visibility, output fd fields, and injection suffixes. This file has 3 source lines and 50 bytes; non-empty generated research at the mirrored `Docs/researches/sources/test-tools/strace/tests/ioctl_gpio-success-v.c_research.md` path is the worker-produced signal for this source item.
+<!-- END_FILE_RESEARCH: sources/test-tools/strace/tests/ioctl_gpio-success-v.c -->

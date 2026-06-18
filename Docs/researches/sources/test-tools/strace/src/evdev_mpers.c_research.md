@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/evdev_mpers.c
+
+Mpers-aware decoder for evdev force-feedback structures. It maps the tracee personality's `struct ff_effect` layout into printers for envelopes, trigger/replay, and effect-specific unions (`constant`, `ramp`, `periodic`, `rumble`), exported as `evdev_write_ioctl_mpers` for `EVIOCSFF`. State is only copied tracee memory and current abbreviation mode. Dependencies are `MPERS_DEFS`, `DEF_MPERS_TYPE`, `<linux/input.h>`, and `print_evdev_ff_type` from `evdev.c`. Risks are compat layout drift, union selection by untrusted `type`, and hiding important effect details in abbrev mode. Tests should run native and compat `EVIOCSFF` traces for each supported force-feedback type plus bad pointers.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/util/TestSysInfoLinux.java
+
+Purpose: JUnit coverage for `SysInfoLinux`, using synthetic `/proc` files to verify Linux system-information parsing without depending on the host machine. The test exercises CPU topology, jiffy-based CPU usage, memory/swap accounting, network counters, and disk-sector counters.
+
+Important APIs/types/functions: `FakeLinuxResourceCalculatorPlugin` extends `SysInfoLinux`, overrides `getCurrentTime()` and `readDiskBlockInformation()`, and exposes `advanceTime()` for deterministic CPU samples. Test methods include `parsingProcStatAndCpuFile()`, `parsingProcMemFile()`, `parsingProcMemFile2()`, `parsingProcMemFileWithBadValues()`, `testCoreCounts()`, `parsingProcNetFile()`, and `parsingProcDisksFile()`. Helper `updateStatFile()` rewrites fake `/proc/stat`; `writeFakeCPUInfoFile()` resets cached CPU-info parsing through `setReadCpuInfoFile(false)`.
+
+Control flow: Static initialization creates randomized temp file names under `GenericTestUtils.getTestDir()` and one shared plugin configured with those paths and a fake jiffy length. Each test writes one fake proc file, then calls the public `SysInfoLinux` accessors that trigger parsing or refresh. CPU-usage tests first assert unavailable usage on the initial sample, then advance fake time and increase user jiffies to validate percentage and vcore calculations, including a one-jiffy interval that should not update cached usage.
+
+State and persistence behavior: The shared plugin persists parser cache and fake time across method calls, while each test rewrites its target fake file. `deleteOnExit()` marks temp files for cleanup but does not isolate all static plugin state, so test methods deliberately reset CPU info where needed. Memory tests validate that huge pages and hardware-corrupted memory are deducted from total physical/virtual sizes, and that oversized unsigned-looking free-memory values are treated as zero.
+
+Dependencies and integration points: Depends on Hadoop `SysInfoLinux`, `CpuTimeTracker`, `GenericTestUtils`, JUnit 5, Java `FileWriter`, and Linux `/proc` text formats. It is an integration-style parser contract for the resource calculator used by Hadoop services that report or enforce system resource capacity.
+
+Risks: The fake formats encode specific kernel field ordering, so parser changes must preserve compatibility with both older `Inactive` and newer `Inactive(file)` memory fields. The static plugin may make tests order-sensitive if future cases mutate shared flags without resetting them. Disk tests force a non-default sector size, which is useful but assumes all selected disk rows should use the same overridden block size.
+
+Test signals: Strong signals are exact assertions on processor count/frequency, core deduplication by physical/core id, CPU usage/vcore deltas, memory totals after deductions, network byte summation across non-loopback devices, and disk byte conversion from sector counts.

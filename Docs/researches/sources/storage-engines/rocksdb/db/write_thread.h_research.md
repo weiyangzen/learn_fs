@@ -1,0 +1,9 @@
+# Research: sources/storage-engines/rocksdb/db/write_thread.h
+
+- **Purpose:** Declares the `WriteThread` concurrency coordinator and its per-writer/per-group state model for RocksDB writes.
+- **Important APIs/types/functions:** Defines `State` bit flags, `Writer`, `WriteGroup`, `WriteGroup::Iterator`, and `AdaptationContext`. Public methods cover batch joining, batch/memtable leader entry/exit, parallel memtable launch/completion, unbatched entry/exit, stall begin/end/wait, and `UpdateLastSequence`.
+- **Control flow:** The header documents the lifecycle: writers start in `STATE_INIT`, may become WAL group leaders, memtable leaders, parallel memtable workers/callers, or completed followers. `Writer` exposes callback checks, final-status folding, WAL/memtable eligibility, and lazy wait primitive construction.
+- **State and persistence behavior:** `Writer` carries batch pointers, trace batch, write options, callbacks, WAL/log references, sequence number, status, write-group pointer, queue links, and optional mutex/CV storage. `WriteThread` owns queue heads, last allocated sequence, stall dummy/counters, and immutable option-derived wait/grouping settings.
+- **Dependencies and integration points:** Includes write callbacks, pre/post memtable callbacks, RocksDB options/status/types/write batch, internal formatting, and instrumented mutex support. It is part of the DBImpl write-path contract and not tied to the DB mutex for most operations.
+- **Risks:** Callers must respect documented locking and lifecycle constraints: `StateMutex` is last in lock order, writer stack lifetime must outlive waits, `batch == nullptr` identifies unbatched operations, and callback failures must prevent WAL/memtable writes. Header comments are part of the concurrency contract.
+- **Test signals:** ABI/compile tests catch signature changes; behavioral tests should validate every state transition path and callback/status precedence in `Writer::FinalStatus`.

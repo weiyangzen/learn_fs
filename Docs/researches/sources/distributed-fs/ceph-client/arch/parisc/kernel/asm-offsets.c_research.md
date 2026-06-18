@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/kernel/asm-offsets.c -->
+# sources/distributed-fs/ceph-client/arch/parisc/kernel/asm-offsets.c
+
+Source read size: 290 lines, 15657 bytes.
+
+Purpose: generates assembler constants for PA-RISC C structure offsets and sizes. Important outputs: task/thread offsets, full `pt_regs` register offsets, thread-info flags/preempt count, signal frame sizes, PDC cache offsets, TIF bit positions in PA bit numbering, page-table geometry constants, hugepage alignment size, and PDC result buffer size. Control flow: the build compiles and runs this C file through the kernel offset-generation machinery; `DEFINE()` emits assembly-readable constants consumed by hand-written assembly. State and persistence: generated offsets persist in build artifacts and must match the exact compiled C layouts. Dependencies and integration points: consumed heavily by `entry.S`, signal code, pacache/low-level assembly, and linker scripts. Risks: missing a changed structure field or wrong alignment formula breaks trap/syscall save/restore, signal frames, cache loops, or page-table walking in assembly. Test signals: full architecture build, objdump sanity of generated offsets, boot trap/syscall tests, signal-frame tests, and 32/64-bit/compat build matrix.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/parisc/kernel/asm-offsets.c -->

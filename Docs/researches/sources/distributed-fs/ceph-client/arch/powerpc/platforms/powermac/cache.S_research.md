@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/powermac/cache.S
+
+Purpose: low-level PPC32 PowerMac cache flush/disable routines used for sleep, PMU CPU-frequency changes, and CPU offline paths.
+
+Important APIs and control flow: `flush_disable_caches` returns immediately outside PPC Book3S 32-bit, otherwise dispatches by CPU feature to 745x, 75x/G3/G4 L2, or L1-only code. `flush_disable_75x` disables EE/DR, stops AltiVec streams and DPM, displacement-flushes L1/L2 via ROM or RAM workaround, disables/invalidates L1, disables and invalidates L2 using L2CR sequences that run from L1, restores HID0 and MSR. `flush_disable_745x` disables interrupts/data translation, stops prefetch, disables L2 prefetch, performs displacement and `dcbf` flushes, locks/unlocks L1 ways, uses hardware flush for L2 and optional L3, invalidates caches, disables L1 data cache, and restores MSR.
+
+State, dependencies, and risks: state is CPU cache-control SPRs, MSR bits, and cache contents; no C-visible persistent state is kept. Dependencies include CPU feature fixups, HID0/L2CR/L3CR/MSSCR0/LDSTCR semantics, ROM at physical `0xfff00000`, assembler raw instructions, and careful alignment for code that must execute from L1. Risks are CPU-revision errata, data loss if flush ordering is wrong, running with translation disabled, and platform assumption about readable ROM. Test signals are reliable sleep/wake, cpufreq transitions, CPU offline/online, and stress tests detecting no data corruption on G3/G4/745x systems.

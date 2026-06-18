@@ -1,0 +1,11 @@
+# Research: sources/storage-engines/foundationdb/tests/slow/ApiCorrectnessAtomicRestore.toml
+
+- **Purpose:** Slow simulation test specification for `ApiCorrectnessAtomicRestore`. It runs a longer or more exhaustive workload than the fast/rare variants.
+- **Source facts:** 40 lines, 958 bytes, executable=False.
+- **Important APIs/types/functions:** Declarative TOML contract: 1 test block(s), titles ApiCorrectnessTest, workloads ApiCorrectness, AtomicRestore, top-level keys configuration, knobs.
+- **Control flow:** The TestRunner passes this TOML to fdbserver simulation with `-f`. The simulator iterates 1 `[[test]]` block(s) (ApiCorrectnessTest) and schedules each block's workload list (ApiCorrectnessTest:2). Workload ordering, durations, clear-after-test settings, and failure-injection workloads determine the control flow inside simulation.
+- **State and persistence:** The file is declarative and persists no state by itself. Runtime state is created by the simulation engine, including simulated database contents, backup/restore artifacts, restart information, logs, or workload-specific key ranges named by the workloads. Backup-oriented workloads add simulated backup agent and restore state that must survive fault injection long enough for correctness validation.
+- **Dependencies:** Depends on the FoundationDB simulator workload registry for: ApiCorrectness, AtomicRestore. Top-level keys: configuration, knobs. Configuration/test knobs: ApiCorrectnessTest.simBackupAgents='BackupToFile', ApiCorrectnessTest.runSetup=True, ApiCorrectnessTest/AtomicRestore.restoreAfter=50.0.
+- **Integration points:** Integrated by suite location `slow` and consumed by `fdbserver -r simulation -f sources/storage-engines/foundationdb/tests/slow/ApiCorrectnessAtomicRestore.toml` through the Python TestRunner/CTest path.
+- **Risks:** Backup/restore specs depend on simulated backup-agent mode, timing, and range selection; timing drift can mask restore validation failures.
+- **Test signals:** Signals are simulator parse success, workload completion, trace absence/presence of severity 40, and any workload-specific invariants for ApiCorrectness, AtomicRestore. Clear-after-test modes: ApiCorrectnessTest:False. Timeouts: ApiCorrectnessTest:2100.

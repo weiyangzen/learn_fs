@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/gspca/spca561.c
+
+Purpose: implements the Sunplus SPCA561 GSPCA subdriver for several SPCA561 revision 012a and 072a webcams. It exposes Bayer/SPCA561 video modes, revision-specific bridge and sensor initialization, V4L2 image controls, input snapshot-button events, packet parsing, and 072a autogain.
+
+Important APIs and functions: module entry is `module_usb_driver(sd_driver)`, with USB IDs dispatching through `sd_probe` to either `sd_desc_12a` or `sd_desc_72a`. Core hooks are `sd_config`, `sd_init_12a`, `sd_init_72a`, `sd_start_12a`, `sd_start_72a`, `sd_stopN`, `sd_pkt_scan`, `do_autogain`, and revision-specific control initialization. Low-level helpers include `reg_w_val`, `reg_r`, `reg_w_buf`, `i2c_write`, `i2c_read`, `sensor_mapwrite`, and `write_sensor_72a`. Controls include hue, brightness, exposure, gain, contrast, and autogain depending on chip revision.
+
+Control flow: probe reads vendor/product registers to verify communication, marks full-bandwidth needs, selects a mode table by `id->driver_info`, and initializes defaults. The 012a path writes PB100-style maps and starts compression only for 320x240 and above; the 072a path resets the bridge, writes bridge tables, programs sensor I2C tables, sets clock by mode, applies hue/contrast/autogain, and enables streaming. `sd_pkt_scan` treats packet sequence 0 as frame start, emits input `KEY_CAMERA` when the header snapshot bit is set, skips raw Bayer headers, and forwards compressed/raw payloads to GSPCA. `do_autogain` periodically reads color averages on 072a, estimates luma, adjusts sensor gain and exposure, and writes the results over the bridge I2C path.
+
+State and persistence: `struct sd` embeds `gspca_dev`, stores control pointers, 012a exposure byte, chip revision, and an autogain countdown. State is volatile per open device; hardware registers and sensor values are reprogrammed on init/start/resume. No persistent storage is used.
+
+Dependencies and integration points: depends on `gspca.h`, Linux USB control transfers, V4L2 controls, optional input support, GSPCA frame assembly, and SPCA561 private pixel format support. It integrates through `struct sd_desc` callbacks and the GSPCA USB probe/disconnect/PM helpers.
+
+Risks: register scripts are mostly reverse-engineered magic constants and differ by revision. `i2c_write` times out silently without setting `usb_err`, so later code may continue after failed sensor writes. Autogain is only implemented for 072a and depends on fragile average registers. Packet parsing assumes minimum header lengths and manually skips headers; malformed short packets can discard frames. Controls no-op while not streaming, so values may not be applied until start paths explicitly reapply them.
+
+Test signals: build with `CONFIG_USB_GSPCA_SPCA561`, probe all listed USB IDs, verify both 012a and 072a mode tables, stream raw and compressed modes, exercise brightness/hue/exposure/gain/autogain controls, check snapshot-button input events, suspend/resume, and validate frame integrity across short or empty packets.

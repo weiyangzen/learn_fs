@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/bootlinux/tasks/config.yml
+
+This task file selects the kernel config template name used for bootlinux builds. It initializes a search list with `config-kdevops` and `config-{{ target_linux_config }}`, discovers `config-next-*` templates on localhost, version-sorts them, appends the newest linux-next config, optionally runs `make mrproper` for clean non-9P builds, and uses `with_first_found` to set `linux_config` to the basename of the first available config.
+
+Important APIs are `set_fact`, delegated `find`, `community.general.version_sort`, `community.general.make`, and `with_first_found`. Persistent state is limited to optional source-tree cleanup; selected config state is the `linux_config` fact. Integration points are role templates, kernel source directory, build tasks, and `bootlinux_clean_before_build`. Risks include `mrproper` deleting existing build state, linux-next sorting depending on filename shape, and this file selecting but not itself copying the config into `.config`. Test signals should cover missing target-specific config fallback and clean-before-build behavior.

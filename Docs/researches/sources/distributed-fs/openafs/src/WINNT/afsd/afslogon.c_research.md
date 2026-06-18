@@ -1,0 +1,28 @@
+# sources/distributed-fs/openafs/src/WINNT/afsd/afslogon.c
+
+## Purpose
+`afslogon.c` implements the OpenAFS Windows network provider and Winlogon notification behavior. It participates in Windows interactive logon, reads domain/user OpenAFS logon policy from the registry, starts or waits for the OpenAFS service, creates authentication groups/PAGs, obtains AFS tokens using either KFW or legacy kaserver authentication, returns optional logon scripts, and removes or preserves tokens at logoff depending on policy and profile location.
+
+## Important APIs And Functions
+Network-provider entry points are `DllEntryPoint`, `NPGetCaps`, `NPLogonNotify`, and `NPPasswordChangeNotify`. Winlogon event handlers include `AFS_Startup_Event`, `AFS_Logon_Event`, `AFS_Logoff_Event`, and optional `KFW_Logon_Event`. Support functions include `AfsLogonInit`, `DebugEvent`, `AFSWillAutoStart`, `IsServiceRunning`, `IsServiceStartPending`, `StartTheService`, `FindFullDomainName`, `GetDomainLogonOptions`, `GetFileCellName`, `UnicodeStringToANSI`, `ObtainTokens`, `IsPathInAfs`, and `NetUserGetProfilePath`.
+
+`LogonOptions_t` from `afslogon.h` is the central configuration carrier: logon option bits, fail-silent behavior, retry/sleep intervals, SMB name, logon script, flags (`LOCAL`, `REMOTE`, `AD_REALM`, `LSA`), extra cells, mapped username, and realm.
+
+## Control Flow
+On DLL attach the module starts Winsock and creates an initialization mutex. `AfsLogonInit` initializes OpenAFS path state and only initializes legacy `ka` state when KFW is unavailable. `NPLogonNotify` handles MSV1_0 and Kerberos interactive logons. It loads trace/debug flags, converts the Windows interactive logon structure from Unicode, strips a realm embedded in the username if present, reads effective domain/user configuration, sets the returned logon script, determines whether AFSD is autostart, obtains the root cell for integrated logon, optionally checks AD home-path cell placement, creates a PAG/auth group, starts AFSD if needed, then loops while the service is starting/running and retries token acquisition until success, timeout, or an unretryable error.
+
+`ObtainTokens` impersonates the logon security context, uses KFW when available, imports LSA credentials when the username/realm maps directly to the LSA Kerberos principal, builds `user@realm`, obtains a token for the selected cell, and optionally obtains tokens for each configured `TheseCells` entry. Without KFW, it calls `ka_UserAuthenticateGeneral2`. After integrated KFW logon, `NPLogonNotify` destroys SYSTEM-held tickets for the user, maps errors to network-provider status, clears logon scripts on hard integrated failures, frees allocated option strings, and zeroes the password.
+
+Logoff behavior reads `LogoffPreserveTokens`. If tokens should be removed, remote logons try to discover the profile path through AD SID lookup, local domain fallback, NetUser profile lookup, or user profile directory. Tokens are preserved when the profile is in AFS to avoid breaking profile unload; otherwise `ktc_ForgetAllTokens` removes them. `AFS_Logon_Event` also establishes a WNet connection to the local AFS redirector using the LSA principal or domain username.
+
+## State And Persistence
+Persistent input is almost entirely registry policy under OpenAFS service/provider keys and per-domain/per-user subkeys. `LogonScript`, `TheseCells`, username mapping, realm mapping, retry timing, fail-silent policy, trace/debug settings, logoff token preservation, and integrated-logon enablement are registry-controlled. Runtime state includes global `TraceOption`, `Debug`, DLL init state, the AFSD service state, Windows logon LUID/security context, token state in the cache manager, and optional logon script memory returned to MPR/Winlogon. Passwords are stack-buffered and cleared before return.
+
+## Dependencies And Integration Points
+The file depends on Windows MPR/network-provider APIs, Winlogon notification structures, LSA, SSPI, NetAPI, registry APIs, service-control APIs, Userenv, WNet, OpenAFS pioctl, ktc/kautils, `afskfw` KFW routines, `logon_ad.cpp` helpers (`LogonSSP`, `AFSCreatePAG`, AD home-path queries), and cache-manager root-cell lookup. It is the main consumer of `afskfw.h` in this subset.
+
+## Risks And Edge Cases
+Logon code runs in sensitive Windows authentication paths, so hangs, UI prompts, or service waits can affect desktop availability. Registry lookup is intentionally permissive and falls back through user/domain/global keys, which can make policy precedence hard to reason about. Several conversions reject multibyte ANSI code pages, limiting non-ASCII usernames/domains. The service-start loop uses short sleeps and retry counters; incorrect service state can produce silent skips depending on `failSilently`. Some allocated fields such as `opt.username` are not freed on all paths visible in this file, while `opt.logonScript` ownership transfers to Windows unless later freed on failure. Authentication failure mapping avoids `WN_NO_NETWORK` to keep other providers' scripts running, which means callers see a broader network error.
+
+## Test Signals
+Test with KFW enabled/disabled, MSV1_0 and Kerberos interactive payloads, local versus remote domains, username containing `@realm`, registry precedence for domain/user/provider keys, `TheseCells` multi-cell acquisition, autostart service startup/retry/failure, fail-silent versus interactive warning behavior, empty passwords, AD home directory in and out of AFS, logoff token preservation with AFS profiles, logon script expansion with `%s`, and secure password zeroing/error cleanup.

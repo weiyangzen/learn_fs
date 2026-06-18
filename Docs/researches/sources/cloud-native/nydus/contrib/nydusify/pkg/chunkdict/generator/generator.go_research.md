@@ -1,0 +1,11 @@
+# sources/cloud-native/nydus/contrib/nydusify/pkg/chunkdict/generator/generator.go
+
+Purpose: implements chunk dictionary generation from one or more source Nydus images and pushes a target image containing the generated dictionary bootstrap and required blob layers.
+
+Important APIs and flow: `Opt` holds source/target refs, insecure flags, backend settings, workdir, `nydus-image` path, arch, and platform selection. `Generator` owns parsers for each source. `New` creates remotes and parsers. `Generate` pulls bootstraps with HTTP retry, runs `generate`, then `push`. `pull` parses each source, creates a sanitized workdir, and delegates `Output`. `generate` invokes `build.Builder.Generate` with bootstrap paths, sqlite database URI, output bootstrap, and output JSON. `push` creates a converter provider, optionally a backend, pulls source images, enumerates manifests, calls `pushBlobFromBackend`, and pushes target descriptors. `pushBlobFromBackend` reads the original manifest and output JSON blob IDs, deduplicates blob IDs, pushes blobs from backend or content store, repacks the generated bootstrap into a gzip layer, rewrites manifest layers/config diff IDs, and writes updated JSON to the content store. `getPushWriter` opens a registry pusher and treats already-existing blobs as skipped. `store.Info` overlays descriptor sizes for remote blobs not present in the base store.
+
+State and persistence: writes per-source bootstrap directories, a sqlite database, output JSON, generated bootstrap, and content-store objects; pushes blobs/manifests to registries. It mutates provider content store when remote blob descriptors are needed.
+
+Dependencies and integration: integrates `parser`, original provider remotes, Harbor acceleration service provider, containerd content store, Nydus build wrapper, backend abstraction, OCI descriptors, platform filtering, and retry-with-HTTP behavior.
+
+Risks and test signals: manifest rewrite assumes output JSON accurately lists blob IDs and that bootstrap gzip digest/size are committed correctly. `sem.Acquire` errors are ignored. Concurrency is limited to one manifest in `push` but blob push uses provider layer limit. External registry/backend failures dominate runtime risk.

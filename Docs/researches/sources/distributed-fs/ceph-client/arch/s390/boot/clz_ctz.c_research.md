@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/clz_ctz.c -->
+# sources/distributed-fs/ceph-client/arch/s390/boot/clz_ctz.c
+
+Purpose: reuses the generic `lib/clz_ctz.c` implementation inside the s390 boot/decompressor build, mainly for compression libraries that need count-leading/trailing-zero helpers. Important content is the include of `../../../../lib/clz_ctz.c`. Control flow and APIs are inherited from the generic file; this wrapper exists to compile it with early-boot flags and object selection. State and persistence are none. Dependencies include the boot Makefile, selected compression algorithms such as zstd, and freestanding compiler settings. Risks are generic code gaining dependencies unsuitable for early boot, duplicate symbol conflicts, and missed instrumentation flag removal. Test signals: `CONFIG_KERNEL_ZSTD` boot builds, decompressor link, and compression self-boot under s390.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/clz_ctz.c -->

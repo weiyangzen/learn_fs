@@ -1,0 +1,15 @@
+# Research: sources/compression/zstd/lib/legacy/zstd_v04.h
+
+Purpose: Declares the public compatibility API for zstd v0.4 decompression, including one-shot, direct streaming, and buffered streaming entry points. It is the legacy header selected by `ZSTD_LEGACY_SUPPORT <= 4`.
+
+Important APIs and types: The simple API is `ZSTDv04_decompress(dst, maxOriginalSize, src, compressedSize)`. Frame sizing is `ZSTDv04_findFrameSizeInfoLegacy(src, srcSize, cSize, dBound)`. Error probing is `ZSTDv04_isError()`. Direct streaming uses opaque `ZSTDv04_Dctx` with create/free/reset, `ZSTDv04_decompressDCtx()`, `ZSTDv04_nextSrcSizeToDecompress()`, and `ZSTDv04_decompressContinue()`. Buffered streaming uses opaque `ZBUFFv04_DCtx` with create/free, `ZBUFFv04_decompressInit()`, `ZBUFFv04_decompressWithDictionary()`, `ZBUFFv04_decompressContinue()`, `ZBUFFv04_isError()`, `ZBUFFv04_getErrorName()`, and recommended input/output size helpers. `ZSTDv04_magicNumber` is `0xFD2FB524`.
+
+Control flow and integration: One-shot callers provide an entire frame and preallocated destination. Direct streaming callers alternate exact-size input requests with decode calls. Buffered streaming callers can pass arbitrary input and output sizes; the API updates both size pointers with consumed and produced byte counts and returns a hint for the next preferred input size, or zero at frame completion. `zstd_legacy.h` uses the one-shot APIs for whole-frame legacy decompression and uses `ZBUFFv04_*` for the common streaming compatibility path.
+
+State and persistence behavior: `ZSTDv04_Dctx` owns direct decoder state and can be reset. `ZBUFFv04_DCtx` owns buffered state and reusable heap buffers; `ZBUFFv04_decompressWithDictionary()` records a dictionary reference that must remain accessible during decompression. The header documents that buffered output is overwritten each call, so callers must consume or persist produced bytes before reusing the output buffer.
+
+Dependencies and integration points: Only includes `<stddef.h>` and wraps declarations in `extern "C"` for C++ callers. The header bridges old zstd v0.4 format support into the current legacy dispatcher and exposes recommended sizes matching the implementation's 128 KiB block model (`BLOCKSIZE + 3` input and `BLOCKSIZE` output).
+
+Risks: The simple API comment again references `ZSTDv01_isError()` instead of `ZSTDv04_isError()`, and `zstd_v04.c` does not define the declared `ZSTDv04_isError()` symbol. Buffered streaming prototypes use in/out size pointers, so caller mistakes can silently lead to retry loops or dropped data if updated sizes are ignored. The dictionary API does not copy dictionary content. The exact decompressed size is not available from v0.4 frame headers, so sizing remains caller- or bound-driven.
+
+Test signals: Compile C and C++ includers, verify magic-number detection, test one-shot and direct-streaming known v0.4 samples, exercise `ZBUFFv04_decompressContinue()` with split headers and constrained output, confirm dictionary-backed streaming through `zstd_legacy.h`, validate error-name/error-probe helpers, and check recommended buffer sizes.

@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/soc/qcom/mdt_loader.c -->
+# sources/distributed-fs/ceph-client/drivers/soc/qcom/mdt_loader.c
+
+Purpose: parses Qualcomm MDT firmware images, extracts metadata for SCM/PAS authentication, computes load size, and loads split or monolithic ELF32 program segments into a caller-provided memory region for remote processors.
+
+Important APIs/types/functions: exported helpers are `qcom_mdt_get_size()`, `qcom_mdt_read_metadata()`, `qcom_mdt_load_no_init()`, `qcom_mdt_load()`, and `qcom_mdt_pas_load()`. Internal helpers are `mdt_header_valid()`, `mdt_phdr_loadable()`, `mdt_load_split_segment()`, `__qcom_mdt_pas_init()`, and `qcom_mdt_bins_are_split()`. The code uses ELF32 headers/program headers, Qualcomm MDT segment flag masks such as `QCOM_MDT_TYPE_HASH` and `QCOM_MDT_RELOCATABLE`, and SCM PAS APIs including `qcom_scm_pas_init_image()` and `qcom_scm_pas_mem_setup()`.
+
+Control flow: all public paths first validate the firmware as an ELF32 MDT with bounded program and section tables. Size calculation walks loadable non-hash PT_LOAD segments and returns the aligned span between the lowest and highest physical addresses. Metadata extraction requires an ELF header segment and a hash segment, allocates a contiguous metadata buffer, copies the ELF header, then copies the hash either from the same firmware blob or from a split `*.bNN` segment file. PAS load paths authenticate metadata first, optionally set up relocation memory through SCM if any segment is relocatable, then call `qcom_mdt_load_no_init()` to copy each loadable segment into the target memory area and zero BSS tails.
+
+State and persistence: this file keeps no persistent driver state. It consumes immutable `struct firmware` blobs and writes into caller-owned memory. It returns a relocation base through `reloc_base` when requested. Persistent effects occur outside the file through SCM/PAS image initialization and memory setup, and through firmware files requested from the kernel firmware loader.
+
+Dependencies and integration: used by Qualcomm remoteproc and PAS clients that allocate a carveout, request an MDT firmware, authenticate it, and then load its segments. It depends on Linux firmware loading, ELF definitions, overflow-safe size helpers, SCM PAS context state, and the naming convention that split segment files replace the last three characters of the MDT filename with `b%02d`.
+
+Risks and test signals: malformed firmware can exercise integer overflow, truncated segment, `p_filesz > p_memsz`, bad relocation, and missing hash-segment paths. The split-file naming logic rejects names shorter than four bytes and assumes standard `.mdt` style naming. Test signals include load-size results for relocatable and fixed-address images, monolithic vs split image loading, metadata extraction where the hash is packed after the ELF header or stored past the MDT file, SCM authentication failures, memory-range rejection, and zero-fill validation for segments with `p_memsz > p_filesz`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/soc/qcom/mdt_loader.c -->

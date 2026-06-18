@@ -1,0 +1,15 @@
+# sources/distributed-fs/orangefs/src/io/bmi/bmi_wintcp/socket-collection.h
+
+Purpose: declares the default WinSock poll socket collection interface and the macros used by the TCP BMI method to queue peer sockets for addition, removal, and write-interest changes.
+
+Important APIs/types/macros: `struct socket_collection` contains the dynamic `WSAPOLLFD` array, parallel `bmi_method_addr_p` array, maximum/count fields, `queue_mutex`, `remove_queue`, `add_queue`, `server_socket`, and unused/commented pipe handles. The exported functions are `BMI_socket_collection_init`, `BMI_socket_collection_queue`, `BMI_socket_collection_finalize`, and `BMI_socket_collection_testglobal`. Readiness bits are `SC_READ_BIT`, `SC_WRITE_BIT`, and `SC_ERROR_BIT`. `BMI_socket_collection_add` queues an address only if `tcp_data->socket > -1`; `BMI_socket_collection_remove` queues removal; `BMI_socket_collection_add_write_bit` asserts a valid socket, increments `write_ref_count`, and queues an update; `BMI_socket_collection_remove_write_bit` decrements `write_ref_count`, asserts it remains nonnegative, and queues an update.
+
+Control flow support: the macros only enqueue work under `queue_mutex`; the arrays are changed later inside `BMI_socket_collection_testglobal`. This delayed update model lets callers request changes while another progress pass owns the poll arrays. Read interest is implicit; the only explicit state transition is whether write interest should be included based on `write_ref_count`.
+
+State and persistence behavior: no durable state exists. Poll membership is represented both by collection arrays and by `struct tcp_addr.sc_index`. Pending changes live in the collection's quicklist queues through each address's embedded `sc_link`. The header notes a pipe notification design, but the Windows implementation currently leaves that disabled.
+
+Dependencies and integration: includes BMI method support, TCP addressing, quicklist, and generic locks. It is tightly coupled to `struct tcp_addr` fields `socket`, `write_ref_count`, `sc_link`, and `sc_index`. `bmi-wintcp.c` calls these macros while holding its interface mutex; the collection has its own queue mutex for poll-array update coordination.
+
+Risks: the macro API hides side effects and assumes valid non-NULL collection/address arguments. A send cancellation or failure path must balance every `BMI_socket_collection_add_write_bit` with a remove-write call or `write_ref_count` will keep `POLLOUT` armed. Since add/remove are deferred, callers must tolerate a socket remaining in `WSAPoll` until the next `testglobal` pass. The comment says a byte is written to a pipe to break poll, but the macro does not do that in this Windows implementation; stale comments can mislead maintainers about wakeup latency.
+
+Test signals: compile-time macro expansion in all TCP paths, add-before-connect no-op behavior, write-reference balance under multiple queued sends, removal resetting `write_ref_count`, deferred queue processing by `testglobal`, and progress behavior when a blocking poll is already in flight.

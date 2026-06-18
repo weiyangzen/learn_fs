@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/phy/mediatek/phy-mtk-xsphy.c
+
+Purpose: Provides the MediaTek XS-PHY driver for USB3.1 Gen2-era PHY blocks supporting USB2, USB3, PCIe, and SGMII lane use. It is similar in shape to T-PHY but has a different bank layout and a narrower feature set.
+
+Important APIs, types, and flow: `struct mtk_xsphy` stores the parent device, optional shared U3 global base, per-child `xsphy_instance` pointers, and USB2 slew calibration parameters. Each `xsphy_instance` stores the generic PHY, port base, per-lane ref clock, type selected by phandle argument, optional syscon type switch, efuse/tuning fields, and USB2 eye values. Probe maps optional global registers, creates a PHY for every child, maps child resources, obtains each `ref` clock, reads optional type switch info, and registers `mtk_phy_xlate()`.
+
+Control flow and state behavior: Translation validates one phandle argument, supports USB2/USB3/PCIe/SGMII, parses type-specific DT tuning, and writes the optional syscon lane function. Init enables the lane ref clock, initializes USB2 registers or USB3 tuning, and leaves PCIe/SGMII to the type switch only. USB2 power-on enables OTG VBUS comparator, sets VBUSVALID/AVALID, and performs slew-rate calibration using the U2 frequency meter unless `eye-src` is fixed. Power-off clears VBUS comparator and sets SESSEND. USB2 set-mode toggles IDDIG force bits for host, device, or OTG.
+
+Dependencies and integration points: Uses generic PHY, child-node resources, per-lane `ref` clocks, optional parent U3 global resource, optional `mediatek,syscon-type`, syscon/regmap, `readl_poll_timeout()`, and MediaTek IO helpers. Consumers distinguish lane purpose through the single `#phy-cells` argument.
+
+Risks and test signals: USB3 tuning writes use `glb_base`; DTs with USB3 lanes but no global resource would be unsafe. Like T-PHY, lane type is stored at xlate time and may be reinterpreted if multiple consumers use one child differently. Slew calibration ignores timeout status and only falls back on zero frequency output. Tests should cover USB2/USB3/PCIe/SGMII xlate, missing optional global resource for non-USB3 cases, syscon switch offsets, ref-clock enable failure, USB role switching, and electrical tuning values from DT.

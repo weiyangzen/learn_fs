@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/misc/vmw_vmci/vmci_context.c
+
+Purpose: implements the host-side VMCI context registry and per-context state used by hosted VMX processes and the host context. A `vmci_ctx` owns a CID, credentials, privilege flags, queued incoming datagrams, registered queue-pair handles, doorbell handles, pending doorbell notifications, context-removal subscriptions, and optional user notify-page mapping.
+
+Important APIs/functions: `vmci_ctx_create()` allocates a context, initializes handle arrays, wait queues, locks, credentials, and inserts into the global RCU list while regenerating colliding CIDs. `vmci_ctx_destroy()` removes the context from the global list, waits for RCU, and drops the final reference. `vmci_ctx_get()/put()/exists()` provide RCU lookup and kref lifetime. `vmci_ctx_enqueue_datagram()` queues copied datagrams with per-context byte limits and wakes poll waiters. `vmci_ctx_dequeue_datagram()` removes the oldest datagram only if the caller's buffer is large enough. Doorbell and queue-pair registration are handled by `vmci_ctx_dbell_*()` and `vmci_ctx_qp_*()`. Checkpoint APIs cover notifier and doorbell state.
+
+Control flow: datagram delivery looks up the destination context, allocates a queue entry, checks queue byte limits, signals the notify flag, and wakes `host_context.wait_queue`. Context teardown fires `VMCI_EVENT_CTX_REMOVED` to subscribers, detaches all brokered queue pairs, drains queued datagrams, destroys arrays and notifier nodes, unmaps notify pages, releases credentials, and frees the object. Doorbell notification validates access rules, appends pending handles, and wakes the context.
+
+State/persistence: all state is kernel-resident and volatile, but checkpoint methods expose notifier and doorbell state for VM suspend/restore. The global context list is protected by `ctx_list.lock` plus RCU readers. Each context's datagram queue and handle arrays are protected by `context->lock`; queue-pair arrays are also touched by queue-pair broker paths per comments.
+
+Dependencies/integration: integrates with `vmci_datagram_dispatch()`, `vmci_event_dispatch()`, `vmci_qp_broker_detach()`, doorbell privilege lookup, handle arrays, host poll/ioctl code, and exported VMCI APIs `vmci_context_get_priv_flags()` and `vmci_is_context_owner()`.
+
+Risks: lock ordering across context, broker, and resource operations needs care. `vmci_ctx_rcv_notifications_release()` assumes a valid context after `vmci_ctx_get()` and would fault if called after context teardown. Checkpoint allocation uses `GFP_ATOMIC` under spinlock and may fail under pressure. `vmci_ctx_exists()` is explicitly race-prone for policy decisions. Datagram queue limits and hypervisor-event exceptions are security-sensitive.
+
+Test signals: exercise context creation with CID collision, restricted/trusted privilege combinations, datagram queue full paths, notify-page setup/unset, poll wakeups, checkpoint get/set with too-small buffers, context destruction with live queue pairs, and doorbell notification replay on failed userspace copy.

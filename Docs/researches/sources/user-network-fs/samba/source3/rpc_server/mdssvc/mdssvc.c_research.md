@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source3/rpc_server/mdssvc/mdssvc.c
+
+Purpose: implements the common Samba Spotlight metadata service engine behind the `mdssvc` RPC endpoint. It unmarshals opaque Spotlight RPC blobs, dispatches command names to local handlers, manages per-tree-connect query state, normalizes macOS UTF-8 paths, and delegates actual search execution to a configured backend.
+
+Important APIs and functions: `mds_init_ctx()` creates a per-share `struct mds_ctx`, checks `lp_spotlight()`, selects `mdsscv_backend_noindex` or `mdsscv_backend_es`, opens NFC/NFD iconv handles, creates an in-memory `dbwrap_rbt` inode map, and creates a VFS connection wrapper. `mds_dispatch()` unpacks a `mdssvc_blob` with `sl_unpack()`, finds a command via `slrpc_cmd_by_name()`, changes to the share root, calls the handler, and packs the reply with `sl_pack_alloc()`. Command handlers cover `fetchPropertiesForContext:`, `openQueryWithParams:forContext:`, `fetchQueryResultsForContext:`, `storeAttributes:forOIDArray:context:`, attribute-name/value fetches, and query close. `mds_add_result()` is the backend-facing result ingestion API.
+
+Control flow: clients open mdssvc on a share, then send named Spotlight commands inside blobs. `slrpc_open_query()` converts the query string from NFD to NFC, extracts context IDs, scope, requested attributes, and optional CNID restrictions, creates a result handle, links the `sl_query` into `mds_ctx->query_list`, and calls `backend->search_start()`. `slrpc_fetch_query_results()` renews the timeout, serializes queued results, and resumes the backend if the query had reached `SLQ_STATE_FULL`. Close and timer expiry free `sl_query`, which removes it from the active list and drops backend/private mappings.
+
+State and persistence: process-wide `mdssvc_ctx` is static and reused by multiple binds. Each `mds_ctx` owns active `sl_query` objects and a transient inode-to-path map. Inode map entries are talloc-refcounted across queries and removed from `dbwrap_rbt` by destructors. There is no persistent Spotlight index here; fake CNIDs are derived from VFS file IDs.
+
+Dependencies and integration points: this file integrates generated `mdssvc` NDR blobs, `dalloc` marshalling, Samba loadparm, VFS pathref/access checks, authenticated pipe impersonation, dbwrap, talloc destructors, tevent timers, and backend vtables from `mdssvc_noindex.c` and optionally `mdssvc_es.c`.
+
+Risks: malformed dalloc blobs can drive many error paths; several return `true` with error payloads to match protocol behavior. `mds_add_result()` impersonates the pipe user and panics on identity mismatch, so callback identity handling is security critical. Query result state is mutable across async callbacks and client fetches; backend code must respect state transitions and talloc lifetime rules. Fake CNID identity via inode/file ID can be unstable across filesystems or remounts.
+
+Test signals: parser/mapping behavior is covered separately by `test_mdsparser_es.c`; runtime coverage should exercise open/fetch/close, timeout cleanup, CNID filtering, Unicode normalization, access-denied result suppression, and both noindex and ES backend paths.

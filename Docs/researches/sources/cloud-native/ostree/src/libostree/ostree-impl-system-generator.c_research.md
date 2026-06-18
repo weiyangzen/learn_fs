@@ -1,0 +1,10 @@
+# sources/cloud-native/ostree/src/libostree/ostree-impl-system-generator.c
+
+## Purpose
+This file implements the ostree systemd generator. At boot or soft reboot it detects an OSTree boot, ensures internal OSTree services are required, and synthesizes mount units/drop-ins for `/sysroot`, `/boot`, and `/var` so deployment mounts remain correct without rerunning the initramfs.
+
+## Important APIs and Control Flow
+The entry point is `_ostree_impl_system_generator(normal_dir, early_dir, late_dir, error)`. It first removes the initramfs handoff marker `INITRAMFS_MOUNT_VAR`; under static prepare-root builds it touches `/run/ostree-booted`, otherwise it no-ops unless `OTCORE_RUN_OSTREE` exists. It reads `/proc/cmdline`, extracts `ostree=` with `otcore_get_ostree_target()`, then runs `require_internal_units()`, `sysroot_mount_generator()`, `boot_mount_generator()`, and `fstab_generator()`. `require_internal_units()` creates symlinks for `ostree-remount.service` and `ostree-boot-complete.service`. `generate_mount_unit_dropin()` writes `DefaultDependencies=no` drop-ins. `boot_mount_generator()` emits a bind `boot.mount` only when `/sysroot/boot/loader` is a symlink and `/boot` exists. `fstab_generator()` parses the deployment stateroot, scans `/etc/fstab` with libmount for an existing `/var`, and if absent writes a bind `var.mount`.
+
+## State, Dependencies, Integration, Risks, and Tests
+Persistent output is generated systemd unit files and symlinks under `normal_dir`; runtime input comes from `/run`, `/proc/cmdline`, `/etc/fstab`, `/sysroot`, and `/boot`. Dependencies include libglnx, GIO streams, libmount when enabled, mount utilities, sysroot parsing helpers, and systemd unit path macros. Key risks are boot ordering regressions, duplicate generated files causing hard failures, libmount-disabled builds returning "Not implemented", and subtle soft-reboot dependency cycles. Test signals should exercise OSTree and non-OSTree cmdlines, aboot bootlinks, existing `/var` fstab entries, same-partition `/boot`, generated unit contents, and missing macro/libmount build configurations.

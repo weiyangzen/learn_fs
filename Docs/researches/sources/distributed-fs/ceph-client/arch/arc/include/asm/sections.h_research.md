@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/sections.h
+
+Small section-symbol extension for ARC. It includes asm-generic/sections.h and declares __arc_dccm_base for tightly coupled data memory placement checks. Control flow is compile/link-time: linker scripts define the symbol, setup.c compares it with hardware DCCM build registers during processor setup. State is not mutated here; the symbol represents a linked address. Dependencies are linker-provided sections and CONFIG_ARC_HAS_DCCM sanity checks. Risks are link-script drift or board configuration changes that make the symbol disagree with hardware, which intentionally panics during boot. Test signals include boot on DCCM-enabled and DCCM-disabled configurations and linker map validation.

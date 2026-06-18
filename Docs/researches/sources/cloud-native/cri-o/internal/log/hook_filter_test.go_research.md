@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/hook_filter_test.go
+
+Purpose: validates filter hook construction and behavior. Tests assert empty filters succeed, invalid regex fails, `Levels` covers all logrus levels, nonmatching messages are filtered by entry replacement, and debug messages containing byte-slice-like numeric brackets are redacted. State is local logrus entries and compiled hook instances. Dependencies are Ginkgo/Gomega, fmt, logrus, and CRI-O log package. Risks are tests checking entry message emptiness after full entry replacement rather than output behavior, and only one predefined redaction pattern. Test signals protect regex compilation error handling and broad custom/predefined filtering semantics.

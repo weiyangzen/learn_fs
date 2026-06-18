@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/client_osi/osistatl.c -->
+## sources/distributed-fs/openafs/src/WINNT/client_osi/osistatl.c
+
+Purpose: Implements the `"stat"` dynamic lock type, which wraps mutex/rwlock operations with timing, blocking, owner/waiter tracking, optional logging, long-held-lock watch callbacks, and remote fd reporting.
+
+Important APIs, types, and functions: Globals include watch callback fields, `osi_statType`, `osi_statLogp`, `osi_allRWLocks`, `osi_allMutexes`, active-info free list, per-hash atomic critical sections, and `osi_statFDCS`. `lock_ObtainWriteStat`, `lock_ObtainReadStat`, release/convert/try/state functions, and `osi_SleepRStat/WStat/MStat` implement instrumented lock semantics. `lock_InitializeRWLockStat` and `lock_InitializeMutexStat` allocate auxiliary stat records and put them on global lists. Active-info helpers allocate, queue, find, remove, and free per-thread timing records. `osi_StatFDCreate`, `osi_StatFDGetInfo`, and `osi_StatFDClose` expose mutex/rwlock summaries. `osi_StatInit` registers the `"stat"` lock type and `"lock"` fd type with field formats. `osi_SetStatLog` and `osi_SetWatchProc` configure optional logging and watch callbacks.
+
+Control flow and state: Stat locks store `lockp->type = osi_statType` and `lockp->d.privateDatap` pointing to an `osi_mutexStat_t` or `osi_rwlockStat_t`. Obtain paths either take the lock immediately and queue an owner active-info record or queue a waiter active-info record, wait on a turnstile, then merge blocked-time statistics. Release paths find the current thread's active-info, merge held-time counts, clear flags/readers, and signal eligible waiters. Remote fd iteration walks all mutex stat records first, then rwlocks, incrementing per-record refs while the cursor points at a record.
+
+Persistence and dependencies: No disk persistence. Runtime statistics live in process memory until lock finalization. Dependencies include base lock struct fields, turnstile helpers, queue helpers, fd registry, large integer math, `GetCurrentTime`, optional `osi_log_t`, and thread ids.
+
+Integration points: Registered by `osi_Init`; selected when `osi_lockTypeDefault` is set to `"stat"` or a lock is explicitly initialized as stat. Remote debug clients retrieve the `"lock"` collection. Watch callbacks let higher code detect locks held beyond a configured threshold.
+
+Risks: Some sleep paths appear to add read-held time into write counters and write-held time into read counters, which deserves scrutiny. `lock_ConvertRToWStat` asserts `OSI_LOCKFLAG_EXCL` before upgrading from read, which looks inconsistent with expected read-to-write conversion. Ref-counted fd iteration protects stat auxiliary records but not all back-pointers from concurrent mutation. Active-info matching by current thread can fail if ownership tracking is inconsistent. Time uses `GetCurrentTime` low-resolution millisecond counts. Header declares active-info helpers as extern, but implementation defines them `static`, creating declaration/definition mismatch in strict compilers.
+
+Test signals: Run lock API conformance tests under stat type, verify counters for read/write acquire/release/try/sleep/conversion, test blocked-time logging, watch callback threshold triggering, remote `"lock"` fd iteration during lock finalization, and compare stat behavior with base locks under contention.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/client_osi/osistatl.c -->

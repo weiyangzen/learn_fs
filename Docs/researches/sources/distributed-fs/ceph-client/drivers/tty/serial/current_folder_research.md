@@ -1,0 +1,115 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/tty/serial
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 101
+- Recursive researched files: 159
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/21285.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/altera_jtaguart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/altera_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/amba-pl010.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/amba-pl011.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/apbuart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/apbuart.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/ar933x_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/arc_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/atmel_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/atmel_serial.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/bcm63xx_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/clps711x.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/cpm_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/cpm_uart.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/digicolor-usart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/dz.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/dz.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/earlycon-riscv-sbi.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/earlycon-semihost.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/earlycon.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/fsl_linflexuart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/fsl_lpuart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/icom.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/imx.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/imx_earlycon.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/ip22zilog.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/ip22zilog.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/kgdboc.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/lantiq.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/liteuart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/lpc32xx_hs.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/ma35d1_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/max3100.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/max310x.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/mcf.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/men_z135_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/meson_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/milbeaut_usio.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/mpc52xx_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/mps2-uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/msm_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/mux.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/mvebu-uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/mxs-auart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/omap-serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/owl-uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/pch_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/pic32_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/pmac_zilog.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/pmac_zilog.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/pxa.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/qcom_geni_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/rda-uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/rp2.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/rsci.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/rsci.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sa1100.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/samsung_tty.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sb1250-duart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sc16is7xx.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sc16is7xx.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sc16is7xx_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sc16is7xx_spi.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sccnxp.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial-tegra.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_base.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_base_bus.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_core.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_ctrl.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_mctrl_gpio.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_mctrl_gpio.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_port.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/serial_txx9.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sh-sci-common.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sh-sci.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sifive.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sprd_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/st-asc.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/stm32-usart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/stm32-usart.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/suncore.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunhv.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunplus-uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunsab.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunsab.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunsu.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunzilog.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/sunzilog.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/tegra-tcu.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/tegra-utc.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/timbuart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/timbuart.h`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/uartlite.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/ucc_uart.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/vt8500_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/xilinx_uartps.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/zs.c`
+- `sources/distributed-fs/ceph-client/drivers/tty/serial/zs.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

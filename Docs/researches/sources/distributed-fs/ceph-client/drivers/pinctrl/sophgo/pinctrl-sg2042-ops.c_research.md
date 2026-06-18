@@ -1,0 +1,11 @@
+## `sources/distributed-fs/ceph-client/drivers/pinctrl/sophgo/pinctrl-sg2042-ops.c`
+
+Purpose: shared SG2042/SG2044 pinctrl operations. Unlike CV18xx, these SoCs use one MMIO region and pack a pin's configuration into a 16-bit slot, sometimes in the high halfword of a 32-bit register. This file implements generic pinctrl, mux, pinconf, and probe-time MMIO setup for tables described by `struct sg2042_pin`.
+
+Important APIs/types/functions: `struct sg2042_priv` stores the mapped register base. `sg2042_get_pin_reg()` and `sg2042_set_pin_reg()` read/write the low or high 16-bit slot according to `PIN_FLAG_WRITE_HIGH`. `sg2042_set_pinmux_config()` writes `PIN_IO_MUX` unless `PIN_FLAG_NO_PINMUX` is set. `sg2042_pconf_get()` and `sg2042_pinconf_compute_config()` handle bias disable/up/down, drive strength in microamps, and input Schmitt enable. Exported ops are `sg2042_pctrl_ops`, `sg2042_pmx_ops`, `sg2042_pconf_ops`, and `sg2042_cfg_ops`.
+
+Control flow: the common Sophgo probe calls this file's init callback, mapping resource 0. DT group parsing is still handled by `sophgo_pctrl_dt_node_to_map()`, but SG2042 does not supply extra verify or post hooks. Mux calls invoke `sg2042_set_pinmux_config()`. Pinconf set computes a value/mask pair, including special pull encoding for `PIN_FLAG_ONLY_ONE_PULL` and output-enable suppression for `PIN_FLAG_NO_OEX_EN`, then calls `sg2042_set_pin_reg()`.
+
+State and persistence: no private logical state beyond the mapped base pointer. Hardware register bits hold mux and pinconf state. Updates are read-modify-write under the common raw spinlock; shared low/high halfword registers are preserved through masks.
+
+Dependencies and integration: depends on `pinctrl-sg2042.h`, Sophgo common helpers, generic pinconf helpers, and SoC-specific VDDIO maps from SG2042/SG2044 files. Risks include flag/table mismatch corrupting the neighboring halfword, unvalidated mux values because no SG2042 verify hook is installed, `INPUT_SCHMITT_ENABLE` only setting enable with no disable path, and output-enable state tied to nonzero drive strength. Test signals include low/high halfword preservation, no-op mux on boot/mode pins, one-pull versus two-bit pull encodings, drive-strength map boundaries, and debugfs pin output showing expected mux/register values.

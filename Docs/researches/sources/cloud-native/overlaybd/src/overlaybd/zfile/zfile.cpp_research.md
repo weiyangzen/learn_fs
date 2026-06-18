@@ -1,0 +1,11 @@
+## sources/cloud-native/overlaybd/src/overlaybd/zfile/zfile.cpp
+
+Purpose: implements OverlayBD's zfile container: a random-readable compressed file format with 512-byte header/trailer, per-block compressed data, optional per-block CRC, block-length index, and Photon `IFile` adapters for reading and writing.
+
+Important types/functions: `CompressionFile::HeaderTrailer` stores magic, digest, flags, index offset/size/CRC, original size, and `CompressOptions`. `JumpTable` reconstructs block start offsets from 32-bit block lengths using partial offsets and 16-bit deltas. `CompressionFile::BlockReader` batches compressed block reads and exposes iterators. Public functions are `zfile_open_ro`, `zfile_compress`, `zfile_decompress`, `zfile_validation_check`, `is_zfile`, and `new_zfile_builder`. Builders include single-threaded `ZFileBuilder` and ordered multi-worker `ZFileBuilderMP`.
+
+Control flow: compression writes an unsealed header, compresses fixed-size raw blocks, optionally appends salted CRC32C to each block, records compressed lengths, writes the index, fills trailer metadata, writes a sealed trailer, and may overwrite the header with trailer metadata. Read path loads header/trailer, validates header digest and optional index CRC, builds the jump table, then `pread` maps requested raw offsets to compressed blocks, verifies CRC with retry/reload, decompresses full or partial blocks, and copies requested spans.
+
+State/persistence: persistent on-disk state is the zfile layout and metadata. In-memory state includes jump table, compressor instance, validity mode, builder buffers, worker semaphores, and block-length vectors. Dependencies include Photon virtual files/threads, compressor adapters, CRC32C, UUID, and POSIX stat.
+
+Integration points: `switch_file.cpp` detects and opens zfiles; zfile tests exercise public APIs; compressor code supplies LZ4/ZSTD algorithms. Risks: `zfile_open_ro` constructs compressor args before disabling verify in the local copy, so option mutation order deserves review; jump-table delta grouping depends on block size and 16-bit limits; multi-worker builder ordering relies on semaphores and shared `m_block_len`/`moffset`; `zfile_compress` accepts null args only as an error but tests intentionally call it. Test signals are strong for round trip, random reads, CRC/header corruption, and builder equivalence.

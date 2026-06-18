@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/drivers/mfd/wm8997-tables.c
+
+Purpose: this file is the WM8997 data-table companion for the Arizona/Madera-style MFD core. It provides revision patch data, main and always-on interrupt chips, reset-default register cache data, readable/volatile register predicates, and the exported I2C regmap config for WM8997.
+
+Important APIs, types, and functions: `wm8997_reva_patch[]` and `wm8997_patch()` apply a small Rev A register patch. `wm8997_aod_irqs[]`/`wm8997_aod` define always-on interrupts such as GP5 and jack-detect edges. `wm8997_irqs[]`/`wm8997_irq` define the five-register main IRQ chip for GPIO, speaker overheat, HP/mic detect, clock/FLL, AIF/control-interface, mixer, boot, and DCS events. `wm8997_reg_default[]` seeds the regcache. `wm8997_readable_register()` and `wm8997_volatile_register()` define access and cache behavior. `wm8997_i2c_regmap` is exported.
+
+Control flow: the Arizona core can call `wm8997_patch()` after identifying revision 0. IRQ setup elsewhere consumes the exported regmap IRQ chips. Regmap uses the readable and volatile callbacks on each access and seeds `REGCACHE_MAPLE` from the default table. The default/readable blocks cover control interface, write sequencer, tone/PWM/haptics, clocking and FLLs, regulators/MICBIAS, jack and mic detect, input/output paths, AIF/SLIMbus interfaces, mixer routing, GPIO/pad/IRQ controls, AOD status/masks, EQ/DRC/HPLPF, and ISRC registers.
+
+State and persistence: persistent register state is represented as reset defaults plus nonvolatile cached writes. Volatile status includes reset/revision, haptics and sample-rate status, FLL NCO tests, mic/headphone detect live status, input/output status, SLIMbus port status, main and secondary IRQ status/raw status, IRQ pin status, AOD wake/IRQ status, and `FX_CTRL2`. `WM8997_MAX_REGISTER` bounds legal access to `0x31ff`.
+
+Dependencies and integration points: depends on Arizona core/register headers, regmap, and module exports. It integrates with the broader Arizona MFD core, codec, GPIO, regulator, interrupt, jack-detect, audio-routing, haptics, SLIMbus, and clocking drivers via shared register definitions.
+
+Risks and test signals: table-driven code risks are mostly omissions or mismatches between default tables, readable predicates, volatile predicates, and hardware revisions. Rev A patch application must be confirmed only for revision 0. Test signals include regmap initialization with 32-bit big-endian register addresses and 16-bit big-endian values, successful IRQ chip registration for main/AOD domains, cache sync after suspend, jack/mic wake behavior, and valid access to audio routing/EQ/DRC/ISRC registers.

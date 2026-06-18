@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pci/controller/dwc/pcie-intel-gw.c
+
+Purpose: This is the Intel Gateway/LGM DesignWare PCIe root-complex driver. It sequences an application register block, core clock/reset, PHY, endpoint reset GPIO, link setup, integrated interrupt enables, L2 entry on shutdown/suspend, and noirq suspend/resume.
+
+Important APIs, types, and functions: `struct intel_pcie` embeds `struct dw_pcie` and stores app register base, endpoint reset GPIO, reset interval, core clock/reset, and PHY. Helpers include `pcie_update_bits()`, app/DBI masked write wrappers, `intel_pcie_ltssm_enable()`, `intel_pcie_ltssm_disable()`, `intel_pcie_link_setup()`, `intel_pcie_init_n_fts()`, reset helpers, `intel_pcie_wait_l2()`, `intel_pcie_turn_off()`, and `intel_pcie_host_setup()`. Host callback `intel_pcie_rc_init()` calls setup through DWC host ops.
+
+Control flow: Probe allocates the controller, sets `use_parent_dt_ranges`, gets clock/reset/app/PHY resources, initializes endpoint reset GPIO, installs DWC ops and host ops, and calls `dw_pcie_host_init()`. Host setup asserts core and endpoint reset, initializes PHY, deasserts core reset, enables core clock, sets `atu_base` to `dbi_base + 0xC0000`, disables LTSSM, disables link disable/ASPM controls, sets N_FTS based on max speed, runs `dw_pcie_setup_rc()` and `dw_pcie_upconfig_setup()`, releases endpoint reset, enables LTSSM, waits for link, and enables integrated interrupts. Remove deinitializes DWC host, disables interrupts, turns off link, disables clock/reset/PHY. Suspend disables interrupts, waits for L2 for Gen3+, exits PHY and disables clock; resume reruns host setup.
+
+State and persistence behavior: State is volatile. Hardware registers hold LTSSM, PM turnoff, interrupt enable/clear, and link setup. The reset interval can come from `reset-assert-ms`, defaulting to 100 ms. No persistent storage is used. Suspend state is reconstructed by `intel_pcie_host_setup()` on resume.
+
+Dependencies and integration points: Uses DWC host core, PHY, clock, reset, GPIO, device properties, iopoll, PCIe capability DBI access, and Intel application registers. Integrated interrupts are enabled in hardware but MSI/INTx handling is otherwise delegated to the DWC/PCI host layers.
+
+Risks: `intel_pcie_host_setup()` manually calls `dw_pcie_setup_rc()` inside the host `init` callback rather than relying only on generic flow; ordering with DWC host init must remain compatible. L2 wait is only attempted for Gen3+ and can delay suspend/remove up to five seconds. `atu_base` is hard-coded relative to DBI. Endpoint reset polarity is active-high assert and active-low release. Interrupt bits must be cleared before disabling to avoid stale events across resume.
+
+Test signals: Test LGM probe, link training, ATU translation, Gen1/Gen2/Gen3/Gen4 N_FTS programming, integrated interrupt enable/clear, remove path, noirq suspend/resume with link present and absent, L2 timeout handling, `reset-assert-ms` override, and resource failure unwinds for PHY/clock/reset.

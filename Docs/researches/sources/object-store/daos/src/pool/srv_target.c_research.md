@@ -1,0 +1,27 @@
+# sources/object-store/daos/src/pool/srv_target.c
+
+## Purpose
+`srv_target.c` is the target-side runtime for DAOS pools. It owns per-xstream `ds_pool_child` objects, system-xstream `ds_pool` objects, pool handle caching, VOS pool open/close, maintenance ULTs, map/property propagation, target query RPCs, target discard/reintegration cleanup, warmup bulk transfer, and container recovery after target/device replacement.
+
+## Important APIs, types, and functions
+Important exported APIs include `ds_pool_child_find`, `ds_pool_child_lookup`, `ds_pool_child_put`, `ds_pool_child_state`, `ds_pool_child_start`, `ds_pool_child_stop`, `ds_pool_cache_init/fini`, `ds_pool_lookup[_internal]`, `ds_pool_get/put`, `ds_pool_start`, `ds_pool_stop`, `ds_pool_hdl_hash_init/fini`, `ds_pool_hdl_lookup`, `ds_pool_tgt_connect`, `ds_pool_tgt_disconnect`, `ds_pool_tgt_map_update`, `ds_pool_tgt_prop_update`, `ds_pool_lookup_map_bc`, `ds_pool_put_map_bc`, `ds_pool_srv_open`, `ds_pool_tgt_query_handler`, `ds_pool_tgt_query_map_handler`, `ds_pool_tgt_discard_handler`, `ds_pool_tgt_warmup_handler`, and `ds_pool_recov_cont_handler`.
+
+Core types include `struct ds_pool_child`, `struct ds_pool`, `struct ds_pool_hdl`, `struct ds_pool_map_bc`, `struct pool_query_xs_arg`, `struct tgt_discard_arg`, and `struct pool_recov_cont_args`. Internal ULTs include GC, flush, EC epoch reporting, discard, and recovery work.
+
+## Control flow
+Pool startup begins on system xstream in `ds_pool_start`: it creates or holds a `ds_pool` in the LRU cache, initializes pool-wide locks/groups/IV namespace/metrics, creates pool children on target xstreams through `pool_child_add_all`, starts the EC epoch-report ULT for unrestricted pools, starts the IV namespace, and starts the pool service. Each child created by `pool_child_create` initializes per-target metrics and points `spc_state` into the pool's state array. `pool_child_start` optionally recreates storage, opens the VOS pool with external flush/checkpoint flags, applies VOS feature flags to pool-level disable/immutable state, starts GC/flush/scrub/checkpoint ULTs, and starts all container children.
+
+Pool shutdown reverses the flow. `ds_pool_stop` marks the pool stopping, stops the pool service, disconnects all target handles, stops IV and EC reporting, aborts rebuild/migration, waits until the LRU has no other users, deletes pool children, and releases the start reference. `pool_child_stop` transitions to STOPPING, stops container children and server container handles, stops scrub, waits for outstanding child references, stops checkpoint/GC/flush, closes VOS, and returns the child to NEW.
+
+Map updates arrive through `ds_pool_tgt_map_update`, which creates a new pool map from a buffer, updates the CRT secondary group, placement map, failed-target counts, cached bulk map, pool map version, per-child map version, and optionally launches DTX resync. Property updates through `ds_pool_tgt_prop_update` cache IV properties in `ds_pool`, collectively applies VOS controls/upgrades to children, wakes checkpoint ULTs when checkpoint properties change, and asks the pool service to upgrade VOS pools.
+
+Query/disconnect/map RPC handlers validate pool handles, query local or aggregate VOS space, combine results across ranks, transfer pool maps through bulk handles, and invalidate IV connection state on disconnect. Discard and recovery flows use asynchronous ULTs and collectives: discard iterates local containers and objects with VOS iterators and calls `vos_discard`; recovery bulk-fetches the authoritative container list, creates missing container children, builds a temporary dbtree, and destroys orphan shards under `sp_recov_lock`.
+
+## State and persistence behavior
+Persistent state is primarily VOS pool/container data, VOS durable format version, pool map/properties persisted by the pool service, SMD pool/device metadata, and IV namespace state. Volatile state includes LRU pool objects, pool-child lists in TLS, pool-handle hash entries, CRT secondary groups, cached pool-map bulk descriptors, scheduler requests, child reference counts, stopping flags, and discard/recovery status. The code carefully sequences reference waits before VOS close and uses locks (`sp_lock`, `sp_mutex`, `sp_recov_lock`) around map/properties/recovery-sensitive state.
+
+## Dependencies and integration points
+This file integrates most pool target subsystems: VOS, BIO/SMD, container children, pool service, rebuild/migration, DTX resync, IV namespace, placement map, CRT groups and bulk transfer, telemetry, Argobots, scheduler request classes, and management storage paths. It calls into `srv_pool_scrub_ult.c` and `srv_pool_chkpt.c` for scrub/checkpoint ULTs, and uses utilities from `srv_util.c` for collectives and rank/target filtering.
+
+## Risks and test signals
+The highest risks are lifecycle races: starting while stopping, child references held during shutdown, map updates racing with handle fetch and EC reporting, stale pool-map bulk handles, discard/recovery overlap with rebuild/reintegration, and partial storage loss where `spc_no_storage` must let DAOS check proceed. Test signals should include pool start/stop idempotence, VOS open failure and lost-shard handling, GC/flush/scrub/checkpoint ULT cleanup, handle lookup retry behavior before IV handle fetch completes, aggregate space query correctness, map bulk truncation and update ordering, property propagation to VOS, target discard retries under busy objects, and recovery creating missing containers while deleting orphans.

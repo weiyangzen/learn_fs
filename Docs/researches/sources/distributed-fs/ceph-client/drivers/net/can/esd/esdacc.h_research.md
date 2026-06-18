@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/esd/esdacc.h
+
+Purpose: private ESDACC hardware/register/data contract shared by PCI card glue and core CAN behavior.
+
+Important types and definitions: register offsets cover overview and CAN core modules, mode bits, CAN control interrupts, bit timing masks, DMA message sizes, and bus-master message IDs. `union acc_bmmsg` and its variants model fixed 32-byte DMA messages for RX/TX done, TX abort, overrun, bus errors, error-state changes, timeslice, hardware timer, and hotplug. `struct acc_bmfifo`, `struct acc_core`, `struct acc_ov`, and `struct acc_net_priv` hold DMA FIFO pointers/counters, per-core netdev/FIFO state, card overview metadata, and SocketCAN private data.
+
+Control flow and state: inline helpers read/write big-endian registers, set/clear bits, detect reset mode, read overview registers, and reset the FPGA. Function declarations expose the core operations implemented in `esdacc.c`. Persistent runtime state defined here includes DMA FIFO tails, IRQ counters, TX FIFO indices, active core counts, feature flags, and frequencies. Dependencies include CAN dev structures, netdevice, units, and MMIO accessors. Risks are structure size/alignment for DMA messages, endian assumptions, register mask correctness, and DMA memory layout consistency with FPGA bus-mastering. Test signals include static assertion on message size, overview metadata reads, correct core FIFO pointer initialization, reset completion, and interrupt message decoding.

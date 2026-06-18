@@ -1,0 +1,15 @@
+# sources/user-network-fs/rclone/cmd/bisync/checkfn.go
+
+Purpose: Selects and implements equality/check functions that bisync uses for conflict checks, rechecks, and sync equality overrides. It extends normal rclone checking with crypt-aware and download-hash fallbacks so bisync can avoid unsafe size-only conclusions.
+
+Important APIs/types/functions: `bisyncCheck` stores selected hash type, source/dest filesystems, and crypt wrapper. `WhichCheck` installs `CheckFn`, `CryptCheckFn`, `ReverseCryptCheckFn`, or `DownloadCheckFn` into `operations.CheckOpt`. `checkconflicts` runs a batched check over potential conflicts and returns identical matches. `WhichEqual` checks one object pair. `EqualFn` injects a custom `operations.EqualFn` that combines rclone equality with bisync checksum and resync-mode rules. `resyncTimeSizeEqual` customizes equality for `PreferOlder`, `PreferLarger`, and `PreferSmaller`.
+
+Control flow: `WhichCheck` first uses ordinary hash checking when a common hash, `--size-only`, or `--ignore-checksum` applies. If hashes do not overlap, it detects crypt remotes and compares encrypted/underlying hashes where possible. If that also fails, it uses download comparison. Conflict checking builds an rclone check option, sets `Match` to a buffer, runs `operations.CheckFn`, resets accounting errors, and converts matched lines into `bilib.Names`. The equality override suppresses the ordinary sync logger temporarily, runs time/size equality, optionally downloads or reads hashes, then emits exactly one match/differ event through the original logger.
+
+State and persistence behavior: There is no direct disk persistence, but `b.check` caches the chosen crypt check context for callback execution, and accounting error counters are reset after conflict checking so read-only check failures do not poison bisync's later error accounting. `EqualFn` mutates context config (`CheckSum = false`) to force modtime evaluation before its own checksum logic.
+
+Dependencies and integration points: Uses `backend/crypt`, `cmd/check`, `fs/operations`, `fs/accounting`, `fs/filter`, `fs/hash`, and `bilib.Names`. It is called by `applyDeltas` for potential conflicts, by `listing.recheck`, and by queue setup when checksum/modtime/download-hash semantics exceed normal sync equality.
+
+Risks: Type assertions in `CryptCheckFn` assume the callback arguments match the selected crypt direction. Download checking can be expensive and data-heavy. Blank hashes deliberately produce "unknown, not different", which reduces false positives but can leave conflicts unresolved. The custom equality logger path must remain aligned with rclone sync logger expectations.
+
+Test signals: Bisync golden tests covering crypt, checksum, compare-all, ignore-listing-checksum, equal conflicts, download-hash, and blank-hash backends exercise this file indirectly. Useful focused tests would assert `WhichCheck` selection for common-hash, dst-crypt, src-crypt, no-hash, size-only, and ignore-checksum combinations.

@@ -1,0 +1,11 @@
+## sources/user-network-fs/samba/source3/lib/system.c
+
+Purpose: central portability wrapper layer for common OS calls in Samba. It normalizes EINTR behavior, stat metadata conversion, allocation/fallocate/mknod availability, capabilities, random number wrappers, supplementary groups, device number extraction, realpath, and `/proc/self/fd` helpers.
+
+Important APIs include `sys_send`, `sys_recvfrom`, `sys_fcntl_ptr/long/int`, `init_stat_ex_from_stat`, `sys_stat`, `sys_fstat`, `sys_lstat`, `sys_fstatat`, `sys_posix_fallocate`, `sys_fallocate`, `sys_fdopendir`, `sys_mknod`, `sys_mknodat`, `sys_getwd`, `set_dmapi_capability`, `set_dac_override_capability`, `sys_random`, `sys_srandom`, `setgroups_max`, `getgroups_max`, `sys_getgroups`, `sys_setgroups`, `unix_dev_major`, `unix_dev_minor`, `sys_realpath`, `sys_have_proc_fds`, and `sys_proc_fd_path`.
+
+Control flow: stat wrappers call native stat variants, force directory size to zero, and convert to `struct stat_ex`, calculating birth time from native birthtime when available or the minimum non-zero c/m/a time. Timestamp update helpers preserve or recalculate calculated birthtime. Allocation wrappers return `ENOSYS` when unavailable. Capability helpers try POSIX capabilities and fall back to `become_root`/`unbecome_root` for DAC override. Group wrappers handle broken int-based getgroups and BSD effective-gid requirements.
+
+State and persistence: static state includes capability availability, `/proc/self/fd` detection, and process start via related time functions elsewhere. Most operations reflect OS state but do not persist data except syscalls such as mknod/fallocate and credential/capability changes. Dependencies are extensive: system headers, Samba setid, time utilities, debug, capability library, and platform macros.
+
+Risks: wrappers can hide platform-specific semantics, especially calculated birthtime, group truncation on BSD, and capability fallback to root. `sys_send` retries EAGAIN/EWOULDBLOCK in a tight loop, which can spin on nonblocking sockets. Tests should cover stat_ex conversion, fake directory create times, group set/get variants, capability fallback, proc-fd detection, and ENOSYS behavior under feature-matrix builds.

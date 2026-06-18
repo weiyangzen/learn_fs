@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/nouveau/nouveau_bo.c
+
+Purpose: Implements Nouveau's TTM-backed buffer object manager. It covers BO allocation, placement, pinning, CPU mapping, cache synchronization, legacy tile-region programming, GPU/CPU migration, BAR/iomem reservation, fault-time relocation, DMA-reservation fence integration, and the `ttm_device_funcs` callback table.
+
+Important APIs/functions: `nouveau_bo_alloc()`, `nouveau_bo_init()`, `nouveau_bo_new()`, `nouveau_bo_new_pin()`, `nouveau_bo_new_map()`, `nouveau_bo_new_map_gpu()`, `nouveau_bo_pin_locked()`, `nouveau_bo_unpin_locked()`, `nouveau_bo_validate()`, `nouveau_bo_map()/unmap()`, `nouveau_bo_sync_for_device()/cpu()`, `nouveau_ttm_fault_reserve_notify()`, `nouveau_bo_fence()`, and `nouveau_bo_move_init()`. Internal movers include `nouveau_bo_move()`, `nouveau_bo_move_m2mf()`, `nouveau_bo_move_ntfy()`, `nouveau_bo_move_prep()`, and TTM TT/bus helpers.
+
+Control flow: Allocation chooses kind/compression/page size from MMU/VMM capabilities, fixes alignment/size, initializes placement, and creates a TTM BO. Validation calls TTM placement and syncs non-coherent DMA pages for the device. Pinning reserves the BO, validates into the requested domain, updates available VRAM/GART counters, and handles contiguous VRAM forcing on Tesla+. Moves bind TT resources, notify GPUVA/VMA mappings, wait for outstanding work, optionally install legacy tile regions, perform null moves for system/TT transitions, use a selected hardware copy engine when possible, fall back to memcpy, then cleans up tile and mapping state.
+
+State/persistence: State lives in `struct nouveau_bo`: TTM BO, placement array, mapping object, VMA list, GPU offset, kind/comp/page/tile fields, pin count via TTM, IO-reserve LRU node, and legacy tile pointer. Driver-wide state includes `drm->ttm.move`, `drm->ttm.chan`, copy object, IO reserve LRU, and availability counters.
+
+Dependencies/integration: Integrates DRM GEM, TTM, dma-resv, AGP, PRIME import, Nouveau GEM/VMM/UVMM/memory/fence/channel subsystems, nvif memory mapping, and generation-specific move files. Display framebuffers, channels, command buffers, GEM ioctls, and fault handlers all rely on this layer.
+
+Risks: Migration is concurrency-heavy and must preserve reservation locking, GPUVA mappings, tile region lifetime, DMA cache coherency, and fence ordering. Hardware copy fallback can be slow; BAR aperture exhaustion triggers LRU unmapping. Test signals include TTM/GEM tests, PRIME import/export, mmap faults for tiled and high VRAM BOs, suspend/resume, GPUVA map/unmap tracing, pin accounting, and copy-engine selection logs.

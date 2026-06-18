@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs_common/nfs_ssc.c
+
+Purpose: provides a shared registration table allowing NFSD server-side-copy code to call NFS client module operations without hard static coupling. It exports `nfs_ssc_client_tbl`, `nfs42_ssc_register/unregister`, and `nfs_ssc_register/unregister`.
+
+Control flow is direct pointer install/removal. NFSv4.2 client code registers `nfs4_ssc_client_ops`; NFS client superblock code registers generic `nfs_ssc_client_ops`; unregister only clears if the pointer matches the caller's ops. When `CONFIG_NFS_V4_2` is absent, generic register/unregister are no-ops. State persists in the global exported table and is consumed by knfsd SSC paths. Dependencies include `linux/nfs_ssc.h`, NFSv4.2 config, and client module lifecycle ordering. Risks include stale function pointers if unregister ordering is wrong, missing ops for inter-server copy, and silent no-op registration in non-v4.2 builds. Test signals: NFSv4.2 inter-server copy, module load/unload ordering, unregister with mismatched ops, and builds with/without `CONFIG_NFS_V4_2`.

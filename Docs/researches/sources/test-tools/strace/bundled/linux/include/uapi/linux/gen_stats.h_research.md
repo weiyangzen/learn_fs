@@ -1,0 +1,5 @@
+# sources/test-tools/strace/bundled/linux/include/uapi/linux/gen_stats.h
+
+Purpose: defines generic netlink traffic-control statistics attributes and payload structs shared by qdisc/class/action reporting. Important APIs/types/functions: `TCA_STATS_*`, `struct gnet_stats_basic`, `struct gnet_stats_rate_est`, `struct gnet_stats_rate_est64`, `struct gnet_stats_queue`, and `struct gnet_estimator`.
+
+Control flow: kernel traffic-control components nest these attributes in netlink dumps or responses; userspace decodes byte/packet counters, rate estimates, queue depth, drops, requeues, overlimits, and estimator configuration. State/persistence behavior: statistics are runtime counters maintained by network subsystems; estimator configuration affects sampling behavior but the header has no storage logic. Dependencies/integration: includes `linux/types.h`; integrates with rtnetlink `tc` tooling and strace netlink decoders. Risks/test signals: 32-bit versus 64-bit packet/rate attributes, hardware-specific `TCA_STATS_BASIC_HW`, and padding attributes can cause decode drift. Tests should validate attribute names, struct sizes, and both `RATE_EST` and `RATE_EST64` output.

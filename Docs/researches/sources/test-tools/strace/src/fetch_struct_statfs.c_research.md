@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_statfs.c
+
+Mpers fetchers for `statfs` and `statfs64`. They normalize filesystem type, block counts, file counts, fsid, name length, fragment size, and flags into `struct strace_statfs`; `statfs64` validates the size argument and handles ARM OABI padded sizes. State is destination-only. Dependencies are `<asm/statfs.h>`, `statfs.h`, mpers macros, and layout feature defines. Risks are rejecting valid padded sizes on niche ABIs, missing fsid member variants, and integer extension errors. Tests should cover `fstatfs`, `statfs64` with valid/invalid sizes, ARM compat fixtures where available, and bad pointers.

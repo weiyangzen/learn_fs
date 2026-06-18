@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-ipq806x-usb.c
+
+This Qualcomm IPQ806x DWC3 USB PHY driver supports HS and SS variants selected by OF match data. It uses `struct usb_phy` for local state: MMIO base, ref/xo clocks, and SS tuning values (`rx_eq`, `tx_deamp_3_5db`, `mpll`). `struct phy_drvdata` embeds the operation table and reference clock rate.
+
+Probe maps the resource, gets the `ref` clock and sets it to 60 MHz for HS or 125 MHz for SS, optionally gets `xo`, reads tuning properties with defaults, creates a generic PHY, and registers a provider. HS init enables clocks, writes QSCRATCH HS control bits for UTMI clock, clamps, VBUS valid, common-on, and optional core-clock use, waits, then bypasses VBUS/ID filters. SS init enables clocks, resets the SS PHY, selects pad/core reference, waits for stable ref clock, enables SS PHY and lane power, then uses CR protocol helpers to read/write internal SSPHY registers for suspend workaround, RX EQ, TX preemphasis/amplitude, MPLL, and QSCRATCH param control. Exit paths disable clocks and, for SS, request low-power state.
+
+Dependencies are clk, MMIO, generic PHY, device properties, and latch polling. Risks include optional `xo_clk` handling after `devm_clk_get()` failure, CR-protocol timeout sensitivity, write-readback only logging mismatch, and many SoC tuning defaults. Test signals are latch timeouts, writeback errors, and USB HS/SS enumeration.

@@ -1,0 +1,26 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/remoteproc/qcom,sm6375-pas.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/remoteproc/qcom,sm6375-pas.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/remoteproc/qcom,sm6375-pas.yaml` defines the Linux devicetree remoteproc binding titled `Qualcomm SM6375 Peripheral Authentication Service`. Qualcomm SM6375 SoC Peripheral Authentication Service loads and boots firmware on the Qualcomm DSP Hexagon cores. It is consumed by dt-schema tooling to constrain source DTS and compiled DTB nodes before Linux drivers bind to the hardware.
+
+## Important APIs, Types, and Functions
+This YAML exports devicetree ABI rather than callable functions. `compatible` uses an `enum` list with 3 tokens: `qcom,sm6375-adsp-pas`, `qcom,sm6375-cdsp-pas`, `qcom,sm6375-mpss-pas`. Top-level properties are `compatible`, `reg`, `clocks`, `clock-names`, `memory-region`, `firmware-name`, `smd-edge`. Required top-level properties are `compatible`, `reg`. Nested required keys observed across child/conditional schemas include `compatible`, `reg`. Important local constraints: composition/conditional keywords `allOf`; schema references `/schemas/remoteproc/qcom,pas-common.yaml#`; non-compatible enum/const values `xo`, `lcx`, `lmx`, `cx`. The primary contract surface is compatible strings, reserved-memory links, firmware-name policy, interrupt and interrupt-name order, clocks/resets, power-domain naming, mailbox or SMEM state phandles, qcom-specific IDs, and child communication edge schemas.
+
+## Control Flow
+Control flow is declarative validation. `dt_binding_check` loads the YAML, validates examples, follows `$ref` links, applies required-property checks, array sizes, constants/enums, and any composed conditions, then descends into pattern-matched child nodes before enforcing schema closure. `dtbs_check` applies the same contract to real compiled DTS nodes selected by compatible strings or parent schemas. Runtime control flow begins outside this file: the Linux device core matches the node to drivers/remoteproc and rpmsg transport drivers, acquires the declared resources, and then creates regulator or remoteproc runtime objects as appropriate.
+
+## State and Persistence Behavior
+The binding itself has no mutable state and performs no persistence. Its persistent behavior is the DT ABI: property names, compatible/fallback ordering, child-node names, interrupt-name order, supply names, and address-cell layout are compiled into DTBs and must remain stable for old boards. Runtime state is external and owned by the matched kernel driver after probe, including remote processor boot/stop state, firmware image selection, reserved-memory ownership, interrupt-driven crash/ready/handover events, power-domain votes, and rpmsg channel registration.
+
+## Dependencies and Integration Points
+Maintainers listed in the schema: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>. Referenced schemas are `/schemas/remoteproc/qcom,pas-common.yaml#`. Integration points include the Linux remoteproc core, Qualcomm/SoC-specific PIL/PAS/SCM loaders, reserved-memory carveouts, mailbox or smem/smp2p signaling, clocks, resets, regulators, power domains, and rpmsg/GLINK/SMD child transports. The file also integrates with example extraction, Linux `make dt_binding_check`, `make dtbs_check`, driver `of_match_table` review, and board DTS files using the compatible strings or common fragment.
+
+## Risks
+Primary risks are ABI drift in compatible strings, reserved-memory links, firmware-name policy, interrupt and interrupt-name order, clocks/resets, power-domain naming, mailbox or SMEM state phandles, qcom-specific IDs, and child communication edge schemas, a compatible string accepted by schema but missing in the driver match table, or vice versa, resource ordering mistakes in `reg`, `interrupts`, `clock-names`, `reset-names`, or `power-domain-names`, reserved-memory or firmware-name mismatches that make remote firmware boot fail late in probe, interrupt-name or SMEM/GLINK/SMD edge mistakes that break crash, ready, stop, or rpmsg signaling, variant conditionals that validate one chip or SoC while rejecting another. This schema uses `unevaluatedProperties: false` after composed schemas. Regressions usually show up as schema failures during DT validation, boot-time probe errors, missing regulators/remote processors, failed child-device creation, or subtly wrong power/firmware sequencing on affected boards.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/remoteproc/qcom,sm6375-pas.yaml` and `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/remoteproc/qcom,sm6375-pas.yaml` against boards that instantiate the binding. The file includes 1 embedded example, so example extraction is a direct smoke test. Compare compatible strings and required resources with drivers/remoteproc and rpmsg transport drivers, check all referenced common schemas, and review probe logs for successful resource acquisition and expected child-device or channel registration.
+
+Source read size: 145 lines, 3632 bytes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/remoteproc/qcom,sm6375-pas.yaml -->

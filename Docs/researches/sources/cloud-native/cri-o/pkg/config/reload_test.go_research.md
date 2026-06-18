@@ -1,0 +1,7 @@
+# sources/cloud-native/cri-o/pkg/config/reload_test.go
+
+This file verifies the live reload contract defined in `reload.go`. It uses Ginkgo/Gomega and the shared config fixture to mutate serialized config files and individual `Config` objects, then checks whether hot-reload APIs update state or reject invalid input.
+
+The main helper, `modifyDefaultConfig`, writes `sut` to a temp file, loads it back so `singleConfigPath` is set, replaces a config string, and then lets `sut.Reload` read the modified file. Test sections cover full `Reload`, log level, log filter, pause image/auth/command, registries, seccomp, AppArmor, runtimes, and pinned images. State changes are in-memory on `sut`, with persistent temp files used for config and seccomp profile simulation. AppArmor tests skip when AppArmor is disabled, and runtime tests use `EnsureRuntimeDeps`.
+
+Dependencies include `go.podman.io/common/pkg/apparmor`, CRI-O config package, temporary filesystem helpers, and registry parsing. Integration signals include a no-change reload path, validation of invalid dynamic settings, fallback to the internal seccomp profile when configured path is missing, runtime inheritance during reload, and registry cache failure propagation. Risks are test fragility from string replacement in generated config output and environment-sensitive AppArmor/runtime availability. The file provides focused coverage for reloadable fields but does not prove atomicity if a late reload operation fails after earlier fields were already changed.

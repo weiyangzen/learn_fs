@@ -1,0 +1,26 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sh/include/asm/thread_info.h -->
+# sources/distributed-fs/ceph-client/arch/sh/include/asm/thread_info.h
+
+## Purpose
+Defines SH `thread_info`, low-level task flags, preemption/count layout, and thread-size/alignment contracts used by entry assembly.
+
+## Important APIs, Types, And Functions
+Includes `asm/page.h`, `asm/processor.h`. Key macros/constants include `__ASM_SH_THREAD_INFO_H`, `FAULT_CODE_WRITE`, `FAULT_CODE_INITIAL`, `FAULT_CODE_ITLB`, `FAULT_CODE_PROT`, `FAULT_CODE_USER`, `THREAD_SHIFT`, `THREAD_SIZE`, `STACK_WARN`, `INIT_THREAD_INFO(tsk)`, `THREAD_SIZE_ORDER`, `TIF_SYSCALL_TRACE`, `TIF_SIGPENDING`, `TIF_NEED_RESCHED`, `TIF_NOTIFY_SIGNAL`, `TIF_SINGLESTEP`, `TIF_SYSCALL_AUDIT`, `TIF_SECCOMP`, plus 19 more. Structures include `thread_info`, `task_struct`. Functions or extern declarations include `init_thread_xstate`.
+
+## Control Flow
+Runtime flow is driven by traps, syscalls, context switches, futex atomics, IRQ entry, and scheduler transitions. These headers define register conventions, inline assembly, and selected backends that low-level SH assembly and generic kernel code call. Inline assembly and section directives mean compiler constraints, clobbers, branch-delay slots, and alignment are part of the interface.
+
+## State And Persistence
+State lives in `pt_regs`, `thread_info`, task thread structs, syscall registers, lock words, futex user words, IRQ flags, and status registers. Inline assembly must preserve those layouts exactly across entry and switch paths.
+
+## Dependencies And Integration Points
+It directly depends on `asm/page.h`, `asm/processor.h`. Kconfig-sensitive paths mention `CONFIG_4KSTACKS`, `CONFIG_CPU_HAS_SR_RB`. Integration points are low-level entry assembly, scheduler context switching, syscall tracing, futex/locking code, and IRQ/trap handling.
+
+## Risks And Edge Cases
+Risks include register convention drift, clobbered `pt_regs`, incorrect syscall argument mapping, incomplete exception fixups, lock/futex atomicity loss, and SMP configurations selecting unsupported primitives.
+
+## Test Signals
+Useful signals are syscall tracing tests, ptrace/audit/seccomp checks, futex stress, lock torture, IRQ tracing, context-switch stress, and boot tests with SMP and non-SMP configs.
+
+Source read size: 168 lines, 5077 bytes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/sh/include/asm/thread_info.h -->

@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/ozone/om/TestOMDbCheckpointServletInodeBasedXfer.java
+
+Purpose: This suite validates the inode-based OM DB checkpoint transfer servlet. It covers batched tarball generation, inode/mtime file naming, snapshot checkpoint inclusion, snapshot DB consistency, deleted-file handling during collection, snapshot cache locking, bootstrap lock behavior, and the guarantee that checkpoint snapshot paths come from frozen checkpoint metadata rather than mutable live OM state.
+
+Important APIs and types: The test exercises `OMDBCheckpointServletInodeBasedXfer`, `OMDBArchiver`, `InodeMetadataRocksDBCheckpoint`, `DBCheckpoint`, `DBStore`, `SnapshotCache`, `OmSnapshotManager`, `OmSnapshot`, `OzoneSnapshot`, `OMDBDefinition`, raw RocksDB column family reads, `OzoneManagerRatisServer`, `SnapshotPurge` protobuf requests, and config keys such as `OZONE_OM_RATIS_SNAPSHOT_MAX_TOTAL_SST_SIZE_KEY` and `OZONE_DB_CHECKPOINT_INCLUDE_SNAPSHOT_DATA`.
+
+Control flow: Setup starts a one-datanode mini cluster, spies the OM, configures long snapshot-cache cleanup intervals, and routes servlet output to temp tar files. The tarball tests write keys and optional snapshots, call `doGet`, untar into an `om.db` directory, then compare inode sets and generated YAML metadata. Other tests call `collectFilesFromDir` directly for SST-only filtering, stream closure, batching, and deletion races. Locking tests hold checkpoint locks while services or snapshot purge work tries to proceed. Frozen-state tests create an extra snapshot while the snapshot cache lock is acquired and then inspect the untarred checkpoint.
+
+State and persistence behavior: The file verifies persistent archive contents, inode-derived file names, snapshot checkpoint DB directories, generated `.yaml` files, delete-table entries written into snapshot DBs, candidate transfer data, and hard-link map semantics. It also checks that `OM_HARDLINK_FILE` is consumed by `InodeMetadataRocksDBCheckpoint` and not left as a regular file in the reconstructed checkpoint.
+
+Dependencies and integration points: It integrates the servlet with OM snapshot manager/cache locking, RocksDB checkpoint creation, checkpoint differ SST backup directories, snapshot delete/purge Ratis responses, low-level RocksDB column families, and Ozone client operations that create keys and snapshots.
+
+Risks: These tests are sensitive to concurrent snapshot deletion, file removal during directory scans, stream lifecycle, inode availability, and background snapshot services. Several assertions depend on exact archive layout, inode string parsing, and timing between checkpoint creation, cache locks, and Ratis double-buffer flushes.
+
+Test signals: Signals include batched archive size behavior with and without snapshot data, closed `Files.list` streams, inode sets matching OM data, correct hard-link maps, expected YAML counts, presence of snapshot DB directories and delete-table values, successful skip of deleted files only when allowed, lock blocking counters, and snapshot inclusion from frozen checkpoint state.

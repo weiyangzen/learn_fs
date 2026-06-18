@@ -1,0 +1,15 @@
+# sources/sync-backup/syncthing/gui/default/assets/lang/lang-en-GB.json
+
+Purpose: British English localization catalog for the Syncthing AngularJS web GUI. It mirrors the full base English key set while changing selected spelling, terminology, and phrasing, for example "synchronisation", "Internet", "dialogue", "fortnightly", and "Rubbish Bin".
+
+Important APIs/types/functions: this JSON file is a complete angular-translate message table. The API is the exact English source-key namespace used by templates and controllers, including nested `theme.name.black`, `theme.name.dark`, `theme.name.default`, and `theme.name.light`. Dynamic strings depend on angular interpolation placeholders such as `{{foldertype}}`, `{{otherFolderLabel}}`, `{{syncthingInotify}}`, `{{folderlabel}}`, and `{{reintroducer}}`.
+
+Control flow: when locale `en-GB` is active, the static-file loader requests `assets/lang/lang-en-GB.json`. Angular-translate resolves exact keys first from this file, then can fall back to `en`, though this catalog currently has no top-level key gaps relative to `lang-en.json`. Escaped interpolation values are inserted into translated values for confirmation prompts, path warnings, version upgrades, and sharing notifications.
+
+State and persistence behavior: the file is static UI data with no control logic or persistence writes. It affects text displayed around persistent Syncthing state, including folders, devices, ignored items, authentication, upgrade channel choice, versioning policies, filesystem watcher state, and rate limits. I parsed the complete JSON: it contains 558 top-level entries and 561 scalar leaf values, with one nested `theme.name` object.
+
+Dependencies and integration points: depends on the Syncthing GUI's AngularJS translation setup in `syncthing/app.js`, the `validLangs` locale list, and all template/controller call sites that use English strings as translation identifiers. It changes 11 scalar values compared with `lang-en.json`, mostly spelling/word choice: "synchronised", "dialogue", "fortnightly", "Rubbish Bin", lowercase "to" in "Upgrade to", and a rewritten Syncthing description.
+
+Risks: because key coverage is complete, fallback-mixing risk is low. The main risks are semantic drift from base English when source text changes, and preserving placeholders through localized rewrites. A complete placeholder scan found 25 placeholder-bearing entries and zero mismatches, so current dynamic prompts should retain all runtime values. Regional terminology can still affect documentation consistency if surrounding docs or screenshots use base English labels like "Trash Can".
+
+Test signals: `jq` parsing should pass; key diff against `lang-en.json` should show zero missing and zero extra top-level keys; placeholder validation should show zero mismatches. GUI smoke tests should select British English and inspect versioning labels, upgrade banner, settings dialog/dialogue text, about text, receive-encrypted warnings, and share-folder prompts to verify regional text and interpolation display correctly.

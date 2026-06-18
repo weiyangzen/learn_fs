@@ -1,0 +1,10 @@
+# sources/cloud-native/ostree/src/libostree/ostree-mutable-tree.c
+
+## Purpose
+This file implements `OstreeMutableTree`, the in-memory modifiable directory tree used to compose commits. It tracks file checksums, child trees, metadata checksum, dirtree checksum, and a lazy-loading state backed by an `OstreeRepo`.
+
+## Important APIs and Control Flow
+The object has `WHOLE` and `LAZY` states. `ostree_mutable_tree_new()` creates an empty whole tree; `new_from_checksum()` and `new_from_commit()` create lazy trees from repo object checksums. `_ostree_mutable_tree_make_whole()` loads a lazy dirtree variant, fills `files` and `subdirs`, creates lazy children, drops the repo ref, and switches to whole. Mutation APIs (`replace_file()`, `remove()`, `ensure_dir()`, `ensure_parent_dirs()`) validate filenames, force whole state, enforce file-vs-directory conflicts, and call `invalidate_contents_checksum()` up the parent chain. Lookup and walk APIs traverse loaded trees. `fill_empty_from_dirtree()` optimizes composition by converting empty or compatible trees to lazy references instead of loading them. Non-throwing getters cache lazy-load errors in `cached_error`; `check_error()` reports them later.
+
+## State, Dependencies, Integration, Risks, and Tests
+State includes parent back-pointers, cached checksums, optional repo ref, cached error, and hash tables for files/subdirs. Child ownership is shared by the parent hash table; `remove_child_mtree()` clears stale parent pointers before unref. Dependencies include OSTree core variant formats, filename validation, repo object loading, GObject, and GLib hash tables. Risks include checksum invalidation invariants partly enforced by callers, cached errors from getter paths, recursive walk depth, and subtle parent lifetime handling. Test signals should cover lazy load, mutation invalidation up ancestors, file/dir conflict errors, noent handling, empty-tree fill optimization, new-from-commit checksum extraction, and child lifetime after parent destruction.

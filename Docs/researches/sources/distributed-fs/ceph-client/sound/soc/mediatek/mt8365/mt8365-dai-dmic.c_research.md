@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/sound/soc/mediatek/mt8365/mt8365-dai-dmic.c
+
+## Purpose
+Digital microphone backend DAI implementation for MT8365. It configures up to four DMIC source registers for 1-8 capture channels, controls DMIC clock gates and the ADDA DMIC clock divider, exposes IIR controls, and registers DAPM routes from the DMIC capture stream into AFE input widgets.
+
+## APIs, Types, and Functions
+The public entry point is `mt8365_dai_dmic_register()`. Internal state is `struct mt8365_dmic_data`, holding two-wire mode, per-channel clock phase, IIR fields, mode, and active channel count. Important helpers are `get_chan_reg()`, `audio_dmic_adda_enable()`, `audio_dmic_adda_disable()`, `mt8365_dai_enable_dmic()`, `mt8365_dai_disable_dmic()`, `mt8365_dai_configure_dmic()`, `mt8365_dai_dmic_startup()`, `mt8365_dai_dmic_shutdown()`, `mt8365_dai_dmic_prepare()`, and `init_dmic_priv_data()`. Static ASoC data defines the `"DMIC"` capture DAI, IIR switch/enum controls, one `DMIC In` widget, and routes from `DMIC Capture` to AFE inputs `I14` through `I21`.
+
+## Control Flow, State, and Persistence
+Registration allocates an AFE sub-DAI, attaches controls/widgets/routes, then allocates DMIC private data. `init_dmic_priv_data()` reads optional `mediatek,dmic-mode`; when not in two-wire mode it defaults channel clock phases to 0 and 4. Startup enables the main AFE clock, ungates all four DMIC ADC clock gates, and enables the shared ADDA AFE-on plus DMIC clock-divider bit. Prepare configures the register selected by `dai->symmetric_channels`, stores the active channel count, programs SDM 3-level mode, optional two-wire mode or clock phases, and one of the supported voice-mode encodings for 8/16/32/48 kHz, then enables channel 1, channel 2, and source bits for the active register. Shutdown disables the active DMIC source, clears the DMIC clock divider, decrements ADDA AFE-on, waits 125-300 us, ungates all DMIC clocks, and disables the main AFE clock.
+
+## Dependencies and Integration
+Depends on Linux bitops/regmap, ALSA PCM params, MT8365 clock/common definitions, ADDA AFE-on helpers from `mt8365-dai-adda.c`, and the MT8365 register field definitions. It is registered by `mt8365-afe-pcm.c` and integrated into the shared DAPM graph via AFE input nodes consumed by VUL/VUL2/TDM capture routes.
+
+## Risks and Test Signals
+`mt8365_dai_configure_dmic()` uses `dai->symmetric_rate` and `dai->symmetric_channels` instead of directly reading `substream->runtime`, so correctness depends on ASoC symmetric fields being populated as intended. The DAI advertises 16/32/48 kHz but the switch accepts 8 kHz too, while `mt8365_afe_rate_supported()` also allows 8 kHz for DMIC. IIR controls only target `AFE_DMIC0_UL_SRC_CON0`, so multi-pair DMIC configurations may not expose independent IIR settings. `of_property_read_u32_array()` uses a temporary array for one value and ignores malformed multi-value policy. Test signals are capture with 1-8 channels, 16/32/48 kHz and any intended 8 kHz path, two-wire and phase-select hardware variants, IIR switch/mode control behavior, DAPM route activation into VUL/VUL2, ADDA refcount balance with simultaneous internal ADDA streams, and shutdown timing with no stale DMIC clock gates.

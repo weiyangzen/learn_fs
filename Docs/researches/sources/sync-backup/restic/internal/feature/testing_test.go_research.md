@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/feature/testing_test.go
+
+Purpose: validates the feature test override helper. API under test is `TestSetFlag`. Control flow creates or uses a feature flag set, records original value, sets an override, asserts `Enabled` reflects it, invokes the returned restore function, and asserts the original value returns. State is mutable feature flag map content. Dependencies include testing and feature package APIs. Risk covered is test isolation: feature overrides must be reversible to avoid leaking global state between tests. Missing signal: behavior with unknown flags is intentionally not tested because it would panic through `Enabled`.

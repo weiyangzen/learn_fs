@@ -1,0 +1,15 @@
+# sources/sync-backup/syncthing/lib/model/folderstate.go
+
+Purpose: this file defines folder state enums, remote folder state enums, and `stateTracker`, the concurrency-safe state transition helper that logs state changes and updates metrics.
+
+Important APIs and types: `folderState` values include idle, scanning, scan-waiting, sync-waiting, sync-preparing, syncing, cleaning, clean-waiting, error, and starting. `folderState.String` maps values to the external event/API strings. `remoteFolderState` represents unknown, not sharing, paused, and valid remote folder states; it implements `String` and `MarshalText` for textual serialization. `stateTracker` stores folder ID, event logger, mutex, current state, current error, and last-changed timestamp. `newStateTracker`, `setState`, `getState`, and `setError` are the main functions.
+
+Control flow: `setState` is for non-error states only and panics if called with `FolderError`, forcing callers to use `setError` for error transitions. It no-ops if the new state equals the current state. Otherwise it builds `StateChanged` event data containing folder, from, to, and optional duration since the previous change; logs a debug message; updates current state and truncates the changed timestamp to whole seconds; emits the event; and updates `metricFolderState` in a deferred call. `setError` handles both entering an error state and clearing back to idle. It emits warn/info logs for visible error transitions, includes the error string when present, updates `s.err`, and logs a `StateChanged` event.
+
+State and persistence behavior: all state is in-memory and protected by a mutex. The persistent/external effects are event log entries and metric gauge values. The timestamp truncation stabilizes externally visible times to second precision. The current error is retained until cleared through `setError(nil)`.
+
+Dependencies and integration points: it depends on `events.Logger`, structured logging through `log/slog` and `slogutil`, and the `metricFolderState` gauge from `metrics.go`. Folder summary code consumes model state strings and changed times, while GUI/API consumers receive `StateChanged` events. Remote folder state text marshaling is used when remote sharing status is serialized.
+
+Risks: the initial zero value of `folderState` is idle and `changed` starts zero, so first transition duration is omitted. Calling `setState(FolderError)` panics by design and is a sharp API boundary. Metrics are updated after the state mutation through `defer`; if event logging ever blocks or panics, metric freshness could be affected. `setError(nil)` always transitions to idle, which is correct for current semantics but would be risky if clearing an error should resume a prior non-idle state.
+
+Test signals: direct tests are not in this subset. Indirect signals appear in folder summary event handling, which reacts to state transitions into idle from syncing or sync-preparing, and in any model tests that inspect folder state strings or errors.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/metrics/TestNameNodeMetrics.java
+
+Purpose: broad coverage for metrics emitted by NameNodeActivity, FSNamesystem, JVM, RPC detailed metrics, HA edit tailing, encryption, resource health checks, block health, DataNode liveness, file operations, and erasure-coded block accounting.
+
+Important APIs and types: `MetricsAsserts`, `DefaultMetricsSystem`, `MiniDFSCluster`, `FSNamesystem`, `BlockManager`, `NameNodeAdapter`, `BlockManagerTestUtil`, `DataNodeTestUtils`, `HostsFileWriter`, `HdfsAdmin`, `JavaKeyStoreProvider`, `NNHAServiceTarget`, `RpcDetailedMetrics`, `LocatedBlocks`, `LocatedStripedBlock`, and many metrics names such as `CapacityTotal`, `StaleDataNodes`, `VolumeFailuresTotal`, `FilesCreated`, `LowRedundancyBlocks`, `CorruptBlocks`, `MissingBlocks`, `TransactionsSinceLastCheckpoint`, `SyncsNumOps`, `EditLogTailTime`, and `CommitBlockSynchronizationNumOps`.
+
+Control flow: setup builds a cluster with enough DNs for the XOR EC policy, enables EC on `/testNameNodeMetrics/ec`, initializes include/exclude host files, and records `FSNamesystem`/`BlockManager`. Tests then create replicated and striped files, corrupt replicas/EC cells, lower replication, delete files, manipulate DataNode heartbeat timestamps, inject disk failure, decommission and expire DNs, rename files, read files to increment block-location counters, open multiple under-construction streams across clients, create encryption zones, monitor HA health, start a separate HA cluster for checkpoint/tailing metrics, and inspect RPC detailed metrics.
+
+State and persistence behavior: metrics reflect live NameNode and block-manager state rather than standalone persisted state. The suite deliberately mutates namespace, block maps, DataNode descriptors, volume health, checkpoint txids, edit logs, encryption-zone keys, and client lease tables, then polls metrics sources until expected gauges/counters settle.
+
+Dependencies and integration points: integrates metrics2, MiniDFSCluster, erasure coding, DataNode storage volumes, host include/exclude files, HA standby checkpoints, safe mode/saveNamespace, KMS/key-provider setup, NameNode health monitor RPC, and RPC detailed metrics registration.
+
+Risks and test signals: risks include stale or misnamed metrics, replicated/EC aggregate mismatches, block health counters not resetting after delete, DataNode liveness/decommission regressions, missing quantile gauges, and HA metrics not registered under the right source. Signals are exact gauge/counter assertions, aggregate tally helper checks, polling helpers for asynchronous deletion/replication, quantile gauge assertions, and RPC metric existence checks.

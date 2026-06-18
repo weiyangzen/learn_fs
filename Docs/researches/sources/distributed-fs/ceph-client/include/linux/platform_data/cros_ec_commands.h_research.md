@@ -1,0 +1,19 @@
+
+# sources/distributed-fs/ceph-client/include/linux/platform_data/cros_ec_commands.h
+
+## Purpose
+This header is the Linux copy of the ChromeOS Embedded Controller host-command ABI. It is explicitly auto-generated from the ChromiumOS EC `ec_commands.h` source and defines the constants, packet layouts, command ids, request/response payload structures, bit masks, and persistent host-visible data maps used by ChromeOS EC transport drivers and client drivers. It is not Ceph-specific; in this source tree it is kernel platform data used by the ChromeOS EC stack.
+
+## Important APIs, Types, And Constants
+The file starts with protocol and transport constants: `EC_PROTO_VERSION`, LPC/ACPI I/O addresses, LPC status bits, EC memory-map offsets, temperature/fan/battery/switch encodings, and ACPI memory locations. It defines alignment annotations such as `__ec_align4` and the core packet structs `ec_lpc_host_args`, `ec_host_request`, `ec_host_response`, `ec_host_request4`, and `ec_host_response4`. `enum ec_status` is the command-result namespace, while `enum host_event_code` plus `EC_HOST_EVENT_MASK()` define stable host event ids.
+
+The command table covers general probing (`EC_CMD_HELLO`, `EC_CMD_GET_VERSION`, `EC_CMD_GET_FEATURES`), flash and vboot commands, PWM/lightbar/LED commands, motion sense, MKBP event delivery, thermal, host event masks, GPIO and I2C passthrough, charging and battery state, sleep/hibernate, CEC/audio codec/WoV, reboot/panic, USB-PD and Type-C, regulators, peripheral charging, UCSI PPM, fingerprint, touchpad, EC-to-EC battery/charger, board-specific ranges, and passthrough command routing. Many commands are versioned with separate v0/v1/v2 payload structs and feature bits.
+
+## Control Flow And State
+The file has no executable code, but it documents several protocol state machines. ACPI read/write commands require ordered writes and waits on LPC status bits. Protocol v3 uses request/response checksums and length headers. Protocol v4 adds sequence numbers, duplicate retry semantics, header CRC, optional data CRC, and explicit host/EC algorithms. Persistent or stateful EC domains include flash protection and regions, VBNV/PSTORE/VSTORE storage, RTC/alarm, host event masks, wake masks, hibernate timers, sleep transition timeout accounting, sensor FIFO state, battery sustainer thresholds, Type-C event queues, fingerprint templates/context/encryption seed, and passthrough sub-device routing.
+
+## Dependencies And Integration Points
+This header depends on `linux/bits.h` and `linux/types.h`; many downstream declarations are consumed by `cros_ec_proto.h`, ChromeOS EC MFD/transport drivers, IIO sensorhub, power supply, Type-C/PD, input, hwmon, charger, fingerprint, touchpad, and userspace-facing debug or char devices. The ABI must match EC firmware exactly, including struct packing, flexible array payloads, command versions, and value ranges. The source comments also show integration with ACPI, LPC, I2C, SPI, ISH, PD MCU passthrough, and board-specific command reservations.
+
+## Risks And Test Signals
+Primary risk is ABI drift: changing field order, packing, command values, enum values, bit positions, or max sizes can break firmware communication. Version negotiation must use `EC_CMD_GET_CMD_VERSIONS`, `EC_CMD_GET_PROTOCOL_INFO`, and feature masks before assuming payload layouts. Several commands are deprecated or write-protect gated, and some are security-sensitive: flash writes, I2C passthrough, fingerprint templates, battery firmware update, vboot storage, and host event wake masks. Test signals include successful hello/version/protocol probes, checksum/CRC failure tests, feature-bit gating, MKBP event decoding across v0/v1/v3 response sizes, motion FIFO overflow handling, Type-C status/event round trips, and fingerprint/template boundary reads.

@@ -1,0 +1,38 @@
+# sources/object-store/rustfs/crates/scanner/src/scanner_io.rs
+
+## Purpose
+Provides the scanner IO orchestration layer that connects the high-level object store, erasure sets, individual disks, and folder scanner. It schedules scanner work across pools, sets, disks, and buckets with configurable concurrency limits, streams merged data-usage updates, loads and saves scanner cache files, and translates disk scans into complete or partial outcomes.
+
+## Important APIs, types, and functions
+- `ScannerIO` is implemented for `ECStore` and exposes `nsscanner(ctx, budget, updates, want_cycle, scan_mode)`, the top-level scanner cycle entry point.
+- `ScannerIOCache` is implemented for `SetDisks` and exposes `nsscanner_cache(...)`, which scans all buckets for one erasure set and publishes `DataUsageCache` snapshots.
+- `ScannerIODisk` is implemented for `Disk` and exposes `nsscanner_disk(...)` plus `get_size(ScannerItem)`.
+- `ScannerDiskScanOutcome` differentiates `Complete(DataUsageCache)` from `Partial(DataUsageCache)`, allowing callers to persist progress when budgets or cancellation stop a scan.
+- Concurrency and metrics helpers include `scanner_concurrency_limit`, `scanner_max_concurrent_set_scans`, `scanner_max_concurrent_disk_scans`, queue/active gauge recorders, wait histograms, `SetScanActiveGuard`, `DiskBucketScanActiveGuard`, `DiskBucketScanGaugeReset`, and `BucketDriveFailureGuard`.
+- Cache helpers include `cache_root_entry_info`, `apply_bucket_result_to_cache`, `bucket_result_should_publish_immediately`, `send_cache_root_entry_info`, and `persist_and_publish_cache_snapshot`.
+- `SCANNER_SKIP_FILE_ERROR` is the sentinel string used by disk size collection to signal that a filesystem entry should be skipped without counting as a scanner failure.
+
+## Control flow
+`ECStore::nsscanner` lists buckets, resets scanner gauges and publishes an empty update when there are no buckets, calculates the number of erasure sets, resolves the set-scan concurrency limit, and spawns one scanner task per set behind a semaphore. Each set task records permit wait time, updates queued/active gauges, invokes `SetDisks::nsscanner_cache`, and records the first non-cancelled set error while allowing other sets to finish. A separate updater task periodically merges available set caches into a `DataUsageInfo` stream every 30 seconds and sends a final merge when all set tasks finish. The result is successful if any set produced a cache with `last_update`; otherwise the first set error is returned.
+
+`SetDisks::nsscanner_cache` obtains online disks and healing state, loads the previous root cache from `DATA_USAGE_CACHE_NAME`, initializes a new root cache, shuffles bucket order, and queues uncached buckets before cached buckets so missing data is discovered early. It preloads existing bucket entries into the root cache and tracks which preloaded buckets have already been published. A cache publisher task saves and sends snapshots periodically, immediately publishes first results for not-yet-published buckets, and saves a final root cache with `next_cycle = want_cycle` when all bucket results are done.
+
+For each online disk, a worker receives bucket jobs from a shared receiver, waits for the disk-scan semaphore, loads the bucket-specific cache at `bucket/.usage-cache`, patches cache identity and healing flags, and spawns a small update-forwarding task that converts folder-level `DataUsageEntry` updates into root-level `DataUsageEntryInfo` messages. It then calls `Disk::nsscanner_disk`. Complete outcomes publish the bucket root and save the bucket cache. Partial outcomes save the partial bucket cache, publish its root entry even after cancellation, and continue to the next bucket. Non-cancelled scan errors are logged; if a prior cache changed, it is saved defensively.
+
+`Disk::get_size` accepts only `xl.meta` paths, reads metadata using disk APIs, maps missing object/version metadata to the skip sentinel, transforms the scanner item from metadata-path form to object-path form, loads `FileMeta`, resolves file info versions, creates `ObjectInfo` values, initializes tier stats, fetches object lock config, delegates lifecycle/heal/replication accounting to `ScannerItem::apply_actions`, enqueues free versions for expiry, and returns a `SizeSummary`.
+
+`Disk::nsscanner_disk` records drive scan metrics, fetches lifecycle and replication config for the bucket, resolves the object-store handle and disk-set inventory needed by folder healing, identifies the local disk, and calls `scan_data_folder` with the global `SCANNER_SLEEPER`. It maps success to `Complete`, `ScannerError::PartialCache` to `Partial`, and other errors to storage errors while emitting complete or partial drive metrics and using a failure guard to count failed drives.
+
+## State and persistence behavior
+There are two persisted cache layers. The set/root cache is stored as `DATA_USAGE_CACHE_NAME` and aggregates bucket root entries for a set. Each bucket cache is stored under `bucket/DATA_USAGE_CACHE_NAME` and contains the detailed data-usage tree for that bucket. Periodic and immediate snapshot persistence ensures consumers see progress during long scans. Partial bucket caches are explicitly saved so budget-limited scans can resume from checkpoints generated by `scanner_folder.rs`.
+
+Runtime state includes queued/active scan gauges, first-error tracking, merged set results, publish-once tracking for bucket entries, `last_update` timestamps for detecting changed snapshots, and per-bucket cache identity fields. Healing state from `SetDisks::get_online_disks_with_healing` is copied into bucket cache info so folder scans can suppress object healing when a disk set is already healing.
+
+## Dependencies and integration points
+This layer integrates `ECStore`, `SetDisks`, `Disk`, `ObjectIO`, bucket listing APIs, metadata-system lookups for lifecycle, object lock, and replication config, bucket target lookup, global tier config, storage-class constants, disk inventory through `StorageAdminApi`, object-store handle resolution, `FileMeta`, bucket versioning, lifecycle expiry state, metrics emitters, Tokio semaphores/channels/tasks, cancellation tokens, and `scan_data_folder` from `scanner_folder.rs`.
+
+## Risks and edge cases
+The orchestration relies on spawned tasks and channels closing in the right order; leaked senders or a hung disk scan can delay final snapshot publishing. The shared bucket receiver is protected by a mutex, so workers fetch one bucket at a time before doing concurrent scans. Concurrency limits must handle zero available work; the code resets gauges in empty paths, but any future early return should preserve that hygiene. A set scan is considered successful if any result has `last_update`, which intentionally tolerates partial set failures but can hide degraded coverage unless metrics and logs are monitored. `SCANNER_SKIP_FILE_ERROR` is string-matched across modules, so changing the sentinel text without a stronger typed error would break skip classification. `get_size` depends on `xl.meta` path shape and bucket versioning lookups; malformed metadata is skipped or logged depending on failure stage.
+
+## Test signals
+Tests verify first-error preservation, final scanner result success when any set succeeds, final error when all sets fail, concurrency limit capping and zero-work behavior, saturating atomic decrements, environment-controlled set and disk concurrency limits, cross-platform `xl.meta` path detection, missing metadata returning the skip sentinel, root-entry flattening, partial root entry sending after cancellation, bucket-result cache replacement and immediate/deferred publish behavior, and publish-once tracking for preloaded and newly discovered buckets.

@@ -1,0 +1,9 @@
+# sources/object-store/minio/cmd/object-api-datatypes_gen.go
+
+This generated msgp file serializes selected object API data types for fast internal persistence and RPC payloads. It implements `MarshalMsg`, `UnmarshalMsg`, and `Msgsize` for `BackendType`, `BucketInfo`, `CompleteMultipartUpload`, `CompletePart`, `DeletedObjectInfo`, `ListMultipartsInfo`, `ListObjectVersionsInfo`, `ListObjectsInfo`, `ListObjectsV2Info`, `ListPartsInfo`, `MultipartInfo`, `NewMultipartUploadResult`, `ObjectInfo`, `PartInfo`, `ReplicateObjectInfo`, and `TransitionedObject`.
+
+Control flow is generated and uniform: marshal methods preallocate using `Msgsize`, write fixed map headers and fields in a stable order, and delegate nested values to their own msgp methods. Unmarshal methods read map headers, switch on field names, populate known fields, clear and reuse maps when possible, resize slices based on array headers, handle nil `ObjectInfo.ActualSize`, and skip unknown fields. Error wrapping includes field names and array indexes for diagnosis.
+
+State and persistence are the serialized forms of object metadata, multipart/list responses, replication decisions/status, transition metadata, checksums, and bucket info. Dependencies include `tinylib/msgp` and replication status types that themselves implement msgp. Integration is tightly coupled to the definitions and `go:generate` directive in `object-api-datatypes.go`.
+
+Risks: manual edits will be overwritten; source type changes require regeneration. Field order and map sizes must match generated code. The generated code supports unknown-field skipping for additive compatibility, but removing/renaming fields can drop data. Test signal is not local because generation disabled tests for this file; coverage is indirect through consumers and compile-time schema checks.

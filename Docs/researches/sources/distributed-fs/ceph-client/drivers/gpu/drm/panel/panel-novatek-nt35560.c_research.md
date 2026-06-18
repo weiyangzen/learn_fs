@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt35560.c
+
+Purpose: This driver supports Novatek NT35560-based Sony ACX424AKP and ACX424AKM AMOLED MIPI-DSI panels. It can run in command mode by default or video mode when the `enforce-video-mode` property is present, manages a single `vddi` regulator and reset GPIO, reads panel IDs, provides an internal PWM-like DCS backlight, and reports mode data based on selected mode type.
+
+Important APIs, types, and functions: `struct nt35560_config` stores video-mode and command-mode display modes. `struct nt35560` stores config, DRM panel, device, supply, reset GPIO, and `video_mode` boolean. `nt35560_set_brightness()` translates backlight brightness to a nonstandard one-byte DCS brightness ratio plus PWMDIV programming through CMD2 unlock/page commands, then enables display backlight control. `nt35560_read_id()` reads ID1/ID2/ID3 and logs Sony-known IDs. `nt35560_power_on()` enables regulator and toggles reset. `nt35560_prepare()` powers on, reads ID, enables tear-on, writes `NT35560_DCS_SET_MDDI` to select DSI, exits sleep, turns display on, and in video mode sends `mipi_dsi_turn_on_peripheral_multi()`. `nt35560_get_modes()` chooses the video or command mode.
+
+Control flow: Probe reads `enforce-video-mode`, selects config, sets two-lane RGB888 DSI with explicit LP/HS rates, chooses video-burst flags or command-mode non-continuous clock, obtains `vddi` and optional reset GPIO, registers the raw backlight, adds the panel, and attaches DSI. Prepare handles the full DSI bring-up. Unprepare sends display-off and sleep-in, waits 85 ms, and powers off.
+
+State and persistence: `video_mode` determines both DSI mode flags and reported timing for the lifetime of the device. Backlight state is managed by the registered backlight and written to panel PWM registers. Hardware state includes selected DSI/MDDI interface, tear-on, sleep/display state, and PWM brightness divisor. No cached prepared flag exists.
+
+Dependencies and integration points: The file depends on DRM MIPI-DSI multi-context helpers, regulator/GPIO APIs, OF properties, and backlight framework. It integrates with `sony,acx424akp` and `sony,acx424akm` compatibles. DSI host support for the hard-coded 420.16 MHz HS and 19.2 MHz LP rates is assumed.
+
+Risks: The brightness conversion uses `max()` with integer arithmetic and subtracts one after scaling, so low brightness behavior is controller-specific and should be checked visually. ID read failures abort prepare through accumulated error. The MDDI command is only described by analogy to other drivers. Video mode requires an explicit peripheral-on command; missing this in future refactors would blank video-mode panels. Probe always registers the internal backlight rather than consulting `drm_panel_of_backlight()`.
+
+Test signals: Validate both Sony compatibles, command and enforced-video mode paths, ID logging, internal backlight brightness and blanking, correct mode dimensions for AKP vs AKM, DSI rates/flags, regulator/reset sequencing, display-on in video mode including peripheral-on, and unprepare power-off after sleep-in.

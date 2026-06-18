@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/memcmp_64.S
+
+This file exports an optimized 64-bit `memcmp`. It supports big and little endian by defining byte-reversing load macros for little endian (`lhbrx`, `lwbrx`, `ldbrx`) so unsigned doubleword comparisons preserve byte-order semantics. It has scalar short, aligned, different-offset, long, and optional VMX paths.
+
+Control flow first handles zero and short lengths with byte comparisons. For longer ranges it checks whether the two addresses share the same 8-byte alignment. Same-offset paths align by masking and shifting an initial doubleword, then compare 32-byte scalar groups with four doubleword comparisons. Different-offset paths align only the first source and use unaligned/reordered loads for the second. For lengths at least 4 KiB on CPUs with `CPU_FTR_ARCH_207S`, Altivec paths enter VMX state, precheck the first 32 bytes to avoid expensive VMX setup for common early mismatches, then compare 16/32-byte vector chunks, using `vperm` for different 16-byte offsets. On mismatch, it falls back to scalar comparison of the relevant 16 bytes to return the correct sign.
+
+State includes temporary VMX enablement and saved nonvolatile GPRs in scalar long paths. Dependencies include `enter_vmx_ops`, feature fixups, endian macros, and string ABI. Risks are page-crossing overreads for tails, endian sign correctness, VMX state management, and fallback after vector mismatch. Test signals include string selftests, BE/LE randomized fuzzing, large-buffer benchmarks, and VMX/no-VMX boots.

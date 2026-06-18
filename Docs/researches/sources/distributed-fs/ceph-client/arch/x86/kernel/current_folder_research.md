@@ -1,0 +1,144 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/x86/kernel
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 130
+- Recursive researched files: 266
+- Direct child folders represented: 5
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/Makefile`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/alternative.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/amd_gart_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/amd_nb.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/amd_node.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/aperture_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/apm_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/asm-offsets.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/asm-offsets_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/asm-offsets_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/audit_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/bootflag.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/callthunks.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/cet.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/cfi.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/check.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/cpuid.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/crash.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/crash_dump_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/crash_dump_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/devicetree.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/doublefault_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/dumpstack.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/dumpstack_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/dumpstack_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/e820.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/early-quirks.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/early_printk.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ebda.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/eisa.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/espfix_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/fred.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ftrace.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ftrace_32.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ftrace_64.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/head32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/head64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/head_32.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/head_64.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/hpet.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/hw_breakpoint.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/i8237.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/i8253.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/i8259.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ibt_selftest.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/idt.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/io_delay.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ioport.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/irq.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/irq_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/irq_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/irq_work.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/irqflags.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/irqinit.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/itmt.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/jailhouse.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/jump_label.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/kdebugfs.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/kexec-bzimage64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/kgdb.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ksysfs.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/kvm.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/kvmclock.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ldt.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/machine_kexec_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/machine_kexec_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/mmconf-fam10h_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/module.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/mpparse.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/msr.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/nmi.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/nmi_selftest.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/paravirt-spinlocks.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/paravirt.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/pci-dma.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/pcspeaker.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/perf_regs.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/platform-quirks.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/pmem.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/probe_roms.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/process.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/process.h`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/process_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/process_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/ptrace.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/pvclock.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/quirks.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/reboot.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/reboot_fixups_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/relocate_kernel_32.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/relocate_kernel_64.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/resource.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/rethook.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/rtc.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/setup.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/setup_percpu.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/sev_verify_cbit.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/shstk.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/signal.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/signal_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/signal_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/smp.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/smpboot.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/stacktrace.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/static_call.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/step.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/sys_ia32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/sys_x86_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/tboot.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/time.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/tls.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/tls.h`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/trace.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/trace_clock.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/traps.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/tsc.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/tsc_msr.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/tsc_sync.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/umip.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/unwind_frame.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/unwind_guess.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/unwind_orc.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/uprobes.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/verify_cpu.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/vm86_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/vmcore_info_32.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/vmcore_info_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/vmlinux.lds.S`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/vsmp_64.c`
+- `sources/distributed-fs/ceph-client/arch/x86/kernel/x86_init.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

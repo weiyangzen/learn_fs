@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/smartpqi/smartpqi_sis.c
+
+Purpose: this file implements the Smart Array legacy SIS mailbox/doorbell interface used before or beside PQI mode. It waits for controller readiness, sends synchronous SIS commands, discovers PQI capabilities, initializes the PQI base structure, toggles interrupt/reset/shutdown bits, and waits for firmware triage or controller logging to finish.
+
+Important APIs, types, and functions: `sis_wait_for_ctrl_ready()` and `sis_wait_for_ctrl_ready_resume()` poll `sis_firmware_status` for `SIS_CTRL_KERNEL_UP` and fail on `SIS_CTRL_KERNEL_PANIC`. `sis_send_sync_cmd()` is the central mailbox command routine for `SIS_CMD_GET_ADAPTER_PROPERTIES`, `SIS_CMD_GET_PQI_CAPABILITIES`, and `SIS_CMD_INIT_BASE_STRUCT_ADDRESS`. `sis_get_ctrl_properties()` validates extended properties and marks `pqi_reset_quiesce_supported`. `sis_get_pqi_capabilities()` fills controller queue and config-table limits. `sis_init_base_struct_addr()` builds a DMA-mapped `sis_base_struct`. Doorbell helpers implement MSI-X/INTx enable, SIS mode reenable, reset quiesce, kdump notification, soft reset, and shutdown.
+
+Control flow: synchronous SIS commands write command and parameters into mailbox registers, clear controller-to-host doorbell, mask interrupts, force the mask write to post via readback, ring host-to-controller `SIS_CMD_READY`, poll for `SIS_CMD_COMPLETE`, validate mailbox status, then read return mailboxes. The base-structure path allocates an aligned structure, fills little-endian physical error-buffer metadata from `ctrl_info`, maps it for DMA, passes the DMA address via mailboxes, then unmaps and frees it.
+
+State and persistence: state is entirely MMIO and `pqi_ctrl_info` runtime fields. The global `sis_ctrl_ready_timeout_secs` controls the normal ready wait. The driver scratch register is a small persistent controller register exposed through `sis_write_driver_scratch()` and `sis_read_driver_scratch()`, but this file does not persist data to disk.
+
+Dependencies and integration: depends on `smartpqi.h`, PCI DMA mapping, jiffies polling, and unaligned endian helpers. It is called by SmartPQI initialization, reset, resume, shutdown, kdump, and diagnostic flows before normal PQI operational queues are available.
+
+Risks: all waits are polling loops, so timeout constants directly affect boot, resume, reset, and panic paths. Hardware disappearance can appear as all-ones status and is only partly distinguished from panic/offline. Doorbell helper return values are ignored by `sis_enable_msix()` and `sis_enable_intx()`, so failures there may only surface later. The packed base structure is protocol-critical, making the `BUILD_BUG_ON()` checks essential.
+
+Test signals: validate with controllers in cold boot, resume, kdump, firmware panic, reset-quiesce supported/unsupported, and shutdown paths. Fault injection should cover DMA mapping failure, mailbox timeout, non-success command status, and doorbell bit never clearing. Compile-time structure layout checks are built into `sis_verify_structures()`.

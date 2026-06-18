@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/rt712-sdca.c
+
+Purpose: Implements the main RT712 SDCA codec core. It supports jack/headphone codec paths, optional class-D speaker/amp paths, and optional smart-mic/DMIC component registration for RT712 VB systems, with controls, DAPM graphs, DAI ops, jack/button handling, calibration, and attach-time version-specific initialization.
+
+Important APIs and functions: `rt712_sdca_init()` registers the main component and, when SDCA quirks expose SMART_MIC, a second DMIC component. `rt712_sdca_io_init()` reads product/version IDs, selects VA or VB initialization, enables jack setup, and marks first init. `rt712_sdca_va_io_init()` programs legacy VA analog/jack/speaker registers; `rt712_sdca_vb_io_init()` initializes mic, jack, and amp function blocks based on SDCA `FUNCTION_NEEDS_INITIALIZATION`. `rt712_sdca_pcm_hw_params()` maps AIF1/AIF2/AIF3 to ports 1/3/4/8 and writes function-specific sample-frequency indexes.
+
+Control flow: Probe registers controls/routes, adding speaker widgets dynamically when the hardware is not RT713. Jack setup enables HID and GE events and SDCA interrupt masks. The SoundWire wrapper stores interrupt bits, then delayed work reads GE detected mode and HID UMP messages, reports jack/buttons, and schedules button-release polling. Mixer controls convert user values into 16-bit SDCA/MBQ dB encodings and maintain software mute mirrors so DAPM and user switches combine correctly. DAPM events drive FU mutes and PDE PS0/PS3 transitions.
+
+State and persistence: `rt712_sdca_priv` tracks regmaps, two possible components, hardware/version IDs, DMIC-function presence, init flags, jack state, delayed work, calibration/IRQ locks, cached SDCA status, and mute mirrors for jack capture, playback, DMIC, and amp paths. VA/VB init paths persist hibernation or function-status information by clearing status bits and writing `SW_CONFIG1`.
+
+Dependencies and integration: Uses ASoC, SoundWire, SDCA helpers, runtime PM, regmap, workqueues, `sdca_device_quirk_match()`, and the bus wrapper. DAI names are `rt712-sdca-aif1`, `aif2`, and optionally `aif3`; component controls expose FU05/FU0F/FU44 and optional FU06/FU1E paths.
+
+Risks and test signals: Key risks are hardware-version branching, ACPI smart-mic mismatch handling, RT713 speaker exclusion, function-status clearing, GE/HID button owner differences between VA/VB, and unsupported AIF3 on VA. Tests should cover RT712/713/716/717 IDs, VA/VB init, smart-mic quirk present/absent, jack and button interrupts, speaker routes, DAPM mute combinations, all supported rates, suspend/resume, and logs for calibration or version mismatch warnings.

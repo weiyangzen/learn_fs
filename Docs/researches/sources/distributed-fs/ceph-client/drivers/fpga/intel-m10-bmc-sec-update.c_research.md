@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/fpga/intel-m10-bmc-sec-update.c
+
+Purpose: Intel MAX10 BMC secure-update driver. It exposes BMC security telemetry through sysfs and registers a firmware-upload endpoint that stages a secure image into MAX10 flash staging space, coordinates RSU handshakes with Nios/BMC firmware, and polls authentication/programming completion.
+
+Important APIs and functions: `struct m10bmc_sec` stores the parent `intel_m10bmc`, firmware-upload handle/name, xarray ID, cancel flag, and per-device RSU status ops. `m10bmc_sec_read` and `m10bmc_sec_write` access flash through optional bulk ops or regmap stride-aware operations. Sysfs helpers expose root-entry hashes, canceled CSKs, and flash update count. Firmware-upload callbacks are `m10bmc_sec_prepare`, `m10bmc_sec_fw_write`, `m10bmc_sec_poll_complete`, `m10bmc_sec_cancel`, and `m10bmc_sec_cleanup`. Status helpers differentiate N3000/D5005 doorbell status from N6000 auth-result status.
+
+Control flow: probe allocates a unique `secure-updateN` name, registers firmware upload, and installs security attributes. Prepare validates size, optionally locks flash writes, checks idle RSU state, sets firmware state to prepare, requests RSU, waits for ready, handles cancellation, and transitions to write state. Write sends chunks up to `WRITE_BLOCK_SIZE` while RSU progress remains ready. Poll-complete marks host write done, waits for RSU progress to leave ready, checks status, then polls until done or timeout. Cleanup cancels if possible, returns firmware state to normal, and unlocks flash.
+
+State and persistence: persistent hardware state includes security hashes, CSK cancellation vectors, flash update count, staging flash contents, doorbell, auth result, and BMC firmware state. Linux state includes the global firmware-upload xarray, firmware-upload object, generated name, cancel flag, and flash lock ownership. Cancel is intentionally asynchronous only as a flag and is synchronized by normal callback flow.
+
+Dependencies and integration points: depends on firmware-upload API, Intel MAX10 BMC MFD core, CSR maps, regmap, optional flash bulk ops, xarray allocation, platform device IDs `n3000bmc-sec-update`, `d5005bmc-sec-update`, and `n6000bmc-sec-update`.
+
+Risks and test signals: risks include stride-aligned staging writes, update-size bounds, long RSU timeouts, ambiguous hardware status mapping across board generations, cancellation only when RSU is ready, flash wearout status, and sysfs bitmap casting assumptions for flash count. Test signals are security sysfs values, firmware-upload device creation, successful prepare/write/poll-complete, flash lock/unlock behavior, expected error codes for wearout/timeout/auth failure, and cleanup after cancel.

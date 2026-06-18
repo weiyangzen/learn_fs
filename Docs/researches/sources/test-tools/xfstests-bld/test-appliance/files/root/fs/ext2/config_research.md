@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/test-appliance/files/root/fs/ext2/config
+
+- Purpose: ext2 filesystem test configuration; it ext2 config using e2fsck/mke2fs defaults and ext-family aliases.. The file is 67 lines/1040 bytes and is researched as source path `sources/test-tools/xfstests-bld/test-appliance/files/root/fs/ext2/config`.
+- Important APIs/types/functions: sourced shell config exports `DEFAULT_MKFS_OPTIONS` and implements hooks check_filesystem, format_filesystem, setup_mount_opts, get_mkfs_opts, show_mkfs_opts, show_mount_opts, test_name_alias, reset_vars; assignments include DEFAULT_MKFS_OPTIONS="", local dev="$1", ret="$?", local dev="$1", local opts="$2", ret="$?", export MKFS_OPTIONS="-q $EXT_MKFS_OPTIONS", export EXT_MOUNT_OPTIONS="$EXT_MOUNT_OPTIONS,$MNTOPTS".
+- Control flow: `runtests.sh` sources this via `get_fs_config`, calls `reset_vars`, derives aliases with `test_name_alias`, formats/checks devices through `format_filesystem`/`check_filesystem`, and records mkfs/mount options for each `ext2` test config.
+- State and persistence: changes mounted test/scratch filesystems, loop/UBI/export directories where applicable, and per-config result metadata; variables are reset between configs to avoid cross-test leakage.
+- Dependencies/integration: integrates with `/root/runtests.sh`, xfstests `local.config`, mkfs/fsck/mount tools for the target filesystem, exclude/config lists, and optional GCE/KVM device inventories.
+- Risks and test signals: wrong mkfs/check commands can destroy the wrong device or skip valid tests; validate with smoke config selection, generated config files, fsck output, and xUnit result creation for this filesystem.

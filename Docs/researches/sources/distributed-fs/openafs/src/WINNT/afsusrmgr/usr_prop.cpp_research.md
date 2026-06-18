@@ -1,0 +1,9 @@
+# sources/distributed-fs/openafs/src/WINNT/afsusrmgr/usr_prop.cpp
+
+Purpose: implements user and machine account property sheets, including general security settings, advanced KAS/PTS properties, and group membership/ownership pages. It supports existing users, multiple selected users, and new-user/new-machine property editing.
+
+Important APIs and control flow: `User_ShowProperties` prevents duplicate property windows with `WindowList`, builds a tabbed property sheet, and selects the requested tab. General and advanced tabs subscribe to object notifications with `taskOBJECT_LISTEN`, read current properties from the local admin cache, compute mixed states for multi-select, and write pending values back into `USERPROPINFO` on apply. `User_FreeProperties` performs final writes by building `USER_CHANGE_PARAMS` per selected user and starting `taskUSER_CHANGE`, warning before changing system accounts. Membership tab gets current groups via `taskGROUP_SEARCH`, marks common vs partial membership through ASID `lParam`, uses the browse dialog to add groups, removes selected groups, and starts `taskUSER_GROUPLIST_SET` on apply.
+
+State and dependencies: `USERPROPINFO` is the shared cross-tab state object. Dialog window data stores backup ASID lists so cancel/destroy can restore membership state. Dependencies include `usr_cpw`, `usr_col`, `winlist`, `browse`, PropSheet helpers, FastList, date/time/elapsed controls, task dispatch, and admin-cache property APIs.
+
+Risks and test signals: mixed tri-state handling can accidentally overwrite fields if the `_Mixed` flags are wrong. Time conversion between GMT account expiration and local UI controls is another risk. Membership backup/restore and ASID-list ownership are delicate. Test single/multi-user properties, system-account warning cancellation, apply order, notification refresh, machine-account tab set, membership add/remove for full and partial groups, and create-mode defaults.

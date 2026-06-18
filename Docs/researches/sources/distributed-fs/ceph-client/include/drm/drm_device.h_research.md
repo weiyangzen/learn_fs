@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/drm/drm_device.h
+
+Purpose: Defines `struct drm_device`, the central per-GPU/display-device object that ties together driver identity, lifetime management, minors, open files, clients, vblank/event handling, KMS mode configuration, GEM namespaces, VRAM management, fbdev emulation, debugfs roots, DMA device selection, and hot-unplug state.
+
+Important APIs, types, and functions: Defines wedge recovery flags, `struct drm_wedge_task_info`, `enum switch_power_state`, `struct drm_device`, `drm_dev_set_dma_dev()`, and `drm_dev_dma_dev()`. Important fields include `ref`, parent `dev`, optional `dma_dev`, managed-resource list, `driver`, primary/render/accel minors, `registered`, `master`, `driver_features`, `unplugged`, file/client lists, vblank locks/state, `max_vblank_count`, `event_lock`, `mode_config`, GEM object-name IDR, VMA offset manager, VRAM manager, switcheroo power state, fb helper pointer, and debugfs root.
+
+Control flow: Drivers allocate a DRM device, initialize subsystems, and only then register it. Open files are tracked in file lists; KMS objects live under `mode_config`; vblank code uses per-CRTC state plus locks; events are queued under `event_lock`; GEM handles and mmap offsets use the object IDR and VMA manager. Hot-unplug sets `unplugged` and drivers should bracket hardware access with `drm_dev_enter()`/`drm_dev_exit()`. DMA import/export paths use `drm_dev_dma_dev()` so virtual or bus-attached devices can name the actual DMA-capable device.
+
+State and persistence: This is runtime kernel state scoped to the DRM device reference lifetime. It persists across client opens and closes until unregister and final put, but it has no on-disk persistence. Some fields expose stable userspace ABI state such as node existence, object IDs, event behavior, mode objects, and debugfs/sysfs visibility.
+
+Dependencies and integration points: Depends on Linux devices, krefs, mutexes, spinlocks, IDR, optional transparent hugepage mounts, DRM driver structs, minors, masters, vblank, VMA managers, VRAM MM, fb helper, and mode config. It is the anchor for almost every DRM subsystem.
+
+Risks and test signals: Risks include registering before initialization is complete, DMA device mismatch for imported buffers, hot-unplug races, stale file/client list entries, vblank counter wrap mistakes, event lock misuse, master lock ordering bugs, managed-resource lifetime surprises, and per-device feature masking diverging from driver expectations. Test probe/register/unregister ordering, render/primary/accel node creation, hot-unplug under active IOCTLs, vblank enable/disable, event delivery, PRIME import on non-DMA-capable devices, fbdev teardown, debugfs cleanup, and per-device feature disabling.

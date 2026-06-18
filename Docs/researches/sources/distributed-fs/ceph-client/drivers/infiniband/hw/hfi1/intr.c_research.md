@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/hfi1/intr.c
+
+Purpose: handles non-hardirq completion work for link-up/link-down transitions and user receive/urgent interrupts. It updates port neighbor/management state, signals RDMA core port events, and wakes user processes waiting in `poll()`.
+
+Important APIs and functions: `handle_linkup_change()` is called outside interrupt context to finish physical link up/down changes. `handle_user_interrupt()` handles receive-available or urgent interrupts for user contexts. Internal helpers `set_mgmt_allowed()`, `add_full_mgmt_pkey()`, and `signal_ib_event()` read neighbor firmware state, install the full management PKEY when allowed, and dispatch `ib_event` notifications if the IB device is registered.
+
+Control flow: on link-up, quick-linkup/simulator paths synthesize verify-cap setup, the driver reads neighbor GUID/type/port/security CSRs, waits `LINK_UP_DELAY`, reads `MgmtAllowed` from 8051 config for switch neighbors or allows HFI neighbors, optionally installs `FULL_MGMT_P_KEY`, marks `ppd->linkup`, clears offline-disabled reason, and reads active link widths. On link-down, it clears linkup and operational VLs, resets link credits, starts freeze handling, sets user link-down event bits, marks the neighbor non-normal, and dispatches `IB_EVENT_PORT_ERR`. User interrupt handling locks `dd->uctxt_lock`, ignores unused shared contexts, clears either `HFI1_CTXT_WAITING_RCV` or `HFI1_CTXT_WAITING_URG`, wakes the context waitqueue, disables receive-available interrupts for receive waiters, or increments `rcd->urgent`.
+
+State and persistence: modifies `hfi1_pportdata` neighbor fields, `mgmt_allowed`, `pkeys[2]`, `linkup`, `offline_disabled_reason`, `actual_vls_operational`, and `neighbor_normal`. It modifies user-context `event_flags` and `urgent` counters and uses `dd->events` indirectly through `hfi1_set_uevent_bits()`. No persistent storage beyond in-memory port/context state and hardware PKEY/link programming.
+
+Dependencies and integration points: uses CSR/8051 helpers, link setup helpers (`set_up_vau()`, `set_up_vl15()`, `assign_remote_cm_au_table()`), MAD/PKEY configuration via `hfi1_set_ib_cfg()` and `hfi1_event_pkey_change()`, freeze handling, RDMA core `ib_dispatch_event()`, receive-control operations, and the user polling bits defined in `hfi.h` and used in `file_ops.c`.
+
+Risks: `signal_ib_event()` must not run before IB registration, hence the `HFI1_INITTED` guard. Management PKEY insertion assumes index 2 is free or already correct and warns otherwise. Link-up handling depends on firmware-updated neighbor CSRs being valid after a short delay. User interrupt ordering must clear wait bits under lock to avoid missed poll wakeups or leaving receive interrupts enabled.
+
+Test signals: physical or simulated link up/down, management-allowed switch neighbor behavior, full management PKEY installation and PKEY change event, IB port error event on link down, user `poll()` waking for receive and urgent packets, receive-available interrupt disable after wake, and no wakeups for contexts whose `in_use_ctxts` bitmap is empty.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/dev/rx-offload.c
+
+Purpose: generic RX offload helper for CAN drivers that collect frames in IRQ context and deliver them through NAPI, optionally preserving timestamp order.
+
+Important APIs and functions: `can_rx_offload_irq_offload_timestamp()` reads pending mailboxes, attaches timestamps, and inserts SKBs sorted by timestamp. `can_rx_offload_irq_offload_fifo()` drains FIFO-style hardware. `can_rx_offload_queue_timestamp()` and `can_rx_offload_queue_tail()` allow manual queueing. Echo helpers queue TX echo SKBs into RX offload ordering. `can_rx_offload_irq_finish()` and threaded variant splice IRQ queues to the NAPI queue and schedule polling. Add/enable/delete functions initialize NAPI and queues.
+
+Control flow and state: interrupt code fills `skb_irq_queue`; finish splices it into the locked `skb_queue`; NAPI poll updates RX stats and calls `netif_receive_skb()`, rescheduling if more packets arrived. Persistent state lives in `struct can_rx_offload`: mailbox range/order, queue length cap, NAPI, and driver `mailbox_read` callback. Dependencies include SKB queues, NAPI, CAN echo helpers, and timestamp storage in `skb->cb`. Risks are queue overflow policy, timestamp sorting across u32 wrap, mailbox direction setup, and correct bottom-half handling for threaded IRQ scheduling. Test signals include ordered delivery under timestamp wrap, overflow/drop counters, NAPI quota behavior, and echo SKB offload paths.

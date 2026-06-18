@@ -1,0 +1,122 @@
+# Folder Research: sources/sync-backup/git-lfs/t
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 108
+- Recursive researched files: 132
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/sync-backup/git-lfs/t/Makefile`
+- `sources/sync-backup/git-lfs/t/t-alternates.sh`
+- `sources/sync-backup/git-lfs/t/t-askpass.sh`
+- `sources/sync-backup/git-lfs/t/t-attributes.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-error-handling.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-retries-ratelimit.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-storage-corrupt.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-storage-encoding.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-storage-retries-ratelimit.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-storage-retries.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-storage-upload-tus.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-transfer-size.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-transfer.sh`
+- `sources/sync-backup/git-lfs/t/t-batch-unknown-oids.sh`
+- `sources/sync-backup/git-lfs/t/t-checkout.sh`
+- `sources/sync-backup/git-lfs/t/t-cherry-pick-commits.sh`
+- `sources/sync-backup/git-lfs/t/t-clean.sh`
+- `sources/sync-backup/git-lfs/t/t-clone-deprecated.sh`
+- `sources/sync-backup/git-lfs/t/t-clone.sh`
+- `sources/sync-backup/git-lfs/t/t-commit-delete-push.sh`
+- `sources/sync-backup/git-lfs/t/t-completion.sh`
+- `sources/sync-backup/git-lfs/t/t-config.sh`
+- `sources/sync-backup/git-lfs/t/t-content-type.sh`
+- `sources/sync-backup/git-lfs/t/t-credentials-no-prompt.sh`
+- `sources/sync-backup/git-lfs/t/t-credentials-protect.sh`
+- `sources/sync-backup/git-lfs/t/t-credentials.sh`
+- `sources/sync-backup/git-lfs/t/t-custom-transfers.sh`
+- `sources/sync-backup/git-lfs/t/t-dedup.sh`
+- `sources/sync-backup/git-lfs/t/t-duplicate-oids.sh`
+- `sources/sync-backup/git-lfs/t/t-env.sh`
+- `sources/sync-backup/git-lfs/t/t-expired.sh`
+- `sources/sync-backup/git-lfs/t/t-ext.sh`
+- `sources/sync-backup/git-lfs/t/t-extra-header.sh`
+- `sources/sync-backup/git-lfs/t/t-fetch-include.sh`
+- `sources/sync-backup/git-lfs/t/t-fetch-paths.sh`
+- `sources/sync-backup/git-lfs/t/t-fetch-recent.sh`
+- `sources/sync-backup/git-lfs/t/t-fetch-refspec.sh`
+- `sources/sync-backup/git-lfs/t/t-fetch.sh`
+- `sources/sync-backup/git-lfs/t/t-filter-branch.sh`
+- `sources/sync-backup/git-lfs/t/t-filter-process.sh`
+- `sources/sync-backup/git-lfs/t/t-fsck.sh`
+- `sources/sync-backup/git-lfs/t/t-happy-path.sh`
+- `sources/sync-backup/git-lfs/t/t-install-custom-hooks-path-unsupported.sh`
+- `sources/sync-backup/git-lfs/t/t-install-custom-hooks-path.sh`
+- `sources/sync-backup/git-lfs/t/t-install-worktree-unsupported.sh`
+- `sources/sync-backup/git-lfs/t/t-install-worktree.sh`
+- `sources/sync-backup/git-lfs/t/t-install.sh`
+- `sources/sync-backup/git-lfs/t/t-lock.sh`
+- `sources/sync-backup/git-lfs/t/t-locks.sh`
+- `sources/sync-backup/git-lfs/t/t-logs.sh`
+- `sources/sync-backup/git-lfs/t/t-ls-files.sh`
+- `sources/sync-backup/git-lfs/t/t-malformed-pointers.sh`
+- `sources/sync-backup/git-lfs/t/t-merge-driver.sh`
+- `sources/sync-backup/git-lfs/t/t-mergetool.sh`
+- `sources/sync-backup/git-lfs/t/t-migrate-export.sh`
+- `sources/sync-backup/git-lfs/t/t-migrate-fixup.sh`
+- `sources/sync-backup/git-lfs/t/t-migrate-import-no-rewrite.sh`
+- `sources/sync-backup/git-lfs/t/t-migrate-import.sh`
+- `sources/sync-backup/git-lfs/t/t-migrate-info.sh`
+- `sources/sync-backup/git-lfs/t/t-multiple-remotes.sh`
+- `sources/sync-backup/git-lfs/t/t-no-remote.sh`
+- `sources/sync-backup/git-lfs/t/t-object-authenticated.sh`
+- `sources/sync-backup/git-lfs/t/t-path.sh`
+- `sources/sync-backup/git-lfs/t/t-pointer.sh`
+- `sources/sync-backup/git-lfs/t/t-post-checkout.sh`
+- `sources/sync-backup/git-lfs/t/t-post-commit.sh`
+- `sources/sync-backup/git-lfs/t/t-post-merge.sh`
+- `sources/sync-backup/git-lfs/t/t-pre-push.sh`
+- `sources/sync-backup/git-lfs/t/t-progress-meter.sh`
+- `sources/sync-backup/git-lfs/t/t-progress.sh`
+- `sources/sync-backup/git-lfs/t/t-prune-worktree.sh`
+- `sources/sync-backup/git-lfs/t/t-prune.sh`
+- `sources/sync-backup/git-lfs/t/t-pull.sh`
+- `sources/sync-backup/git-lfs/t/t-push-bad-dns.sh`
+- `sources/sync-backup/git-lfs/t/t-push-failures-local.sh`
+- `sources/sync-backup/git-lfs/t/t-push-failures-remote.sh`
+- `sources/sync-backup/git-lfs/t/t-push-file-with-branch-name.sh`
+- `sources/sync-backup/git-lfs/t/t-push.sh`
+- `sources/sync-backup/git-lfs/t/t-reference-clone.sh`
+- `sources/sync-backup/git-lfs/t/t-repo-format.sh`
+- `sources/sync-backup/git-lfs/t/t-smudge.sh`
+- `sources/sync-backup/git-lfs/t/t-ssh.sh`
+- `sources/sync-backup/git-lfs/t/t-standalone-file.sh`
+- `sources/sync-backup/git-lfs/t/t-status.sh`
+- `sources/sync-backup/git-lfs/t/t-submodule-lfsconfig.sh`
+- `sources/sync-backup/git-lfs/t/t-submodule-recurse.sh`
+- `sources/sync-backup/git-lfs/t/t-submodule.sh`
+- `sources/sync-backup/git-lfs/t/t-tempfile.sh`
+- `sources/sync-backup/git-lfs/t/t-track-attrs.sh`
+- `sources/sync-backup/git-lfs/t/t-track-wildcards.sh`
+- `sources/sync-backup/git-lfs/t/t-track.sh`
+- `sources/sync-backup/git-lfs/t/t-umask.sh`
+- `sources/sync-backup/git-lfs/t/t-uninstall-worktree-unsupported.sh`
+- `sources/sync-backup/git-lfs/t/t-uninstall-worktree.sh`
+- `sources/sync-backup/git-lfs/t/t-uninstall.sh`
+- `sources/sync-backup/git-lfs/t/t-unlock.sh`
+- `sources/sync-backup/git-lfs/t/t-untrack.sh`
+- `sources/sync-backup/git-lfs/t/t-unusual-filenames.sh`
+- `sources/sync-backup/git-lfs/t/t-update.sh`
+- `sources/sync-backup/git-lfs/t/t-upload-redirect.sh`
+- `sources/sync-backup/git-lfs/t/t-usage.sh`
+- `sources/sync-backup/git-lfs/t/t-verify.sh`
+- `sources/sync-backup/git-lfs/t/t-version.sh`
+- `sources/sync-backup/git-lfs/t/t-worktree.sh`
+- `sources/sync-backup/git-lfs/t/t-zero-len-file.sh`
+- `sources/sync-backup/git-lfs/t/testenv.sh`
+- `sources/sync-backup/git-lfs/t/testhelpers.sh`
+- `sources/sync-backup/git-lfs/t/testlib.sh`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

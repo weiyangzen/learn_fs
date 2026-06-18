@@ -1,0 +1,11 @@
+# sources/user-network-fs/samba/source3/rpc_server/svcctl/srv_svcctl_nt.c
+
+Purpose: Implements the source3 SVCCTL RPC server for service-control-manager and service handles. It supports opening SCM/services, querying display names/status/config/security, enumerating services, starting/stopping/interrogating services, locking/unlocking the service database as a stub handle, and server init/shutdown. Many write/configuration and notification opnums intentionally fault as unsupported.
+
+Important APIs/functions: `init_service_op_table()` builds global `svcctl_ops` from configured external services using `rcinit_svc_ops` plus built-ins Spooler, NETLOGON, RemoteRegistry, and WINS. `construct_scm_sd()` grants SCM read to Everyone and all access to Builtin Administrators. `create_open_service_handle()` stores `SERVICE_INFO` in policy handles. `_svcctl_OpenSCManagerW()` and `_svcctl_OpenServiceW()` map generic access and check SCM/service security descriptors. Query and control functions enforce handle type and granted access bits before calling service operation callbacks or registry-backed service metadata helpers.
+
+Control flow and state: The only file-local persistent state is the global `svcctl_ops` table, allocated at server init and freed at shutdown. Service metadata and security descriptors are read/written via `svcctl_get_*`/`svcctl_set_secdesc` helpers backed by winreg service keys. Service start/stop/status operations dispatch to `SERVICE_CONTROL_OPS`. Unsupported operations set `p->fault_state = DCERPC_FAULT_OP_RNG_ERROR` and return `WERR_NOT_SUPPORTED`.
+
+Dependencies and integration: Depends on generated SVCCTL NDR glue, service operation modules, `services/svc_winreg_glue.h`, security descriptor utilities, auth session info, global messaging, and `svcctl_init_winreg()` from `srv_svcctl_reg.c`. Init wraps generated endpoint init to seed service registry keys first.
+
+Risks and test signals: Access masks are handle-time decisions, so tests should verify least privilege on query/start/stop/security operations. Buffer sizing and NDR marshaling for enum/config/status-ex replies are compatibility-sensitive. Test SCM open, service open absent/present, service status, enum with small buffers, config/config2, DACL get/set, unsupported opnums, init failure when winreg seeding fails, and cleanup freeing `svcctl_ops`.

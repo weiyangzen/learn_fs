@@ -1,0 +1,11 @@
+## sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/TestRouterRetryCache.java
+
+Purpose: tests retry-cache correctness through Router-based Federation when proxy users and HA failover are involved. It also unit-checks parsing of caller-context special values used by NameNode audit/retry metadata.
+
+Important APIs and types include `MiniRouterDFSCluster` in HA mode, `UserGroupInformation`, proxy-user Hadoop configuration keys, `DFS_NAMENODE_IP_PROXY_USERS`, `RetryInvocationHandler.SET_CALL_ID_FOR_TEST`, `Client.setCallIdAndRetryCount`, `HAServiceProtocol.HAServiceState`, `FileSystem.rename`, and `NameNode.parseSpecialValue`.
+
+Control flow: `setup()` configures proxy permissions for the login router user and fake users, starts HA NameNodes and Routers, registers NameNodes, installs mock locations, and switches the first NameNode active. Two tests call `internalTestRetryCache()` with one-level and two-level proxy UGI. The helper creates a Router filesystem, prepares a directory, constructs a fake user or proxy user, creates a source dir, manually sets the same IPC call ID, performs a rename twice, fails over active NameNode from `nn0` to `nn1`, retries the same call ID again, and checks final file owner. `testParseSpecialValue()` extracts `clientIp`, `clientCallId`, and `clientId` tokens while returning null for a missing retry token.
+
+State and persistence behavior includes HDFS retry cache state across duplicate call IDs and HA failover, filesystem rename side effects, and UGI ownership on created/renamed paths. No durable state-store records are inspected; the main stateful dependency is NameNode retry cache semantics.
+
+Dependencies and integration points are Router RPC forwarding, HDFS HA failover, proxy-user authorization, IPC call ID/retry count propagation, and NameNode caller-context parsing. Risks covered include duplicate non-idempotent operations being replayed incorrectly, retry cache identity losing proxy user information, failover changing owner attribution, and malformed audit context parsing. Test signals are active/standby state assertions, successful repeated renames, final owner equality, and parsed special-value assertions.

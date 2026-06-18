@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/async/TestRouterAsyncRPCMultipleDestinationMountTableResolver.java
+
+Purpose: async version of multiple-destination mount table resolver tests, focused on local resolver datanode mapping, invoking available namespaces when one destination is down, and multi-destination directory detection.
+
+Important APIs/types/functions: extends `TestRouterRPCMultipleDestinationMountTableResolver`; uses `StateStoreDFSCluster` with `MultipleDestinationMountTableResolver`, `DistributedFileSystem`, `MountTable`, `RouterQuotaUsage`, `DestinationOrder`, `LocalResolver`, `RouterClientProtocol`, `RemoteMethod`, `FsServerDefaults`, `MiniDFSCluster`, and `syncReturn`.
+
+Control flow: setup starts three nameservices with async RPC, quota, admin, state store, and ACL-enabled namenodes. `testLocalResolverGetDatanodesSubcluster()` installs a LOCAL multi-destination mount, asks the `LocalResolver` for datanode-to-subcluster mapping, then removes mount and NN paths. `testInvokeAtAvailableNs()` creates a fault-tolerant RANDOM mount, shuts down two NNs, invokes async `getServerDefaults` at an available namespace, and restarts NNs in finally. `testIsMultiDestDir()` calls async client protocol `isMultiDestDirectory` for directories, files, and symlinks under HASH_ALL and HASH mount orders.
+
+State and persistence behavior: mount-table entries persist in state store and physical paths in multiple NNs; cleanup is explicit or inherited. Integration points include multi-destination ordering, local datanode resolver, fault-tolerant invocation, symlink resolution, and async RPC. Risks include NN shutdown/restart fragility and resolver cache state. Test signals are non-empty datanode mapping, non-null server defaults, and expected boolean values for multi-destination directory checks.

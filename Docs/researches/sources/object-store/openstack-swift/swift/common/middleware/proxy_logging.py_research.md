@@ -1,0 +1,9 @@
+# sources/object-store/openstack-swift/swift/common/middleware/proxy_logging.py
+
+Purpose: Implements Swift proxy access logging and StatsD metrics, including request/response byte counts, timing, time-to-first-byte, policy labels, anonymization, sensitive-header redaction, and support for double proxy-logging pipeline placement.
+
+Important APIs and control flow: `CallbackInputProxy` wraps `wsgi.input` so reads can trigger byte-transfer callbacks. `BufferXferEmitCallback` accumulates streaming byte counts and periodically emits labeled metrics. `ProxyLoggingMiddleware.__init__` builds the log template, anonymization settings, header logging policy, valid method list, access logger, labeled statsd client, and streaming metric interval. `__call__` creates request labels, avoids duplicate access logs via `swift.proxy_access_log_made`, wraps input, captures downstream `start_response`, enforces content length with `ByteEnforcer`, emits first-byte metrics for GET, streams response bytes, records disconnects as 499 and exceptions as 500, and logs in a `finally` block.
+
+State, dependencies, and integration: Per-process state includes PID, log config, statsd clients, and storage-domain config. Per-request state lives in environ keys such as `swift.base_labels`, `swift.proxy_logging_status`, `swift.backend_path`, and `swift.source`. It integrates with S3 request detection, storage policies, sensitive header registries, and catch-errors byte enforcement.
+
+Risks and test signals: Logging must not leak sensitive values and must not double-count subrequests. Tests should cover template validation, anonymization, HEAD content length, generator close, downstream exceptions, invalid content-length, labeled S3 base-label updates, policy metrics, `access_log_headers_only`, and streaming metric flush on EOF.

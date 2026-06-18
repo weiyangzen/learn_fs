@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmget/shmget04.c
+
+Purpose: verifies `shmget()` returns `EACCES` when an unprivileged user accesses an existing segment without permissions using `SHM_RD`, `SHM_WR`, or `SHM_RW`. Setup resolves `nobody`, switches real UID, generates a key, and creates a segment with no permission bits beyond `IPC_CREAT | IPC_EXCL`. The test table iterates access flags and expects `EACCES`. State is one segment owned by the unprivileged user but without read/write permissions. Dependencies include root startup for UID change and LTP shared-memory flags from `lapi/shm.h`. Risks are capability retention or filesystem namespace not relevant. Test signal is expected errno for all three access modes and cleanup removal.

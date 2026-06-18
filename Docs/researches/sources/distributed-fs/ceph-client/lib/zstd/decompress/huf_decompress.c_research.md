@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/lib/zstd/decompress/huf_decompress.c
+
+## Purpose
+Implements the Huffman literal decoder used by the in-kernel Zstandard decompressor. It builds Huffman decode tables from compressed table descriptions, selects either the single-symbol X1 or double-symbol X2 decoder, and decodes both one-stream and four-stream Huffman payloads used by Zstd literals blocks. The file is performance-sensitive: it contains generic C decoders, optional runtime/static BMI2 wrappers, optional x86-64 BMI2 assembly fast-loop hooks, and table-log tuning that favors an 11-bit fast decode table when possible.
+
+## Important APIs, Types, and Functions
+The public entry points are `HUF_readDTableX1_wksp()`, `HUF_readDTableX2_wksp()`, `HUF_decompress1X_DCtx_wksp()`, `HUF_decompress1X_usingDTable()`, `HUF_decompress1X1_DCtx_wksp()`, `HUF_decompress1X2_DCtx_wksp()`, `HUF_decompress4X_usingDTable()`, and `HUF_decompress4X_hufOnly_wksp()`. These are consumed by Zstd block decompression when literal sections are Huffman-coded and by dictionary entropy loading.
+
+Key local types include `DTableDesc`, the first word of a `HUF_DTable` carrying `maxTableLog`, `tableType`, and `tableLog`; `HUF_DEltX1`, a single-symbol decode table entry with `nbBits` and `byte`; `HUF_DEltX2`, a double-symbol entry with a packed two-byte sequence, consumed bit count, and decoded length; `HUF_DecompressFastArgs`, the shared state passed to C or assembly four-stream fast loops; and workspace structures `HUF_ReadDTableX1_Workspace` and `HUF_ReadDTableX2_Workspace`.
+
+Notable helpers are `HUF_selectDecoder()`, which estimates X1 versus X2 cost from compressed/decompressed size ratio; `HUF_rescaleStats()`, which raises small table logs toward `HUF_DECODER_FAST_TABLELOG`; `HUF_initFastDStream()` and `HUF_initRemainingDStream()`, which bridge between the custom fast-loop bit representation and normal `BIT_DStream_t`; and the `HUF_DGEN()` wrapper macro, which emits BMI2 and default variants when runtime BMI2 dispatch is enabled.
+
+## Control Flow
+Table construction begins by calling `HUF_readStats_wksp()` to parse Huffman weights and rank counts. X1 construction optionally rescales weights to a target table log, sorts symbols by weight, writes `DTableDesc.tableType = 0`, and fills decode-table ranges with repeated single-symbol entries. X2 construction computes sorted symbols, rank starts, and rank-value columns, writes `DTableDesc.tableType = 1`, and fills table ranges either with a first-level single symbol or with second-level entries that can emit two symbols per lookup.
+
+Decoding has two shape variants. `1X` decoders initialize one `BIT_DStream_t`, decode until the requested output size is filled, and then require `BIT_endOfDStream()`. `4X` decoders parse the six-byte jump table, split compressed input into four bitstreams, split output into four near-equal segments, decode each segment, and validate all streams ended exactly. Fast 4X paths first call `HUF_DecompressFastArgs_init()`, require 64-bit little-endian execution, an 11-bit table log, enough input per stream, and non-tiny output, then run the C or assembly fast loop and finish the tail through the normal stream decoder. If the fast initializer returns zero, callers fall back to the generic decoder.
+
+The universal selectors handle edge cases before table decoding: zero output is rejected, `cSrcSize == dstSize` is treated as uncompressed copy in 1X mode, `cSrcSize == 1` is treated as RLE in 1X mode, and malformed 4X jump tables or segment/output overflows return corruption errors. Compile-time macros can force only X1 or only X2, and runtime flags can disable BMI2 assembly or fast decode.
+
+## State and Persistence Behavior
+The file owns no persistent external state. State is held in caller-provided decode tables, temporary workspaces, local bitstream containers, and output buffers. `HUF_DTable` carries reusable entropy tables across literal blocks or dictionaries, with the first table word serving as a descriptor. The fast path mutates only `HUF_DecompressFastArgs` and caller buffers. Dictionary entropy persistence is external: this file builds the Huffman table that `zstd_ddict.c` and `zstd_decompress.c` store in `ZSTD_entropyDTables_t`.
+
+## Dependencies and Integration Points
+The implementation depends on Zstd common helpers for memory, bitstreams, FSE stats parsing, Huffman declarations, errors, CPU feature attributes, and bit utilities. It integrates primarily through `../common/huf.h` declarations and is called from Zstd literal-block decompression and dictionary entropy loading. CPU-feature integration is controlled by `DYNAMIC_BMI2`, `ZSTD_ENABLE_ASM_X86_64_BMI2`, `HUF_flags_bmi2`, `HUF_flags_disableAsm`, and `HUF_flags_disableFast`.
+
+## Risks and Edge Cases
+The high-risk areas are bounds in the 4X jump-table parser, output-segment boundary checks, the fast-loop assumptions about 64-bit little-endian layout, strict-aliasing avoidance through `void*` table pointers, and bitstream tail validation after unrolled loops. X2 decoding writes up to two bytes per table lookup, so last-symbol handling and segment-end checks are critical. Table construction is sensitive to table-log limits, workspace size, rank math, and rescaling correctness. Any divergence between C and assembly fast loops can become architecture-specific corruption, so the disable-fast and disable-assembly flags are important diagnostic controls.
+
+## Test Signals
+Useful tests include Zstd frame decompression with Huffman literals across both 1X and 4X block modes, malformed jump tables with overflowing stream lengths, tiny literals that force fallback, dictionaries with precomputed Huffman tables, forced X1/X2 builds, BMI2-enabled and BMI2-disabled runs, `HUF_flags_disableFast` and `HUF_flags_disableAsm` comparisons, and fuzzing compressed literal payloads for `corruption_detected` rather than overread/overwrite. Cross-endian and 32-bit build coverage is valuable because fast decode is intentionally bypassed there.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-common-props.c
+
+This file implements reusable firmware-property parsing for differential PHY lane polarity. Its exported APIs are `phy_get_rx_polarity()`, `phy_get_tx_polarity()`, `phy_get_manual_rx_polarity()`, and `phy_get_manual_tx_polarity()`, all exported GPL symbols for PHY drivers that need `rx-polarity`/`tx-polarity` and matching `*-polarity-names` properties.
+
+The core control flow is `fwnode_get_u32_prop_for_name()`: missing firmware node or missing value property returns the caller default, a single unnamed value applies globally, named arrays must match value array length, lookup first tries the requested mode name and then `"default"`, and multi-value arrays without a matching name fail with `-EINVAL`. Multi-value decoding allocates a temporary `u32` array with `kcalloc()`. `phy_get_polarity_for_mode()` then verifies the decoded enum against a caller-supplied supported bitmask.
+
+State is not retained beyond the returned value. Dependencies are Linux fwnode/property APIs, `BIT()`-encoded `PHY_POL_*` constants, printk diagnostics, and slab allocation. Integration points are DT/ACPI-backed PHY drivers that want consistent polarity parsing. Risks include strict count matching rejecting malformed but historically tolerated DTs, log noise from invalid firmware data, and possible unsupported-value failures if bindings allow values not represented in a driver's supported mask. KUnit coverage in `phy-common-props-test.c` is the main test signal.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pci/remove.c
+
+Purpose: Implements PCI device and bus teardown. It separates stopping devices from destroying them, recurses through subordinate buses, removes sysfs/proc/device-tree representations, releases resources, updates global PCI bus lists, and handles root bus teardown.
+
+Important APIs and functions: Exports `pci_remove_bus()`, `pci_stop_and_remove_bus_device()`, `pci_stop_and_remove_bus_device_locked()`, `pci_stop_root_bus()`, and `pci_remove_root_bus()`. Internal helpers are `pci_free_resources()`, `pci_stop_dev()`, `pci_destroy_dev()`, `pci_stop_bus_device()`, and `pci_remove_bus_device()`.
+
+Control flow: Stop is a driver-facing phase: `pci_stop_dev()` disables PME activity, checks and clears the added flag, releases the bound driver, removes proc/sysfs files, and removes OF nodes. Destruction is a core-model phase: `pci_destroy_dev()` marks the device removed, tears down DOE/NPEM/TSM/IDE/ASPM state, calls `device_del()`, removes the device from `bus_list` under `pci_bus_sem`, updates bridge D3 state, frees claimed resources, and drops the final device reference. Recursive helpers stop children before parents and destroy children before removing subordinate buses. The locked wrapper takes `pci_rescan_remove_lock`; the unlocked exported path asserts that the caller already holds it.
+
+State and persistence: Mutates `pci_dev` added/removed state, `dev->subordinate`, bus and device linked lists, resource parentage, sysfs/proc/device-tree objects, DOE/IDE/ASPM/TSM side state, bridge D3 accounting, host bridge `bus`, and generic device-model registration. Released resources leave the kernel resource tree and device references are dropped with `put_device()` or `device_unregister()`.
+
+Dependencies and integration points: Depends on PCI core locking (`pci_rescan_remove_lock`, `pci_bus_sem`), Linux device core, driver core, OF PCI helpers, proc/sysfs PCI helpers, DOE/IDE/NPEM/TSM teardown, ASPM, bridge D3 policy, host bridge/domain-number handling, and platform `bus->ops->remove_bus`, `pcibios_remove_bus()`, and `pci_remove_legacy_files()`. It is used by hot-remove, rescan/remove sysfs operations, root bus removal, and platform host bridge teardown.
+
+Risks: Ordering is critical. Drivers must be detached before the device disappears from the device model, children must be stopped before parents, and SR-IOV VFs must be handled without corrupting iteration over bus device lists. The code uses reverse iteration for stop because stopping a PF can remove VFs. Missing locks can race with rescan or enumeration; double removal is guarded by added/removed test-and-set bits. Resource leaks or premature `put_device()` would destabilize the PCI device model.
+
+Test signals: PCI hotplug remove, sysfs remove/rescan, SR-IOV PF/VF removal, bridge subtree removal, root bus unregistration, OF node cleanup, DOE/IDE/ASPM teardown coverage, lockdep checks for `pci_rescan_remove_lock`, and clean sysfs/proc/resource state after repeated remove/rescan cycles.

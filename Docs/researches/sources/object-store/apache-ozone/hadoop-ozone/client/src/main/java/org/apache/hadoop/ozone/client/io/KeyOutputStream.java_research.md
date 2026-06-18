@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/client/src/main/java/org/apache/hadoop/ozone/client/io/KeyOutputStream.java
+
+Purpose: This is the main replicated byte-array key writer. It writes client bytes to one or more datanode block streams, handles retry and exclusion after failures, supports flush and hsync for RATIS keys, executes pre-commit hooks, and commits the final key to OM.
+
+Important APIs and types: Key methods include `write`, `flush`, `hflush`, `hsync`, `close`, `addPreallocateBlocks`, `handleWrite`, `setPreCommits`, `getCommitUploadPartInfo`, `getMetadata`, and builder setters for OM, xceiver, config, replication, metrics, executor, multipart, and OM version. It depends on `BlockOutputStreamEntryPool`, `BlockOutputStreamEntry`, `KeyOutputStreamSemaphore`, `RetryPolicy`, `ExcludeList`, `OzoneManagerVersion`, Ratis exceptions, SCM container exceptions, and `Syncable`.
+
+Control flow: `write` acquires the per-key semaphore, validates arguments, takes the write lock, writes chunks into the current block entry, closes full blocks, and advances `offset`/`writeOffset`. On IOException it waits for pending flushes, determines retry versus container exclusion, records failed datanodes and pipelines/containers in the exclude list, cleans the failed stream, discards invalid preallocated blocks, sleeps per retry policy, and rewrites buffered data into a newly allocated block. Flush and hsync use `handleFlushOrClose`; close flushes/closes, validates offsets when no exception occurred, runs pre-commit hooks, commits to OM, and clears the pool.
+
+State and persistence behavior: Runtime state includes closed flag, exception flag, retry count, committed offset, ingested writeOffset, client ID, stream buffer settings, metrics, OM version, write lock/condition, semaphore, and pre-commit hooks. Persistent state is datanode block data plus OM key, multipart-part, or hsync metadata. Failed streams are not rolled back if an earlier block in a multi-block write already succeeded.
+
+Dependencies and integration points: It is wrapped by `OzoneOutputStream` and may be wrapped by encryption streams. It coordinates with OM block allocation/commit through the pool, SCM datanode streams through entries, client retry config, metrics, and HBase-support-gated hsync.
+
+Risks: The class explicitly does not support general multi-thread access despite some concurrency controls; condition/semaphore interactions are subtle. Retry offset accounting depends on `getWrittenDataLength` and buffer pool invariants. Hsync only supports RATIS with replication factor greater than one and sufficient OM version. `markStreamClosed` aggressively clears the pool, making later errors terminal.
+
+Test signals: Tests should cover argument validation, block-boundary writes, full-block close, concurrent write semaphore queueing, retry after partial writes, failed datanode/pipeline/container exclusion, preallocated block discard, hsync gating by replication and OM version, OM hsync/commit metrics, pre-commit failure behavior, multipart commit info, and cleanup after errors.

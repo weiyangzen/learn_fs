@@ -1,0 +1,17 @@
+# sources/test-tools/strace/tests/clock_xettime.c
+
+Purpose: `clock_xettime.c` exercises clock and time syscall decoders, especially clock ids, timespec/timex structures, 32-bit versus 64-bit time ABI variants, and restartable sleep output.
+
+Important APIs/types/functions: local functions include none detected; macros include `SYSCALL_NR_gettime`, `SYSCALL_NR_settime`, `SYSCALL_NR_getres`, `SYSCALL_NAME_gettime`, `SYSCALL_NAME_settime`, `SYSCALL_NAME_getres`, `clock_timespec_t`; included headers include `tests.h`, `scno.h`, `clock_xettime-common.c`. Kernel/user ABI names observed in the full file include `clock_gettime`, `clock_settime`. Prominent constants include `SPDX`, `GPL`, `SKIP_MAIN_UNDEFINED`; prominent struct names include none detected.
+
+Control flow: this file is a shared implementation or variant wrapper; compile-time macros select the syscall number, xlat style, fd/path mode, success behavior, or namespace mode before the included/shared test body runs.
+
+State and persistence behavior: runtime state is intentionally temporary and test-local. Most state lives in stack variables, tail-allocated buffers, compile-time macros, and errno/return-code snapshots.
+
+Dependencies: strace test harness headers such as `tests.h`, `scno.h`, `print_utils.h`, `pidns.h`, `secontext.h`, local xlat tables, libc headers, and Linux UAPI headers provide syscall numbers, fallback structs, constants, and output helpers. This file directly includes `tests.h`, `scno.h`, `clock_xettime-common.c`.
+
+Integration points: the file participates in strace's testsuite as a compiled C test, AWK normalizer, header, or generator input. It integrates with generated xlat tables, syscall-number selection, test-driver `.test` scripts, and expected-output comparison.
+
+Risks: time64/time32 splits and architecture-specific clock ids can alter syscall numbers and structure layout, so tests need conditional compilation and tolerant unsupported-syscall handling.
+
+Test signals: useful validation is the corresponding strace testsuite target under the same basename, comparison of stdout against expected decoder lines, successful compilation under the configured personality/time ABI, and skip behavior when the kernel lacks the syscall or permission. The source was read in full for this report: 40 lines, 982 bytes, sha256 prefix `fb219b92be48`.

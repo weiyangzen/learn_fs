@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/phy/motorola/phy-mapphone-mdm6600.c
+
+Purpose: This driver models the Mapphone MDM6600 modem USB PHY as a generic PHY controlled by GPIO handshakes. It powers the modem, selects normal USB boot mode, waits for status-line acknowledgements, exposes PHY power callbacks to USB consumers, and uses runtime PM to periodically wake the modem for TS 27.010/n_gsm traffic after USB suspend.
+
+Important APIs/types/functions: `struct phy_mdm6600` stores control, mode, status, and command GPIO arrays; delayed works for boot, status sampling, and modem wake; a completion `ack`; state booleans `enabled`, `running`, `awake`; and the last decoded status. Enums define control lines, boot-mode lines, command-line bit encodings, status-line bit encodings, command values, and status values. Key functions include `phy_mdm6600_init()`, `power_on()`, `power_off()`, `phy_mdm6600_cmd()`, `phy_mdm6600_status()`, IRQ handlers, `phy_mdm6600_device_power_on()`, `phy_mdm6600_device_power_off()`, runtime PM callbacks, probe, and remove.
+
+Control flow: Probe allocates state, initializes delayed work and completion, acquires all GPIO arrays with exact descriptor counts, registers status IRQs, schedules deferred power-on, sleeps long enough for early USB host users, enables autosuspend runtime PM, wakes the modem, creates the generic PHY, and registers a simple OF PHY provider. Power-on toggles boot-mode GPIOs low, sends `PHY_MDM6600_CMD_NO_BYPASS`, releases reset, pulses power, waits for PHY-ready delay, then waits for a status-line completion. After boot, mode GPIO1 is converted to input and requested as an OOB wake IRQ. Generic PHY operations gate USB access through the enable GPIO and runtime PM references.
+
+State and persistence: State is volatile and distributed across GPIO line levels, delayed work, runtime PM state, completion state, and booleans in `ddata`. The hardware modem retains its own power/status state. Remove disables runtime PM, waits for unfinished boot, asserts reset, requests modem shutdown, and cancels all delayed work.
+
+Dependencies and integration points: The driver depends on OF, GPIO descriptors/arrays, threaded IRQs from GPIOs, pinctrl sleep state, generic PHY, platform devices, and runtime PM. Its compatible is `motorola,mapphone-mdm6600`; consumers obtain the PHY through the OF PHY provider.
+
+Risks: The driver depends on long fixed sleeps and status GPIO completions; boot timing changes can produce false timeouts or deferred PHY init failures. `phy_mdm6600_status_name[ddata->status]` assumes valid 3-bit status values, which is protected by the bitmask but depends on descriptor count validation. GPIO mode lines are reused as wake signals, so ordering mistakes can glitch modem wake or USB boot mode.
+
+Test signals: Confirm exact GPIO array counts, status IRQs firing, "Powered up OK" after boot, generic PHY init no longer returning `-EPROBE_DEFER`, USB host access without L3 errors, runtime autosuspend/resume wake kicks, and clean power-down status. Stress tests should cover module remove during boot, missing wake IRQ, and repeated USB suspend/resume with n_gsm traffic.

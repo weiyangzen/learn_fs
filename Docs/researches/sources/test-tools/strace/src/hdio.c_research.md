@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/hdio.c
+
+HDIO ioctl decoder. It handles `HDIO_GETGEO`, `HDIO_DRIVE_CMD`, and delegates many generated variable HDIO commands to `var_ioctl_HDIO` when native word size matches; compat HDIO is intentionally unsupported because the kernel lacks it. `HDIO_DRIVE_CMD` prints command header on entry and status/error/data buffer on exit, including `EIO` status behavior. State is tracee memory and phase. Dependencies include `<linux/hdreg.h>`, mpers geometry type, `hdio_drive_cmds`, and `gen/generated.h`. Risks are generated decoder staleness, 512-byte sector buffer sizing, and error-specific output. Tests should cover getgeo, drive command success/EIO/other errors, generated HDIO commands, and compat skip behavior.

@@ -1,0 +1,15 @@
+# sources/storage-engines/tikv/components/raftstore-v2/src/batch/store.rs
+
+Purpose: Implements the raftstore-v2 store batch system: per-thread `StoreContext`, poll handlers for store and peer FSMs, startup recovery, tablet cleanup, worker/scheduler wiring, router behavior, purge/flush background work, and shutdown.
+
+Important APIs/types/functions: `StoreContext` carries config, transport, metrics, router, tick batches, schedulers, store metadata, raft engine, tablet registry, pools, disk status, snapshot manager, importer, key manager, and latency inspectors. `StorePoller` implements `PollHandler` for `PeerFsm` and `StoreFsm`; `begin`, `handle_control`, `handle_normal`, `light_end`, `end`, and `pause` drive message batches and flush events. `StorePollerBuilder::init` reconstructs peer FSMs from raft groups and cleans stale tablets. `Schedulers` and `Workers` own background channels and threads. `StoreSystem::start`, `shutdown`, `pd_scheduler`, and `refresh_config_scheduler` manage lifecycle. `StoreRouter::send_raft_message` routes known-region raft messages to peer mailboxes and unknown-region messages to the store FSM. `create_store_batch_system` constructs the router/system pair.
+
+Control flow: Startup registers PD reconnect heartbeat callbacks, optionally spawns raft-engine purge tasks, starts write/read/PD/tablet/split-check/refresh-config workers, builds a poller, recovers peers, registers mailboxes, sends `PeerMsg::Start` to peers, then sends `StoreMsg::Start`. Polling drains bounded batches from control and peer queues, delegates to store/peer handlers, invokes raft ready handling, periodically flushes transport, ticks, metrics, and store stats, and forwards latency inspectors to write workers.
+
+State and persistence behavior: Runtime state is in `StoreContext`, worker pools, batch-system mailboxes, `StoreMeta`, recovered peer FSMs, and atomic shutdown markers. Persistence is indirect through raft engine writes, write workers, tablet registry operations, and purge-triggered tablet flushes. Stale tablet directories are removed during recovery, with key-manager cleanup when encryption is enabled.
+
+Dependencies and integration points: This file integrates `batch-system`, PD client callbacks, raftstore worker types, `engine_traits`, `TabletRegistry`, coprocessor host, snapshots, resource control, gRPC service manager, YATP pools, and raftstore-v2 FSM/operation/worker modules.
+
+Risks: Startup ordering is critical: peers must receive `Start` before normal messages, and stale tablet cleanup must not delete merge-source/in-progress state. Manual purge rate calculation depends on KV flush counters. Many worker starts use asserts/unwraps, so startup failures can panic. Router fallback must preserve backpressure semantics for full/disconnected peer queues.
+
+Test signals: Local failpoints pause peer message collection. Crate integration tests should cover startup replay, PD reconnect heartbeat broadcast, purge/manual flush, router fallback for unknown regions, tablet cleanup, shutdown ordering, and refresh config behavior.

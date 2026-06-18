@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/selftest_migrate.c Research
+
+Purpose: this suite verifies and benchmarks i915 migrate BLT support for copying and clearing memory across system/internal memory and local memory, including flat CCS metadata handling, ring-space edge cases, concurrency, and throughput reporting.
+
+Important APIs/types/functions: correctness helpers include `copy()`, `clear()`, `intel_context_copy_ccs()`, `intel_migrate_ccs_copy()`, wrappers around `intel_migrate_copy()`, `intel_context_migrate_copy()`, `intel_migrate_clear()`, and `intel_context_migrate_clear()`. Live subtests are `live_migrate_copy()`, `live_migrate_clear()`, `live_emit_pte_full_ring()`, and threaded copy/clear variants. Performance tests use `perf_clear_blt()` and `perf_copy_blt()`.
+
+Control flow: copy tests allocate source and destination objects, initialize source with incremental dwords and destination with bitwise inverse values, call a migrate/global copy function under ww locking, wait for the output request, and sample one random dword per page for correctness. Clear tests initialize an object, optionally write/read CCS via `intel_migrate_ccs_copy()` on flat-CCS LMEM objects, call the clear function, verify data dwords, and verify CCS bytes were zeroed. Threaded tests spawn `num_online_cpus() + 1` workers that repeatedly run 2*`CHUNK_SZ` operations. The full-ring regression shrinks a migrate context ring and ensures `emit_pte()` waits for space rather than overwriting reserved space.
+
+State and persistence: the tests create and pin GEM objects, lock them with ww contexts, pin WC maps, submit migrate requests, spawn temporary kthreads, use an `igt_spinner`, and temporarily create migrate contexts. Performance helpers lock and pin objects, run several passes, sort timings, and print MiB/s. All objects, maps, contexts, and request refs are released.
+
+Dependencies/integration: it integrates with GEM LMEM/internal allocation, scatter-gather page lists, PAT indices, migrate VM/context code, CCS access helpers, request waits, timers, and kernel thread management. It gates live tests on `gt->migrate.context` and perf tests additionally skip wedged GTs.
+
+Risks and test signals: risks include allocation pressure from large sizes, Small BAR limitations, ww deadlock retry paths, interruptible kthread stops, and timing-sensitive ring-space behavior. Strong signals are correct sampled dwords after copy/clear, zero CCS metadata after clear, no reserved-space assertion in the ring test, no worker failures under concurrency, and printed throughput for perf lanes.

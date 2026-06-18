@@ -1,0 +1,30 @@
+# sources/test-tools/xfstests-bld/fstests-bld/popt/missing
+
+## Purpose
+`missing` is the GNU Automake helper script shipped with the vendored `popt` package. It provides controlled fallbacks when optional maintainer tools are absent or too old during a build from a generated distribution tarball. Its purpose is to let ordinary consumers build existing generated sources without requiring Autoconf, Automake, Bison, Flex, Texinfo, Help2man, or GNU tar, while making it clear that changed maintainer inputs require the real tools.
+
+## Important APIs, types, and functions
+The script is command-line driven and has no shell functions. Supported options are `--help`, `--version`, and `--run`. `--run PROGRAM ARGS...` first tries to execute the requested program and exits successfully if it works; exit code `63` is treated as a version mismatch and falls back to emulation with the diagnostic text changed to "probably too old".
+
+The supported program names are normalized by stripping leading `gnu-`, `gnu`, or `g`, and version suffixes are naturally accepted by wildcard cases. Emulated program families are `aclocal`, `autoconf`, `autoheader`, `automake`, `autom4te`, `bison`/`yacc`, `flex`/`lex`, `help2man`, `makeinfo`, and `tar`. The script uses two sed expressions, `sed_output` and `sed_minuso`, to discover output files from `--output=FILE`, `--output FILE`, or `-o FILE` style arguments.
+
+## Control flow
+Startup requires at least one argument, initializes `run=:` to mean "do not actually run first", chooses `configure.ac` if present or `configure.in` otherwise, and sets the default message to "missing on your system". Option parsing handles `--run`, help/version output, and unknown options. After `--run`, it shifts off the flag, tries the requested command, exits on success, and only continues to fallback behavior when the program failed with status `63` or was not runnable.
+
+Before emulating, the script has a generic guard that avoids silently faking failed tools that appear to exist. For most GNU-style tools, if `--run` was used and `$tool --version` succeeds, the script exits with failure rather than pretending the tool is absent. It also exits with failure for direct `$tool --version` or `$tool --help` probes so configure checks see the tool as unavailable. `tar` is special: it requires `--run`, and `lex`/`yacc` are exempt from `--version` checks because they are not GNU programs.
+
+The main program-family case emits a warning explaining when the real tool is needed and then performs the fallback. Autotools fallbacks `touch` generated files such as `aclocal.m4`, `configure`, `config.h.in`, and all `Makefile.in` files corresponding to `Makefile.am`. `autom4te`, `help2man`, and `makeinfo` locate or infer the requested output and either touch it or create a minimal stub, failing when the output does not already exist and a real generator is required. Parser/scanner fallbacks create `y.tab.c`, `y.tab.h`, or `lex.yy.c` by copying adjacent generated `.c`/`.h` files if available, otherwise creating minimal dummy C sources. The `tar` fallback tries `gnutar`, `gtar`, and then retries system `tar` with nonportable option letters `o` or `h` stripped.
+
+## State and persistence behavior
+The script persists only timestamp or placeholder outputs. It touches generated Autotools files to satisfy make dependency rules, creates stub shell output for missing `autom4te`, writes a minimal roff line for missing `help2man`, writes empty or dummy parser/scanner outputs, and removes/recreates `y.tab.*` or `lex.yy.c` during fallback. It also reads `configure.ac` or `configure.in` to infer autoheader outputs and `@setfilename` from Texinfo input to infer makeinfo output. It does not maintain a separate state file.
+
+## Dependencies and integration points
+`missing` is invoked by Automake-generated makefile rules in the `popt` package, typically through `$(SHELL) ./missing --run TOOL ...`. It integrates with source-distribution build workflows where generated files are already present but their timestamps may cause make to try regenerating them. It depends on basic POSIX shell utilities: `sed`, `touch`, `find`, `cp`, `rm`, `echo`, and candidate tools such as `gnutar`, `gtar`, and `tar`. It also assumes it is usually run from the source directory, which is why it looks for `configure.ac` or `configure.in` in the current directory.
+
+## Risks and edge cases
+The fallbacks are intentionally incomplete. They can make a build continue when generated files are already valid, but they can also mask stale generated outputs after a maintainer input has been changed. Dummy `y.tab.c`, `y.tab.h`, and `lex.yy.c` only satisfy compilation in narrow cases and do not preserve parser/scanner behavior. `autom4te` and `help2man` can create executable or documentation stubs that are placeholders, not real generated content.
+
+Argument parsing is simple and sed-based, so unusual quoting, spaces in filenames, or nonstandard option layouts may fail to identify output files correctly. The script also uses unquoted variables in several test/touch paths, matching the portability style of older Automake but making whitespace-heavy paths risky. The `tar` fallback mutates option strings by removing `o` and `h`, which can help on old vendor tar implementations but can also change semantics if a caller depended on those flags.
+
+## Test signals
+Direct smoke tests are `./missing --help`, `./missing --version`, and `./missing --run nonexistent-tool`, which should print a warning and fail for unknown tools. Known fallback tests include invoking `./missing aclocal`, `./missing autoconf`, `./missing autoheader`, and `./missing automake` in a scratch copy and verifying that only the expected generated files are touched. Parser/scanner tests can pass a `.y` or `.l` input with adjacent generated `.c`/`.h` files and confirm the fallback copies them. `make` in the vendored `popt` directory should not normally need these fallbacks unless generated-file timestamps force maintainer regeneration rules.

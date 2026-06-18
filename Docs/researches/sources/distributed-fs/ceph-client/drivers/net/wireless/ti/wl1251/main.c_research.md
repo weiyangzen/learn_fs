@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/ti/wl1251/main.c
+
+Purpose: Provides the wl1251 mac80211 core driver: firmware/NVS loading, power and boot startup, IRQ work, TX enqueue, interface/config/filter/key/scan/BSS callbacks, EEPROM/NVS MAC handling, hardware allocation, registration, teardown, and module metadata.
+
+Important APIs and functions: Public/exported functions are `wl1251_enable_interrupts()`, `wl1251_disable_interrupts()`, `wl1251_init_ieee80211()`, `wl1251_alloc_hw()`, and `wl1251_free_hw()`. Main mac80211 callbacks include `wl1251_op_start()`, `wl1251_op_stop()`, `wl1251_op_add_interface()`, `wl1251_op_remove_interface()`, `wl1251_op_config()`, `wl1251_op_prepare_multicast()`, `wl1251_op_configure_filter()`, `wl1251_op_tx()`, `wl1251_op_set_key()`, `wl1251_op_hw_scan()`, `wl1251_op_bss_info_changed()`, `wl1251_op_conf_tx()`, and `wl1251_op_get_survey()`. Internal lifecycle helpers load firmware/NVS, wake the chip, join BSS, and read/write MAC addresses.
+
+Control flow: Bus drivers call `wl1251_alloc_hw()` and `wl1251_init_ieee80211()`. mac80211 `start` powers on, resets/wakes the chip, reads chip ID, fetches firmware, boots firmware via `boot.c`, runs `wl1251_hw_init()`, programs station ID, and marks state ON. IRQ handlers only queue `irq_work`; `wl1251_irq_work()` wakes from ELP, masks interrupts, reads/normalizes interrupt bits, handles RX buffers, TX completion, and event mailboxes, then restores interrupt mask and schedules ELP sleep. mac80211 `stop` aborts scans, disables IRQs, cancels work, flushes TX, powers off, and resets volatile state.
+
+State and persistence: Maintains `struct wl1251` runtime state: ON/OFF, BSSID, MAC, BSS type, channel, monitor/joined/scanning flags, RX filters, TX queue state, ELP/PS mode, beacon/DTIM settings, NVS/firmware buffers, debugfs stats, and noise. Persistent inputs are firmware files `ti-connectivity/wl1251-fw.bin`, `ti-connectivity/wl1251-nvs.bin`, optional EEPROM, and possibly rewritten MAC bytes in the in-memory NVS buffer when a random MAC is generated.
+
+Dependencies and integration points: Integrates with Linux mac80211/cfg80211, firmware loader, regulator/bus `if_ops`, `boot.c`, `init.c`, `cmd.c`, `acx.c`, `event.c`, `tx.c`, `rx.c`, `ps.c`, and debugfs. It registers 2.4 GHz channels/rates and station/adhoc interface support.
+
+Risks: Workqueue and IRQ ordering are delicate: stop must disable IRQs, cancel work, and flush frames without racing with TX/RX callbacks. `wl1251_tx_flush()` paths can skip freeing some SKBs when TX status was not requested, which is a leak risk to inspect. Scan and idle transitions rely on ELP wake/sleep and correct join sequencing. The driver only supports a single interface and limited scan SSID behavior.
+
+Test signals: Build warnings for mac80211 API drift, boot logs for firmware version, successful `ieee80211_register_hw()`, scan completion or abort events, TX status callbacks, RX delivery, power-save transitions, CQM RSSI events, key install/remove, and debugfs stats updates. Firmware/NVS absence or invalid MAC path should be tested.

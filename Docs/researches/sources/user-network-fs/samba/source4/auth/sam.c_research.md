@@ -1,0 +1,13 @@
+# sources/user-network-fs/samba/source4/auth/sam.c
+
+Purpose: core Samba AD authentication/SAM helper code. It defines KDC/account lookup attribute sets, validates account policy, builds `auth_user_info_dc` records from SAMDB rows, expands domain groups, and maintains logon accounting.
+
+Important APIs and functions: `authsam_account_ok()` enforces disabled, locked, expired, must-change, password-expired, workstation, logon-hours, and trust-account restrictions. `authsam_make_user_info_dc()` converts an LDB user record into account metadata, session keys, and SID attributes. `authsam_update_user_info_dc()` expands local-domain nested group SIDs. `sam_get_results_principal()`, `authsam_get_user_info_dc_principal()`, and `authsam_search_account()` locate accounts. `authsam_update_bad_pwd_count()`, `authsam_reread_user_logon_data()`, and `authsam_logon_success_accounting()` implement bad-password and successful-logon updates.
+
+Control flow: authentication callers search by principal, DN, or account name using the exported attribute arrays, validate the resulting account with `authsam_account_ok()`, then build DC-style user info. Group expansion filters out builtin groups for the PAC path, later adding builtin local groups at session-token generation. Failure accounting reads domain/PSO policy, starts an LDB transaction, rereads the user by extended DN/GUID, delegates count/lockout calculation to DSDB, writes modifications with `DSDB_CONTROL_FORCE_RODC_LOCAL_CHANGE`, and records a temporary bad-password indicator. Success accounting first checks that indicator to avoid unnecessary transactions, optionally rereads the account, resets lockout/badPwdCount, updates `lastLogon`, `logonCount`, and `lastLogonTimestamp`, and emits RODC `SendToSAM` reset messages when appropriate.
+
+State and persistence: persistent state lives in SAMDB user/domain attributes (`badPwdCount`, `badPasswordTime`, `lockoutTime`, `lastLogon`, `lastLogonTimestamp`, `logonCount`, account-control computed attributes). A clustered temporary dbwrap database named `bad_password` stores objectSID keys to remember failed-password attempts between failure and success accounting.
+
+Dependencies/integration: depends on LDB/DSDB/SAMDB helpers, SID/security utilities, NDR LDAP encoders, loadparm, dbwrap, and clustering. It feeds GENSEC/Kerberos paths that need PAC-less user info, NTLM auth, DSDB tokenGroups handling, PAC construction, and session generation.
+
+Risks/test signals: policy correctness is security-critical; time, RODC, temporary indicator, and transaction paths are easy to regress. `auth/tests/sam.c` directly includes this file and verifies reread, lockout, transaction commit/cancel, bad-password indicator, and memory ownership behavior.

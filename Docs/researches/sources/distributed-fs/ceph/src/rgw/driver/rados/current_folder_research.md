@@ -1,0 +1,140 @@
+# Folder Research: sources/distributed-fs/ceph/src/rgw/driver/rados
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 126
+- Recursive researched files: 137
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/account.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/account.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/buckets.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/buckets.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/group.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/group.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/groups.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/groups.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/oidc.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/oidc.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/oidcs.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/oidcs.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_bl_rados.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_bl_rados.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_bucket.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_bucket.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_cr_rados.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_cr_rados.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_cr_tools.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_cr_tools.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_d3n_datacache.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_d3n_datacache.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_data_sync.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_data_sync.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_datalog.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_datalog.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_datalog_notify.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_datalog_notify.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_cluster.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_cluster.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_epoch.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_filter.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_filter.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_remap.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_store.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_store.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_table.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_table.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_utils.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_dedup_utils.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_etag_verifier.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_etag_verifier.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_gc.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_gc.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_gc_log.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_lc_tier.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_lc_tier.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_log_backing.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_log_backing.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_mdlog.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_metadata.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_metadata.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_metadata_lister.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_notify.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_notify.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_obj_manifest.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_obj_manifest.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_object_expirer_core.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_object_expirer_core.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_otp.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_otp.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_pubsub_push.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_pubsub_push.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_putobj_processor.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_putobj_processor.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rados.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rados.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_reshard.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_reshard.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_bucket.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_bucket.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_log.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_log.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_realm.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_realm.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_user.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_rest_user.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sal_rados.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sal_rados.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_service.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_service.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_counters.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_counters.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_error_repo.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_error_repo.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_aws.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_aws.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_es.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_es.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_es_rest.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_es_rest.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_log.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_module_log.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_trace.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_sync_trace.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_tools.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_tools.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_trim_bilog.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_trim_bilog.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_trim_datalog.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_trim_datalog.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_trim_mdlog.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_trim_mdlog.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_user.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/rgw_user.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/role.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/role.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/roles.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/roles.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/shard_io.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/sync_fairness.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/sync_fairness.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/topic.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/topic.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/topic_migration.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/topic_migration.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/topics.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/topics.h`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/users.cc`
+- `sources/distributed-fs/ceph/src/rgw/driver/rados/users.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

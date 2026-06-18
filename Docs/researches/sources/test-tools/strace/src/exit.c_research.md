@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/exit.c
+
+Minimal decoder for process termination syscalls. It prints the exit status argument and returns decoded so the generic syscall layer does not add an opaque value. There is no heap, private tcb data, or persisted state. Integration is through `SYS_FUNC(exit)` or equivalent sysent bindings for exit-like calls. Dependencies are just `defs.h` and integer printing helpers. Risks are low; the main concern is preserving conventional status formatting and not expecting a normal syscall exit stop. Tests should trace `_exit`/`exit_group` with representative status values, including high-bit statuses.

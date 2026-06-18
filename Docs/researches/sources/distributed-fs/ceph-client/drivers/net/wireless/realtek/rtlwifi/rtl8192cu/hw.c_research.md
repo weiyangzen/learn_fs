@@ -1,0 +1,16 @@
+
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+
+Purpose: Main RTL8192CU hardware bring-up, shutdown, EEPROM parsing, register get/set, media/beacon control, rate-mask programming, power-state, and GPIO radio switch implementation. It is the central USB HAL backend used by `sw.c`.
+
+Important APIs/functions: `rtl92cu_read_eeprom_info()` selects EEPROM/efuse boot source, reads adapter info, tx-power tables, board type, OEM ID, and LED behavior. `_rtl92cu_init_mac()` powers the device, initializes LLT, queue pages, TRX buffers, endpoint priority, interrupts, WMAC filters, EDCA/rate fallback/retry, bandwidth, and beacon parameters. `rtl92cu_hw_init()` chains MAC init, firmware download, table selection, MAC/BB/RF config, CAM reset, security setup, IQ/LC calibration, PA bias, and DM init. `rtl92cu_card_disable()` performs RF, digital, GPIO, and analog shutdown. `rtl92cu_set_hw_reg()` and `rtl92cu_get_hw_reg()` multiplex many core hardware variables. `rtl92cu_update_hal_rate_tbl()` builds rate tables or firmware rate masks. `rtl92cu_gpio_radio_on_off_checking()` reads GPIO/powerdown state under `rf_ps_lock`.
+
+Control flow: Probe-time flow is chip version read in `mac.c`, firmware buffer setup in `sw.c`, EEPROM read, endpoint mapping, then `hw_init`. Hardware init temporarily enables IRQs because it can take hundreds of milliseconds, then restores flags before returning. Join/report flow sends reserved-page/H2C commands via scheduled work to avoid USB I/O in atomic context. Card disable clears link/media state, LEDs, RF PS levels, and runs one of two disable sequences depending on `rtlusb->disablehwsm`.
+
+State and persistence: Maintains `rtlhal->fw_ready`, `hw_type`, `last_hmeboxnum`, `rtlphy->hwparam_tables`, RF channel values, IQK initialized flag, EEPROM tx-power arrays, board/OEM identity, `rtlusb->reg_bcn_ctrl_val`, MAC filters, security config, rate masks, PS flags, and hardware registers. EEPROM-derived tx-power state persists for channel changes and regulatory calculations.
+
+Dependencies/integration: Depends on rtlwifi USB core, efuse, CAM, PS, firmware common, 8192C common PHY/DM, CE hw/phy headers, CU TRX/LED/table code, and mac80211 interface types. Exported through `rtl8192cu_hal_ops` in `sw.c`.
+
+Risks: Highly register-order-sensitive. `usb_cmd_send_packet()` intentionally frees the skb and does not send a command packet; comments associate this with WPA2 802.11n traffic stops, making reserved-page/H2C behavior a notable risk. `rtl92cu_update_interrupt_mask()` is empty. `rtl92cu_gpio_radio_on_off_checking()` sets `hwradiooff = true` even in the `actuallyset` branch before checking the target state, which is subtle. Rate-mask update copies five bytes into shared state then schedules work, so races with station teardown need coverage. Init temporarily re-enables IRQs and assumes device interrupts remain disabled.
+
+Test signals: Cold probe, warm reset, suspend/resume-like disable/enable, firmware download failure, EEPROM autoload failure, 8188/8192 and high-PA boards, AP/STA/adhoc media transitions, beacon interval updates, hardware crypto, reserved-page H2C join reports, GPIO radio toggle, LPS/RPWM transitions, and rate-mask updates under traffic. Register traces should confirm init/shutdown sequences match vendor expectations.

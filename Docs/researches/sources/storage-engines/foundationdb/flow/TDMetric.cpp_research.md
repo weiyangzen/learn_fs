@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/storage-engines/foundationdb/flow/TDMetric.cpp -->
+# sources/storage-engines/foundationdb/flow/TDMetric.cpp
+- Purpose: Implements time-distributed metric key packing, rolling behavior, dynamic event metric flushing, StatsD message helpers, and OTEL gauge creation.
+- Important APIs/types/functions: `reduceFilename`, `MetricKeyRef::packLatestKey/packDataKey/packFieldRegKey`, `TDMetricCollection::canLog/checkRoll`, `DynamicEventMetric::log/flushData/rollMetric/registerFields`, `MetricData::toString`, `createStatsdMessage`, `verifyStatsdMessage`, `knobToMetricModel`, and `createOtelGauge`.
+- Control flow: Dynamic event logging chooses a probabilistic metric level, checks queue pressure, rolls keys when new fields appear or data overflows, logs time plus fields, and asks the collection to roll after enough bytes. Flush functions produce mutation batches for latest/data/field-registration keys.
+- State and persistence behavior: Metric data is buffered in writers and serialized into FoundationDB key ranges with binary delimiters and tuple-encoded level/time suffixes. `TDMetricCollection` tracks roll queues and current-byte counts. OTEL gauges append points to the process metric collection.
+- Dependencies and integration points: Depends on Flow serialization, knobs, deterministic randomness, `OTELMetrics`, `MetricCollection`, `g_network` local address, and trace event metrics from `Trace.cpp`.
+- Risks: Key encoding is compatibility-sensitive. Probabilistic level selection can drop high-volume metrics by design. `verifyStatsdMessage` assumes token positions and should only be called on messages with at least name/value and type tokens. OTEL gauge creation depends on global metric collection initialization.
+- Test signals: Tests should validate packed key ordering, field registration, roll thresholds, StatsD strings with/without tags, numeric parsing, knob mapping, and OTEL gauge attributes for ip/port and custom attributes.
+<!-- END_FILE_RESEARCH: sources/storage-engines/foundationdb/flow/TDMetric.cpp -->

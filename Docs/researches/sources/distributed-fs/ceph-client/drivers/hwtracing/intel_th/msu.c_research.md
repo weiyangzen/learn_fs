@@ -1,0 +1,16 @@
+
+# sources/distributed-fs/ceph-client/drivers/hwtracing/intel_th/msu.c
+
+Purpose: Intel TH Memory Storage Unit output driver. It manages MSC capture buffers, single and multiblock modes, output character-device read/mmap, sysfs configuration, interrupt-driven window rotation, and a registry for external MSU buffer providers.
+
+Important APIs/types/functions: `struct msc` is per-output state; `struct msc_window` describes multiblock windows; `struct msc_iter` tracks reader iteration; `struct msu_buffer_entry` backs the sink registry. Public exports are `intel_th_msu_buffer_register()`, `intel_th_msu_buffer_unregister()`, and `intel_th_msc_window_unlock()`. Core operations include `msc_configure()`, `msc_disable()`, buffer allocation/free helpers, `msc_buffer_iterate()`, `intel_th_msc_activate()/deactivate()`, IRQ handler `intel_th_msc_interrupt()`, and sysfs stores for `mode`, `nr_pages`, `wrap`, `win_switch`, and `stop_on_full`.
+
+Control flow: probe maps MSU/MSC registers, initializes default mode (`multi` unless quirked), lists, mutexes, and user count. Users select mode and allocate pages through sysfs. Opening the char device installs a read iterator only when capture is not enabled. Activating output configures BAR/size/mode/wrap/burst, initializes interrupts, asks GTH to route/enable tracing, and calls external buffer activation. Disable stops GTH, captures write pointer/wrap state for single mode, disables MSC, notifies buffer readiness, restores original BAR/size, and clears status. In multiblock IRQ mode, filled windows transition INUSE to LOCKED, the next READY window is programmed through a GTH switch trigger, and external buffers later unlock windows.
+
+State and persistence: `user_count` is a tri-state lifetime guard: -1 no buffer, 0 allocated idle, positive active readers/mappings/capture/locked windows. `buf_mutex` serializes buffer configuration. Multiblock windows have lockout state READY/INUSE/LOCKED, SG tables, hardware descriptors, and page offsets. Single mode tracks wrap and size after disable. State is volatile; trace data lives only in allocated DMA pages or external buffers.
+
+Dependencies and integration: depends on Intel TH output callbacks, GTH trace controls, DMA/scatterlist APIs, x86 cache attribute APIs when available, char-device read/mmap, sysfs, workqueues, IRQ dispatch from core, and the public Intel TH MSU buffer interface.
+
+Risks: concurrency is high-risk: readers, mmap users, capture activation, IRQ window switches, external buffers, and sysfs reconfiguration all coordinate through atomics, mutexes, and spinlocks. Wrong lockout transitions can stop capture or leak `user_count`. DMA/cache attribute handling is architecture-sensitive. `do_irq` setup appears inverted around missing IRQ resource and should be verified against resource numbering. Timeouts and no-interrupt hardware can reduce sink-buffer support. Removal notes a FIXME for open output character devices during parent detach.
+
+Test signals: single-mode allocate/read/mmap with and without wrap, multiblock allocate multiple window sizes, IRQ-driven capture with external `sink`, stop-on-full behavior, manual `win_switch`, capability checks for CAP_SYS_RAWIO, reconfiguration while busy returning `-EBUSY`, unload under open fd, and hardware with `multi_is_broken` quirk.

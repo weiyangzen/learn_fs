@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/intel_rc6.c -->
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/intel_rc6.c
+
+Purpose: manages RC6 low-power GPU states: platform setup, enable/disable, park/unpark behavior, BIOS validation, power-context allocation, runtime-PM gating, and residency counter accounting.
+
+Important APIs and functions: public APIs are `intel_rc6_init()`, `intel_rc6_sanitize()`, `intel_rc6_enable()`, `intel_rc6_unpark()`, `intel_rc6_park()`, `intel_rc6_disable()`, `intel_rc6_fini()`, `intel_rc6_residency_ns()`, `intel_rc6_residency_us()`, `intel_rc6_print_residency()`, and `intel_check_bios_c6_setup()`. Platform helpers include `gen11_rc6_enable()`, `gen9_rc6_enable()`, `gen8_rc6_enable()`, `gen6_rc6_enable()`, `vlv_rc6_init()`, `chv_rc6_init()`, `vlv_rc6_enable()`, `chv_rc6_enable()`, `bxt_check_bios_rc6_setup()`, `rc6_supported()`, `pctx_corrupted()`, and `rc6_res_reg_init()`.
+
+Control flow: init takes a runtime-PM wakeref to keep the GPU awake until RC6 is ready, validates support/BIOS/platform exclusions, initializes residency registers, allocates or validates VLV/CHV power context, disables RC6 for sanitization, and marks support on success. Enable forcewakes all domains, dispatches platform-specific threshold/power-gating register programming, records whether manual RC6 entry is possible, handles context-corruption workarounds, drops the runtime-PM wakeref, and marks enabled. Unpark restores automatic RC control; park optionally forces a target RC state when idle; disable reacquires the runtime-PM wakeref and clears RC registers. Fini disables, restores Meteor Lake BIOS C6 state when captured, releases power-context objects, and balances wakerefs. Residency reads forcewake-protected counters, handles VLV/CHV 40-bit high/low windows, accounts wraparound into software-extended counters, and converts hardware units to ns/us.
+
+State and persistence: `struct intel_rc6` stores support/enabled/manual/wakeref flags, control value, BIOS RC state, power-context GEM object, residency register IDs, previous raw counters, and accumulated extended residency. Hardware state includes RC threshold registers, power-gating enables, PCBR/RC6 context base, RC_CONTROL/RC_STATE, and residency counters.
+
+Dependencies and integration points: depends on runtime PM, uncore forcewake/MMIO, PCODE, stolen memory/GEM region allocation, GT engine enumeration, GuC RC ownership, BIOS/firmware setup, vGPU detection, clock helpers, and debugfs/seq output. Integrated with GT parking/unparking, initialization, reset/sanitize, and power-management flows.
+
+Risks: wakeref balancing is critical: init intentionally holds runtime PM disabled until RC6 enable succeeds or fini releases it. BIOS setup checks can disable power saving on BXT/MTL. RC6 context corruption workaround can disable runtime PM to protect state. Residency wrap handling depends on sufficiently frequent reads. Wrong thresholds can increase latency or power draw. GuC RC ownership changes which RC_CTL bits the driver programs.
+
+Test signals: `selftest_rc6.c`, runtime-PM suspend/resume, park/unpark idle tests, residency debugfs monotonicity and wrap tests, BIOS-disabled BXT/MTL paths, VLV/CHV stolen power-context allocation, GuC RC mode, and pctx corruption fault injection.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/gt/intel_rc6.c -->

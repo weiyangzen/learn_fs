@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/gcsfuse/cmd/testdata/valid_config.yaml -->
+# Research: sources/user-network-fs/gcsfuse/cmd/testdata/valid_config.yaml
+
+Purpose: full valid config fixture for gcsfuse command/config tests.
+
+Important data and APIs: YAML fixture data with `app-name`, `read`, `inactive-stream-timeout`, `enable-buffered-read`, `global-max-blocks`, `block-size-mb`, `start-blocks-per-handle`, `max-blocks-per-handle`, `min-blocks-per-handle`, `random-seek-threshold`, `write`, `create-empty-file`, `enable-streaming-writes`, `max-blocks-per-file`, `enable-rapid-appends`, `file-cache`, `cache-file-for-range-read`, `download-chunk-size-mb`, `enable-crc`, `enable-parallel-downloads`, `max-parallel-downloads`, `max-size-mb`, `parallel-downloads-per-file`, `write-buffer-size`, `enable-o-direct`, `experimental-disable-size-calculation-fix`, `gcs-auth`, `anonymous-access`, `key-file`, `reuse-token-from-url`, `token-url`, `gcs-connection`, `billing-project`, `client-protocol`, `custom-endpoint`, `experimental-enable-json-read`, `grpc-conn-pool-size`, `grpc-path-strategy`, `http-client-timeout`, `limit-bytes-per-sec`, `limit-ops-per-sec`, `max-conns-per-host`, `max-idle-conns-per-host`, `sequential-read-size-mb`, `gcs-retries`, `experimental-nonrapid-folder-api-stall-retry`, `chunk-retry-deadline-secs`, `chunk-transfer-timeout-secs`, `read-stall`, `enable`, `min-req-timeout`, `max-req-timeout`, `initial-req-timeout`, `req-increase-rate`, `req-target-percentile`, `file-system`, `dir-mode`, `disable-parallel-dirops`, `file-mode`, `fuse-options`, `gid`, `uid`, `ignore-interrupts`, `kernel-list-cache-ttl-secs`, `rename-dir-limit`, `temp-dir`, `max-read-ahead-kb`, `list`, `enable-empty-managed-folders`, `enable-hns`, `enable-atomic-rename-object`, `metadata-cache`, `deprecated-stat-cache-capacity`, `deprecated-stat-cache-ttl`, `deprecated-type-cache-ttl`, `enable-nonexistent-type-cache`, `metadata-prefetch-max-workers`, `enable-metadata-prefetch`, `metadata-prefetch-entries-limit`, `experimental-metadata-prefetch-on-mount`, `stat-cache-max-size-mb`, `ttl-secs`, `type-cache-max-size-mb`, `metrics`, `cloud-metrics-export-interval-secs`, `workers`, `buffer-size`, `machine-type`, `dummy-io`, `reader-latency`, `per-mb-latency`. It is not executable code; its public contract is the exact schema and scalar values consumed through Viper, mapstructure YAML tags, and `cfg.DecodeHook`/`cfg.ValidateConfig`.
+
+Control flow and integration: It exercises most config subtrees with non-default valid values, including read/write/cache/auth/connection/retries/filesystem/list/metadata/metrics/dummy-io. Tests load it through `--config-file` or helper Viper instances, then execute `newRootCmd` pre-run logic or config validation before any real mount occurs.
+
+State and persistence: static repository test data only. It creates no runtime state beyond parsed config maps in tests.
+
+Dependencies: depends on `cfg.Config` field names, YAML/JSON parser behavior, duration/octal/log severity/protocol decode hooks, and validation rules in `cfg/validate.go`.
+
+Risks: changing field names, defaults, or accepted sentinel values can make this fixture stale. Invalid fixtures are valuable because relaxing strict unmarshalling would hide typos in user config files.
+
+Test signals: the relevant root/config tests should parse, validate, or reject this fixture according to its name.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/gcsfuse/cmd/testdata/valid_config.yaml -->

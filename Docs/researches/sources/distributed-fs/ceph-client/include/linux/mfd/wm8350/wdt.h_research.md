@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/linux/mfd/wm8350/wdt.h
+
+Purpose: this header defines the WM8350 watchdog register masks, timeout IRQ number, and minimal child state structure used by the WM8350 watchdog platform driver. It is the MFD contract between the PMIC core register map and `drivers/watchdog/wm8350_wdt.c`.
+
+Important APIs, types, and constants: `WM8350_WDOG_HIB_MODE`, `WM8350_WDOG_DEBUG`, `WM8350_WDOG_MODE_MASK`, and `WM8350_WDOG_TO_MASK` are fields in `WM8350_SYSTEM_CONTROL_2`. `WM8350_IRQ_SYS_WDOG_TO` names the watchdog-timeout interrupt index in the parent IRQ controller. `struct wm8350_wdt` currently stores only the watchdog child `platform_device`.
+
+Control flow: the header has no functions, but the watchdog driver uses these masks when handling watchdog core operations. Probe retrieves the parent `struct wm8350`, sets the global `watchdog_device` parent and driver data, programs the default 4 second timeout, and registers with the watchdog framework. `set_timeout()` validates a table of supported 1, 2, and 4 second values, unlocks PMIC protected registers, clears `WM8350_WDOG_TO_MASK`, writes the selected timeout value, relocks, and updates `wdt_dev->timeout`. `start()` clears `WM8350_WDOG_MODE_MASK` and writes mode value `0x20`; `stop()` clears the same mode bits; `ping()` refreshes by rewriting `WM8350_SYSTEM_CONTROL_2`.
+
+State and persistence: watchdog mode and timeout persist in the WM8350 system-control register until changed or reset. The Linux watchdog object is static in the driver and uses a module `nowayout` parameter; this header's `struct wm8350_wdt` is embedded in the parent core state and is used for platform-device ownership rather than per-open state. The timeout IRQ is represented in the MFD IRQ map even though the watchdog driver primarily uses the watchdog core callbacks.
+
+Dependencies and integration points: includes `linux/platform_device.h`; relies on `wm8350/core.h` for system-control register access, protected-register lock/unlock, parent data, and the embedded `struct wm8350_wdt`. It integrates with the Linux watchdog framework, platform bus, WM8350 MFD child creation, and the WM8350 IRQ table.
+
+Risks: only three timeout values are supported; unsupported values return `-EINVAL`. Protected-register lock/unlock must balance under the watchdog mutex or watchdog mode can be left partially configured. `start()` writes a literal mode field (`0x20`) rather than a named mode macro, so changes to field semantics would be easy to miss. The static watchdog device means the implementation assumes a single WM8350 instance. If the timeout IRQ number is changed inconsistently with the MFD IRQ map, timeout event reporting can break.
+
+Test signals: build with `CONFIG_WM8350_WATCHDOG`; probe should register a watchdog named `WM8350 Watchdog` under platform device `wm8350-wdt`. Exercise `set_timeout` for 1, 2, 4, and invalid values, verify `WDOG_TO` bits in `WM8350_SYSTEM_CONTROL_2`, start/stop mode-bit transitions, keepalive rewriting of the register, `nowayout` behavior, and absence of lock imbalance or register-write failures.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/net/socket.c
+
+Purpose: Implements the Linux socket top-level VFS, syscall, protocol-family registry, sockfs, ancillary data, ioctl, compat, and in-kernel socket helper layer. It is the main bridge between file descriptors/user memory and protocol `proto_ops`.
+
+Important APIs/types/functions: Core objects include `socket_file_ops`, sockfs inode/xattr handlers, `net_families[]`, and `sock_inode_cachep`. Exported helpers include `sock_alloc_file()`, `sock_from_file()`, `sockfd_lookup()`, `sock_alloc()`, `sock_release()`, `sock_sendmsg()`, `sock_recvmsg()`, `kernel_sendmsg()`, `kernel_recvmsg()`, `sock_register()`, `sock_unregister()`, `get_user_ifreq()`, `put_user_ifreq()`, and kernel bind/listen/accept/connect/name/shutdown/IP-overhead helpers. Syscall internals cover socket/socketpair/bind/listen/accept/connect/getname/send/recv/setsockopt/getsockopt/shutdown/sendmsg/sendmmsg/recvmsg/recvmmsg/socketcall.
+
+Control flow: Socket creation validates family/type, runs LSM hooks, allocates a sockfs inode/socket, module-loads and RCU-resolves a protocol family, calls its `create`, holds protocol module refs, and maps the socket to a file descriptor. File operations translate read/write/poll/ioctl/splice/mmap/fasync/close into `proto_ops`. Send/recv paths import user buffers/iovecs, copy addresses/control messages, apply nonblocking flags, run LSM/BPF cgroup hooks, and dispatch to protocol methods. Batched send/recv loops maintain partial-success semantics and update user message lengths.
+
+State and persistence behavior: Global state includes the protocol-family RCU table, sockfs mount, inode cache, ioctl hooks, and optional busy-poll sysctls. Per-socket state is held in sockfs inodes, files, wait queues, fasync lists, xattrs, module references, and protocol-owned `sock` objects. State is in-memory and released on close/module/namespace teardown.
+
+Dependencies and integration points: Integrates with VFS, fd tables, pseudo filesystems, LSM, audit, BPF cgroup sockopt hooks, io_uring, netdevice ioctls, bridge/VLAN/wireless hooks, timestamping/PTP, netfilter init, procfs, compat syscalls, and every registered network protocol including PF_SMC.
+
+Risks and test signals: Risks include user-copy length mistakes, address truncation semantics, module/RCU lifetime bugs, partial batch error reporting, compat ifreq conversion, timestamp ancillary corner cases, sockopt BPF rewrite behavior, and close/fasync races. Test with syscall suites for all socket operations, LSM/audit/BPF enabled, compat 32-bit ioctls, sendmmsg/recvmmsg partial failures/timeouts, timestamping error queue, protocol module load/unload, sockfs xattrs, splice/io_uring, and PF_SMC creation through the generic path.

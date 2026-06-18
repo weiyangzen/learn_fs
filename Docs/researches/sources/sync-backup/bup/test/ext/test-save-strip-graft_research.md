@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-strip-graft -->
+# sources/sync-backup/bup/test/ext/test-save-strip-graft
+
+Purpose: validates path rewriting options for `bup save`: `--strip`, `--strip-path`, and `--graft`, including collision detection. Important APIs are `bup index`, `save -n`, `restore`, `ls`, and `compare-trees`. Control flow creates source hierarchies, saves with strip modes for relative and absolute paths, verifies no-match behavior, checks invalid empty graft points, then tests grafts where source and destination path depths differ or map to root. It finishes with a collision case where rewritten paths would overlap. State is the source tree, rewritten branch layout, restore tree, and error logs. Dependencies include path normalization, absolute path handling, and WvTest. Risks are accidental path traversal, root mapping errors, duplicate destination entries, and inconsistent restore layout. Test signals are exact `bup ls` output, restored tree equality under expected target paths, and failed saves for invalid/colliding options.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-strip-graft -->

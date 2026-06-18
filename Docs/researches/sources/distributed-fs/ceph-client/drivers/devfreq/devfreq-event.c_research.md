@@ -1,0 +1,13 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/devfreq/devfreq-event.c -->
+# sources/distributed-fs/ceph-client/drivers/devfreq/devfreq-event.c
+
+Purpose: implements the devfreq-event framework, a class-level registry for hardware event providers that expose raw load/total counters to devfreq device drivers. Providers register `struct devfreq_event_desc` instances and consumers acquire them directly or through device-tree phandles.
+
+Important APIs and control flow: exported APIs include `devfreq_event_enable_edev()`, `devfreq_event_disable_edev()`, `devfreq_event_is_enabled()`, `devfreq_event_set_event()`, `devfreq_event_get_event()`, `devfreq_event_reset_event()`, `devfreq_event_get_edev_by_phandle()`, `devfreq_event_get_edev_count()`, `devfreq_event_add_edev()`, `devfreq_event_remove_edev()`, and devres wrappers. Enable/disable are reference-counted with `edev->enable_count`; provider `enable` and `disable` callbacks run only on 0-to-1 and 1-to-0 transitions. `set_event`, `get_event`, and `reset_event` validate enabled state, then serialize provider ops through `edev->lock`. Registration allocates a `devfreq_event_dev`, sets its class device name to `eventN`, adds sysfs read-only `name` and `enable_count`, and links it into the global list.
+
+State and persistence behavior: global state is `devfreq_event_class`, `devfreq_event_list`, and `devfreq_event_list_lock`. Per-provider state is the descriptor pointer, enable count, mutex, class device, and list node. The framework does not persist counter samples; provider drivers own hardware state and driver data. Device-managed registration removes devices automatically on parent teardown.
+
+Dependencies and integration points: depends on `include/linux/devfreq-event.h`, device core, devres, OF phandle parsing, class sysfs, and provider callbacks. Exynos bus and RK3399 DMC are direct consumers; Exynos PPMU/NoCP and Rockchip DFI are providers in this subset.
+
+Risks and test signals: `devm_devfreq_event_add_edev()` returns `ERR_PTR(-ENOMEM)` instead of preserving provider registration errors, so probe diagnostics can be less precise. `enable_count_show()` reads without taking `edev->lock`. Phandle lookup first matches parent OF node, then falls back to node name versus descriptor name, which is fragile if DT naming changes. Test signals include balanced enable/disable counts, unbalanced disable warning, failed ops leaving counts unchanged, class devices under `/sys/class/devfreq-event/`, phandle lookup against real DT providers, and provider removal warning when still enabled.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/devfreq/devfreq-event.c -->

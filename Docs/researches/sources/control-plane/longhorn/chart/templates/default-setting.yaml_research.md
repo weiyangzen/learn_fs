@@ -1,0 +1,15 @@
+# sources/control-plane/longhorn/chart/templates/default-setting.yaml
+
+Purpose: renders the `longhorn-default-setting` ConfigMap whose `default-setting.yaml` payload seeds Longhorn Setting CR values at install or upgrade time. It maps many Helm `.Values.defaultSettings.*` knobs into the kebab-case setting names consumed by Longhorn Manager, while intentionally omitting null or invalid values so the controller can keep built-in defaults.
+
+Important APIs/types/functions: Kubernetes `ConfigMap`, Helm `include "release_namespace"`, `include "longhorn.labels"`, `kindIs "invalid"` null checks, `quote`, `join`, `compact`, and `include "longhorn.multiTypeSetting"` for settings that may be plain values or per-data-engine JSON. Key value groups cover replica scheduling, backup/restore limits, snapshot integrity, V1/V2 data engines, SPDK/ublk tuning, logging, CSI topology/capacity, and manager URL behavior.
+
+Control flow: the template emits one ConfigMap unconditionally, then conditionally writes individual lines inside the embedded YAML block when the corresponding value is present. Windows/Rancher cluster mode merges `.Values.global.cattle.windowsCluster.defaultSetting` toleration and node selector defaults with user-provided Longhorn defaults using semicolon-separated strings. Multi-type settings are delegated to the helper so chart consumers can pass data-engine-specific JSON without each setting duplicating parsing logic.
+
+State and persistence: rendered data becomes Kubernetes ConfigMap state, but Longhorn Manager typically copies these defaults into Setting CRs; some settings, notably `manager-url`, persist beyond Helm value removal and require explicit CR cleanup. Storage, backup, data-engine, and snapshot choices influence persistent volume data layout and runtime controller behavior after startup.
+
+Dependencies/integration: depends on the chart helper templates, `values.yaml`, Longhorn Manager's default-setting loader, Kubernetes ConfigMap delivery, and Longhorn Setting CR semantics. It is integrated with `deployment-driver.yaml` because an externally protected `manager-url` can break driver deployment links, and with `storageclass.yaml` because several defaults overlap with StorageClass parameters.
+
+Risks: type handling is subtle because booleans, strings, nulls, and JSON-like multi-type values are mixed. A rendered but malformed setting can make Longhorn reject or misapply configuration. Settings affecting V2 data engine CPU masks, hugepages, storage networking, or data-engine enablement can destabilize clusters if changed while volumes are attached. Because absent values are omitted rather than reset, Helm users may assume a rollback clears persisted Setting CRs when it does not.
+
+Test signals: run `helm template` with null defaults, explicit booleans, explicit zero-like strings, and multi-type JSON values; verify the embedded YAML parses and contains only intended keys. Add cases for Rancher Windows cluster merging, `managerUrl` protected-ingress warnings, V2 data engine settings, and upgrade paths where existing Setting CRs retain values after Helm values become null.

@@ -1,0 +1,15 @@
+# sources/cloud-native/ostree/src/ostree/ot-main.c
+
+Purpose: provides the core OSTree command-line runtime: global option handling, command dispatch, external command lookup/exec, repo/sysroot option parsing, admin sysroot loading, colored error output, GPG result printing, and repository writability helpers.
+
+Important APIs/functions: `ostree_main()` sets locale/program name and wraps `ostree_run()`. `ostree_run()` strips the command verb from `argv`, finds an `OstreeCommand`, parses root options for help/error paths, and invokes the command function. `ostree_option_context_parse()` adds `--repo`, command options, and global options, handles `--version`, verbosity, `--`, and repo opening. `ostree_admin_option_context_parse()` adds `--sysroot`, initializes/loads sysroots, supports hidden `--print-current-dir`, and enforces admin flags. `ostree_parse_sysroot_or_repo_option()` supports remote builtins that may target either a sysroot or repo. `parse_repo_option_and_maybe_remount()` remounts `/sysroot` writable in a private namespace when operating on a system repo. `ostree_command_lookup_external()` and `ostree_command_exec_external()` implement extension binary support. `ot_enable_tombstone_commits()` mutates repo config.
+
+Control flow: CLI entry starts at `ostree_main()`, which calls `ostree_run()`. The dispatcher scans arguments, records the first non-option as `command_name`, compacts the remaining `argv`, finds the builtin, and calls its `fn`. Option parsing is layered: command-specific parsers call `ostree_option_context_parse()`, which injects repo/global entries and opens or remounts the repository unless `NO_REPO` is set. Admin parsing further initializes an `OstreeSysroot`, creates a mount namespace/lock unless `UNLOCKED`, then loads deployments unless `NO_LOAD`.
+
+State/persistence: global static option variables hold parsed CLI state for the process. Persistent mutations include repo config writes in `ot_enable_tombstone_commits()` and possible remount of `/sysroot` in a new mount namespace for system repos. `--print-current-dir` prints the first deployment directory and exits.
+
+Dependencies/integration: uses GLib/GIO `GOptionContext`, libglnx, libostree repo/sysroot APIs, `ot-admin-functions.h`, `otutil.h`, Unix `signal`, `unshare`, `mount`, `stat`, and locale support. It is the common integration point for most `ostree` and `ostree admin` builtins.
+
+Risks: static option variables are process-global and assume one parse lifecycle. Argument compaction mutates `argv`, so callers must not depend on the original vector after dispatch. The system-repo remount path is privileged and mount-namespace-sensitive. Extension lookup ignores flags until the first non-option verb and can execute matching `ostree-$verb` from the libexec extension directory or `$PATH`.
+
+Test signals: `tests/admin-test.sh` exercises admin option handling through `--print-current-dir`, sysroot deploy/status/upgrade, and remote add through physical/nonphysical sysroot modes. Remote command tests elsewhere cover `ostree_option_context_parse()` with `--repo`.

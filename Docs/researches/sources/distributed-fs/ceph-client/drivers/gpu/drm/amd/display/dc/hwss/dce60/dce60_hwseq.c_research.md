@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/hwss/dce60/dce60_hwseq.c
+
+Purpose: DCE6 hardware sequencer adaptation. It inherits most DCE110 behavior but replaces surface/front-end handling and selected hooks for older display hardware that lacks later bottom-pipe/blender capabilities, while reusing DCE100 power/bandwidth/DCC helpers.
+
+Important APIs, types, and functions: exported `dce60_hw_sequencer_construct()` installs the DCE60 overrides. Private helpers include `dce60_should_enable_fbc()`, `dce60_enable_fbc()`, `dce60_set_default_colors()`, `dce60_program_surface_visibility()`, `dce60_get_surface_visual_confirm_color()`, `dce60_program_scaler()`, `dce60_program_front_end_for_pipe()`, and `dce60_apply_ctx_for_surface()`. These operate on `dc`, `dc_state`, `pipe_ctx`, `mem_input`, `transform`, `compressor`, and plane/stream color and scaling state.
+
+Control flow: construction first calls `dce110_hw_sequencer_construct(dc)` and then overrides power gating with `dce100_enable_display_power_gating`, surface commit with `dce60_apply_ctx_for_surface`, cursor and pipe locks with `dce60_pipe_control_lock`, bandwidth hooks with DCE100 versions, and DCC/tiling clear with DCE100 reset. Surface application disables FBC, iterates pipes for the target stream, allocates MI, programs front-end color/scaler/tiling/PTE/gamma state, updates plane addresses through common HWSS, then sets CRTC blanking directly from plane visibility. It re-enables FBC afterward when eligible.
+
+State and persistence: state changes are hardware register programming through component function tables and FBC compressor state. Plane flip status is delegated to inherited DCE110 address update logic. The DCE6 FBC predicate requires allocated `fbc_gpu_addr`, single display, eDP, no PSR, present plane, and non-linear tiling. No persistent storage is used.
+
+Dependencies and integration points: depends on DCE110 base functions, DCE100 power/bandwidth/reset helpers, DCE6 register headers, and older pipe-control locking. It integrates with the normal DC HWSS table but narrows surface visibility semantics because DCE6 has no later blender/bottom-pipe model.
+
+Risks and test signals: key risk is assuming no DCE110-style blender. Visibility programming blanks/unblanks the CRTC directly, so multi-plane or underlay behavior must stay within DCE6 limitations. FBC eligibility lacks the DCE110 Replay exclusion, matching older feature support. Test signals include DCE6 single eDP FBC, plane visibility toggles, cursor updates under DCE60 locks, GPU VM PTE programming, color/gamma changes, and bandwidth updates through the DCE100 hooks.

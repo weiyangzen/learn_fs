@@ -1,0 +1,13 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-ozone/ozonefs-common/src/main/java/org/apache/hadoop/fs/ozone/BasicOzoneFileSystem.java -->
+# sources/object-store/apache-ozone/hadoop-ozone/ozonefs-common/src/main/java/org/apache/hadoop/fs/ozone/BasicOzoneFileSystem.java
+
+Purpose: minimal Hadoop `FileSystem` implementation for `o3fs`, built on `OzoneClientAdapter`. It translates Hadoop paths and operations into bucket-scoped Ozone key operations.
+
+Important APIs and functions: `initialize`, `createAdapter`, `open`, `create`, `createNonRecursive`, output stream selection, `rename`, `renameFSO`, delete helpers and iterators, `listStatus`, working/home/trash methods, `mkdirs`, `getFileStatus`, block locations, delegation token/canonical service, checksums, snapshots, `setTimes`, `OzoneFileStatusIterator`, `listFileStatus`, `pathToKey`, `OzoneListingIterator`, and `setSafeModeUtil`.
+
+Control flow: initialization parses authority as `bucket.volume[.om-host[:port]|.serviceId]`, configures listing page size, streaming threshold, hsync support, creates an adapter, and sets `/user/<user>` working dir. Reads/writes convert paths to keys. Writes may use `SelectorOutputStream` to choose normal or Ratis data stream output after a byte threshold. Non-FSO rename validates source/destination status and iterates/prefix-renames keys; FSO rename delegates one key rename. Deletes either delegate directly for FSO buckets or iterate key batches for legacy layouts. Listings page through adapter results and handle duplicate continuation entries.
+
+State and persistence behavior: local state includes URI, username, working dir, adapter, listing page size, hsync and streaming settings. Persistent effects occur through adapter creates, deletes, renames, directory markers, snapshots, setTimes, and safe mode. Fake parent directories are recreated after successful legacy delete/rename when needed.
+
+Dependencies and integration: Hadoop `FileSystem`, FSData streams, permissions, `OzoneFSUtils`, `OzoneClientUtils`, Ozone config keys, `FileStatusAdapter`, and Ozone adapter interface. Risks include URI parsing rigidity, non-atomic batch rename/delete for legacy keys, fake-directory marker races, duplicate handling in paged listings, append unsupported, and output stream selection changing based on written byte threshold. Test signals should stress path parsing, root operations, FSO vs legacy behavior, pagination, snapshot path construction, and trash roots.
+<!-- END_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-ozone/ozonefs-common/src/main/java/org/apache/hadoop/fs/ozone/BasicOzoneFileSystem.java -->

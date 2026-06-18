@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/SimplePattern.c -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/striping/SimplePattern.c
+
+**Purpose:** Provides a minimal/invalid stripe-pattern implementation used when deserialization fails or no real target layout exists. **APIs/functions:** deserialize always succeeds, target index/ID return zero, min/default target counts return zero, and target ID copy/reference functions produce no IDs/NULL. **Control flow/state:** methods are safe no-op virtual targets for invalid patterns. **Dependencies/integration:** `StripePattern_createFromBuf` returns this for invalid/unknown pattern headers or failed subclass deserialization. **Risks/tests:** callers must check pattern type or zero target IDs before routing IO; tests should verify invalid pattern behavior does not crash and is rejected by higher layers.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/SimplePattern.c -->

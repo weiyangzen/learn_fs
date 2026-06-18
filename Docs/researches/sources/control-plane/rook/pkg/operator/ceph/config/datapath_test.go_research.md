@@ -1,0 +1,3 @@
+# sources/control-plane/rook/pkg/operator/ceph/config/datapath_test.go
+
+Purpose: validates `DataPathMap` constructor outputs for representative daemon types. Stateful tests cover mon and OSD host/container data paths and host log/crash roots, including trailing slash normalization. Stateless tests cover mgr, mds, and rgw with empty host data dirs, correct container daemon data dirs, and namespace-scoped host log/crash roots. Dataless tests cover rbd-mirror with empty container data dir and host data root set to the configured data dir. These tests signal the persistence classification used throughout daemon specs. They do not test the derived `ContainerCrashDir`, `ContainerLogDir`, `HostLogDir`, or `HostCrashDir` methods directly, nor invalid or relative path inputs.

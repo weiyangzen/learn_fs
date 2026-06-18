@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/security/apparmor/policy.c
+
+Purpose: implements AppArmor profile/policy object lifecycle, hierarchical lookup, null and learning profiles, policy admin checks, atomic profile replacement/load, and policy removal.
+
+Important APIs/functions: policy DB lifecycle (`aa_alloc_pdb()`, `aa_pdb_free_kref()`), profile/ruleset lifecycle (`aa_alloc_ruleset()`, `aa_alloc_profile()`, `aa_free_profile()`), profile list mutation (`__add_profile()`, `__remove_profile()`), lookup (`aa_find_child()`, `aa_lookupn_profile()`, `aa_fqlookupn_profile()`), null/learning profile creation (`aa_alloc_null()`, `aa_new_learning_profile()`), capability checks (`aa_policy_view_capable()`, `aa_policy_admin_capable()`, `aa_may_manage_policy()`), replacement (`aa_replace_profiles()`), and removal (`aa_remove_profiles()`).
+
+Control flow: `aa_replace_profiles()` unpacks a load blob, enforces a single namespace, prepares/locks the namespace, deduplicates rawdata, resolves old/rename/parent entries, creates apparmorfs nodes, bumps namespace revision, then atomically replaces or adds profiles and updates stale labels across the subtree. Failure audits the causative entry and marks the rest of the atomic set as failed. Removal resolves a namespace/profile, bumps revision, removes profile trees or namespaces, and updates labels.
+
+State and persistence: profiles own labels, rulesets, attachments, rawdata refs, children, parent refs, hashes, data tables, and apparmorfs dentries. Namespace revisions and rawdata exports persist policy load history while refs remain.
+
+Dependencies and integration: depends on policy unpack, namespaces, label replacement, apparmorfs, capability, resource, file, IPC, and path modules. Risks include atomicity across profile sets, namespace lock ordering, missing ancestor placeholder semantics, rawdata/profile ref cycles, immutable/noreplace handling, user namespace policy admin checks, and rlimit persistence after removal. Test atomic multi-profile load failure, replacement with children/hats, missing parent creation, rename, same-rawdata dedup, policy lock, unprivileged user namespace controls, namespace removal, and active task label refresh.

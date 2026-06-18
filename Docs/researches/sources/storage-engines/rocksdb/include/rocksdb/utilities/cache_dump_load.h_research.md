@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/include/rocksdb/utilities/cache_dump_load.h
+
+- **Purpose:** Declares experimental APIs for dumping block-cache entries from one host and loading them into a destination secondary cache for cache warmup.
+- **Important APIs/types/functions:** Format constants `kCacheDumpMajorVersion` and `kCacheDumpMinorVersion`. `CacheDumpWriter` writes metadata and packets. `CacheDumpReader` reads metadata and packets. `CacheDumpOptions` carries a `SystemClock`, deadline, and max byte budget. `CacheDumper` supports `SetDumpFilter()` and `DumpCacheEntriesToWriter()`. `CacheDumpedLoader` restores entries to secondary cache. Factory functions create file readers/writers, the default dumper, and the default loader.
+- **Control flow:** A source process creates a writer and default dumper, optionally filters by DB list, writes metadata once, then writes cache-entry packets. A destination process creates a reader and loader, reads metadata once, then loads packets into a secondary cache before DB reopen.
+- **State and persistence:** The dump format stores metadata and packetized block contents including type, dump time, cache key, block length, checksum, and block data. File-backed readers/writers persist the stream; loaders populate secondary cache, not the primary block cache.
+- **Dependencies:** Depends on cache, Env, FileSystem, `IOStatus`, secondary cache, table options, `SystemClock`, and block-based table options.
+- **Integration points:** Intended for DB migration/warmup workflows where copied SST files arrive on another host and the secondary cache can be prefilled.
+- **Risks:** API and data format are experimental. Deadline and size limits can produce partial dumps. Cache keys must remain meaningful on the destination. Only secondary-cache loading is supported. Default methods return NotSupported unless concrete factories are used.
+- **Test signals:** Tests should cover metadata-before-packets ordering, EOF as empty packet, checksum/version validation, DB filtering, deadline/size cutoff, file round trips, and restored secondary-cache hit behavior after DB open.

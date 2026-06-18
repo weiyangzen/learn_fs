@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/stream/stream04.c
+
+Purpose: confirms `fwrite()` writes all bytes and `fread()` returns the same data. Setup copies the alphabet string into a buffer; `run` opens `ltp_file` in append/update mode, writes `DATASIZE` bytes, closes, reopens in read/update mode, reads the same byte count, unlinks, and compares buffers. Important APIs are `fwrite`, `fread`, LTP safe stdio wrappers, and `TST_EXP_EQ_STRN`. State is one temporary regular file plus allocated buffers. Dependencies are tmpdir and standard stdio behavior. Risks include `DATASIZE` including the string terminator due to `sizeof(DATA)`; the test intentionally compares that exact size. Test signal is full byte-count and matching buffer contents.

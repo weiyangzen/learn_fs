@@ -1,0 +1,15 @@
+# sources/distributed-fs/lustre-release/lnet/lnet/lnet_rdma.c
+
+Purpose: provides an optional bridge from LNet RDMA paths to NVIDIA FS/GDS DMA callbacks. It lets an external NVFS provider register scatterlist preparation/DMA/page/device-priority operations, then exposes helpers for device priority, GPU page device index, DMA map/unmap, and RDMA-only page detection.
+
+Important APIs/types/functions: global `nvfs_ops`, `nvfs_shutdown`, and `nvfs_n_ops` track registered callbacks and in-flight users. `REGISTER_FUNC()` validates feature bits, initializes the percpu counter, installs callbacks, and clears shutdown. `UNREGISTER_FUNC()` sets shutdown, waits until the in-flight counter drains, clears callbacks, and destroys the counter. `lnet_get_dev_prio()`, `lnet_get_dev_idx()`, `lnet_rdma_map_sg_attrs()`, `lnet_rdma_unmap_sg()`, and `lnet_is_rdma_only_page()` wrap provider callbacks and are exported as appropriate.
+
+Control flow: callers use `nvfs_get_ops()` to reject absent/shutting-down providers and increment the in-flight counter, call the provider, then `nvfs_put_ops()` when ownership ends. DMA map returns `-EIO` for `NVFS_IO_ERR`, falls back to normal CPU mapping when `NVFS_CPU_REQ` is returned, or returns the provider map count while intentionally keeping the operation counted until `lnet_rdma_unmap_sg()` drops it. Unregister loops with a one-second sleep until `nvfs_count_ops()` reaches zero.
+
+State and persistence behavior: state is module-global and volatile. Registration is single-provider, without persistence across module reload. `ERROR_PRINT_DEADLINE` throttles missing-feature console messages through a static timestamp. The in-flight percpu counter doubles as shutdown coordination and lifetime protection for `nvfs_ops`.
+
+Dependencies/integration points: depends on `linux/lnet/lnet_rdma.h`, NVFS callback feature macros, Linux DMA/scatterlist/page/device types, libcfs logging, and LNet RDMA-capable LNDs that can pass GPU pages or SG lists through these wrappers.
+
+Risks: `REGISTER_FUNC()` has no explicit locking around `nvfs_ops`, so concurrent register/unregister or caller races need external serialization assumptions. `lnet_rdma_unmap_sg()` calls `nvfs_put_ops()` once after provider unmap and again when `count` is nonzero; this matches the map path only if nonzero represents a previously held map operation, but it is a fragile lifetime contract. Unregister waits indefinitely for leaked operation counts. Missing feature log text for device priority says "not missing" while marking unsupported, suggesting a diagnostic typo.
+
+Test signals: register rejects NULL or incomplete feature sets, successful register enables all wrappers, unregister blocks until map-held operations unmap, `NVFS_IO_ERR` maps to `-EIO`, `NVFS_CPU_REQ` falls back with balanced counts, provider map count is returned and later drained by unmap, absent provider returns neutral defaults (`UINT_MAX`, false, 0), device priority ignores NULL devices, and concurrent lookup during shutdown never dereferences cleared callbacks.

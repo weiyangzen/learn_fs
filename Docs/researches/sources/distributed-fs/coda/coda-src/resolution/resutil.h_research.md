@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/resolution/resutil.h
+
+Purpose: shared resolution utility declarations and constants for Coda server directory/file resolution. It defines resolution log opcodes, validation action codes, helper list element types, and cross-module function prototypes used by coordinator and subordinate resolution phases.
+
+Important APIs/types: `he` groups remote vnode-resolution log headers by host id; `ilink` is the inconsistency-list entry containing object name, object fid components, parent fid components, and vnode type. Opcode constants distinguish original user operations (`RES_*`) from replayed resolution operations (`ResolveVice*`) while preserving older numeric compatibility. `PRINTOPCODE`, `ISNONRESOLVEOP`, and `FormFid` are macro helpers used throughout log parsing and diagnostics. Utility prototypes include status aggregation (`GetResStatus`, `ObtainResStatus`), store-id allocation, return-code reduction, bounded-byte-stream/list conversion, inconsistency serialization, object marking/creation, phase-2 object acquisition, remote remove lookup, and entry-name lookup.
+
+Control flow and integration: this header ties together `rescoord`, `rvmrescoord`, `subresphase3`, `subresphase34`, `ruconflict`, `resfile`, and log parser code. It depends on RPC2 bounded byte streams, Coda `ViceFid`, `ViceStatus`, `ViceStoreId`, `Volume`, `Vnode`, `ResStatus`, `dlist`, and `olist` infrastructure.
+
+State/persistence: no state is stored here, but declarations operate on persistent RVM volume/vnode state, resolution logs, and inconsistency flags. Risks include macro side effects, raw `strdup`/`free` ownership in `ilink`, and opcode compatibility requirements. Test signals are successful resolution of conflicting create/remove/rename cases, correct bounded-BS round trips, and no leaks in `CleanIncList`.

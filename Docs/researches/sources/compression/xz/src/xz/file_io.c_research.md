@@ -1,0 +1,16 @@
+# Research: sources/compression/xz/src/xz/file_io.c
+## sources/compression/xz/src/xz/file_io.c
+
+Purpose: Implements source/destination opening, signal-aware nonblocking reads/writes, sparse output, attribute copying, synchronization, safe unlinking, and final close behavior.
+
+Important APIs and functions: `io_init()` validates stdio descriptors and creates the POSIX self-pipe used for abort wakeups. `io_write_to_user_abort_pipe()` is signal-handler support. `io_no_sparse()` disables sparse output. `io_open_src()` and `io_open_dest()` wrap signal-blocked `io_open_src_real()` and `io_open_dest_real()`. `io_close()` finalizes sparse holes, copies attributes, optionally fsyncs file and directory, closes destination first, then closes and maybe removes the source. `io_read()`, `io_write()`, `io_seek_src()`, `io_pread()`, and `io_fix_src_pos()` provide the streaming and random-access primitives used by `coder.c` and `list.c`.
+
+Control flow: Source open handles stdin specially, otherwise opens with safe flags, optional `O_NOFOLLOW`, nonblocking mode, regular-file restrictions, setuid/setgid/sticky/hardlink checks when removing originals, and optional `posix_fadvise()`. Destination open either binds stdout or creates an exclusive new output path from `suffix_get_dest_name()`, opening the parent directory for later sync when `opt_synchronous` is true. Reads and writes retry `EINTR`, use `poll()` with the self-pipe for `EAGAIN`/`EWOULDBLOCK`, and integrate `--flush-timeout` by returning partial input with `flush_needed`. Close removes incomplete destination files or successful source files according to `opt_keep_original`.
+
+State and persistence: Uses static `file_pair pair` because processing is sequential. Tracks stdin/stdout original flags for restoration, `try_sparse`, pending sparse-hole length, destination and source `stat` structures, and a POSIX user-abort pipe. Persistent filesystem effects include creating destination files, copying permissions/timestamps, fsyncing, unlinking sources or failed outputs, and sparse-file holes.
+
+Dependencies and integration points: Depends on `args.c` globals (`opt_stdout`, `opt_force`, `opt_keep_original`, `opt_synchronous`), `coder.c` mode, `mytime.c` flush timeout, `signals.c` blocking and `user_abort`, `suffix.c` destination names, `sandbox.c` strict sandbox transition after source open, and `message.c` for diagnostics. `list.c` uses seek/pread support to inspect xz metadata.
+
+Risks: Race windows around unlinking are mitigated with device/inode checks but cannot be eliminated. Nonblocking stdio flag restoration must happen on all paths. Sparse output must avoid stdout append-mode corruption and must materialize trailing holes. Directory fsync portability is handled with platform exclusions. Hardlink/setuid/sticky safeguards differ by `--force`, `--keep`, stdout, and platform macros.
+
+Test signals: Cover stdin/stdout flag restore, regular versus special files, symlink and hardlink rejection/acceptance, force overwrite, source equals destination, directory sync failures, sparse decompression with all-zero buffers and trailing holes, EPIPE behavior, read timeout flushes, signal abort during blocking I/O, list-mode seeks, and sandbox enablement after opening exactly one source.

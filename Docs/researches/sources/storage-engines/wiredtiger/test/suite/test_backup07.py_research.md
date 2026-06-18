@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup07.py
+
+Purpose: tests full backup recovery when a new table is created while a backup cursor is open and later log records mention that new table. It ensures recovery tolerates log records for files absent from the backup file list.
+
+Important APIs are `backup_base.add_data`, `session.open_cursor('backup:')`, `session.log_flush`, `take_full_backup`, `take_log_backup`, and `wiredtiger_open` on the backup directory. Control flow writes until log file 2 exists, opens a full backup cursor, creates and populates a new table, flushes logs, copies the full backup list, asserts the new table is not included, then copies later logs via duplicate log backup and recovers the backup. State behavior depends on log file rotation, file-id references, and backup cursor file list snapshotting. Risks include log filename assumptions and filesystem timing. Test signal is successful recovery of the backup directory without including the newly created table file.

@@ -1,0 +1,11 @@
+## sources/sync-backup/restic/internal/global/global.go
+
+Purpose: central CLI-global configuration, password resolution, repository open/create workflow, backend setup, transport limiting, retry/log wrapping, and cache setup.
+
+Important APIs/types: `Options` holds repository, password, locking, cache, transport, limiter, compression, pack size, terminal, registry, test hooks, and extended backend options. `AddFlags` binds pflag options and environment defaults. `PreRun` applies env overrides for `RESTIC_PACK_SIZE` and `RESTIC_COMPRESSION` unless CLI flags were changed, derives verbosity, parses `-o` options, and optionally resolves password. Password helpers include `resolvePassword`, `LoadPasswordFromFile`, `readPassword`, and `ReadPasswordTwice`. Repository helpers include `readRepo`, `OpenRepository`, `CreateRepository`, `hasRepositoryConfig`, `createRepositoryInstance`, `decryptRepository`, `printRepositoryInfo`, and `setupCache`. Backend helpers include `innerOpenBackend`, `parseConfig`, `setupTransport`, `createOrOpenBackend`, and `wrapBackend`.
+
+Control flow and state: `OpenRepository` reads location, opens backend, verifies config, creates `repository.Repository`, searches keys with up to three interactive attempts, prints repository info, and optionally attaches cache. `CreateRepository` validates version, reads password twice, creates backend, initializes config/key. Backend wrapping order is logger/semaphore, inner test hook, retry, outer test hook. Cache cleanup can remove old cache directories when requested.
+
+Dependencies and integration points: this file sits between Cobra/pflag command setup, backend registries, location parsing, retry/semaphore/logger wrappers, transport TLS/rate limiting, repository initialization/search, cache management, terminal input, and progress printers. `options.Options` feeds backend-specific configuration through reflection.
+
+Risks and test signals: source precedence is security-sensitive: password file and command are mutually exclusive; empty passwords require explicit `--insecure-no-password`; repo and repository-file are mutually exclusive. `readPassword` documents a goroutine leak when context is cancelled during terminal read. Environment parsing fails fast for invalid pack size/compression. Tests cover repo-file reading, empty-password mode, and env-vs-flag precedence.

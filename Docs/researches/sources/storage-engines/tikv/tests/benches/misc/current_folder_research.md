@@ -1,0 +1,15 @@
+# Folder Research: sources/storage-engines/tikv/tests/benches/misc
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 1
+- Recursive researched files: 22
+- Direct child folders represented: 7
+
+## Direct Files
+
+- `sources/storage-engines/tikv/tests/benches/misc/mod.rs`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

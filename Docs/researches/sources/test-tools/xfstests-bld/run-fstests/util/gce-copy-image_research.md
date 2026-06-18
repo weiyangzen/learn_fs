@@ -1,0 +1,8 @@
+# sources/test-tools/xfstests-bld/run-fstests/util/gce-copy-image
+
+- Purpose: GCE image copy helper; it copies a source Compute Engine image or image-family image into a destination project by creating a temporary disk and then an image, preserving labels and description. The file is 207 lines/4134 bytes and is researched as source path `sources/test-tools/xfstests-bld/run-fstests/util/gce-copy-image`.
+- Important APIs/types/functions: shell variables include XFSTESTS_FLAVOR, DIR, SRC_FAMILY, DEST_FAMILY, SRC_IMAGE, DEST_IMAGE, TEMP_DISK, DESCRIPTION, NO_ACTION; functions include top-level script logic.
+- Control flow: loads `util/get-config` or `/usr/local/lib/gce-funcs`, validates required GCE/GCS inputs, composes gcloud/gcloud-storage commands or metadata, performs the cloud action, and records local marker/state files when a long-running service is launched.
+- State and persistence: uses local marker files, GCS objects, result directories, generated configs, temporary disks/images, schroot entries, or mounted filesystems depending on the helper; cleanup is generally explicit and failure paths may leave debug artifacts.
+- Dependencies/integration: integrates with xfstests-bld frontends, `get-config`, `arch-funcs`, `/root/runtests_utils`, gcloud/gcloud storage, systemd services, Debian tooling, QEMU/KVM, and filesystem utilities as applicable.
+- Risks and test signals: most failures come from missing credentials/tools, stale cloud resources, command-line validation gaps, destructive device operations, or partial cleanup; validate with `--no-action` where available, smoke selftests, GCS artifact checks, systemd logs, and generated xUnit summaries.

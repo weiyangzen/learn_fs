@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/comedi/drivers/adv_pci1760.c Research
+
+Implements the Advantech PCI-1760 relay and isolated digital input driver. It exposes digital input, relay digital output, PWM configuration, and currently leaves counter support unused.
+
+`pci1760_send_cmd()` and `pci1760_cmd()` implement the board mailbox protocol with feedback matching, clear-between-identical-commands, retries, and timeout returns. `pci1760_di_insn_bits()` reads input status from IMB3. `pci1760_do_insn_bits()` updates relay outputs using `PCI1760_CMD_SET_DO`. `pci1760_pwm_insn_config()` handles arm/disarm, PWM period configuration, status queries, and rounding feedback. `pci1760_reset()` disables interrupts, counters, filters, pattern matching, and initializes counter-related values. `pci1760_auto_attach()` creates four subdevices.
+
+Attach enables PCI BAR0, resets board features through mailbox commands, creates DI/DO/PWM/unused-counter subdevices, and reads current output state with `GET_DO`. Mailbox commands write OMB0-3 and poll IMB2 for command echo, returning IMB0/1 feedback. PWM state is maintained in hardware; the driver derives divisors from nanosecond requests with a 100 usec base and returns `-EAGAIN` when rounded periods differ. DO state is mirrored in Comedi `s->state`.
+
+Dependencies are Comedi PCI auto attach, Linux bit/time helpers, raw byte I/O, and Comedi PWM instruction config semantics. The driver status is untested. Risks center on firmware mailbox timeouts, retry limits, identical-command clearing, PWM rounding contract, and reset-time command failures being ignored. Tests should cover command timeout paths, DO state readback after `GET_DO`, PWM period rounding and `-EAGAIN`, arm count validation, reset command sequence, and DI reads from the continuously updated mailbox byte.

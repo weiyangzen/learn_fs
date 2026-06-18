@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/sgi-ip27/ip27-memory.c
+
+Purpose: IP27 NUMA memory discovery and topology setup. It replaces bogus ARC memory data with KL config-derived node, router, and bank information.
+
+Important APIs and control flow: `gen_region_mask()` builds HUB region presence. Router traversal computes `__node_distances` and dumps topology. `slot_psize_compute()` derives slot PFNs from KL memory bank sizes. `mlreset()` sets `master_nasid`, probes CPUs, initializes topology, region masks, replication mask, and per-node HUB region/CALIAS registers. `szmem()` adds node-local memblock ranges while avoiding configurations where memmap metadata would overrun slot 0. `node_mem_init()` places `node_data` and `hub_data` at the node's first free PFN and reserves that area. `prom_meminit()` orchestrates all of this and installs a null node for offline nodes.
+
+State, persistence, and integration: state includes exported `__node_data`, `__node_distances`, memblock nodes, node maps, and HUB region registers. Dependencies include KL boards, GDA, SMP CPU probing, ktext replication, and Linux NUMA zones. Risks include complex firmware topology trust, hacky DIMM bank sizing, fixed assumptions about bootmem fitting in slot 0, and large platform-specific address math. Test signals are topology dump, memblock node ranges, NUMA distances, CPU masks per node, and successful zone initialization.

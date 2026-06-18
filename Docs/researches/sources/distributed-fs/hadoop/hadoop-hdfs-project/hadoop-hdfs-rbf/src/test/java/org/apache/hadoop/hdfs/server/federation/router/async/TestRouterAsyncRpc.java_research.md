@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/async/TestRouterAsyncRpc.java
+
+Purpose: configures the broad `TestRouterRpc` suite to run with async RPC and overrides selected assertions that need async result retrieval.
+
+Important APIs/types/functions: extends `TestRouterRpc`; uses `MiniRouterDFSCluster`, `RouterConfigBuilder`, `RouterAsyncRpcFairnessPolicyController`, `DFS_ROUTER_ASYNC_RPC_ENABLE_KEY`, `DFS_ROUTER_FAIRNESS_POLICY_CONTROLLER_CLASS`, `UserGroupInformation`, `FSDataOutputStream`, `OpenFilesIterator`, `LocatedBlock`, `HAServiceState`, `RemoteException`, reflection, and `syncReturn`.
+
+Control flow: `globalSetUp()` builds router configuration with metrics/RPC, async RPC enabled, async fairness controller, lowered DN report cache, and delegates cluster setup to the superclass. `testSetup()` calls inherited per-test setup. Overrides include `testgetGroupsForUser()` retrieving async group arrays via `syncReturn`, `testConcurrentCallExecutorInitial()` verifying async clients do not initialize the synchronous concurrent executor, `testGetDelegationTokenAsyncRpc()`, and `testProxyGetHAServiceStateAsync()`.
+
+State and persistence behavior: inherited tests create files, mount locations, delegation-token state, and router metrics. Async-specific state includes async worker pools and thread-local/current future state consumed by `syncReturn`. Integration points are the full router client/RPC surface, fairness controller, security token calls, HA state proxying, and inherited superclass behavior. Risks include large inherited coverage making failures harder to localize and async context reuse between overrides. Test signals are inherited `TestRouterRpc` assertions plus explicit async groups, delegation token, and HA state checks.

@@ -1,0 +1,15 @@
+# sources/object-store/rustfs/crates/e2e_test/src/mc_mirror_small_bucket_test.rs
+
+Purpose: End-to-end regression test for issue #3107, validating that MinIO Client `mc mirror` can mirror a modest RustFS bucket without hanging or timing out during list/compare behavior. It exercises RustFS from an external CLI client rather than only through the AWS SDK.
+
+Important APIs/types/functions: The file imports `DEFAULT_ACCESS_KEY`, `DEFAULT_SECRET_KEY`, and `RustFSTestEnvironment`, plus `tokio::fs`, `tokio::time::timeout`, `std::process::Command`, `walkdir::WalkDir`, `uuid::Uuid`, and `serial_test::serial`. Constants are `BUCKET = "ddd"` and `OBJECT_COUNT = 484`. Helpers are `create_issue_3107_fixture`, `mc_available`, `run_mc`, and `count_files`. `TestResult` is the common boxed error result type.
+
+Control flow: The fixture helper writes 484 files below `ddd/requirements/file-XXXX.txt` and three extra marker files under sibling directories `aaa`, `ccc`, and `ccc-package`. The test initializes logging, skips cleanly if `mc --version` is unavailable, starts RustFS, creates bucket `ddd`, creates a unique `mc` alias pointed at the test server, creates fixture and backup directories under the environment temp directory, mirrors the local fixture into the bucket, then mirrors the bucket back to a backup path inside a 20-second timeout using `spawn_blocking` for the CLI call. It counts files in the backup and removes the alias before returning.
+
+State and persistence behavior: Local filesystem state is created under `env.temp_dir` for the source fixture and mirrored backup. Remote RustFS state is populated by `mc mirror --overwrite` into bucket `ddd`; because the source root contains a `ddd` directory plus three sibling directories, the expected remote/backup file count is `OBJECT_COUNT + 3`. The `mc` alias is global client configuration state, so it is given a UUID suffix and explicitly removed at the end.
+
+Dependencies and integration points: This test depends on the external `mc` binary being installed and available on `PATH`. It integrates RustFS bucket creation with MinIO Client alias management, upload mirror, download mirror, object listing/comparison, local directory walking, blocking process execution inside async Tokio tests, and serial server lifecycle. It is a compatibility test for real-world client behavior rather than a unit-level API test.
+
+Risks: The test is skipped when `mc` is missing, so CI environments without MinIO Client will not exercise the regression. `run_mc` uses blocking process execution and captures full stdout/stderr on failure; the download path is wrapped in a 20-second timeout, but the upload mirror is not. If a failure occurs before alias removal, the alias can be left in user/global `mc` config. The fixed bucket name and external CLI config make `#[serial]` important.
+
+Test signals: Strong signals are successful `mc alias set`, successful upload mirror, successful download mirror completing within 20 seconds, and `count_files(backup/ddd-backup) == 487`. A missing `mc` binary is treated as a skip signal, not a failure.

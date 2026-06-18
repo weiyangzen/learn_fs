@@ -1,0 +1,45 @@
+# sources/distributed-fs/ceph-client/drivers/accel/habanalabs/gaudi/gaudiP.h
+
+## Purpose
+`gaudiP.h` is the private Gaudi ASIC contract used by the HabanaLabs accelerator driver implementation. It centralizes Gaudi-specific queue counts, DMA/MME/TPC/NIC topology constants, memory-map reservations, address-space limits, register-offset arithmetic, hardware capability bits, masks for enabled engines, collective synchronization bookkeeping types, internal QMAN persistent-queue allocation metadata, and the private `struct gaudi_device` hung off `hdev->asic_specific`. It also declares a few Gaudi-private entry points used across implementation files, including the CoreSight debug hooks implemented in `gaudi_coresight.c`.
+
+## Important APIs, types, and functions
+- Queue topology macros define the hardware queue model: `NUMBER_OF_EXT_HW_QUEUES`, `NUMBER_OF_CMPLT_QUEUES`, `NUMBER_OF_CPU_HW_QUEUES`, `NUMBER_OF_INT_HW_QUEUES`, `NUMBER_OF_HW_QUEUES`, `QMAN_STREAMS`, `NUMBER_OF_COLLECTIVE_QUEUES`, and `GAUDI_STREAM_MASTER_ARR_SIZE`.
+- Engine and queue resource macros define DMA, MME, TPC, NIC, SOB, monitor, and internal QMAN sizing, including `DMA_NUMBER_OF_CHNLS`, `MME_NUMBER_OF_ENGINES`, `MME_NUMBER_OF_QMANS`, `NUM_OF_SOB_IN_BLOCK`, `NUM_OF_MONITORS_IN_BLOCK`, `MONITOR_MAX_SOBS`, and queue persistent-queue sizes such as `HBM_DMA_QMAN_SIZE_IN_BYTES`.
+- Memory-map macros reserve device DRAM regions for firmware and driver-owned MMU support: `CPU_FW_IMAGE_ADDR`, `MMU_PAGE_TABLES_ADDR`, `MMU_CACHE_MNG_ADDR`, `DRAM_DRIVER_END_ADDR`, and `DRAM_BASE_ADDR_USER`. The compile-time assertion prevents driver reservations from exceeding the 512 MB boundary.
+- Virtual-address macros define host VA space exposed through the device MMU: `VA_HOST_SPACE_START`, `VA_HOST_SPACE_END`, `VA_HOST_SPACE_SIZE`, and `HOST_SPACE_INTERNAL_CB_SZ`.
+- Hardware capability bits such as `HW_CAP_PLL`, `HW_CAP_HBM`, `HW_CAP_MMU`, `HW_CAP_MME`, `HW_CAP_CPU`, DMA bits, MSI, scramblers, `HW_CAP_NIC_MASK`, and `HW_CAP_TPC_MASK` are the shared readiness map used by init, reset, validation, and debug paths.
+- Address conversion helpers `GAUDI_CPU_PCI_MSB_ADDR()`, `GAUDI_PCI_TO_CPU_ADDR()`, and `GAUDI_CPU_TO_PCI_ADDR()` encode/decode the Gaudi 50-bit PCI/CPU address extension convention.
+- `enum gaudi_dma_channels`, `enum gaudi_tpc_mask`, and `enum gaudi_nic_mask` provide stable channel and engine-bit names for DMA/TPC/NIC handling.
+- `struct gaudi_hw_sob_group` tracks one reserved hardware SOB group, its owning device, refcount, base SOB id, and waiting queue.
+- `struct gaudi_collective_properties` stores all collective SOB groups plus per-stream next/current group state and precomputed master monitor SOB masks.
+- `struct gaudi_internal_qman_info` records a kernel virtual address, DMA address, and size for an internal QMAN persistent queue allocated in host coherent memory.
+- `struct gaudi_device` is the private per-device object containing the CPU-CP info callback, a legacy hardware queue spinlock, `internal_qmans[]`, collective properties, current HBM BAR address, event id/stat arrays, the hardware capability initialized bitmap, and MMU cache invalidation producer index.
+- Declared cross-file functions include `gaudi_init_security()`, `gaudi_ack_protection_bits_errors()`, `gaudi_debug_coresight()`, `gaudi_halt_coresight()`, and `gaudi_mmu_prepare_reg()`.
+
+## Control flow
+This header does not execute control flow itself, but it shapes most Gaudi driver control paths. During software initialization, `gaudi_sw_init()` allocates `struct gaudi_device`, assigns it to `hdev->asic_specific`, sets `cpucp_info_get`, allocates internal QMAN persistent-queue memory into `internal_qmans[]`, initializes `hw_queues_lock`, and advertises capabilities such as CoreSight support. Hardware initialization code sets and clears `hw_cap_initialized` bits as PLL, memory, MMU, DMA, MME, TPC, NIC, MSI, CPU, and CPU queue components become available or are reset.
+
+Collective command-submission paths use `struct gaudi_collective_properties` to map reserved SOB groups onto NIC queues plus the single collective engine resource shared by DMA5/TPC7. The kref in each `gaudi_hw_sob_group` lets queue users release a group and trigger hardware SOB reset when the reference count drops to zero. Internal QMAN initialization paths consult the queue sizing macros in this header when allocating host PQ buffers and programming queue bases. Debug ioctl control reaches the prototypes in this header via `gaudi_debug_coresight()` and `gaudi_halt_coresight()` after the common driver has entered debug mode.
+
+## State and persistence
+The primary persistent state introduced here is `struct gaudi_device`, which lives for the lifetime of the `hl_device` software initialization and is freed during Gaudi software teardown. Its `events[]` array is initialized from the Gaudi IRQ map; `events_stat[]` is resettable event histogram state; `events_stat_aggregate[]` survives normal resets as an aggregate histogram. `hw_cap_initialized` is persistent but intentionally reset-sensitive: each engine bit is set only after a hardware block is initialized and is cleared when that block is reset or torn down. `mmu_cache_inv_pi` is an 8-bit producer index because the hardware MMU cache invalidation queue expects that width.
+
+The internal QMAN PQ pointers are persistent coherent-DMA allocations owned by the driver, freed in `gaudi_sw_fini()`. Collective SOB group state persists across submissions and is reset through kref release callbacks and collective init. The header's memory-map constants also encode persistent layout contracts with firmware, MMU page tables, and user-visible DRAM base addresses; changing them can alter ABI-like expectations between the driver, firmware, and hardware.
+
+## Dependencies and integration points
+The header depends on common HabanaLabs driver types from `../common/habanalabs.h`, the DRM uAPI header `uapi/drm/habanalabs_accel.h`, boot interface definitions, Gaudi packet and firmware interfaces, Gaudi register-derived base macros, and Linux kernel helpers such as `BIT`, `GENMASK`, `dma_addr_t`, `spinlock_t`, and `kref`. Many constants are expressed in terms of generated register map symbols such as `mmDMA1_QM_BASE`, `mmTPC1_QM_BASE`, `mmSYNC_MNGR_*`, `mmHBM*_BASE`, and `CFG_BASE`, so generated ASIC register headers are part of the contract.
+
+Important consumers are `gaudi.c` for initialization, reset, queue setup, collective sync, MMU, events, and hardware capability handling; `gaudi_coresight.c` for CoreSight timeout and MMU capability checks; MMU code for `gaudi_mmu_prepare_reg()`; and common ioctl/device paths through the `hdev->asic_funcs` callbacks. Userspace sees these internals indirectly via queue behavior, debug mode/CoreSight ioctls, memory mapping limits, and event reporting.
+
+## Risks and edge cases
+- Hardware capability bits are tightly packed in a 32-bit field. NIC bits occupy 14-23 and TPC bits occupy 24-31, leaving no room for additional high-numbered capabilities without widening or reorganizing the bitmap.
+- Register-offset macros assume generated register bases are correct and monotonically laid out per block. A bad generated base or a mismatched ASIC revision can make queue, DMA, TPC, SIF/NIF, MME, or SRAM offset arithmetic silently program the wrong block.
+- DRAM reservation constants are guarded only by a compile-time size check. Firmware, MMU table, or cache-management growth can collide with user DRAM if the layout is changed without updating all parties.
+- `GAUDI_PCI_TO_CPU_ADDR()` and `GAUDI_CPU_TO_PCI_ADDR()` rewrite bits 49:39 in place. Callers must pass mutable 64-bit address variables and must preserve the correct extension value, especially when security mode changes address interpretation.
+- Collective SOB refcount handling must match command-submission ownership. Premature release can reset hardware SOBs still observed by queues; missing release can pin collective groups and stall future reuse.
+- Internal QMAN arrays are sized by `GAUDI_QUEUE_ID_SIZE` even though only a sparse subset is used. Queue-id drift between generated ids and driver allocation/programming code can index valid memory with semantically wrong queue data.
+- The private header is included broadly, so changes to topology macros or `struct gaudi_device` layout have a large rebuild and behavior surface.
+
+## Test signals
+Useful validation includes Gaudi driver probe/remove and reset tests, successful initialization logs through PLL/HBM/MMU/DMA/MME/TPC/NIC/CPU/MSI stages, command submission on external and internal queues, collective operations using NIC queues plus DMA5/TPC7, MMU map/unmap and cache invalidation flows, and debug-mode CoreSight operations. Strong failure signals include event-array overflow during `gaudi_sw_init()`, DMA coherent allocation failures for internal QMAN PQs, queue initialization errors tied to `internal_qmans[]`, collective SOB overflow/underflow or stuck collective waits, invalid MMU/DRAM/SRAM address rejection, and logs indicating a hardware capability bit was not initialized when a path attempted to use that engine.

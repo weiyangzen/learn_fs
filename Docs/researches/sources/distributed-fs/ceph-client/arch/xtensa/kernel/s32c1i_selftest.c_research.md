@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/s32c1i_selftest.c -->
+# sources/distributed-fs/ceph-client/arch/xtensa/kernel/s32c1i_selftest.c
+
+Purpose: early self-test for Xtensa `S32C1I` atomic compare-and-swap support. Important functions are `probed_compare_swap`, `do_probed_exception`, and `check_s32c1i`.
+
+Control flow for capable cores installs temporary trap handlers for load/store error causes, probes a non-storing compare-swap and a storing compare-swap while recording exception PC/cause, validates return value and memory behavior, panics on inconsistent or unsupported exception behavior, restores original handlers, and runs as an `early_initcall`. For cores without `XCHAL_HAVE_S32C1I`, it warns that atomic CAS support is absent. Persistent state includes initdata probe word, probe PC, exception cause, and temporarily replaced trap handlers. Dependencies include `asm/traps.h`, `scompare1`, exception cause constants, and early trap setup. Integration points are atomic/cmpxchg correctness, bringup diagnostics, and trap handler replacement. Risks are panic during boot on cores where S32C1I traps, incomplete handler restoration if panic occurs, and early exception handling fragility. Test signals include boot logs, successful early initcall, intentional unsupported-core warning, and atomic operation stress after boot.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/s32c1i_selftest.c -->

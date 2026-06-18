@@ -1,0 +1,114 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/clocksource
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 100
+- Recursive researched files: 100
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/clocksource/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/acpi_pm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/arc_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/arm_arch_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/arm_arch_timer_mmio.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/arm_global_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/armv7m_systick.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/asm9260_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/bcm2835_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/bcm_kona_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/clksrc-dbx500-prcmu.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/clksrc_st_lpc.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/clps711x-timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/dummy_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/dw_apb_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/dw_apb_timer_of.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/em_sti.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/exynos_mct.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/hyperv_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/i8253.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/ingenic-ost.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/ingenic-sysost.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/ingenic-timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/jcore-pit.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/mips-gic-timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/mmio.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/mps2-timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/mxs_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/nomadik-mtu.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/numachip.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/renesas-ostm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/samsung_pwm_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/scx200_hrt.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/sh_cmt.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/sh_mtu2.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/sh_tmu.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-armada-370-xp.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-atmel-pit.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-atmel-st.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-atmel-tcb.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-cadence-ttc.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-clint.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-cs5535.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-davinci.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-digicolor.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-econet-en751221.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-ep93xx.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-fsl-ftm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-fttmr010.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-goldfish.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-gx6605s.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-gxp.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-imx-gpt.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-imx-sysctr.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-imx-tpm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-integrator-ap.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-ixp4xx.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-keystone.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-loongson1-pwm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-lpc32xx.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-mediatek-cpux.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-mediatek.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-meson6.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-microchip-pit64b.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-milbeaut.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-mp-csky.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-msc313e.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-npcm7xx.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-nxp-pit.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-nxp-stm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-of.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-of.h`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-orion.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-owl.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-pistachio.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-probe.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-pxa.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-qcom.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-ralink.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-rda.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-realtek.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-riscv.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-rockchip.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-rtl-otto.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-sp.h`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-sp804.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-sprd.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-stm32-lp.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-stm32.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-sun4i.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-sun5i.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-tegra.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-tegra186.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-ti-32k.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-ti-dm-systimer.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-ti-dm.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-versatile.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-vt8500.c`
+- `sources/distributed-fs/ceph-client/drivers/clocksource/timer-zevio.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

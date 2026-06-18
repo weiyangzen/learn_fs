@@ -1,0 +1,11 @@
+# sources/distributed-fs/openafs/src/bozo/bosserver.c
+
+`bosserver.c` is the bosserver daemon entry point and global coordinator. It initializes server directories, logging, auth configuration, the bnode subsystem, registered bnode types (`fs`, `dafs`, `simple`, `cron`), Rx services, audit, pid files, restricted mode, and scheduled restarts.
+
+Important APIs include `bozo_IsRestricted`/`bozo_SetRestricted`, `bozo_insecureme`, `bozo_rxstat_userok`, `bozo_ReBozo`, directory helpers `MakeDirParents`/`MakeDir`/`CreateDirs`, `ReadBozoFile`, `WriteBozoFile`, `BozoDaemon`, pid-file helpers, `bozo_CreateRxBindFile`, `GetRxBindAddress`, `CreateLocalCellConfig`, and `main`. `ReadBozoFile` parses `restrictmode`, `restarttime`, `checkbintime`, and `bnode`/`parm`/`end` records. `WriteBozoFile` atomically writes a `.NBZ` file and renames it into place.
+
+Control flow in `main` parses options, requires root on Unix, creates required directories, daemonizes unless `-nofork`, initializes locks/signals/audit/logging, opens or creates cell config, initializes bnodes, reads `BosConfig` to instantiate and start configured services, initializes Rx, starts `BozoDaemon`, builds server security classes, creates the bos and rxstats services, and donates the process to `rx_StartServer`. `BozoDaemon` wakes every minute, handles restricted-mode signal notices, recomputes ktime schedules, triggers full reexec restarts, restarts bnodes whose binaries changed, and reopens logs for rotation.
+
+State and persistence include global `bozo_confdir`, `bozo_fileName`, `bnode_glock`, logging flags, core/pid/log paths, restart ktime structures, restricted-mode atomics, rxbind file, pid files, and `BosConfig`. Dependencies include Rx/rxkad/rxstat, afsconf/authcon, audit, dirpath, bnode internals, soft signals, ktime, and platform-specific daemon/core handling.
+
+Risks include global lock scope, root-only filesystem setup, persistence parser fragility for malformed `BosConfig`, direct reexec semantics, creating a default `localcell`, signal-based restricted-mode disable via `SIGFPE`, and security impact of running without restricted mode. Test signals include parser/round-trip tests for `BosConfig`, startup with missing config, directory permission checks, option parsing, Rx bind-file generation, and scheduled restart behavior with mocked bnodes.

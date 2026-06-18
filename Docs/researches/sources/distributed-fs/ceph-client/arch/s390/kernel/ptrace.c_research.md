@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/s390/kernel/ptrace.c
+
+Purpose: implements the s390 ptrace user area, PER single-step/block-step controls, transactional-execution ptrace commands, and ELF/core user regsets for GPRs, FPRs, vector registers, guarded storage, and runtime instrumentation.
+
+Important APIs/functions: hardware-state control is in `update_cr_regs()`, `user_enable_single_step()`, `user_disable_single_step()`, `user_enable_block_step()`, and `ptrace_disable()`. Legacy user-area access is implemented by `__peek_user()`, `peek_user()`, `__poke_user()`, and `poke_user()`. `arch_ptrace()` handles s390-specific requests. Regset callbacks include `s390_regs_get/set`, `s390_fpregs_get/set`, `s390_vxrs_low/high_get/set`, `s390_gs_cb_get/set`, `s390_gs_bc_get/set`, `s390_runtime_instr_get/set`, `s390_tdb_get`, `s390_last_break_get`, and system-call regset access.
+
+Control flow: `update_cr_regs()` compares current and desired control-register state, enabling/disabling transactional execution, guarded storage, and PER. It merges user PER settings with kernel single-step or uprobe single-step state and loads CR9-CR11 only when changed. Legacy ptrace peeks/pokes map sparse `struct user` offsets onto stack `pt_regs`, access registers, FPU/vector storage, and PER state while preserving historical gdb quirks. `arch_ptrace()` dispatches peek/poke area operations, last-break access, TE enable/disable, and TE abort randomization before falling back to generic ptrace. Regset setters validate PSW masks, FPC reserved bits, guarded-storage availability, and runtime-instrumentation control-block invariants.
+
+State and persistence: modifies per-task `thread_struct` fields: access registers, FPU/vector state, PER user/event controls, PER flags, last break, syscall number, guarded-storage control blocks, runtime-instrumentation control block, and saved transaction diagnostic block. State is task-local and appears in core dumps via user regsets.
+
+Dependencies and integration points: depends on scheduler switch code calling `update_cr_regs()`, machine facility checks for TX/VX/GS/RI, `entry.h` syscall flags, generic ptrace/regset/core-dump infrastructure, access-register and FPU helpers, guarded storage, runtime instrumentation, and seccomp/audit-visible syscall state.
+
+Risks: ptrace is ABI-sensitive; offsets and historical access-register quirks cannot be casually changed. PSW validation must prevent invalid addressing and unauthorized RI bits. Runtime instrumentation and guarded storage setters allocate control blocks and may update live hardware under preemption disable. Single-step PER merging must not lose debugger-installed PER ranges.
+
+Test signals: gdb register read/write, `PTRACE_PEEKUSR_AREA`/`POKEUSR_AREA`, single-step and block-step, transactional execution ptrace commands, core dumps containing all regsets, vector-reg access on VX and non-VX machines, guarded-storage and RI regset validation, and syscall-number modification while stopped in a syscall.

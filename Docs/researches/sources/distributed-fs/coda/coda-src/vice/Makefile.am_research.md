@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/vice/Makefile.am
+
+This Automake file defines the build for the Vice server directory when `BUILD_SERVER` is enabled. It declares a private `libviceerror.la` library, installs/links the `codasrv` and `printvrdb` programs, and distributes the `codasrv.8` and `servers.5` manpages plus `server.conf.ex`.
+
+The main source group is `codasrv_SOURCES`, which includes server entry and RPC handling files (`srv.cc`, `srvproc.cc`, `srvproc2.cc`, `codaproc*.cc`), client tracking (`clientproc.cc`), callback handling (`vicecb.cc`), server monitoring (`smon.cc`), cop pending logic, and private headers. `libviceerror_la_SOURCES` isolates `ViceErrorMsg.c`, allowing error formatting to be linked into `codasrv`. `printvrdb_SOURCES` is the smaller VRDB diagnostic program.
+
+`AM_CPPFLAGS` wires the server to generated and source include directories for base, kernel dependencies, utilities, vicedep, directory, ACL/auth, partition, volume, lookaside cache, repair, and resolution code. `codasrv_LDADD` establishes link order across vicedep, volutil, resolution, repair I/O, volume, LKA, VV, auth, partition, AL, directory, util, rwcdb/base, RPC2/RVM libraries, and `LIBKVM`. `printvrdb` links only util and base.
+
+State and persistence here are build-system state rather than runtime state, but the file controls whether server binaries and config/manpage artifacts are produced. Risks include conditional definitions hiding required artifacts when `BUILD_SERVER` is off, strict link-order dependencies among legacy libraries, and missing generated headers from `top_builddir`. Test signals are `autoreconf`/Automake generation, `make V=1` for `codasrv` and `printvrdb`, dependency tracking after touching `ViceErrorMsg.c` or `clientproc.cc`, and install/distcheck behavior with and without `BUILD_SERVER`.

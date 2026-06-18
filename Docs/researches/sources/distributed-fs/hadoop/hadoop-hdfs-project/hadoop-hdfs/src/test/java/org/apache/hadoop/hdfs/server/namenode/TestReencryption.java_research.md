@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/TestReencryption.java
+
+Purpose: Large integration suite for HDFS encryption-zone re-encryption. It validates admin command semantics, key-version changes, status reporting, queue ordering, restart recovery from edits/fsimage, checkpoint resume, deletion/create/rename races, snapshots, cancellation, safe mode, missing key provider behavior, KMS/updater fault handling, and retriable recovery.
+
+Important APIs and functions: Setup configures a JKS key provider, delegation-token usage, short listing/batch limits, `MiniDFSCluster`, `HdfsAdmin`, wrappers, and `DFSTestUtil.createKey`. Tests call `dfsAdmin.createEncryptionZone`, `reencryptEncryptionZone(START|CANCEL)`, `listReencryptionStatus`, `rollKey`, `getFileEncryptionInfo`, `pauseReencryptForTesting`, `pauseForTestingAfterNthSubmission`, `pauseForTestingAfterNthCheckpoint`, and helper waits over `ReencryptionStatus` and `ZoneReencryptionStatus`.
+
+Control flow: Tests build encryption-zone trees, roll the EZ key, submit re-encryption, and compare file encryption key version names before and after processing. Restart tests pause after queued command or checkpoint, restart the NameNode with re-encryption paused, verify queued zone/checkpoint file recovery, then resume and validate completion. Race tests pause handler/updater work, mutate files or directories, then verify deleted files are skipped, newly created files are not unnecessarily re-encrypted, and renames under re-encryption are rejected.
+
+State and persistence behavior: The suite exercises persistent reencryption status in edit logs and fsimage, per-zone submission/completion metadata, last checkpoint file, canceled flag, failure counters, and encrypted data encryption key versions on INodes. It also checks status visibility without a live provider and completion behavior around safemode.
+
+Dependencies and integration points: Integrates `EncryptionZoneManager`, `ReencryptionHandler`, `ReencryptionUpdater`, `ZoneSubmissionTracker`, `ReencryptionStatus`, `HdfsAdmin`, key providers, snapshots, safemode, FS wrappers, fault injection through `EncryptionFaultInjector`, and Whitebox access to internals.
+
+Risks: The suite is timing-heavy and depends on pauses, sleeps, futures, and background handler/updater ordering. Fault-injection tests distinguish permanent IO failures from `RetriableException`; regressions can leave queues stuck, futures un-canceled, or status counters inconsistent. Snapshot and rename restrictions protect against re-encrypting stale or moved INodes incorrectly.
+
+Test signals: Strong signals include key-version equality/inequality, exact files-reencrypted counts, queued/completed zone counts, queue ordering by inode id, last checkpoint file restoration, canceled/completion time flags, failure counts for KMS/updater faults, rejection messages for invalid commands, and successful re-encryption after cancellation or restart.

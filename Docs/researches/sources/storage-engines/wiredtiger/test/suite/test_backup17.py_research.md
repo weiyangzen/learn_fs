@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup17.py
+
+Purpose: tests incremental backup consolidation, ensuring adjacent dirty ranges are collapsed when `consolidate=true` and not collapsed otherwise. It compares range lengths and total byte coverage.
+
+Important APIs are incremental full backup, `take_incr_backup(..., consolidate)`, helper `add_data`, and assertions on returned file length lists. Control flow creates two tables, writes initial data to both, opens an incremental primary with 100K granularity, takes a full backup, then writes identical changes to table one and takes an unconsolidated incremental backup; it writes similar changes to table two and takes a consolidated backup. State behavior is dirty block range tracking and consolidation in incremental metadata. Risks include eviction/checkpoint internal operations adding small dirty ranges, so total length comparison uses tolerance. Test signals are presence/absence of ranges larger than granularity, fewer consolidated ranges, and approximate equal total length.

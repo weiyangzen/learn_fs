@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/nouveau/nouveau_bios.c
+
+Purpose: Implements Nouveau's legacy VBIOS interpretation layer used by pre-GSP PCI devices, especially pre-Tesla display initialization. It translates BIT and BMP ROM structures into `drm->vbios`, builds DCB encoder/connector information, runs LVDS/TMDS init scripts, locates embedded EDID, and decides whether VBIOS init scripts must execute when the adapter is not POSTed.
+
+Important APIs/functions: `nouveau_bios_init()`, `nouveau_run_vbios_init()`, `nouveau_bios_fp_mode()`, `nouveau_bios_parse_lvds_table()`, `run_tmds_table()`, `call_lvds_script()`, `bit_table()`, `olddcb_table()`, `olddcb_outp_foreach()`, `olddcb_conn()`, and `nouveau_bios_embedded_edid()`. Internal parsing is split across `parse_bit_*_tbl_entry()`, `parse_bmp_structure()`, `parse_dcb20_entry()`, `parse_dcb15_entry()`, `merge_like_dcb_entries()`, and board-specific `apply_dcb_encoder_quirks()`.
+
+Control flow: `nouveau_bios_init()` skips non-PCI and GSP-RM devices, initializes the legacy `struct nvbios` from the nvkm BIOS object, parses BIT or BMP, parses/fabricates DCB outputs for pre-Tesla, decides whether the hardware is POSTed, loads NV17 panel sequencer microcode when needed, parses flat-panel tables, then enables later script execution. LVDS and TMDS entry points select clock comparison tables, protect RAMDAC clock-head binding, run init tables through `nouveau_bios_run_init_table()`, and repair side effects such as `NV_PBUS_POWERCTRL_2`.
+
+State/persistence: The file persists parsed VBIOS data in `drm->vbios`, including ROM pointer/length, feature bits, DCB entries, flat-panel mode pointers, LVDS flags, script invocation cache, EDID pointer, and init execution flag. It writes hardware registers while running scripts, loading HWSQ microcode, and checking POST state.
+
+Dependencies/integration: Depends on nvkm BIOS, nvif MMIO access, VGA/RAMDAC helpers, DCB definitions, DRM display modes, PowerPC Open Firmware quirks, and Nouveau encoder/display code. Downstream users include connector creation, encoder setup, mode validation, LVDS panel power sequencing, debugfs VBIOS export, and pre-NV50 modeset.
+
+Risks: ROM parsing is version-sensitive and includes many heuristics and board-specific overrides. Bad offsets can lead to disabled outputs, wrong connector mappings, incorrect panel bpc/dual-link decisions, or unsafe script execution. DCB fabrication and fake connector indices are fallback heuristics. Test signals include boot logs for BIT/BMP/DCB versions, connector enumeration, LVDS/eDP panel bring-up, TMDS clock behavior, suspend/resume panel scripts, embedded EDID detection, and known quirk boards.

@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/arch/arm/mach-sti/platsmp.c
+
+## Purpose
+`sources/distributed-fs/ceph-client/arch/arm/mach-sti/platsmp.c` provides SMP and CPU hotplug platform code for STMicroelectronics STi platform support. It consumes or advertises OF compatible strings `arm,cortex-a9-scu` to find syscon/MMIO nodes, match machine descriptors, or register CPU bring-up methods.
+
+## Important APIs, Types, and Functions
+Important functions and entry points are `sti_boot_secondary`, `sti_smp_prepare_cpus`. Important structs/types referenced or defined are `task_struct`, `device_node`, `smp_operations`. File-scope platform state and tables include `release_phys`, `cpu`. Preprocessor/register symbols defined here include none. Machine descriptors are none; OF compatible strings visible in the file are `arm,cortex-a9-scu`. Headers imported by the file include `linux/init.h`, `linux/errno.h`, `linux/delay.h`, `linux/smp.h`, `linux/io.h`, `linux/of.h`, `linux/of_address.h`, `linux/memblock.h`, `asm/cacheflush.h`, `asm/smp_plat.h`, `asm/smp_scu.h`, `smp.h`
+
+## Control Flow
+Runtime flow starts when generic ARM SMP code calls this platform's `smp_operations`: initialize possible CPUs, prepare shared boot vectors or release registers, request a secondary CPU start, then synchronize with a pen-release or completion path. Hotplug paths reverse the sequence by quiescing caches, programming power/reset control, and waiting for the dying CPU or cluster to report a safe state.
+
+## State and Persistence Behavior
+Persistent storage is not used. Runtime state is kept in file-scope mappings, flags, tables, or hardware registers such as `release_phys`, `cpu`. The durable contract is the DT ABI, Kconfig/Kbuild selection, and register programming sequence expected by firmware and the SoC; hardware register contents may persist across warm reset or low-power states even though the kernel does not write files.
+
+## Dependencies and Integration Points
+Dependencies include `linux/init.h`, `linux/errno.h`, `linux/delay.h`, `linux/smp.h`, `linux/io.h`, `linux/of.h`, `linux/of_address.h`, `linux/memblock.h`, `asm/cacheflush.h`, `asm/smp_plat.h`, `asm/smp_scu.h`, `smp.h` plus platform integration with DT-only machine selection, GIC/irqchip setup, SMP secondary boot through syscfg boot registers, PSCI fallback expectations, and OF platform device population. Cross-reference scans for visible symbols/compatibles found `sources/distributed-fs/ceph-client/arch/arm/boot/dts/actions/owl-s500.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/amlogic/meson8.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/arm/arm-realview-pbx-a9.dts`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/arm/vexpress-v2p-ca9.dts`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/axis/artpec6.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/broadcom/bcm-ns.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/broadcom/bcm63138.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/intel/socfpga/socfpga.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/intel/socfpga/socfpga_arria10.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/marvell/armada-375.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/marvell/armada-38x.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/marvell/armada-39x.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/nuvoton/nuvoton-common-npcm7xx.dtsi`, `sources/distributed-fs/ceph-client/arch/arm/boot/dts/rockchip/rk3xxx.dtsi`. The file depends on generic ARM infrastructure such as machine descriptors, irqchip, clocksource, SMP, cpuidle, PM, syscon/regmap, AMBA, OF address mapping, and Kbuild/Kconfig as applicable.
+
+## Risks
+Primary risks: missing syscfg phandles, wrong secondary-start address programming, stale compatible strings, and SMP boot regressions when firmware or DT changes the CPU bring-up method. Additional file-specific risks: CPU bring-up and hotplug bugs can deadlock boot or leave caches incoherent; compatible-string changes can orphan existing board DTBs.
+
+## Test Signals
+ARCH_STI builds, DT boot on stih415/stih416/stih407 class boards, secondary CPU online/offline logs, and dtbs_check coverage for `st,syscfg` and CPU enable-method data. Exercise `/sys/devices/system/cpu/cpu*/online`, parallel hotplug loops, and dmesg checks for secondary boot timeouts or cache/RCU warnings.

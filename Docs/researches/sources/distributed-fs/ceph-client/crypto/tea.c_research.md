@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/crypto/tea.c
+
+`tea.c` registers generic TEA, XTEA, and XETA block ciphers with the Crypto API legacy cipher interface. XETA exists for compatibility with implementations that used an incorrect XTEA operation order.
+
+Important definitions are `struct tea_ctx`, `struct xtea_ctx`, `tea_setkey()`, `tea_encrypt()`, `tea_decrypt()`, `xtea_setkey()`, `xtea_encrypt()`, `xtea_decrypt()`, `xeta_encrypt()`, `xeta_decrypt()`, and `tea_algs[3]`. Algorithms are `"tea"`, `"xtea"`, and `"xeta"` with `*-generic` driver names, 16-byte keys, and 8-byte blocks.
+
+Setkey reads four little-endian 32-bit key words into the transform context. TEA encryption/decryption run 32 rounds with delta accumulation or reverse subtraction. XTEA uses the standard `sum`-based key index formulas. XETA uses the compatibility expression/order. Module init registers all algorithms with `crypto_register_algs()`, and exit unregisters them. State is just the four-word per-transform key. Dependencies include `<crypto/algapi.h>` and unaligned little-endian helpers. Risks include legacy/weak cipher use, reliance on Crypto API key-length validation because setkey itself does not check `key_len`, endian-vector mismatches, and confusing XETA with correct XTEA. Test signals include known-answer vectors, round trips, key-length rejection through the API, aliases, and `tcrypt` modes 19, 20, and 30.

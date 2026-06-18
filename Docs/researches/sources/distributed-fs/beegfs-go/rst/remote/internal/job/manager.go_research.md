@@ -1,0 +1,22 @@
+# sources/distributed-fs/beegfs-go/rst/remote/internal/job/manager.go
+
+## Purpose
+This file implements the BeeRemote job manager. It accepts job requests from gRPC, filesystem-event channels, and worker callbacks; persists job state by path in a Badger-backed `kvstore.MapStore`; schedules generated work through `remote/internal/workermgr`; and reconciles worker results into final job states.
+
+## Important APIs, Types, and Functions
+`Config` defines the path DB location, async request queue depth, and per-RST historical job retention limits. `Manager` owns lifecycle context, readiness locks, request/update/result channels, the path store, the worker manager, and a lock-release callback. `NewManager` builds buffered channels and installs the default BeeGFS file-lock cleanup behavior. `Start` opens the Badger-backed path store, marks the manager ready, and starts a select loop over job requests, job updates, and work results. `GetJobs`, `SubmitJobRequest`, `UpdatePaths`, `UpdateJobs`, `UpdateWork`, `GetRSTConfig`, `GetStubContents`, and `Stop` are the primary external APIs.
+
+## Control Flow
+Startup opens the path database and starts a goroutine that serially drains async request channels, while direct RPC methods can call the same synchronous APIs. `SubmitJobRequest` constructs a `Job`, locks or creates the path entry, rejects conflicting active jobs for the same path/RST, prunes terminal history, resolves the target RST, generates a work submission, and calls `workerManager.SubmitJob`. `UpdateJobs` locks one path entry, selects jobs by path, job ID, and optional RST filters, applies cancellation/deletion through `updateJobState`, and deletes path entries only when all jobs are removed. `UpdateWork` locks the path entry, updates one work result, and when every work result is terminal or failed it completes, aborts, fails, or marks the job unknown.
+
+## State and Persistence Behavior
+The path store maps a BeeGFS path to `map[jobID]*Job`; this keeps active and historical jobs for all RSTs associated with that path. The manager uses Badger transactions through `CreateAndLockEntry`/`GetAndLockEntry` so job creation, update, and deletion are committed atomically with lock release. Active jobs block duplicate submissions for the same path/RST; terminal jobs can be retained and garbage-collected by `MinJobEntriesPerRST`/`MaxJobEntriesPerRST`. Work results are stored inside the persisted `Job`, including assigned node and pool information. The default lock cleanup clears BeeGFS access flags only after no active jobs remain and the file is not offloaded.
+
+## Dependencies and Integration Points
+The manager depends on `common/kvstore` and Badger for durable state, `common/rst` for job generation/completion and sentinel errors, `ctl/pkg/ctl/entry` for BeeGFS file data state and access-flag cleanup, `workermgr.Manager` for worker scheduling and cancellation, protobuf packages for all public wire messages, and gRPC `status` codes for worker-result errors. It is called by `remote/internal/server` and receives work results from BeeSync workers through `UpdateWork`.
+
+## Risks and Edge Cases
+The code intentionally notes a crash window after worker scheduling but before the updated path entry is committed; scheduled work could exist without durable assignment records. `Start` returns without unlocking `readyMu` if called while already ready, which is a deadlock risk for future callers. Async channel receives do not check `ok`, so closed channels would feed nil requests. Force cancellation/deletion can leave orphaned remote artifacts by design. The status message concatenation in missing-RST/abort-error branches duplicates existing messages due to `status.GetMessage() + (status.GetMessage() + ...)`. `UpdateWork` assumes the manager is ready indirectly through a valid store but does not take `readyMu`.
+
+## Test Signals
+`manager_test.go` exercises scheduling, duplicate conflict handling, multi-RST same-path submissions, async update channels, cancellation, deletion, completed-job protection, forced deletion, scheduling-error recovery, unknown-state handling, worker-result completion/cancellation transitions, mixed terminal-state unknown handling, and sentinel generation-status mapping. The tests use mock workers and mock filesystems; they do not cover real Badger crash recovery, real BeeGFS access-flag clearing, or the startup double-call lock bug.

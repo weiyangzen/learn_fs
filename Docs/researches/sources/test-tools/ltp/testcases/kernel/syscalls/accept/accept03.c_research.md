@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/accept/accept03.c
+
+Purpose: checks `accept()` error behavior over LTP's generic file descriptor corpus. `TST_FD_FOREACH` supplies many descriptor types; socket descriptors are skipped, `open_tree` and `O_PATH` descriptors expect `EBADF`, and other non-sockets expect `ENOTSOCK`. Important APIs are `TST_FD_FOREACH`, `tst_fd_desc`, and `accept`. State is the descriptor set created by the LTP fd iterator; no persistent filesystem state is owned by the file. Dependencies are LTP fd helpers and IPv4 sockaddr structures. Risks are kernel-specific errno differences for descriptor classes; test signal is exact `EBADF` or `ENOTSOCK` matching.

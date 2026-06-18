@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/SecureIOUtils.java
+
+Purpose: `SecureIOUtils` provides local-file open/create helpers that reduce symlink traversal and ownership-substitution attacks when Hadoop security is enabled. It validates opened file descriptors with native `fstat` and uses native create-with-permissions when available.
+
+Important APIs and types: static initialization checks `UserGroupInformation.isSecurityEnabled()` and `NativeIO.isAvailable()`, fails fast if secure mode requires unavailable native code, caches a raw local filesystem, and sets `skipSecurity`. Public `openForRandomRead`, `openFSDataInputStream`, and `openForRead` perform insecure direct opens when Hadoop security is disabled and secure force-open paths otherwise. `createForWrite` creates a non-existing file with requested permissions via native IO or an insecure fallback. `AlreadyExistsException` reports create collisions. Visible-for-testing force methods run secure checks regardless of global security mode.
+
+Control flow: secure open methods open the file first, call native `fstat` on the returned descriptor, compare actual owner/group metadata with expected values via `checkStat`, and close the stream/file if validation fails. This avoids checking a path before open and then following a swapped symlink. `createForWrite` uses native atomic create when possible; fallback checks existence, opens a `FileOutputStream`, then chmods through the raw filesystem.
+
+State and persistence: state is static process configuration (`skipSecurity`) and cached raw local filesystem. Persistent effects are opened descriptors/streams and newly created local files with requested permissions. The insecure fallback is explicitly race-prone when native support is absent.
+
+Dependencies and integration points: depends on Hadoop `UserGroupInformation`, `NativeIO.POSIX.Stat`, `FileSystem`, `FSDataInputStream`, `Path`, `FsPermission`, and Java file streams. It is used by local disk paths where logs, tokens, or task files need owner validation.
+
+Risks and test signals: risks include group validation being effectively absent despite expectedGroup parameters, security disabled paths skipping ownership checks, fallback create race vulnerability, Windows administrator-owner special handling, static initialization failure when raw local filesystem cannot be obtained, and native dependency differences across platforms. Tests should cover secure and insecure modes, owner mismatch, Windows administrator allowance, force methods with security disabled, create existing-file failure, permission setting, cleanup on failed validation, and behavior when native IO is unavailable.

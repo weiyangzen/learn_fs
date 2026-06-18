@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/recon/src/test/java/org/apache/hadoop/ozone/recon/fsck/TestContainerHealthStatus.java
+
+Purpose: This suite verifies `ContainerHealthStatus`, the Recon/SCM health classifier for containers based on expected replication, actual replicas, replica states, node operational states, placement policy, and replica data checksums. It covers healthy, missing, under-replicated, over-replicated, mis-replicated, checksum mismatch, and decommission/maintenance behavior.
+
+Important APIs/types/functions: The tests use `ContainerHealthStatus`, `ContainerInfo`, `ContainerReplica`, `ContainerReplica.ContainerReplicaBuilder`, `ContainerChecksums`, `ContainerID`, `PlacementPolicy.validateContainerPlacement`, `ContainerPlacementStatusDefault`, `RatisReplicationConfig`, `MockDatanodeDetails`, `ReconContainerMetadataManager`, `HddsProtos.NodeOperationalState`, and `ContainerReplicaProto.State`.
+
+Control flow: `setup` mocks a closed RATIS THREE container with ID 123456 and a placement policy that is initially satisfied. Helper methods generate sets of replicas with desired container states and either matching or incrementing data checksums. Individual tests construct `ContainerHealthStatus` and query boolean predicates and deltas. Parameterized tests mutate one replica's datanode operational state to decommissioning/decommissioned/maintenance states and recompute status.
+
+State and persistence behavior: There is no SQL or filesystem persistence. Runtime state is the mocked container metadata, a set of replica value objects, their datanode persisted operational state, and mocked placement validation. Some tests mutate the replica set in place by removing a replica, changing datanode state, and re-adding it.
+
+Dependencies and integration points: This class protects the health semantics consumed by Recon fsck and `ReconReplicationManager`. It integrates SCM replication config, placement validation, node operational state semantics, and checksum comparison while using a mocked `ReconContainerMetadataManager`.
+
+Risks: The replica mutation loops modify a set while iterating but break immediately after remove/add; this works here but is a fragile pattern. Placement is mocked, so real topology placement behavior is not covered. EC replication behavior is not exercised. Decommission versus maintenance semantics are intentionally precise and can break when SCM policy changes.
+
+Test signals: Healthy status has `replicaDelta=0`, replica count three, and no missing/under/over/mis flags. Missing status has delta three and `isMissing=true`. One replica yields under-replicated delta two; four replicas yields over-replicated delta minus one. Extra `UNHEALTHY` replica does not make a properly replicated container unhealthy. Mismatched checksums set `areChecksumsMismatched=true`. Placement status requiring two racks makes `isMisReplicated=true` with delta one. Out-of-service node states clear over-replication and distinguish decommission under-replication from maintenance sufficient replication.

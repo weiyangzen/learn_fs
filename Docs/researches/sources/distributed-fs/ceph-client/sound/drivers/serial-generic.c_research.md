@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/sound/drivers/serial-generic.c
+
+Purpose: provides a generic Device Tree matched serial MIDI driver using the Linux serdev bus instead of direct UART port access. It exposes one duplex ALSA rawmidi device backed by a serial controller.
+
+Important APIs, types, and functions: `struct snd_serial_generic` stores the `serdev_device`, ALSA card/rawmidi objects, current input/output substreams, baudrate, filemode bits, TX work item, TX state flags, and a 256-byte staging buffer. Key callbacks are `snd_serial_generic_receive_buf()` and `snd_serial_generic_write_wakeup()` in `serdev_device_ops`, rawmidi `open/close/trigger/drain` callbacks, and `snd_serial_generic_probe()` for serdev binding.
+
+Control flow: probe creates a devm-managed ALSA card, fills card names, reads `current-speed` from DT with a 38400 default, initializes TX work, creates a 1-in/1-out rawmidi device, installs serdev ops and driver data, then registers the card. Input/output open call `snd_serial_generic_ensure_serdev_open()`, which opens the serial device and sets baudrate only when no filemode bits are active. Output trigger schedules work; the worker peeks ALSA rawmidi data, writes what serdev accepts, acknowledges exactly written bytes, and stops unless a write-wakeup requested another pass. Receive callbacks push incoming bytes to ALSA only while input is open.
+
+State and persistence: all state is volatile. `filemode` bit flags track input/output open and trigger state; only open bits affect serial close. `tx_state` serializes work rescheduling with `SERIAL_TX_STATE_ACTIVE` and `SERIAL_TX_STATE_WAKEUP`. Baudrate persists for the life of the device instance after DT parsing.
+
+Dependencies and integration: uses `module_serdev_device_driver()` and matches `compatible = "serial-midi"`. It depends on ALSA rawmidi and serdev buffering semantics rather than IRQ or I/O port code.
+
+Risks: receive delivery checks input-open but not `SERIAL_MODE_INPUT_TRIGGERED`, so rawmidi trigger state does not gate input bytes. The TX worker tests output-open but not output-triggered after scheduling. Bit definitions are ordinal bit numbers, not masks, and are used with bitops; this is intentional but easy to misread. There is limited locking around `filemode` and substream pointer changes, so close versus serdev callbacks should be stress-tested. Test signals include DT baud fallback/warnings, partial `serdev_device_write_buf()` acknowledgments, write wakeup rescheduling, drain cancellation, serdev close when both directions close, and behavior when input/output trigger is toggled.

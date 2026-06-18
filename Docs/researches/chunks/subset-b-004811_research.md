@@ -1,0 +1,290 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/ipw2x00/ipw2200.c lines 9593-11969
+
+## Scope
+
+This chunk is the tail of the Intel PRO/Wireless 2200BG/2915ABG driver source. It covers private Wireless Extensions handlers, wireless statistics, netdevice transmit and ethtool hooks, interrupt entry, deferred work setup, security/rate/system configuration helpers, regulatory geography tables, device bring-up/down paths, cfg80211 wiphy registration, PCI probe/remove, suspend/resume/shutdown, module init/exit, and module parameters.
+
+The chunk depends heavily on earlier parts of the same file for helpers such as `ipw_disassociate`, `ipw_associate`, `ipw_send_system_config`, `ipw_load`, `ipw_irq_tasklet`, firmware command definitions, sysfs attribute definitions, QoS helpers, LED helpers, scan/association workers, and many `STATUS_*`/`CFG_*` constants. This document therefore describes the behavior visible in this line range and records cross-chunk integration points for the later per-file merge.
+
+## Purpose
+
+The code in this range connects the driver's previously defined firmware and 802.11 logic to Linux kernel subsystem entry points:
+
+- Wireless Extensions private ioctls let users alter adapter mode, preamble, power mode, reset behavior, and monitor mode.
+- `net_device_ops`, libipw callbacks, and ethtool operations expose normal network-device behavior and transmit packets into the hardware Tx descriptor rings.
+- Interrupt and deferred-work setup connect PCI interrupts to tasklet and workqueue handlers.
+- Configuration helpers initialize firmware system configuration, supported rates, encryption state, regulatory geography, and hardware state.
+- PCI probe/remove and PM callbacks allocate resources, map MMIO, register sysfs/wiphy/netdev objects, bring firmware up/down, and release everything during unplug, suspend, or module removal.
+- Module registration advertises supported PCI IDs and module parameters controlling radio disable, association behavior, monitor/promiscuous support, QoS, Bluetooth coexistence, hardware crypto, roaming, command logging, antenna selection, and debug level.
+
+In whole-file terms, this chunk is the boundary where ipw2200 becomes a Linux PCI network driver: it binds to hardware, registers OS-facing interfaces, and drives lifecycle transitions into and out of firmware-ready state.
+
+## Important APIs, Types, and Functions
+
+### Wireless Extensions Private Handlers
+
+`ipw_wx_set_wireless_mode()` validates an integer mode mask against `IEEE_MODE_MASK`, rejects 802.11a on non-`IPW_2915ABG` adapters, derives libipw frequency-band/modulation flags, updates `priv->ieee->mode`, `freq_band`, `modulation`, and `abg_true`, rebuilds supported rates, and forces reassociation by calling `ipw_disassociate()`, `ipw_send_supported_rates()`, and `ipw_associate()`. It also updates band LEDs via `ipw_led_band_on()`.
+
+`ipw_wx_get_wireless_mode()` maps `priv->ieee->mode` bit combinations to fixed strings such as `802.11bg (6)` and returns the length through `wrqu->data.length`.
+
+`ipw_wx_set_preamble()` toggles `CFG_PREAMBLE_LONG`. Changing from short/auto to long triggers disassociation and reassociation because preamble length is part of association behavior. Invalid values return `-EINVAL`. `ipw_wx_get_preamble()` reports `long (1)` or `auto (0)`.
+
+When `CONFIG_IPW2200_MONITOR` is enabled, `ipw_wx_set_monitor()` changes the netdev ARP hardware type to raw 802.11 or radiotap, schedules an adapter restart, and sets the requested channel. Disabling monitor restores `ARPHRD_ETHER` and restarts if the interface was in monitor mode.
+
+`ipw_wx_reset()` schedules `adapter_restart`. `ipw_wx_sw_reset()` performs a firmware/software reset under `priv->mutex`, reloads firmware if the reset succeeded, reapplies software radio-kill state, temporarily drops the mutex to call `libipw_wx_set_encode()` with disabled encoding, then reassociates if RF kill is not active.
+
+`ipw_wx_handlers[]`, `ipw_priv_args[]`, `ipw_priv_handler[]`, and `ipw_wx_handler_def` register standard Wireless Extensions handlers defined earlier in the file plus private commands such as `set_power`, `get_power`, `set_mode`, `get_mode`, `set_preamble`, `get_preamble`, `reset`, `sw_reset`, and optionally `monitor`.
+
+### Wireless Statistics
+
+`ipw_get_wireless_stats()` returns `priv->wstats` for `/proc/net/wireless` and `SIOCGIWSTATS`. If `STATUS_ASSOCIATED` is not set, it returns zeroed metrics and marks quality, level, and noise invalid. When associated, it reports cached quality, averaged RSSI/noise, missed beacon average, last Tx failures, and undecryptable Rx discards. It avoids firmware ordinal reads unless the device is initialized and associated.
+
+### System and Network Device Setup
+
+`init_sys_config()` initializes `struct ipw_sys_config` with conservative defaults: no Bluetooth coexistence, no broadcast SSID probe response, directed/non-directed frame acceptance settings, hardware decryption disabled by default, antenna diversity from the `antenna` module parameter with range validation, no CRC-to-host, no 802.11g auto detection, no CTS-to-self, noise stats enabled, and a fixed silence threshold.
+
+`ipw_net_open()` and `ipw_net_stop()` only start and stop the kernel Tx queue. Firmware bring-up is handled at probe/resume/restart time, not at ordinary netdev open.
+
+`ipw_net_set_multicast_list()` is empty in this chunk, so multicast filtering changes are ignored here.
+
+`ipw_net_set_mac_address()` validates the requested Ethernet address, marks `CFG_CUSTOM_MAC`, copies it to `priv->mac_addr`, logs it, and schedules an adapter restart so the new address can be programmed into firmware.
+
+`ipw_netdev_ops` connects `.ndo_open`, `.ndo_stop`, `.ndo_set_rx_mode`, `.ndo_set_mac_address`, `.ndo_start_xmit = libipw_xmit`, and `.ndo_validate_addr`. Actual driver Tx is routed through the libipw callback `priv->ieee->hard_start_xmit = ipw_net_hard_start_xmit`.
+
+### Transmit Path
+
+`ipw_net_hard_start_xmit()` is the libipw-to-driver Tx callback. It takes `priv->lock` with IRQ save, optionally mirrors transmitted frames to the promiscuous radiotap interface, calls `ipw_tx_skb()`, turns on the activity LED on success, and releases the spinlock.
+
+`ipw_tx_skb()` converts a `struct libipw_txb` into a hardware `struct tfd_frame` in the selected `struct clx2_tx_queue`. With `CONFIG_IPW2200_QOS`, the queue is selected by `ipw_get_tx_queue_number(priv, pri)`; otherwise queue 0 is used.
+
+The Tx routine:
+
+- Drops and frees the txb unless `STATUS_ASSOCIATED` is set.
+- Determines 802.11 header length with `libipw_get_hdrlen()`.
+- In adhoc mode, finds or adds a station table entry for the destination address and rejects invalid cells.
+- In infrastructure mode, uses station id 0 and determines unicast from `addr3`.
+- Fills the next empty TFD, stores the txb pointer in `txq->txb[]`, sets `TX_FRAME_TYPE`, `TFD_NEED_IRQ_MASK`, `DINO_CMD_TX`, payload length, CCK/OFDM mode, short-preamble flag, station number, and a copied MAC header with `IEEE80211_FCTL_MOREFRAGS` cleared.
+- Requests ACKs for unicast, and also for multicast CCMP frames because group CCMP is handled by the AP.
+- Programs hardware crypto flags for CCMP, TKIP, or WEP when the txb is encrypted and host encryption is disabled; otherwise sets `DCT_FLAG_NO_WEP`.
+- Applies QoS Tx queue command fields for QoS data frames when QoS is compiled in.
+- DMA maps each fragment payload after the 802.11 header into `chunk_ptr[]`/`chunk_len[]`, limited by `NUM_TFD_CHUNKS - 2`.
+- If there are more fragments than chunk slots, attempts to coalesce the remaining payload bytes into a new `sk_buff` allocated with `GFP_ATOMIC`, replaces one txb fragment, maps it, and increments `num_chunks`.
+- Advances `q->first_empty`, writes the hardware queue write index register, and stops the netdev queue when space drops below `high_mark`.
+
+The function assumes queue space was checked by libipw through `ipw_net_is_queue_full()` or equivalent caller-side flow control. It returns `NETDEV_TX_OK` for both successful submission and silent drop.
+
+`ipw_net_is_queue_full()` tests whether the selected Tx queue has less than `high_mark` free descriptors and returns a boolean.
+
+### Promiscuous/Radiotap Optional Path
+
+With `CONFIG_IPW2200_PROMISCUOUS`, `ipw_handle_promiscuous_tx()` mirrors transmitted fragments into `priv->prom_priv->ieee` as received radiotap packets. It filters by `priv->prom_priv->filter` flags, supports header-only modes for management/control/data frames, builds a minimal radiotap header containing channel frequency and flags derived from `priv->channel` and `priv->ieee->mode`, copies the selected frame bytes, and feeds them to `libipw_rx()`.
+
+`ipw_prom_open()` and `ipw_prom_stop()` alter `priv->sys_config` to accept all data and management frames when the main interface is not already in monitor mode, then send the updated system configuration to firmware.
+
+`ipw_prom_alloc()` allocates a separate libipw netdev named `rtap%d`, associates a small `struct ipw_prom_priv` with the main `struct ipw_priv`, sets radiotap hardware type, min/max MTU, monitor mode, device parent, and registers it. `ipw_prom_free()` unregisters and frees it. `ipw_prom_hard_start_xmit()` discards packets sent through the radiotap interface.
+
+### Ethtool
+
+`ipw_ethtool_get_drvinfo()` fills driver/version strings, queries firmware version with `ipw_get_ordinal(IPW_ORD_STAT_FW_VERSION)`, and reports PCI bus info.
+
+`ipw_ethtool_get_link()` reports association state as link state.
+
+`ipw_ethtool_get_eeprom_len()`, `ipw_ethtool_get_eeprom()`, and `ipw_ethtool_set_eeprom()` expose the cached EEPROM image. Writes copy into `priv->eeprom` and then write the full EEPROM image byte-by-byte to `IPW_EEPROM_DATA` registers under `priv->mutex`.
+
+`ipw_ethtool_ops` registers link, driver info, and EEPROM get/set operations.
+
+### Interrupt and Deferred Work
+
+`ipw_isr()` is the top-half interrupt handler. It rejects null private data, takes `priv->irq_lock`, ignores interrupts unless `STATUS_INT_ENABLED` is set, reads `IPW_INTA_RW` and `IPW_INTA_MASK_R`, treats `0xFFFFFFFF` as hardware removal, filters shared interrupts, disables further interrupts with `__ipw_disable_interrupts()`, acknowledges the masked interrupt bits by writing `IPW_INTA_RW`, caches them in `priv->isr_inta`, schedules `priv->irq_tasklet`, and returns `IRQ_HANDLED`.
+
+`ipw_rf_kill()` runs under `priv->lock`; if hardware RF kill is still active, it reschedules the delayed RF-kill work. If hardware RF kill is no longer active and software RF kill is clear, it schedules an adapter restart. `ipw_bg_rf_kill()` wraps it in `priv->mutex`.
+
+`ipw_link_up()` resets duplicate-packet tracking, turns carrier on, cancels pending scan work, resets statistics, updates current rate and gathered stats, updates link LED state, sends a Wireless Extensions association event, and optionally schedules background scan. `ipw_link_down()` turns LEDs and carrier off, sends a notification, cancels scan/adhoc/stat work, resets stats, and schedules a new scan unless exit is pending.
+
+`ipw_setup_deferred_work()` initializes waitqueues, delayed work, immediate work, LED work, scan work, association/disassociation work, restart/up/down work, RF kill work, statistics work, roaming work, adhoc merge work, optional QoS activation work, and the IRQ tasklet. PCI probe calls this before reset/IRQ registration.
+
+### Security and Supported Rates
+
+`shim__set_security()` translates `struct libipw_security` updates into `priv->ieee->sec` state. It updates per-key algorithms, sizes, key material, active key, authentication mode, privacy capability, encryption enablement, encryption level, and `STATUS_SECURITY_UPDATED`. It maps shared-key auth to `CAP_SHARED_KEY` and encryption enablement to `CAP_PRIVACY_ON`. If hardware encryption is enabled and new encryption flags arrive, it calls `ipw_set_hwcrypto_keys()`.
+
+The disabled `#if 0` block documents a deliberate choice not to force disassociation on privacy-capability changes, matching ipw2100 behavior with supplicants.
+
+`init_supported_rates()` clears an `ipw_supported_rates` structure and fills it based on `priv->ieee->freq_band` and `priv->ieee->modulation`. Pure 5 GHz uses `IPW_A_MODE` and OFDM scan rates; mixed/2.4 GHz uses `IPW_G_MODE`, CCK rates, and optionally OFDM rates.
+
+### Firmware Configuration and Geography
+
+`ipw_config()` is called only from `ipw_up()` after firmware reload/reset. It sets Tx power, sends the adapter address, initializes and sends system config, enables Bluetooth coexistence bits according to the `bt_coexist` module parameter and EEPROM SKU capability, enables broader frame acceptance when the radiotap interface is running, enables broadcast SSID probe responses in adhoc mode, sends supported rates, sends RTS threshold if configured, activates QoS when compiled in, sends a random seed, sends host-complete to enter run state, marks `STATUS_INIT`, initializes/radio-on LEDs, clears missed-beacon notification count, and programs WEP hardware keys for level-1 privacy when host crypto is disabled.
+
+`ipw_geos[]` is a static regulatory geography table mapping 3-byte EEPROM country/SKU codes to `struct libipw_geo` channel lists. Entries include restricted/default, custom US/Canada, world, Europe, Japan, high-band, and mixed profiles. Channel records carry frequency, channel number, and flags such as `LIBIPW_CH_PASSIVE_ONLY`, `LIBIPW_CH_B_ONLY`, and radar/no-IBSS equivalents where used. `ipw_set_geo()` matches `priv->eeprom[EEPROM_COUNTRY_CODE]`, warns and falls back to entry 0 if unknown, then calls `libipw_set_geo()`.
+
+### Device Up/Down Lifecycle
+
+`ipw_up()` is the main bring-up routine. It ages scanned networks after suspend, refuses work when `STATUS_EXIT_PENDING` is set, lazily allocates the optional firmware command log, then tries up to `MAX_HW_RESTARTS` times to load microcode/firmware/EEPROM through `ipw_load()`, initialize ordinals, parse and install MAC address if no custom MAC is set, set regulatory geography, honor software and hardware RF kill, run `ipw_config()`, and schedule an immediate scan on success. On configuration failure it calls `ipw_down()` and retries. After all attempts fail it returns `-EIO`.
+
+`ipw_bg_up()` invokes `ipw_up()` under `priv->mutex`.
+
+`ipw_deinit()` aborts an active scan, disassociates if associated, shuts down LEDs, waits briefly for disassociation/scanning state to clear, sends card-disable, and clears `STATUS_INIT`.
+
+`ipw_down()` sets `STATUS_EXIT_PENDING` temporarily, deinitializes if initialized, restores the bit if this is not final exit, disables interrupts, preserves only RF-kill and exit-pending bits in `priv->status`, turns carrier off, stops the NIC, and turns the radio LED off.
+
+`ipw_bg_down()` invokes `ipw_down()` under `priv->mutex`.
+
+### cfg80211/Wiphy Registration
+
+`ipw_wdev_init()` translates the libipw geography currently selected in `priv->ieee` into cfg80211 `wiphy` supported-band data. It fills permanent address, allocates 2.4 GHz and 5 GHz channel arrays when present, copies center frequency, hardware channel number, max power, and maps passive/no-IBSS/radar flags to `IEEE80211_CHAN_NO_IR` and `IEEE80211_CHAN_RADAR`. It attaches bitrate arrays (`ipw2200_bg_rates`, `ipw2200_a_rates`), cipher-suite list, parent device, and registers the wiphy. On allocation or registration failure it frees allocated channel arrays.
+
+This is a bridge between the older libipw/Wireless Extensions driver and cfg80211's device model; the code supplies wiphy metadata but the runtime connection management remains in the ipw/libipw paths.
+
+### PCI Driver and Sysfs
+
+`card_ids[]` lists supported Intel PCI IDs and subsystem IDs for 2200BG/2915ABG devices. One `0x104f` entry is class-constrained to `PCI_CLASS_NETWORK_OTHER` to avoid conflicting with i40e Ethernet devices. `MODULE_DEVICE_TABLE(pci, card_ids)` exports the table for module autoloading.
+
+`ipw_sysfs_entries[]` aggregates device attributes defined earlier in the file, including RF kill, direct/indirect register access, memory GPIO, command/event registers, NIC type, status, config, error/event/command logs, EEPROM delay, ucode version, RTC, scan age, LED, speed scan, net stats, channels, and optional radiotap interface/filter attributes. `ipw_attribute_group` installs them directly under the PCI device directory.
+
+`ipw_pci_probe()` performs device allocation and registration:
+
+- Allocates a libipw netdev with private `struct ipw_priv`, sets `priv->ieee`, `net_dev`, `pci_dev`, debug level, locks, IBSS MAC hash lists, and mutex.
+- Enables the PCI device, sets bus mastering, configures 32-bit streaming/coherent DMA masks, stores driver data, and requests PCI BAR regions.
+- Disables PCI `RETRY_TIMEOUT` in config register `0x40` to avoid C3 CPU-state interactions.
+- Maps BAR0 with `pci_ioremap_bar()`, records hardware length/base, initializes work/tasklet state, performs initial software reset, and requests the shared IRQ.
+- Sets the netdev parent, configures libipw callbacks (`hard_start_xmit`, `set_security`, `is_queue_full`, optional QoS callbacks), RSSI bounds, netdev ops, Wireless Extensions handlers, ethtool ops, spy support, and MTU range.
+- Creates sysfs attributes, calls `ipw_up()` under `priv->mutex`, registers the wiphy, registers the main netdev, optionally allocates the radiotap/promiscuous netdev, and logs detected geography.
+- Uses ordered error labels to unregister/free wiphy channels, remove sysfs, free IRQ, unmap MMIO, release regions, disable PCI, and free libipw state.
+
+`ipw_pci_remove()` marks exit pending, calls `ipw_down()`, removes sysfs, unregisters the netdev, frees Rx and Tx queues, frees command log, synchronously cancels all delayed/immediate work items and the adhoc hash lists, frees error state, removes optional radiotap netdev, frees IRQ, unmaps MMIO, releases regions, disables PCI, unregisters wiphy, frees wiphy channel arrays and libipw state, and releases firmware.
+
+### Power Management and Module Registration
+
+`ipw_pci_suspend()` calls `ipw_down()`, detaches the netdev, and records `suspend_at`.
+
+`ipw_pci_resume()` restores the PCI retry-timeout tweak, reattaches the netdev, computes `priv->suspend_time`, and schedules asynchronous bring-up through `priv->up`.
+
+`ipw_pci_shutdown()` calls `ipw_down()` and disables the PCI device.
+
+`SIMPLE_DEV_PM_OPS`, `ipw_driver`, `ipw_init()`, and `ipw_exit()` register and unregister the PCI driver and the driver-level debug sysfs file. If debug file creation fails, init unregisters the PCI driver.
+
+The module parameters at the end of the chunk provide read-only load-time controls: `disable`, `associate`, `auto_create`, `led`, `debug`, `channel`, optional `rtap_iface`, optional QoS knobs, `mode`, `bt_coexist`, `hwcrypto`, `cmdlog`, `roaming`, and `antenna`.
+
+## Control Flow
+
+### Probe to Running Device
+
+The normal initialization path starts in `ipw_init()`, which registers `ipw_driver`. When PCI core matches `card_ids[]`, `ipw_pci_probe()` allocates driver state, enables and maps the PCI device, initializes work, resets hardware, requests IRQ, exposes sysfs/netdev/libipw callbacks, then calls `ipw_up()`.
+
+`ipw_up()` loads firmware and EEPROM, initializes ordinals, programs MAC/geography, checks radio kill, and delegates configuration to `ipw_config()`. `ipw_config()` sends firmware commands in a strict sequence ending with `ipw_send_host_complete()`. Once configured, `ipw_up()` schedules a scan, after which earlier association code can connect and eventually schedule `ipw_link_up()`.
+
+After `ipw_up()`, probe registers cfg80211/wiphy and netdev objects and optionally the radiotap netdev. Error exits unwind in reverse allocation order.
+
+### Tx Packet Flow
+
+The kernel calls `libipw_xmit()` through `net_dev->netdev_ops`. libipw converts the skb into a `libipw_txb` and calls `priv->ieee->hard_start_xmit`, which this chunk sets to `ipw_net_hard_start_xmit()`. That callback serializes with `priv->lock`, optionally mirrors to radiotap, fills one hardware TFD with header/security/QoS/payload DMA chunks, updates the hardware queue write pointer, and applies flow control.
+
+Completion and DMA unmapping are not in this chunk; they should be covered by earlier interrupt/tasklet/Tx-completion code in the same file.
+
+### Interrupt Flow
+
+The device IRQ enters `ipw_isr()`. The top half does only filtering, interrupt masking/acknowledgement, caching of interrupt bits, and tasklet scheduling. The lower-half `ipw_irq_tasklet` is initialized here but defined earlier, so the final merge should connect this ISR with the tasklet's Rx/Tx/error handling and interrupt re-enable behavior.
+
+### Link and Scan State Flow
+
+Association success elsewhere schedules `priv->link_up`, which calls `ipw_link_up()` under the mutex. Link up turns carrier on, clears pending scan work, resets stats, records rate/noise data, updates LEDs, notifies userspace, and may start background scanning. Link down reverses carrier/LED/scan state and schedules a new scan unless removal is pending.
+
+### Reset and Reconfiguration Flow
+
+Wireless private ioctls and MAC-address changes schedule `adapter_restart` rather than doing all work synchronously. Software reset is more invasive: it resets firmware, frees and reloads firmware, resets radio-kill state, clears encryption through libipw, and reassociates when possible.
+
+Mode and preamble changes cause disassociation/reassociation directly under `priv->mutex` because they affect association parameters.
+
+### Suspend/Resume/Remove Flow
+
+Suspend and shutdown call `ipw_down()` to deinitialize firmware and stop interrupts/NIC. Resume restores one PCI config tweak, reattaches the netdev, records elapsed suspend time, and schedules `ipw_up()` so scan entries can be aged and firmware can be reloaded asynchronously.
+
+Remove is stricter than suspend: it sets permanent exit-pending state, unregisters public interfaces, cancels every work item synchronously, frees queues/state, unregisters wiphy, and releases PCI resources.
+
+## State and Persistence Behavior
+
+The central persistent software state is `struct ipw_priv`, retrieved through `libipw_priv(dev)`. This chunk mutates:
+
+- `priv->status`, including `STATUS_ASSOCIATED`, `STATUS_INIT`, `STATUS_EXIT_PENDING`, `STATUS_INT_ENABLED`, `STATUS_RF_KILL_*`, `STATUS_SECURITY_UPDATED`, and scan/association bits.
+- `priv->config`, including `CFG_PREAMBLE_LONG`, `CFG_CUSTOM_MAC`, and background-scan behavior.
+- `priv->ieee` libipw state, including 802.11 mode/band/modulation, security keys and capabilities, geography, cfg80211 wdev/wiphy, spy enablement, Tx/security/queue callbacks, RSSI bounds, and channel/rate data.
+- Firmware-facing configuration such as `priv->sys_config`, `priv->rates`, `priv->assoc_request`, `priv->rts_threshold`, `priv->capability`, `priv->mac_addr`, and `priv->eeprom`.
+- Runtime queue state in `priv->txq[]`, including TFD descriptors, queued txb pointers, `q->first_empty`, and queue high-water flow control.
+- Workqueue/tasklet state initialized in `ipw_setup_deferred_work()` and canceled in remove.
+- Optional persistent allocations such as `priv->cmdlog`, `priv->error`, `priv->rxq`, wiphy channel arrays, and optional radiotap netdev/private state.
+- Suspend bookkeeping in `priv->suspend_at` and `priv->suspend_time`.
+
+Hardware state persists in PCI config space, MMIO registers, firmware RAM, EEPROM image/registers, and firmware command state. `ipw_up()` reloads firmware and replays configuration. `ipw_down()` clears most runtime status and stops the NIC but intentionally preserves RF-kill and exit-pending bits. EEPROM writes through ethtool update the cached image and push the whole image to device registers; this is high-impact persistent-adjacent behavior even if the exact nonvolatile commit semantics are controlled by hardware/firmware outside this chunk.
+
+Locking is mixed:
+
+- `priv->mutex` protects most configuration, lifecycle, and ioctl paths.
+- `priv->lock` protects Tx submission and RF-kill restart checks.
+- `priv->irq_lock` protects interrupt enable/ack state.
+- Work callbacks commonly reacquire `priv->mutex`.
+
+The code uses workqueues to avoid doing restart/up/down/link operations in IRQ or ioctl contexts where blocking or long firmware interactions would be unsafe.
+
+## Dependencies and Integration Points
+
+Kernel subsystem dependencies include:
+
+- PCI core: `pci_driver`, ID matching, enable/disable, regions, BAR mapping, config-space access, IRQ registration, device drvdata, DMA masks, and PM callbacks.
+- Netdevice core: `struct net_device`, `net_device_ops`, carrier/queue control, MTU limits, MAC address validation, and netdev registration.
+- Wireless Extensions: `iw_handler_def`, standard/private ioctl handlers, `iw_statistics`, and association notifications.
+- cfg80211/wiphy: `struct wireless_dev`, `struct wiphy`, `ieee80211_supported_band`, `ieee80211_channel`, cipher suites, and wiphy registration.
+- libipw: allocation/free helpers, `struct libipw_device`, `struct libipw_txb`, security structure, geography structure, rate/channel helpers, Tx conversion, Rx injection for radiotap, and network aging.
+- DMA and skb APIs: `dma_map_single`, `alloc_skb`, `skb_put_data`, `skb_copy_from_linear_data`, `dev_kfree_skb_any`.
+- Workqueue/tasklet APIs: `INIT_WORK`, `INIT_DELAYED_WORK`, `schedule_work`, `schedule_delayed_work`, `cancel_work_sync`, `cancel_delayed_work_sync`, `tasklet_setup`, and `tasklet_schedule`.
+- Firmware/hardware helpers defined earlier in the same source: `ipw_load`, `ipw_sw_reset`, `ipw_adapter_restart`, `ipw_send_*`, `ipw_write32`, `ipw_read32`, `ipw_stop_nic`, queue helpers, LED helpers, RF-kill helpers, association/scan helpers, QoS helpers, and debug/logging macros.
+
+Major external integration points:
+
+- Userspace Wireless Extensions tools call the standard/private ioctl handlers through `net_dev->wireless_handlers`.
+- Userspace net tools and supplicants observe link state through netdev carrier, wireless stats, and association events.
+- ethtool uses `ipw_ethtool_ops` for firmware version, link state, and EEPROM access.
+- sysfs exposes driver-specific diagnostic and control attributes registered by `ipw_attribute_group`.
+- Module autoloading uses the PCI ID table.
+- cfg80211 consumers get supported-band/cipher metadata from `ipw_wdev_init()` even though connection management remains Wireless Extensions/libipw oriented.
+
+## Risks and Edge Cases
+
+- `ipw_tx_skb()` maps DMA chunks but does not check `dma_mapping_error()` in this chunk. A mapping failure could leave an invalid DMA address in a descriptor unless handled by architecture guarantees or earlier/later code.
+- Tx fragment coalescing after chunk exhaustion allocates only `remaining_bytes` bytes and replaces `txb->fragments[i]` after freeing it. The original fragments after `i` remain in the txb and may require careful completion/free handling elsewhere to avoid leaks or double frees.
+- `remaining_bytes` is a `u16`; very large fragmented payload totals could overflow, though 802.11/libipw packet sizing likely constrains this in practice.
+- The Tx path clears `IEEE80211_FCTL_MOREFRAGS` on the first fragment header before copying it into the TFD. If the original txb is reused or inspected later, this mutation may matter.
+- Queue fullness is checked outside `ipw_tx_skb()`; direct callers must honor `ipw_net_is_queue_full()` or equivalent flow control or they can overwrite descriptors.
+- Hardware crypto setup branches depend on `priv->ieee->sec.level`, key sizes, host crypto flags, and firmware key state. Mismatches can create undecryptable traffic or incorrect protected-bit handling.
+- `ipw_ethtool_set_eeprom()` allows rewriting the cached EEPROM image and all device EEPROM data registers. Bad offsets are checked, but bad content can alter calibration, regulatory, MAC, or SKU behavior depending on hardware semantics.
+- `ipw_wx_sw_reset()` drops `priv->mutex` to call into libipw encoding setup and then reacquires it. That is likely intentional lock-order avoidance, but concurrent state changes during the gap must be considered.
+- `ipw_wdev_init()` frees both `a_band.channels` and `bg_band.channels` on any failure. Probe error paths also free those pointers after `wiphy_unregister`; ownership assumptions must stay consistent to avoid double frees on future edits.
+- `ipw_pci_probe()` calls `ipw_up()` before `wiphy_register()` and `register_netdev()`. Failure after firmware up relies on later unwind plus remove/down behavior; edits should preserve cleanup of firmware and sysfs exposure.
+- `ipw_pci_remove()` cancels many work items after unregistering the netdev and freeing queues. Any work not listed in `ipw_setup_deferred_work()` or newly added elsewhere must be canceled before freeing `priv`.
+- Suspend calls `ipw_down()` without explicitly taking `priv->mutex` in this chunk. PM serialization may be supplied by the driver core or higher-level paths, but this is a concurrency-sensitive area.
+- `ipw_isr()` treats `STATUS_INT_ENABLED` as authoritative and disables interrupts before scheduling the tasklet. The lower half must reliably re-enable interrupts or the device can stall.
+- Regulatory geography is based on EEPROM SKU fallback. Unknown SKUs fall back to restricted entry 0; any table edits can affect legal channel exposure.
+- Optional compile-time paths (`CONFIG_IPW2200_QOS`, `CONFIG_IPW2200_PROMISCUOUS`, `CONFIG_IPW2200_MONITOR`, `CONFIG_IPW2200_RADIOTAP`) materially change behavior and need separate build coverage.
+
+## Test and Validation Signals
+
+Useful validation for this chunk includes:
+
+- Build coverage with representative configs: base ipw2200, monitor/radiotap, promiscuous radiotap interface, QoS, and hardware crypto options.
+- PCI probe/remove tests on supported 2200BG and 2915ABG hardware or emulated PCI binding where feasible: verify BAR mapping, IRQ request/free, sysfs group creation/removal, netdev/wiphy registration, and clean error unwinds.
+- Module parameter tests: `disable`, `mode`, `channel`, `led`, `bt_coexist`, `hwcrypto`, `cmdlog`, `roaming`, `antenna`, QoS parameters, and optional `rtap_iface`.
+- Wireless Extensions tests for `set_mode`, `get_mode`, `set_preamble`, `get_preamble`, `reset`, `sw_reset`, and monitor enable/disable, including invalid mode and 802.11a-on-2200BG rejection.
+- Association lifecycle tests: initial firmware load/config, scan scheduling, association, link-up notification/carrier state, link-down scan restart, background scan, disassociation on mode/preamble changes, RF-kill recovery, and software reset reassociation.
+- Tx path tests with unicast/multicast, infrastructure/adhoc, fragmented txbs, QoS priorities, WEP/TKIP/CCMP/hardware-crypto combinations, queue high-water stopping, and Tx completion/DMA unmapping in the earlier completion code.
+- Promiscuous/radiotap tests when enabled: creation of `rtap%d`, frame filtering flags, header-only modes, channel radiotap metadata, open/stop sys_config changes, and safe teardown.
+- Interrupt tests: shared IRQ filtering, disabled-interrupt behavior, hardware-gone `0xFFFFFFFF` handling, acknowledgement, tasklet scheduling, and lower-half re-enable.
+- ethtool tests for driver info, firmware version, link reporting, EEPROM read bounds, and carefully controlled EEPROM write behavior.
+- PM tests: suspend down/detach, resume retry-timeout reprogramming, scan-list aging via `suspend_time`, scheduled re-up, and shutdown without workqueue use-after-free.
+- Failure-injection tests for allocation failures in `ipw_pci_probe()`, `ipw_wdev_init()`, `ipw_prom_alloc()`, command-log allocation, IRQ request failure, firmware load failure, and `ipw_config()` retries.
+
+## Cross-Chunk Notes for Merge
+
+- The Wireless Extensions standard handlers referenced in `ipw_wx_handlers[]` are defined earlier and should be summarized together with this handler table in the final per-file report.
+- Tx completion, DMA unmapping, Rx handling, interrupt tasklet details, queue allocation/free, and firmware command helpers are outside this chunk and are required to fully assess Tx/Rx correctness.
+- Sysfs attributes listed in `ipw_sysfs_entries[]` are defined earlier; final documentation should connect each attribute's implementation to this registration group.
+- `ipw_setup_deferred_work()` is the central work initializer, but many worker functions are defined earlier. The final report should verify every initialized work item is canceled in `ipw_pci_remove()`.
+- `ipw_config()` and `ipw_up()` are lifecycle pivots that depend on many firmware helpers from earlier chunks. The final merge should describe the full firmware command sequence from reset/load through run state.

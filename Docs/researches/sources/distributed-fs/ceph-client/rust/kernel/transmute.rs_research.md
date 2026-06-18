@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/rust/kernel/transmute.rs
+
+## sources/distributed-fs/ceph-client/rust/kernel/transmute.rs
+
+Purpose: defines explicit byte-transmutation traits for types safe to read from arbitrary bytes or expose as initialized bytes. Important APIs are unsafe traits `FromBytes` and `AsBytes`, methods for exact/prefix/shared/mutable/copy conversions, and primitive/array impl macros.
+
+Control flow: `FromBytes::from_bytes` checks exact size and alignment before returning `&Self`; prefix variants split slices first; mutable variants require `Self: AsBytes`; copy variants use `read_unaligned` after size checks. `AsBytes::as_bytes` and `as_bytes_mut` expose initialized memory as byte slices, with mutable requiring `FromBytes` so writes of arbitrary bytes remain valid. State is none. Dependencies are `size_of`, slice split checked APIs, and unsafe implementer invariants. Integration points are uaccess typed reads/writes, ioctl structures, device protocol parsing, and DMA/user buffer serialization. Risks include implementing `FromBytes` for types with invalid bit patterns or interior mutability, implementing `AsBytes` for padded structs or kernel-pointer-containing data intended for userspace, endian assumptions, and alignment failures returning `None`. Test signals: primitive conversion examples, unaligned copy path, prefix remainder behavior, padding audits for custom impls, and fuzzing byte inputs for protocol structs.

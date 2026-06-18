@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listmount/listmount03.c
+
+Purpose: verifies `listmount()` returns `EPERM` when the mount point is not accessible after chroot/credential changes. Setup records `/` unique mount ID via `statx`, resolves `nobody`, then chroots to the temporary directory. The child drops effective GID/UID to `nobody` and calls `listmount(root_id, 0, list, LISTSIZE, 0)` expecting `EPERM`. State is a stored mount ID outside the child's accessible root and child credentials. Dependencies are root, kernel >= 6.8, `nobody`, `statx`, and chroot support. Risks are permission model changes around mount namespace visibility. Test signal is expected `EPERM`.

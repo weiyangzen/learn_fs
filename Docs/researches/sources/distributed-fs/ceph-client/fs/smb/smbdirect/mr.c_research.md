@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/fs/smb/smbdirect/mr.c
+
+Purpose: Manages Fast Registration Memory Region (FRMR/MR) objects used by SMBDirect RDMA read/write buffer descriptors. It allocates MR pools, registers iterator memory for remote access, fills SMBDirect buffer descriptors, invalidates/deregisters MRs, and recycles them.
+
+Important APIs and functions: `smbdirect_connection_create_mr_list()` allocates `responder_resources * 2` MR objects and scatterlists. `smbdirect_connection_destroy_mr_list()` detaches and disables all MRs. `smbdirect_connection_register_mr_io()` extracts an iterator to SG, DMA maps it, maps the MR, updates rkey, and posts `IB_WR_REG_MR`. `smbdirect_mr_io_fill_buffer_descriptor()` writes offset/token/length into `smbdirect_buffer_descriptor_v1`. `smbdirect_connection_deregister_mr_io()` performs local invalidation when needed or recycles remotely invalidated MRs.
+
+Control flow: MR creation requires nonzero negotiated responder resources and allocates all MRs in READY state on `sc->mr_io.all.list`, incrementing ready count. Registration waits for a ready MR, marks it REGISTERED, takes a kref, extracts pages from the iterator, DMA maps SG entries, maps the MR, increments rkey, posts a signaled register WR, and returns the MR to the caller. Deregistration locks the MR, disables immediately if socket is disconnected, optionally posts and waits for `IB_WR_LOCAL_INV`, unmaps DMA SG entries, returns state to READY, wakes ready waiters, decrements used count, and drops the kref.
+
+State and persistence: MR state is in `struct smbdirect_mr_io`: kref, mutex, list node, state enum, `ib_mr`, SG table, DMA direction, register/invalidate WR storage, `need_invalidate`, and completion. Socket-level state tracks all MRs, ready count wait queue, and used count. All state is volatile and destroyed during socket teardown.
+
+Dependencies and integration points: Depends on IB MR APIs (`ib_alloc_mr`, `ib_map_mr_sg`, `ib_update_fast_reg_key`, `ib_post_send`, `ib_dereg_mr`), DMA SG mapping, iov iterator SG extraction, SMBDirect buffer descriptor types from public headers, QP/PD state from `connection.c`, and cleanup scheduling from `socket.c`.
+
+Risks and edge cases: Reference/lifetime rules are subtle because destroy can detach MRs while callers still hold registration references. Register completion does not wake callers because hardware ordering is relied on before later send I/O. Local invalidation waits while temporarily dropping the mutex, so state is rechecked. Error paths set MR ERROR or DISABLED and schedule socket cleanup. `extract_iter_to_sg()` and `iov_iter_npages()` must agree with `max_frmr_depth`; over-depth iterators fail early.
+
+Test signals: Test MR pool creation with zero and nonzero responder resources, max_frmr_depth boundaries, registration for read and write directions, local invalidation path, remote invalidation path, socket disconnect during deregistration, register WR failure, DMA map failure, descriptor fill for REGISTERED versus invalid states, and concurrent MR acquisition under exhaustion.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/compat-i915-headers/i915_config.h
+
+Purpose: supplies a minimal i915 compatibility API for display code compiled under Xe. The only function is `i915_fence_timeout()`, returning `MAX_SCHEDULE_TIMEOUT`. Control flow is trivial and has no side effects. State and persistence are absent. Dependencies are `linux/sched.h`. Integration points are shared i915 display code that expects the i915 configuration helper while building inside the Xe driver. Risks are semantic mismatch if a caller expects a finite timeout or module-configurable fence behavior. Test signals are compile coverage of shared display paths and any timeout-sensitive tests that should not hang indefinitely under Xe.

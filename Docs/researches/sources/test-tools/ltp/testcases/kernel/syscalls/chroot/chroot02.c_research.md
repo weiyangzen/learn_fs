@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chroot/chroot02.c
+
+Purpose: basic positive `chroot()` functionality test. Setup creates a file in the tmpdir and records tmpdir path; run forks a child, calls `chroot(path)`, then stats the file as `/<name>` inside the new root. Important APIs are `SAFE_FORK`, `chroot`, `stat`, `SAFE_TOUCH`, and `tst_tmpdir_path`. State is child process root directory and a fixture file. Dependencies are root and fork. Risks include child not exiting explicitly after assertions, but LTP handles child process lifecycle. Test signal is successful chroot and file visibility at new root.

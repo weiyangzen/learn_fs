@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/common/net/message/nodes/HeartbeatRequestMsgEx.c
+
+## Research
+`HeartbeatRequestMsgEx.c` handles incoming heartbeat requests. The ops use `SimpleMsg` payload handling but override `processIncoming`. On receive, it gets config and local node data, clones the local NIC list and alias, builds a `HeartbeatMsgEx` for the client node, sets the client port from `Config`, serializes into the provided response buffer, and sends either through `DatagramListener_sendto_kernel` for datagrams or `Socket_sendto_kernel` for streams.
+
+Control flow logs serialization/send errors but returns true after cleanup. State is temporary except for reading local node/config state. Dependencies include `App`, `Config`, `Node`, `DatagramListener`, `Socket`, `ListTk`, and `HeartbeatMsgEx`. Integration points are discovery/probing flows where other nodes ask the client to identify itself. Risks include response buffer sizing, cleanup of cloned NIC list, alias lifetime during serialization, and transport-specific send paths. Test signals are heartbeat request round trips over UDP/TCP, response payload matching local node identity, and cleanup under serialization failure.

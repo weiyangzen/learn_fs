@@ -1,0 +1,91 @@
+# sources/cloud-native/moby/api/docs/v1.43.yaml lines 7770-12566
+
+## Scope And Purpose
+
+This chunk is the later `paths` portion of the Docker Engine API v1.43 Swagger 2.0 contract. It starts inside the tail of `/containers/{id}/rename`, where only the final path/query parameters and tag are visible, then covers container pause/attach/wait/delete/archive/prune, image/build/system/exec APIs, volumes, networks, plugins, swarm nodes and cluster control, services, tasks, secrets, configs, distribution inspection, and interactive session setup.
+
+The file is API contract and documentation, not runtime implementation code. Its purpose is to define the externally visible HTTP surface for Docker Engine v1.43: route names, methods, request parameters, body schemas, response status codes, MIME types, examples, tags, and `operationId` values used by rendered docs and generated clients. Most operations in this range either mutate daemon state or expose long-lived streams, so the API contract is tightly coupled to daemon subsystems such as container runtime state, image/build storage, volume and network drivers, plugins, registries, logging drivers, and swarmkit/Raft state.
+
+## Important APIs And Operation Groups
+
+The visible container operations are `ContainerPause`, `ContainerUnpause`, `ContainerAttach`, `ContainerAttachWebsocket`, `ContainerWait`, `ContainerDelete`, `ContainerArchiveInfo`, `ContainerArchive`, `PutContainerArchive`, and `ContainerPrune`. Pause and unpause use freezer cgroup semantics and return `204` or missing/server errors. Attach can hijack or upgrade the HTTP connection and can replay logs, stream live output, and attach stdin/stdout/stderr. Wait blocks until `not-running`, `next-exit`, or `removed`. Delete supports anonymous-volume removal, forced kill-before-remove, and link removal. Archive operations expose `HEAD`, `GET`, and `PUT` over a container filesystem path, including a base64 `X-Docker-Container-Path-Stat` header and tar upload/download semantics. Prune deletes stopped containers using `until` and label filters and reports deleted IDs plus reclaimed bytes.
+
+Image and build operations include `ImageList`, `ImageBuild`, `BuildPrune`, `ImageCreate`, `ImageInspect`, `ImageHistory`, `ImagePush`, `ImageTag`, `ImageDelete`, `ImageSearch`, `ImagePrune`, `ImageCommit`, `ImageGet`, `ImageGetAll`, and `ImageLoad`. `ImageBuild` accepts a compressed tar or remote context, Dockerfile path, tags, build args, cache inputs, resource limits, labels, network mode, platform, target, BuildKit `outputs`, and a `version` selector where `1` is classic builder and `2` is BuildKit. `BuildPrune` removes build cache with `keep-storage`, `all`, and filters including cache ID, parent, type, description, in-use/shared/private state, and age. Image create/push use registry auth headers, image import/export use tar streams, image delete returns per-layer/tag delete records, and image prune returns deleted images and reclaimed bytes.
+
+System operations include `SystemAuth`, `SystemInfo`, `SystemVersion`, `SystemPing`, `SystemPingHead`, `SystemEvents`, and `SystemDataUsage`. Auth validates registry credentials and may return an identity token. Info/version expose daemon and platform metadata. Ping is a health probe that returns version, builder recommendation, experimental mode, swarm status, and no-cache headers. Events streams real-time object events with broad JSON-filter support. Data usage aggregates layers, images, containers, volumes, and v1.43 build cache records, with an optional multi-valued `type` query selecting `container`, `image`, `volume`, and `build-cache`.
+
+Exec operations are `ContainerExec`, `ExecStart`, `ExecResize`, and `ExecInspect`. Creating an exec instance requires a running container and an `ExecConfig` body with attach flags, console size, detach keys, TTY, env, command, privileged flag, user, and working directory. Starting can detach immediately or attach to a raw/multiplexed stream. Resize requires `h` and `w` for TTY sessions. Inspect returns execution state such as `Running`, `ExitCode`, `ProcessConfig`, open stream flags, `ContainerID`, and host `Pid`.
+
+Volume operations are `VolumeList`, `VolumeCreate`, `VolumeInspect`, `VolumeUpdate`, `VolumeDelete`, and `VolumePrune`. Listing accepts JSON filters for dangling state, driver, label, and name. Create consumes `VolumeCreateOptions` and returns a `Volume`. The v1.43 `VolumeUpdate` operation is specifically for swarm cluster volumes; it accepts an object containing `Spec: ClusterVolumeSpec`, currently allows only `Availability` changes, and requires a `version` query parameter from the volume's `ClusterVolume` field. Delete supports `force` and distinguishes missing volume/driver, in-use conflict, and server error. Prune can include all local volumes with `all=true` or filter by labels.
+
+Network operations are `NetworkList`, `NetworkInspect`, `NetworkDelete`, `NetworkCreate`, `NetworkConnect`, `NetworkDisconnect`, and `NetworkPrune`. Network create supports name, duplicate checking, driver, scope, internal/attachable/ingress flags, config-only/config-from behavior, IPAM, IPv6, driver options, and labels. Connect/disconnect bind containers to networks with endpoint settings or forced disconnect. Direct connect/disconnect reject swarm-scoped networks with `403`. Prune supports `until` and label filters.
+
+Plugin operations cover `PluginList`, `GetPluginPrivileges`, `PluginPull`, `PluginInspect`, `PluginDelete`, `PluginEnable`, `PluginDisable`, `PluginUpgrade`, `PluginCreate`, `PluginPush`, and `PluginSet`. The API includes registry-backed pull/upgrade with `X-Registry-Auth`, privilege review/acceptance through `PluginPrivilege` arrays, local plugin creation from an `application/x-tar` rootfs/manifest bundle, enable/disable with timeout or force controls, deletion with optional force, and configuration mutation using string assignments such as `DEBUG=1`.
+
+Swarm and node operations include `NodeList`, `NodeInspect`, `NodeDelete`, `NodeUpdate`, `SwarmInspect`, `SwarmInit`, `SwarmJoin`, `SwarmLeave`, `SwarmUpdate`, `SwarmUnlockkey`, and `SwarmUnlock`. Node list filters include ID, engine labels, membership, name, node labels, and role. Node and swarm updates require version query parameters to avoid conflicting writes. Swarm init/join bodies carry listen, advertise, and data-path addresses, data-path port, default address pools, subnet size, join tokens, manager addresses, and `SwarmSpec`. Swarm update can rotate worker tokens, manager tokens, and the manager unlock key.
+
+Service and task APIs include `ServiceList`, `ServiceCreate`, `ServiceInspect`, `ServiceDelete`, `ServiceUpdate`, `ServiceLogs`, `TaskList`, `TaskInspect`, and `TaskLogs`. Services use `ServiceSpec` bodies with examples covering container image, mounts, hosts, DNS, secrets, log driver, placement, resources, restart policy, replicated mode, update/rollback config, endpoint ports, labels, and registry auth. Service update requires the current object version, supports `registryAuthFrom`, and can request rollback to the previous spec. Task list returns scheduler/runtime state including service/node IDs, slots, desired state, task status, container status, and network attachments. Service/task log endpoints return raw or multiplexed stream bodies and work only with `local`, `json-file`, or `journald` logging drivers.
+
+Secret and config APIs include `SecretList`, `SecretCreate`, `SecretInspect`, `SecretDelete`, `SecretUpdate`, `ConfigList`, `ConfigCreate`, `ConfigInspect`, `ConfigDelete`, and `ConfigUpdate`. Both resource families are swarm-scoped, listable by ID/label/name filters, created from `SecretSpec` or `ConfigSpec`, inspected as versioned objects, and deleted with `204`. Updates require the current version and the prose restricts mutation to labels only; all other fields must remain unchanged from inspect responses.
+
+The final endpoints are `DistributionInspect` and `Session`. `DistributionInspect` contacts a registry for image descriptor and platform information. `Session` initializes an interactive client/server session by hijacking an HTTP connection to h2c so the daemon can call back to client-exposed gRPC services.
+
+## Control Flow
+
+Control flow is primarily encoded through HTTP methods and status codes. `GET` operations list, inspect, query registry metadata, read logs, stream events, or export tar data. `POST` operations create, update, mutate lifecycle state, prune resources, start streams, validate credentials, initialize/join/leave swarm state, and establish sessions. `PUT` uploads tar content into containers or updates cluster volumes. `DELETE` removes containers, images, volumes, networks, plugins, nodes, services, secrets, and configs. `HEAD` is used for container path metadata without returning a tar body.
+
+Several operations have multi-step client flows. Container attach requires clients to choose `logs` and/or `stream`, choose which stdio streams to attach, then handle either a `200` hijacked raw response or a `101` upgraded connection. Non-TTY streams are multiplexed with an 8-byte header, while TTY streams are raw PTY bytes. Exec follows create/start/resize/inspect sequencing and inherits the same stream-family concerns as attach.
+
+Swarm, service, node, secret, config, and cluster-volume updates follow optimistic concurrency. Clients inspect or list the object, copy the current version index, send a complete replacement spec or allowed subset with `version`, then handle `400`, `404`, `500`, or `503` if the spec is invalid, object is gone, write conflicts, daemon fails, or the node is not in swarm mode. Service update adds registry-auth selection and server-side rollback behavior.
+
+Registry and build flows are long-running and connection-sensitive. Build and image create/push may stream progress and are documented as canceled when the HTTP connection closes. Registry auth is supplied per request through body or base64/base64url headers rather than through a persistent API session. Distribution inspection is a read path but crosses the local daemon boundary to a registry.
+
+Prune flows consistently accept JSON-encoded filter maps and return object identifiers plus reclaimed bytes when meaningful. These endpoints turn query strings into broad deletions, so filter parsing and default behavior are part of the observable control flow.
+
+## State And Persistence Behavior
+
+This YAML does not store state itself, but it specifies persistent and transient daemon state transitions. Container pause/unpause, wait, delete, archive upload, and prune interact with live process state, container metadata, root filesystems, anonymous volumes, and stopped-container records. Archive upload can mutate container filesystems and must honor read-only rootfs or volume permissions.
+
+Image operations mutate the local image store, repository tags, layer references, build cache, and imported/exported tar archives. Build can create images and cache records; prune can reclaim build cache or image storage; tag and delete mutate reference graph state; push/pull/import/load/export integrate local storage with registries and tar streams. `ImageCommit` snapshots a container into a new image and can pause the container while doing so.
+
+Volumes and networks are persistent daemon or driver-managed resources. Volume update is limited to swarm cluster volume availability; delete and prune must honor in-use checks. Network create/delete/connect/disconnect/prune mutate driver/IPAM state and container endpoint membership, while builtin networks and swarm-scoped networks have documented operation restrictions.
+
+Plugin operations persist installed plugin content, accepted privileges, configuration, and enabled/disabled state. Pull/upgrade/create modify local plugin storage; enable/disable changes daemon extension activation; force delete/disable can disrupt containers or networks that depend on a plugin.
+
+Swarm APIs mutate cluster membership, Raft-backed object specs, node roles and membership, join tokens, manager unlock keys, service desired state, secrets, configs, and task scheduling results. Services persist desired state; tasks expose observed state produced by the orchestrator. Secrets and configs are persisted swarm objects with sensitive data at create time and label-only updates in this API contract.
+
+System info, version, ping, events, data usage, distribution inspection, logs, and session are mostly read or transport establishment paths. They nevertheless reflect live daemon state and can expose sensitive operational data, credentials indirectly through auth results, or privileged callback channels.
+
+## Dependencies And Integration Points
+
+The chunk depends on shared definitions elsewhere in `v1.43.yaml`, including `ErrorResponse`, `IdResponse`, `ContainerWaitResponse`, `ContainerConfig`, `ImageSummary`, `ImageInspect`, `ImageHistoryResponseItem`, `ImageDeleteResponseItem`, `AuthConfig`, `SystemInfo`, `SystemVersion`, `EventMessage`, `ContainerSummary`, `Volume`, `VolumeListResponse`, `VolumeCreateOptions`, `ClusterVolumeSpec`, `Network`, `IPAM`, `EndpointSettings`, `Plugin`, `PluginPrivilege`, `Node`, `NodeSpec`, `Swarm`, `SwarmSpec`, `Service`, `ServiceSpec`, `ServiceUpdateResponse`, `Task`, `Secret`, `SecretSpec`, `Config`, `ConfigSpec`, and `DistributionInspect`.
+
+Runtime integration points include Docker daemon routing, container runtime/freezer cgroups, PTY and stream multiplexing, logging drivers, filesystem archive/tar handling, image stores, registry resolvers, build backends including BuildKit, build cache accounting, volume drivers, network drivers and IPAM, plugin management, swarmkit managers/agents, Raft persistence, service scheduler, secrets/configs storage, event broadcaster, and session h2c/gRPC callback transport.
+
+Client integration is broad. Generated SDKs and the Docker CLI must handle JSON body refs, free-form filter query strings, repeated query arrays, path identifiers that can be names or IDs, required version parameters, base64/base64url registry auth headers, binary tar bodies, raw and multiplexed stream MIME types, connection upgrades, websocket attach, long-running streams, and open-ended maps for labels, options, and driver settings.
+
+## Risks And Edge Cases
+
+The largest compatibility risk is schema drift in a versioned public API. Changing `operationId`, path shape, parameter name, required flag, response code, media type, enum, integer format, or referenced schema can break generated clients or existing Docker CLI behavior.
+
+Streaming and hijacked transports are high risk because they do not behave like ordinary JSON responses. Attach, exec start, service logs, task logs, events, build, push/pull-style progress, and session require clients and proxies to preserve connection lifetime, upgrades, binary framing, and TTY versus non-TTY stream differences. Tests need to cover client disconnect cancellation where documented.
+
+Destructive endpoints need careful filter and force semantics. Container/image/build/volume/network prune operations can remove broad sets of objects. Image delete can remove tags and untagged parents. Volume and network deletes must reject in-use or builtin resources as documented. Plugin force operations can break consumers that still depend on the plugin.
+
+Swarm and versioned update endpoints are concurrency-sensitive. Missing or stale `version` values should fail predictably. Secret/config updates are particularly easy to implement incorrectly because the schema accepts the full spec while the prose allows only labels to change. Cluster volume update similarly accepts a wrapped `ClusterVolumeSpec` but currently only permits availability changes.
+
+Registry and plugin flows carry security risk. Auth headers and secret/config data should not be logged or reflected. Plugin privileges and rootfs tar uploads are privileged trust boundaries. Distribution inspection and pulls depend on remote registry behavior and must distinguish authentication failures, missing images, and daemon errors.
+
+Name-or-ID path parameters create ambiguity risks across containers, images, volumes, networks, plugins, nodes, services, secrets, and configs. Implementations should resolve consistently and avoid mutating the wrong object when names collide or partial IDs match multiple objects.
+
+## Test Signals
+
+Static validation should parse this YAML as Swagger 2.0, resolve all `$ref` targets, ensure unique `operationId` values, validate required path/query/body/header parameters, and regenerate client/server/documentation artifacts without type or rendering errors.
+
+API conformance tests should cover documented status codes for missing objects (`404`), bad parameters (`400`), conflicts (`409`), unsupported builtin or swarm-scoped operations (`403`), swarm unavailable/already-in-swarm states (`503`), and successful `200`/`201`/`204`/`101` paths. Versioned update tests should assert stale and missing version handling for nodes, swarm, services, secrets, configs, and cluster volumes.
+
+Stateful integration tests should exercise container pause/unpause/wait/delete/archive/prune; image build/create/inspect/history/push/tag/delete/search/prune/commit/export/load; build cache prune; exec create/start/resize/inspect; volume create/update/delete/prune; network create/connect/disconnect/delete/prune; plugin pull/create/enable/disable/set/upgrade/push/delete; swarm init/join/leave/update/unlock; service create/update/delete/logs; task list/inspect/logs; and secret/config create/update/delete.
+
+Transport tests should verify attach and exec stream framing in TTY and non-TTY modes, websocket attach, service/task log filters (`details`, `follow`, `stdout`, `stderr`, `since`, `timestamps`, `tail`), event streaming with `since`/`until`, build cancellation on client disconnect, image tar export/import, container archive metadata and extraction, and h2c session upgrade behavior.
+
+Compatibility tests should confirm JSON filter encoding as `map[string][]string`, repeated array query encoding for `system/df?type=...`, preservation of auth headers, correct handling of binary body formats, tolerance for unknown response fields, and stable examples for dense service/task/system data shapes.

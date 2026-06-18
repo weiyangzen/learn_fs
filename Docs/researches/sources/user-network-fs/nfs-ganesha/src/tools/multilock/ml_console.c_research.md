@@ -1,0 +1,15 @@
+# sources/user-network-fs/nfs-ganesha/src/tools/multilock/ml_console.c
+
+Purpose: `ml_console.c` is the TCP console/orchestrator for the multilock test suite. It listens for multilock clients, accepts interactive or scripted commands, sends parsed requests to named clients, and verifies asynchronous responses against expected results. It is a control-plane process rather than a lock backend.
+
+Important APIs, types, and functions: `open_socket()` creates the listening socket with `SO_REUSEADDR`; `do_accept()` converts accepted sockets to unbuffered `FILE *` streams and registers clients in the shared `client_list`; `receive()` wraps `pselect()` over the listener, client sockets, and optional stdin; `receive_response()` normalizes socket, timeout, stdin, and signal cases; `process_client_response()` parses client lines via `parse_response()`. Console commands are represented by `enum console_cmd` and dispatched through `console_command()`, with helpers for `CLIENTS`, `FORK`, `EXPECT`, simple expected-status commands, sleeps, strict/fatal toggles, and brace groups.
+
+Control flow: `main()` installs signal handlers, blocks signals around `pselect()`, parses options, opens the listener, optionally syntax-checks and replays a script, then loops between receiving unsolicited responses and reading console commands. Script mode first runs with `syntax = true`, then rewinds the input and uses source line numbers as initial tags. `handle_quit()` sends `QUIT` to all connected clients and builds expected `QUIT` responses before reporting `SUCCESS` or `FAIL`.
+
+State and persistence: state is in process globals: `expected_responses`, `client_list`, `sockets`, `maxfd`, `global_tag`, `num_errors`, `terminate`, and mode booleans. No durable state is written. Client lifetime is reference-counted through `struct response` ownership and `free_response()`.
+
+Dependencies and integration points: this file depends on the shared parser/protocol in `multilock.h` and `ml_functions.c`, POSIX sockets, `pselect()`, signal handling, and stdio streams. It integrates with clients that emit `HELLO` and request/response lines using the multilock protocol.
+
+Risks: `fdopen()` is called twice on the same socket descriptor, so stream close semantics need care; the code explicitly calls `close()` but does not always `fclose()` both streams. `maxfd` is not reduced after closing clients, which is acceptable for `select()` but inefficient. Signal/termination logic relies on global flags and blocked signal masks. The parser uses fixed-size buffers; most helpers bound copies, but protocol fields near `MAXXFER` remain important test cases.
+
+Test signals: sample scripts under `sample_tests/` exercise client registration, braces, simple expected-status commands, forks, lock waits, and quit paths. Useful validation includes script syntax-only mode (`-k`), strict mode behavior on unsolicited responses, interrupted `pselect()`, client disconnect producing tag `-2 QUIT OK`, and error-accounting mode.

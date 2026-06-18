@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/rockchip,rk818.yaml
+
+Purpose: Schema for the Rockchip RK818 I2C PMIC MFD, covering regulators, RTC, power button, two clock outputs, wakeup behavior, and system power-off use.
+
+Important schema surface and control flow: the binding requires `compatible = "rockchip,rk818"`, `reg`, `interrupts`, and `#clock-cells = 1`. It allows `clock-output-names` with up to two entries, deprecated and generic power-controller flags, `wakeup-source`, input supplies for four DCDC rails, boost, LDO groups, digital I/O, HDMI switch, and USB switch. The `regulators` object permits `DCDC_REG1-4`, `DCDC_BOOST`, `LDO_REG1-9`, `SWITCH_REG`, `HDMI_SWITCH`, and `OTG_SWITCH`, each validated by the common regulator schema.
+
+State, dependencies, and integration: the DT node persists the board's RK818 rail topology and optional switch rails for HDMI/USB, consumed by RK818 MFD, regulator, RTC, input, and clock drivers. Dependencies include regulator schema, clock IDs from the RK808 family, and GPIO/interrupt/pinctrl bindings. Risks include omitting switch supplies, wrong regulator child names, retaining deprecated power-controller syntax, and suspend-state definitions that keep or cut critical rails incorrectly. Test signals are `dt_binding_check`, example validation, successful clock provider setup, regulator registration for boost/switch rails, and wakeup IRQ behavior.

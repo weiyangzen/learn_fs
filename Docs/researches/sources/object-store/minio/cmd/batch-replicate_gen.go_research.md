@@ -1,0 +1,11 @@
+# sources/object-store/minio/cmd/batch-replicate_gen.go
+
+This generated `tinylib/msgp` file supplies MessagePack serialization for the batch replication job model. It implements `DecodeMsg`, `EncodeMsg`, `MarshalMsg`, `UnmarshalMsg`, and `Msgsize` for `BatchJobReplicateCredentials`, `BatchJobReplicateFlags`, `BatchJobReplicateResourceType`, `BatchJobReplicateSource`, `BatchJobReplicateTarget`, `BatchJobReplicateV1`, and `BatchReplicateFilter`.
+
+The encoded schema is map-based for structs and string-based for enum-like resource types. Important persisted field names are `AccessKey`, `SecretKey`, `SessionToken`, `Filter`, `Notify`, `Retry`, `Type`, `Bucket`, `Prefix`, `Endpoint`, `Path`, `Creds`, `Snowball`, `APIVersion`, `Target`, `Source`, `NewerThan`, `OlderThan`, `CreatedAfter`, `CreatedBefore`, `Tags`, and `Metadata`. Nested structs such as credentials and flags are expanded explicitly rather than delegated everywhere, which makes schema drift easy to miss if source struct definitions change without regenerating the file.
+
+Control flow is the standard msgp pattern: read a map header, switch on each map key, decode known fields, and call `msgp.Skip` for unknown fields. Slice fields allocate or reuse backing arrays for prefixes, tags, and metadata. The marshal paths append into caller-provided buffers using `msgp.Require` and return leftover bytes from unmarshalling, so callers and tests can detect trailing data.
+
+State and persistence behavior matters because these codecs are used for batch job definitions and resume metadata. Any field rename, type change, or generated-code mismatch can make previously persisted replication jobs decode incorrectly. Unknown-field skipping gives limited forward compatibility, but removed or retyped fields still risk zero-value behavior.
+
+Dependencies are `github.com/tinylib/msgp/msgp` plus the batch-job types declared elsewhere in `cmd`. Test signals come from `batch-replicate_gen_test.go`, which exercises round-trip encode/decode, skip, and allocation benchmarks for each generated type. Main risks are stale generated code, accidental credential exposure in serialized blobs, and insufficient semantic tests around non-zero values or unknown-field compatibility.

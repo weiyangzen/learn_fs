@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/firmware/thead,th1520-aon.c
+
+T-HEAD TH1520 Always-On firmware RPC helper library. It wraps the `"aon"` mailbox channel, serializes request/ack transactions, maps firmware error codes to Linux errno values, and exports a power-resource update helper.
+
+`struct th1520_aon_chan` owns the mailbox channel/client, last common ack, completion, and `transaction_lock`. `th1520_aon_init()` allocates this object, configures a blocking mailbox client with `MAX_TX_TIMEOUT`, installs `th1520_aon_rx_callback()`, requests the named mailbox, and initializes synchronization. `th1520_aon_deinit()` frees the mailbox and object.
+
+`th1520_aon_call_rpc()` is the generic transaction path. It locks out concurrent RPCs, reinitializes completion, stamps protocol version/service/message flags into the request header, sends over mailbox, waits up to three seconds for the RX callback, then converts the firmware ack error code through `th1520_aon_to_linux_errno()`. The RX callback validates that the returned header size matches `th1520_aon_rpc_ack_common` before copying and completing. `th1520_aon_power_update()` builds a packed set-resource-power-mode request with big-endian resource and mode fields and calls the generic RPC path.
+
+State is transient except for the mailbox handle and last ack buffer. Firmware owns actual power state and RPC semantics. Dependencies include the TH1520 AON firmware header macros/types, mailbox client/controller APIs, completions, mutexes, and exported symbols for consumers such as power-domain drivers.
+
+Risks include strict ack-size validation: unexpected future ack formats will be ignored and cause caller timeout. The error map returns `-EEXIST` for `LIGHT_AON_ERR_NOTFOUND`, which is semantically suspicious and should be checked against firmware ABI expectations. `th1520_aon_call_rpc()` returns `th1520_aon_to_linux_errno(ret)` even when `mbox_send_message()` fails, so negative Linux errors outside the firmware enum collapse to `-EIO`; preserving transport errors would aid diagnostics. Test signals include mailbox channel lookup failure, send timeout, malformed ack size, firmware error-code mapping, serialized concurrent callers, and power on/off payload endianness.

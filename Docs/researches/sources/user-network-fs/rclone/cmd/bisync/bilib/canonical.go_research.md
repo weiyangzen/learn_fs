@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/cmd/bisync/bilib/canonical.go
+
+Purpose: provides canonical naming/path helpers shared by bisync implementation and tests. It converts `fs.Info` values into rclone argument-like paths, normalizes those paths into filesystem-safe session names, and handles backward-compatible migration from old canonical names containing `{hex}` suffixes.
+
+Important APIs: `FsPath`, `CanonicalPath`, `SessionName`, `StripHexString`, `HasHexString`, and `BasePath`. `BasePath` builds listing-file base paths under a work directory and, if legacy suffixed listing files exist, renames them to the new non-suffixed paths unless destructive operations are skipped. State changes are local file renames of listing files. Dependencies include OS path rules, runtime GOOS, regex normalization, and `operations.SkipDestructive`. Risks include path collisions after character replacement/hex stripping, Windows path handling, and partial migration when one listing exists. Test signal is likely bisync tests using stable session names.

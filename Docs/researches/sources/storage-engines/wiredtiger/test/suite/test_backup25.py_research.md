@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup25.py
+
+Purpose: verifies commit-level durability when the source crashes while a backup cursor is open. It checks that recovery from `WiredTiger.backup` still replays logged changes made after the backup cursor opened, even when later checkpoints are discarded.
+
+Important APIs are `add_data`, `session.checkpoint`, `session.open_cursor('backup:')`, `session.log_flush`, `copy_wiredtiger_home`, `wiredtiger_open`, and expected stdout pattern for both turtle and backup files. Control flow writes until log file 2, checkpoints, writes pre-backup data, opens backup cursor, writes and checkpoints two backup-era keys, writes a third uncheckpointed key, flushes logs, copies the live home to a new directory while backup cursor remains open, closes cursor, opens the copy, and verifies all backup-era keys are present. State behavior is log durability versus backup checkpoint pinning. Risks include filesystem copy fidelity and log flush timing. Test signals are recovered key/value assertions.

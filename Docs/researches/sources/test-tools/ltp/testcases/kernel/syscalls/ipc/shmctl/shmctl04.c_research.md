@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmctl/shmctl04.c
+
+Purpose: validates `shmctl(SHM_INFO)` and `SHM_STAT_ANY`, including consistency with `/proc/sysvipc/shm`. Setup creates one segment to guarantee at least one entry, checks `SHM_STAT_ANY` support, and records root and `nobody` UIDs. Each test switches euid, calls `SHM_INFO`, verifies the returned max index maps to a valid shm ID, counts valid indexes, and parses procfs to compare `used_ids`, `shm_rss`, `shm_swp`, and page-rounded `shm_tot`. State is one segment plus effective UID changes. Dependencies are root, procfs, page size, and no concurrent IPC mutation. Risks are procfs races and ABI support; test signals are expected counts/totals and valid index mapping.

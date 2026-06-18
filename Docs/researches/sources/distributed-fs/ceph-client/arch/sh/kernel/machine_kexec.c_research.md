@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/machine_kexec.c
+
+Purpose: implements SH architecture kexec transition, kexec jump context preservation, and crashkernel memory reservation.
+
+Important APIs and control flow: `machine_kexec()` converts generic kexec indirection entries from physical to virtual, optionally saves processor state for kexec jump, disables ftrace and interrupts, copies `relocate_new_kernel` to the control page, prints segment info, flushes caches, reloads BIOS VBR, and jumps to relocation code with page list/control page/start address. On kexec jump return it restores VBR, processor state, page-list physical addresses, and ftrace state. `reserve_crashkernel()` parses `crashkernel=`, reserves or allocates memory through memblock, disables conflicting `memory_limit`, and fills `crashk_res`.
+
+State, dependencies, and risks: state includes transformed `image->head`, control code page contents, ftrace enabled state, crashkernel resource, and memory limit. Dependencies include `relocate_kernel.S`, memblock, cache flushes, BIOS VBR reload, suspend processor state helpers, and generic kexec image format. Risks include no-op SMP crash shutdown, page-list conversion mistakes, irreversible interrupts-off transition, and crashkernel reservation conflicts. Test signals are regular kexec, kexec jump return, crashkernel reservation logs, and `/proc/vmcore` after crash.

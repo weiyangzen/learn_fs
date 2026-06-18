@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/media/v4l2-core/v4l2-ctrls-api.c
+
+## Purpose
+This file implements the V4L2 controls userspace API for querying, getting, trying, setting, logging, and subscribing to controls. It is the ABI-facing layer over the lower-level control core: it validates userspace `VIDIOC_G_EXT_CTRLS`, `VIDIOC_TRY_EXT_CTRLS`, `VIDIOC_S_EXT_CTRLS`, legacy `VIDIOC_G_CTRL`/`VIDIOC_S_CTRL`, `VIDIOC_QUERY_EXT_CTRL`, `VIDIOC_QUERYCTRL`, `VIDIOC_QUERYMENU`, control events, and control polling.
+
+## Important APIs, types, and functions
+`struct v4l2_ctrl_helper` ties each userspace `v4l2_ext_control` to its found `v4l2_ctrl_ref`, its cluster master reference, and the next control index in the same cluster. `prepare_ext_ctrls()` resolves control IDs, checks `which`, rejects old-style private controls for extended APIs, enforces disabled and min/max rules, normalizes pointer sizes, and builds cluster chains. `v4l2_g_ext_ctrls_common()` copies default, request, min, max, volatile, or current values to userspace. `try_set_ext_ctrls_common()` validates and optionally commits extended control changes.
+
+Legacy helpers include `get_ctrl()`, `v4l2_g_ctrl()`, `set_ctrl()`, `set_ctrl_lock()`, and `v4l2_s_ctrl()`. Driver-facing helpers include `v4l2_ctrl_g_ctrl()`, `v4l2_ctrl_g_ctrl_int64()`, `__v4l2_ctrl_s_ctrl()`, `__v4l2_ctrl_s_ctrl_int64()`, `__v4l2_ctrl_s_ctrl_string()`, and `__v4l2_ctrl_s_ctrl_compound()`. Query and metadata functions are `v4l2_query_ext_ctrl()`, `v4l2_query_ext_ctrl_to_v4l2_queryctrl()`, `v4l2_queryctrl()`, and `v4l2_querymenu()`. Event helpers include `v4l2_ctrl_subscribe_event()`, `v4l2_ctrl_subdev_subscribe_event()`, `v4l2_ctrl_replace()`, `v4l2_ctrl_merge()`, and `v4l2_ctrl_poll()`.
+
+## Control flow
+Extended get/set begins by canonicalizing `cs->which` with `V4L2_CTRL_ID2WHICH()`. `prepare_ext_ctrls()` looks up each control under the handler lock, records the corresponding reference, validates availability, computes payload sizes, and links controls from the same cluster so the cluster is processed once through the master. For get, `v4l2_g_ext_ctrls_common()` rejects write-only controls, locks each master, refreshes volatile clusters through `g_volatile_ctrl` when appropriate, and copies the selected value source back to userspace.
+
+For try/set, `try_set_ext_ctrls_common()` rejects attempts to modify default/min/max pseudo-values, prepares helpers, performs up-front validation for read-only/grabbed/scalar controls, locks each cluster master, resets `is_new`, copies userspace values through `user_to_new()`, validates pointer payloads after copy, and calls `try_or_set_cluster()`. If the handler is a request handler, successful sets copy new values into request storage through `new_to_req()` instead of immediately changing device state. Successful operations copy normalized values back to userspace.
+
+The API explicitly documents best-effort atomicity: invalid values should fail before modifying controls, but driver or hardware errors during cluster commits can leave partial changes. `error_idx` communicates whether no controls were affected (`count`) or which index failed after earlier controls may have been processed.
+
+## State and persistence behavior
+This layer mutates `v4l2_ctrl` transient `p_new`, `is_new`, `new_elems`, and current values via core helpers when a set commits. It also mutates dynamic-array storage if a userspace payload is larger than the current allocation. It uses locks on control masters or handlers to serialize cluster operations. It can change control ranges and dimensions through `__v4l2_ctrl_modify_range()` and `__v4l2_ctrl_modify_dimensions()`, emitting events when value, range, or dimensions change. Event subscriptions are stored in each control's `ev_subs` list and are removed on unsubscribe or handler teardown.
+
+## Dependencies and integration points
+It depends on `v4l2-ctrls-priv.h` for internal helpers implemented by the core and request files. It integrates with the media request API by routing `V4L2_CTRL_WHICH_REQUEST_VAL` to `v4l2_g_ext_ctrls_request()` or `try_set_ext_ctrls_request()`. It uses `v4l2-event` for event queueing, `v4l2-dev` for debug context, and `v4l2-device`/subdev plumbing for log-status helpers. Query operations rely on names, flags, menus, and type information provided by `v4l2-ctrls-core.c` and `v4l2-ctrls-defs.c`.
+
+## Risks
+Cluster handling is subtle: controls may appear in any userspace order, and a bug in helper linking can cause duplicate commits or skipped controls. Dynamic-array resizing copies both new and current payloads into a new allocation and must preserve element counts exactly. Pointer payload validation happens after copying from userspace, so size normalization and `-ENOSPC` handling must be correct to avoid overrun or truncated ABI behavior. Volatile auto-clusters require careful transitions from auto to manual mode to avoid losing current hardware-derived values. The legacy single-control helpers only support integer-like controls, so using them with compound controls is intentionally rejected.
+
+## Test signals
+Strong tests include extended get/try/set with mixed clusters, repeated cluster members, disabled/read-only/write-only/grabbed controls, invalid `which`, zero-count class checks, string truncation, dynamic-array growth and `-ENOSPC`, pointer compound validation failures, volatile controls, auto-cluster manual transitions, request-valued controls, and error_idx behavior when driver `try_ctrl` or `s_ctrl` fails. Query tests should cover next-control iteration, compound/hidden controls, menu skip masks, empty menu entries, and event subscribe/merge/replace behavior.

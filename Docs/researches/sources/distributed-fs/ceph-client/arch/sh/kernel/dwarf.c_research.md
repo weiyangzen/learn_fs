@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/dwarf.c
+
+Purpose: implements a DWARF `.eh_frame` unwinder for SH stack traces, return-address lookup, and module unwind metadata.
+
+Important APIs and control flow: slab/mempool caches allocate `dwarf_frame` and `dwarf_reg` structures. CIEs and FDEs are parsed from `.eh_frame` into rbtrees guarded by spinlocks. `dwarf_cfa_execute_insns()` interprets a subset of DWARF CFA opcodes to derive CFA and saved-register offsets. `dwarf_unwind_stack()` locates an FDE for the PC, executes CIE/FDE instructions, computes the CFA, reads the return address, and stops at unreliable interrupt returns. `module_dwarf_finalize()` and `module_dwarf_cleanup()` add/remove module CIE/FDE entries. `dwarf_unwinder_init()` parses kernel metadata, registers the unwinder, and marks it ready.
+
+State, dependencies, and risks: persistent state includes CIE/FDE rbtrees, cached CIE, pools, and module lists. Dependencies include `.eh_frame` linker symbols, DWARF encoding conventions, ftrace graph return stacks, module ELF sections, and SH register-number mappings. Risks are high: unsupported encodings call `UNWINDER_BUG()`, DWARF64 and some `DWARF_VAL_OFFSET` behavior are called out as incomplete, compiler metadata can be inaccurate around interrupts, and parser/rbtree insertion defects can disable unwinding. Test signals are boot unwinder initialization counts, module load/unload with unwind info, oops stack depth, and function-graph tracer callchain correctness.

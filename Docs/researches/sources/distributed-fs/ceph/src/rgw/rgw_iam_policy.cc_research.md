@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph/src/rgw/rgw_iam_policy.cc
+
+See the grouped research section in `Docs/researches/groups/subset-b-006989_research.md` for the complete report.
+
+This implementation is RGW's IAM policy parser/evaluator. It maps action strings to bitsets, uses RapidJSON SAX callbacks and generated keyword tables to validate grammar, parses principals/resources/actions/conditions, evaluates typed condition operators, matches identities and ARNs, applies explicit deny precedence, prints policies, and detects public wildcard-allow policies. State is parsed in-memory `Policy`/`Statement`/`Condition` data from stored JSON text. Dependencies include RGW auth principals, ARN/wildcard helpers, ISO8601/base64 helpers, and generated IAM keywords. Risks are security-critical: action omissions, AWS semantic drift, invalid-principal compatibility mode, tenant resource validation, condition interpolation, IP matching, and deny/allow precedence. Tests need broad grammar, action, principal, resource, and condition coverage.

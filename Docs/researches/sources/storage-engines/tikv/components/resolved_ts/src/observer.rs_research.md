@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resolved_ts/src/observer.rs
+
+`observer.rs` bridges raftstore coprocessor events into resolved-ts worker tasks. `Observer` holds a `Scheduler<Task>` and shared `MemoryQuota`. `register_to` installs it as a command observer with low priority 1000, a role observer, and a region-change observer. Low command priority lets other observers process batches before resolved-ts takes ownership with `mem::take`.
+
+For applied command batches, `on_flush_applied_cmd_batch` exits when no observer level is active, filters batches through `lock_only_filter`, charges their serialized size into `RTS_CHANNEL_PENDING_CMD_BYTES` and `memory_quota.alloc_force`, then schedules `Task::ChangeLog`. If scheduling fails, it frees the charged quota. `on_applied_current_term` registers a region after a peer becomes leader and applies in its current term. `on_role_change` deregisters on non-leader roles. `on_region_changed` forwards leader-only update and destroy events to the endpoint.
+
+The file has no persistent state; correctness depends on raftstore event order, observe handles, and the endpoint's stale-observe-id checks. The risk is memory pressure because command batches are forcibly charged before asynchronous handling, but endpoint active quota checks and all-region re-registration are designed to drain overload. Unit tests cover command filtering under cdc/resolved-ts/PITR observe-handle combinations, including lock-only filtering when only resolved-ts observes.

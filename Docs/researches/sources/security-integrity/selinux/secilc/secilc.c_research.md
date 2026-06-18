@@ -1,0 +1,7 @@
+# sources/security-integrity/selinux/secilc/secilc.c
+
+Purpose: `secilc` is the main CIL-to-binary-policy compiler. It reads CIL files, configures libcil compilation behavior, builds a `sepol_policydb_t`, optionally optimizes it, writes a binary policy, and emits file contexts.
+
+Important APIs and flow: command-line parsing maps target to `SEPOL_TARGET_SELINUX` or `SEPOL_TARGET_XEN`, MLS to `cil_set_mls`, policy version through `strtol` bounded by `POLICYDB_VERSION_MIN/MAX`, unknown handling to `SEPOL_DENY/ALLOW/REJECT_UNKNOWN`, and flags to CIL setters such as `cil_set_disable_dontaudit`, `cil_set_multiple_decls`, and `cil_set_disable_neverallow`. Input files are read completely and added with `cil_add_file`; zero-length files are skipped. The compile path is `cil_compile` -> `cil_build_policydb` -> optional `sepol_policydb_optimize` -> `sepol_policydb_write`. File contexts come from `cil_filecons_to_string` and are written separately.
+
+State and persistence: persistent artifacts are `policy.<version>` or `-o` output plus `file_contexts` or `-f` output. Dependencies include libsepol policydb, CIL APIs, and filesystem writes. Risks: some `strdup` and default-output allocations are checked inconsistently, binary output uses text-mode `"w"`, and failures can leave partial output files. Test signals should include policy version bounds, unknown action overrides, empty inputs, file_context generation, optimization, neverallow disabling, and target-platform differences.

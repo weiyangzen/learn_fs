@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/rust/kernel/sync/lock.rs
+
+## sources/distributed-fs/ceph-client/rust/kernel/sync/lock.rs
+
+Purpose: provides the generic pinned lock abstraction used by mutexes, spinlocks, and global locks. Important APIs/types are unsafe trait `Backend`, `Lock<T, B>`, `Lock::new`, `Lock::from_raw` for ZST data, `lock`, `try_lock`, and `Guard` with `lock_ref`, `do_unlocked`, `as_mut`, `Deref`, `DerefMut`, and `Drop`.
+
+Control flow: `Lock::new` pin-initializes protected data and asks the backend to initialize the C lock state. `lock` and `try_lock` call backend acquisition functions, then create a `Guard` after `assert_is_held`. Dropping the guard calls backend `unlock`. `do_unlocked` temporarily unlocks, installs a `ScopeGuard` to relock with backend `relock`, then runs a callback; this is central to condvar waits. State is the C lock object plus `UnsafeCell<T>`, with pinning required conservatively for C lock internals and protected pinned data. Dependencies are `LockClassKey`, `Opaque`, `ScopeGuard`, `pin_init`, and backend modules. Integration points include `Mutex`, `SpinLock`, `CondVar`, `LockedBy`, global locks, and any C-initialized lock via `from_raw`. Risks concentrate in unsafe backend implementations, relock symmetry, `from_raw` layout assumptions, non-`Send` guard enforcement, and `DerefMut` only for `Unpin`. Test signals include backend-specific lockdep assertions, try-lock success/failure, `do_unlocked` relock on panic-like exits, and pinned data access through `as_mut`.

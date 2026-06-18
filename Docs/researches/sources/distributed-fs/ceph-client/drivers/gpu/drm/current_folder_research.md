@@ -1,0 +1,119 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/gpu/drm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 105
+- Recursive researched files: 7750
+- Direct child folders represented: 71
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_atomic.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_atomic_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_atomic_state_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_atomic_uapi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_auth.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_blend.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_bridge.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_bridge_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_buddy.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_cache.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_client.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_client_event.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_client_modeset.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_client_sysrq.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_color_mgmt.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_colorop.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_connector.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_crtc.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_crtc_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_crtc_helper_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_crtc_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_damage_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_debugfs.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_debugfs_crc.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_displayid.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_displayid_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_draw.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_draw_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_drv.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_dumb_buffers.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_edid.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_edid_load.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_eld.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_encoder.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_exec.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_fb_dma_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_fb_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_fbdev_dma.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_fbdev_shmem.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_fbdev_ttm.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_file.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_flip_work.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_format_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_format_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_fourcc.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_framebuffer.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem_atomic_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem_dma_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem_framebuffer_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem_shmem_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem_ttm_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gem_vram_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gpusvm.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_gpuvm.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_ioc32.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_ioctl.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_kms_helper_common.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_lease.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_managed.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_mipi_dbi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_mipi_dsi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_mm.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_mode_config.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_mode_object.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_modes.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_modeset_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_modeset_lock.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_of.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_pagemap.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_pagemap_util.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_panel.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_panel_backlight_quirks.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_panel_orientation_quirks.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_panic.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_panic_qr.rs`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_pci.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_plane.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_plane_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_prime.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_print.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_privacy_screen.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_privacy_screen_x86.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_probe_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_property.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_ras.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_ras_genl_family.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_ras_nl.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_ras_nl.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_rect.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_self_refresh_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_simple_kms_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_suballoc.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_syncobj.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_sysfs.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_trace.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_trace_points.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_vblank.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_vblank_helper.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_vblank_work.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_vma_manager.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/drm_writeback.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

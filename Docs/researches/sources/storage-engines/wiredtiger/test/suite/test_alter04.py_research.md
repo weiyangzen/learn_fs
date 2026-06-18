@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_alter04.py
+
+Purpose: smoke-tests `WT_SESSION.alter` for `os_cache_max` and `os_cache_dirty_max` metadata settings across files, simple tables, column groups, indexes, tiered storage, create-time defaults, and reopen behavior. The main class combines `TieredConfigMixin` and `WiredTigerTestCase`.
+
+Control flow creates the object with explicit or default cache setting, optionally creates a column group or index subobject, inserts rows, checks metadata, then alters to `1M` and `100K`, reopening when scenario demands. Important APIs are `session.create`, `session.alter`, metadata cursor iteration, and cursor writes. Persistence is represented by metadata propagation to file entries and survival across reopen. Dependencies include `helper_tiered` and scenario generation. Risks are default sensitivity (`setting=0` is hard-coded) and special handling of subobjects, where the test alters both top-level and sub-URI metadata. Test signals are metadata substring assertions and tiered file skip behavior.

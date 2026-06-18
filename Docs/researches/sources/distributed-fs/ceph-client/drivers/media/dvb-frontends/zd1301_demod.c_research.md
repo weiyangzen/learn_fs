@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/dvb-frontends/zd1301_demod.c
+
+Purpose: Implements the ZyDAS ZD1301 DVB-T demodulator as a platform driver. It exposes a DVB frontend, creates an I2C adapter for downstream tuner access through the demodulator's I2C bridge, programs demod registers for DVB-T bandwidths, and uses parent-supplied register callbacks for hardware access.
+
+Important APIs/types/functions: `struct zd1301_demod_dev` owns the platform device, frontend, child I2C adapter, and cached gain. `zd1301_demod_wreg()`/`zd1301_demod_rreg()` call `zd1301_demod_platform_data` callbacks. Frontend ops include `zd1301_demod_init()`, `zd1301_demod_sleep()`, `zd1301_demod_set_frontend()`, `zd1301_demod_get_tune_settings()`, and `zd1301_demod_read_status()`. Exported helpers `zd1301_demod_get_dvb_frontend()` and `zd1301_demod_get_i2c_adapter()` let the parent/bridge wire demod and tuner together. `zd1301_demod_i2c_master_xfer()` implements limited child I2C transactions.
+
+Control flow: Probe validates platform data and parent driver, allocates state, writes initial sleep/bridge registers, registers an I2C adapter named "ZyDAS ZD1301 demod", copies frontend ops, and stores drvdata. `set_frontend()` requires tuner `set_params` and `get_if_frequency`, accepts only IF 36.15 MHz, maps 6/7/8 MHz bandwidth to register `0x6a50`, then writes a fixed register sequence. The child I2C algorithm supports write-read with one address byte and up to eight read bytes, write with one register byte plus up to eight data bytes, and rejects unsupported transfer shapes. Status polls register `0x6a24`, treats values 1..31 as full lock, and updates gain register `0x6a43` if the module parameter changed.
+
+State and persistence: Runtime state includes the module parameter `gain`, cached per-device gain, the registered child I2C adapter, and volatile demod/bridge registers. No firmware or nonvolatile persistence exists.
+
+Dependencies/integration: Depends on platform devices, parent register callbacks, DVB frontend APIs, Linux I2C adapter registration, jiffies/timeouts, and module parameter handling. It is designed to be instantiated by a USB/bridge driver that owns direct register access and tuner attachment.
+
+Risks and test signals: Test missing platform data, no parent driver, I2C adapter registration failure, fixed IF rejection, bandwidth rejection, tuner callback errors, child I2C length/shape limits, bridge transfer timeouts, gain module parameter changes during status polling, and remove cleanup. The I2C bridge polling loops return success even if `0x6804` never clears before timeout, so transfer-timeout behavior deserves hardware validation.

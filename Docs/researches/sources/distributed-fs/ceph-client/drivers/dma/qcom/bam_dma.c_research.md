@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/drivers/dma/qcom/bam_dma.c Research
+
+## Purpose
+`bam_dma.c` implements the Qualcomm BAM (Bus Access Manager) DMA engine as a dmaengine slave provider. BAM hardware uses an external-memory descriptor FIFO per pipe/channel; the driver writes descriptors into a circular FIFO, advances the event register to start transfers, handles pipe/global interrupts, supports remotely controlled or remotely powered BAM instances, and integrates runtime PM and device-tree channel translation.
+
+## Important APIs, Types, and Functions
+`struct bam_desc_hw` is the packed hardware descriptor with buffer address, size, and flags. `struct bam_async_desc` is a virt-dma descriptor plus temporary descriptor array, transfer length, flags, current descriptor pointer, active-list node, direction, and total length. `struct bam_chan` embeds `struct virt_dma_chan` and stores channel id, slave config, FIFO virtual/DMA addresses, circular head/tail indices, initialized/paused/reconfigure flags, and active descriptor list. `struct bam_device` owns MMIO registers, dma_device, channel array, execution environment id, remote-control flags, clock, IRQ, register layout, active-channel count, and controller tasklet.
+
+Register layout is abstracted by `enum bam_reg`, `struct reg_offset_data`, per-version layout tables for v1.3, v1.4, and v1.7, and `bam_addr()`. Core methods include `bam_alloc_chan()`, `bam_free_chan()`, `bam_slave_config()`, `bam_prep_slave_sg()`, `bam_issue_pending()`, `bam_tx_status()`, `bam_dma_terminate_all()`, `bam_pause()`, `bam_resume()`, `bam_start_dma()`, `process_channel_irqs()`, and `bam_dma_irq()`.
+
+## Control Flow
+Probe matches the compatible string to a register layout, maps MMIO, gets the IRQ, reads the `qcom,ee` execution environment, reads remote-control/power flags, gets the BAM clock or static channel/EE counts when no clock is available, enables the clock, initializes global BAM state, creates channels, requests the IRQ, sets dmaengine slave capabilities, registers dmaengine and OF DMA controller, and enables runtime PM autosuspend.
+
+Channel allocation allocates a write-combined 32 KiB descriptor FIFO. If the BAM is remotely powered and this is the first active channel, the driver resets the BAM. Slave configuration copies `struct dma_slave_config` and marks the channel for reconfiguration. `bam_prep_slave_sg()` validates direction, splits SG entries into descriptors no larger than the FIFO payload size, applies command/fence/interrupt flags, and returns a virt-dma descriptor.
+
+`bam_issue_pending()` moves pending descriptors to issued and calls `bam_start_dma()` if FIFO space is available. `bam_start_dma()` runtime-resumes the device, initializes pipe hardware on first use, applies maxburst configuration, chooses how many descriptors fit in the circular FIFO, sets EOT or INT flags on the last descriptor chunk as needed, copies descriptors into the FIFO with wrap handling, moves the async descriptor to `desc_list`, issues a write barrier, and writes `BAM_P_EVNT_REG` with the new tail offset. The controller tasklet starts more work after IRQs free FIFO space.
+
+Interrupt flow first calls `process_channel_irqs()`, which reads the EE-specific IRQ sources, clears pipe status, computes hardware-consumed FIFO offset from `BAM_P_SW_OFSTS`, advances the channel head, completes fully consumed descriptors through virt-dma, or requeues partially consumed descriptors. The top-level IRQ schedules the tasklet for pipe IRQs and separately clears global BAM error/status IRQs under runtime PM.
+
+## State and Persistence
+Runtime state is all in memory, descriptor FIFO DMA memory, MMIO registers, and runtime PM/clock state. Per-channel FIFO `head` and `tail` mirror hardware descriptor consumption and software production. `desc_list` tracks descriptors committed to hardware but not fully consumed. `initialized` controls pipe reset/setup. `paused` changes status reporting to `DMA_PAUSED`. `reconfigure` defers slave config effects until the next start. `active_channels` coordinates remotely powered BAM reset behavior. No filesystem state is persisted.
+
+## Dependencies and Integration Points
+The driver depends on dmaengine, virt-dma, OF DMA controller APIs, platform devices, clocks, runtime PM, scatterlist helpers, circular buffer helpers, write-combined DMA allocation, and Qualcomm BAM device-tree bindings with compatibles `qcom,bam-v1.3.0`, `qcom,bam-v1.4.0`, and `qcom,bam-v1.7.0`. Clients request a channel through one OF argument selecting the BAM pipe number. The Kconfig symbol is `QCOM_BAM_DMA`, and the Makefile maps it to `bam_dma.o`.
+
+## Risks and Edge Cases
+Circular FIFO accounting is the highest-risk area. The driver reserves one descriptor slot, aligns FIFO base, handles wraparound copies, and must keep software `head`/`tail` consistent with `BAM_P_SW_OFSTS`. Partial descriptor submission means a single dmaengine transaction can be committed in chunks and requeued until all descriptors are consumed. Termination resets pipe hardware before freeing descriptors because connected peripherals can otherwise continue accessing freed FIFO memory. Remote-controlled and remotely powered BAMs cannot always be reset or clocked like local BAMs, so probe and channel allocation have special paths. Runtime PM is used in IRQ, start, pause/resume, and free paths; a failed `pm_runtime_get_sync()` can leave cleanup incomplete. The descriptor address field is 32-bit, so DMA mask and platform addressing assumptions matter.
+
+## Test Signals
+Useful tests include OF channel xlate for valid and invalid pipe ids, slave SG transfers in both directions, SG entries larger than `BAM_FIFO_SIZE`, FIFO wraparound, transfer chunks larger than available FIFO space, pause/resume status, terminate while hardware has active descriptors, runtime autosuspend/resume under repeated traffic, remotely controlled/powered DT configurations, global and pipe interrupt handling, residue reporting for queued and active descriptors, and compile coverage for all supported BAM register layouts.

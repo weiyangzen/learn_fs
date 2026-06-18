@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/fpga/dfl-n3000-nios.c
+
+Purpose: implements a DFL bus driver for the Intel PAC N3000 Nios private feature. It exposes Nios firmware, retimer, and FEC status through sysfs, waits for the Nios firmware to finish one-time board initialization, then instantiates an Altera SPI controller and MAX10 BMC SPI child so the host can access or recover board-management firmware.
+
+Important APIs, types, and functions: `struct n3000_nios` stores the DFL MMIO base, regmap, owning device, and created `subdev_spi_altera` platform device. `n3000_nios_probe` maps `ddev->mmio_res`, builds a custom regmap over the Nios indirect register bus, calls `n3000_nios_init_done_check`, and registers the SPI controller. Sysfs attributes `nios_fw_version`, `retimer_A_mode`, `retimer_B_mode`, and `fec_mode` read Nios registers through that regmap. `n3000_nios_reg_read` and `n3000_nios_reg_write` encode indirect read/write commands in `N3000_NS_CTRL` and poll `N3000_NS_STAT_RW_VAL`. The driver binds to DFL devices `{ FME_ID, FME_FEATURE_ID_N3000_NIOS }`.
+
+Control flow: probe is synchronous. It initializes the regmap, reads the Nios firmware version, optionally asserts `INIT_START` for firmware major version 3 or later, requests RS FEC for all links, and polls `NIOS_INIT_DONE` for up to ten seconds. Even missing firmware or failed retimer initialization is treated as recoverable in some paths so the SPI controller can be created and the BMC can be used to restore firmware. Remove unregisters the child SPI controller.
+
+State and persistence: persistent state is hardware-resident in Nios init/version/mode registers and in the created child platform device. Linux state is devm-managed private data, regmap, sysfs group, and the `altera_spi` pointer. No settings are persisted by the driver other than writing the Nios init/FEC request register during initialization.
+
+Dependencies and integration points: depends on the DFL bus, MMIO `readq`/`writeq`, `regmap`, Altera SPI platform data, SPI board info for `m10-n3000`, and the MAX10 BMC stack. It is an FME private-feature driver, so DFL enumeration in `dfl.c` and PCI discovery in `dfl-pci.c` must expose the private feature first.
+
+Risks and test signals: risks include tight polling on the indirect bus without time-based delay, hardware-version-specific init semantics, continuing after missing Nios firmware, and treating inconsistent FEC fields as `-EFAULT`. Test signals are DFL driver binding, visible sysfs attributes, successful `subdev_spi_altera` creation, `m10-n3000` SPI child probing, correct firmware version formatting, and recovery behavior when Nios firmware or retimer status is bad.

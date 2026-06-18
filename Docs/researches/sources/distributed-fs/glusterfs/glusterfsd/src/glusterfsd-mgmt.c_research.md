@@ -1,0 +1,15 @@
+# sources/distributed-fs/glusterfs/glusterfsd/src/glusterfsd-mgmt.c
+
+Purpose: Management RPC implementation for glusterfsd. It handles volfile fetch/reconfiguration, brick attach/detach, translator operations, status/profile/metrics requests, portmap sign-in, listener setup, and management-client reconnect behavior.
+
+Important APIs and functions: Public entry points are `glusterfs_mgmt_init()`, `glusterfs_listener_init()`, `glusterfs_volfile_fetch()`, `glusterfs_mgmt_notify()`, and `mgmt_submit_request()`. Key handlers include `glusterfs_handle_terminate()`, `glusterfs_handle_attach()`, `glusterfs_handle_svc_attach()`, `glusterfs_handle_svc_detach()`, `glusterfs_handle_translator_info_get()`, `glusterfs_handle_translator_op()`, `glusterfs_handle_brick_status()`, `glusterfs_handle_node_status()`, `glusterfs_handle_nfs_profile()`, `glusterfs_handle_volume_barrier_op()`, `glusterfs_handle_barrier()`, `glusterfs_handle_bitrot()`, `glusterfs_handle_defrag()`, and `glusterfs_handle_dump_metrics()`.
+
+Control flow: Management callbacks use a consistent pattern: decode XDR request, unserialize input dictionaries, locate the active graph/xlator, issue an xlator notify or local operation, serialize a response dictionary, and free XDR-owned buffers. Volfile paths compute SHA-256 checksums, compare against `ctx->volfile_list`, and choose no-op, option reconfigure, graph reconstruct, service attach, or multiplexed reconfigure. `mgmt_rpc_notify()` reacts to disconnect/connect by rotating volfile servers, refetching specs, signing in brick ports, or terminating if startup cannot obtain a graph.
+
+State and persistence: Mutates `glusterfsd_ctx`, `ctx->active`, `ctx->volfile_list`, volfile checksums, `ctx->listener`, `ctx->mgmt`, portmap registration state, and static flags `is_mgmt_rpc_reconnect` and `need_emancipate`. Temporary volfiles are created with `mkstemp`, unlinked immediately, and fed to graph processing. Status/metrics handlers read process state and dump data into dictionaries or response strings.
+
+Dependencies and integration: Depends on Gluster RPC client/server layers, XDR types, dictionaries, iobufs, graph/xlator APIs, server translator internals, portmap and handshake programs, monitoring, statedump, and daemon lifecycle functions from `glusterfsd.c`. It is the server counterpart to `gf_attach.c`.
+
+Risks: This file is concurrency-sensitive around `ctx->volfile_lock` and graph mutation. Many handlers manually manage XDR buffers and dictionaries, so cleanup-path leaks or double frees are plausible. Some operations return success for idempotent detach/not-found cases. Temporary file and graph-reconfiguration paths must preserve checksum/list consistency. Reconnect logic can terminate the process during startup if no volfile server works.
+
+Test signals: Best coverage would combine RPC integration tests, volfile checksum/reconfigure tests, brick mux attach/detach tests, and fault injection for XDR/dict/graph failures. No direct tests are in this subset; runtime validation likely comes from Gluster daemon integration suites.

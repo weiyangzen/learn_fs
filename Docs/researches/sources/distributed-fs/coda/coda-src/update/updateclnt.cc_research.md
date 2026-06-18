@@ -1,0 +1,9 @@
+# sources/distributed-fs/coda/coda-src/update/updateclnt.cc
+
+Purpose: long-running update client that synchronizes server database files from the SCM `updatesrv` and notifies the local Coda file server when databases change.
+
+Important functions: `main` parses options, reads `server.conf`, obtains SCM host from `-h` or `db/scm`, ensures local `/vice` structure, detaches, installs signals, logs to `misc/UpdateClntLog`, initializes RPC/SFTP, then loops reconnecting and checking `db`. `CheckDir` fetches the `files` list, processes additions and deletion entries prefixed with `-`, and calls `CheckFile`. `CheckFile` stats local files, uses `UpdateFetch` with local mtime, receives `.UPD` via SmartFTP when newer, rotates existing file to `.BAK`, renames new file into place, chmods/utimes it, tracks remote clock skew, and returns whether updates occurred. `ReConnect` binds to `SUBSYS_UPDATE` using `db/update.tk`; `U_BindToServer` binds to the file server utility subsystem using `volutil.tk` for `VolUpdateDB`.
+
+State/persistence: creates local `misc/db/srv/vol/spool` directories, writes pid/log files, updates database files under `db`, maintains `.BAK` backups and `.UPD` temps, and may trigger server database reload. It stores no durable cursor except file mtimes/backups.
+
+Dependencies, risks, tests: depends on RPC2/SFTP, update RPC stubs, `codaconf`, `vice_file`, token secrets, and time synchronization. Risks include fixed-size buffers and `strcpy`/`strcat`, partial file updates around rename failure, unactioned clock skew warning, `ReadOnlyAllowed` default disabling write-protection skip, and polling forever with no backoff beyond wait interval. Test initial full sync, incremental mtime sync, deletion entries, interrupted `.UPD`, bind failure/reconnect, `VolUpdateDB` notify, signal handlers, and SCM/local clock skew.

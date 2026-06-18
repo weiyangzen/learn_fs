@@ -1,0 +1,13 @@
+## sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_KVSFS/kvsfs_fsal_internal.h
+
+Purpose: This is the private KVSFS FSAL header shared by KVSFS implementation files. It declares operation-vector initializers, the KVSFS wire filehandle, the pNFS DS private handle, default KVSNS config path, supported attribute mask, handle sizing helper, global FS info, and pNFS helper prototypes.
+
+Important APIs and types: `kvsfs_export_ops_init` and `kvsfs_handle_ops_init` are the main operation table initializers. `typedef struct kvsfs_file_handle` wraps `kvsns_ino_t kvsfs_handle`, making the wire handle effectively a KVSNS inode identifier. `struct kvsfs_ds` embeds public `struct fsal_ds_handle`, a wire handle, a `struct kvsfs_filesystem *`, and a `connected` flag. `KVSNS_DEFAULT_CONFIG` points to `/etc/kvsns.d/kvsns.ini`. `KVSFS_SUPPORTED_ATTRIBUTES` includes type, size, fsid, fileid, mode, link count, owner, group, atime, rawdev, ctime, mtime, space used, and change. `kvsfs_sizeof_handle` returns the fixed wire handle size. The non-`FSAL_INTERNAL_C` section declares `global_fs_info`, pNFS MDS helpers (`kvsfs_getdeviceinfo`, `kvsfs_fs_da_addr_size`, `export_ops_pnfs`, `handle_ops_pnfs`) and DS ops initializer `kvsfs_pnfs_ds_ops_init`.
+
+Control flow and state: The only inline control is fixed-size handle sizing. The header defines the object shapes used for DS lifetime and wire-handle validation. The `FSAL_INTERNAL_C` guard separates the defining translation unit from external consumers.
+
+Persistence behavior: The header does not persist data, but it defines the serialized handle contract. A KVSFS NFS filehandle contains a KVSNS inode value, so any persistence or stability guarantee depends on KVSNS inode stability across server restarts and namespace mutations. The default config path controls how exports locate the backing KVSNS service if not overridden.
+
+Dependencies and integration points: It depends on Ganesha `fsal.h` and `<kvsns/kvsns.h>`. All KVSFS C files rely on these definitions to convert between Ganesha FSAL handles and KVSNS objects. pNFS-related prototypes connect export and object operation vectors with KVSFS MDS and DS files.
+
+Risks: The handle format has no version, length field, fsid, checksum, or generation number in this header; `kvsfs_wire_to_host` only checks size. Stale inode reuse in KVSNS could therefore be a serious correctness/security concern unless prevented elsewhere. `struct kvsfs_ds` references `struct kvsfs_filesystem *`, but this subset does not show where it is defined or used. Test signals should include handle encode/decode stability, stale handle behavior after delete/recreate, default config override, supported attribute claims versus actual object ops, and pNFS helper linkage.

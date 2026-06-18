@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/copypage_64.S
+
+This file exports the generic 64-bit `copy_page` routine. It copies exactly `PAGE_SIZE` bytes from source in `r4` to destination in `r3`. At entry it uses CPU feature fixup sections: if `CPU_FTR_VMX_COPY` is absent on Book3S 64, the patched code can branch to `copypage_power7`; if cache-block zeroing is available, it prefetches source and zeroes destination cachelines using cache parameters from `ppc64_caches`.
+
+The main copy loop is scalar and copies the page in 128-byte strides. It adjusts the destination pointer, preloads the first chunk, then performs an unrolled sequence of doubleword loads and stores, using `ldu`/`stdu` to advance pointers. A final unrolled block finishes the last stride and returns. There is no exception-table recovery because page copy operates on kernel-mapped pages and is expected not to fault.
+
+State is transient register state only. Dependencies include `asm/page.h`, `ppc64_caches`, feature-fixup macros, and the external Power7 optimized routine. Integration points are core MM page copy operations and kernel page migration/fault handling. Risks are incorrect feature patching, cache-block size assumptions, and page-size assumptions if configuration changes. Test signals include boot-time page allocator activity, MM selftests, page migration, transparent hugepage interactions that call page copy, and running with/without `CPU_FTR_CP_USE_DCBTZ` and `CPU_FTR_VMX_COPY`.

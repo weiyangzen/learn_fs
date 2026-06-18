@@ -1,0 +1,17 @@
+# Folder Research: sources/control-plane/juicefs-csi-driver/dashboard-ui-v2/src/types
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 3
+- Recursive researched files: 3
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/control-plane/juicefs-csi-driver/dashboard-ui-v2/src/types/config.ts`
+- `sources/control-plane/juicefs-csi-driver/dashboard-ui-v2/src/types/index.ts`
+- `sources/control-plane/juicefs-csi-driver/dashboard-ui-v2/src/types/k8s.ts`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

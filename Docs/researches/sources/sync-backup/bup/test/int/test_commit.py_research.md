@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/int/test_commit.py -->
+# sources/sync-backup/bup/test/int/test_commit.py
+
+Purpose: tests commit parsing, GPG signature parsing, Git date string formatting, and trailer detection. Important APIs are `parse_commit`, `_git_date_str`, `has_trailers`, `git`, and buptest command helpers. Control flow creates commits with controlled environment identities and messages, parses commit objects back into structured fields, verifies multi-parent/message behavior, tests commits containing `gpgsig` blocks, checks date string formatting for offsets, and validates trailer detection on message bodies. State is a temporary Git/bup repository and generated commit objects. Dependencies include Git commit-tree behavior, environment author/committer variables, timezone offsets, and WvTest assertions. Risks are Git output format drift, signature indentation rules, and false trailer positives. Test signals are exact parsed fields, expected signature content, formatted date strings, and boolean trailer outcomes.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/int/test_commit.py -->

@@ -1,0 +1,21 @@
+# sources/distributed-fs/ceph-client/drivers/iio/adc/vf610_adc.c
+
+## Purpose
+This file implements the Linux IIO platform driver for the Freescale/NXP Vybrid VF610 ADC family and the related i.MX6SX ADC variant. It exposes voltage channels, a temperature channel on VF610-class devices, direct sysfs reads, sampling-frequency control, a conversion-mode enum, debugfs register reads, suspend/resume handling, and triggered-buffer capture for one active scan channel.
+
+## Important APIs, Types, And Functions
+The central state is `struct vf610_adc`, which stores the MMIO base, enabled ADC clock, vref regulator, cached reference voltage, selected ADC feature configuration, completion object, lock, latest conversion value, available sample rates, and an aligned one-sample scan buffer. `struct vf610_adc_feature` records clock source, reference source, conversion mode, divider, resolution, hardware averaging index, long-sample-time index, default sample time, calibration state, and overwrite behavior. `struct vf610_chip_info` gates channel count for `fsl,vf610-adc` versus `fsl,imx6sx-adc`.
+
+Key functions are `vf610_adc_calculate_rates()` for deriving clock divider, long sample timing, and `sample_freq_avail`; `vf610_adc_cfg_init()`, `vf610_adc_cfg_post_set()`, `vf610_adc_sample_set()`, `vf610_adc_cfg_set()`, and `vf610_adc_hw_init()` for programming hardware; `vf610_adc_calibration()` for one-time calibration; `vf610_read_sample()`, `vf610_read_raw()`, and `vf610_write_raw()` for IIO direct ABI callbacks; `vf610_adc_isr()` for completion and buffered push handling; and `vf610_adc_probe()` for resource acquisition and IIO registration.
+
+## Control Flow
+Probe allocates an IIO device, maps the ADC registers, picks chip data from firmware match data, requests the IRQ, enables the `adc` clock, enables the `vref` regulator with a devm cleanup action, reads optional `fsl,adck-max-frequency` and `min-sample-time` properties, initializes completions and IIO metadata, programs defaults, calibrates hardware, installs a one-hot triggered buffer, initializes the mutex, and registers the device. Direct raw reads claim direct mode, select the requested channel in `HC0` with interrupt enable, wait up to 100 ms for the ISR to complete, then return raw voltage or a processed temperature value. Buffered mode enables continuous conversion, selects the first active scan channel, and the ISR pushes the cached 16-bit sample with a timestamp before notifying the trigger.
+
+## State And Persistence
+The driver persists configuration only in memory and hardware registers: conversion mode, hardware averaging index, default sample-time-derived timing, cached vref voltage, and calibration-complete state. It does not persist across reboot. Runtime state is protected by `info->lock` for direct conversion paths and mode updates, while completions synchronize interrupt-driven conversion results. Suspend disables conversion, clock, and vref; resume re-enables them and reinitializes hardware.
+
+## Dependencies And Integration Points
+It depends on platform firmware matching, MMIO, IRQs, the common clock framework, regulators, IIO direct mode, IIO sysfs attributes, and IIO triggered buffers. Userspace integration is through IIO channel attributes for raw/processed readings, scale, sampling frequency, `sampling_frequency_available`, and `conversion_mode`. Device-tree integration includes `fsl,vf610-adc`, `fsl,imx6sx-adc`, `vref`, `adc` clock, `fsl,adck-max-frequency`, and `min-sample-time`.
+
+## Risks And Test Signals
+Important risks are timeout or failure during calibration and direct conversions, invalid clock-rate/divider assumptions, regulator voltage read failures affecting scale, and a narrow one-channel buffer model enforced by `iio_validate_scan_mask_onehot`. The temperature conversion uses fixed typical constants for the 3.3 V case, so board variance can affect accuracy. Useful tests are probe/remove with both compatibles, raw reads on every exposed channel, temperature read on VF610, sampling-frequency writes using only advertised values, conversion-mode sysfs changes during idle, buffered capture with a single selected channel, suspend/resume followed by reads, IRQ timeout injection, and debugfs register-read boundary checks.

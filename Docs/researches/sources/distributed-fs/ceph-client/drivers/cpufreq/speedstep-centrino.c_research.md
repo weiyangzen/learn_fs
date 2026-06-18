@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/speedstep-centrino.c
+
+Purpose: implements the legacy x86 CPUFreq driver for Intel Enhanced SpeedStep on Pentium M/Centrino-era CPUs. It exposes a `cpufreq_driver` named `centrino` that programs `MSR_IA32_PERF_CTL`, reads `MSR_IA32_PERF_STATUS`, and uses conservative CPU model/stepping/table matching before allowing voltage/frequency transitions.
+
+Important APIs and functions: `centrino_init()` checks `x86_match_cpu()` against EST-capable families/models and registers the driver. `centrino_cpu_init()` validates Intel vendor and `X86_FEATURE_EST`, restricts operation to CPU0, enables `MSR_IA32_MISC_ENABLE_ENHANCED_SPEEDSTEP` if needed, installs a Banias/Dothan/P4HT frequency table through `policy->freq_table`, and sets a 10 us latency. `extract_clock()` decodes either multiplier bits or table `driver_data`, `get_cur_freq()` reads current/fallback MSRs, and `centrino_target()` writes the selected low 16 PERF_CTL bits to all CPUs in the policy domain.
+
+Control flow and state: static CPU ID/model tables map model strings to frequency/voltage operating points when `CONFIG_X86_SPEEDSTEP_CENTRINO_TABLE` is enabled. Per-CPU pointers `centrino_model` and `centrino_cpu` cache the matched table and CPU ID. Target changes allocate a temporary cpumask, choose an online CPU for shared domains, preserve reserved PERF_CTL bits, and attempt best-effort rollback if a multi-CPU write path fails after partial coverage.
+
+Dependencies and integration points: depends on x86 MSR helpers, CPU feature matching, the CPUFreq table verifier, late init registration, and old Intel CPU model strings. It integrates only through CPUFreq, not ACPI; unsupported tables intentionally suggest `acpi-cpufreq`.
+
+Risks and test signals: risks include exact ASCII model-name matching, CPU0-only init on systems with unusual topology, stale voltage tables, transient PERF_STATUS values, and limited rollback semantics where `oldmsr` may already contain the requested value. Test signals include driver refusal on unsupported CPUs, correct `cpufreq-info` table entries for supported Banias systems, successful EST enable bit persistence, `get` reporting nonzero rates during thermal transitions, and PERF_CTL writes matching table `driver_data`.

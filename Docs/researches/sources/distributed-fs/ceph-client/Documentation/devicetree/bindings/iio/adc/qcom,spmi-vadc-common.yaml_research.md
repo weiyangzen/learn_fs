@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-vadc-common.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/iio/adc/qcom,spmi-vadc-common.yaml` defines the Linux devicetree binding titled `Qualcomm Technologies, Inc. SPMI PMIC ADC channels`. This defines the common properties used to define Qualcomm VADC channels. Qualcomm PMIC/SPMI ADC binding. It exposes not declared directly. Its primary consumer is dt-schema validation for DTS nodes that instantiate the ADC hardware; kernel drivers consume the validated ABI through standard OF, SPI, I2C, platform, regulator, GPIO, interrupt, clock, reset, and IIO channel helpers.
+
+## Important APIs, Types, and Functions
+This is a schema contract rather than C code, so the important APIs are devicetree properties, compatible strings, referenced common schemas, and child-node layouts. The `compatible` property is a not declared directly. The schema is common or property-driven and does not publish a concrete compatible list in this file. Top-level properties include `reg`, `label`, `qcom,decimation`, `qcom,pre-scaling`, `qcom,ratiometric`, `qcom,hw-settle-time`, `qcom,avg-samples`. Required top-level properties are `reg`. Important resource contracts cover bus/resource keys `reg`. No patternProperties are declared. No child-node pattern schema is declared; validation is focused on the ADC node properties themselves.
+
+## Control Flow, State, and Persistence
+Control flow is declarative schema evaluation: dt-schema selects the binding by `$id`, `compatible`, node name, or a referencing schema, checks required resources, applies `$ref` common schemas, walks child channel objects when present, and then enforces `additionalProperties`/`unevaluatedProperties`. There is no executable state machine in this YAML file. Persistent behavior is the devicetree ABI: compatible ordering, register or chip-select cells, supply names, channel numbering, interrupt naming, GPIO polarity, reference-voltage modeling, and any per-channel calibration settings must remain stable for existing DTS files and drivers.
+
+## State and Persistence Behavior
+State and persistence are external to the document. The ADC driver stores runtime state in kernel structures after probing, while this binding persists only the static hardware description. Edits that rename properties, change required supplies, narrow channel ranges, or alter compatible fallbacks can break previously valid board descriptions even though the file itself has no mutable storage.
+
+## Dependencies and Integration Points
+Maintainers: Jishnu Prakash <jishnu.prakash@oss.qualcomm.com>. Schema dependencies/references: `/schemas/types.yaml#/definitions/uint32`, `/schemas/types.yaml#/definitions/uint32-array`. Conditionals/composition: `oneOf`. Examples present: 0. Integration points are `make dt_binding_check`, `make dtbs_check`, example extraction, in-tree DTS/overlay files using the compatible strings, generated `dt-bindings` headers where referenced by descriptions, and the matching IIO ADC drivers under `drivers/iio/adc/` or related MFD/platform driver glue.
+
+## Risks
+Primary risks are devicetree ABI drift, mismatched driver expectations, and schema closure mistakes because this file allows properties not consumed by this schema or referenced common schemas. For ADC bindings, high-risk changes include tightening `reg` ranges without checking channel maps, making optional regulators mandatory, changing SPI mode or `spi-max-frequency`, altering interrupt order/name semantics, dropping channel child-node properties used by board DTS files, or forgetting that common `$ref` schemas may already evaluate properties before `unevaluatedProperties` is applied. Conditional blocks require representative DTS coverage because a small `if`/`then` edit can reject one compatible variant while leaving others apparently valid.
+
+## Test Signals
+Useful test signals are `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/iio/adc/qcom,spmi-vadc-common.yaml`, repository-wide `make dtbs_check`, and building representative DTS files that use the listed compatible strings. For schemas with examples, successful example extraction and validation is the first regression signal. Driver-facing validation should also check probe logs for the relevant ADC driver, regulator/GPIO/interrupt acquisition, IIO channel enumeration, and any per-channel scale, offset, oversampling, differential, or calibration attributes implied by the binding.

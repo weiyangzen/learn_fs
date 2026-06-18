@@ -1,0 +1,25 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/ocrdma/ocrdma_verbs.c
+
+## Purpose
+`ocrdma_verbs.c` is the Emulex/Broadcom OCRDMA provider implementation for the Linux RDMA core. It exposes RoCE verbs for device and port queries, user-context mmap setup, protection domains, memory registration, CQs, QPs, SRQs, posting send/recv work requests, CQ polling/arming, and fast-registration MRs. It is the main translation layer between `ib_verbs` objects and OCRDMA mailbox/doorbell hardware state.
+
+## Important APIs, Types, And Functions
+The exported verbs include `ocrdma_query_device`, `ocrdma_query_port`, `ocrdma_query_pkey`, `ocrdma_alloc_ucontext`, `ocrdma_dealloc_ucontext`, `ocrdma_mmap`, `ocrdma_alloc_pd`, `ocrdma_dealloc_pd`, `ocrdma_get_dma_mr`, `ocrdma_reg_user_mr`, `ocrdma_dereg_mr`, `ocrdma_create_cq`, `ocrdma_resize_cq`, `ocrdma_destroy_cq`, `ocrdma_create_qp`, `ocrdma_modify_qp`, `ocrdma_query_qp`, `ocrdma_destroy_qp`, `ocrdma_create_srq`, `ocrdma_modify_srq`, `ocrdma_query_srq`, `ocrdma_destroy_srq`, `ocrdma_post_send`, `ocrdma_post_recv`, `ocrdma_post_srq_recv`, `ocrdma_poll_cq`, `ocrdma_arm_cq`, `ocrdma_alloc_mr`, and `ocrdma_map_mr_sg`.
+
+Internal helpers manage mmap authorization (`ocrdma_add_mmap`, `ocrdma_del_mmap`, `ocrdma_search_mmap`), PD bitmap allocation, PBL sizing/allocation, WQE/RQE construction, QPN-to-QP mapping, CQE decoding, QP flush expansion, and SRQ tag allocation. Core state lives in driver objects from `ocrdma.h`: `ocrdma_dev`, `ocrdma_ucontext`, `ocrdma_pd`, `ocrdma_mr`, `ocrdma_cq`, `ocrdma_qp`, and `ocrdma_srq`.
+
+## Control Flow
+Device and port queries copy cached hardware attributes and netdev link state into RDMA core structures. User context allocation creates a coherent AH table, registers it in the per-context mmap allow-list, allocates a context PD, and returns ABI fields through `ib_copy_to_udata`. `ocrdma_mmap` only maps pages that were previously inserted into that allow-list, then chooses noncached doorbell, write-combined DPP, or normal remap behavior based on physical address ranges.
+
+PD allocation first tries preallocated bitmap PD ranges when enabled, including DPP-capable PDs for user contexts on supported ASICs; otherwise it uses mailbox allocation. CQ/QP/SRQ creation validates RDMA core attributes, creates hardware resources through mailbox helpers, initializes locks and software queues, exposes user mmap pages when `udata` exists, and records lookup pointers in device tables. Teardown reverses those steps, synchronizes interrupts for CQs, moves QPs to error before destruction, removes QPN mappings under CQ locks, discards or flushes outstanding CQEs, and frees shadow WR tables.
+
+The data path builds OCRDMA WQEs for send, send-with-imm/invalidate, RDMA read/write, local invalidate, and fast MR registration. It stores kernel WR IDs in shadow arrays, converts WQEs to little-endian, uses `wmb()` before ringing SQ/RQ/SRQ doorbells, and advances circular queue heads. CQ polling decodes hardware CQEs into `ib_wc`, updates SQ/RQ tails, handles UD/GSI flags, maps hardware status to `ib_wc_status`, and expands a single hardware error CQE into software flush completions for pending work.
+
+## State And Persistence Behavior
+State is volatile kernel/device state, not persistent storage. Important mutable state includes mmap allow-list entries per user context, PD bitmap counts and high-water marks, `dev->cq_tbl` and `dev->qp_tbl`, QP SQ/RQ head/tail indexes, SRQ bitmap tags, per-QP WR-ID shadows, CQ phase/get pointers, flush lists on CQs, and `dev->stag_arr` for fast-registration MRs. Locks are critical: `dev_lock` serializes PD/QP mailbox and state operations, `q_lock` protects QP queues, `cq_lock` protects CQ polling/destruction, `flush_q_lock` protects flush lists, and SRQ `q_lock` protects shared receive queue state.
+
+## Dependencies And Integration Points
+This file depends on the RDMA core (`ib_verbs`, `ucontext`, `umem`, `ib_sg_to_pages`, AH helpers), Linux DMA/mmap APIs, netdev state and MTU helpers, OCRDMA mailbox functions in `ocrdma_hw.*`, OCRDMA hardware layouts in `ocrdma_sli.h`, and ABI structs from `<rdma/ocrdma-abi.h>`. It integrates with userspace through uverbs responses and mmap offsets, and with hardware through mailbox commands, coherent DMA PBLs, queue memory, and MMIO doorbells.
+
+## Risks And Test Signals
+Primary risks are lifetime and ordering bugs around mmap allow-lists, PD reuse, QP destroy versus in-flight CQ polling, SRQ tag reuse, CQ phase handling, and error CQE expansion. `ocrdma_alloc_wr_id_tbl` leaks the first allocation if the second allocation fails before QP cleanup reaches the common path. `ocrdma_reg_user_mr` releases neither `mr->umem` nor PBLs on some early error paths after `ib_umem_get`, which is a resource-lifetime area to verify against surrounding kernel expectations. Test signals include RDMA core query/mmap tests, userspace PD/CQ/QP/SRQ create/destroy loops, rping/perftest UD/RC traffic, error-state QP flush tests, CQ shared SQ/RQ tests, SRQ receive reuse tests, fast-reg MR registration/invalidation, and fault injection for mailbox and DMA allocation failures.

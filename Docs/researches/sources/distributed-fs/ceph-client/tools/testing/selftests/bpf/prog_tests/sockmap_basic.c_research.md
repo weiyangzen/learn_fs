@@ -1,0 +1,19 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/sockmap_basic.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/sockmap_basic.c
+
+Purpose: `sockmap_basic.c` is a broad sockmap/sockhash regression suite. It covers map creation/update/free, socket lifetime cleanup, SK_MSG and SK_SKB attach/query APIs, BPF link update semantics, map-to-map socket copying, FIONREAD/MSG_PEEK/shutdown behavior, Unix/vsock edge cases, zero-copy receive recovery, copied sequence recovery, and mixed native/BPF redirect channels.
+
+Important APIs/types/functions: `connected_socket_v4()` creates a TCP socket using `TCP_REPAIR` to synthesize a connected socket. `compare_cookies()` compares socket cookies across maps. Test functions cover create/update/free, vsock delete-on-close, `test_skmsg_helpers[_with_link]`, `test_sockmap_update()`, `test_sockmap_copy()`, SKB verdict attach/query paths, shutdown/FIONREAD/change-tail/peek behavior, Unix/vsock update restrictions, many sockets/maps replacement, zero-copy, copied-seq, and multi-channel delivery. `test_sockmap_basic()` dispatches all subtests.
+
+Control flow: most subtests load a relevant skeleton, create one or more socket pairs, update a sockmap/sockhash with socket FDs, attach a verdict/parser/msg program through `bpf_prog_attach()` or `bpf_program__attach_sockmap()`, then drive traffic or map operations and assert kernel-visible behavior. Iterator copy tests populate source maps, attach a map-specific iterator, drain it, and compare cookies. Data-path tests send through one endpoint and observe received bytes, `FIONREAD`, `MSG_PEEK`, FIN notification, tail changes, copied sequence recovery, or zero-copy receive behavior.
+
+State and persistence: runtime state includes many transient TCP, UDP, Unix, and vsock sockets; BPF maps from skeletons and explicit `bpf_map_create()` calls; BPF links and attached programs; epoll FDs; and temporary buffers. No durable file state is created. Each subtest closes sockets and destroys skeletons locally.
+
+Dependencies: depends on sockmap/sockhash kernel support, SK_MSG/SK_SKB attach types, BPF links for sockmap programs, BPF iterators over sockmap/sockhash, TCP repair and zero-copy receive support, AF_UNIX and AF_VSOCK support, `FIONREAD`, `MSG_PEEK`, epoll, and multiple generated skeletons.
+
+Integration points: this file is a central integration point between userspace socket APIs, BPF sockmap/sockhash map semantics, libbpf attach/query/link APIs, and kernel stream parser/verdict implementations. It also relies on shared helpers from `sockmap_helpers.h` and `socket_helpers.h`.
+
+Risks: many tests are kernel-version and config sensitive, especially TCP repair, vsock local transport, TCP zero-copy receive, and copied-seq behavior. The source snapshot includes duplicated assignment lines and an extra-looking brace in `test_sockmap_same_sock()`, which are compile/source-quality risks to verify. `fmt_test_name()`-style issues are not here, but some subtests reuse one socket in multiple entries and expect precise delete behavior. Data-path tests can be timing-sensitive, so `wait_for_fionread()` was added for multi-channel readiness.
+
+Test signals: successful subtests across the dispatch list are the signal set: map update/free for sockmap and sockhash, expected failure of unsafe update object load, matching socket cookies after map copy/update, `-EBUSY` for conflicting attaches, correct `bpf_prog_query()` IDs, FIN readiness through epoll, FIONREAD values for pass/drop, MSG_PEEK preserving queued bytes, Unix/vsock expected accept/reject behavior, zero-copy receive success after sockmap removal, copied sequence recovery for native traffic, and TCP/UDP multi-channel data integrity.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/sockmap_basic.c -->

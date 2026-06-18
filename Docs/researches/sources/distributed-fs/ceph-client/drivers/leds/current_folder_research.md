@@ -1,0 +1,120 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/leds
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 106
+- Recursive researched files: 162
+- Direct child folders represented: 5
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/leds/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/leds/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/leds/led-class-flash.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/led-class-multicolor.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/led-class.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/led-core.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/led-test.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/led-triggers.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-88pm860x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-acer-a500.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-adp5520.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-an30259a.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-apu.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ariel.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-as3668.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-aw200xx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-aw2013.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-bcm6328.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-bcm6358.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-bd2606mvv.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-bd2802.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-blinkm.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-cht-wcove.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-clevo-mail.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-cobalt-qube.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-cobalt-raq.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-cpcap.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-cr0014114.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-cros_ec.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-da903x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-da9052.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-dac124s085.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-el15203000.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-expresswire.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-gpio-register.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-gpio.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-hp6xx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ip30.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ipaq-micro.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-is31fl319x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-is31fl32xx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm3530.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm3532.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm3533.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm355x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm36274.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm3642.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm3692x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lm3697.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-locomo.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp3944.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp3952.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp50xx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp5521.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp5523.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp5562.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp5569.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp55xx-common.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp55xx-common.h`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp8501.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp8788.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp8860.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lp8864.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-lt3593.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-max5970.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-max77650.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-max77705.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-max8997.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-mc13783.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-menf21bmc.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-mlxcpld.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-mlxreg.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-mt6323.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-net48xx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-netxbig.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-nic78bx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ns2.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ot200.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-pca9532.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-pca955x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-pca963x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-pca995x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-pm8058.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-powernv.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-pwm.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-qnap-mcu.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-rb532.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-regulator.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-sc27xx-bltc.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-spi-byte.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ss4200.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-st1202.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-sun50i-a100.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-sunfire.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-syscon.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-tca6507.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-ti-lmu-common.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-tlc591xx.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-tps6105x.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-turris-omnia.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-upboard.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-wm831x-status.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-wm8350.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds-wrap.c`
+- `sources/distributed-fs/ceph-client/drivers/leds/leds.h`
+- `sources/distributed-fs/ceph-client/drivers/leds/uleds.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

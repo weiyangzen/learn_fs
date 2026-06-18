@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/functional/CallableRaisingIOE.java
+
+`CallableRaisingIOE<R>` is Hadoop's zero-argument callable form for lambdas that return a value and may throw `IOException`. It deliberately narrows the checked exception type compared with `java.util.concurrent.Callable`, which makes filesystem and remote-IO call chains easier to type and reason about.
+
+The primary API is `apply()`. The default `unchecked()` adapter runs `apply()` and wraps `IOException` in `UncheckedIOException`; unchecked exceptions pass through. There is no internal state or persistence. Dependencies are only Java IO exception classes.
+
+This interface is heavily integrated across the package. `LazyAtomicReference` uses it as a lazy constructor, `FutureIO.eval()` evaluates it into a `CompletableFuture`, `FunctionalIO` wraps it into suppliers, and `RemoteIterators.haltableRemoteIterator()` uses it as a continuation predicate. Its main risk is semantic conversion: checked IO failures can become unchecked at API boundaries and must be unwrapped intentionally. Another risk is lambda overload ambiguity; `InvocationRaisingIOE` explicitly warns implementors not to overload purely to distinguish these interfaces. Test signals include `TestFunctionalIO` for wrapping behavior, `TestLazyReferences` for lazy evaluation and repeated construction failures, and `TestFutureIO`/caller tests for future evaluation semantics.

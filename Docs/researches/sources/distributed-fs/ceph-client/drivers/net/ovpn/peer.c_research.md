@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ovpn/peer.c
+
+Purpose: Implements ovpn peer allocation, reference lifetime, P2P/MP peer tables, endpoint binding and floating, destination/source peer selection, teardown, and keepalive timeout/transmit scheduling.
+
+Important APIs, types, and functions: Creation and lifetime are `ovpn_peer_new()`, `ovpn_peer_release()`, and `ovpn_peer_release_kref()`. Mutable endpoint state is handled by `ovpn_peer_reset_sockaddr()` and `ovpn_peer_endpoints_update()`. Lookup APIs include `ovpn_peer_get_by_transp_addr()`, `ovpn_peer_get_by_id()`, `ovpn_peer_get_by_dst()`, and `ovpn_peer_check_by_src()`. Table operations are `ovpn_peer_add()`, `ovpn_peer_del()`, `ovpn_peers_free()`, and `ovpn_peer_hash_vpn_ip()`. Keepalive is configured and run by `ovpn_peer_keepalive_set()` and `ovpn_peer_keepalive_work()`.
+
+Control flow: New peers initialize IDs, crypto, stats, locks, dst cache, dev reference, and keepalive work. MP add inserts by peer ID, transport address, and VPN IP; P2P add replaces the old single peer and toggles carrier. RX endpoint update learns local addresses and detects UDP peer floating, resets bind/dst cache, emits a netlink float event, and rehashes transport address in MP mode. TX lookup uses the single P2P peer or MP VPN next-hop hashes; source checks perform reverse-route lookup. Delete removes visible table entries, sends delete notification, then defers socket release/ref drops until after `ovpn->lock` is released.
+
+State and persistence behavior: Peer state is in memory and protected by a mix of `ovpn->lock`, `peer->lock`, RCU, kref, and delayed work. `peer->bind` and `peer->sock` are RCU pointers. The dst cache is destroyed only after an RCU grace period. Keepalive tracks `last_sent`, `last_recv`, future expiry timestamps, and removes expired peers.
+
+Dependencies and integration points: This file depends on bind, crypto, pktid, netlink, socket, route lookup, IPv6 route support, workqueues, netdev carrier, and I/O keepalive transmit helpers. Packet paths in UDP/TCP and tunnel TX call these lookup/update helpers.
+
+Risks and edge cases: Lock ordering between ovpn and peer locks is important during floating and rehash. Releasing sockets while holding table locks could sleep, so the release list is essential. Nulls-list lookup must restart when entries move. P2P replacement deletes the old peer with a teardown reason and may race readers. Keepalive scheduling uses wall-clock seconds and must avoid negative delays if time moves unexpectedly. A likely bug signal is `memset(dt_val, ..., sizeof(*dt_val))`-style mistakes elsewhere; here allocations are explicit and peer tables rely on initialized hash/nulls nodes from zero allocation.
+
+Test signals: Cover MP duplicate peer IDs, TCP peers without bind, UDP transport lookup by peer ID and by undefined peer ID/source address, IPv4/IPv6 VPN destination lookup with gateways, source reverse-path checks, endpoint floating and rehash, P2P carrier on/off, concurrent delete/lookup, device teardown filtering by socket, keepalive send and expiry, and RCU/kref leak detection under stress.

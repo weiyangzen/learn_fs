@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/qcom,gcc-msm8976.h
+
+Purpose: declares Qualcomm global clock-controller binding IDs for `qcom,gcc-msm8976.h`. It exports 225 macros covering GPLLs and bus/peripheral clocks plus reset lines and GDSC power domains where supported.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 225 exported defines, numeric range 0..203, first numeric symbols `GPLL0`=0, `GPLL2`=1, `GPLL3`=2, `GPLL4`=3, `GPLL6`=4, and last numeric symbols `VFE0_GDSC`=5, `VFE1_GDSC`=6, `CPP_GDSC`=7, `OXILI_GX_GDSC`=8, `OXILI_CX_GDSC`=9. Dominant macro prefixes are `GCC`(137), `RST`(11), `BLSP1`(10), `BLSP2`(10), `CAMSS`(3), `USB`(3), `VENUS`(3), `APS`(2); common suffix categories are `CLK`(132), `SRC`(67), `BCR`(11), `GDSC`(10), `GPLL0`(1), `GPLL2`(1), `GPLL3`(1), `GPLL4`(1). Source section markers include `GCC block resets`, `GDSCs`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The IDs must stay synchronized with `drivers/clk/qcom/gcc-msm8976.c` or the matching GCC provider and with SoC DTS nodes for UART, BLSP/QUP, SDCC, USB, PCIe, UFS, camera/display/video, modem, crypto, and NOC clocks.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `_DT_BINDINGS_CLK_MSM_GCC_8976_H` should remain unique enough to avoid accidental include suppression. Qualcomm generated-style headers often contain multiple domains in one file: clock IDs, reset IDs ending in `BCR`/`RESET`/`ARES`, and GDSC IDs. Provider array order and `num_*` counts are the key review points.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include successful provider probe, `clk_summary` showing expected names/rates, display/camera/GCC consumers acquiring all clocks, reset-controller operations succeeding, and GDSC domains toggling without `-ENOENT` or probe deferral loops.

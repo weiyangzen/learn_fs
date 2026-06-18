@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/hns/hns_roce_main.c
+
+## Purpose
+`hns_roce_main.c` is the top-level HNS RoCE verbs-device and HCA lifecycle layer. It registers common `ib_device_ops`, exposes device and port attributes, handles RoCE netdev events, user context mmap setup, optional stats/resource tracking hooks, hardware-entry-memory setup, HCA bring-up/teardown, and device-error CQ notification.
+
+## Important APIs, Types, And Functions
+The file centers on `struct hns_roce_dev`, `struct hns_roce_ib_iboe`, `struct hns_roce_ucontext`, `struct hns_user_mmap_entry`, `struct hns_roce_bond_group`, and `struct ib_device_ops`. Key verbs callbacks are `hns_roce_query_device()`, `hns_roce_query_port()`, `hns_roce_alloc_ucontext()`, `hns_roce_dealloc_ucontext()`, `hns_roce_mmap()`, `hns_roce_modify_device()`, and `hns_roce_port_immutable()`. Device lifecycle is driven by `hns_roce_init()`, `hns_roce_exit()`, `hns_roce_register_device()`, `hns_roce_unregister_device()`, `hns_roce_init_hem()`, and `hns_roce_setup_hca()`. Netdev integration uses `hns_roce_netdev_event()`, `handle_en_event()`, and `hns_roce_set_mac()`. `hns_roce_handle_device_err()` scans QPs and signals armed CQs during device failure.
+
+## Control Flow
+Initialization allocates debug counters, initializes optional command queues, reads hardware profile data, initializes command/EQ infrastructure, optionally switches command completion to event mode, initializes HEM tables, sets up HCA-side allocators, calls hardware init, registers the RDMA device, and registers debugfs. Registration composes base, hardware-specific, and capability-specific `ib_device_ops`; binds netdevs or bond devices; registers the IB device; programs initial MTU/MAC state; registers a netdevice notifier; then marks the device active. User context allocation validates udata, negotiates feature flags, allocates a UAR, creates a DB mmap entry, initializes record-doorbell bookkeeping when supported, and returns ABI capabilities. Teardown unwinds in reverse: debugfs, device unregister/notifier removal, hardware exit, HCA/HEM cleanup, command polling restore, EQ and command cleanup, optional CMQ exit, and counter free.
+
+## State And Persistence
+State is in memory and hardware tables only. `hr_dev->active` gates user context allocation and is cleared before unregister. `hr_dev->dev_addr[]`, `ib_dev->port_data[].cache.last_port_state`, UAR IDA state, QP/CQ lists, page-directory list, HEM tables, and DFX counters are runtime state. Node description changes are copied into `ib_dev->node_desc` under `sm_lock`; no nonvolatile persistence is used. Netdev events update hardware MAC on older revisions and dispatch IB port active/error events for LAG master state transitions. Device-error handling builds a temporary list of armed CQs needing completion notification.
+
+## Dependencies And Integration Points
+The file integrates RDMA core uverbs, mmap entries, netdev notifiers, RoCE GID cache operations, bonding helpers from `hns_roce_bond.h`, hardware methods in `hr_dev->hw`, HEM table management, debugfs, EQ/command infrastructure, and optional resource tracking and hardware stats. It relies on PCI revision checks for HIP08/HIP09 behavior and capability flags for FRMR, SRQ, XRC, flow control, stats, bonding, and record doorbells.
+
+## Risks
+The registration path has many capability-dependent partial states; failures after bond group allocation or bond init must not leak bond resources. `hns_roce_setup_mtu_mac()` dereferences `get_hr_netdev()` without a local NULL check, so probe correctness depends on prior netdev population. Ucontext cleanup frees the UAR ID directly through IDA rather than a paired helper, so allocation-index invariants must remain stable. Device-error CQ notification runs while holding `qp_list_lock` and calls completion handling after building the list; locking order against CQ locks and completions is important. Netdev notifier returns `NOTIFY_DONE` even on handled events, so external notifier semantics rely only on side effects.
+
+## Test Signals
+Useful signals include probe failure injection at every lifecycle step, register/unregister with and without bonding, HIP08/HIP09 MAC programming, user context ABI negotiation and mmap of DB/DWQE regions, invalid mmap pgoff and `dis_db` behavior, port query with missing netdev, netdev up/down/changeaddr events, hardware stats query bounds, FRMR/SRQ/XRC operation availability by capability flag, device-error flushing of armed CQs, and full teardown after partial initialization.

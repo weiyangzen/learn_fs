@@ -1,0 +1,9 @@
+# sources/distributed-fs/openafs/src/WINNT/aklog/aklog.c
+
+Purpose: implements the Windows/OpenAFS `aklog` command, acquiring Kerberos credentials for AFS service principals and installing AFS tokens for explicit cells or cells discovered by walking paths.
+
+Important APIs and control flow: command-line parsing builds linked lists of cell/realm pairs and paths. `auth_to_cell` resolves cell configuration, avoids repeated attempts with `authedcells`, obtains Kerberos v5 tickets by trying user realm, cell realm, referral/fallback realm, and service forms `afs/<cell>` then `afs`, optionally converts through krb524 when built with Kerberos 4, builds `ktc_token`, optionally resolves/registers PTS identity in `ViceIDToUsername`, and calls `ktc_SetToken`. Linked cells are authenticated after the primary cell. `auth_to_path` resolves path components via `next_path`, detects AFS mount points with `pioctl`, extracts cells, and authenticates to each encountered cell. Helpers handle local cell config, realm discovery, dotted principal registry policy, WOW64 registry view, symlink traversal, and error redirection.
+
+State and dependencies: global flags control debug, PRDB lookup, force replacement, Kerberos version, and krb5 context/ccache. External dependencies include Kerberos/Heimdal delay loading, AFS config, ptserver, ktc token APIs, pioctl, registry APIs, and the local linked-list utility. The command mutates token state in the AFS cache manager, not repository files.
+
+Risks and test signals: security-sensitive risks include buffer copying with fixed arrays, service principal fallback logic, DES key derivation, duplicate-token comparison, cross-cell auto-registration, and registry-controlled dotted principals. Tests should cover no-arg local-cell auth, `-cell/-k`, `-path`, duplicate cell suppression, linked cells, missing Kerberos runtime, PRDB failures with `-noprdb`, `AFS_SMBNAME`, referral fallback, and bad path/symlink loops.

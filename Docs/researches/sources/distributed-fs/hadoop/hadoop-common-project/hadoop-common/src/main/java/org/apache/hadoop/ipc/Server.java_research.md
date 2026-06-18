@@ -1,0 +1,39 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/Server.java -->
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/Server.java
+
+## Purpose
+`Server` is Hadoop Common's abstract IPC server runtime. It owns socket accept/read/write loops, Hadoop RPC framing, SASL authentication, connection-context authorization, request deserialization, call queueing, handler-thread invocation, response serialization, metrics, and lifecycle management. Concrete RPC engines subclass it and implement `call(RPC.RpcKind, String, Writable, long)`.
+
+## Important APIs, Types, And Functions
+- Static protocol-engine registry: `registerProtocolEngine`, `getRpcRequestWrapper`, and `getRpcInvoker` map `RPC.RpcKind` values to request wrapper classes and server invokers.
+- Static call context accessors: `get()`, `getCurCall()`, `getCallId()`, `getCallRetryCount()`, `getRemoteIp()`, `getRemotePort()`, `getRemoteUser()`, `getProtocol()`, `getPriorityLevel()`, `getClientId()`, and `getAuxiliaryPortEstablishedQOP()` expose per-handler `ThreadLocal` state.
+- `Call` is the generic schedulable unit with timing details, retry/client IDs, caller context, authorization header, priority, alignment state, deferred/postponed-response controls, and default no-op execution.
+- `RpcCall` extends `Call` with a `Connection`, decoded `Writable` request, response buffer, response parameters, synchronous/deferred response setup, and exception-to-RPC-status mapping.
+- `Listener` accepts nonblocking `SocketChannel`s, distributes them to `Reader` threads, and starts/stops the idle scanner.
+- `Connection` reads HRPC headers, negotiates auth, parses framed RPC packets, authorizes the connection context, unwraps SASL packets, and queues valid calls.
+- `Responder` performs nonblocking response writes, SASL wrapping, selector registration for partial writes, and purges responses stuck longer than `purgeIntervalNanos`.
+- `Handler` takes calls from `CallQueueManager`, establishes thread-local call/caller/authorization context, optionally executes under remote UGI, invokes `Call.run()`, and records metrics.
+- Configuration helpers choose call queue, scheduler, client backoff, reader counts, maximum data/response sizes, slow-RPC thresholds, and port-specific overrides.
+- Lifecycle APIs include constructors, `start()`, `stop()`, `join()`, `addAuxiliaryListener()`, `refreshCallQueue()`, service ACL refreshers, metrics getters, and connection/queue counters.
+
+## Control Flow
+Construction binds the primary `Listener`, initializes `CallQueueManager`, authentication methods, SASL properties, metrics sources, a `Responder`, and a scheduled metrics updater. `start()` launches responder, listeners, auxiliary listeners, and handler threads.
+
+The listener accepts sockets, configures TCP options, registers a `Connection` with `ConnectionManager`, and hands it to a reader. A reader calls `Connection.readAndProcess()` whenever the socket is readable. The connection first reads the HRPC magic/version/service/auth bytes, rejects HTTP GETs with a friendly 404 string, sends old-version fatal responses when needed, and sets `AuthProtocol`. It then reads length-prefixed RPC packets, enforces `maxDataLength`, and dispatches each packet to `processOneRpc`.
+
+Out-of-band call IDs handle connection context, SASL negotiation, and pings. SASL negotiation advertises enabled methods, can accelerate token auth with an initial challenge, creates a `SaslServer`, retries once after Kerberos relogin if login state failed, records audit/metrics success or failure, and enables wrapping for QoP values other than `auth`. Connection context parsing establishes the protocol, UGI/proxy UGI, service authorization, and per-user connection counts.
+
+Normal RPC packets validate operation/kind, reject deprecated `RPC_WRITABLE`, reject unregistered protocol kinds before deserializing request payloads, instantiate the registered wrapper, continue tracing if headers contain trace info, build caller context and authorization header, apply optional `AlignmentContext` coordination state, compute priority, and enqueue the `RpcCall`. Handler threads take calls, delay coordinated calls whose client state is ahead of the server, execute the call under the remote UGI when present, then send responses unless deferred. Responses are serialized as protobuf-delimited messages when possible, as writable buffers otherwise, optionally SASL-wrapped, queued to the responder, and written synchronously or through the write selector for partial writes.
+
+## State And Persistence
+Runtime state is in memory only: listener/responder/handler threads, selectors, socket channels, response queues, SASL server contexts, connection sets, user connection counters, queue/scheduler state, protocol class cache, RPC kind registry, and metrics objects. No durable data is written by this class. Persistent external effects are network replies, audit/application logs, and metrics exported through Hadoop metrics/JMX. Thread locals (`SERVER`, `CurCall`) are cleared after handler execution; caller and authorization context are also reset around request queueing/execution paths.
+
+## Dependencies And Integration Points
+`Server` integrates with `Client`, `RPC.Server`, `RpcInvoker`, `RpcWritable`, protobuf RPC headers, `ProtobufRpcEngine2`, `CallQueueManager`, `RpcScheduler`, `FairCallQueue`, `DecayRpcScheduler`, `RpcMetrics`, `RpcDetailedMetrics`, `ProcessingDetails`, `AlignmentContext`, Hadoop security (`UserGroupInformation`, `SaslRpcServer`, `SecretManager`, `ProxyUsers`, `ServiceAuthorizationManager`), tracing, `NetUtils`, and Hadoop configuration keys. Concrete services plug in through `call(...)`, protocol registration, secret managers, policy providers, and queue/scheduler configuration.
+
+## Risks And Edge Cases
+This file is high-risk concurrency and security code. Selector registration races are controlled with queues and `pending`, but close paths may race across reader, responder, listener, and idle scanner. Incorrect response-wait handling can double-send, skip metrics, or leak calls. SASL state transitions must preserve ordering: wrapping is enabled only after the final auth response is sent, and SIMPLE fallback must be consistent with advertised methods. Request deserialization is intentionally delayed until registered protocol kinds are verified; changing that path can reintroduce untrusted deserialization exposure. Queue overflow maps to client backoff and sometimes disconnects, so scheduler exceptions must carry the right RPC status. `AlignmentContext` requeueing can reorder calls by design. Metrics time-unit conversion and slow-RPC sigma logic depend on enough samples and last-stat snapshots. `ConnectionManager` user counts are incremented only after authorized context and decremented only for established users; missing one path skews JMX. `MetricsUpdateRunner` divides by `TimeUnit.MILLISECONDS.toSeconds(...)`, so very small intervals would be dangerous if configured below one second.
+
+## Test Signals
+Relevant tests should cover IPC protocol version mismatch, HTTP-to-IPC response, SASL SIMPLE/Kerberos/TOKEN negotiation, auth failure audit/metrics, proxy-user authorization, unregistered RPC kind rejection, call queue overflow/backoff, deferred/postponed responses, large response warning and buffer reset, SASL wrap/unwrap with auth-int/auth-priv, auxiliary listener QoP reporting, slow-RPC metrics, alignment-context requeueing, idle connection cleanup, refreshCallQueue swaps, and lifecycle shutdown/unregister behavior. Existing Hadoop RPC/security/metrics tests are the natural signal for regressions.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/Server.java -->

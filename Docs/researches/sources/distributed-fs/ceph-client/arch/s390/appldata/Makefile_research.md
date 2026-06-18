@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/appldata/Makefile -->
+# sources/distributed-fs/ceph-client/arch/s390/appldata/Makefile
+
+Purpose: builds Linux-z/VM Monitor Stream APPLDATA modules. Important rules map `CONFIG_APPLDATA_BASE`, `CONFIG_APPLDATA_MEM`, `CONFIG_APPLDATA_OS`, and `CONFIG_APPLDATA_NET_SUM` to their respective objects. Control flow is pure Kbuild selection: the base infrastructure is built when enabled, and each record provider is built in or as a module according to its tristate. State is build output only. Dependencies include the APPLDATA Kconfig symbols and source files in this folder. Integration is with `arch/s390/Kbuild` and z/VM monitoring functionality. Risks are provider objects compiled without base support if dependencies drift, module naming/ordering mistakes, and missing build coverage for modular combinations. Test signals: built-in and module configs for each provider, `modpost` symbol resolution for exported base APIs, and load/unload tests for `appldata_mem`, `appldata_os`, and `appldata_net_sum`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/appldata/Makefile -->

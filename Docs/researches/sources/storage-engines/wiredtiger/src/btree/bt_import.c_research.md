@@ -1,0 +1,15 @@
+# sources/storage-engines/wiredtiger/src/btree/bt_import.c
+
+Purpose: reconstructs metadata for importing an existing WiredTiger file into a database. It reads the file's stored metadata and final checkpoint information through the block manager, validates encryption compatibility, rewrites metadata fields that must be local to the destination database, and returns a collapsed metadata config string.
+
+Important APIs/types/functions: the file contains `__wt_import_repair`. It uses `WT_BM` checkpoint methods, `WT_CKPT` lists, scratch `WT_ITEM`s, `WT_KEYED_ENCRYPTOR`, metadata config collapse/update helpers, block modification reset, file ID generation, shared-table detection, and connection stats.
+
+Control flow: the function opens the target URI in `WT_SESSION_IMPORT_REPAIR` mode with a conservative allocation size so the descriptor block can be read, asks the block manager for the last checkpoint metadata and checkpoint list, then closes the block manager. It checks whether stored block metadata encryption matches the current database encryptor, strips quote wrappers, optionally hex-decodes and decrypts the metadata, and builds a config stack with reset incremental-backup metadata, empty `checkpoint_lsn`, and a newly generated file ID. It rejects shared-table imports. It then reopens the block manager using the reconstructed allocation size/config, fetches the final checkpoint again, updates the last checkpoint entry in the checkpoint list with corrected raw checkpoint bytes, collapses the final metadata config, stores it in `*configp`, and increments import-repair stats.
+
+State and persistence behavior: no metadata is written directly here; it returns allocated metadata text for the caller to install. It deliberately resets block modification/incremental backup state, strips checkpoint LSNs because imported files are not associated with local logs, and assigns a destination-unique file ID. Session import-repair state is set only around block-manager repair reads and is cleared on all exits.
+
+Dependencies and integration points: integrates with block manager import/repair support, encryption config from `bt_handle.c`, metadata checkpoint-list serialization, schema lock file ID generation, backup metadata reset, and table-create import flows.
+
+Risks: encryption mismatch detection is essential because encrypted metadata may otherwise be decoded incorrectly. The two-pass block-manager open is subtle: the first pass reads enough metadata with a guessed allocation size, and the second pass rereads checkpoint bytes with corrected configuration. Shared table import is intentionally unsupported to avoid file ID collisions. Error cleanup must not leak returned config on failure.
+
+Test signals: import encrypted and unencrypted files, encryption mismatch failures, files with missing checkpoint information, allocation-size-sensitive checkpoints, metadata quote stripping, reset of backup/checkpoint LSN fields, generated file ID uniqueness, shared-table rejection, and cleanup when either block-manager pass fails.

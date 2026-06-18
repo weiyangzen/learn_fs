@@ -1,0 +1,14 @@
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/dma/loongson/loongson2-apb-dma.c -->
+# sources/distributed-fs/ceph-client/drivers/dma/loongson/loongson2-apb-dma.c
+
+Purpose: implements the single-channel Loongson-2 APB DMA controller as a DMAEngine slave/cyclic driver. It builds linked hardware descriptors in a DMA pool, starts transfers by writing a global command register, and supports pause/resume/terminate around the active descriptor chain.
+
+Important APIs and control flow: `ls2x_dma_probe()` maps the command register block, enables the clock, initializes the sole virt-dma channel/IRQ in `ls2x_dma_chan_init()`, fills DMAEngine callbacks/capabilities, registers DMAEngine, and registers OF translation by channel ID. `ls2x_dma_alloc_chan_resources()` creates a descriptor pool; `ls2x_dma_prep_slave_sg()` and `ls2x_dma_prep_dma_cyclic()` allocate flexible software descriptors and one hardware descriptor per SG/period, fill memory/APB addresses, word counts, step fields, direction/interrupt command bits, and next pointers. `ls2x_dma_start_transfer()` dequeues the next virt descriptor and starts hardware at the first descriptor. ISR completion either invokes cyclic callbacks or completes the descriptor and starts the next queued transfer. Pause/resume write STOP/START command bits if the active descriptor is paused or in progress.
+
+State and persistence behavior: `struct ls2x_dma_priv` stores the embedded `dma_device`, clock, MMIO registers, and single channel. The channel stores the active descriptor, descriptor pool, IRQ, and last slave config. Descriptor state includes cyclic flag, burst size, direction, status, and per-SG hardware descriptor metadata. Hardware state is controlled through `LDMA_ORDER_ERG` and descriptor fields containing 64-bit memory/next addresses split high/low.
+
+Dependencies and integration points: depends on `virt-dma`, DMAEngine, platform IRQ/resources, OF DMA, clocks, non-atomic lo/hi 64-bit IO helpers, and compatible `loongson,ls2k1000-apbdma`. Clients configure peripheral address, width, maxburst, and direction before preparing transfers.
+
+Risks and test signals: risks include suspicious bus-width validation in `ls2x_dmac_detect_burst()` rejecting configurations where both src and dst widths match supported masks, no custom residue reporting despite cyclic/SG operation, command-register sharing in a single-channel model, descriptor-pool allocation per channel use, and relying on DMAEngine callbacks to treat `ERR_PTR`-free NULL failures. Test signals include SG and cyclic peripheral transfers, IRQ completion starting queued descriptors, pause/resume command behavior, 64-bit DMA address programming, descriptor-chain termination bit on final descriptor, and OF channel registration under `loongson,ls2k1000-apbdma`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/dma/loongson/loongson2-apb-dma.c -->

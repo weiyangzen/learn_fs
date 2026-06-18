@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/Raid0Pattern.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/striping/Raid0Pattern.h
+
+**Purpose:** Declares and inline-constructs the RAID0 stripe-pattern subclass. **APIs/types:** `Raid0Pattern` embeds `StripePattern`, a `UInt16Vec stripeTargetIDs`, and `defaultNumTargets`; inline functions initialize from supplied IDs or chunk size, construct, uninit, and assign virtual functions. **Control flow/state:** construction copies target IDs and defaults target count to 4 when zero; deserialization construction starts with an empty vector. **Dependencies/integration:** base class users call virtual stripe methods through `StripePattern`. **Risks/tests:** vector ownership and first-field embedding are important; tests should ensure uninit frees target vectors and default target count matches app expectations.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/Raid0Pattern.h -->

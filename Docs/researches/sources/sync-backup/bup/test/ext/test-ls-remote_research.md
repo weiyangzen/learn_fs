@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-ls-remote -->
+# sources/sync-backup/bup/test/ext/test-ls-remote
+
+Purpose: runs the normal `test-ls` suite through the remote-repository path by setting `BUP_TEST_REMOTE_REPO=1`. It has no custom APIs beyond delegating to `./test-ls`; the integration point is the conditional `bup-ls()` helper in that script, which switches to `bup ls -r "-:$BUP_DIR"`. Control flow is a thin wrapper: export the mode flag and exec the local test. State and persistence are inherited from `test-ls`; this wrapper only changes command routing, not fixture creation. Dependencies are the same WvTest and bup CLI dependencies as `test-ls`, plus remote syntax support for the `-:` local transport. The main risk is that a failure may appear in the delegated test while the actual regression is in remote argument handling or remote object streaming. Test signal is that every local `ls` assertion also passes over the remote transport.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-ls-remote -->

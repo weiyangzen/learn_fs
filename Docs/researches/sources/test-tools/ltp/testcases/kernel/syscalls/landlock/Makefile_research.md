@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/landlock/Makefile
+
+Purpose: builds the Landlock syscall tests. It includes standard LTP testcase rules, adds `$(KEYUTILS_LIBS)` only for `landlock07` because that regression uses `keyctl`, and delegates to `generic_leaf_target.mk`. Runtime state is absent; build state is target-specific library linkage. Integration points are LTP Landlock lapi headers, keyutils for the Houdini credential-transfer regression, and resource file handling for `landlock_exec`. Risks are missing keyutils linkage for `landlock07`. Test signal is successful build of all Landlock tests and helper binary.

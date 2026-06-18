@@ -1,0 +1,11 @@
+# sources/distributed-fs/openafs/src/util/work_queue.c
+
+Purpose: Implements a pthread-based dependency-aware work queue with ready, blocked, and done lists; callback execution; flow-control thresholds; shutdown; node waits; and reference-managed work nodes.
+
+Important APIs: Queue lifecycle: `afs_wq_opts_init()`, `afs_wq_opts_calc_thresh()`, `afs_wq_create()`, `afs_wq_destroy()`, `afs_wq_shutdown()`. Node lifecycle/config: `afs_wq_node_alloc()`, `afs_wq_node_get()`, `afs_wq_node_put()`, `afs_wq_node_set_callback()`, `afs_wq_node_set_detached()`, dependency add/delete, block/unblock. Scheduling/execution: `afs_wq_add_opts_init()`, `afs_wq_add()`, `afs_wq_do()`, `afs_wq_do_nowait()`, `afs_wq_wait_all()`, and `afs_wq_node_wait()`.
+
+Control flow and state: `afs_work_queue` owns three locked lists plus queue counters and condition variables. Nodes own a lock, state CV, queue/list id, callback, callback rock/destructor, refcount, block/error counters, dependency children, detach flag, and retcode. Adding a node increments pending count unless throttled by high/low thresholds, chooses ready/blocked/done based on block/error counts, and enqueues. Workers dequeue ready nodes, run callbacks unlocked, choose next state from callback return (`0`, `AFS_WQ_ERROR_RESCHEDULE`, or error), decrement pending on terminal states, propagate completion/error through dependency children, and enqueue to the next list or free detached nodes.
+
+Concurrency dependencies: Uses `opr_mutex`, `opr_cv`, rx queues, and a custom two-node multilock with trylock and exponential backoff to avoid undefined lock hierarchy deadlocks during dependency operations. Shutdown drains lists, marks nodes error, wakes waiters, and waits for running callbacks in `afs_wq_wait_all()`.
+
+Risks and test signals: The checked-out file contains an apparent compile-breaking typo at line 1900, `if (retcowait{`, likely intended to check `retcode`. `afs_wq_del()` is unimplemented (`ENOTSUP`). Detached nodes are freed automatically; non-detached nodes require wait/put discipline. Dependency mutation is allowed only in init or running states. Tests should cover dependency propagation, reschedule, external block/unblock, detached cleanup, shutdown during wait/add/do, high/low threshold drain, and node wait removal from done list.

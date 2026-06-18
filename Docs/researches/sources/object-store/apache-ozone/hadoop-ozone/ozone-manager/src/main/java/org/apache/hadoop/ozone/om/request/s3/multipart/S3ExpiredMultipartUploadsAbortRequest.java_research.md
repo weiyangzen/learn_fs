@@ -1,0 +1,15 @@
+## sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/request/s3/multipart/S3ExpiredMultipartUploadsAbortRequest.java
+
+Purpose: `S3ExpiredMultipartUploadsAbortRequest` handles internal/background requests that abort expired multipart uploads in bulk. It moves MPU open keys and multipart info entries toward deletion by cache tombstoning open-key and multipart-info rows, while collecting abort metadata for the response to process delete-table work.
+
+Important APIs/types/functions: The main method is `validateAndUpdateCache`. Helpers include `updateTableCache`, `auditAbortedMPUs`, and `processResults`. It uses `MultipartUploadsExpiredAbortRequest`, `ExpiredMultipartUploadsBucket`, `ExpiredMultipartUploadInfo`, `OmMultipartUpload.from`, `OMMultipartUploadUtils.getMultipartOpenKey`, `OmMultipartKeyInfo`, `OmMultipartAbortInfo`, `S3ExpiredMultipartUploadsAbortResponse`, bucket locks, and OM metrics for expired MPU aborts.
+
+Control flow: The request counts submitted MPUs, then iterates per bucket. For each bucket it acquires the bucket lock, loads bucket info and layout, and scans submitted expired MPU keys. Existing multipart info rows are checked for transaction update-ID ordering, parsed into volume/bucket/key/upload ID, mapped to the correct open key for that bucket layout, and converted into `OmMultipartAbortInfo`. It decrements bucket used bytes by each part's replicated length, tombstones the open-key row if it still exists, tombstones the multipart-info row, updates metrics, and logs skipped invalid or already-finished MPUs.
+
+State and persistence behavior: Cache updates invalidate open-key/file-table entries and multipart-info entries at the transaction index. The delete table is intentionally not updated by this request because delete-table entries are not needed for later client-response validation; response replay owns the physical cleanup details. Bucket used bytes are decremented in the in-memory `OmBucketInfo` object included in abort info.
+
+Dependencies and integration points: This request integrates lifecycle-expiration cleanup with OM bucket metadata, multipart info table, open key/file tables across bucket layouts, quota accounting, audit, and the expired-MPU abort response. It tolerates legacy orphan MPU state left by older cleanup services.
+
+Risks and edge cases: Submitted MPU keys can be stale, malformed, already completed/aborted, or have update IDs newer than the transaction, all of which are skipped. Orphan MPU entries without open-key rows are tolerated. The `abortedMultipartUploads.size()` metric in `processResults` counts buckets with aborts, not individual MPUs, which is a potential interpretation risk. Correct quota release depends on replication config and complete part metadata.
+
+Test signals: Tests should cover multi-bucket batches, invalid MPU key strings, missing buckets, missing multipart info, orphan open-key rows, newer update IDs, quota release, metrics, audit messages for only aborted MPUs, and replay through `S3ExpiredMultipartUploadsAbortResponse`.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/bpf/Makefile
+
+Purpose: LTP leaf Makefile for eBPF syscall tests. It includes standard testcase rules, filters `bpf_common` out as a standalone executable target, adds `_GNU_SOURCE`, and links every test target against `bpf_common.o`. Runtime capability drops, memlock changes, taint checks, and CVE metadata are declared in C files. State is build-only. Dependencies are LTP make infrastructure and the shared helper object. Risks are missing the helper object dependency or BPF lapi headers. Test signal is successful compilation/linking of map and program tests against `bpf_common`.

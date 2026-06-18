@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/utilities/trace/file_trace_reader_writer.cc
+
+- **Purpose:** Implements file-backed `TraceReader` and `TraceWriter` adapters used by RocksDB tracing and replay.
+- **Important APIs/types/functions:** `FileTraceReader::Read` reads fixed-size trace metadata, decodes payload length with `DecodeFixed32`, and reads payload chunks through `RandomAccessFileReader`. `Reset` rewinds offset; `Close` drops the reader. `FileTraceWriter::Write` appends a slice to `WritableFileWriter`, `GetFileSize` reports writer size, and factory functions create file-backed reader/writer instances from `Env` and `EnvOptions`.
+- **Control flow:** Reader starts at offset zero, reads `kTraceMetadataSize`, returns `Incomplete` on zero-byte EOF, rejects short metadata/payload as corruption, appends metadata and payload into `data`, and advances `offset_`. Writer creation opens a writable file and each write appends the already-encoded trace bytes.
+- **State and persistence behavior:** Reader state is the current file offset plus a reusable 1 KB buffer; writer state is the owning writable file handle. Trace persistence is the actual trace file on the configured filesystem. Destructors call `Close().PermitUncheckedError()`.
+- **Dependencies:** Uses `RandomAccessFileReader`, `WritableFileWriter`, filesystem options wrappers, `trace_replay/trace_replay.h` constants, and fixed-width coding helpers.
+- **Integration points:** `NewFileTraceReader` and `NewFileTraceWriter` bridge public trace reader/writer APIs to RocksDB `Env` files. `ReplayerImpl` consumes a `TraceReader`, often this implementation.
+- **Risks:** `FileTraceWriter::Write` and `GetFileSize` assume the writer is open; calling after `Close` would dereference null. Reader asserts non-null in `Read` but only `Reset` returns a clean IOError when closed. EOF currently maps to `Incomplete`, which replay treats as normal end in some paths.
+- **Test signals:** Expected tests would cover full record reads, multi-chunk payloads larger than 1 KB, reset/re-read, short metadata/payload corruption, EOF handling, close behavior, and writer file-size growth.

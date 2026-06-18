@@ -1,0 +1,11 @@
+## sources/cloud-native/overlaybd/src/prefetch.cpp
+
+Purpose: implements static trace-based and dynamic file-list-based prefetching for OverlayBD images, using Photon threads to issue background reads before foreground I/O.
+
+Important types/functions: `PrefetchFile` wraps a source file and records successful `pread` calls in record mode. `PrefetcherImpl` handles mode detection, trace dump/reload, source registration, replay queues, and worker threads. `DynamicPrefetcher` reads a prefetch file list, discovers ext4/erofs file extents via fiemap, turns extents into read tasks, and reuses replay workers. Factories are `new_prefetcher` and `new_dynamic_prefetcher`.
+
+Control flow: static mode uses trace-file state: missing file disables, empty file records, non-empty file replays. Record mode creates a `.lock`, records reads, dumps a header plus trace records with CRC32C on stop/destruction, removes lock, and creates `.ok`. Replay mode loads and checksum-validates the trace, registers layer source files, and spawns `m_concurrency` workers to `pread` queued ranges. Dynamic mode treats the configured path as a file list, validates/trims entries, creates an erofs or extfs view of the image file, collects extents for files/directories, slices reads to 1MiB, and replays.
+
+State/persistence: trace file contains `TraceHeader` and `TraceFormat` records; `.lock` and `.ok` sidecar files signal recording lifecycle. In-memory state includes queues, registered files, Photon join handles, and stop flags. Dependencies include Photon FS/thread/fiemap/extfs, erofs helpers, LSMT alignment, CRC32C, regex, and local filesystem calls.
+
+Integration points: image service/config can provide `recordTracePath`; trace tests include prefetch implementation directly. Risks: replay queue access is not visibly locked across worker threads; dynamic path validation function name is misleading and regex may accept only narrow path characters; destructor shutdown must coordinate with worker thread state; dynamic replay depends on filesystem fiemap support and may issue large background reads. Test signals: `trace_test.cpp` validates dynamic erofs prefetch by checksumming files, while static record/replay has no direct listed test.

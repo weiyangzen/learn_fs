@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/thermal/lib/mainloop.h
+
+Purpose: declaration header for the thermal-tools event loop. Types/APIs: `mainloop_callback_t` and prototypes for loop, add/delete, exit, init, and fini. Control flow: applications initialize once, register fds with callbacks, run `mainloop(timeout)`, and request shutdown through `mainloop_exit()`. State: hidden in implementation. Dependencies: none beyond C function declarations. Integration: included through `thermal-tools.h` by thermal-engine and thermometer. Risks: callback contract only documents positive return ending the loop through implementation behavior, not comments; callers must manage fd lifetime carefully. Test signals: compile linkage and runtime epoll callback delivery.

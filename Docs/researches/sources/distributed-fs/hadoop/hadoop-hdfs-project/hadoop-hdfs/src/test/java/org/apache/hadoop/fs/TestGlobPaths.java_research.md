@@ -1,0 +1,11 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/fs/TestGlobPaths.java -->
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/fs/TestGlobPaths.java
+
+Purpose: Provides broad regression coverage for Hadoop glob expansion on HDFS and local FS, including literals, wildcards, sets, ranges, braces, filters, permissions, symlink scenarios, reserved paths, and sorting.
+Important APIs/types/functions: `RegexPathFilter`, `AcceptAllPathFilter`, `AcceptPathsEndingInZ`, `prepareTesting()`, `checkStatus()`, `FSTestWrapperGlobTest`, and many `@Test` methods such as `testMultiGlob()`, `pTestCurlyBracket()`, `testGlobFillsInSchemeOnFS/FC()`, `testGlobAccessDeniedOnFS/FC()`, `testReservedHdfsPathsOnFS/FC()`, and `testLocalFilesystem()`.
+Control flow: Class setup starts HDFS, opens privileged and unprivileged FileSystem/FileContext handles, makes root writable, and switches login user. Tests create deterministic directory trees, run `globStatus` with patterns and filters, normalize paths, and delete the user root. Wrapper-based tests execute the same glob behavior through FileSystem and FileContext.
+State and persistence behavior: Persistent state is transient namespace content under the test user's home plus root permission/owner changes in some cases. Static privileged/unprivileged handles live for the class.
+Dependencies and integration points: Integrates `FileSystem.globStatus`, `FileContext.util().globStatus`, glob pattern parsing, `PathFilter`, symlink wrappers, HDFS reserved inode paths, permission enforcement, and local FS ordering.
+Risks and edge cases: The suite mutates global login user and root permissions, so isolation matters. Several symlink glob tests are disabled. Expected ordering is strict and assumes glob sorting. Windows escape behavior is skipped for backslash semantics.
+Test signals: Signals include exact merged path order, null versus empty-array distinction, `AccessControlException` when listing forbidden dirs, reserved root inode visibility, scheme filling, relative working-directory expansion, and sorted local filesystem glob output.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/fs/TestGlobPaths.java -->

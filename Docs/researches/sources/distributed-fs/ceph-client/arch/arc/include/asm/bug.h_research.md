@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/bug.h
+
+Purpose: ARC architecture hook for BUG/WARN behavior. Important APIs/types/functions: includes or defines architecture BUG support around generic mechanisms in the small header. Control flow: compile-time macro definitions only. State and persistence: none beyond trap/debug side effects when macros are used elsewhere. Dependencies/integration: consumed by `linux/bug.h` and exception handling. Risks: wrong trap encoding or missing metadata prevents oops decoding. Test signals: build coverage and intentional WARN/BUG smoke tests on ARC.

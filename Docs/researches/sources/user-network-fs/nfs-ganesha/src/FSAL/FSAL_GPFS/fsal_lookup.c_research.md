@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_GPFS/fsal_lookup.c
+
+- **Purpose:** Resolves child names under GPFS directory handles into GPFS file handles and attributes, including filesystem-boundary handling and GPFS-specific dotdot workarounds.
+- **Important APIs/types/functions:** `GPFSFSAL_lookup`, `get_handle2inode`, `GPFS_ROOT_INODE`, `fsal_internal_handle2fd`, `fsal_internal_get_handle_at`, `gpfs_extract_fsid`, `lookup_fsid`, and `GPFSFSAL_getattrs`.
+- **Control flow:** The lookup path validates parent/name, opens the parent handle as a directory, rejects non-directory parents, asks GPFS for the child handle, closes the parent fd, handles special `..` failures at the GPFS root, detects a GPFS bug where dotdot returns the same handle as the parent and returns `ERR_FSAL_DELAY`, extracts fsid for XDEV detection, switches `new_fs` when crossing to another GPFS filesystem, and finally fetches attributes for the correct filesystem.
+- **State and persistence behavior:** No durable state is changed. Temporary fds are opened and closed; the caller receives a GPFS file handle, attributes, and possibly a changed `new_fs` pointer.
+- **Dependencies and integration points:** Used by `handle.c` object lookup and readdir-plus paths. It depends on the GPFS handle binary layout for inode extraction, FSAL filesystem registry lookup, and attribute conversion from `GPFSFSAL_getattrs`.
+- **Risks:** `get_handle2inode` casts opaque GPFS handle bytes to a local struct layout, so GPFS handle format changes can break root/dotdot logic. XDEV detection compares only fsid major to the parent object fsid major. The dotdot delay workaround depends on retry behavior above this layer.
+- **Test signals:** Test regular lookup, non-directory parent, missing names, `..` at root, GPFS same-handle dotdot bug, cross-GPFS filesystem traversal, cross-non-GPFS traversal, and stale/unknown fsid handling.

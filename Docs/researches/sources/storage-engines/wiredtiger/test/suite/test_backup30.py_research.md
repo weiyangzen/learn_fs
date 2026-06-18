@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup30.py
+
+Purpose: tests `conn.query_timestamp('get=backup_checkpoint')` while backup cursors are opened and closed. It confirms the backup checkpoint timestamp is pinned to the cursor’s checkpoint even if later checkpoints advance stable timestamp.
+
+Important APIs are timestamped writes, `conn.set_timestamp`, `session.checkpoint`, `conn.query_timestamp`, and backup cursor open/close. Control flow creates a table, writes data at timestamps 1 and 5, sets stable timestamp to 10 and checkpoints, asserts no open backup cursor reports timestamp 0, opens a backup cursor and asserts backup checkpoint equals stable 10, writes later timestamped data, advances stable to 20 and checkpoints while cursor remains open, verifies the query still returns 10, then closes/reopens backup cursor and expects 20. State behavior is backup cursor checkpoint pinning and timestamp query reset on close. Risks are exact timestamp string formatting and stable timestamp assumptions. Test signals are timestamp equality assertions.

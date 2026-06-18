@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph/src/mds/ScrubStack.cc
+
+Purpose: implements the MDS scrub scheduler, recursive traversal, remote scrub forwarding, pause/resume/abort control, status reporting, scrub stats exchange, and data-uninline integration.
+
+Important APIs and control flow: `enqueue()` registers a tag, sets origin, optionally queues the local mdsdir, initializes counters, queues the root, logs status, and calls `kick_off_scrubs()`. `_enqueue()` initializes inode/dirfrag scrub state, skips purging objects, pins queue entries, and pushes top/bottom. `kick_off_scrubs()` respects `mds_max_scrub_ops_in_progress`, state transitions, waiting list, and recursively processes inodes or dirfrags. `validate_inode_auth()` either proceeds locally, waits for auth stability/recovery, or forwards to the authoritative rank. `scrub_dir_inode()` queues local dirfrags, forwards remote fragsets, waits for fetch/unfreeze, or final-validates. `scrub_dirfrag()` walks dentries, queues child inodes, identifies remote-link damage, scrubs local dirfrag state, and maybe fragments. `scrub_file_inode()` and `scrub_dir_inode_final()` call `validate_disk_state()`; `_validate_inode_done()` reports damage/repair and updates damage tables.
+
+State and persistence: scrub queue state is in-memory: `scrub_stack`, `scrub_waiting`, `scrubs_in_progress`, `remote_scrubs`, `scrubbing_map`, state enum, `clear_stack`, control contexts, and per-rank scrub stats. Persistent side effects are indirect: damage table notifications, cluster log messages, possible metadata repair/log trim, and internal uninline metadata requests.
+
+Dependencies and integration: depends on `MDCache`, `MDSRank`, `CInode`, `CDir`, `MMDSScrub`, `MMDSScrubStats`, `RetryMessage`, `SnapRealm`, Objecter/Filer-facing inode validation, and MDS lock discipline. Rank 0 coordinates scrub state messages and stats epochs.
+
+Risks and test signals: risks include duplicate scrub tags, queue pin leaks, remote ACK loss, rank failure during remote scrub, abort/pause races while work is in progress, dirty remote dirfrag reporting, damaged dirfrag skip semantics, and uninline request lifetime. Tests should cover recursive multi-rank scrub, pause/resume/abort propagation, forced vs incremental scrub, remote dentry damage, stats epoch convergence, and repair-triggered log trimming.

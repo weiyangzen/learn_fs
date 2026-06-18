@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/acpi/numa/srat.c
+
+`srat.c` implements ACPI SRAT/SLIT NUMA parsing and PXM-node mapping. It maps ACPI proximity domains to Linux node IDs, records memory affinity ranges, delegates CPU affinity parsing to architecture hooks, handles generic initiators, extends coverage with CXL CFMWS windows, and exports ACPI node lookup helpers.
+
+Important APIs and state are `pxm_to_node_map`, `node_to_pxm_map`, `nodes_found_map`, `disable_srat()`, `pxm_to_node()`, `node_to_pxm()`, `acpi_map_pxm_to_node()`, `fix_pxm_node_maps()` under NUMA emulation, `bad_srat()`, `srat_disabled()`, `acpi_numa_init()`, `acpi_node_backed_by_real_pxm()`, and `acpi_get_node()`. Parsers cover memory affinity, SLIT distances, processor affinity variants, generic initiators, RINTC, and CEDT CFMWS.
+
+`acpi_numa_init()` parses SRAT CPU/generic initiator entries before memory entries, adds NUMA memblocks and hotplug annotations, parses SLIT distances, computes the next fake PXM after real SRAT PXMs, and parses CFMWS windows when CXL ACPI is enabled. `_PXM` lookup walks an ACPI handle's parents and translates the discovered domain.
+
+Persistent state is the bidirectional PXM/node map, parsed node masks, `last_real_pxm`, NUMA memblocks, memory hotplug marks, and node distances. Dependencies include ACPICA table parsing, architecture affinity hooks, memblock NUMA setup, memory hotplug, CXL CEDT parsing, and exported helpers consumed by HMAT/NFIT/PCI. Risks include global SRAT disable on malformed memory entries, fake PXM collision, invalid SLIT rejection, NUMA emulation remapping bugs, and out-of-range PXM handling. Test signals include valid/invalid SRAT and SLIT, enabled/disabled memory affinities, CFMWS overlap and fake-node creation, generic initiators, `_PXM` parent fallback, and NUMA emulation.

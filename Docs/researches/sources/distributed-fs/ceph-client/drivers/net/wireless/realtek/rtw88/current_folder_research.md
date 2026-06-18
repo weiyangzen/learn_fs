@@ -1,0 +1,112 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 98
+- Recursive researched files: 98
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/bf.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/bf.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/coex.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/coex.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/debug.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/debug.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/efuse.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/efuse.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/fw.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/fw.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/hci.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/led.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/led.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/mac.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/mac.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/mac80211.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/main.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/main.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/pci.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/pci.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/phy.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/phy.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/ps.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/ps.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/reg.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/regd.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/regd.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8703b.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8703b.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8703b_tables.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8703b_tables.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723cs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723d.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723d.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723d_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723d_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723de.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723ds.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723du.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723x.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8723x.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8812a.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8812a.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8812a_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8812a_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8812au.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8814a.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8814a.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8814a_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8814a_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8814ae.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8814au.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821a.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821a.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821a_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821a_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821au.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821c.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821c.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821c_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821c_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821ce.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821cs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8821cu.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822b.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822b.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822b_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822b_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822be.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822bs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822bu.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822c.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822c.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822c_table.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822c_table.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822ce.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822cs.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw8822cu.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw88xxa.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rtw88xxa.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rx.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/rx.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/sar.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/sar.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/sdio.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/sdio.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/sec.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/sec.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/tx.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/tx.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/usb.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/usb.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/util.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/util.h`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/wow.c`
+- `sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtw88/wow.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

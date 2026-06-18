@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/fs/btrfs/transaction.c
+
+## Purpose
+`transaction.c` implements Btrfs transaction lifetime, metadata reservation, root recording, commit sequencing, snapshot creation during commit, writeback of dirty btree blocks, superblock update, abort handling, and cleanup of dead roots. It is the central coordination layer that turns many concurrent filesystem mutations into an ordered committed generation.
+
+## Important APIs, Types, And Functions
+Externally visible transaction entry points include `btrfs_start_transaction()`, `btrfs_start_transaction_fallback_global_rsv()`, `btrfs_join_transaction()`, `btrfs_join_transaction_spacecache()`, `btrfs_join_transaction_nostart()`, `btrfs_attach_transaction()`, `btrfs_attach_transaction_barrier()`, `btrfs_end_transaction()`, `btrfs_end_transaction_throttle()`, `btrfs_commit_transaction()`, `btrfs_commit_transaction_async()`, `btrfs_commit_current_transaction()`, `btrfs_wait_for_commit()`, `btrfs_transaction_blocked()`, `btrfs_record_root_in_trans()`, `btrfs_add_dropped_root()`, `btrfs_add_dead_root()`, `btrfs_clean_one_deleted_snapshot()`, and `__btrfs_abort_transaction()`.
+
+Important internal functions include `join_transaction()`, `start_transaction()`, `record_root_in_trans()`, `wait_current_trans()`, `btrfs_trans_release_metadata()`, `__btrfs_end_transaction()`, `btrfs_write_marked_extents()`, `btrfs_write_and_wait_transaction()`, `commit_fs_roots()`, `commit_cowonly_roots()`, `switch_commit_roots()`, `create_pending_snapshot()`, `create_pending_snapshots()`, `update_super_roots()`, `cleanup_transaction()`, and `btrfs_cleanup_pending_block_groups()`.
+
+## Control Flow
+Transaction start first reserves qgroup and metadata space, optionally reserves delayed-ref and relocation-root space, then joins or creates a running transaction under `fs_info->trans_lock`. The transaction state table controls which transaction types may attach at each phase. `start_transaction()` handles freeze protection, waits for blocked current transactions when appropriate, initializes the handle, performs chunk allocation pressure work if needed, records the root in the transaction, and converts qgroup prealloc reservations to per-transaction reservations.
+
+Ending a transaction releases metadata reservations, creates pending block groups, releases chunk metadata, drops freeze protection, uninhibits writeback, decrements writer counters, wakes commit waiters, and returns abort or read-only errors when the filesystem has failed.
+
+Commit starts by releasing the caller's unused reservation, flushing delayed refs and dirty block groups, then transitions through `COMMIT_PREP`, `COMMIT_START`, `COMMIT_DOING`, `UNBLOCKED`, `SUPER_COMMITTED`, and `COMPLETED`. The committer waits for previous transactions, extwriters, delalloc, fsync-started ordered extents, and all other writers. In the critical section it pauses scrub, runs pending snapshots, delayed items, delayed refs, commits fs roots and cow-only roots, accounts qgroups, switches commit roots, updates super root pointers, releases the running transaction so a new one may start, writes and waits dirty btree extents, writes superblocks, finishes extent commit, updates last committed transid, removes the transaction from the list, and frees references.
+
+## State And Persistence Behavior
+In-memory transaction state lives in `struct btrfs_transaction`: writer counters, external writer counters, state, abort code, dirty pages, pinned extents, delayed refs, pending snapshots, dirty block groups, dropped roots, deleted block groups, and wait queues. Per-handle state tracks reservations, delayed refs, pending snapshots, chunk operations, relocation reservations, fsync context, and inhibited writeback extent buffers. Persistent effects include root item updates, chunk/root super fields, uuid tree updates, qgroup accounting, block group IO, dirty btree writeback, and superblock writes.
+
+## Dependencies And Integration Points
+This file connects nearly every major Btrfs subsystem: extent tree and delayed refs, qgroups, block groups and chunk allocation, root tree updates, relocation, tree log, device replace and device stats, scrub, ordered extents, delayed inodes/items, uuid tree, fscrypt names during snapshot creation, and freeze/writeback infrastructure. It also exports wait and blocked-state helpers used by throttling, transaction kthread, fsync, cleaner, and mount/unmount paths.
+
+## Risks And Edge Cases
+The riskiest areas are ordering and cleanup. Writer counters and transaction states must prevent new mutators from entering while supporting join paths needed during commit. Root recording relies on memory barriers around `BTRFS_ROOT_IN_TRANS_SETUP` and `last_trans`. Commit must not expose a new superblock before all referenced tree blocks are durably written. Snapshot creation has partial-failure semantics where some errors only fail the pending snapshot while commit-affecting errors abort the transaction. Abort cleanup must avoid use-after-free with the transaction kthread, release block group references, avoid scrub deadlock during relocation, and clear reservations consistently.
+
+## Test Signals
+Direct tests are mostly elsewhere in the Btrfs selftest suite, but this file exposes many observable failure signals: `-EROFS` for filesystem error state, `-ENOENT` for attach without a running transaction, abort errno propagation, transaction wait behavior, dirty writeback errors via `BTRFS_FS_BTREE_ERR`, and warnings/assertions for impossible state. The qgroup and RAID stripe tree tests in this subset use dummy transactions and `transaction.h` helpers but do not exercise the full commit path.

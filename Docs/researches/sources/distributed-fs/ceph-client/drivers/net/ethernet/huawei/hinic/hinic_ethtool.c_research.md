@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/huawei/hinic/hinic_ethtool.c
+
+Implements HiNIC ethtool support for PFs and VFs. It handles link settings, driver info, ring parameters, interrupt coalescing, pause, channels, RSS hash/indir/key/fields, stats strings/data, diagnostics loopback, LED identification, module EEPROM, and link extended state. `hinic_set_ethtool_ops()` selects PF or VF ops; VF ops omit unsupported PF-only features.
+
+Control flow maps firmware capabilities to ethtool link modes, validates requested speed/autoneg, writes combined or fallback link-setting commands, restarts netdev for ring/channel changes when up, converts coalescing units to hardware fields, updates RSS templates and user shadows, gathers function/port/queue stats, and runs loopback diagnostics by disabling carrier/TX, sending patterned packets, and comparing received buffers.
+
+State touched includes queue depths/counts, RSS hash engine/type/key/indir user buffers, coalescing arrays, pause config under `cfg_mutex`, loopback buffers/flags, and link-ext-state booleans. Dependencies include ethtool/netdevice APIs, SFP identifiers, HiNIC port management, hardware device state, TX/RX stats, `hinic_open/close`, and loopback transmit. Risks include interface restart failure after state updates, quantized coalescing, retained RSS allocations, broad `-EFAULT` error mapping, and loopback cleanup. Test all ethtool commands on PF/VF, netdev up/down paths, unsupported values, firmware failures, and diagnostics.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/spi/spi-pic32-sqi.c
+
+Purpose: Microchip PIC32 SQI quad SPI controller driver. It is a half-duplex DMA/descriptor-ring SPI host for SQI hardware, supporting two chip selects, single/dual/quad transfer lanes, 8..32 bits per word, and hardware-owned buffer descriptors for DMA transactions.
+
+Important APIs, types, and functions: `struct pic32_sqi` stores MMIO, clocks, host, IRQ, completion, descriptor ring memory, free/used descriptor lists, current SPI device, speed, and mode. `struct buf_desc` mirrors hardware descriptors; `struct ring_desc` wraps descriptor metadata and DMA address. Important functions are clock programming, interrupt enable/disable and ISR, ring get/put/allocation/free, `pic32_sqi_one_transfer()`, `pic32_sqi_one_message()`, hardware prepare/unprepare, hardware init, probe, and remove.
+
+Control flow: probe maps registers, gets IRQ and clocks, initializes completion, soft-resets hardware, sets DMA mode/quad lanes/burst/thresholds, allocates coherent descriptor memory and software ring descriptors, requests IRQ, configures host DMA limits and callbacks, then registers. For each SPI message the driver updates speed/mode when the SPI device changes, converts each transfer's DMA SG entries into BDs with direction/lane/CS/LSB flags, marks the last descriptor with LAST/CS_DEASSERT/LIFM/PKT_INT, writes the BD base, enables interrupts and DMA processor, waits up to 5 seconds, disables DMA/interrupts, returns descriptors to free list, updates actual length, and finalizes the message.
+
+State and persistence: descriptor memory and ring lists persist for device lifetime. `cur_spi`, `cur_speed`, and `cur_mode` cache hardware programming. Used descriptors represent the current message only and are returned in reverse order after completion/error. Hardware state includes DMA mode, lanes, CS enables, thresholds, and clock divider.
+
+Dependencies and integration points: platform device/OF compatible `microchip,pic32mzda-sqi`, clock framework (`reg_ck`, `spi_ck`), coherent DMA allocation, SPI core `transfer_one_message`, DMA-mapped SGs, and Linux list/completion/IRQ APIs. Host flags require half-duplex and DMA alignment/length constraints.
+
+Risks: `pic32_sqi_one_transfer()` breaks if free descriptors run out but returns 0, so messages exceeding descriptor capacity may be silently truncated before last descriptor marking. The code assumes DMA SGs are prepared by the core because `can_dma` always returns true. Transfer-specific speed, bits-per-word, and delays are explicitly unsupported. Timeout still counts used descriptor lengths into `actual_length`. Hardware reset masks CPU interrupts locally due to reset-generated interrupt.
+
+Test signals: descriptor exhaustion with >256 SG entries, 1/2/4-lane TX and RX, half-duplex enforcement, CS deassert on final descriptor, clock divider stability timeout, DMA error interrupt, packet completion, 5-second timeout handling, current-device speed/mode cache, and probe/remove ring/IRQ cleanup.

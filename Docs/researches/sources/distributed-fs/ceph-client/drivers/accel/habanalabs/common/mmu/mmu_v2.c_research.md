@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/accel/habanalabs/common/mmu/mmu_v2.c
+
+Purpose: implements the second-generation device-resident MMU backend for Gaudi2-family DRAM/HMMU mappings. In v2, device-resident page tables are allowed only for DRAM addresses; host PMMU mappings are expected to use the host-resident backend when the ASIC properties request it.
+
+Important APIs/types/functions: `hl_mmu_v2_set_funcs()` installs `hl_mmu_dr_init()`, `hl_mmu_dr_fini()`, `hl_mmu_v2_ctx_init()`, `hl_mmu_v2_ctx_fini()`, `hl_mmu_v2_map()`, `hl_mmu_v2_unmap()`, `hl_mmu_dr_flush()`, and `hl_mmu_v2_get_tlb_info()` into `struct hl_mmu_funcs`. `hl_mmu_v2_map()` and `hl_mmu_v2_unmap()` use `MMU_ARCH_6_HOPS` arrays, ASIC address scrambling, common HOP PTE address calculation, and device-resident helper routines.
+
+Control flow: context init only initializes `ctx->mmu_shadow_hash`; context fini reports and frees any leftover PGT nodes. Map rejects non-DRAM addresses, scrambles virtual and physical addresses, walks from HOP0 to the configured last HOP, allocating missing HOPs through `hl_mmu_dr_get_alloc_next_hop_addr()`. It rejects an already-present final PTE, writes the scrambled physical leaf with `last_mask | PAGE_PRESENT_MASK`, links newly allocated intermediate HOPs from their parents, and updates PTE counts. Unmap also rejects non-DRAM, walks through the configured HOPs until a `last_mask` PTE marks a huge mapping, requires DRAM mappings to be huge, clears the leaf, and frees empty parent HOPs while unwinding toward HOP0. TLB info reads hardware PTEs and descrambles the final PTE when the VA was scrambled.
+
+State and persistence behavior: runtime state is per-context shadow hash entries and device-resident page-table allocations from the shared DR pool. Address scrambling means stored PTEs may not be direct physical addresses; `hops->unscrambled_paddr` is populated for consumers that need original addresses. There is no persistent state beyond hardware and driver memory lifetime.
+
+Dependencies and integration points: depends on `mmu_v2_0.h`, `mmu_general.h`, common device-resident MMU helpers, and ASIC callbacks for `scramble_addr`, `descramble_addr`, `read_pte`, and `write_pte`. It is selected for Gaudi2-family ASICs as the DRAM side of the MMU function table.
+
+Risks and test signals: major risks are accidental use for host mappings, scrambling/descrambling mismatch, HOP count or `last_mask` mismatches with ASIC properties, and cleanup of partially allocated HOPs. Test signals include DRAM-only map/unmap success, host-address rejection, huge-page enforcement for DRAM unmap, TLB info on scrambled mappings, allocation-failure unwind tests, and teardown leak warnings from `hl_mmu_v2_ctx_fini()`.

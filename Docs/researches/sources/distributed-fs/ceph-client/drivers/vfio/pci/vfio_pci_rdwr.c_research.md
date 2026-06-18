@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/vfio_pci_rdwr.c
+
+This file implements VFIO PCI BAR, ROM, VGA, and ioeventfd read/write mechanics. It performs width-aware MMIO/PIO access, excludes sensitive ranges such as MSI-X tables, validates memory decode state, and translates eventfd notifications into programmed device writes.
+
+Important exported APIs are `vfio_pci_core_iowrite{8,16,32,64}()`, `vfio_pci_core_ioread{8,16,32,64}()`, `vfio_pci_core_do_io_rw()`, `vfio_pci_core_setup_barmap()`, `vfio_pci_bar_rw()`, optional `vfio_pci_vga_rw()`, and `vfio_pci_ioeventfd()`. Endianness is handled by mapping native accessors to little-endian or big-endian I/O helpers.
+
+Control flow for normal BAR access resolves the VFIO region index, validates the requested offset and length, maps ROM specially, rejects invalid BARs, excludes MSI-X table bytes, then loops through aligned 8/4/2/1-byte transfers. Excluded reads return `0xff` bytes and excluded writes are dropped. MMIO transfers take `memory_lock` read-side when requested and fail if virtual memory enable or power state disallows access. VGA access maps legacy memory or I/O ports under the VGA arbiter and bypasses command-memory checking because it is non-BAR legacy probing space.
+
+State includes eager BAR maps created by core enable, per-device MSI-X table location metadata, ioeventfd list/count protected by `ioeventfds_lock`, and virqfd registrations. `vfio_pci_ioeventfd()` only supports BAR offsets, rejects MSI-X table overlap, caps registrations, and stores enough metadata to issue the programmed write from either fast handler or fallback thread.
+
+Dependencies include PCI resource metadata, `pci_iomap`, ROM mapping, VGA arbiter, user-copy helpers, virqfd, config/core memory lock helpers, and MSI-X metadata from core enable. Risks include access-width incompatibility on ROMs, stale barmaps after close, missing memory decode checks, user offsets crossing excluded ranges, ioeventfd duplicate handling, and lock contention forcing threaded writes. Test signals include unaligned BAR I/O, ROM reads larger than actual ROM, MSI-X table exclusion, memory-enable toggles returning `-EIO`, VGA legacy ranges, ioeventfd add/remove/duplicate/max-count cases, and close teardown with active ioeventfds.

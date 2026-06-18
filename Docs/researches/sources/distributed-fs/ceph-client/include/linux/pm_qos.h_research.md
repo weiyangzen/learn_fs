@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/pm_qos.h
+
+Purpose: defines Power Management QoS constraints for CPU latency, device resume latency, latency tolerance, frequency min/max bounds, and device PM flags.
+
+Important APIs and types: `struct pm_qos_constraints`, `struct pm_qos_request`, `struct pm_qos_flags`, and `struct pm_qos_flags_request` implement plist-backed scalar constraints and list-backed flag aggregation. `struct freq_constraints` and `struct freq_qos_request` wrap min/max frequency constraints. `struct dev_pm_qos_request` and `struct dev_pm_qos` bind QoS requests, notifiers, resume latency, latency tolerance, frequency, and flags to a device. APIs include `pm_qos_update_target()`, `pm_qos_update_flags()`, CPU latency request helpers, `dev_pm_qos_add/update/remove_request()`, notifier registration, sysfs exposure helpers, user latency tolerance updates, raw/requested read helpers, and frequency QoS add/update/remove/apply/notifier calls.
+
+Control flow: request owners allocate request objects, add them to a constraint set, update values as requirements change, and remove them on teardown. Scalar constraints compute either min or max target values from plist priority, while flags aggregate status against a mask. Device PM and frequency clients use notifiers to react to changed effective values, and runtime PM/genpd can use resume-latency and no-power-off flags to block deeper idle states.
+
+State and persistence: QoS state is live kernel state attached to global CPU latency containers, `freq_constraints`, or `dev->power.qos`; it includes active plist nodes, flag list nodes, cached 32-bit target/effective values, default/no-constraint values, request ownership, and notifier heads. It is not persistent and must be explicitly cleaned up by request owners.
+
+Dependencies and integration points: depends on plist ordering, blocking notifiers, device power state, CPU idle, PM core, and frequency scaling paths. The header documents that lockless readers rely on atomic 32-bit access to `target_value` and `effective_flags`. Disabled PM/CPU-idle configs provide default/no-op semantics.
+
+Risks and test signals: risks include uninitialized request objects, double add/remove, leaking request nodes across driver detach, wrong min-vs-max constraint type, notifier recursion, assuming 64-bit lockless values are safe, and relying on PM QoS when config stubs return defaults. Test add/update/remove ordering, notifier firing only on effective changes, frequency min/max clamping, device resume-latency sysfs exposure, no-power-off flags, CPU idle latency limits, and disabled-config builds.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-symlink-race -->
+# sources/sync-backup/bup/test/ext/test-save-symlink-race
+
+Purpose: simulates a race where a symlink changes between metadata capture and content handling during save. Important APIs are a generated `bup.cmd.save` monkey patch with `test_save_symlink_race_pause_save()`, `instrumented-bup()`, symlink creation/replacement, and normal save/restore commands. Control flow indexes a tree containing a symlink, pauses save at the chosen path, mutates the symlink target, and verifies bup handles the metadata/content mismatch safely. State is the mutable symlink, temp repo, generated import module, and restore/log output. Dependencies include Python import override, symlink support, timing coordination, and WvTest. Risks are scheduler flakiness, filesystem timestamp resolution, and unsafe dereferencing of a changed symlink. Test signals are expected save status and restored symlink metadata/content consistency.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-save-symlink-race -->

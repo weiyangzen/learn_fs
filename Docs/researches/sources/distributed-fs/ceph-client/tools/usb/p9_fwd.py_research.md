@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/usb/p9_fwd.py
+
+Purpose: `p9_fwd.py` forwards 9P filesystem messages between a USB gadget interface and a TCP 9P server. It is aimed at `usb9pfs` inside a composite gadget, discovering the vendor-specific 9P interface and shuttling length-prefixed 9P packets between PyUSB endpoints and a socket.
+
+Important APIs and functions: `path_from_usb_dev()` derives a stable bus-port path for selecting devices behind hubs. `Forwarder.__init__()` locates the USB device by VID/PID/path, detaches storage interfaces when needed, claims the 9P interface, finds IN/OUT endpoints, and connects to the TCP server. `c2s()` reads a packet from USB IN and sends it to TCP; `s2c()` reads a packet from TCP and writes it to USB OUT, adding a zero-length packet for max-packet-aligned USB transfers. `list_usb()` prints matching devices, and `connect()` runs the forwarding loop.
+
+Control flow: `main()` builds an argparse CLI with `list` and `connect` subcommands and log verbosity. The connect loop alternates one client-to-server request with one server-to-client response, assuming request/response lockstep. USB transient read timeout and `EIO` are retried; other USB errors abort and final statistics are printed in `finally`.
+
+State and dependencies: state includes socket connection, claimed USB interface, endpoint descriptors, counters, and periodic stats timing. Dependencies are PyUSB/libusb, `/sys/bus/usb/devices` metadata for names, TCP reachability to the 9P server, and a gadget interface class/subclass/protocol of `0xff/0xff/0x09`. Risks include blocking or short TCP reads returning empty buffers, `socket.send()` not guaranteeing full sends, assumptions about 4-byte little-endian 9P size fields, and no concurrent full-duplex pumping. Test signals are successful `list`, interface claim logs, packet counters, trace hexdumps, and a mounted 9P client behaving through the forwarder.

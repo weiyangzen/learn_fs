@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/git-lfs/git/git.go -->
+# sources/sync-backup/git-lfs/git/git.go
+
+## Research
+
+`git.go` is the broad Git subprocess integration layer. It defines `RefType`, `Ref`, object ID constants/regexes, `IndexStage`, `CommitSummary`, `Worktree`, `CloneFlags`, and many helpers for invoking Git with LFS filters disabled or enabled. Core APIs cover ref parsing/resolution, current/remote refs, remote lists/URLs, ref updates, clone/checkout/fetch, worktree enumeration, repository directory discovery, tracked/changed/modified files, dirty checks, object database construction, and remote inference for a treeish.
+
+Control flow is mostly thin subprocess orchestration around `git rev-parse`, `show-ref`, `for-each-ref`, `ls-remote`, `worktree list`, `clone`, `checkout`, `diff-index`, `diff-tree`, `status`, `ls-files`, `hash-object`, and `cat-file`. `gitConfigNoLFS` disables smudge/clean/filter-process for operations that must not trigger LFS downloads. State includes cached empty tree OID guarded by a mutex and global object ID metadata. Persistent effects include updating refs/index, cloning, fetching, checkout mutations, and possible object database writes through `gitobj`. Dependencies include `subprocess`, `tools`, custom errors, `gitobj`, OS/filesystem, URL parsing, time parsing, and tracer logging. Risks include subprocess portability, Git version feature gates, SHA-1/SHA-256 length assumptions, scanner error handling, ambiguous remotes with slashes, command output parsing, worktree fallback assumptions about absolute gitdir files, and path quoting/special character behavior. Test coverage in this subset is limited; many helpers require integration tests with real repositories.
+<!-- END_FILE_RESEARCH: sources/sync-backup/git-lfs/git/git.go -->

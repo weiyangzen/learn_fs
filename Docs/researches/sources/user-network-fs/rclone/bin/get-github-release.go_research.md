@@ -1,0 +1,5 @@
+# sources/user-network-fs/rclone/bin/get-github-release.go
+
+Purpose: standalone installer/fetcher for the latest GitHub release asset matching the current OS/architecture and a user-provided asset-name regex. It can use the GitHub API or scrape the releases page, download the asset to temp, optionally install a `.deb`, or extract a named binary from a tar archive into a writable bin directory.
+
+Important functions: `defaultBinDir` selects a writable PATH directory; `getAsset` uses API JSON and optional `GITHUB_USER`/`GITHUB_TOKEN`; `getAssetFromReleasesPage` parses HTML; `isOurOsArch` applies OS/arch aliases; `getFile` downloads; `untar` extracts a matching regular file from gzip/bzip2/plain tar; `run` executes installer commands. State changes include temp downloads, optional sudo package installation, and file extraction into bindir. Risks include HTML scraping fragility, unauthenticated rate limits, matching the wrong asset by regex, no checksum verification, and extracting files with broad permissions. Validation is fatal-on-error command flow.

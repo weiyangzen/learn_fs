@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/drm/drm_edid.h
+
+Purpose: Defines EDID and CTA/CEA display-identification data structures, bitfields, constants, quirks, and helper APIs for reading, validating, duplicating, parsing, matching, and applying monitor EDID data to DRM connectors and display modes.
+
+Important APIs, types, and functions: Defines EDID block lengths, DDC I2C addresses, extension tags, timing structures (`struct est_timings`, `struct std_timing`, `struct detailed_timing`, detailed monitor-range/string/color/CVT structures), input/feature/deep-color/VRR/DSC bit masks, `struct drm_edid_product_id`, packed `struct edid`, `struct drm_edid_ident`, `DRM_EDID_IDENT_INIT()`, `struct cea_sad`, and `enum drm_edid_quirk`. APIs include SAD and speaker allocation parsing, HDMI AVI/vendor infoframe construction, quantization range setup, manufacturer and panel ID encode/decode helpers, DDC probing, legacy `struct edid` reads, mode addition, override update, CEA/DMT mode matching, monitor audio/HDMI detection, EDID validity/header checks, monitor-name extraction, and newer opaque `struct drm_edid` allocation/read/update/match/quirk helpers.
+
+Control flow: Connector probe paths read EDID over DDC, switcheroo, custom block readers, or overrides. The EDID is validated, parsed into connector display info, used to add modes, checked for quirks, and queried for audio, HDMI, quantization, panel ID, and infoframe metadata. Legacy callers operate directly on `struct edid`; newer paths use opaque `struct drm_edid` ownership and connector update helpers before adding modes.
+
+State and persistence: EDID bytes are monitor-provided runtime data cached or owned by connector state outside this header. The packed structs define wire/on-device ABI layouts and must remain layout-stable. Connector properties and display modes derived from EDID become userspace-visible until the next hotplug/probe update.
+
+Dependencies and integration points: Depends on I2C/DDC, DRM connectors, display modes, HDMI infoframes, display-info population, audio ELD generation, quirks tables, panel matching, override firmware/debug mechanisms, and userspace mode enumeration.
+
+Risks and test signals: Risks include accepting malformed EDIDs, packed-layout or endian mistakes, checksum/extension handling errors, DDC failures, wrong mode derivation for detailed/standard/CEA timings, incorrect YCbCr/deep-color/VRR/DSC capability parsing, stale override data, and broken panel quirk matching. Test valid and corrupt base blocks, multiple extensions, DDC NACKs, DisplayID at alternate address, monitor audio SADs, HDMI/DP classification, panel ID matching, EDID override, hotplug re-read, CEA VIC matching, and malformed range/timing descriptors.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/display/xe_tdf.c
+
+Purpose: provides the display transient data flush hook for Xe. The only API is `intel_td_flush`, which converts `intel_display` to `xe_device` and calls `xe_device_td_flush`. Control flow and state are minimal; persistence is external hardware/cache state. Dependencies are Intel display core/TDF declarations and `xe_device.h`. Integration points are shared display TDF paths on platforms requiring transient flushes. Risks are root-device conversion assumptions and no local error reporting. Test signals include platform paths that trigger TDF flush and MMIO/cache coherency tests around display updates.

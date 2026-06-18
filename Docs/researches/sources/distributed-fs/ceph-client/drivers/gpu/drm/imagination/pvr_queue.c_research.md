@@ -1,0 +1,36 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/imagination/pvr_queue.c
+
+## Purpose
+Implements PowerVR per-context job queues on top of `drm_gpu_scheduler`. It creates firmware queue contexts and CCCBs, manages scheduler jobs and internal dependencies, converts native PowerVR fences into firmware UFO waits/updates, submits KCCB kicks, handles combined geometry/fragment submissions, processes firmware completion events, and coordinates queue stop/start around reset.
+
+## Important APIs, types, and functions
+- Public APIs: `pvr_queue_fence_is_ufo_backed()`, `pvr_queue_job_init()`, `pvr_queue_job_arm()`, `pvr_queue_job_cleanup()`, `pvr_queue_job_push()`, `pvr_queue_create()`, `pvr_queue_kill()`, `pvr_queue_destroy()`, `pvr_queue_process()`, `pvr_queue_device_pre_reset()`, `pvr_queue_device_post_reset()`, `pvr_queue_device_init()`, and `pvr_queue_device_fini()`.
+- Scheduler backend: `pvr_queue_prepare_job()`, `pvr_queue_run_job()`, `pvr_queue_timedout_job()`, `pvr_queue_free_job()`, and `pvr_queue_sched_ops`.
+- Fence helpers: `pvr_queue_fence_alloc()`, `pvr_queue_fence_init()`, `pvr_queue_cccb_fence_init()`, `pvr_queue_job_fence_init()`, `pvr_queue_fence_put()`, `to_pvr_queue_job_fence()`, and the job/CCCB `dma_fence_ops`.
+- Submission helpers: `job_cmds_size()`, `job_count_remaining_native_deps()`, `pvr_queue_get_job_cccb_fence()`, `pvr_queue_get_job_kccb_fence()`, `pvr_queue_get_paired_frag_job_dep()`, and `pvr_queue_submit_job_to_cccb()`.
+- Queue lifecycle helpers: `get_ctx_state_size()`, `get_ctx_offset()`, `init_fw_context()`, `pvr_queue_cleanup_fw_context()`, `reg_state_init()`, `pvr_queue_update_active_state_locked()`, `pvr_queue_signal_done_fences()`, and `pvr_queue_check_job_waiting_for_cccb_space()`.
+
+## Control flow
+Queue creation validates that the requested queue type matches the owning context type, computes firmware context-state size from device features, allocates a queue, initializes fence contexts and the CCCB, creates firmware register-state and timeline-UFO objects, writes the queue's common firmware-context fields into the parent context mapping, initializes a single-runqueue DRM scheduler and entity, and inserts the queue on the device idle list.
+
+Job initialization rejects faulty contexts, selects the queue for the job type, verifies the command sequence can ever fit into the CCCB, initializes the DRM scheduler job, and preallocates CCCB, KCCB, and done fences so arm/push paths do not fail. `pvr_queue_job_arm()` exposes the scheduler finished fence. `pvr_queue_job_push()` records the last scheduled fence for combined-submit ordering, takes a job reference, and pushes to the entity.
+
+`prepare_job()` initializes the internal done fence and returns one internal dependency at a time: CCCB space fence, KCCB slot fence, then paired-fragment dependency. CCCB dependencies attach the waiting job to `queue->cccb_fence_ctx.job` until firmware progress frees enough CCCB space. KCCB dependencies reserve a kernel CCB slot. For combined geometry/fragment work, the geometry job waits until the paired fragment job's earlier dependencies are gone, while the paired fragment job can return an already-initialized done fence after the geometry path has submitted both jobs.
+
+`run_job()` acquires runtime PM references, writes firmware-side UFO wait commands for unsignaled native dependencies, writes the job command, then writes a UFO update command for the job done fence. Combined geometry/fragment submissions write both queues' commands and send a combined KCCB kick. Non-paired jobs send a normal KCCB kick. The returned parent fence is the internal done fence backed by the queue timeline UFO.
+
+Firmware completion processing is driven by `pvr_queue_process()` under the device queue lock. It checks whether a CCCB-space waiter now fits and signals its CCCB fence, signals done fences whose seqno is covered by the timeline UFO value, releases job PM references, decrements in-flight counts, and moves queues between active and idle lists. Timeout handling stops the scheduler, reassigns parent fences to internal done fences for pending jobs, restores list membership and in-flight counts, optionally processes the queue, then restarts the scheduler.
+
+Reset handling stops all idle and active queue schedulers before hard reset. Post-reset sets each timeline UFO to the current job-fence sequence, reattaches completed parent fences, marks contexts faulty when pending jobs did not complete, and restarts schedulers. Queue kill prevents new jobs by destroying the scheduler entity; queue destroy removes list membership, finalizes scheduler/entity state, waits for firmware context cleanup, releases firmware objects, destroys the CCCB and mutex, and frees the queue.
+
+## State and persistence
+Persistent per-queue state includes the DRM scheduler/entity, queue type, context pointer, active/idle list node, in-flight count, CCCB fence waiter, job fence timeline, firmware timeline UFO object and CPU mapping, last queued scheduled fence, CCCB, firmware register-state object, firmware context offset, and geometry callstack address. Device-level persistent state includes active and idle queue lists, their mutex, and the scheduler workqueue. Per-job queue state includes scheduler job fields, internal CCCB/KCCB/done fences, PM reference state, dependencies, paired job links, command buffer pointer/length, firmware command type, HWRT, and job IDs.
+
+## Dependencies and integration points
+Depends on DRM GPU scheduler and dma-fence, PowerVR CCCB/KCCB, context lifetime/refcounting, job objects, VM firmware memory context, firmware object allocation, Rogue firmware command structures, runtime PM through job helpers, and device feature queries. It integrates with ioctl job submission, context creation/destruction, firmware event/IRQ processing via `pvr_queue_process()`, and power reset via pre/post reset hooks.
+
+## Risks
+This file is concurrency-heavy. Races between firmware completion, scheduler stop/start, timeout handling, and queue active-list transitions can corrupt pending-list or in-flight accounting. CCCB waiter management assumes DRM scheduler entity serialization means only one job waits for CCCB space. Native fence dependency counting must match the number of firmware UFO wait commands or CCCB sizing is wrong. Combined geometry/fragment submission has strict ordering and same-context/HWRT assumptions. `pvr_queue_job_init()` can return `-ENOMEM` after `drm_sched_job_init()` without local cleanup unless caller follows the release path. Timeout handling is explicitly incomplete and mainly reassigns fences rather than recovering the GPU.
+
+## Test signals
+Useful signals include successful geometry, fragment, compute, transfer, and combined geometry/fragment submissions; correct fence signaling from timeline UFO values; CCCB-full jobs blocking and later unblocking; KCCB reservation pressure; no PM reference leaks after completion or timeout; context faulty state after reset with unfinished jobs; and clean queue destroy after in-flight work. Stress tests should cover many native dependencies, cross-queue UFO waits, scheduler timeouts, firmware reset during pending work, job completion racing with reset, and command sizes near CCCB limits.

@@ -1,0 +1,19 @@
+# sources/distributed-fs/openafs/src/budb/server.c
+
+## Purpose
+`server.c` is the executable bootstrap for the OpenAFS Backup Database server (`buserver`). It turns command-line and cell configuration into an Rx/Ubik replicated database service for `BUDB_SERVICE`, opens auditing/logging, initializes the on-disk backup database prefix, starts the service threads, and then donates the main LWP to Rx request handling.
+
+## Important APIs, Types, And Functions
+The file exports process-wide state used by other BUDB modules: `BU_dbase`, `BU_conf`, `globalConfPtr`, `lcell`, `myHost`, `rxBind`, `lwps`, and the `dbDir`/`cellConfDir` backing buffers. `initializeArgHandler()` registers the daemon syntax and options. `argHandler()` populates `globalConfPtr`, enforces `-p` bounds (`MINLWP` to `MAXLWP`), configures audit logging, and preserves legacy handling for hidden `-resetdb`. `parseServerList()` converts a command parser list into the `ubik_ParseServerList()` argument vector. `convert_cell_to_ubik()` derives this host address and peer server list from `afsconf_cell`. `BU_rxstat_userok()` and `BU_IsLocalRealmMatch()` integrate Rx statistics and audit user checks with `afsconf`. `main()` orchestrates all process setup. `LogDebug()`, `Log()`, and `LogError()` wrap `FSLog`/`WriteLogBuffer`.
+
+## Control Flow
+Startup initializes platform-specific state, directory paths, BUDB error tables, command parsing, defaults, and audit. After `cmd_Dispatch()`, help exits before daemon work begins. The server opens the cell config directory, reads the local cell, and either uses an explicit `-servers` list or discovers Ubik peers from CellServDB via `afsconf_GetExtendedCellInfo()` and `convert_cell_to_ubik()`. It then sets Ubik security callbacks, computes the database name prefix, optionally binds Rx to the primary restricted/netinfo address, calls `rx_InitHost()`, disables jumbograms, initializes Ubik with either cellinfo or an explicit server list, builds server security classes, registers the Rx service with `BUDB_ExecuteRequest`, initializes dump synchronization, starts Rx, runs `InitProcs()`, logs readiness, and enters `rx_ServerProc(NULL)`.
+
+## State And Persistence
+The persistent state is the Ubik replicated BUDB database under `globalConfPtr->databaseDirectory` with prefix `DEFAULT_DBPREFIX` unless overridden by `-database`. Cell configuration is read from `globalConfPtr->cellConfigdir`. Global process state includes the active `afsconf_dir`, Ubik database handle, logging options, dump synchronization lock, server list, worker-thread count, and authentication/debug flags. The file does not manipulate database contents directly; it initializes the storage and serving layer used by database procedure modules.
+
+## Dependencies And Integration Points
+This file sits at the boundary between platform runtime, OpenAFS command parsing, `afsconf`, audit, Rx, RxKAD, and Ubik. The service callback comes from generated/linked BUDB RPC code as `BUDB_ExecuteRequest`. It relies on `globals.h`, `database.h`, `budb_internal.h`, `error_macros.h`, and external procedures such as `InitProcs()`. Audit integration uses `osi_audit_*`, and logging uses OpenAFS server log utilities.
+
+## Risks And Test Signals
+Risks cluster around daemon bootstrap: bad CellServDB contents, hostname resolution failure, incorrect bind address selection, incompatible Ubik peer lists, or unavailable security classes prevent startup. Several fields are process globals, so tests should exercise repeated initialization only in a fresh process. `parseServerList()` builds a temporary argument vector that intentionally aliases parser item strings; lifetime is safe for the call but not beyond it. Test signals include successful startup with default cell discovery, explicit `-servers`, `-rxbind`, auth/noauth, audit log options, bounded `-p`, Ubik database creation/open, and superuser-only Rx statistics access.

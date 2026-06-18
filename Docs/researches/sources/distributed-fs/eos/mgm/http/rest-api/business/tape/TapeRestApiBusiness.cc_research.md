@@ -1,0 +1,13 @@
+## sources/distributed-fs/eos/mgm/http/rest-api/business/tape/TapeRestApiBusiness.cc
+
+Purpose: implements tape REST business operations by translating request models into EOS prepare/bulk-request calls. It is the main bridge from REST actions to MGM tape staging, cancellation, query, deletion, archive-info, and release/evict behavior.
+
+Important APIs/types/functions: `createStageBulkRequest` builds `PrepareArgumentsWrapper("fake_id", Prep_STAGE, paths, opaqueInfos)` and expects `SFS_DATA`; `cancelStageBulkRequest` loads a stage bulk request, authorizes issuer/root access, verifies each requested path belongs to the request, and calls `Prep_CANCEL`; `getStageBulkRequest` loads a persisted `StageBulkRequest`, authorizes, queries current prepare status, and fills `GetStageBulkRequestResponseModel`; `deleteStageBulkRequest` cancels all paths then deletes the persistency entry; `getFileInfo` runs `Prep_QUERY`; `releasePaths` runs `Prep_EVICT`.
+
+Control flow: all public methods add MGM stats and timing. Stage/create/release create prepare managers over `RealMgmFileSystemInterface(gOFS)`. Cancel and delete first retrieve bulk-request state through `BulkRequestBusiness`, then run prepare cancellation only after local validation. Query maps CTA/EOS prepare responses back to REST model file entries, preferring persisted bulk-request file errors, then CTA `error_text`, then missing request-id errors.
+
+State and persistence: persisted stage requests are accessed through `BulkRequestBusiness` created with `ProcDirectoryDAOFactory(gOFS, *gOFS->mProcDirectoryBulkRequestTapeRestApiLocations)`. Delete mutates both the live prepare state and the proc-directory bulk-request persistency. No state is cached in the business object.
+
+Dependencies and integration points: depends heavily on global `gOFS`, MGM stats, `BulkRequestPrepareManager`, `PrepareManager`, `BulkRequestBusiness`, `ProcDirectoryDAOFactory`, and XRootD `XrdOucErrInfo`. REST exceptions (`ObjectNotFoundException`, `ForbiddenException`, `TapeRestApiBusinessException`, `FileDoesNotBelongToBulkRequestException`) are translated later by response factories.
+
+Risks and test signals: authorization is enforced for get/cancel/delete by `checkIssuerAuthorizedToAccessStageBulkRequest`, allowing root or the original issuer uid; tests should cover unauthorized uid returning forbidden, nonexistent IDs, path-not-in-request cancellation, empty cancellation subsets, prepare return-code failures, persistency exceptions, and CTA query error text. A remaining risk is uid-only authorization: gid, auth protocol, and identity realm are not considered. Another risk is that stage and release rely on `fake_id`; tests should confirm underlying prepare managers ignore or replace that ID safely.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup16.py
+
+Purpose: verifies incremental backup range cursors return only files with changed or required content and do not copy unnecessary files. It distinguishes old unchanged files, old changed files, new empty files, and new populated files.
+
+Important APIs are primary incremental backup cursor, duplicate per-file incremental cursors, `get_keys()` range/length results, checkpoints, and helper `add_data`. Control flow creates initial tables, writes data to two, checkpoints and opens/closes an initial incremental full backup (`ID0`), creates new tables, writes to selected old/new tables, checkpoints, and calls `verify_incr_backup` with expected file lists across three generations. State behavior is incremental file/block metadata and whole-file inclusion for new files without checkpoint information. Risks include exact expected files when checkpoint metadata writes change. Test signals are per-file inclusion assertions, nonzero copy lengths, and exact expected file counts.

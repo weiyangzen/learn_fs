@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_mipi.c
+
+Purpose: `sh_css_mipi.c` computes MIPI frame buffer sizes, allocates/free per-port buffered-sensor MIPI frames and metadata, and sends allocated buffer handles to the SP. It bridges stream input configuration, global CSS buffer state, and SP host-to-device communication.
+
+Important APIs/types/functions: `ia_css_mipi_frame_calculate_size()` calculates a complete CSI/MIPI frame size in DDR memory words including SOF/EOF, packet headers, optional SOL/EOL, embedded data, RAW/YUV/RGB packing, and ISP2401 padding. `mipi_init()` clears per-port allocation refcounts. `allocate_mipi_frames()` allocates `my_css.mipi_frames` and optional metadata for buffered-sensor streams. `free_mipi_frames()` decrements per-port refs and frees buffers when refs reach zero, or frees all buffers when called with NULL. `send_mipi_frames()` writes frame/metadata pointers and frame counts to host-to-SP state and posts `IA_CSS_PSYS_SW_EVENT_MIPI_BUFFERS_READY`.
+
+Control flow and state: file-static `ref_count_mipi_allocation[N_CSI_PORTS]` tracks shared port allocations, especially for ISP2401 multi-stream same-port use. Allocation bypasses online ISP2401 and non-buffered-sensor modes. It validates the CSI port, optionally computes 2401 buffer size, increments refs, sets `NUM_MIPI_FRAMES_PER_STREAM`, allocates frames, and allocates metadata if configured. Freeing validates mode/port, decrements refs, and releases frames/metadata at zero. Sending requires buffered sensor mode, valid port, SP running, and enqueues the SP event.
+
+Dependencies and integration: it depends on stream/pipe/frame/metadata APIs, `my_css` global state from internal CSS, format-to-bits helpers, `HIVE_ISP_DDR_WORD_BYTES`, `ISP_VEC_NELEMS`, SP update functions, and buffer queue event APIs. It is invoked during stream setup and SP startup for buffered sensor input.
+
+Risks: allocation failure after metadata allocation can leave earlier frames or metadata unless all paths unwind consistently; metadata allocation failure returns the previous `err` value, which may still be zero. Refcounting is per port, so mismatched allocate/free calls can leak or prematurely free shared buffers. Size calculations duplicate older logic and include comments questioning which stream config field is authoritative. Arithmetic uses unsigned dimensions and could overflow on invalid resolutions.
+
+Test signals: tests should cover every input format size calculation, ISP2400 versus ISP2401 padding, YUV420 odd/even line math, embedded data, SOL/EOL, invalid formats, invalid ports, multi-stream same-port refcounts, allocation failure unwind, metadata allocation, NULL free-all behavior, and SP-not-running send failure.

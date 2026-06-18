@@ -1,0 +1,15 @@
+# sources/cloud-native/nydus/utils/src/compress/zlib_random.rs
+
+Purpose: feature-gated zran support for generating and using random-access context information over gzip/zlib streams, especially OCI tarball streams.
+
+Important APIs/types/functions: constants define dictionary/window and context limits: `ZRAN_DICT_WIN_SIZE`, `ZRAN_MAX_CI_ENTRIES`, `ZRAN_READER_BUF_SIZE`. `ZranChunkInfo` maps uncompressed chunk ranges to compression-context slices. `ZranContext` stores compressed/uncompressed offsets/lengths, pending bit state, previous byte, and dictionary. `ZranDecoder::uncompress` decodes a random-access slice using a context. `ZranGenerator<R>` wraps `ZranReader<R>` and emits context entries/chunk info via `begin_read` and `end_read`. `ZranReader<R>` tracks compressed input size/hash and exposes initial-data seeding. `ZranStream` wraps raw `z_stream` with custom alloc/free, reset, dictionary, prime bits, and pointer setters.
+
+Control flow: `ZranReaderState::read` feeds compressed input to zlib in `Z_BLOCK` mode, records block-boundary context and dictionaries, handles gzip member boundaries by reset, and returns decompressed bytes to callers such as `tar::Archive`. `ZranGenerator::begin_read` decides whether to reuse or create a compression-info entry based on compressed/uncompressed growth, stream switches, and gaps. `end_read` updates the selected context sizes and returns a `ZranChunkInfo`. `ZranDecoder::uncompress` resets to raw inflate mode, primes pending bits, installs dictionary, inflates the requested context, and has special handling for gzip multi-member transitions/trailers.
+
+State and persistence: contexts and chunk info are persistent metadata that can be stored by callers to later fetch compressed byte ranges and decompress only desired uncompressed chunks. Reader state tracks zlib stream position, dictionaries, SHA256 of compressed bytes read, and total input size.
+
+Dependencies and integration points: depends on `libz_sys`, `sha2`, `tar` in tests, and unsafe C ABI calls including `inflateGetDictionary`. Enabled by the `zran` feature from `utils/Cargo.toml`. Integrates with stargz/zran image handling where random access to compressed tar content is needed.
+
+Risks: this is unsafe, pointer-heavy code around zlib internals; correctness depends on exact `z_stream` pointer/avail accounting. `begin_read` accepts tunables but does not enforce documented relationships between min/max sizes. `ZranDecoder::uncompress` has complex multi-member gzip handling and strict input length checks. Custom zalloc/zfree must match layout precisely. Several methods lock `Mutex` and unwrap, so poisoning panics. Feature-gated code may receive less routine build coverage.
+
+Test signals: tests parse single-stream, first-stream, two-stream, and zero-file gzip tar fixtures; generate compression info; decode bgzip and multi-stream contexts; and verify reader initial-data accounting. These are strong fixture tests for expected stream patterns, but not exhaustive fuzz/property tests for malformed streams.

@@ -1,0 +1,3 @@
+# sources/object-store/apache-ozone/hadoop-ozone/common/src/main/java/org/apache/hadoop/ozone/om/exceptions/OMLeaderNotReadyException.java
+
+Purpose: specialized `IOException` indicating the OM leader exists but is not ready to serve. API is a message constructor. State is the inherited message only. Dependencies are Java IO. Integration point is HA retry/failover logic, especially follower-read and leader failover providers that detect leader-not-ready and retry appropriately. Risk: callers relying on exact type need server-side exception translation to preserve it. Test signal should assert retry policies treat it differently from non-retriable errors.

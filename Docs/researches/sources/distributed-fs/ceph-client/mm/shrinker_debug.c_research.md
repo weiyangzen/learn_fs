@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/mm/shrinker_debug.c
+
+Purpose: exposes registered shrinkers through debugfs so developers can inspect per-memcg/per-node reclaimable object counts and trigger manual scans for a selected shrinker.
+
+Important APIs/types/functions: global state includes `shrinker_debugfs_ida` and `shrinker_debugfs_root`. Public hooks used by the shrinker core are `shrinker_debugfs_add`, `shrinker_debugfs_rename`, `shrinker_debugfs_detach`, and `shrinker_debugfs_remove`; initialization is `shrinker_debugfs_init`. Internal file operations are `shrinker_debugfs_count_show`, `shrinker_debugfs_scan_open`, `shrinker_debugfs_scan_write`, `shrinker_debugfs_scan_fops`, and `shrinker_debugfs_count_fops`.
+
+Control flow: late init creates `/sys/kernel/debug/shrinker` and then walks already registered shrinkers under `shrinker_mutex` to add missing entries. `shrinker_debugfs_add` allocates a stable debugfs ID, creates a directory named `<shrinker-name>-<id>`, and installs `count` and `scan` files. Reading `count` allocates a per-node buffer, iterates memcgs when the shrinker is memcg-aware, calls the shrinker's `count_objects` callback for each node, and emits rows containing memcg id followed by node counts when total is nonzero. Writing `scan` parses `memcg_id nid nr_to_scan`, validates the target, optionally resolves and pins the memcg, builds a `shrink_control`, and invokes `scan_objects`.
+
+State and persistence behavior: debugfs entries live only while debugfs and the shrinker exist. `shrinker->debugfs_entry`, `debugfs_id`, and `name` are updated under `shrinker_mutex`. Rename uses `kvasprintf_const`, swaps names atomically under the mutex, and frees the old name only after a successful debugfs rename. Removal is split into detach under the shrinker mutex and recursive debugfs removal plus IDA free after the core has made the shrinker unreachable.
+
+Dependencies and integration points: depends on `debugfs`, `seq_file`, memcg iteration and lookup by ID, shrinker callbacks/flags, `shrinker_mutex`, and `shrinker_list` exported from the shrinker core. It is not on the reclaim critical path except for creation/removal/rename hooks.
+
+Risks: manual `scan` writes can invoke arbitrary shrinker callbacks from debugfs context and may affect system state, so input validation and memcg reference handling are important. Count output can be expensive when many memcgs/nodes exist and is interruptible through `signal_pending`. The code assumes shrinker lifetime is protected by the core's registration/removal locking; debugfs files must not outlive reachable shrinker objects in a way that allows use-after-free.
+
+Test signals: with debugfs enabled, registered shrinkers should appear under `/sys/kernel/debug/shrinker`, `count` should show rows for root or memcg-aware IDs with per-node counts, `scan` should reject malformed input, invalid nodes, invalid memcg IDs, and nonzero memcg IDs for non-memcg shrinkers, and renaming/removing shrinkers should update or delete directories without ID leaks or stale files.

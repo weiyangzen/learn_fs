@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/capget/capget01.c
+
+Purpose: verifies `capget()` works for Linux capability ABI versions 1, 2, and 3 and observes a dropped capability. Setup stores current pid; test metadata drops `CAP_NET_RAW`; each testcase fills the header version/pid, calls raw `__NR_capget`, and asserts `CAP_NET_RAW` is absent from effective capabilities. Important APIs are `tst_syscall(__NR_capget)`, `struct __user_cap_header_struct`, `struct __user_cap_data_struct`, and LTP capability metadata. State is process capability sets and allocated header/data buffers. Dependencies are Linux capabilities. Risks include bit-width assumptions for version 1 and capability environment. Test signal is syscall success and effective set lacking `CAP_NET_RAW`.

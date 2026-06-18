@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/usb/mtu3/mtu3_trace.h
+
+Purpose: declares the tracepoint surface for the MediaTek MTU3 controller driver. The events cover generic driver logs, USB2/USB3 interrupt summaries, QMU interrupt summaries, control setup packets, gadget request lifecycle, QMU GPD preparation/completion/ZLP handling, and gadget endpoint state.
+
+Important APIs, types, and events: `TRACE_SYSTEM mtu3` groups events under `mtu3`. `TRACE_EVENT(mtu3_log)` records device name and formatted message. Interrupt events are `mtu3_u3_ltssm_isr`, `mtu3_u2_common_isr`, and `mtu3_qmu_isr`. Event classes `mtu3_log_setup`, `mtu3_log_request`, `mtu3_log_gpd`, and `mtu3_log_ep` define reusable payloads for setup packets, `struct mtu3_request`, `struct qmu_gpd`, and `struct mtu3_ep`; derived events include `mtu3_handle_setup`, `mtu3_alloc_request`, `mtu3_free_request`, `mtu3_gadget_queue`, `mtu3_gadget_dequeue`, `mtu3_req_complete`, `mtu3_prepare_gpd`, `mtu3_complete_gpd`, `mtu3_zlp_exp_gpd`, `mtu3_gadget_ep_enable`, `mtu3_gadget_ep_disable`, and `mtu3_gadget_ep_set_halt`.
+
+Control flow: included normally, the header provides tracepoint declarations and inline call sites through generated `trace_mtu3_*` functions. Included from `mtu3_trace.c` with `CREATE_TRACE_POINTS`, it instantiates the tracepoint definitions. The footer sets `TRACE_INCLUDE_PATH .` and `TRACE_INCLUDE_FILE mtu3_trace` so `trace/define_trace.h` can locate this header during kernel trace generation.
+
+State and persistence: no persistent state is owned here. Each enabled event snapshots selected runtime fields: endpoint names, flags, GPD words converted from little-endian, request actual/length/status/zero/no_interrupt fields, setup packet fields converted from little-endian, and interrupt bitmasks. Disabled tracepoints have minimal static-key overhead.
+
+Dependencies and integration points: includes Linux tracepoint infrastructure and `mtu3.h` for register bit names and MTU3 structures. It integrates with QMU code, gadget endpoint code, setup handling, and interrupt handlers. User-space consumers see these events through tracefs/perf/ftrace using the `mtu3` event system.
+
+Risks: trace events dereference driver pointers such as `mreq->mep`, `mep->gpd_ring`, and `gpd` fields, so call sites must only trace while those objects are valid. Event print formats assume MTU3 bit definitions from `mtu3.h` are visible and stable. The event name/API surface is consumed by tracing scripts, so renaming events or changing payloads can break diagnostics. The header must remain safe for multiple inclusion under `TRACE_HEADER_MULTI_READ`.
+
+Test signals: build with `CONFIG_TRACEPOINTS`, enable individual MTU3 events, exercise setup packets, endpoint enable/disable/halt, request queue/dequeue/complete, QMU descriptor preparation/completion, QMU exceptions, USB2 reset/suspend/resume, and USB3 LTSSM interrupts; verify decoded event output matches hardware register state and does not fault when requests complete concurrently.

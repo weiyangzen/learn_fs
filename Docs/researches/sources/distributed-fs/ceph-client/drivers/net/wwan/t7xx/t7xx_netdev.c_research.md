@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_netdev.c
+
+This file adapts the T7xx DPMAIF data path to Linux WWAN netdevs. It registers WWAN rtnl operations, creates per-IP-mux network devices, starts/stops NAPI around netdev users, transmits IP packets through DPMAIF TX, receives DPMAIF SKBs into GRO, and reacts to modem state changes.
+
+Important functions include `t7xx_ccmni_init`, `t7xx_ccmni_exit`, `t7xx_ccmni_open`, `t7xx_ccmni_close`, `t7xx_ccmni_start_xmit`, `t7xx_ccmni_recv_skb`, and the WWAN link callbacks `t7xx_ccmni_wwan_newlink`/`dellink`. The modem-state notifier registers with the FSM and starts WWAN operations when `MD_STATE_READY`; exception/stopped states stop TX, run `t7xx_dpmaif_md_state_callback`, disable NAPI, and drop carrier.
+
+Control flow for TX checks MTU and CCCI headroom, stores `netif_idx` in the SKB control block, and enqueues to the default DPMAIF TX queue. RX gets `netif_idx` and `rx_pkt_type` from DPMAIF, selects the registered `t7xx_ccmni` instance, sets IPv4/IPv6 protocol, and passes the SKB to `napi_gro_receive`. Queue-state callbacks stop or wake netdev TX queues on DPMAIF full/IRQ notifications.
+
+State is in `struct t7xx_ccmni_ctrl`: DPMAIF control, per-link netdev pointers, callbacks, FSM notifier, NAPI pointers attached to a dummy netdev, registration flag, and reference counts. Dependencies include Linux WWAN rtnl core, netdev/NAPI/GRO, runtime PM, DPMAIF RX/TX, FSM, and CCCI header sizing. Risks include null default netdev access in queue-state callbacks, NAPI reference imbalance, registering links before modem readiness, SKB headroom drops, and queue wakeups after modem state changes. Test signals include default link creation, manual link add/delete, open/close refcounting, IPv4/IPv6 RX, TX queue full/wake, MTU changes, suspend/resume, and exception/stopped modem transitions.

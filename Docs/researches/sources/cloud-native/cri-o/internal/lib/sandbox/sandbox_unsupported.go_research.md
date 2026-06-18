@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/sandbox/sandbox_unsupported.go
+
+Purpose: non-Linux, non-FreeBSD fallback implementation for sandbox platform hooks. It provides no-op `UnmountShm` and `NeedsInfra` returning false. There are no data structures or persistence. Integration is purely via Go build tags so unsupported platforms compile without Linux mount or FreeBSD jail/netns behavior. Dependencies are only `context`. Risks are semantic under-reporting: callers on unsupported platforms will not require infra containers and shm cleanup is skipped, which may be acceptable only because those runtime features are unavailable. Test signals are compile-time coverage for unsupported platforms rather than runtime tests in this repository slice.

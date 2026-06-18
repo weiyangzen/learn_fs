@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/ras/rascore/ras_log_ring.c
+
+Purpose: this file implements an in-memory RAS event log ring using a mempool and radix tree keyed by batch/subsequence numbers. It stores ACA register snapshots for later CPER generation or inspection.
+
+Important functions: `ras_log_ring_sw_init()` creates a preallocated mempool, initializes the radix tree and spinlock. `ras_log_ring_create_batch_tag()` reserves a batch ID and timestamp; `ras_log_ring_add_log_event()` allocates a log record, fills timestamp/event/register data, synthesizes RMA register data when needed, and inserts it. `ras_log_ring_get_batch_records()` returns records in a batch. `ras_log_ring_get_batch_overview()` reports first/last batch indexes and count. Cleanup paths delete tree entries and destroy the mempool.
+
+Control flow and state: `mono_upward_batch_id` grows as batches or unbatched entries are created. `last_del_batch_id` advances when old data is removed. `logged_ecc_count` tracks live records. Batch sequence numbers use the high bits for batch ID and low 8 bits for sub-sequence; `MAX_RECORD_PER_BATCH` is 32. If allocation fails or the pool is too full, the code deletes a temporary number of old records before retrying.
+
+Dependencies and integration: CPER code consumes `struct ras_log_info` records; ACA producers provide register arrays; core supplies timestamps and device info. Risks include radix-tree insertion collisions, `logged_batch_count` including empty/deleted batches, count comparison against byte-sized mempool constants, and no deep copy on `get_batch_records()`. Test signals should cover batched/unbatched insertion, batch overflow, deletion under memory pressure, RMA synthetic register content, concurrent add/query paths, and CPER generation from returned records.

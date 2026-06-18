@@ -1,0 +1,7 @@
+## sources/sync-backup/bup/lib/bup/repo/remote.py
+
+Purpose: implements `RemoteRepo`, the `RepoProtocol` adapter for repositories reached through `bup.client.Client`. It gives higher-level code the same read/write/ref surface as a local repo while routing object and ref operations over the remote client protocol.
+
+Important APIs and control flow: construction validates the location through `Client`, exposes client methods (`rev_list`, `refs`, `resolve`, `join`, etc.), and builds shared write configuration via `_make_base`. Writes are lazy: `_ensure_packwriter()` opens a remote packwriter only when an object write is requested; `finish_writing()` closes and uploads that writer before ref updates. `cat()` wraps `client.cat_batch()` and, when the requested ref is a 40-hex oid, streams data through a SHA-1 check before allowing the batch call to finish.
+
+State, dependencies, and integration: persistent state lives remotely in packs and refs; local state is the open client and optional `_packwriter`. It depends on `bup.client`, `bup.git`, and `bup.repo.base`. `update_ref()` flushes pending writes first, which is critical for remote visibility. Risks include protocol deadlock if a caller starts another remote operation before consuming a `cat()` iterator, and abort handling leaving `_packwriter` set after `abort_writing()`. Test signals come indirectly from remote save/get/gc/init scenarios such as `test-gc`, `test-init`, and import/save tests that use `-r -:repo`.

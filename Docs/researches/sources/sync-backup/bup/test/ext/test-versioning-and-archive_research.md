@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-versioning-and-archive -->
+# sources/sync-backup/bup/test/ext/test-versioning-and-archive
+
+Purpose: verifies bup version strings and release archive behavior across clean/dirty release and non-release trees. Important APIs are Git clone/status/commit/archive, `./bup version`, `make check`, and unpacked tarball execution. Control flow clones the current repo, computes base/head version information, checks non-release clean and dirty suffix behavior, edits release-version state to check dirty and clean release strings, creates a `git archive` tarball, verifies archive version output, and runs `make check` in the unpacked archive. State is a cloned worktree, modified files, Git commits, and a tar archive. Dependencies include Git archive metadata, make, test suite availability, and version-generation scripts. Risks are dirty worktree detection, archive export losing Git metadata, and expensive `make check` runtime. Test signals are exact version strings with or without `+` and successful archive test run.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-versioning-and-archive -->

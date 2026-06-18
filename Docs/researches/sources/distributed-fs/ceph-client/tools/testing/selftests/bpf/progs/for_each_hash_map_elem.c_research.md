@@ -1,0 +1,53 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/progs/for_each_hash_map_elem.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/progs/for_each_hash_map_elem.c
+
+## Purpose
+`for_each_hash_map_elem.c` is a bpf_for_each_map_elem callback-iteration selftest. It belongs to the Linux BPF selftest program corpus vendored under the Ceph client source tree, so its purpose is verifier/runtime coverage rather than Ceph production filesystem logic. The file was read completely for this note; size is 1855 bytes across 95 lines.
+
+## Important APIs, Types, and Functions
+- Dependencies: `"vmlinux.h"`, `<bpf/bpf_helpers.h>`.
+- BPF API surface: map lookup/update/delete or map-side state; task/cgroup/time/function metadata helpers; map-element callback iteration.
+- Helper/kfunc calls: `bpf_for_each_map_elem`, `bpf_get_smp_processor_id`, `bpf_map_delete_elem`.
+Map/type declarations observed:
+- line 9 declares map type `BPF_MAP_TYPE_HASH`
+- line 16 declares map type `BPF_MAP_TYPE_PERCPU_HASH`
+Attach sections and exported entry points:
+- line 6 `SEC("license")` -> struct {
+- line 13 `SEC(".maps")` -> struct {
+- line 20 `SEC(".maps")` -> struct callback_ctx {
+- line 81 `SEC("tc")` -> int test_pkt_access(struct __sk_buff *skb)
+Key functions/subprograms:
+- line 82 `test_pkt_access`: `int test_pkt_access(struct __sk_buff *skb)`
+
+## Control Flow
+User-space loads the object and attaches programs by `SEC` name. The primary runtime entry sections are `license`, `.maps`, `.maps`, `tc`. Each entry uses the attach-specific context, performs bounded checks or helper/kfunc calls, records result state in globals/maps when needed, and returns the expected verifier/runtime verdict for that attach type.
+Local flow is organized through `test_pkt_access`. Error returns are generally checked immediately because verifier tests rely on precise path state and reference lifetime accounting.
+Callback iteration is central to the flow; callback prototypes, mutation permissions, and bounded iteration counts are part of what the verifier is testing.
+
+## State and Persistence Behavior
+Object-local globals/BSS provide harness-visible state:
+- line 24 `int input;`
+- line 25 `int output;`
+- line 33 `__u32 k;`
+- line 34 `__u64 v;`
+- line 51 `__u32 cpu = 0;`
+- line 52 `__u32 percpu_called = 0;`
+- line 53 `__u32 percpu_key = 0;`
+- line 54 `__u64 percpu_val = 0;`
+- line 55 `int percpu_output = 0;`
+- line 77 `int hashmap_output = 0;`
+- plus 2 more entries of the same pattern.
+BPF maps persist while the object is loaded and carry fixture data, counters, callback state, program arrays, object references, or map-in-map handles between the BPF side and the user-space harness.
+
+## Dependencies and Integration Points
+- Linux BPF selftest skeleton/loading code selects programs by section/function name and reads BSS/map state after triggering the relevant kernel path.
+- Kernel verifier, BTF IDs, helper/kfunc availability, and program-type-specific context rules are part of the API contract.
+- Packet contexts (`tc`, `xdp`, `lwt`, cgroup skb) make data/meta bounds and return codes verifier-sensitive.
+
+## Risks and Edge Cases
+- The main drift risk is mismatch with the user-space selftest harness for section names, globals, maps, return codes, or expected side effects.
+
+## Test Signals
+- Runtime signal comes from attaching the listed sections, triggering the relevant syscall/socket/packet/LSM/testmod path, and reading globals/maps.
+- Map contents are part of the observable state for callbacks, references, counters, or fixture data.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/progs/for_each_hash_map_elem.c -->

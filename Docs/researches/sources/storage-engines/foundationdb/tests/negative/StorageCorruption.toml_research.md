@@ -1,0 +1,11 @@
+# Research: sources/storage-engines/foundationdb/tests/negative/StorageCorruption.toml
+
+- **Purpose:** Negative simulation test specification for `StorageCorruption`. It intentionally exercises error or fault behavior where the expected signal is not normal success-path workload completion.
+- **Source facts:** 21 lines, 432 bytes, executable=False.
+- **Important APIs/types/functions:** Declarative TOML contract: 1 test block(s), titles StorageCorruption, workloads StorageCorruption, ReadWrite, top-level keys none.
+- **Control flow:** The TestRunner passes this TOML to fdbserver simulation with `-f`. The simulator iterates 1 `[[test]]` block(s) (StorageCorruption) and schedules each block's workload list (StorageCorruption:2). Workload ordering, durations, clear-after-test settings, and failure-injection workloads determine the control flow inside simulation.
+- **State and persistence:** The file is declarative and persists no state by itself. Runtime state is created by the simulation engine, including simulated database contents, backup/restore artifacts, restart information, logs, or workload-specific key ranges named by the workloads. Storage-engine-focused workloads stress on-disk or checkpoint representations in the simulated/noSim environment.
+- **Dependencies:** Depends on the FoundationDB simulator workload registry for: StorageCorruption, ReadWrite. Top-level keys: none. Configuration/test knobs: StorageCorruption/StorageCorruption.testDuration=60.0, StorageCorruption/ReadWrite.testDuration=60.0, StorageCorruption/ReadWrite.transactionsPerSecond=200, StorageCorruption/ReadWrite.nodeCount=10000.
+- **Integration points:** Integrated by suite location `negative` and consumed by `fdbserver -r simulation -f sources/storage-engines/foundationdb/tests/negative/StorageCorruption.toml` through the Python TestRunner/CTest path.
+- **Risks:** Negative tests rely on expected failure/ignore behavior, so a plain non-zero exit is not always enough context without matching trace assertions. Storage-engine tests are sensitive to engine selection/exclusion knobs and checkpoint determinism.
+- **Test signals:** Signals are simulator parse success, workload completion, trace absence/presence of severity 40, and any workload-specific invariants for StorageCorruption, ReadWrite. Clear-after-test modes: none. Timeouts: none.

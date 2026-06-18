@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/arch/sparc/include/asm/pgtable_64.h
+
+Purpose: sparc64 Spitfire/SUN4V page-table definition covering virtual layout, PTE bit encodings, huge pages, ADI tag save/restore, TLB batching, swap entries, IO PFNs, and fault-handler integration.
+
+Important APIs/types/functions: types `seq_file`, `vm_area_struct`; functions/helpers `kern_addr_valid`, `mk_pte_io`, `pte_sz_bits`, `pfn_pte`, `pfn_pmd`, `pte_pfn`, `pte_modify`, `pmd_modify`, `pgprot_noncached`, `pte_dirty`, `pte_write`, `arch_make_huge_pte`, `__pte_default_huge_mask`, `pte_mkhuge`, `is_default_hugetlb_pte`, `is_hugetlb_pmd`, plus 70 more; macros/constants `_SPARC64_PGTABLE_H`, `TLBTEMP_BASE`, `TSBMAP_8K_BASE`, `TSBMAP_4M_BASE`, `MODULES_VADDR`, `MODULES_LEN`, `MODULES_END`, `LOW_OBP_ADDRESS`, `HI_OBP_ADDRESS`, `VMALLOC_START`, `VMEMMAP_BASE`, `PMD_SHIFT`, `PMD_SIZE`, `PMD_MASK`, `PMD_BITS`, `PUD_SHIFT`, `PUD_SIZE`, `PUD_MASK`, plus 143 more.
+
+Control flow: The file is driven by preprocessor gates such as `_SPARC64_PGTABLE_H`, `(MAX_PHYS_ADDRESS_BITS > PGDIR_SHIFT + PGDIR_BITS)`, `(PGDIR_SHIFT + PGDIR_BITS) != 53`, `(PMD_SHIFT != HPAGE_SHIFT)`, `__ASSEMBLER__`, `REAL_HPAGE_SHIFT != 22`, `CONFIG_TRANSPARENT_HUGEPAGE`, `defined(CONFIG_HUGETLB_PAGE) || defined(CONFIG_TRANSPARENT_HUGEPAGE)`, plus 2 more; inline/assembler paths that run at trap, MMU, cache, lock, or user-copy boundaries; static inline helpers selected by generic kernel call sites. Callers normally reach it through generic Linux architecture hooks or SPARC wrapper headers, so behavior changes propagate into memory-management, TLB/MMU, scheduler/task paths rather than through standalone functions.
+
+State and persistence behavior: State persists in page tables, TSB/TLB batch queues, global patchable page-size/cache masks, ADI tag metadata, `VMALLOC_END`, and platform-selected SUN4U/SUN4V bit layouts.
+
+Dependencies and integration points: Includes/dependencies: `asm-generic/pgtable-nop4d.h`, `linux/compiler.h`, `linux/const.h`, `asm/types.h`, `asm/spitfire.h`, `asm/asi.h`, `asm/adi.h`, `asm/page.h`, `asm/processor.h`, `linux/sched.h`, `asm/tlbflush.h`. Integration points include memory-management, TLB/MMU, scheduler/task; many consumers rely on exact macro names matching Linux generic MM, scheduler, trap, PCI, signal, or VDSO contracts.
+
+Risks and test signals: Main risks are register/window layout drift, inline assembly or ASI ordering mistakes, MMU/TLB encoding regressions, configuration-specific build gaps. Test signals: Boot on sun4u/sun4v, THP/hugetlb, ADI MCD mappings, swap migration, framebuffer mmap alignment, D-cache alias moves, and TLB batch flushing are critical tests.

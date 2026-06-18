@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/debug/testing.go
+
+Purpose: test helpers for controlling debug output. APIs: `TestLogToStderr` reports whether debug stderr logging is active for tests, and `TestDisableLog` disables debug logging globally. Control flow inspects global debug options and mutates `opts.isEnabled`. State is global and process-wide, so changes affect all subsequent debug logging in the test process. Dependencies include `testing`. Integration points are tests that need stable output or want to skip log-dependent assertions. Risks: disabling logging is not automatically restored and can affect parallel tests; helper is intentionally test-only by convention, not build tags.

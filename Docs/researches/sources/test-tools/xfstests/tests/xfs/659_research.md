@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/xfstests/tests/xfs/659 -->
+# sources/test-tools/xfstests/tests/xfs/659
+
+## Purpose
+`sources/test-tools/xfstests/tests/xfs/659` is an XFS fstests shell case focused on online repair and scrub, metadata fuzzing and repair, realtime-device coverage, extent mapping and exchange, I/O or media-error handling. Check that xfs_healer can report file IO errors. The `_begin_fstest` declaration is `auto quick scrub eio selfhealing`. The file is part of the xfstests `tests/xfs` suite and exercises kernel/xfsprogs behavior through the standard fstests harness.
+
+## Important APIs, Types, And Functions
+The script is bash built on `./common/preamble` and imports `./common/dmerror`, `./common/filter`, `./common/fuzzy`, `./common/preamble`, `./common/systemd`. Local helper surface: `_cleanup`, `filter_healer_errors`. Requirement and regression gates include `_require_scratch`, `_require_scrub`, `_require_command "$XFS_HEALER_PROG" "xfs_healer"`, `_require_command "$XFS_PROPERTY_PROG" "xfs_property"`, `_require_dm_target error`, `_require_no_xfs_always_cow	# no out of place writes`, `_require_xfs_scratch_non_zoned`, `_require_xfs_healer $SCRATCH_MNT`. Important external or harness tools detected in the full source include `xfs_io`, `mkfs.xfs`, `xfs_healer`, `xfs_property`, `dm-error`, `mount`. Scenario variables and harness state referenced include `DMERROR_TABLE`, `DMERROR_RTTABLE`, `SCRATCH_MNT`, `SCRATCH_DEV`.
+
+## Control Flow
+The test starts with fstests setup, requirement gating, and scratch/test environment preparation. Its concrete flow formats the scratch or loop filesystem, mounts, unmounts, or cycle-mounts to test persistence across remounts, uses `xfs_io` commands for writes, fallocate/punch, bmap inspection, scrub, repair, exchange, or media verification, uses `xfs_db` or fuzz helpers to inspect or intentionally corrupt on-disk metadata, uses dm-error or healer/systemd helpers to inject and observe I/O failures. Branches are mostly feature skips, helper return-code checks, and scenario loops over corruption targets, geometry variants, or repair modes when present. Output is compared with the companion `.out` file when one exists, with noisy paths and variable values normalized by filter helpers.
+
+## State And Persistence Behavior
+Persistent effects are intentionally scoped to scratch or test filesystem contents, temporary `$tmp.*` files, `$seqres.full` diagnostics, mount state, and any on-disk XFS metadata intentionally created or damaged during the test. Cleanup is handled through local `_cleanup`/`_register_cleanup` hooks when present and otherwise by the fstests harness. Remounts, syncs, offline repair, and post-test checks are used to verify that repaired metadata and file data survive persistence boundaries.
+
+## Dependencies And Integration Points
+The file integrates with fstests variables such as `$SCRATCH_DEV`, `$SCRATCH_MNT`, `$TEST_DIR`, `$seqres`, `$seqres.full`, `$here`, `$tmp`, and tool variables for xfs_io, xfs_db, xfs_repair, mkfs.xfs, xfs_scrub, quota, healer, and auxiliary test programs when referenced. Requirement gates are the compatibility contract for kernel features, xfsprogs commands, scratch-device geometry, realtime devices, quotas, loop devices, dm-error targets, and helper binaries.
+
+## Risks
+the test assumes fstests scratch/test device isolation and can leave deliberately corrupted metadata until cleanup or repair finishes; intentional metadata corruption can make failures noisy and depends on xfs_db field names matching the tested xfsprogs version; device-mapper error injection is sensitive to logical block size, realtime/zoned layout, and async writeback or readahead retries; realtime-device paths depend on allocation unit and feature configuration, so tests skip or change behavior when geometry is unsuitable.
+
+## Test Signals
+companion golden output `sources/test-tools/xfstests/tests/xfs/659.out`; stable progress/output labels such as `echo "$errordev:$bmap_str" >> $seqres.full`, `echo "file_blksz:$file_blksz:fs_blksz:$fs_blksz" >> $seqres.full`, `echo "$errordev:$phys:$len:$fs_blksz:$phys_start" >> $seqres.full`, `echo "victim file:" >> $seqres.full`, `echo "bad_sector $bad_sector not congruent with device logical block size $logical_block_size"`, and 12 more; diagnostic detail appended to `$seqres.full`; hard failures through `_fail` assertions. The source has 212 lines and was read completely for this report.
+<!-- END_FILE_RESEARCH: sources/test-tools/xfstests/tests/xfs/659 -->

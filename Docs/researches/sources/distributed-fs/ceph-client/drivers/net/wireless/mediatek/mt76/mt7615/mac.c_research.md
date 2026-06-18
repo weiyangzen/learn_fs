@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+
+Purpose: descriptor-level MAC logic for MT7615-family devices: RX parsing, TX descriptor generation, WTBL key/rate updates, TX status/free handling, survey/MIB/SCS maintenance, runtime PM workers, DFS radar control, beacon filtering, and firmware coredump assembly.
+
+Important APIs/functions: exports `mt7615_mac_reset_counters()`, `mt7615_mac_set_timing()`, `mt7615_mac_write_txwi()`, `mt7615_mac_wtbl_update()`, `mt7615_mac_sta_poll()`, `mt7615_mac_get_sta_tid_sn()`, `mt7615_mac_set_rates()`, WTBL key setters, `mt7615_rx_check()`, `mt7615_queue_rx_skb()`, `mt7615_mac_set_scs()`, `mt7615_mac_enable_nf()`, `mt7615_mac_cca_stats_reset()`, `mt7615_update_channel()`, PM workers, `mt7615_mac_work()`, `mt7615_tx_token_put()`, DFS init, beacon filter, and `mt7615_coredump_work()`.
+
+Control flow: RX queue entries are classified by packet type. TX status/free packets update tx status, release tokens, clean queues, poll airtime, and reschedule the tx worker. Normal RX packets are decoded from RXD groups, mapped to the correct PHY/WCID, annotated with checksum/decryption/rate/RSSI/AMPDU status, optionally reverse header translation for mesh fragments, and passed to mt76/mac80211. TX path builds TXWI descriptors with queue, WCID, header format, key/protection, fixed-rate, retry, sequence, PID, and beacon flags. MAC work periodically updates survey/MIB counters and SCS sensitivity. DFS setup loads regional radar thresholds through MCU and transitions CAC/active/disabled states.
+
+State and persistence: maintains per-STA rate sets, rate TSF, airtime counters, WCID cipher mask, TX tokens, tx status queues, per-PHY MIB stats, survey time, noise EWMA, false CCA and sensitivity thresholds, DFS state/rdd_state, beacon-filter counts, runtime PM statistics, queued PM SKBs, and coredump message queues. Hardware WTBL and MIB registers are the volatile backing store.
+
+Dependencies and integration: integrates mac80211 RX/TX status APIs, mt76 queue/token/status helpers, connac MCU commands, runtime PM, debug tracepoints, devcoredump, DFS/cfg80211 state, and register definitions from `mac.h`/`regs.h`. `main.c` calls these hooks from mac80211 ops; `mcu.c` supplies command transport.
+
+Risks: RX parsing is length- and flag-sensitive; malformed RXD groups must be rejected to avoid skb overrun. Rate-set TSF selection and asynchronous USB/SDIO rate updates are race-sensitive. WTBL key updates must handle mixed BIP/data ciphers and key index validity correctly. PM work avoids sleeping while the mt76 mutex is held; violating that can break register access. DFS thresholds are regulatory-sensitive.
+
+Test signals: RX traffic with checksum/decryption/radiotap correctness; TX status ACK/retry accounting; AMPDU BA setup/teardown; airtime stats; survey/noise updates; SCS debug values changing under interference; DFS CAC/radar events; beacon filtering for STA/AP roles; token cleanup on reset/unload; devcoredump creation after firmware assert events.

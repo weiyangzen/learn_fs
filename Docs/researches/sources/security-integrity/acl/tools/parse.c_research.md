@@ -1,0 +1,5 @@
+## sources/security-integrity/acl/tools/parse.c
+
+Purpose: ACL command and restore-file parser for `setfacl`. It converts textual ACL entries, comma lists, and `getfacl` comment blocks into `cmd_t` records stored in a `seq_t`.
+
+Important functions are `parse_acl_cmd`, `parse_acl_seq`, `read_acl_comments`, and `read_acl_seq`; helpers `skip_tag_name` and `get_token` implement tolerant ACL token parsing. Control flow recognizes user/group/other/mask/default entries, resolves user and group names through libacl helpers, supports numeric and symbolic permissions including conditional `X`, and reports parse offsets through `which`. State is caller-owned except temporary tokens and parsed comment outputs. Dependencies include `sequence.h`, `misc.h` line/quote helpers, `sys/acl.h`, pwd/group lookup wrappers, and mode flag constants. Risks include permissive fallback to `user:` parsing, static line buffers from `__acl_next_line`, duplicate restore comments causing `-EINVAL`, and fragile pointer-offset diagnostics after parse failure. Test signals come indirectly from `setfacl --restore`, modify/remove-file tests, and ACL text compatibility cases.

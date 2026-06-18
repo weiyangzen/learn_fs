@@ -1,0 +1,32 @@
+# sources/object-store/minio/cmd/xl-storage.go
+
+## Purpose
+This file is MinIO's local erasure-set storage backend implementation. `xlStorage` implements the `StorageAPI` surface for a local disk path: disk initialization, volume lifecycle, raw file I/O, `xl.meta` metadata reads/writes, version metadata mutation, trash-based deletes, multipart/part movement, bitrot verification, data usage scanning, and disk identity reporting.
+
+## Important APIs, Types, and Functions
+Core constants define the metadata file names (`xlStorageFormatFile`, `xlStorageFormatFileBackup`), small-file inline threshold, and legacy null version marker. `xlStorage` holds drive path, endpoint indexes, direct-I/O capability, cached `format.json` data, disk ID, disk-info cache, filesystem identity, scan state, trash purge channel, rotational-disk walk locks, and global sync/direct-I/O flags.
+
+Initialization is handled by `newXLStorage`, `getValidPath`, `getDiskInfo`, `makeFormatErasureMetaVolumes`, and `checkODirectDiskSupport`. Identity and health are exposed through `DiskInfo`, `GetDiskID`, `SetDiskID`, `GetDiskLoc`, `Healing`, `IsOnline`, `IsLocal`, `Hostname`, `Endpoint`, and `Close`.
+
+Namespace APIs include `MakeVolBulk`, `MakeVol`, `ListVols`, `StatVol`, `DeleteVol`, `ListDir`, `Delete`, `DeleteBulk`, `RenameFile`, and `StatInfoFile`. Metadata and version APIs include `ReadXL`, `ReadVersion`, `WriteMetadata`, `UpdateMetadata`, `DeleteVersion`, `DeleteVersions`, `renameLegacyMetadata`, `readRaw`, `readMetadataWithDMTime`, and `readAllDataWithDMTime`. Data APIs include `ReadAll`, `WriteAll`, `AppendFile`, `CreateFile`, `ReadFile`, `ReadFileStream`, `RenameData`, `RenamePart`, `ReadParts`, `ReadMultiple`, `CheckParts`, `VerifyFile`, and `CleanAbandonedData`.
+
+## Control Flow
+`newXLStorage` validates or creates the endpoint path, rejects root drives, captures filesystem/disk properties, creates MinIO internal volumes, migrates/loads `format.json`, checks expected pool/set/disk ordering, decides direct-I/O support, and initializes a cached `DiskInfo` callback. Regular operations first resolve a volume directory, validate effective path length, then call local filesystem helpers (`OpenFile`, `Rename`, `renameAll`, `readDir`, `mkdirAll`, `Remove`, `Lstat`) while translating OS errors into MinIO domain errors.
+
+Read flow for objects starts with `ReadVersion`: optional original-volume access check, volume/path validation, raw metadata read from `xl.meta` or legacy `xl.json`, `getFileInfo` decoding, and optional inline or small-part data loading. Write flow for metadata usually serializes `xlMetaV2`, writes bytes with sync semantics, and for `writeAllMeta` uses a temp file in `.minio.sys/tmp` followed by `renameAll` to atomically replace the final metadata. `RenameData` is the commit path for object data: it loads existing destination metadata, preserves legacy data if needed, adds free versions for overwritten null versions, writes new metadata under the source temp location, renames data directories, optionally backs up old metadata under the old data dir, then atomically renames source metadata into the destination.
+
+Delete flow mutates metadata with `xlMetaV2.DeleteVersion`, moves unreferenced data dirs to `.minio.sys/tmp/.trash`, rewrites metadata when versions remain, or removes `xl.meta` and empty parents when the last version is gone. Bulk deletes and volume force-deletes use trash renames; immediate purge is asynchronous through `immediatePurge` unless queue pressure forces blocking removal.
+
+`NSScanner` bridges the storage layer to MinIO lifecycle, replication, object-lock, versioning, tier, usage-cache, and scanner metrics subsystems. It walks metadata files, decodes versions, applies lifecycle/replication accounting actions, emits data-usage entries, and queues free versions for tier cleanup.
+
+## State and Persistence
+Persistent state is stored directly under `drivePath`: buckets/volumes as directories, objects as directories containing `xl.meta`, parts under version data dirs, legacy objects as `xl.json`, MinIO internal state under `.minio.sys`, and trash under `.minio.sys/tmp/.trash`. `format.json` is cached in memory with its `os.FileInfo` and periodically rechecked to detect disk replacement or ordering mismatch. Extended attributes on `format.json` track total writes/deletes. Metadata writes use synchronous/direct or O_SYNC/O_DSYNC modes depending on platform and size, then atomic rename where required. Data writes use `Fdatasync` and checked `Close` to avoid silent loss.
+
+## Dependencies and Integration Points
+The file depends heavily on MinIO internal packages: `disk`, `ioutil`, `cachevalue`, scanner/lifecycle/replication systems, storage-class tiering, logger, xattr, and metadata codecs (`xlMetaV2`, `formatErasureV3`, `FileInfo`). It is called by erasure object-layer code and storage REST wrappers. It integrates with global configuration (`globalDriveConfig`, `globalAPIConfig`, `globalFSOSync`, `globalStorageClass`), global object-layer access, bucket metadata systems, disk health checks, scanner metrics, and platform-specific `readMode`/`writeMode`.
+
+## Risks and Edge Cases
+Correctness depends on careful error translation; a wrong OS error mapping can make healing, retries, or S3 responses incorrect. `RenameData` is complex and has partial-failure windows around metadata, data-dir, and backup renames; recovery depends on later healing and backup metadata. `CleanAbandonedData` appears to serialize `newBuf` but writes `buf`, which is a risk if this snapshot is representative. Direct-I/O support varies by filesystem; unsupported or misdetected direct I/O fails startup for erasure disks. Root-drive detection and disk-ID ordering checks are safety gates with operational impact. Path-length validation is platform sensitive. Trash growth, immediate purge backpressure, xattr availability, and legacy `xl.json` migration paths are operational risk areas.
+
+## Test Signals
+The companion tests exercise path validation, volume CRUD, disk-not-found/access-denied mapping, reads, writes, appends, renames, metadata version delete, bitrot verification, stat behavior, umask behavior, and Windows UNC/path-component errors. Coverage is strongest for local filesystem edge cases and legacy metadata reads; it is weaker for `NSScanner`, `RenameData` crash recovery, xattr counters, direct-I/O probing, and trash-purge pressure.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/intel/iavf/iavf_adminq.c
+
+Purpose: this file implements the VF Admin Queue ring machinery. It allocates and configures Admin Send Queue (ASQ) and Admin Receive Queue (ARQ) descriptor rings, posts DMA buffers, sends commands, polls/completes writebacks, cleans received events, and tears queues down.
+
+Important APIs/functions: exported functions include `iavf_init_adminq`, `iavf_shutdown_adminq`, `iavf_asq_done`, `iavf_asq_send_command`, `iavf_fill_default_direct_cmd_desc`, and `iavf_clean_arq_element`. Internal helpers allocate/free ASQ/ARQ descriptor rings and per-descriptor DMA buffers, configure VF AdminQ registers (`IAVF_VF_ATQ*`, `IAVF_VF_ARQ*`), initialize/shutdown each queue, and clean ASQ completions.
+
+Control flow: initialization validates queue depths and buffer sizes, sets ASQ timeout, initializes ASQ, then ARQ. Each queue allocates descriptor memory, allocates buffer-info arrays, allocates DMA buffers, initializes indexes, and writes base/length/tail registers. `iavf_asq_send_command` locks ASQ, validates the queue and head register, copies command details/cookies, checks indirect buffer size and async/postpone flags, reclaims completed descriptors, copies descriptor and optional indirect buffer to the ring, bumps tail unless postponed, optionally waits for firmware head advancement, copies writeback data/status, maps AdminQ return codes, saves optional writeback descriptors, and unlocks. ARQ cleaning locks ARQ, compares hardware head with next-to-clean, copies event descriptor/buffer to caller, reposts the DMA buffer, updates tail and indexes, and returns pending count.
+
+State and persistence: all runtime state is in `hw->aq`: ASQ/ARQ ring memory, command-detail memory, DMA buffer arrays, descriptor counts, next indexes, queue mutexes, last AQ status, and timeout. Queue state is transient hardware/driver state rebuilt on reset or probe; nothing is persisted beyond the adapter lifetime.
+
+Dependencies and integration: it depends on iavf register definitions, type/status headers, allocation helpers, `libie_aq_desc`, and `iavf_debug_aq`. Higher layers use this as the transport for PF mailbox messages and direct AQ operations such as RSS and shutdown.
+
+Risks and test signals: risks include DMA allocation unwind leaks, descriptor wrap errors, deadlocks around ASQ/ARQ mutexes, timeouts when PF/FW stops processing, stale buffer length/address when reposting ARQ descriptors, and incorrect async/postpone behavior. Test signals include probe/remove cycles, reset reinitialization, AQ timeout injection, full queue handling, indirect buffer size rejection, ARQ event drain, and shutdown when ASQ is already dead.

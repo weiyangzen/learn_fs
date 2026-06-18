@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/tools/perf/scripts/python/intel-pt-events.py
+
+Purpose: `intel-pt-events.py` is a `perf script` Python report for Intel Processor Trace streams. It formats branch/instruction samples, PTWRITE, CBR, MWAIT, PWRE/PWRX, EXSTOP, PSB, EVT, IFLAG, auxtrace errors, and context-switch notifications into readable trace output.
+
+Important APIs and state: the perf integration points are `trace_begin`, `trace_end`, `process_event`, `auxtrace_error`, and `context_switch`. It imports `perf_set_itrace_options`, `perf_sample_insn`, and `perf_sample_srccode` from perf's Python trace utilities and uses `LibXED` from `libxed.py` when instruction disassembly is requested. Global state tracks options, disassembler availability, previous source location, pending switch strings by CPU, interleaved output buffers by CPU, and the current event time.
+
+Control flow: `trace_begin` parses script options, chooses an itrace mode (`bepwxI` for branch/event output or `i0nsepwxI` for instruction/source output), optionally initializes XED, and configures perf. `process_event` either handles the event directly or captures per-CPU output into stashes for timestamp-level interleaving. `do_process_event` dispatches by event name, decodes raw payloads with `struct.unpack_from`, prints common sample prefixes, and attaches symbol, DSO, source, instruction, IPC, and correlated address data when available.
+
+Persistence and dependencies: it is stateful only for the life of the perf-script process and writes to stdout. It depends on `PERF_EXEC_PATH`, perf's Python helper modules, optional `libxed.so`, and sample dictionaries containing Intel PT synthetic event fields.
+
+Integration, risks, and tests: this script is used through `perf script -s` and depends on kernel/perf field naming stability. Risks include optional raw fields missing on older perf versions, XED decode silently degrading to address-only output, `print_evt` reusing offset zero while iterating event-data records, and unbounded stashed output under large interleaved traces. Test signals are successful perf-script execution with branch, instruction, source, PTWRITE, power, auxtrace-error, VM, and context-switch samples.

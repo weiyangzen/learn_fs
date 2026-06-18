@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chmod/chmod06.c
+
+Purpose: negative `chmod()` errno coverage for EPERM, EACCES, EFAULT, ENAMETOOLONG, ENOENT, ENOTDIR, EROFS, and ELOOP. Setup creates files/directories, a protected directory, a non-directory path prefix, an overlong path, a bad mapped address, and a symlink loop; selected case changes euid to nobody and restores root. Important APIs are `chmod`, `SAFE_MMAP(PROT_NONE)`, `SAFE_SETEUID`, `SAFE_TOUCH`, `SAFE_MKDIR`, `SAFE_SYMLINK`, and LTP rofs mount support. State is tmpdir fixtures, rofs mountpoint, and credential changes. Dependencies are root and read-only filesystem support. Risks include filesystem permission quirks and bad-address handling. Test signal is exact expected errno for each condition.

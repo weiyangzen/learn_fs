@@ -1,0 +1,9 @@
+# Research: sources/distributed-fs/seaweedfs/weed/s3api/filer_multipart_sse_s3_test.go
+
+## sources/distributed-fs/seaweedfs/weed/s3api/filer_multipart_sse_s3_test.go
+
+Purpose: regression coverage for SSE-S3 multipart completion metadata repair. It verifies completed multipart chunks can be retagged with missing chunk-level SSE-S3 metadata from the upload entry, while preserving already-present metadata and applying object-level SSE headers to the completed entry.
+
+Important tests: `TestCompletedMultipartChunkBackfillsSSES3MetadataFromUploadEntry` extracts upload-level key data/base IV via `extractMultipartSSES3Info`, calls `completedMultipartChunk`, and confirms `SSE_S3` plus per-chunk IV based on the part-local offset. `TestCompletedMultipartChunkPreservesExistingSSES3Metadata` protects existing metadata. `TestApplyMultipartSSES3HeadersFromUploadEntry` backfills `SeaweedFSSSES3Key` and `X-Amz-Server-Side-Encryption` without clobbering. `TestCompletedMultipartChunkBackfilledIVDecryptsActualCiphertext` encrypts realistic multipart streams and proves the repaired IV decrypts each chunk. `TestCompletedMultipartChunkRejectsPartNumberMultiplierFormula` prevents using `PartOffsetMultiplier` in IV derivation.
+
+State and dependencies: synthetic `filer_pb.FileChunk` and `Entry.Extended` maps stand in for filer persistence. The tests depend on the SSE-S3 key manager, `GenerateSSES3Key`, metadata serialization/deserialization, CTR IV math, and S3 constants. Integration points are multipart upload completion, read-side decryption, and object metadata detection. Risks include silent data corruption if IV offsets use final object offsets or part-number math instead of part-local encrypted chunk offsets. Test signal is high because it crosses encryption and decryption paths with random plaintext.

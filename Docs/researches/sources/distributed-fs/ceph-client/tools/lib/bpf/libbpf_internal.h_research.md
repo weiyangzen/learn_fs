@@ -1,0 +1,22 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/lib/bpf/libbpf_internal.h -->
+# sources/distributed-fs/ceph-client/tools/lib/bpf/libbpf_internal.h
+
+## Purpose
+This internal libbpf header centralizes portability shims, ELF/BPF relocation constants, BTF encoding helpers, logging macros, internal object/link structures, option validation, kernel feature IDs, BTF/BTF.ext layouts, endian helpers, FD utilities, ELF symbol helpers, CO-RE interfaces, USDT interfaces, and SHA-256 declarations used by libbpf implementation files.
+
+## APIs, Types, and Functions
+Portability definitions cover Android `AT_EACCESS`, `EM_BPF`, BPF relocation numbers, `SHT_LLVM_ADDRSIG`, old-libelf `ELF_C_READ_MMAP`, and `ELF64_ST_VISIBILITY`. BTF construction macros include `BTF_INFO_ENC`, `BTF_TYPE_ENC`, `BTF_INT_ENC`, `BTF_TYPE_INT_ENC`, `BTF_MEMBER_ENC`, `BTF_PARAM_ENC`, `BTF_VAR_SECINFO_ENC`, `BTF_TYPE_FLOAT_ENC`, `BTF_TYPE_DECL_TAG_ENC`, and `BTF_TYPE_TYPE_TAG_ENC`. General helpers define `likely`, `unlikely`, `min`, `max`, `offsetofend`, `__alias`, `str_has_pfx()`, and `str_has_sfx()`.
+
+Symbol-version macros `DEFAULT_VERSION` and `COMPAT_VERSION` adapt between shared-library symver attributes, assembler `.symver`, and static aliases. Logging routes `pr_warn`, `pr_info`, and `pr_debug` through `libbpf_print()`. `struct bpf_link` stores detach/dealloc callbacks, optional pin path, FD, and disconnected state. Memory/string helpers include `libbpf_reallocarray()` with overflow checks and `libbpf_strlcpy()`. Options macros use `libbpf_validate_opts()`, `OPTS_VALID`, `OPTS_HAS`, `OPTS_GET`, `OPTS_SET`, and `OPTS_ZEROED`.
+
+Kernel-feature state is represented by `enum kern_feature_id`, `enum kern_feature_result`, and `struct kern_feature_cache`. BTF APIs declared here include type lookup, kind strings, modifier skipping, BTF relocation/base setup, map definition parsing, raw BTF loading, BTF kernel loading/fetching, attach-prefix lookup, BTF.ext iterators, byte-swappers for func/line/core relo records, `btf_field_iter`, and visitor functions for type IDs and string offsets. Error helpers include `libbpf_err()`, `libbpf_err_errno()`, `libbpf_err_ptr()`, and `libbpf_ptr()`. FD helpers include `dup_good_fd()`, `ensure_good_fd()`, `sys_dup3()`, `sys_memfd_create()`, and `reuse_fd()`. The header also declares CO-RE candidate helpers, USDT manager helpers, `is_pow_of_2()`, `ror32()`, `sys_bpf_prog_load()`, glob matching, ELF offset resolvers/open/close helpers, `probe_fd()`, and `libbpf_sha256()`.
+
+## Control Flow, State, and Persistence
+Most logic is inline utility behavior. Options validation rejects too-small `.sz` values or nonzero bytes beyond known fields. Error helpers normalize libbpf's convention of returning negative errors while setting `errno` for public APIs. FD helpers deliberately move FDs out of the stdio range, duplicate FDs with close-on-exec, and close temporary FDs after reuse. `struct kern_feature_cache` persists per-object feature probe results and token FD. `struct btf_ext` stores parsed and possibly byte-swapped BTF.ext sections plus record-size metadata. `struct bpf_link` persists ownership state for attached or pinned kernel links.
+
+## Dependencies and Integration
+The header depends on libc allocation/FD/syscall headers, libelf, Linux error helpers, and local `relo_core.h`, `libbpf.h`, and `btf.h`. It is included throughout libbpf implementation files such as object loading, BTF, linker, netlink, probes, and utilities. Integration points include ELF parsing, BTF and CO-RE relocation, `bpf()` syscalls, USDT attachment, feature probing, and public API error/log handling.
+
+## Risks and Test Signals
+Risks include inline ABI assumptions about struct layouts, integer overflow in allocation and alignment arithmetic, GNU/compiler-specific poison/symver behavior, stale kernel feature IDs, misuse of `OPTS_GET` on invalid option objects, FD ownership confusion in `ensure_good_fd()`/`reuse_fd()`, and byte-order handling for BPF instructions and BTF.ext records. Test signals should cover option compatibility, realloc overflow, FD duplication/reuse semantics, BTF.ext iteration across record sizes, endian byte-swapping, public API errno behavior, feature-cache behavior with token FDs, and builds across shared/static and Android/libelf variants.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/lib/bpf/libbpf_internal.h -->

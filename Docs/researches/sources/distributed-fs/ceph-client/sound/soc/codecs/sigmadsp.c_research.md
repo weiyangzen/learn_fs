@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/sigmadsp.c
+
+Purpose: common Analog Devices SigmaStudio firmware loader and ALSA control bridge for SigmaDSP-based codecs. It parses firmware blobs, stores sample-rate-tagged program/data blocks and controls, downloads data to DSP memory, creates ALSA byte controls, and reapplies cached controls across sample-rate changes or resets.
+
+Important APIs and data: internal `sigmadsp_control` and `sigmadsp_data` lists store control metadata/cache and data chunks. Firmware structs support v2 chunked files (`DATA`, `CONTROL`, `SAMPLERATES`) and v1 action streams. Exported APIs are `devm_sigmadsp_init()`, `sigmadsp_attach()`, `sigmadsp_setup()`, `sigmadsp_reset()`, and `sigmadsp_restrict_params()`. Transport callbacks are supplied by I2C or regmap adapters; optional `sigmadsp_ops.safeload` atomically writes small controls.
+
+Control flow: initialization requests firmware, validates size, magic, CRC32, and version, then parses v1 or v2 into lists. `sigmadsp_attach()` creates ALSA mixer byte controls for firmware controls and marks controls inactive if not valid for the current sample-rate mask. `sigmadsp_setup()` skips if already configured, computes the samplerate mask, writes matching data chunks through the transport, activates/deactivates controls, restores cached control values, and records current samplerate; on error it calls `sigmadsp_reset()`. Control get/put serializes with a mutex, uses cache for normal controls, bypasses cache for `ReadBack*` controls, and safeloads <=20-byte controls if supported.
+
+State and persistence: firmware-derived lists persist for the device lifetime via devres. Control caches persist across DSP setup and are replayed when controls reactivate. `current_samplerate` tracks whether DSP memory needs reload.
+
+Dependencies and integration points: firmware loader, CRC32, ALSA control core, ASoC components, PCM constraints, list/mutex APIs, and transport callbacks. Risks include malformed firmware parsing, unknown chunks ignored, control-name validation/truncation, lifetime warning after attach, and reset on partial setup failure. Test signals include valid/invalid firmware headers/CRC, v1/v2 parsing, sample-rate constraints, readback vs cached controls, safeload path, and reset/reload cycles.

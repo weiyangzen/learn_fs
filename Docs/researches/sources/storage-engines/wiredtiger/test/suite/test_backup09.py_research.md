@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup09.py
+
+Purpose: verifies opening a backup cursor forces a log file switch and that recovery includes only the intended operations unless all log files are copied. It runs checkpoint, no-checkpoint, and all-log-file scenarios.
+
+Important APIs are `session.open_cursor('backup:')`, directory log file counting, `helper.copy_wiredtiger_home`, backup cursor file copy, `wiredtiger_open`, and cursor iteration after restore. Control flow writes 10 records, optionally checkpoints, writes another 10, asserts one log file exists, opens backup cursor and asserts two log files exist, writes a final 10, then copies either only cursor-returned files or all home files. Restore validation counts records up to either backup start or final data. State behavior is log rotation boundary and recovery from selected logs. Risks include platform skip for all-log copy on Windows and assumptions about `WiredTiger.backup` versus turtle output. Test signals are log file counts and restored record cardinality.

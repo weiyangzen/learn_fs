@@ -1,0 +1,13 @@
+# sources/test-tools/fio/zbd.c
+
+Purpose: fio zoned block device (ZBD) implementation. It discovers or emulates zone geometry, validates job options, tracks per-zone write pointers and open/write-zone limits, adjusts IO offsets/lengths for zoned rules, handles zone resets/finishes/trims, and recovers selected write-pointer errors.
+
+Important APIs/functions: setup exports include `zbd_init_files()`, `zbd_recalc_options_with_zone_granularity()`, `zbd_setup_files()`, `zbd_free_zone_info()`, and `zbd_file_reset()`. Runtime exports include `setup_zbd_zone_mode()`, `zbd_adjust_ddir()`, `zbd_adjust_block()`, `zbd_do_io_u_trim()`, `zbd_queue_io_u()`/`zbd_put_io_u()` through callbacks, `zbd_write_status()`, `zbd_log_err()`, and `zbd_recover_write_error()`. Internals cover zone report/reset/finish/move/get-limit wrappers, write-zone get/put, zone locking, write-target selection, readable-zone search, and valid-data-byte accounting.
+
+Control flow: initialization obtains the zoned model through ioengine or block helpers, parses real zone reports or creates emulated zones, shares `zbd_info` among identical files, sets max write-zone limits, validates direct I/O and block sizes, aligns ranges to zone boundaries, and records min/max zones. At IO time `zbd_adjust_block()` locks the target sequential zone, validates read/write/trim semantics, may select another zone, shrink length, reset zones, or return EOF. Accepted sequential-zone IOs leave the zone lock held and install queue/put callbacks; those callbacks advance write pointers and unlock on completion/busy/error.
+
+State/persistence: persistent device state is affected through zone reset, finish, and write-pointer move operations. In-memory state lives in `zoned_block_device_info` and `fio_zone_info`: mutexes, wp, capacity, conditions, write target array, refcount, valid-data bytes, reset counters, inflight writes, and write-error repair fields.
+
+Dependencies/integration: depends on fio file/thread/job options, ioengine zoned callbacks, `oslib/blkzoned`, verify/trim logic, direct-IO policy, smalloc/pshared, and fio statistics.
+
+Risks/test signals: this is concurrency- and device-state-sensitive code. Risks include lock-order regressions between zone mutex and device mutex, stale zone reports, incorrect range alignment, data loss if resets occur while verify data remains, zone-limit off-by-one errors, and async write-error recovery assumptions. Tests should include emulated zones, host-managed devices, conventional-zone crossings, read-before-write, trim as reset, max_open/job_max_open limits, zone capacity smaller than size, verify-enabled random writes, and recovery paths.

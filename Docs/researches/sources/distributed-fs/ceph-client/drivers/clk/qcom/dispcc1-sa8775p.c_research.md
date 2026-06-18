@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/clk/qcom/dispcc1-sa8775p.c
+
+Purpose: second SA8775P display clock-controller instance driver, binding `qcom,sa8775p-dispcc1`. It mirrors the `dispcc0` hardware model for the second MDSS display island and exports a namespaced set of display clocks, PLLs, resets, and GDSCs.
+
+Important APIs/types/functions: the namespace is `mdss_1_disp_cc_*`. The PLLs, parent maps, RCGs, dividers, branch clocks, reset map, regmap config, and GDSC definitions are structurally the same as `dispcc0`, but all clock names and static symbols are suffixed with `1`. `mdss_1_disp_cc_pll0` and `mdss_1_disp_cc_pll1` are Lucid EVO alpha PLLs with the same VCO range and configuration values as instance 0. The exported clock table maps shared `MDSS_DISP_CC_*` binding IDs to instance-1 clock objects. The match table contains only `qcom,sa8775p-dispcc1`.
+
+Control flow: `disp_cc_1_sa8775p_probe()` follows the same sequence as `dispcc0`: enable runtime PM, resume, map with `qcom_cc_map()`, configure PLL0/PLL1 using `clk_lucid_evo_pll_configure()`, force sleep and XO branches on at offsets `0xc070` and `0xc054`, register the descriptor with `qcom_cc_really_probe()`, then release runtime PM. The driver is registered with `module_platform_driver()`.
+
+State and persistence: static objects represent all CCF, reset, and power-domain nodes. Hardware state persists in the second controller's MMIO range, not in any software cache. GDSCs at `0x9000` and `0xd000` retain state and are hardware-controlled. Reset entries cover MDSS core BCR at `0x8000` and RSCC BCR at `0xa000`. The only notable source-level divergence from `dispcc0` is symbol/name substitution, including `disp_cc_1_parent_data_7_ao` for the sleep parent data despite it carrying `DT_SLEEP_CLK`.
+
+Dependencies and integration: depends on the same SA8775P display binding header and Qualcomm clock stack as `dispcc0`, but integrates through the second DT provider node. Display pipelines, DP/DSI PHYs, and MDSS power domains must reference the `dispcc1` phandle when controlling the second display controller instance.
+
+Risks: because this file is generated or cloned from `dispcc0`, drift is both the main risk and the main review signal. Any functional fix to clock rates, reset offsets, GDSC flags, or branch halt behavior should be applied to both files unless hardware documentation says otherwise. The `_7_ao` parent-data name for a sleep-clock parent is harmless to C but can mislead reviewers and automated audits. Shared binding IDs make provider selection in DT critical. Runtime PM and map-failure behavior has the same caveats as `dispcc0`.
+
+Test signals: boot SA8775P with both display clock-controller nodes, confirm `mdss_1_disp_cc_*` clocks register separately from instance 0, validate MDP, DSI, DP0/DP1, ESC, AHB, vsync, PLL lock-monitor, sleep, XO, reset, and GDSC behavior for the second display island, and run simultaneous or alternating display-pipeline tests to catch accidental cross-provider use. No direct in-tree unit tests exist for this file.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/ctype.c -->
+# sources/distributed-fs/ceph-client/arch/s390/boot/ctype.c
+
+Purpose: compiles the generic character classification implementation for early s390 boot. Important content is the include of `../../../lib/ctype.c`, supplying `isascii`, `islower`, `tolower`, and related helpers used while parsing IPL command data. Control flow is inherited from the generic library. State is the ctype table/static data from the included implementation; no persistence. Dependencies include boot C flags with exports/fortify disabled and consumers such as `ipl_parm.c`. Risks are generic ctype gaining dependencies unavailable in decompressor context, table encoding assumptions around ASCII/EBCDIC conversion, and symbol duplication. Test signals: IPL SCP data lowercase conversion, EBCDIC command-line conversion, decompressor link, and boot command-line parser tests.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/ctype.c -->

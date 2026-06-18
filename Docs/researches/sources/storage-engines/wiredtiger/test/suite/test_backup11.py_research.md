@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup11.py
+
+Purpose: exercises incremental backup cursor configuration and error validation, including legal log-target duplicate use with an incremental primary and many invalid combinations. It extends `backup_base`.
+
+Important APIs are `session.open_cursor('backup:', config='incremental=(...)')`, duplicate cursor creation, `take_full_backup`, `take_log_backup`, `add_data`, and backup directory recovery. Control flow performs an initial incremental full backup with `this_id=ID1`, copies logs through a duplicate, then tests invalid primary/duplicate configurations: file on primary, incremental duplicate without incremental primary, consolidation on duplicate, multiple duplicate cursors, file target misuse, mixed incremental/log target, IDs on duplicate, force stop on duplicate, missing known source ID, unknown source ID, reserved WiredTiger namespace IDs, illegal grouping characters, and same source/target IDs. State behavior is incremental ID metadata and cursor-open state. Risks are brittle regex messages and sequencing of ID history. Test signals are expected errors and final backup recovery.

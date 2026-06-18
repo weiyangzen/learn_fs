@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/ai_uninstall/tasks/main.yml
+
+This role removes the Docker-based AI benchmark runtime. It imports optional extra vars, removes the Milvus, MinIO, and etcd containers, removes the Docker network, optionally uninstalls Python graphing packages when `ai_benchmark_enable_graphing` is true, and prints a completion message that data directories are preserved.
+
+Important APIs are `community.docker.docker_container`, `community.docker.docker_network`, `ansible.builtin.pip`, and `debug`. Control flow is linear and guarded by `ai_milvus_docker` for Docker resources. Persistent data under `ai_docker_data_path` and `ai_benchmark_results_dir` is intentionally retained. Integration depends on the same container/network names used by `ai_setup`. Risks include `failed_when: false` hiding partial cleanup failures, pip uninstall operating outside the benchmark venv, and no removal of volumes or directories. Test signals should validate idempotency, missing-container behavior, and preservation of benchmark artifacts.

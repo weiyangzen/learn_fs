@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/crypto/simd.c
+
+`simd.c` provides shared helpers for registering AEAD wrappers around internal SIMD implementations. The public wrapper is asynchronous and chooses direct SIMD execution only when `crypto_simd_usable()` says the current context is safe; otherwise it routes work through cryptd.
+
+Exports are `simd_register_aeads_compat()` and `simd_unregister_aeads()`. Private state uses `struct simd_aead_alg` for wrapper metadata and `struct simd_aead_ctx` for the `cryptd_aead` transform. Core callbacks are `simd_aead_init()`, `simd_aead_exit()`, `simd_aead_setkey()`, `simd_aead_setauthsize()`, `simd_aead_encrypt()`, and `simd_aead_decrypt()`.
+
+Registration requires internal AEAD names and driver names to start with `"__"`, registers the internal algorithms, then exposes public names with the prefix stripped. Init allocates a cryptd transform and sizes requests for either direct-child or cryptd request state plus a copied subrequest. Encrypt/decrypt copy the caller request into request context, pick cryptd or the child based on SIMD/atomic conditions, and dispatch. State is per transform plus per request copy; unregister frees both wrapper and internal algorithms. Risks include request-size mistakes, flag propagation, atomic-context selection, and naming convention drift. Test signals include fallback coverage, concurrent AEAD requests, setkey/authsize propagation, and KASAN request-context checks.

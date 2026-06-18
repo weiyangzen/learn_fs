@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/qcom/venus/hfi_parser.c
+
+This file parses HFI capability/property payloads into `venus_core` platform capability state. It supports two modes: for v4/v6 it prefers static platform capability tables from `hfi_platform_get()`, while older or instance-specific paths parse firmware-provided property records.
+
+Key functions include `hfi_parser()`, `hfi_platform_parser()`, `init_codecs()`, `parse_codecs()`, `parse_codecs_mask()`, `parse_raw_formats()`, `parse_caps()`, `parse_profile_level()`, and `parse_alloc_mode()`. The `for_each_codec()` helper applies parsed data to matching `hfi_plat_caps` entries, while `parser_init()` and `parser_fini()` handle the Venus v1xx per-instance validity behavior.
+
+The main control flow starts by trying static platform parsing for core-level calls. If that path succeeds, it fills `core->enc_codecs`, `core->dec_codecs`, `core->codecs_count`, `core->max_sessions_supported`, and `core->caps` from platform data. Otherwise `hfi_parser()` validates 32-bit alignment and walks a property stream by reading a property id word and advancing by the parser-reported payload size. Codec-supported records seed capability entries, mask records select the target codec/domain, then format/capability/profile/allocation records append arrays onto matching capability entries.
+
+State is held in `venus_core`: codec bitmasks, max sessions, capability arrays, raw format arrays, profile-level arrays, and dynamic-buffer-mode flags. Dependencies include `core.h`, `hfi_helper.h`, and `hfi_platform`. Integration points include V4L2 format enumeration, decoder format clamping, control limits, and buffer-mode setup through helpers that query `venus_caps_by_codec()`.
+
+Risks include trusting payload-internal counts and size math. The code checks max entry counts but advances by parser return values that must match firmware layout; malformed `format_entries` or plane counts can desynchronize parsing. Static table fallback means v4/v6 capability regressions may not be visible through firmware parser tests. Test signals are correct codec enumeration, min/max frame constraints, raw format availability, profile/level exposure, dynamic buffer mode behavior, and error returns for truncated or unaligned property payloads.

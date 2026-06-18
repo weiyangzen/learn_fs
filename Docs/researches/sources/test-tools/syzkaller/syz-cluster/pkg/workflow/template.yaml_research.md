@@ -1,0 +1,7 @@
+## sources/test-tools/syzkaller/syz-cluster/pkg/workflow/template.yaml
+
+This embedded Argo `Workflow` template orchestrates an end-to-end series workflow for one session. It starts with triage, exits early on skip, then processes each target through base build, optional base boot, patched build, patched boot, optional fuzzing, and optional retesting.
+
+The main template has `failFast: true` and parallelism 2 for target processing. `process-target` converts JSON parameters to artifacts, calls `build-action-template`, `boot-action-template`, `fuzz-action-template`, and `retest-action-template`, and uses JSONPath expressions to pass build IDs, configs, test names, and artifacts. Fuzz and retest are conditional on triage output fields. `convert-artifact` writes parameter data to `/tmp/artifact`; `exit-workflow` exits with a configurable nonzero code.
+
+State persists in Argo workflow status/artifacts and through each action's calls back to syz-cluster APIs. Integration depends on workflow templates in sibling directories, session-id workflow parameter, and artifact names (`kernel`, `request`, `config`, `retest-task`). Risks include shell quoting in `convert-artifact` for arbitrary JSON, expression complexity, optional base artifacts in retest, and `continueOn.failed` at target iteration possibly allowing partial workflow failure semantics. No direct tests for this YAML were observed.

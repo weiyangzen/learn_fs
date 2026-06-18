@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/arch/sparc/kernel/ldc.c
+
+Purpose: Implements the Logical Domain Channel link-layer driver for sun4v logical domains, including queue management, handshake negotiation, packetized read/write modes, exported memory cookies, and hypervisor copy operations.
+
+Important APIs/types/functions: `struct ldc_packet` defines control/data/error frames, version/RTS/RTR/RDX controls, fragments, and reliable ACK fields. `struct ldc_channel` owns queue state, sequence numbers, handshake state, mode ops, event callback, IRQ names, and an `ldc_iommu`. Exported channel APIs include `ldc_alloc()`, `ldc_bind()`, `ldc_connect()`, `ldc_disconnect()`, `ldc_unbind()`, `ldc_free()`, `ldc_state()`, `ldc_mode()`, `ldc_rx_reset()`, `ldc_write()`, `ldc_read()`, and `__ldc_print()`. Exported memory APIs include `ldc_map_sg()`, `ldc_map_single()`, `ldc_unmap()`, `ldc_copy()`, `ldc_alloc_exp_dring()`, and `ldc_free_exp_dring()`.
+
+Control flow: `ldc_init()` reads the machine description, registers the LDOM hypervisor API, and enables allocation only when `domaining-enabled` is true. Allocation validates the mode, initializes the per-channel IOMMU map table, queues, IRQs, mode ops, and list node. `ldc_bind()` registers TX/RX queues with the hypervisor and enters `BOUND`. `ldc_connect()` starts the version/RTS/RTR/RDX handshake; RX interrupts process control frames until `LDC_HS_COMPLETE`, then report `LDC_EVENT_UP` and data-ready events. Read/write paths lock the channel, verify handshake completion, and dispatch to raw, unreliable/reliable packet, or stream mode.
+
+State and persistence: Persistent runtime state is per-channel: queue head/tail offsets mirrored with the hypervisor, `snd_nxt`/`rcv_nxt`, `tx_acked`, `chan_state`, `hs_state`, flags for allocated/registered/reset resources, stream buffering, and IOMMU bitmap/MTE table. Mapped cookies persist until `ldc_unmap()` revokes entries through `sun4v_ldc_revoke()`.
+
+Dependencies and integration points: It depends on sun4v hypervisor calls, machine descriptions from `mdesc.c`, Linux IRQs, spinlocks, IOMMU map-table helpers, scatterlists, page allocation, and client drivers that consume event callbacks and cookies.
+
+Risks and test signals: The code has explicit comments about missing serialization for `ldc_channel_list`, so duplicate channel allocation races are a risk. Handshake and sequence state must tolerate resets, NACKs, and partial fragments. Cookie alignment is strict 8-byte alignment. Tests should exercise raw/unreliable/stream channels, queue full and `HV_EWOULDBLOCK` paths, reset/disconnect, bad sequence NACKs, short stream reads, scatterlist mapping/unmapping, `ldc_copy()` partial copies, and disabled-domaining boot.

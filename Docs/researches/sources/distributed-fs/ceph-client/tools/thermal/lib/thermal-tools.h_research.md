@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/thermal/lib/thermal-tools.h
+
+Purpose: umbrella header for the small thermal tools support library. APIs: includes logging, mainloop, and uptime-of-day helpers. Control flow/state: no executable logic or state; it centralizes the common library surface for tools. Dependencies: `log.h`, `mainloop.h`, and `uptimeofday.h`. Integration: included by `uptimeofday.c`, `thermal-engine.c`, and `thermometer.c`, allowing tools to include one local header for shared helpers. Risks: broad inclusion can expose unrelated macros and names to consumers, but the file is intentionally small. Test signals: compile success for consumers using the combined helper API.

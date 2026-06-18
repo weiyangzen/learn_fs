@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/nouveau/nvkm/subdev/gsp/rm/r535/nvrm/gsp.h
+
+Purpose: this is the main R535 GSP firmware/RM ABI header. It covers static GPU information, FB region metadata, system information, ACPI payloads, error/sequencer messages, firmware boot handoff metadata, shared message queue layout, suspend/resume metadata, RISCV firmware descriptors, interrupt-table controls, and WPR heap sizing constants.
+
+Important APIs/types: `GspStaticConfigInfo` is returned by `GET_GSP_STATIC_INFO` and contains GR caps, GID, GPC/TPC/ZCULL masks, SKU, FB region info, SR-IOV caps, engine caps, SM info, FB topology, GFX preemption buffer sizing, names/branding flags, BAR PDE bases, VBIOS IDs, displayless limits, and internal RM handles. `GspSystemInfo` is sent by Nouveau and contains BAR physical addresses, BDF, user VA limit, PCI config mirror, ACPI method data, passthrough/hypervisor fields, and VF information. `PACKED_REGISTRY_TABLE` and `PACKED_REGISTRY_ENTRY` define registry RPC content. `rpc_run_cpu_sequencer_v17_00` and `GSP_SEQUENCER_BUFFER_CMD` define firmware-requested CPU-side register operations. `GspFwWprMeta`, `GspFwSRMeta`, `GSP_ARGUMENTS_CACHED`, `LibosMemoryRegionInitArgument`, `RM_RISCV_UCODE_DESC`, `msgqTxHeader`, and `msgqRxHeader` define boot, queue, and resume handoff state.
+
+Control flow and state: `gsp.c` consumes this header heavily. Static info seeds Nouveau's internal client/device/subdevice handles, BAR PDBs, usable FB regions, reserved FB size, and GR counts. System info sends host PCI/BAR/ACPI context before RM initialization completes. Shared queue headers are initialized in coherent memory and then referenced through RM arguments. WPR and SR metadata describe firmware and resume buffers to the booter and GSP.
+
+Dependencies and integration: includes `engine.h` and depends on `nvrm/nvtypes.h`. It integrates with RPC function IDs in `rpcfn.h`, message IDs in `msgfn.h`, falcon/SEC2 boot paths, ACPI display/mux probing, FBSR, BAR/MMU setup, and interrupt routing.
+
+Risks: this header is packed with firmware-owned layouts. Field order, alignment, and exact constants are critical. The sequencer opcode sizing macro must match the union payloads or `gsp.c` will walk command buffers incorrectly. Queue header offsets and page counts must match the shared memory layout. WPR/SR metadata is exactly 256 bytes by design; size drift can break boot or resume authentication.
+
+Test signals: static info should decode sane FB and GR topology, system info RPC should succeed on PCI devices with and without ACPI, queue traffic should work for small and split RPCs, CPU sequencer events should complete, GSP boot should validate WPR metadata, and suspend/resume should verify SR metadata handling.

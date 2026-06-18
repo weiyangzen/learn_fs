@@ -1,0 +1,120 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/mips/kernel
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 106
+- Recursive researched files: 108
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/Makefile`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/access-helper.h`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/asm-offsets.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/bmips_5xxx_init.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/bmips_vec.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/branch.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cacheinfo.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cevt-bcm1480.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cevt-ds1287.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cevt-gt641xx.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cevt-r4k.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cevt-sb1250.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cevt-txx9.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cmpxchg.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cps-vec-ns16550.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cps-vec.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cpu-probe.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/cpu-r3k-probe.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/crash.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/crash_dump.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/csrc-bcm1480.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/csrc-ioasic.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/csrc-r4k.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/csrc-sb1250.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/early_printk.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/early_printk_8250.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/elf.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/entry.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/fpu-probe.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/fpu-probe.h`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/ftrace.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/genex.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/gpio_txx9.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/head.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/i8253.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/idle.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/irq-gt641xx.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/irq-msc01.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/irq.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/irq_txx9.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/jump_label.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/kgdb.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/kprobes.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/linux32.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/machine_kexec.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/mcount.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/mips-cm.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/mips-cpc.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/mips-mt-fpaff.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/mips-mt.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/mips-r2-to-r6-emul.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/module.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/octeon_switch.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/perf_event.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/perf_event_mipsxx.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/perf_regs.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/pm-cps.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/pm.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/probes-common.h`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/proc.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/process.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/prom.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/ptrace.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/ptrace32.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/r2300_fpu.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/r2300_switch.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/r4k-bugs64.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/r4k_fpu.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/r4k_switch.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/relocate.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/relocate_kernel.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/reset.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/rtlx-mt.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/rtlx.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/scall32-o32.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/scall64-n32.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/scall64-n64.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/scall64-o32.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/segment.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/setup.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/signal-common.h`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/signal.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/signal32.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/signal_n32.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/signal_o32.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/smp-bmips.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/smp-cps.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/smp-mt.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/smp-up.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/smp.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/spinlock_test.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/spram.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/stacktrace.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/sync-r4k.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/syscall.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/sysrq.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/time.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/topology.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/traps.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/unaligned.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/uprobes.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/vdso.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/vmlinux.lds.S`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/vpe-mt.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/vpe.c`
+- `sources/distributed-fs/ceph-client/arch/mips/kernel/watch.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

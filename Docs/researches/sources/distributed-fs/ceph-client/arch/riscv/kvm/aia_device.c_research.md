@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/arch/riscv/kvm/aia_device.c
+
+Purpose: This file implements the userspace-visible KVM AIA device. It validates and stores VM AIA configuration, APLIC and per-vCPU IMSIC addresses, initializes the emulated/accelerated interrupt controller graph, exposes KVM device attributes, and provides VM/vCPU AIA lifecycle and injection helpers.
+
+Important APIs/types/functions: `kvm_riscv_aia_device_ops` supplies create/destroy/set/get/has attribute handlers for `KVM_DEV_TYPE_RISCV_AIA`. Internal helpers include `aia_config`, `aia_aplic_addr`, `aia_imsic_addr`, `aia_imsic_ppn`, `aia_imsic_hart_index`, and `aia_init`. Public integration helpers include `kvm_riscv_vcpu_aia_update`, `reset`, `init`, `deinit`, `kvm_riscv_aia_inject_msi_by_id`, `kvm_riscv_aia_inject_msi`, `kvm_riscv_aia_inject_irq`, `kvm_riscv_aia_init_vm`, and `kvm_riscv_aia_destroy_vm`.
+
+Control flow: Device creation refuses duplicate in-kernel irqchip state, requires host SSAIA availability, locks all vCPUs, and rejects creation once any vCPU has run. Userspace sets mode, IDS, source count, address geometry, APLIC base, and per-vCPU IMSIC bases through device attributes. `KVM_DEV_RISCV_AIA_CTRL_INIT` verifies vCPU creation is stable, checks source/ID limits and required bases, initializes APLIC, validates all IMSIC pages share the same base PPN under configured hart/group/guest addressing, derives each vCPU hart index, initializes each IMSIC, then marks the VM AIA initialized.
+
+State and persistence: VM state in `kvm->arch.aia` persists mode, ID/source counts, group/hart/guest addressing geometry, APLIC address, initialized flag, and APLIC state. vCPU AIA state persists IMSIC address, hart index, AIA CSR shadow, and IMSIC state. Writes to configuration/address attributes are blocked after initialization. VM defaults choose AUTO mode when HGEI exists and EMUL otherwise.
+
+Dependencies and integration points: It coordinates `aia_aplic.c`, `aia_imsic.c`, KVM device attributes, KVM vCPU lookup/locking, KVM MSI routing, and VM creation/destruction hooks. IRQ injection routes either by abstract hart/guest/EIID or by MSI address decoding against per-vCPU IMSIC pages.
+
+Risks and test signals: The most important correctness boundary is initialization immutability: changing address geometry after IMSIC allocation would misroute MSIs. Address alignment, common PPN checks, online-vCPU count checks, and cleanup of partially initialized IMSICs all need coverage. Tests should exercise userspace AIA device creation ordering, all config validation failures, mode behavior with and without HGEI, MSI-by-address routing, hart-index derivation with group bits, and teardown after partial init failures.

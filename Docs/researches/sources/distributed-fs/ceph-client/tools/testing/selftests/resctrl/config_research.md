@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/resctrl/config
+
+Purpose: declares kernel configuration dependencies for resctrl selftests: `CONFIG_X86_CPU_RESCTRL=y` and `CONFIG_PROC_CPU_RESCTRL=y`. It has no executable flow. Integration is with kselftest configuration tooling that can prepare a kernel capable of mounting `/sys/fs/resctrl` and exposing CPU resource-control information. Risks are that runtime still needs suitable Intel/AMD/Hygon hardware, perf permissions, mounted sysfs/procfs, and root privileges; the config file cannot express all of those. Test signals are `check_resctrlfs_support()` passing and individual feature checks finding `MB`, `L3`, `L2`, and `L3_MON` files.

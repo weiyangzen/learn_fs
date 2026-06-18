@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/fs/orangefs/protocol.h
+
+Purpose: this header defines kernel-visible OrangeFS protocol constants, file handle/reference structures, error encoding bits, permission and attribute masks, xattr limits, object types, ioctl numbers, and debug/logging glue. It is the ABI-facing vocabulary shared by the OrangeFS kernel module and the userspace client-core protocol.
+
+Important APIs and types: `struct orangefs_khandle` stores 16-byte object handles; `struct orangefs_object_kref` pairs a handle with an `fs_id`. `ORANGEFS_khandle_cmp()`, `ORANGEFS_khandle_to()`, and `ORANGEFS_khandle_from()` compare and marshal handles. `struct ORANGEFS_sys_attr_s` carries owner, group, perms, times, size, object type, flags, block size, distribution hints, and mask bits. `struct ORANGEFS_keyval_pair` models xattr key/value traffic. Constants such as `ORANGEFS_ATTR_SYS_*`, `ORANGEFS_TYPE_*`, `ORANGEFS_XATTR_*`, and `ORANGEFS_DEV_*` are consumed by upcall builders and ioctl handlers. `ORANGEFS_KERNEL_PROTO_VERSION` and `ORANGEFS_MINIMUM_USERSPACE_VERSION` gate kernel/userspace compatibility.
+
+Control flow: the header itself has no runtime flow beyond inline handle helpers and `gossip_debug()`. The handle helpers are used by export and inode code to convert fixed 16-byte OrangeFS handles into larger buffers and back. Error constants define the bit layout decoded later by `orangefs_normalize_to_errno()`.
+
+State and persistence behavior: protocol structs are fixed-size wire/ABI state. Comments call out 32/64-bit compatibility constraints, including xattr name/value sizing and `ORANGEFS_dev_map_desc` layout for mapped buffers. `ORANGEFS_sys_attr_s` contains pointer fields for userspace/system-interface ownership, but kernel code intentionally avoids copying `link_target` into that object for normal setattr.
+
+Dependencies and integration points: depends on Linux kernel types, spinlock types, slab, ioctl macros, and `orangefs-debug.h`. It is included by almost every OrangeFS file in this subset, and its constants must match the userspace OrangeFS source definitions. Ioctl definitions integrate with the OrangeFS device node, while `gossip_debug()` routes debug output through the global `orangefs_gossip_debug_mask`.
+
+Risks and test signals: ABI drift is the dominant risk: field size, alignment, enum, or bit changes can break older userspace clients, especially 32-bit compat paths. Handle conversion assumes at least 16 bytes of storage and uses pointer arithmetic on `void *`, relying on kernel compiler behavior. Tests should validate ioctl numbers, struct sizes/layouts on 32- and 64-bit builds, xattr length boundaries, handle round trips, and error-bit compatibility against the OrangeFS userspace headers.

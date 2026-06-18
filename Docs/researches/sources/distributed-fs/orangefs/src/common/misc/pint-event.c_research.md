@@ -1,0 +1,13 @@
+# sources/distributed-fs/orangefs/src/common/misc/pint-event.c
+
+Purpose: Implements optional event tracing support for OrangeFS using event and group registries plus optional TAU trace emission. It lets code define named groups/events, enable/disable them by name or group, start/stop per-thread tracing, and emit start/end events when enabled.
+
+Important APIs and functions: Lifecycle is `PINT_event_init()` and `PINT_event_finalize()`. Runtime controls are `PINT_event_enable()`, `PINT_event_disable()`, `PINT_event_thread_start()`, and `PINT_event_thread_stop()`. Definitions use `PINT_event_define_group()` and `PINT_event_define_event()`. Emission uses `PINT_event_start_event()` and `PINT_event_end_event()`; `PINT_event_log_event()`, `PINT_event_setinfo()`, and `PINT_event_getinfo()` are declared in the header but not implemented in the visible source. `PINT_event_enabled_mask` controls active events.
+
+Control flow: Initialization creates event and group hash tables, defines a default group, and initializes TAU if requested and available. Group/event definitions allocate records, duplicate names, register ids with `id_gen_fast_register()`, link events into group lists, and assign event masks as `1 << event_count`. Enabling/disabling splits a string list, looks up event names first then group names, and updates the global mask; special values `all` and `none` set broad masks. Start/end functions look up event ids, test the mask, and forward variable arguments to TAU calls when compiled with TAU.
+
+State and persistence behavior: Global in-memory state includes `events_table`, `groups_table`, `default_group`, `event_count`, and `PINT_event_enabled_mask`. TAU output may persist in trace files under the TAU-selected output folder, but this module otherwise owns no persistent storage.
+
+Dependencies and integration points: Uses quickhash/quicklist, `id-generator`, string splitting utilities, gossip, PVFS management types, and optional TAU APIs. Header macros compile event calls to no-ops unless `__PVFS2_ENABLE_EVENT__` is set, so runtime availability also depends on build flags.
+
+Risks and test signals: Mask assignment uses `1 << event_count`, which overflows after the width of an `int` despite storing in `uint64_t`. There is no apparent locking around global registries or enabled mask. Some allocation failure paths leak partially allocated group/event strings. The source contains a typo in a TAU-only forward declaration (`strcut`). Tests should cover builds with and without TAU/event flags, enable/disable unknown events, group masks, many events near mask limits, finalize after partial init, and linkage for all header-declared functions.

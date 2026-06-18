@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/keyctl/keyctl07.c
+
+Purpose: CVE-2017-12192 regression ensuring `KEYCTL_READ` on a negative key fails safely with `ENOKEY`. A child calls `request_key("user", ...)` expecting `ENOKEY` or `ENOENT`, reads the process keyring to obtain the negative key serial, then attempts `KEYCTL_READ` on that serial. The parent waits and treats normal exit as pass, while `SIGKILL` indicates a likely kernel oops. State is a process keyring containing a negative key with a short lifetime. Dependencies include request-key behavior and keyring read support. Risks are local `/sbin/request-key` policy unexpectedly instantiating the key. Test signals are child `ENOKEY` plus parent survival/no crash.

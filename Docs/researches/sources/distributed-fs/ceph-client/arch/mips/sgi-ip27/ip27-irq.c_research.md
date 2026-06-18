@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/sgi-ip27/ip27-irq.c
+
+Purpose: IP27 HUB interrupt-domain and dispatch implementation. It allocates HUB interrupt levels, manages per-CPU HUB masks, supports affinity, and handles pending HUB interrupts.
+
+Important APIs and control flow: `alloc_level()` reserves a bit in `hub_irq_map`. `enable_hub_irq()` and `disable_hub_irq()` update per-CPU mask arrays and write slice mask registers. `setup_hub_mask()` chooses an online CPU in the target hub. `set_affinity_hub_irq()` retargets active IRQs. `hub_domain_alloc()` allocates chip data, assigns a hardware level, configures `handle_level_irq`, clears pending state, and sets descriptor node/affinity. Chained handlers process `PI_INT_PEND0/1`, handle SMP reschedule/call IPIs specially, or dispatch through `generic_handle_domain_irq()`. `arch_init_irq()` creates the default HUB domain and chains CPU IRQs.
+
+State, persistence, and integration: state includes the HUB IRQ bitmap, per-CPU enable masks, irq-domain mappings, and hardware mask registers. Dependencies include hub CPU masks from memory/init code, generic IRQ domains, SMP IPI handlers, and SN IRQ allocation info. Risks include no freeing of reserved bitmap bits in `hub_domain_free()`, affinity fallback behavior, and masking complexity around recursive interrupts. Test signals are domain allocation, IPI delivery, device IRQ affinity, and no spurious HUB interrupts.

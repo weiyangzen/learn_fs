@@ -1,0 +1,17 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/madvise/madvise11.c
+
+Purpose: Stress a possible race condition between memory pages allocation and soft-offline of unrelated pages as explained in the commit from v4.18: d4ae9916ea29 (mm: soft-offline: close the race against page allocation) Control that soft-offlined pages get correctly replaced: with the same content and without SIGBUS generation when accessed.
+
+Important APIs/types/functions: write, read, open, close, mmap, munmap, madvise, tst_test, tst_safe_pthread, tst_safe_stdio, tst_res, SAFE_MMAP, SAFE_MUNMAP, tst_remaining_runtime, TST_CHECKPOINT_WAIT, SAFE_PTHREAD_CREATE, TST_CHECKPOINT_WAKE2, SAFE_PTHREAD_JOIN, SAFE_OPEN, SAFE_CLOSE, SAFE_FOPEN, SAFE_FCLOSE, SAFE_WRITE, tst_check_builtin_driver, SAFE_CMD, tst_brk, TST_RET, TST_ERR; local functions detected: my_yield, sigbus_handler, verif_unmap, allocate_offline, stress_alloc_offl, parse_kmsg_soft_offlined_pfn, populate_from_klog, find_in_file, unpoison_this_pfn, open_unpoison_pfn, unpoison_pfn, write_beginning_tag_to_kmsg, setup, cleanup; key constants/macros: NUM_LOOPS, NUM_PAGES, NUM_PAGES_OFFSET, HW_MODULE, OFFLINE_PATTERN, OFFLINE_PATTERN_LEN
+
+Control flow: setup prepares fixtures; test_all runs one whole-file scenario; cleanup releases descriptors, mappings, mounts, ACLs, or memory; tags link the test to kernel commits/regressions. Local helper functions: my_yield, sigbus_handler, verif_unmap, allocate_offline, stress_alloc_offl, parse_kmsg_soft_offlined_pfn, populate_from_klog, find_in_file, unpoison_this_pfn, open_unpoison_pfn, unpoison_pfn, write_beginning_tag_to_kmsg.
+
+State and persistence behavior: temporary files/directories created under the LTP tmpdir; root privileges for namespace, xattr, device, resource-limit, or permission checks; anonymous/file-backed memory mappings whose residency/locking/advice state is inspected; child process coordination through fork/wait and sometimes LTP checkpoints; procfs files parsed for kernel-visible state. Artifacts are temporary test files, mappings, process state, mounts, or kernel-visible metadata and are expected to be cleaned by LTP tmpdir/device cleanup or file-local cleanup callbacks; no repository-persistent runtime state is written.
+
+Dependencies and integration points: LTP harness headers and safe-macro wrappers; kernel madvise advice support for each tested flag. The file integrates with the LTP syscall suite through either `struct tst_test` or the legacy `test.h`/`tst_resm` harness, so build and execution are controlled by the enclosing syscall directory Makefile.
+
+Risks and edge cases: exact errno expectations can vary when prerequisites are missing or a filesystem rejects setup earlier; madvise behavior is kernel-version and configuration sensitive, especially newer advice flags; page size, memory pressure, limits, and overcommit can affect observable residency/locking; mount/device availability and filesystem semantics affect read-only and node-creation cases; process/thread timing is part of the signal and can make failures noisy.
+
+Test signals: explicit TPASS/TFAIL result messages; TCONF skips for unsupported kernel/library/filesystem features; TBROK on setup or invariant failure. A healthy run reports expected TPASS/TCONF/TBROK outcomes through the LTP result macros; failures usually indicate syscall semantic drift, missing kernel configuration, or fixture setup problems.
+
+Additional source notes: Needed module to online back memory pages a SIGBUS received is a confirmation of test failure

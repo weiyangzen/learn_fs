@@ -1,0 +1,11 @@
+# sources/distributed-fs/openafs/src/butc/tcudbprocs.c
+
+Purpose: implements tape-coordinator backup database save and restore operations. It creates BUDB dump/tape records for `SaveDb`, writes the BUDB server's serialized database stream to `butm`, reads that stream back during `RestoreDb`, restores configuration text blocks, and updates BUDB metadata for the tapes used.
+
+Important APIs and state: public entry points include `saveDbToTape`, `restoreDbFromTape`, `CreateDBDump`, `GetDBTape`, `readDbTape`, `getTapeData`, `restoreDbHeader`, `restoreDbDump`, `restoreText`, and `saveTextFile`. `struct rstTapeInfo` tracks task id, tape sequence, and dump id across multi-volume restore. The file uses global tape-entry list state (`listEntryHead`, `listEntryPtr`, `lastDump`) to defer BUDB tape updates until the tape operation reaches a consistent point.
+
+Control flow: save creates a database dump entry, obtains and labels the first tape, deletes overwritten old dump metadata where needed, streams `ubik_Call_SingleServer_BUDB_DumpDB` chunks into 16 KiB tape blocks, starts `KeepAlive` after the first BUDB stream call, writes filemarks/EOD at tape boundaries, prompts for more tapes when remaining space falls below an end margin, then finishes tape and dump records. Restore mounts the first expected database tape, reads a file stream of `structDumpHeader` records, dispatches database header, dump/tape/volume trees, and text sections, and moves to later tapes on `BUTM_ENDVOLUME`.
+
+Persistence and integration: all durable state is external: BUDB records through `bcdb_*`, UBik BUDB RPCs, tape labels/data through `butm_*`, and temporary text files under `gettmpdir()`. It integrates with butc task status, device queue locking, prompt/log helpers, abort checks, DB watcher threading, and network byte-order conversion helpers from BUDB structures.
+
+Risks: state is process-global and not safe for concurrent DB tape tasks. `writeDbDump` overwrites `code` during the final `UF_END_SINGLESERVER` cleanup, which can mask an earlier error. Several fixed buffers rely on OpenAFS tape-name limits. Restore trusts tape dump structure ordering and uses `ERROR_EXIT(-1)` for some malformed records. Test signals come indirectly from `test_budb.c`, `test_ftm.c`, and operational SaveDb/RestoreDb workflows; no isolated unit test covers multi-tape BUDB restoration.

@@ -1,0 +1,25 @@
+# sources/distributed-fs/openafs/src/libadmin/adminutil/afs_utilAdmin.c
+
+## Purpose
+Implements shared libadmin utilities: error-code translation, database-server enumeration from CellServDB, hostname-to-address translation, the reusable background-prefetch iterator framework, cell-handle validation, RPC statistics wrappers, cache-manager callback introspection, and rxdebug query iterators. This is a support layer used by higher-level admin modules such as BOS, VOS, KAS, PTS, and configuration administration.
+
+## Important APIs, Types, And Functions
+Public functions include `util_AdminErrorCodeTranslate`, `util_DatabaseServerGetBegin/Next/Done`, `util_AdminServerAddressGetFromName`, `CellHandleIsValid`, `util_RPCStatsGetBegin/Next/Done`, `util_RPCStatsStateGet`, `util_RPCStatsStateEnable`, `util_RPCStatsStateDisable`, `util_RPCStatsClear`, `util_RPCStatsVersionGet`, `util_CMGetServerPrefsBegin/Next/Done`, `util_CMListCellsBegin/Next/Done`, `util_CMLocalCell`, `util_CMClientConfig`, and the `util_RXDebug*` family. Internal iterator entry points `IteratorInit`, `IteratorNext`, and `IteratorDone` are defined here but declared in `afs_AdminInternal.h`.
+
+Important local state structures are `database_server_get_t`, `rpc_stat_get_t`, `cm_srvr_pref_get_t`, `cm_list_cell_get_t`, `rxdebug_conn_get_t`, and `rxdebug_peer_get_t`; each embeds a `CACHED_ITEMS` array used by the generic iterator. `init_once` initializes many OpenAFS com_err tables and is guarded by `pthread_once_t error_init_once`.
+
+## Control Flow
+Error translation lazily initializes error tables, casts the admin status to `afs_int32`, calls `afs_error_message`, and optionally falls back to Kerberos error text when enabled. Database-server enumeration opens `AFSDIR_CLIENT_ETC_DIRPATH`, copies the requested cell name because `afsconf_GetCellInfo` mutates it, loads database host metadata, and feeds one host at a time through the generic iterator.
+
+The iterator framework creates a joinable producer thread when `make_rpc` is non-NULL. `DataGet` waits for an empty cache slot, calls the file-specific RPC/data producer without holding the iterator mutex, stores data in a ring buffer, signals waiting consumers, and marks `ADMITERATORDONE` when the producer reports end-of-stream. `IteratorNext` locks the iterator, validates magic and validity flags, waits for cached data, copies one item using the caller-supplied cache copier, and signals the producer when space opens. `IteratorDone` sets `request_terminated`, wakes the producer if needed, joins the worker, then destroys mutexes/condition variables and frees the iterator-specific data.
+
+RPC stats retrieval performs one bulk RPC into `struct rpcStats`, then iterates through the returned integer vector with `UnmarshallRPCStats`. Cache-manager functions call `RXAFSCB_GetServerPrefs`, `RXAFSCB_GetCellServDB`, `RXAFSCB_GetLocalCell`, and `RXAFSCB_GetCacheConfig`, translating XDR strings/vectors into fixed public structures. Rxdebug functions first discover supported server statistics, then query version/basic/rx stats or iterate connections and peers through UDP rxdebug helper routines.
+
+## State And Persistence
+Most state is transient heap memory owned by iterators. Persistent inputs are AFS client configuration files under `AFSDIR_CLIENT_ETC_DIRPATH`, especially CellServDB and local cell metadata. The file does not write persistent configuration, but it observes remote cache-manager and rxdebug state and can enable, disable, or clear RPC statistic counters on remote processes via caller-supplied RPC hooks. `CellHandleIsValid` validates opaque libadmin handles using `BEGIN_MAGIC`, `END_MAGIC`, and `is_valid`.
+
+## Dependencies And Integration Points
+The file depends on pthreads, Rx/RxStat, XDR freeing, OpenAFS cell configuration, com_err tables, `afscbint` cache-manager callback RPCs, `rxdebug` helpers, and internal handle/iterator definitions from `afs_AdminInternal.h`. Its generic iterator is reused by BOS and other libadmin modules. Database-server enumeration is used by configuration code to discover CellServDB hosts.
+
+## Risks And Test Signals
+Important risks include thread lifecycle bugs in the generic iterator, failures during `pthread_attr_init` after mutex/condition initialization, inconsistent cleanup when `IteratorInit` starts a worker but later fails, and fixed-size destination assumptions for names and cell arrays. `util_AdminServerAddressGetFromName` parses dotted quads with `sscanf` but does not validate octet range; it also serializes `gethostbyname` behind a global mutex because that API is not generally thread-safe. RPC stat unmarshalling assumes the returned vector matches version-1 layout. Test signals should include iterator begin/next/done success and early-done paths, producer error propagation, CellServDB enumeration, hostname parsing/resolution, com_err translation, cache-manager CellServDB and server preference enumeration, rxdebug timeout handling, and memory cleanup under valgrind/asan-like instrumentation.

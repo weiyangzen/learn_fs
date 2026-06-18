@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/arch/x86/entry/entry_64.S
+
+Purpose: this is the primary 64-bit x86 low-level entry assembly for native syscall, exception, interrupt, NMI, task-switch, fork-return, Xen PV, and mitigation paths. It constructs `struct pt_regs`, switches GS/CR3 state, applies entry/exit speculation mitigations, and transfers to C handlers such as `do_syscall_64()`, `ret_from_fork()`, `exc_nmi()`, generated `idtentry` handlers, `fixup_bad_iret()`, and `make_task_dead()`.
+
+Important APIs/functions: `entry_SYSCALL_64`, `__switch_to_asm`, `ret_from_fork_asm`, `idtentry`, `idtentry_mce_db`, `idtentry_vc`, `idtentry_df`, `common_interrupt_return`, `swapgs_restore_regs_and_return_to_usermode`, `restore_regs_and_return_to_kernel`, `asm_load_gs_index`, `paranoid_entry`, `paranoid_exit`, `error_entry`, `error_return`, `asm_exc_nmi`, `entry_SYSCALL32_ignore`, `rewind_stack_and_make_dead`, and `clear_bhb_loop`. The file depends heavily on macros from `calling.h`, `asm/idtentry.h`, speculation headers, and per-CPU TSS/current-stack offsets.
+
+Control flow: syscall entry swaps to kernel GS, saves user RSP in `TSS_sp2`, switches to kernel CR3, builds a syscall-style `pt_regs`, clears caller-saved registers, runs IBRS/untrain/BHB mitigations, calls `do_syscall_64()`, then chooses fast `SYSRETQ` only if the C layer returns true; otherwise it uses the shared IRET exit path. Exception stubs enter through `error_entry()` or `paranoid_entry()` depending on stack/IST sensitivity, then return through `error_return()` or `paranoid_exit()`. NMI handling has a special nested-NMI protocol with an "NMI executing" stack word and repeat frame.
+
+State/persistence: persistent architectural state touched includes per-CPU TSS stack slots, CR3/PCID, GSBASE, SPEC_CTRL/IBRS shadow state, RSB/BHB predictor state, ESPFIX stacks, and pt_regs stack images. It exports `asm_load_gs_index` and KVM-facing `clear_bhb_loop`.
+
+Integration points: scheduler context switch, syscall dispatch, generated IDT vectors, Xen PV callbacks, SEV/VC exception support, FRED alternative fork exit, KVM mitigations, objtool ORC unwind annotations, stackleak, page-table isolation, and x86 speculation mitigations.
+
+Risks: register layout must match `struct pt_regs`, `inactive_task_frame`, and unwinder expectations; any swapgs/CR3 ordering bug can expose user memory or corrupt per-CPU state. Fast SYSRET is security-sensitive for noncanonical RIP/RFLAGS. NMI nesting, ESPFIX, Xen PV, and bad-IRET fixup are fragile corner cases. Test signals include syscall ABI tests, x86 selftests for entry/ptrace/signals, KVM boot tests, objtool validation, lockdep/DEBUG_ENTRY, NMI watchdog/perf stress, Xen PV boot, and PTI/IBRS/BHB mitigation coverage.

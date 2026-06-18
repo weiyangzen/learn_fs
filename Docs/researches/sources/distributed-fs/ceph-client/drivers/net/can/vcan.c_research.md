@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/net/can/vcan.c
+
+Purpose: this file implements the virtual CAN network interface type `vcan`. It provides a software-only CAN device for local testing, supports classic CAN, CAN FD, and CAN XL MTUs/capability reporting, and can optionally perform driver-level echo for testing CAN core echo behavior.
+
+Important APIs, types, and functions: the module parameter `echo` controls whether the driver itself creates echo skbs. `vcan_tx()` is the transmit path, `vcan_rx()` reinjects locally echoed skbs, `vcan_change_mtu()` restricts MTU changes to valid CAN/CAN FD/CAN XL sizes while the device is down, `vcan_set_cap_info()` maps MTU to CAN capability flags, `vcan_setup()` initializes netdev shape and CAN multi-length private state, and `vcan_link_ops` registers the RTNL link kind.
+
+Control flow: module init logs the virtual driver and registers `rtnl_link_ops` for `kind = "vcan"`. Creating a vcan link allocates `struct can_ml_priv` private data and calls setup. Setup assigns `ARPHRD_CAN`, default `CANXL_MTU`, no hardware header/address, zero TX queue length, `IFF_NOARP`, CAN ML private pointer, capability flags, optional `IFF_ECHO`, netdev operations, ethtool ops, and `needs_free_netdev`. TX validates CAN skb shape, updates TX stats, timestamps the skb, detects whether the CAN core marked it as loopback, and either consumes it with core echo accounting or, when `echo=1`, clones/creates an echo skb and reinjects it through `vcan_rx()`. MTU changes are rejected while up and accepted only for classic CAN, CAN FD, or valid CAN XL MTUs. Module exit unregisters the RTNL link type.
+
+State and persistence: there is no hardware or persistent device state. Per-device state is only the CAN ML private area and netdev fields. The module-level `echo` parameter is read-only at runtime via permissions `0444` and affects all vcan devices created under the module.
+
+Dependencies and integration points: the driver integrates with RTNL link creation (`ip link add type vcan`), netdevice TX hooks, SocketCAN skb validation and data-length helpers, CAN ML private helpers, ethtool timestamp fallback, and packet loopback conventions from the CAN core.
+
+Risks: echo behavior changes accounting paths: with default `echo=0`, the CAN core already handled loopback and the driver only increments RX counters for looped packets; with `echo=1`, the driver performs standard echo skb creation itself. MTU changes while up are blocked to avoid capability changes under active traffic. Defaulting to CAN XL MTU means userspace should inspect capability flags if it expects classic-only behavior.
+
+Test signals: create/delete vcan links through RTNL, send classic CAN/CAN FD/CAN XL skbs at matching MTUs, verify invalid skb drops and invalid MTUs return `-EINVAL`, verify MTU changes return `-EBUSY` while up, compare RX/TX stats with `echo=0` and `echo=1`, confirm timestamping reports through ethtool, and confirm module unload unregisters the link kind.

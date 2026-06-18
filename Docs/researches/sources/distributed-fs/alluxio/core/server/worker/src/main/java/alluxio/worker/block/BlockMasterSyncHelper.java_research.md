@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/core/server/worker/src/main/java/alluxio/worker/block/BlockMasterSyncHelper.java
+
+Purpose: `BlockMasterSyncHelper` contains retry, registration, and heartbeat helper logic around a `BlockMasterClient`.
+
+Important APIs are constructor, `getDefaultAcquireLeaseRetryPolicy`, `tryAcquireLease`, `registerToMaster`, and `heartbeat`. Control flow builds an exponential time-bounded retry policy from worker register lease configuration. `tryAcquireLease` only contacts the master when `WORKER_REGISTER_LEASE_ENABLED` is true. `registerToMaster` collects worker-scope configuration, then chooses streaming or unary registration based on `WORKER_REGISTER_STREAM_ENABLED`. `heartbeat` reports worker metrics plus block/capacity deltas, invokes the supplied command handler, returns true on success, and logs/disconnects the client on any failure.
+
+State and persistence are limited to the master client reference. Dependencies include configuration, retry utilities, gRPC `Command`/`ConfigProperty`, metrics reporting, and block-store metadata/report types. Integration points are `BlockMasterSync` and registration/heartbeat error handling. Risks include catching all exceptions in heartbeat and reducing them to false, disconnecting the client but relying on retry/reconnect behavior later, and registration mode changes affecting memory/stream behavior. No direct tests in this subset.

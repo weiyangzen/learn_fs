@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/drivers/media/test-drivers/vidtv/vidtv_psi.c
+
+## Purpose
+`vidtv_psi.c` implements the virtual DVB driver's MPEG Program Specific Information and DVB Service Information table model. It builds PAT, PMT, SDT, NIT, and EIT structures in memory, maintains section lengths and version numbers, serializes descriptor loops, computes CRC32 values, and packetizes table bytes into MPEG-TS packets using the helpers from `vidtv_ts.c`. The code deliberately treats each logical table as a single section for vidtv, which keeps the simulator simpler while still exercising user-space DVB PSI parsing.
+
+## Important APIs, Types, and Functions
+The public constructors and destructors include `vidtv_psi_pat_table_init()`, `vidtv_psi_pmt_table_init()`, `vidtv_psi_sdt_table_init()`, `vidtv_psi_nit_table_init()`, `vidtv_psi_eit_table_init()`, the matching destroy helpers, and constructors for PAT programs, PMT streams, SDT services, EIT events, and descriptors. Writer entry points are `vidtv_psi_pat_write_into()`, `vidtv_psi_pmt_write_into()`, `vidtv_psi_sdt_write_into()`, `vidtv_psi_nit_write_into()`, and `vidtv_psi_eit_write_into()`. Descriptor handling centers on `vidtv_psi_desc_clone()`, `vidtv_psi_desc_destroy()`, `vidtv_psi_desc_assign()`, `vidtv_pmt_desc_assign()`, `vidtv_sdt_desc_assign()`, and `vidtv_psi_desc_write_into()`.
+
+Internal helpers manage bitfields: `vidtv_psi_get_sec_len()`, `vidtv_psi_set_sec_len()`, `vidtv_psi_set_desc_loop_len()`, `vidtv_psi_update_version_num()`, `vidtv_psi_get_pat_program_pid()`, and `vidtv_psi_pmt_stream_get_elem_pid()`. `vidtv_psi_ts_psi_write_into()` is the serialization core: it writes TS headers, pointer fields, payload fragments, padding, and continuity counter updates while optionally folding the bytes into a running big-endian CRC.
+
+## Control Flow
+The typical flow is construct, assign children or descriptors, recompute section length, then write. Constructors initialize table IDs, MPEG reserved bits, current/next flags, section IDs, default versions, and descriptor-loop bitfields. Assignment helpers transfer ownership of linked lists into their table, recompute length, enforce maximum section limits, and bump the version. Writer functions start with `INITIAL_CRC`, write the common PSI header through `vidtv_psi_table_header_write_into()`, walk table-specific linked lists, write nested descriptors, then append the CRC with `table_section_crc32_write_into()`. The packetizer inserts a new TS header at every 188-byte boundary, uses a pointer field for new PSI sections, and pads the final CRC packet with `TS_FILL_BYTE`.
+
+## State and Persistence
+All table state is in heap-allocated linked structures owned by the caller until assigned to a table. There is no persistence beyond module memory and no global mutable table cache in this file. Version numbers are stored in table headers and increment on assignments; continuity counters are passed by pointer from callers and updated during serialization. EIT events embed a wall-clock-derived Modified Julian Date start time at event creation, so the emitted schedule depends on current kernel time. Destroy paths recursively free descriptor loops and child linked lists.
+
+## Dependencies and Integration Points
+The file depends on kernel allocation/string/time/CRC helpers, endian helpers, `vidtv_common.h` safe buffer copy/fill wrappers, `vidtv_psi.h` layout definitions, and `vidtv_ts.h` TS constants and continuity helpers. Upstream vidtv muxing code uses these APIs to create DVB service metadata and interleave PSI tables with audio/video elementary streams. PID constants are standardized for PAT, SDT, NIT, and EIT, while PMT PID lookup is derived from PAT entries.
+
+## Risks and Edge Cases
+The implementation has many ownership-transfer APIs; callers must not reuse or double-free assigned descriptor or program chains. Section length checks are limited: some assignment loops null out new input after one pass, so oversize rejection effectively drops newly assigned content rather than returning an error. `vidtv_psi_desc_clone()` can leak already cloned descriptors if a later clone fails. Packetization warns but forcibly pads when asked to start a PSI section at a non-TS-aligned offset. Descriptor lengths are stored in `u8`, so overly long strings can truncate protocol length fields even though allocations use `u32` string lengths. EIT events have a fixed nearly-one-day duration and no rollover logic.
+
+## Test Signals
+Useful validation includes MPEG-TS analyzers confirming PAT/PMT/SDT/NIT/EIT CRCs, section lengths, descriptor loop lengths, PIDs, and continuity counters; DVB user-space scans discovering the expected services; fault injection for allocation failures in descriptor/table constructors; and buffer-boundary tests around 184-byte payload breaks. Regression tests should exercise descriptor cloning/destruction and oversize descriptor loops.

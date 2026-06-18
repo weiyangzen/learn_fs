@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/sh/kernel/signal_32.c
+
+Purpose: implements 32-bit SH signal frame setup, signal return, syscall restart, altstack, FPU state save/restore, and user-mode notification.
+
+Important APIs and control flow: `restore_sigcontext()` restores GPRs, GBR/MAC/PR/SR/PC, preserves kernel SR bits, restores optional FPU state, disables syscall restart checks, and returns saved r0. `sys_sigreturn()` and `sys_rt_sigreturn()` validate user frames, restore signal masks, context, and altstack, or force SIGSEGV on bad frames. `setup_sigcontext()` writes register/FPU state to user frames. `get_sigframe()` selects normal or altstack and adds `UNWINDGUARD`. `setup_frame()` and `setup_rt_frame()` copy siginfo/ucontext, choose SA_RESTORER, VDSO, or generated trampoline code, flush trampoline icache, and set handler args/PC/PR including FDPIC descriptors. `do_signal()` handles syscall restart rules and signal delivery; `do_notify_resume()` dispatches signal and resume-user-mode work.
+
+State, dependencies, and risks: state is user stack frames, blocked masks, restart block, FPU/xstate, and pt_regs. Dependencies include entry work flags, VDSO symbols, FPU helpers, FDPIC ABI, signal core, altstack, and SH instruction size decoding. Risks include user-frame ABI breakage, generated trampoline cache coherency, syscall PC rewind errors, and FPU ownership mistakes. Test signals are POSIX signal/rt-signal tests, altstack, SA_RESTORER/VDSO fallback, syscall restart, FDPIC handler calls, and bad-frame SIGSEGV.

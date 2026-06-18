@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/cachestat/cachestat03.c
+
+Purpose: negative errno coverage for `cachestat()`. Setup opens a normal tmpdir file and a file on hugetlbfs; testcases exercise invalid fd `EBADF`, NULL range `EFAULT`, NULL data `EFAULT`, invalid flags `EINVAL`, and hugetlbfs fd `EOPNOTSUPP`. Important APIs are `cachestat`, `SAFE_OPEN`, hugetlbfs LTP metadata, and allocated range/data buffers. State includes two open fds and mounted hugetlbfs with one required hugepage. Dependencies are hugetlbfs availability and modern cachestat syscall support. Risks include unsupported hugetlbfs setup or errno variation for unsupported fd classes. Test signal is exact expected errno for every invalid input.

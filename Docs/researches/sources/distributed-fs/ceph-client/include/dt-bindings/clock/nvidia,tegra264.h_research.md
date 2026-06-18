@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/nvidia,tegra264.h
+
+Purpose: declares the device-tree clock IDs for NVIDIA Tegra264 BPMP-managed clocks. It exports 458 macro constants, mainly `TEGRA264_CLK_*`, spanning numeric IDs 1..467; the set covers PLLs, CPU/cluster roots, memory/display/video/audio blocks, PCIe/UPHY, GPU, MGBE, and DPAUX identifiers.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 458 exported defines, numeric range 1..467, first numeric symbols `TEGRA264_CLK_OSC`=1, `TEGRA264_CLK_CLK_S`=2, `TEGRA264_CLK_JTAG_REG`=3, `TEGRA264_CLK_SPLL`=4, `TEGRA264_CLK_SPLL_OUT0`=5, and last numeric symbols `TEGRA264_CLK_MGBE0_RX_SER`=463, `TEGRA264_CLK_MGBE1_RX_SER`=464, `TEGRA264_CLK_MGBE2_RX_SER`=465, `TEGRA264_CLK_MGBE3_RX_SER`=466, `TEGRA264_CLK_DPAUX`=467. Dominant macro prefixes are `TEGRA264`(458); common suffix categories are `M`(62), `IN`(23), `DIV`(19), `REF`(15), `CORE`(12), `SYNC`(10), `TX`(9), `SER`(8). Source section markers include `Copyright (c) 2022-2025, NVIDIA CORPORATION. All rights reserved.`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The IDs are consumed by Tegra device trees and the Tegra BPMP clock provider path under `drivers/clk/tegra/clk-bpmp.c`, where firmware-facing clock numbers must match BPMP firmware and binding documentation.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `DT_BINDINGS_CLOCK_NVIDIA_TEGRA264_H` should remain unique enough to avoid accidental include suppression. Since the file has no executable validation, errors usually appear as boot-time probe failures, missing clocks, or devices stuck in reset.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include BPMP firmware accepting all requested IDs, Tegra264 platform devices acquiring clock handles, and no firmware `invalid clock id` errors during PCIe, display, GPU, audio, and networking bring-up.

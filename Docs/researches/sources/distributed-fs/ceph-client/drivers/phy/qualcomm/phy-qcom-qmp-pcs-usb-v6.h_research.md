@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v6.h
+
+This header exports a reduced QMP V6 USB3 PCS offset set for power-state config, autonomous mode control, LFPS RX termination IRQ clear, LFPS high-count value, RXEQ DFE time, and receiver-detect delay low/high registers. It is macro-only with no state or control flow. USB PHY drivers include it when their V6 tables need these PCS controls. Risks are missing or wrong offsets for low-power wake and receiver-detect timing. Test signals include USB3 attach/detach, LFPS wake handling, RXEQ training, receiver detect timing, and suspend/resume.

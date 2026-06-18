@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-airoha-pcie.c
+
+Purpose: This driver initializes the Airoha EN7581 PCIe PHY through direct MMIO programming. It exposes one generic PHY whose `.init` callback performs a long hardware bring-up sequence for clocks, PLLs, RX/TX flows, signal detection, spread-spectrum clocking, and lane calibration; `.exit` partially resets PMA and disables JCPLL SSC.
+
+Important APIs/types/functions: `struct airoha_pcie_phy` stores the device, PHY, and six mapped resource bases: `csr_2l`, `pma0`, `pma1`, `p0_xr_dtime`, `p1_xr_dtime`, and `rx_aeq`. Helpers `airoha_phy_clear_bits()`, `set_bits()`, `update_bits()`, and `airoha_phy_update_field()` perform read-modify-write with compile-time constant mask validation. Major setup functions include lane0/lane1 RX firmware pre-calibration, default lane enable, clock output setup, CSR reset setup, RX init, JCPLL setup, TXPLL setup, SSC setup, RX signal detect, RX flow, PR/CDR settings, TX flow, RX mode, and K-flow loading.
+
+Control flow: Probe maps all named resources, creates the PHY with `airoha_pcie_phy_ops`, stores drvdata, and registers a simple OF PHY provider for compatible `airoha,en7581-pcie-phy`. Init first writes Tx/Rx detect and RX AEQ timing registers, enables FLL K-flow loading, then runs a strict sequence: default trim/lane enable, clock-output tuning, reset staging, RX and JCPLL setup, TXPLL, SSC, per-lane signal detection, RX flow, PR settings, TX flow, RX mode, Gen3 then Gen2 lane calibration, CDR power toggle, and a final 30 ms hardware-settle sleep. The calibration loops sweep IDAC values, repeatedly toggle frequency detection, read `PCIE_RO_FL_OUT`, and attempt frequency-lock detection up to ten times.
+
+State and persistence: The driver stores only MMIO bases and no cached init state. Hardware register state persists until reset, suspend, or `.exit`; the comment notes that suspend resets hardware and consumers should call `phy_init()` again on resume. `.exit` clears PMA software-reset bits and disables JCPLL SSC phase/triangular/enable bits.
+
+Dependencies and integration points: It depends on platform resources by exact names, generic PHY, Linux MMIO accessors, bitfield helpers, and the adjacent register header. A PCIe controller consumes the PHY through OF and is responsible for calling PHY init/exit at the right time.
+
+Risks: The init sequence has many magic values and mostly unchecked MMIO writes; failures are observable only through later PCIe link behavior. Calibration loops do not return an error if lock never appears, so marginal hardware may proceed. Resource-name mismatches fail probe. Because both lanes are always programmed, board variants with fewer lanes need matching hardware tolerance.
+
+Test signals: Probe should validate all six resources. Runtime validation should cover cold boot, warm reboot, suspend/resume with reinit, Gen1/Gen2/Gen3 link training, link stability under load, and failure injection for missing resources. Useful low-level signals are frequency-detector lock, endpoint enumeration, absence of PCIe correctable-error storms, and successful link after `.exit`/`.init` cycles.

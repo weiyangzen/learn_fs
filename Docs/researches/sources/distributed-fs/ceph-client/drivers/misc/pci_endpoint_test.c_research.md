@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/misc/pci_endpoint_test.c
+
+Purpose: host-side PCI endpoint test driver exposing `/dev/pci-endpoint-test.N` ioctls for validating endpoint BAR mappings, interrupt delivery, DMA/read/write/copy paths, dynamic inbound doorbells, and BAR subrange mapping.
+
+Important APIs and types: `struct pci_endpoint_test` tracks PCI device, test register BAR, mapped BARs, IRQ completion, IRQ type/count, capabilities, alignment, and miscdevice. `struct pci_endpoint_test_data` carries per-device test BAR/alignment quirks. Major helpers include IRQ vector management, BAR tests, subrange setup/clear, `pci_endpoint_test_intx_irq()`, `pci_endpoint_test_msi_irq()`, `pci_endpoint_test_read/write/copy()`, `pci_endpoint_test_set_irq()`, `pci_endpoint_test_doorbell()`, `pci_endpoint_test_ioctl()`, probe/remove, and ID table entries.
+
+Control flow: probe rejects bridges, allocates state, applies device-specific data, enables PCI, requests regions, maps memory BARs, selects the test register BAR, allocates a misc device name/IDA, reads endpoint capabilities, and registers the misc device. Ioctls are serialized by `test->mutex`; they reinitialize the IRQ completion, validate arguments, program endpoint test registers, wait for IRQ completion, then inspect status/CRC/IRQ number. DMA tests allocate aligned bounce buffers, map with streaming DMA APIs, write source/destination addresses to endpoint registers, and validate CRC32 or status bits. IRQ type selection frees old vectors and requests INTx/MSI/MSI-X vectors as requested or inferred from endpoint capabilities.
+
+State and persistence: state is per PCI device and per open ioctl operation. Endpoint status/capability/test registers are MMIO state. No disk persistence exists.
+
+Dependencies and integration points: depends on UAPI `<uapi/linux/pcitest.h>`, PCI endpoint test register protocol, miscdevice, DMA mapping, IRQ vector APIs, CRC32, and many vendor/device IDs. The endpoint function under test must implement the expected register protocol.
+
+Risks and test signals: several operations wait indefinitely with `wait_for_completion()` rather than timeout, so malfunctioning endpoints can hang ioctl callers. Doorbell reads an endpoint-supplied BAR/offset and writes to `test->bar[bar] + addr`; capability validation and BAR bounds are critical. BAR tests intentionally write across endpoint BARs and must skip reserved/test BARs correctly. Tests should cover all ioctls, invalid BAR/IRQ arguments, vector allocation failure, DMA mapping failure, endpoint status failures, subrange cleanup after failure, SR-IOV devices, and hot-remove during userspace access.

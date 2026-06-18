@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source3/winbindd/wb_queryuser.c
+
+Purpose: resolves a user SID into complete `wbint_userinfo`, including UID mapping, default or cached account fields, NSS info enrichment, primary GID mapping, and optional primary group name.
+
+Important APIs and types: public `wb_queryuser_send/recv`; `struct wb_queryuser_state` tracks the event context, `wbint_userinfo`, parent idmap config, and DC rediscovery flag. Async callbacks are `wb_queryuser_idmap_setup_done`, `wb_queryuser_got_uid`, `wb_queryuser_got_domain`, `wb_queryuser_done`, `wb_queryuser_got_dc`, `wb_queryuser_got_gid`, and `wb_queryuser_got_group_name`.
+
+Control flow: `send` initializes `wbint_userinfo`, sets `primary_gid` to `(gid_t)-1`, copies the user SID, and starts parent idmap setup. The next step maps the user SID with `wb_sids2xids_send` and requires `ID_TYPE_UID` or `ID_TYPE_BOTH`. It defaults the group SID to Domain Users or Guests based on the user RID, fills template homedir/shell, and overlays account/domain/full-name fields from `netsamlogon_cache_get` when present. If the domain name is still unknown it calls `wb_lookupsid_send`; group-type SIDs are accepted when they map to `ID_TYPE_BOTH`, otherwise unknown types fail as no-such-user. The idmap child `dcerpc_wbint_GetNssInfo_send` enriches NSS fields. Host-unreachable/domain-controller-not-found triggers a single `wb_dsgetdcname_send` plus gencache update and retry. If `primary_gid` is still unset, the group SID is mapped through `wb_sids2xids_send`. Primary group name lookup is only done when template homedir or shell contains `%g`/`%G` and the name is missing.
+
+State and persistence: no direct persistent writes, but it reads netsamlogon cache, idmap configuration/cache through `wb_sids2xids`, and writes DC discovery data via `wb_dsgetdcname_gencache_set` after rediscovery. Template homedir/shell values come from runtime configuration.
+
+Dependencies and integration points: `wb_parent_idmap_setup`, `wb_sids2xids`, `wb_lookupsid`, `dcerpc_wbint_GetNssInfo`, netsamlogon cache, DC locator/gencache helpers, template configuration, and higher-level passwd/user lookup handlers. It bridges SID identity mapping with NSS account materialization.
+
+Risks: UID and primary GID type checks are security-sensitive; accepting wrong `unixid.type` would expose bad POSIX identities. The default Domain Users/Guests group SID is a fallback until cache or `GetNssInfo` supplies better data. `GetNssInfo` result failures are intentionally ignored after transport succeeds, so later fallback filling must be correct. DC rediscovery is single-shot. The warning in the GID type failure says UID/BOTH although the code checks GID/BOTH, a diagnostic inconsistency worth preserving in tests.
+
+Test signals: mapped UID success, invalid UID type, netsamlogon cache overlay, unknown domain resolved by `wb_lookupsid`, group-type SID accepted for `ID_TYPE_BOTH`, `GetNssInfo` host-unreachable/DC rediscovery retry, primary GID mapping success/failure, template `%g`/`%G` group-name lookup, and receive-time talloc move of `wbint_userinfo`.

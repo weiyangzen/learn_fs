@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/hwprobe/Makefile
+
+Purpose: builds RISC-V `hwprobe`, `cbo`, and `which-cpus` selftests. It adds local `sys_hwprobe.S` as a generated object/library, sets test programs, and includes `../../lib.mk`. State is output binaries and the syscall wrapper object. Dependencies are RISC-V syscall ABI, kernel headers exposing `struct riscv_hwprobe`, and compiler support for inline CBO assembly. Risks are build failures on non-RISC-V or older headers and runtime skips/fails on heterogeneous CPU extension availability. Test signals are three runnable binaries and kselftest pass/fail output.

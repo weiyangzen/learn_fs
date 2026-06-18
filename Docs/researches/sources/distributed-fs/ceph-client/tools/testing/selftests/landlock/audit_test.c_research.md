@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/landlock/audit_test.c
+
+## Purpose
+`audit_test.c` validates Landlock audit logging semantics. It covers signal-scope denials, domain allocation and deallocation messages, log muting flags, fork and thread propagation, TSYNC behavior, and logging across `execve()` into helper binaries.
+
+## Important APIs, Types, And Functions
+The file uses Landlock syscalls through wrappers: `landlock_create_ruleset()`, `landlock_restrict_self()`, and Landlock flags such as `LANDLOCK_SCOPE_SIGNAL`, `LANDLOCK_RESTRICT_SELF_LOG_SAME_EXEC_OFF`, `LANDLOCK_RESTRICT_SELF_LOG_SUBDOMAINS_OFF`, `LANDLOCK_RESTRICT_SELF_LOG_NEW_EXEC_ON`, and `LANDLOCK_RESTRICT_SELF_TSYNC`. It uses the audit helpers from `audit.h`, capability helpers from `common.h`, kselftest fixtures and variants, `fork()`, `pthread_create()`, pipes, `kill(pid, 0)`, `waitpid()`, `mmap()` shared memory, and `execve()` of `wait-pipe-sandbox`. Local helpers include `matches_log_signal()`, `thread_audit_test()`, `thread_sandbox_deny_twice()`, and `matches_log_fs_read_root()`.
+
+## Control Flow
+The `audit` fixture disables broad capabilities, briefly enables `CAP_AUDIT_CONTROL`, initializes an audit socket filtered to the current executable, and removes the capability for the test body. `layers` repeatedly stacks signal-scoped Landlock domains in a child, triggers denied `kill()` checks, compares denial and allocation domain IDs, validates monotonically increasing domain IDs, verifies the layer limit returns `E2BIG`, then matches deallocation records in LIFO order from the parent. `thread` verifies that allocation logs identify the thread group ID rather than a secondary thread ID. `log_subdomains_off_fork` proves that muting set through `landlock_restrict_self(-1, LOG_SUBDOMAINS_OFF)` is inherited by a forked child even when the parent has no domain. `log_subdomains_off_tsync` propagates muting to a sibling thread with TSYNC, while `tsync_override_log_subdomains_off` verifies that a later TSYNC without the muting flag re-enables logging for subsequently stacked domains.
+
+The `audit_flags` fixture runs the `signal` test across restrict flag variants. A child applies a signal-scoped ruleset, triggers denials, and either expects no logs for `LOG_SAME_EXEC_OFF` or matches access/allocation/deallocation records for normal logging. It also checks that repeated denials produce exactly the expected count and that deallocation denials match the domain ID. The `audit_exec` fixture uses a filter for `wait-pipe-sandbox`, then `signal_and_open` forks a child that restricts itself and execs the helper. Parent and child coordinate over pipes so the parent can check whether signal and filesystem read-dir denials are logged according to `LOG_NEW_EXEC_ON` and `LOG_SUBDOMAINS_OFF`.
+
+## State, Persistence, And Dependencies
+State is mostly process, credential, and kernel audit state: Landlock domain stacks, log-status bits in credentials/domains, audit filters, pipe synchronization, shared memory for domain IDs, and asynchronous deallocation records. No persistent test files are created by this file itself, but it depends on helper executables built by the Landlock Makefile. It requires kernel support for Landlock audit records and `CAP_AUDIT_CONTROL`, and it can conflict with a running audit daemon.
+
+## Integration Points
+This file is the main consumer of `audit.h` and `common.h`. It integrates kernel Landlock audit behavior with the kselftest harness and external helper programs (`wait-pipe-sandbox`) used to verify post-exec logging. It exercises interactions between Landlock LSM hooks, credential transfer, thread synchronization, signal permission checks, filesystem access checks, and audit netlink delivery.
+
+## Risks
+The tests are timing-sensitive around asynchronous domain deallocation and rely on the helper timeouts in `audit.h`. Audit message regexes must match exact kernel output formatting. Running auditd or another audit consumer can cause initialization failure. Pipe synchronization and thread return values must remain aligned or failures can deadlock or be misattributed. Some scenarios intentionally mutate audit filters mid-test to receive deallocation records, so missing cleanup can affect later tests. Cross-exec assertions rely on the helper binary behavior and executable path resolution.
+
+## Test Signals
+Pass signals include successful audit fixture setup/cleanup, matched denial/allocation/deallocation records with consistent domain IDs, no extra access records after drains, expected `-EAGAIN` when logging is muted, `E2BIG` at the maximum domain layer count, correct thread join status, and child exit success. Failures isolate regressions in logging flags, inheritance through fork or TSYNC, TGID attribution, domain lifetime accounting, executable filtering, or audit formatting.

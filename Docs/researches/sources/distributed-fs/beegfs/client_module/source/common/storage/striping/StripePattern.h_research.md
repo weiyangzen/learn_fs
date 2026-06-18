@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/StripePattern.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/striping/StripePattern.h
+
+**Purpose:** Defines the base polymorphic stripe-pattern interface for file chunk routing. **APIs/types:** pattern type constants, minimum chunk size, serialized header length, `StripePatternHeader`, `StripePattern` function-pointer table, factory/deserializer externs, and inline helpers for pattern type, chunk size, chunk start, next chunk start, and chunk end. **Control flow/state:** chunk math uses bit masking instead of modulo, assuming chunk size is a power of two; virtual methods are assigned by subclasses. **Dependencies/integration:** included by lookup intent output, stripe subclasses, and storage routing code. **Risks/tests:** non-power-of-two chunk sizes break chunk-start calculations; tests should enforce power-of-two validation at the producer/consumer boundary and verify virtual methods for each subclass.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/StripePattern.h -->

@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/lib/delay.c
+
+Purpose: chooses between loop-based and timer-based ARM delay operations and exports `read_current_timer`.
+
+Control flow starts with `arm_delay_ops` pointing to loop routines. `register_current_timer_delay` evaluates a candidate timer's frequency/resolution, installs it if it is the best pre-calibration timer, updates `lpj_fine` and private ticks-per-jiffy, and replaces delay callbacks with cycle-based loops. `calibrate_delay_is_known` and `calibration_delay_done` freeze late replacement. Persistent state includes `arm_delay_ops`, `delay_timer`, `delay_calibrated`, and `delay_res`. Dependencies are clocksource delay timers, `clocks_calc_mult_shift`, and timer calibration. Risks are accepting low-resolution timers, late duplicate registration, cpufreq interaction, and no timer available for `read_current_timer`. Test signals include boot log selection, udelay accuracy, duplicate registration logs, and `read_current_timer` returning `-ENXIO` without a timer.

@@ -1,0 +1,22 @@
+# sources/test-tools/xfstests/tests/btrfs/235
+
+## Purpose
+Test that if we set a capability on a file but not on the next files we create, send/receive operations only apply the capability to the first file, the one for which we have set a capability. Override the default cleanup function. Set a capability only on file foo. Note that file foo has a lower inode number then files bar and baz - we want to test that if a file with a lower inode number has a capability set, after a send/receive, the capability is not set on the next files that have higher inode numbers. Now create the base snapshot, which is going to be the parent snapshot for. In this subset it primarily covers Btrfs send/receive stream generation and replay, subvolume and snapshot metadata.
+
+## Important APIs, Types, and Functions
+The fstest declaration is `auto quick send`. Requirement and capability gates: line 24: `_require_test`; line 25: `_require_scratch`; line 26: `_require_command "$SETCAP_PROG" setcap`; line 27: `_require_command "$GETCAP_PROG" getcap`. Local helper surface: `_cleanup()` (line 15). Important command/API calls include line 12: `_begin_fstest auto quick send`; line 18: `rm -fr $send_files_dir`; line 19: `rm -f $tmp.*`; line 24: `_require_test`; line 25: `_require_scratch`; line 26: `_require_command "$SETCAP_PROG" setcap`; line 27: `_require_command "$GETCAP_PROG" getcap`; line 29: `send_files_dir=$TEST_DIR/btrfs-test-$seq`; line 32: `mkdir $send_files_dir`; line 34: `_scratch_mkfs >>$seqres.full 2>&1`; line 35: `_scratch_mount`; line 37: `touch $SCRATCH_MNT/foo`; line 38: `touch $SCRATCH_MNT/bar`; line 39: `touch $SCRATCH_MNT/baz`.
+
+## Control Flow
+The control flow follows the xfstests pattern: source the common preamble, declare `_begin_fstest auto quick send`, install cleanup if needed, enforce requirements, then formats scratch storage, mounts the test filesystem, creates or deletes subvolumes/snapshots, generates and replays send streams, cycles mounts to force persistence. The script then performs its focused state transition and relies on explicit command failures, `_fail`, filtered stdout, content comparisons, filesystem checks, or expected output matching to detect regressions. Cleanup hooks remove temporary send streams, loop devices, scratch pool devices, or `$tmp.*` artifacts when the test defines them.
+
+## State and Persistence Behavior
+The script owns scratch filesystem state and normally reformats, mounts, unmounts, or checks it through xfstests helpers. It persists send streams, fssum files, or received subvolumes in a temporary test directory and validates replay on a freshly formatted scratch filesystem. Snapshot and subvolume roots are deliberate persistent state used to test root items, received UUIDs, cleaner behavior, and metadata references. Sync, remount, unmount, receive, or device-scan boundaries are used to separate in-memory success from on-disk or kernel-global persistence.
+
+## Dependencies and Integration Points
+This file integrates with xfstests `common/preamble`, Btrfs common helpers, scratch-device lifecycle helpers, output filters, and the Btrfs kernel interfaces reached through btrfs-progs. It also depends on the adjacent expected-output file for stable golden-output comparison: `QA output created by 235 | At subvol SCRATCH_MNT/mysnap1 | At subvol SCRATCH_MNT/mysnap2 | At subvol mysnap1 | File mysnap1/foo capabilities: | SCRATCH_MNT/mysnap1/foo cap_net_raw=p | File mysnap1/bar capabilities: | File mysnap1/baz capabilities: | ... (17 expected-output lines total)`.
+
+## Risks and Edge Cases
+send-stream ordering bugs can emit invalid paths, clone sources, link records, or parent references that only appear after replaying onto a clean filesystem. Test reliability can also depend on mkfs defaults, sector size, nodesize, mount options, compression settings, discard support, device size, and whether helper commands support the specific subcommands used by the script.
+
+## Test Signals
+Primary pass signals are successful command completion, no unexpected stderr after filtering, expected `.out` text, clean `btrfs check` or `_check_scratch_fs` results when present, and matching file digests/fssum/byte dumps after replay or remount. Any mismatch in expected output, missing qgroup/device/snapshot state, uncorrected corruption, unexpected swapon success/failure, or receive/check failure indicates a regression for this source.

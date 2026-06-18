@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-redundant-saves -->
+# sources/sync-backup/bup/test/ext/test-redundant-saves
+
+Purpose: checks that repeated saves without meaningful changes do not create divergent tree objects or leave invalid index state. Important APIs are `bup init`, `index -u`, `save -t`, `index -m`, `index -s /`, and root-path saving. Control flow creates a temp source tree, indexes and saves it, checks the index modification listing is empty, saves the same tree again and compares tree IDs, then saves `/` after verifying no deleted root entries leak into status. State is the bup index, temporary source tree, and tree IDs printed by `save -t`. Dependencies are WvTest, root path traversal, and stable index metadata behavior. Risks are timestamp capping, parent directory metadata changing outside the test tree, and accidentally treating unchanged paths as modified. Test signals are equal tree IDs and empty/expected index status output.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-redundant-saves -->

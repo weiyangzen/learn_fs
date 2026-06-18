@@ -1,0 +1,11 @@
+# sources/test-tools/syzkaller/pkg/covermerger/testdata/integration/aesni-intel_glue/test-workdir-covermerger/repos/9fe30842a90be9b57a3bd1a37c9aed92918cc6d0/arch/x86/crypto/aesni-intel_glue.c
+
+This is an earlier Linux x86 AES-NI glue snapshot for covermerger integration testing. It exposes AES cipher and skcipher algorithms, RFC4106/GCM AEADs, CTR and xctr acceleration, and mode glue that routes crypto framework requests into AES-NI assembly when SIMD/FPU use is allowed.
+
+Key structures are `aesni_rfc4106_gcm_ctx`, `generic_gcmaes_ctx`, `aesni_xts_ctx`, and aligned GCM context buffers. Important functions include `aes_set_key_common`, simple cipher wrappers (`aesni_encrypt`, `aesni_decrypt`), skcipher callbacks for ECB/CBC/CTS/CTR/XCTR/XTS, AEAD helpers (`gcmaes_crypt_by_sg`, `helper_rfc4106_encrypt/decrypt`, `generic_gcmaes_encrypt/decrypt`), algorithm descriptor arrays, and module lifecycle functions. In this snapshot `aesni_set_key` returns `int`, and `aes_set_key_common` checks AES key size before selecting generic or AES-NI key expansion.
+
+Control flow starts with CPU feature checks in `aesni_init`. On x86_64, AVX/AVX2 feature checks select GCM static branches and CTR static-call optimization. Registration then proceeds through `crypto_register_alg`, `simd_register_skciphers_compat`, `simd_register_aeads_compat`, and optional xctr registration. Request paths use skcipher walks for block modes, scatter-gather AEAD walking for GCM, and FPU guard sections around assembly calls.
+
+State is maintained in crypto transform contexts, request IVs, scatterlist walkers, and module-global SIMD wrapper pointers. The file does not persist runtime data; it is persisted as a repository snapshot for coverage-diff testing. External dependencies include Linux crypto, SIMD registration helpers, x86 feature helpers, FPU state helpers, scatterwalk/skcipher primitives, and matching assembly implementations.
+
+Risks center on request-length corner cases, IV/tweak mutation, scatterlist alignment, AEAD tag verification, and keeping registration error unwinding symmetric. The snapshot has no local unit tests, but in this repository it is itself a high-value test fixture: covermerger can validate coverage movement against a realistic, multi-thousand-line kernel file with conditional compilation and assembly declarations.

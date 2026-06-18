@@ -1,0 +1,13 @@
+# sources/user-network-fs/rclone/backend/pcloud/pcloud.go
+
+Purpose: main pCloud rclone backend. It registers `pcloud`, manages OAuth and region host selection, maps pCloud files/folders through rclone interfaces, and implements listing, upload, copy/move, cleanup, public links, quota, hashes, and change notifications.
+
+Important APIs/types/functions: `Options` stores encoding, root folder ID, hostname, and optional username/password for trash cleanup. `Fs` keeps OAuth token source, REST clients, dircache, pacer, token renewer, and diff state. `Object` stores path, metadata, ID, hashes, and cached download link. Core functions include `NewFs`, `shouldRetry`, `readMetaDataForPath`, `FindLeaf`, `CreateDir`, `listAllRootRecursive`, `listAll`, `listHelper`, `ListP`, `ListR`, `Put`, `Copy`, `Move`, `DirMove`, `CleanUp`, `PublicLink`, `About`, `ChangeNotify`, `Object.Hash`, `Open`, `Update`, and `Remove`.
+
+Control flow: config updates the OAuth token endpoint based on hostname; the OAuth callback saves the hostname returned by pCloud. `NewFs` creates the OAuth REST client, optional cleanup client, feature table, token renewer, and dircache, then performs file-root detection. Listing resolves folder IDs and calls `/listfolder`, with special recursive-root handling because pCloud rejects recursive listing at folder ID 0. Uploads require known size and content length, disable chunked transfer, and use multipart POST for zero-length files. Server-side operations call pCloud copy/rename endpoints and update metadata from responses. Change notification long-polls `/diff` and resolves parent IDs via `dircache`.
+
+State and persistence: persistent state is remote pCloud files, folders, hashes, public links, trash, and diff state. Local state includes dircache, cached metadata/download links, OAuth token renewer, and `lastDiffID`. Cleanup needs username/password because pCloud's trash-clear endpoint does not support OAuth here.
+
+Dependencies/integration: uses rclone `fs`, `config`, `oauthutil`, `dircache`, `encoder`, `pacer`, `rest`, and pCloud API types. It calls pCloud endpoints `/listfolder`, `/createfolder`, `/uploadfile`, `/copyfile`, `/renamefile`, `/renamefolder`, `/getfilelink`, `/checksumfile`, `/userinfo`, `/trash_clear`, and `/diff`.
+
+Risks/test signals: streaming uploads are rejected because pCloud needs content length. ChangeNotify ignores changes outside cached parent paths. Cleanup feature is disabled unless password credentials exist. Root recursive listing has an API-specific workaround. `XOpenWriterAt` exists but is intentionally not exposed due fileops access-denied behavior. Integration tests cover standard rclone behavior through `TestPcloud:`.

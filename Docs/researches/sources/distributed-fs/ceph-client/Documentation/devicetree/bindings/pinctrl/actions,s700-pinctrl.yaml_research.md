@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/actions,s700-pinctrl.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/actions,s700-pinctrl.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/actions,s700-pinctrl.yaml` is a Actions Semi S-series pin controller binding for `Actions Semi S700 Pin Controller`. It preserves the devicetree ABI for this hardware by constraining compatible matching, provider cells, required board resources, child nodes, and examples. Description signal: Actions Semi S700 Pin Controller.
+
+## Important APIs, Types, And Functions
+The effective API is the schema contract. `compatible` is single `const` with values `actions,s700-pinctrl`. Top-level properties are `compatible`, `reg`, `clocks`, `gpio-controller`, `gpio-line-names`, `gpio-ranges`, `#gpio-cells`, `interrupt-controller`, `#interrupt-cells`, `interrupts`. Required properties across the composed schema are `#gpio-cells`, `#interrupt-cells`, `clocks`, `compatible`, `function`, `gpio-controller`, `gpio-ranges`, `groups`, `interrupt-controller`, `interrupts`, `pinconf`, `pinmux`, `pins`, `reg`. All discovered property names, including nested child-node contracts, include `#gpio-cells`, `#interrupt-cells`, `bias-pull-down`, `bias-pull-up`, `clocks`, `compatible`, `drive-strength`, `function`, `gpio-controller`, `gpio-line-names`, `gpio-ranges`, `groups`, `input-schmitt-disable`, `input-schmitt-enable`, `interrupt-controller`, `interrupts`, `pinconf`, `pinmux`, `pins`, `reg`. Important numeric/constant limits include `const=actions,s700-pinctrl`, `maxItems=1`, `maxItems=136`, `const=2`, `maxItems=5`.
+
+## Control Flow
+Control flow is declarative JSON-schema evaluation, not imperative code. `dt-doc-validate` and `dt_binding_check` load the YAML, resolve `$ref` links, apply `allOf`/`oneOf`/`if`/`then` composition, validate embedded examples, and `dtbs_check` later applies the same rules to compiled board DTS. Runtime behavior begins after a matching pinctrl driver probes: validated child nodes are consumed as state definitions, and client devices select those states through standard `pinctrl-*` properties. Referenced schemas include `/schemas/pinctrl/pincfg-node.yaml#`, `/schemas/pinctrl/pinmux-node.yaml#`
+
+## State And Persistence
+State is static firmware description rather than runtime persistence. pinctrl child nodes persist mux, bias, drive, and GPIO/IRQ configuration selected by consumers. Named resources such as `clocks`, `gpio-controller`, `gpio-ranges`, `#gpio-cells`, `interrupt-controller`, `#interrupt-cells`, `interrupts` must stay stable because driver probe, suspend/resume, and board DTS validation depend on their order and names.
+
+## Dependencies And Integration Points
+Integrates with Linux pinctrl, gpiolib, and irqchip/irqdomain frameworks. Schema dependencies are `/schemas/pinctrl/pincfg-node.yaml#`, `/schemas/pinctrl/pinmux-node.yaml#`. Observed driver-side references include `sources/distributed-fs/ceph-client/drivers/pinctrl/actions/pinctrl-s700.c`. Observed DTS references include `sources/distributed-fs/ceph-client/arch/arm64/boot/dts/actions/s700.dtsi`. External providers/consumers are signaled through `clocks`, `gpio-controller`, `gpio-ranges`, `#gpio-cells`, `interrupt-controller`, `#interrupt-cells`, `interrupts`.
+
+## Risks And Edge Cases
+wrong register ranges can point the driver at the wrong PHY lane, PLL, or mux block function/group enum mistakes can silently route board pins to the wrong peripheral if schema and driver tables diverge Closure rule: additional top-level properties are constrained by a nested schema. Representative enum constraints: additionalProperties.properties.pinmux.properties.groups.items: rgmii_txd23_mfp, rgmii_rxd2_mfp, rgmii_rxd3_mfp, lcd0_d18_mfp, rgmii_txd01_mfp, rgmii_txd0_mfp, rgmii_txd1_mfp, rgmii_txen_mfp, rgmii_rxen_mfp, rgmii_rxd1_mfp, rgmii_rxd0_mfp, rgmii_ref_clk_mfp, and 55 more; additionalProperties.properties.pinmux.properties.function.items: nor, eth_rgmii, eth_sgmii, spi0, spi1, spi2, spi3, seNs0, sens1, uart0, uart1, uart2, and 36 more; additionalProperties.properties.pinconf.properties.groups.items: sirq_drv, rgmii_txd23_drv, rgmii_rxd23_drv, rgmii_txd01_txen_drv, rgmii_rxer_drv, rgmii_crs_drv, rgmii_rxd10_drv, r....
+
+## Test Signals
+`make dt_binding_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/actions,s700-pinctrl.yaml` should parse this YAML and validate 1 embedded example. `make dtbs_check` should validate board DTS nodes using the compatible strings and resource names from this schema. spot-check representative compatibles such as `actions,s700-pinctrl` against matching driver OF tables and DTS examples.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/pinctrl/actions,s700-pinctrl.yaml -->

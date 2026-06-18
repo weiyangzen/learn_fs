@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/squashfs/Makefile
+
+Purpose: LTP leaf Makefile for SquashFS filesystem regression tests. It sets `top_srcdir`, includes `testcases.mk`, and delegates target generation to `generic_leaf_target.mk`. There are no custom compiler flags or libraries; build behavior is inherited from LTP. Runtime dependencies such as `mksquashfs`, root, a block device, and kernel config are declared in `squashfs01.c`, not the Makefile. State is build metadata only. Risk is minimal: incorrect `top_srcdir` would break includes, and missing LTP make infrastructure would prevent target discovery.

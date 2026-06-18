@@ -1,0 +1,15 @@
+# sources/distributed-fs/glusterfs/xlators/features/bit-rot/src/stub/bit-rot-stub-helpers.c
+
+Purpose: this helper file supports bit-rot-stub by managing fd contexts and the bad-object quarantine facade under the brick export. It also implements wrapper logic for lookup/readdir on the virtual bad-object container and path enrichment for scrub status output.
+
+Important APIs and functions: fd context helpers are `br_stub_fd_new`, `__br_stub_fd_ctx_set`, `__br_stub_fd_ctx_get`, `br_stub_fd_ctx_get`, and `br_stub_fd_ctx_set`. Quarantine management functions are `br_stub_dir_create`, `br_stub_add`, `br_stub_del`, `br_stub_check_stub_directory`, and `br_stub_check_stub_file`. Worker queue helpers are `__br_stub_enqueue`, `__br_stub_dequeue`, `br_stub_worker_enqueue`, and `br_stub_worker`. Virtual directory operations are `br_stub_lookup_wrapper`, `br_stub_readdir_wrapper`, and `br_stub_fill_readdir`. Scrub status enrichment uses `br_stub_bad_objects_path`, `br_stub_get_path_of_gfid`, and `br_stub_entry_xattr_fill`.
+
+Control flow: during stub initialization, `br_stub_dir_create` ensures `.glusterfs/quarantine` exists and creates the stable `stub-<container-gfid>` link target file. When the scrubber marks an object bad, `br_stub_add` hard-links that stable stub file to a file named by the object's GFID, creating an enumerable bad-object entry. Lookup or readdir of the special bad-object GFID is handled by queuing call stubs to `br_stub_worker`, which performs filesystem directory reads outside the main fop path.
+
+State and persistence behavior: the quarantine directory is persistent under the brick export path. Each bad object is represented by a hard link named as its GFID, and stale `stub-<uuid>` entries are cleaned during readdir when they have only one link. Per-fd state stores either ordinary bitrot release callback context or an open `DIR *` for the quarantine directory plus EOF offset.
+
+Dependencies and integration points: this file depends on GlusterFS syncop utilities, syscall wrappers, fd/inode context APIs, gf_dirent handling, and `syncop_gfid_to_path_hard`. It integrates with scrub status by attaching paths to the readdir xdata dict when available.
+
+Risks: `br_stub_del` appears to treat `gf_unlink` return semantics differently from normal POSIX `unlink`; this should be checked against the wrapper. Hard-link based accounting can lose scrub status entries if link creation fails with ENOENT, EMLINK, or EEXIST, though object access is still blocked by the bad xattr. Readdir offset portability is guarded for non-Linux hosts, so directory seek/tell behavior needs platform testing. Path resolution is best effort and may fail without `gfid2path` or inode-table linkage.
+
+Test signals: initialize both old misspelled quarantine path migration and fresh directory creation, mark and unmark bad GFIDs, enumerate quarantine directory with offsets and EOF, delete stale stub files, return path xdata when gfid2path is available, and verify bad-object directory lookup/readdir is handled asynchronously without leaking fd contexts.

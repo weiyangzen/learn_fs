@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/mac80211/sta_info.h
+
+Purpose: declares mac80211 internal station data structures, flags, aggregation state, fast-path caches, mesh state, per-link stats, fragment cache, station lifecycle APIs, power-save APIs, MLO link APIs, and compact rate-stat encoding helpers.
+
+Important APIs/types: `enum ieee80211_sta_info_flags` defines authentication, association, authorization, power-save, TDLS, BA-blocking, encryption, fast-path, mesh, and offload flags manipulated through `set_sta_flag()`, `clear_sta_flag()`, and test helpers. `struct tid_ampdu_tx` and `struct tid_ampdu_rx` represent TX/RX BA session state and are RCU-managed. `struct sta_ampdu_mlme` stores per-TID aggregation arrays, timers, bitmaps, and work. `struct link_sta_info` contains per-link address, hash node, keys, TX/RX/status stats, bandwidth/OMI state, debugfs, and public `ieee80211_link_sta`. `struct sta_info` is the full private station object wrapping public `ieee80211_sta`.
+
+Control flow and state model: the header documents that allocated stations are caller-owned until insertion, then owned by global hash/list state until destruction. `sta_info_move_state()` and `sta_info_pre_move_state()` move through station states before or after insertion. Lookup functions are RCU/wiphy protected. Flush, expire, and destroy APIs remove stations; PS delivery APIs release buffered traffic; stats APIs fill cfg80211 structures. Link APIs allocate/free/activate/remove MLO links and keep the public link pointers synchronized.
+
+State and persistence behavior: persistent fields include `_flags`, `sta_state`, `uploaded/dead/removed`, link pointer array, default link, removed-link aggregate stats, PTKs/GTKs, rate-control pointers, TXQs, A-MPDU state, power-save queues and TID bitmaps, airtime/AQL counters, fragment cache, fast TX/RX RCU pointers, mesh state, TDLS chandef, and per-link TX/RX/status counters. The public `struct ieee80211_sta` is kept last and exposes driver-visible station data.
+
+Dependencies and integration points: includes Linux list/workqueue/rhashtable/u64 stats support, Ethernet helpers, bitfield helpers, and local `key.h`. APIs are consumed across mac80211 TX, RX, MLME, TDLS, mesh, aggregation, rate control, debugfs, and driver-facing code.
+
+Risks and edge cases: direct manipulation of `WLAN_STA_AUTH`, `WLAN_STA_ASSOC`, and `WLAN_STA_AUTHORIZED` through generic flag helpers is warned against because those flags mirror station-state transitions. Aggregation arrays require RCU and locking discipline. `sta_info_get_by_idx()` is explicitly marked broken, signaling that indexed station lookup is not a reliable stable API. Per-link stats and removed-link accumulation are easy to misreport if new fields are added without updating aggregation/reporting code.
+
+Test signals: compile-time structure and macro coverage comes from mac80211 builds; `tests/mfp.c` directly uses `set_sta_flag()` and raw association bit state; TDLS and status files depend heavily on these declarations. Additional confidence comes from lockdep, sparse RCU checking, and KUnit suites that include `../sta_info.h`.

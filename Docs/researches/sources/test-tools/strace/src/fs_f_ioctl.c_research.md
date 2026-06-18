@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fs_f_ioctl.c
+
+Decoder for ioctl type `f`, mainly `FS_IOC_FIEMAP` and filesystem inode flags. `decode_fiemap` prints requested range/flags/count on entry and mapped extents on exit; flag get/set commands print indirect `FS_*_FL` values with 32-bit compat cases. State is tracee memory and syscall phase. Dependencies are `<linux/fiemap.h>`, `fiemap_flags`, `fiemap_extent_flags`, `fs_ioc_flags`, and array printers. Risks are huge extent counts, abbrev hiding extent details, compat command aliases, and failed get handling. Tests should cover fiemap entry/exit, mapped extent arrays, errors, `FS_IOC_GETFLAGS`, `SETFLAGS`, compat aliases, and unknown commands.

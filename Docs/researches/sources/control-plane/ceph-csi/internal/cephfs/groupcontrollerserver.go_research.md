@@ -1,0 +1,11 @@
+## sources/control-plane/ceph-csi/internal/cephfs/groupcontrollerserver.go
+
+Purpose: Implements CSI group controller RPCs for CephFS volume group snapshots using filesystem quiesce plus per-volume snapshots and a group journal.
+
+Important functions: `validateCreateVolumeGroupSnapshotRequest`, `CreateVolumeGroupSnapshot`, `queisceFileSystems`, `releaseQuiesceAndGetVolumeGroupSnapshotResponse`, `createSnapshotAddToVolumeGroupJournal`, `formatCreateSnapshotRequest`, `releaseFSQuiesce`, `fsQuiesceWithExpireTimeout`, `createSnapshotAndAddMapping`, `checkIfFSNeedQuiesceRelease`, `getClusterIDForVolumeID`, `getFsNamesAndSubVolumeFromVolumeIDs`, `destroyFSConnections`, `matchesSourceVolumeIDs`, `deleteSnapshotsAndUndoReservation`, `validateVolumeGroupSnapshotDeleteRequest`, `DeleteVolumeGroupSnapshot`, and `extractDeleteVolumeGroupError`.
+
+Control flow: Create validates parameters, locks by group name, builds credentials/options, checks or reserves a group, resolves source volume IDs into filesystem quiesce clients, quiesces filesystems, creates snapshots one by one while refreshing quiesce expiration, writes volume-to-snapshot mappings to the group journal, releases quiesce, and returns a group snapshot response. Existing partial groups can trigger a release-and-complete path when all source mappings exist. Delete resolves the group ID, deletes member snapshots, removes journal mappings, and undoes the reservation.
+
+State and persistence: Persists group reservations and volume snapshot maps in RADOS OMAP through `VolumeGroupJournal`, creates normal CephFS snapshots through `CreateSnapshot`, and uses CephFS quiesce reservation state. It opens additional cluster connections grouped by monitor set and filesystem.
+
+Dependencies and risks: Depends on CephFS quiesce support, store volume lookups, controller snapshot methods, RADOS journals, and CSI group snapshot APIs. The function name `queisceFileSystems` is misspelled but internal. Source-volume matching sorts slices in place, mutating caller-provided slices. Cleanup inside `deleteSnapshotsAndUndoReservation` undoes reservation inside the loop, which deserves integration scrutiny for multi-snapshot groups. Tests cover request validation only.

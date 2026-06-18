@@ -1,0 +1,30 @@
+# sources/storage-engines/sqlite/src/util.c
+
+## Purpose
+`util.c` is a dense collection of SQLite core utility routines used across parsing, VDBE execution, btree record handling, numeric conversion, logging, safety checks, overflow-safe arithmetic, query-planner estimates, and bind-parameter name storage. It does not define one subsystem; it provides shared primitives whose behavior is part of SQLite's public compatibility surface.
+
+## Important APIs, Types, And Functions
+Error and parser helpers include `sqlite3FaultSim()`, `sqlite3Error()`, `sqlite3ErrorClear()`, `sqlite3SystemError()`, `sqlite3ErrorWithMsg()`, `sqlite3ProgressCheck()`, `sqlite3ErrorMsg()`, and `sqlite3ErrorToParser()`. Token/string helpers include `sqlite3Strlen30()`, `sqlite3ColumnType()`, `sqlite3Dequote()`, `sqlite3DequoteExpr()`, `sqlite3DequoteNumber()`, `sqlite3DequoteToken()`, `sqlite3TokenInit()`, `sqlite3_stricmp()`, `sqlite3StrICmp()`, `sqlite3_strnicmp()`, and `sqlite3StrIHash()`.
+
+Numeric routines include `sqlite3AtoF()`, `sqlite3Int64ToText()`, `sqlite3Atoi64()`, `sqlite3DecOrHexToI64()`, `sqlite3GetInt32()`, `sqlite3Atoi()`, `sqlite3FpDecode()`, and `sqlite3GetUInt32()`, supported by internal 128/160-bit multiplication and powers-of-ten tables. Binary encoding helpers include `sqlite3PutVarint()`, `sqlite3GetVarint()`, `sqlite3GetVarint32()`, `sqlite3VarintLen()`, `sqlite3Get4byte()`, `sqlite3Put4byte()`, `sqlite3HexToInt()`, and `sqlite3HexToBlob()`. Runtime safety and arithmetic helpers include `sqlite3SafetyCheckOk()`, `sqlite3SafetyCheckSickOrOk()`, `sqlite3AddInt64()`, `sqlite3SubInt64()`, `sqlite3MulInt64()`, `sqlite3AbsInt32()`, `sqlite3LogEstAdd()`, `sqlite3LogEst()`, `sqlite3LogEstFromDouble()`, `sqlite3LogEstToInt()`, and `sqlite3VListAdd()`/lookup helpers.
+
+## Control Flow
+The error helpers maintain connection and parse error state. Compile-time errors use `sqlite3ErrorMsg()` to allocate formatted UTF-8 text in `Parse.zErrMsg`, increment `nErr`, set parser `rc`, and respect `db->suppressErr`. Runtime errors use `sqlite3Error()` or `sqlite3ErrorWithMsg()` to update `db->errCode`, `db->pErr`, `db->errByteOffset`, and OS errno fields. `sqlite3ProgressCheck()` polls interrupt and progress callbacks during long prepares.
+
+Text/token helpers operate mostly in place: dequoting removes SQL identifier/string quotes; quoted numeric tokens remove digit separators and reclassify as integer or float; token initialization stores pointer plus 30-bit length. Case-insensitive comparison and hashing use SQLite's `sqlite3UpperToLower` table, so behavior matches identifier rules rather than locale rules.
+
+Numeric conversion parses into bounded integer mantissas and decimal exponents, then uses precomputed powers of ten and wide multiplication to convert between decimal text and IEEE754 doubles. Integer parsing separately handles decimal, optional UTF-16 input in `sqlite3Atoi64()`, and hex literals in `sqlite3DecOrHexToI64()`/`sqlite3GetInt32()`. Varint routines implement SQLite's 1-to-9 byte btree record format with fast paths for small values and careful masking for larger values.
+
+## State And Persistence Behavior
+Most state is transient but persistence-critical. Varints and big-endian 4-byte helpers read and write on-disk btree record headers and page metadata. Numeric conversion controls how SQL literals become stored INTEGER or REAL values and how REALs render back to text. `sqlite3Error*` changes connection-visible error state. Safety checks may log misuse through `sqlite3_log()`. `sqlite3FileSuffix3()` can alter journal/WAL/shared-memory filenames under 8.3-name builds. `sqlite3VListAdd()` stores bind-parameter name mappings in parser/VDBE state and can freeze reallocability by convention when pointers are exposed.
+
+## Dependencies And Integration Points
+`util.c` depends on `sqliteInt.h`, standard `stdarg.h`, optional `math.h`, compiler intrinsics for overflow/multiplication/byte-swap, the VFS for last OS errors, btree/pager access for special WAL system-error handling, SQLite memory allocation wrappers, tokenizer character-class tables, and global configuration. Consumers span nearly every SQLite subsystem: parser, expression code, printf formatting, VDBE record decoding, btree, pager, JSON and SQL functions, URI handling, bind-parameter APIs, query planner LogEst math, and test fault injection.
+
+## Risks And Edge Cases
+The highest-risk code is numeric and binary compatibility code. `sqlite3AtoF()` intentionally uses about 19 significant input digits, so rounding is not arbitrary precision; changing it can alter query results and tests. Integer parsing distinguishes no-prefix, trailing text, overflow, and the special positive `9223372036854775808` case. Varint decoding is optimized and mask-heavy; off-by-one errors corrupt record parsing. Endian helpers must handle unaligned memory safely via `memcpy` in optimized branches. Error-state helpers must not overwrite parser errors in suppressed contexts or lose OS errno details. `VList` realloc rules are subtle because exposed name pointers make later enlargement unsafe.
+
+Overflow-safe arithmetic must preserve the original value on failure. `sqlite3SafetyCheckOk()` intentionally only provides misuse protection, not a hard memory-safety proof. `sqlite3HexToInt()` assumes valid input under assert. LogEst conversion is approximate by design; planner changes can cascade from small table-estimate differences.
+
+## Test Signals
+Relevant tests include `atof1.test`, `numcast.test`, `cast.test`, `types*.test`, `printf*.test`, `bind*.test`, `capi*.test`, `misc*.test`, `fault*.test`, `malloc*.test`, `pager*.test`, and VDBE record/format tests that exercise varints. Strong targeted checks include boundary integers around `SMALLEST_INT64`/`LARGEST_INT64`, `9223372036854775808`, hex literals, digit separators in quoted numbers, NaN/Inf handling, very long strings for `sqlite3Strlen30()`, malformed bind parameter names, varint lengths 1 through 9, endian round trips, arithmetic overflow preservation, and fault simulation callbacks.

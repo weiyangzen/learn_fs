@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/raspberrypi/rp1-cfe/cfe.c
+
+Purpose: main RP1 Camera Front End driver. It binds platform resources, registers the media device, CSI-2 and PiSP FE subdevices, async sensor links, and video/meta nodes for CSI-2 channels plus FE image/config/statistics paths.
+
+Important APIs/types/functions: `cfe_device` owns the media graph, state bitmap, CSI-2 device, FE device, notifier, source subdev, and node array. `cfe_node` owns per-node vb2 queue, formats, current/next buffers, DMA queue, and video device. Format helpers include `find_format_by_code()`, `find_format_by_pix()`, `cfe_find_16bit_code()`, and `cfe_find_compressed_code()`. Scheduling is handled by `cfe_check_job_ready()`, `cfe_prepare_next_job()`, `cfe_schedule_next_csi2_job()`, and `cfe_schedule_next_pisp_job()`. Streaming uses `cfe_start_streaming()`, `cfe_start_channel()`, `cfe_stop_streaming()`, and `cfe_stop_channel()`.
+
+Control flow: probe maps CSI-2 DMA, DPHY, MIPI config, and FE resources, requests IRQ, sets DMA limits, registers V4L2/media devices, initializes CSI-2 and FE subdevices, registers the media device, then waits for async source binding. Async completion registers video nodes and creates media links. Link notifications maintain `NODE_ENABLED` and detect CSI2-to-FE routing. Streaming validates enabled links, starts the media pipeline, marks nodes streaming, starts individual CSI-2/FE channels, enables MIPI interrupts once all enabled nodes stream, opens DPHY/CSI-2 RX, and enables remote source streams. IRQ handling collects CSI-2/FE SOF/EOF flags, updates current/next buffers, handles coalesced FS/FE cases, completes buffers, and queues the next job when every enabled node has a ready buffer.
+
+State and persistence: all runtime state is volatile: node flags, `job_ready`, `job_queued`, current/next buffers, frame counters, timestamps, stream mask, source pad/subdev, FE channel selection, and debugfs entries. Runtime PM controls the device clock.
+
+Dependencies and integration: depends on V4L2 async/fwnode, subdev streams/routing, media controller, vb2 dma-contig, debugfs, runtime PM, CSI-2 and FE helper modules, and Raspberry Pi PiSP FE UAPI structs.
+
+Risks: multi-node scheduling requires all enabled nodes to have buffers; missing buffers stall the entire job. Interrupt ordering is complex because FS and FE/FE_ACK can coalesce. `cfe_calc_meta_format_size_bpl()` uses `f->fmt.pix.bytesperline` in the buffer-size expression while calculating meta sizes, a line worth targeted review/testing. Link state drives streaming validity, so stale media links can make streamon fail. Sensor `get_frame_desc` fallback assumes VC 0 and data type from current sink format.
+
+Test signals: media graph link enable/disable, async sensor bind, route setup with multiple streams, image and metadata format validation, streamon ordering across enabled nodes, frame sync/source change events, coalesced interrupt stress, stop-streaming buffer return, debugfs register reads, and runtime suspend/resume.

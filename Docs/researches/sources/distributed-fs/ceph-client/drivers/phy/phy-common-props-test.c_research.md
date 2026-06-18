@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/phy/phy-common-props-test.c
+
+This file is a KUnit suite for the PHY common polarity property helpers. It creates synthetic firmware/software nodes with `PROPERTY_ENTRY_U32_ARRAY()` and `PROPERTY_ENTRY_STRING_ARRAY()` and validates the exported API behavior from `phy-common-props.c`, especially `phy_get_manual_rx_polarity()`, `phy_get_manual_tx_polarity()`, and one `phy_get_rx_polarity()` path that permits `PHY_POL_AUTO`.
+
+Control flow is a set of isolated test functions: create a software node, call the helper under test with mode names such as `sgmii`, `2500base-x`, or `usb-ss`, assert return code and decoded value, then remove the node. The suite covers missing properties defaulting to `PHY_POL_NORMAL`, single unnamed values, exact name lookup, fallback to `"default"`, mismatched array lengths, absent names with multiple values, and unsupported values returning `-EOPNOTSUPP`.
+
+State is transient and test-local; the only persistent integration is registration through `kunit_test_suite()`. Dependencies are KUnit, firmware-node property APIs, `dt-bindings/phy/phy.h`, and the common polarity header. Risks are mostly coverage gaps: it does not exercise allocation failure in the helper, NULL mode names, invalid property read failures, or TX helper paths allowing custom defaults. Strong test signal exists for the public polarity contract and expected error codes.

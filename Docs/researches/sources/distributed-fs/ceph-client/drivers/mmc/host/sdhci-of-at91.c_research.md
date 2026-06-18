@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mmc/host/sdhci-of-at91.c
+
+Purpose: this is the Atmel/Microchip AT91 SDMMC SDHCI driver for SAMA5D2 and SAM9X60. It supplies controller-specific clock programming, capability/preset rewriting, force-card-detect handling, DDR52 mode setup, analog calibration behavior, and runtime PM clock management.
+
+Important APIs, types, and functions: `struct sdhci_at91_soc_data` selects platform data and describes whether the base clock is internally generated. `struct sdhci_at91_priv` stores `hclock`, `gck`, `mainck`, restore state, and calibration behavior. Key functions are `sdhci_at91_set_clock()`, `sdhci_at91_set_uhs_signaling()`, `sdhci_at91_reset()`, `sdhci_at91_set_clks_presets()`, runtime suspend/resume, and probe/remove. `sdhci_at91_sama5d2_ops` wires custom clock/reset/UHS functions into SDHCI.
+
+Control flow: probe selects SoC data, initializes SDHCI, gets base/hclock/multclk clocks, programs capabilities and presets through `sdhci_at91_set_clks_presets()`, reads the `microchip,sdcal-inverted` property, parses MMC and SDHCI DT properties, enables runtime PM, marks HS200 broken, registers the host, enables polling for removable non-GPIO card detect, forces card detect for nonremovable or GPIO-CD configurations, and autosuspends. Preset programming temporarily enables `hclock`, calculates base and multiplier from clock rates, unlocks capability writes with `SDMMC_CACR_KEY | SDMMC_CACR_CAPWREN`, updates capability registers and SDR/DDR presets, relocks, and enables `mainck` and `gck`.
+
+State and persistence: persistent state includes clock handles, `restore_needed`, and `cal_always_on`. Runtime suspend calls `sdhci_runtime_suspend_host()`, marks retune needed where appropriate, and disables all clocks. System suspend sets `restore_needed`; runtime resume reprograms capabilities/presets after system sleep or simply reenables clocks, then resumes SDHCI. Reset reapplies force-card-detect and optional always-on calibration because full reset clears those bits.
+
+Dependencies and integration points: the file depends on SDHCI platform helpers, clock APIs, runtime PM, MMC GPIO card detect helpers, DT compatibles `atmel,sama5d2-sdhci` and `microchip,sam9x60-sdhci`, and the SDMMC vendor registers `MC1R`, `CACR`, and `CALCR`.
+
+Risks: capability and preset rewriting must match real clock rates; bad values can break preset mode and SDR104's degraded 120 MHz support. The custom clock path deliberately avoids disabling internal clock during changes due to known hardware behavior. Force-card-detect is required for several board wiring cases and must be restored after reset. Runtime-suspended controllers cannot wake on native card-detect IRQ, so GPIO CD or polling is required. Always-on calibration depends on board-specific SDCAL wiring.
+
+Test signals: validate capability and preset registers after probe and resume, clock stability polling, DDR52 MC1R bit setting, card detection with nonremovable/GPIO/polling setups, runtime autosuspend/resume, calibration completion when `microchip,sdcal-inverted` is present, and absence of HS200 advertisement.

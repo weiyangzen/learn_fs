@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/fs/nfs_common/localio_trace.h
+
+Purpose: declares LOCALIO trace events. It defines the `nfs_local_client_event` event class and concrete `nfs_localio_enable_client` / `nfs_localio_disable_client` events.
+
+Control flow is trace macro expansion: each event accepts `const struct nfs_client *`, records NFS protocol version and server hostname, and prints `server=<name> NFSv<version>`. State is per-event trace buffer data, not NFS behavior state. Dependencies include kernel tracepoint infrastructure and trace helper headers for fs, NFS, and SunRPC. Integration points are calls in `nfslocalio.c` when localio is enabled/disabled for a client. Risks include dereferencing fields that must remain valid when tracing, trace header multi-read/include-path requirements, and format compatibility for tooling. Test signals: tracefs event format, enable/disable traces around LOCALIO handshake and teardown, and build with tracepoints compiled as the first object consumer.

@@ -1,0 +1,137 @@
+# Folder Research: sources/distributed-fs/openafs/src/WINNT/afssvrmgr
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 123
+- Recursive researched files: 123
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/action.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/action.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_col.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_col.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_general.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_general.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_prop.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_prop.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_tab.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/agg_tab.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/alert.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/alert.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/cmdline.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/cmdline.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/columns.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/columns.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/command.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/command.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/creds.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/creds.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/dispatch.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/dispatch.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/dispguts.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/dispguts.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/display.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/display.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/exportcl.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/general.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/general.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/helpfunc.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/helpfunc.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/messages.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/options.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/options.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/prefs.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/prefs.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/problems.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/problems.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/propcache.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/propcache.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/resource.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_clone.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_clone.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_col.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_col.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_create.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_create.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_createrep.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_createrep.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_delete.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_delete.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_dump.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_dump.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_general.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_general.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_move.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_move.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_prop.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_prop.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_quota.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_quota.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_release.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_release.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_rename.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_rename.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_repprop.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_repprop.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_restore.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_restore.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_tab.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/set_tab.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/subset.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/subset.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_col.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_col.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_create.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_create.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_delete.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_delete.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_general.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_general.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_prop.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_prop.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_startstop.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_startstop.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_tab.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_tab.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_viewlog.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svc_viewlog.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_address.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_address.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_col.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_col.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_execute.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_execute.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_general.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_general.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_getdates.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_getdates.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_hosts.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_hosts.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_install.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_install.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_prop.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_prop.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_prune.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_prune.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_salvage.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_salvage.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_security.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_security.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_syncvldb.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_syncvldb.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_uninstall.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_uninstall.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_window.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svr_window.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svrmgr.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/svrmgr.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/task.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/task.h`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/window.cpp`
+- `sources/distributed-fs/openafs/src/WINNT/afssvrmgr/window.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,9 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/test/java/org/apache/hadoop/ozone/om/request/file/TestOMDirectoryCreateRequest.java
+
+Tests default-layout `OMDirectoryCreateRequest`: preExecute mutation, `.snapshot` reserved root rejection, successful directory creation, namespace quota, missing volume/bucket, existing directory/file conflicts, metrics, default ACL inheritance, and client ACL filtering.
+
+The local fixture builds a mocked `OzoneManager`, real temporary `OmMetadataManagerImpl`, `OMMetrics`, audit logger, bucket link resolution, and layout version manager. Helpers include `createDirectoryRequest`, `verifyDirectoriesInheritAcls`, `genRandomKeyName`, and `getBucketLayout` returning `BucketLayout.DEFAULT`. The tests use `OzoneFSUtils`, `OmBucketInfo`, `OmKeyInfo`, `CacheKey`, `OzoneAcl`, and `RatisReplicationConfig`.
+
+Control flow is request build -> preExecute -> instantiate modified request -> optional UGI -> validateAndUpdateCache. Success writes directory entries into the default-layout key table using `getOzoneDirKey`. Failure cases omit volume/bucket, exceed namespace quota, preseed an existing directory, or preseed a file in the path. ACL tests seed bucket default ACLs or client ACLs and inspect resulting key ACLs.
+
+Persistence behavior is key-table directory rows, bucket `usedNamespace` equal to `OzoneFSUtils.getFileCount(keyName)`, and `omMetrics.numKeys` incrementing by created directories. Existing-directory failure leaves the preexisting DB row but not a new cache entry. Risks are snapshot path validation, file/directory distinction, quota counting across components, and ACL scope inheritance. Signals include `OK`, `QUOTA_EXCEEDED`, `VOLUME_NOT_FOUND`, `BUCKET_NOT_FOUND`, `DIRECTORY_ALREADY_EXISTS`, `FILE_ALREADY_EXISTS`, table/cache assertions, namespace usage, ACL containment, and metrics.

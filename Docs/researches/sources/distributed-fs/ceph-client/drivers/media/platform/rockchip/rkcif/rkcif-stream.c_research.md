@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/rockchip/rkcif/rkcif-stream.c
+
+Purpose: shared DMA/video-node implementation for CIF DVP and MIPI streams. It owns vb2 queue operations, ping-pong buffer rotation, dummy-buffer fallback, V4L2 capture ioctls, media link validation, video device registration, and stream start/stop integration with the interface subdev.
+
+Important APIs/types/functions: exports `rkcif_stream_pingpong()`, `rkcif_stream_register()`, `rkcif_stream_unregister()`, and `rkcif_stream_find_output_fmt()`. Internal helpers manage driver queue push/pop under a spinlock, complete buffers with sequence/timestamps, allocate/free dummy DMA storage, prepare vb2 DMA addresses including single-plane fallback for multi-component formats, and fill/clamp pixel formats.
+
+Control flow: vb2 start resets frame counters, starts the media pipeline, resumes runtime PM, pops two initial buffers or installs a dummy second buffer, calls the hardware-specific `start_streaming` hook, then enables the corresponding source stream on the interface subdev. Frame IRQs from DVP/MIPI call `rkcif_stream_pingpong()`, which completes the just-finished non-dummy buffer, pulls a new queued buffer or dummy, writes hardware addresses through `queue_buffer`, then flips `frame_phase`. vb2 stop disables the interface stream upstream, waits up to one second for the hardware-specific ISR stop path to clear `stopping`, forces `stop_streaming` on timeout, returns all buffers as error, drops runtime PM, and stops the media pipeline.
+
+State and persistence: per-stream state includes `driver_queue`, `buffers[2]`, dummy DMA buffer, `frame_idx`, `frame_phase`, `stopping`, waitqueue, V4L2 pixel format, vb2 queue, video device, and media pipeline. No durable persistence. DMA addresses are derived from queued vb2 buffers and dummy allocation.
+
+Dependencies/integration: requires vb2 DMA-contig, V4L2 ioctl/file ops, media controller links, runtime PM, and hardware callbacks installed by DVP/MIPI registration. The interface subdev performs upstream stream control.
+
+Risks: dummy buffer sizing assumes all planes fit in `pix->num_planes * plane0.sizeimage`; this is safe for many formats but should be rechecked when adding asymmetric multi-plane formats. `rkcif_stream_start_streaming()` jumps to `err_runtime_put` if the hardware hook fails after dummy allocation, but dummy freeing happens only in `rkcif_stream_return_all_buffers()`, so error paths depend on that cleanup. Link validation checks width/height but not media-bus code, relying on stream format tables and interface negotiation. Stop waits for an IRQ; if no frame arrives, forced stop happens after timeout.
+
+Test signals: vb2 queue setup/prepare for single-plane and multi-plane formats, start with one queued buffer and with two queued buffers, frame drop/dummy-buffer path, stream stop with and without a final frame IRQ, media link validation failures for size mismatch, and format enumeration/clamping at min/max dimensions.

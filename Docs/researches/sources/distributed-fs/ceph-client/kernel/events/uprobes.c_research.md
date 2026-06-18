@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/kernel/events/uprobes.c
+
+Purpose: implements generic user-space probes and return probes. It tracks probe points by inode and file offset, patches executable private mappings with software breakpoints, dispatches consumers, executes original instructions out of line, manages return-probe trampolines, and follows mmap/munmap/fork/exit lifecycle changes.
+
+Important APIs/types/functions: `struct uprobe` stores rb-tree key, refcount, semaphores, consumer list, inode/offset/ref-counter offset, flags, and `arch_uprobe`. `struct xol_area` stores execute-out-of-line slots. Public functions include `uprobe_register()`, `uprobe_unregister_nosync()`, `uprobe_unregister_sync()`, `uprobe_apply()`, `uprobe_mmap()`, `uprobe_munmap()`, `uprobe_copy_process()`, `uprobe_free_utask()`, `uprobe_notify_resume()`, `uprobe_pre_sstep_notifier()`, `uprobe_post_sstep_notifier()`, `handle_syscall_uprobe()`, and `uprobes_init()`.
+
+Control flow: registration validates the consumer and offsets, allocates or reuses an inode:offset uprobe in the global RCU rb-tree, links the consumer, scans matching VMAs, prepares the original instruction, marks `MMF_HAS_UPROBES`, and patches breakpoints where filters match. Unregistration removes the consumer, removes breakpoints from mm mappings when no consumer remains, and frees the uprobe through SRCU/RCU tasks trace. Breakpoint handling runs from `TIF_UPROBE` resume: find active uprobe, reset IP, allocate `utask`, run consumer handlers, optionally prepare return-probe state, then skip or XOL single-step the original instruction.
+
+State and persistence: global state includes `uprobes_tree`, locks/seqcount, hashed mmap mutexes, `dup_mmap_sem`, `uretprobes_srcu`, and delayed ref-counter work. Per-mm state includes `MMF_HAS_UPROBES`, `MMF_RECALC_UPROBES`, arch state, and a lazy `[uprobes]` XOL mapping. Per-task `utask` tracks active XOL, return instances, reusable pools, timer, and signal-denial flags. Probe state is live kernel memory only.
+
+Dependencies and integration points: coupled to mm/VMA internals, page cache/shmem, COW page modification, folio walking, MMU notifiers, THP collapse, RCU tasks trace, SRCU, task work, signals, single stepping, kdebug die notifiers, and trace/perf consumers. Weak arch hooks implement instruction analysis, trap handling, XOL preparation, and return address hijacking.
+
+Risks: user instruction patching must preserve COW semantics, handle userfaultfd and THP limitations, and roll back reference counters on failure. Lifetime spans RCU and SRCU because return probes can lease uprobes across user execution. XOL slots are finite. Races with unregister, munmap, fork, longjmp, fatal signals, and speculative mmap lookup are expected and require conservative restarts.
+
+Test signals: uprobe/uretprobe selftests should cover registration, filters, SDT ref counters, mmap-after-register, unregister races, nesting/longjmp, fork/vfork/exec, signals during XOL, userfaultfd/THP/COW mappings, and arch single-step exception paths.

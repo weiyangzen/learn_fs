@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/vmwgfx/vmwgfx_page_dirty.c
+
+Purpose: Tracks CPU dirtied pages in vmwgfx BOs so coherent guest-backed resources can synchronize changed backing ranges to hardware resources. It dynamically switches between page-table dirty-bit scanning and write-protect/mkwrite tracking.
+
+Important APIs/types/functions: `enum vmw_bo_dirty_method` selects `VMW_BO_DIRTY_PAGETABLE` or `VMW_BO_DIRTY_MKWRITE`. `struct vmw_bo_dirty` stores a kref, first/last dirty bounds, method, transition counter, bitmap size, and page bitmap. Public functions include `vmw_bo_is_dirty()`, `vmw_bo_dirty_scan()`, `vmw_bo_dirty_add()`, `vmw_bo_dirty_release()`, `vmw_bo_dirty_transfer_to_res()`, `vmw_bo_dirty_clear()`, `vmw_bo_dirty_clear_res()`, `vmw_bo_dirty_unmap()`, `vmw_bo_vm_mkwrite()`, and `vmw_bo_vm_fault()`.
+
+Control flow: Small BOs start with page-table scanning; larger BOs start by write-protecting mappings and recording writes in `mkwrite`. Pagetable scanning calls `clean_record_shared_mapping_range()` and switches to mkwrite after repeated empty scans. Mkwrite scanning re-write-protects dirty ranges and switches to pagetable scanning after repeated high dirty percentages. VM fault handling reserves the BO, cleans intersecting resources before prefaulting dirty-tracked pages, chooses write-protected protections for mkwrite mode, then delegates to TTM fault helpers.
+
+State and persistence: Dirty state is attached to `vbo->dirty` and reference-counted across users. Dirty bounds and bitmap persist until transferred or cleared. Resource transfer clears bitmap ranges and calls `vmw_resource_dirty_update()`.
+
+Dependencies and integration points: Integrates TTM VM fault/reservation helpers, DRM VMA node offsets, shared mapping dirty/write-protect helpers, vmwgfx resource clean/dirty functions, and BO reservation locks. Risks include bounds update mistakes after partial clears, division by zero if malformed BO sizes ever occur, subtle page offset units, interaction with unmap losing dirty bits, and fault retry semantics. Test signals: mmap write faults, dirty transfers to coherent resources, method switching thresholds, unmap before eviction, resource clean failures causing SIGBUS, and refcounted add/release.

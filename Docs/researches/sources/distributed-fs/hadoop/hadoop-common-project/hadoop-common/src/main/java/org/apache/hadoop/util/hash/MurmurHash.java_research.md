@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/hash/MurmurHash.java
+
+`MurmurHash` implements a Java port of MurmurHash 2.0, a fast non-cryptographic 32-bit hash suitable for general hash-based lookup. It extends `Hash` and exposes a singleton through `getInstance()`.
+
+`hash(byte[] data, int length, int seed)` delegates to `hash(data, 0, length, seed)`. The offset overload initializes `h` as `seed ^ length`, processes four-byte little-endian chunks with Murmur's multiply/xor/multiply mix (`m = 0x5bd1e995`, `r = 24`), handles one to three trailing bytes without modulo, multiplies once more for tails, and finishes with two xor-shift/multiply avalanche steps. All arithmetic uses Java int overflow intentionally.
+
+State is only the static singleton; hash execution is local and thread-safe. Dependencies are minimal: Hadoop annotations and the `Hash` base class. Integration is via `Hash.getInstance()` and configuration defaulting; `TestHash` shows Murmur is the default hash type for an empty configuration in this source tree. Risks include no offset/length bounds validation, signed-byte handling in the tail path where bytes are cast directly before shifting, and non-cryptographic collision/security limitations. Test coverage verifies parsing/factory behavior and deterministic repeated output for default and seeded calls, but does not compare against external Murmur2 golden vectors or offset-specific cases.

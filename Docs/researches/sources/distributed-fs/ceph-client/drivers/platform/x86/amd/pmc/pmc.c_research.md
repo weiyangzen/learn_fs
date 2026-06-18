@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/platform/x86/amd/pmc/pmc.c
+
+Purpose: `pmc.c` is the AMD SoC Power Management Controller driver. It binds ACPI PMC devices, locates the AMD root PCI/SMN base, maps SMU registers, registers ACPI LPS0/S2Idle callbacks, exposes SMU firmware/debug data, applies platform workarounds, and coordinates STB logging.
+
+Important APIs, types, and functions: global `struct amd_pmc_dev pmc` stores all PMC state. `amd_pmc_send_cmd()` is the locked SMU command transport. `amd_pmc_get_ip_info()` selects IP block maps and message register offsets by CPU/root-device ID. `amd_pmc_setup_smu_logging()`, `get_metrics_table()`, and debugfs show functions expose SMU metrics, active IPs, S0ix stats, and idle masks. S2Idle flow is implemented by `amd_pmc_s2idle_prepare()`, `amd_pmc_s2idle_check()`, and `amd_pmc_s2idle_restore()` registered via `acpi_register_lps0_dev()`. Probe and remove manage ACPI/platform lifecycle.
+
+Control flow: probe finds root PCI device 00:00.0, rejects unsupported IDs and server parts without S0i3, reads SMU base address through AMD SMN registers, maps PMC MMIO, initializes the mutex and IP metadata, registers LPS0 callbacks and quirks, creates debugfs files, initializes MP1 S2D STB and optional MP2 STB, and reports max hardware sleep. During S2Idle, prepare starts SMU logging, applies RTC workaround if needed, sends OS hint, and writes STB prepare marker. Check may delay to avoid OVP, dumps idlemask, and writes STB check marker. Restore sends OS hint, asks SMU to dump metrics, writes STB restore marker, reports deepest-state residency, and runs restore quirks.
+
+State and persistence: state is global singleton `pmc`, including mapped MMIO, root PCI reference, SMU logging DRAM mapping, FCH mapping, debugfs root, quirks, STB state, and cached SMU version. Firmware state is affected by OS hint commands, logging commands, power-management workarounds, and RTC alarm handling. No driver file persistence exists.
+
+Dependencies and integration points: depends on ACPI device IDs, PCI root device IDs, AMD SMN helpers, suspend/LPS0 framework, RTC class, serio bus, debugfs, PM reporting (`pm_report_hw_sleep_time()`), and STB helpers. User-visible surfaces include sysfs `smu_fw_version`/`smu_program` and debugfs `amd_pmc` files.
+
+Risks: `amd_pmc_send_cmd()` trusts that response register nonzero means ready and serializes all SMU/S2D messages through one mutex; wrong `msg_port` state from STB code can redirect commands. Probe error after STB init path can leak root PCI reference only through `err_pci_dev_put`, but debugfs or LPS0 partial registration need careful unwinding. RTC workaround opens `rtc0` and has early returns that do not always close the RTC device. S2Idle failures are logged but do not necessarily abort all suspend paths.
+
+Test signals: ACPI match and root PCI ID detection, MMIO mapping, sysfs firmware version read, debugfs SMU metrics/S0ix/idlemask output, LPS0 callback registration, OS hint command success on suspend/resume, idle-mask values in PM debug, STB markers, DMI quirk behavior, and no binding on unsupported CPU IDs.

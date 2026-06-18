@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/usb/gadget/udc/aspeed-vhub/epn.c
+
+## Purpose
+Implements the Aspeed vHub generic endpoint pool, meaning all non-control endpoints assigned to the virtual downstream devices behind the vHub. It turns Linux gadget `usb_ep_ops` calls into Aspeed endpoint register programming, DMA staging, descriptor-ring operation for IN endpoints, request completion, halt/wedge handling, and endpoint allocation/disposal.
+
+## Important APIs, Types, And Functions
+The exported entry points are `ast_vhub_epn_ack_irq`, `ast_vhub_update_epn_stall`, and `ast_vhub_alloc_epn`. The endpoint operations table `ast_vhub_epn_ops` wires the file into the gadget core through enable, disable, dispose, queue, dequeue, set halt, set wedge, and request allocation/free helpers supplied by `core.c`.
+
+Single-stage transfer helpers are `ast_vhub_epn_kick` and `ast_vhub_epn_handle_ack`. Descriptor-mode helpers are `ast_vhub_count_free_descs`, `ast_vhub_epn_kick_desc`, and `ast_vhub_epn_handle_ack_desc`. `ast_vhub_stop_active_req` handles DMA stop/reset when disabling or dequeuing active work. Request state is stored in `struct ast_vhub_req`: `actual`, `act_count`, `last_desc`, and `active`. Endpoint state is stored in the `epn` union member of `struct ast_vhub_ep`: hardware register base, global endpoint index, descriptor pointers, ring pointers, max chunk size, DMA config, direction/type flags, halt state, and mode flags.
+
+## Control Flow
+`ast_vhub_alloc_epn` finds a free global endpoint from `vhub->epns`, binds it to a downstream device endpoint number, allocates one coherent block containing a max-packet bounce buffer plus a 256-entry descriptor ring, installs `usb_ep_ops`, and links the endpoint into the gadget endpoint list. `ast_vhub_epn_enable` validates the USB endpoint descriptor, derives direction, type, maxpacket, descriptor-mode eligibility, chunk size, and config bits, resets endpoint DMA, writes `AST_VHUB_EP_CONFIG`, initializes descriptor or single-stage DMA mode, clears data toggle, and enables ACK interrupts for the global endpoint.
+
+`ast_vhub_epn_queue` validates the request and endpoint/device state, maps request DMA when aligned and safe or when descriptor mode is used, otherwise leaves `req->dma` zero so the coherent bounce buffer is used. If the endpoint queue was empty, it immediately kicks either single-stage DMA or descriptor-ring DMA. ACK interrupts enter `ast_vhub_epn_ack_irq`; single-stage mode reads transferred length from `AST_VHUB_EP_DESC_STATUS`, copies OUT data from the bounce buffer if needed, detects short packets, completes finished requests, and kicks the next chunk. Descriptor mode reads a stable hardware read pointer, walks completed descriptors from `d_last`, sums lengths into `req.actual`, completes when `last_desc` is reached, and may add more descriptors.
+
+Disable and dequeue paths stop hardware DMA, optionally restart the endpoint after removing only one request, nuke pending requests, disable endpoint config, and clear ACK interrupt state. Halt/wedge updates set `VHUB_EP_CFG_STALL_CTRL`, reject unsupported ISO stalls, and reject halting busy IN endpoints with `-EAGAIN`.
+
+## State And Persistence Behavior
+All state is in-memory driver state plus MMIO registers and coherent DMA memory. There is no filesystem persistence. Persistent while the controller is bound are global endpoint ownership (`ep->dev`), per-device endpoint slots (`dev->epns`), queue membership, descriptor ring pointers, DMA config, stall/wedge flags, and request progress. The driver drops and reacquires `vhub->lock` around gadget completion callbacks via `ast_vhub_done`, so queue state can change during completion and is rechecked after callbacks.
+
+## Dependencies And Integration Points
+Depends on the Linux USB gadget API, DMA mapping helpers, coherent DMA allocation, Aspeed vHub register definitions and shared structures in `vhub.h`, and shared request completion/allocation helpers from `core.c`. It is driven by ACK interrupts dispatched from the vHub core interrupt handler. It integrates with `dev.c` because each downstream virtual device owns a set of allocated generic endpoints, and with `hub.c` because device reset/suspend/resume controls when endpoint traffic is valid.
+
+## Risks
+Descriptor-ring accounting is delicate: the ring intentionally leaves one descriptor empty to distinguish full from empty, assumes only the head request is described at a time, and relies on `last_desc` matching the hardware read pointer. DMA safety depends on the alignment/multiple-of-packet rules for non-DMA bounce-buffer fallback, especially OUT endpoints that could overrun if directly mapped with an undersized tail packet. The Aspeed memory-order workaround in `vhub_dma_workaround` is essential before MMIO kicks; removing it can make hardware read stale descriptors or buffers. Completion callbacks run with the lock dropped, so every path after `ast_vhub_done` must tolerate queue mutation. Timeout in `ast_vhub_stop_active_req` indicates hardware may continue using DMA state after software thinks it stopped.
+
+## Test Signals
+Useful signals are enumeration of multiple downstream gadget functions, bulk/interrupt/iso IN and OUT traffic, large IN transfers that require descriptor mode, unaligned and short OUT requests that force bounce-buffer behavior, endpoint halt and wedge tests, dequeue of active transfers, disconnect/reset while transfers are pending, and dynamic allocation/exhaustion of the global endpoint pool. Kernel warnings from `CHECK`, DMA timeout messages, unexpected read-pointer mismatches, transfer byte count mismatches, or request completion after disable are high-value regression indicators.

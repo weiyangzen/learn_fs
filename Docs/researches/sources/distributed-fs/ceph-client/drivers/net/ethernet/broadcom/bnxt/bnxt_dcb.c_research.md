@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/broadcom/bnxt/bnxt_dcb.c
+
+Purpose: Implements Data Center Bridging support for `bnxt_en` when `CONFIG_BNXT_DCB` is enabled. It maps Linux dcbnl IEEE ETS, PFC, DCBX mode, RoCE app priority, and DSCP-to-priority operations onto Broadcom HWRM queue and structured-data commands.
+
+Important APIs, types, and functions: Public functions are `bnxt_dcb_init()` and `bnxt_dcb_free()`. The installed `dcbnl_rtnl_ops` callbacks include `bnxt_dcbnl_ieee_getets()`, `bnxt_dcbnl_ieee_setets()`, `bnxt_dcbnl_ieee_getpfc()`, `bnxt_dcbnl_ieee_setpfc()`, `bnxt_dcbnl_ieee_setapp()`, `bnxt_dcbnl_ieee_delapp()`, `bnxt_dcbnl_getdcbx()`, and `bnxt_dcbnl_setdcbx()`. HWRM helpers configure/query priority-to-CoS, CoS-to-bandwidth, PFC enable masks, DCBX app structured data, DSCP capabilities, and DSCP-to-priority entries.
+
+Control flow: Initialization checks HWRM spec level, queries DSCP support, derives DCBX capability flags from PF/VF status and firmware LLDP/DCBX agents, then installs dcbnl ops. ETS set validates priority-to-TC and TSA/bandwidth totals, configures Linux multi-queue TC layout through `bnxt_setup_mq_tc()`, sends HWRM CoS bandwidth and priority mapping, then caches the settings. PFC set derives priority and TC masks from cached ETS, remaps TCs onto lossless queues if necessary, possibly closes/reopens a running NIC, sends the PFC enable mask, then caches PFC. App set/delete updates kernel dcb app state and mirrors RoCE/DSCP mappings into firmware.
+
+State and persistence behavior: DCB state is cached in `bp->ieee_ets`, `bp->ieee_pfc`, `bp->dcbx_cap`, `bp->max_dscp_value`, queue profile arrays, and TC-to-queue mapping. Firmware/NVM may retain DCBX settings when managed by firmware, but host-managed changes here are runtime HWRM programming plus kernel cache. `bnxt_dcb_free()` releases cached ETS/PFC memory.
+
+Dependencies and integration points: It integrates with Linux dcbnl, rtnl/netdev state, RDMA constants for RoCE app selectors, Broadcom HWRM queue commands, `bnxt_open_nic()`/`bnxt_close_nic()` for remap, `bnxt_setup_mq_tc()` for netdev TC layout, `bp->port_stats.hw_stats` for PFC counters, and `bnxt.h` queue/capability state.
+
+Risks: ETS validation has to prevent bandwidth sums over 100 percent and starvation when zero-weight ETS TCs coexist with a full allocation. PFC requires a cached ETS map; enabling PFC on more lossless TCs than supported returns `-EINVAL`. Queue remap while the NIC is running temporarily closes and reopens the device, so failures can disrupt traffic. DCBX capability transitions must reject unsupported host control when firmware LLDP/DCBX agents own the configuration.
+
+Test signals: Test with `CONFIG_BNXT_DCB=y` and disabled, PF and VF devices, firmware-managed and host-managed DCBX, ETS strict/ETS bandwidth edge cases, PFC enabling on lossless and non-lossless queues, live queue remap while traffic is running, RoCE v1/v2 app add/delete, DSCP app bounds, and PFC stats readback from port stats.

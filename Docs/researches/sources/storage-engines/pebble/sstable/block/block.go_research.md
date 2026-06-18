@@ -1,0 +1,15 @@
+## sources/storage-engines/pebble/sstable/block/block.go
+
+Purpose: Defines core block handles, checksum validation, metadata casting, read environment accounting, and `Reader`, the central block-loading path for SSTables/blob files. It bridges object storage, block cache, buffer pools, checksums, decompression, tracing, and iterator statistics.
+
+Important APIs/types/functions: `Handle`, `HandleWithProperties`, `DecodeHandle`, and `DecodeHandleWithProperties` encode/decode varint block references. `ChecksumType`, `Checksummer`, and `ValidateChecksum` implement CRC32c and XXHash64 trailer validation. `Metadata`, `CastMetadataZero`, and `CastMetadata` provide in-allocation metadata typed overlays. `ReadEnv` records stats/corruption callbacks/buffer-pool context. `Reader.Init`, `Read`, `doRead`, `GetFromCache`, `ReadRaw`, and `Close` make up the I/O surface.
+
+Control flow: `Reader.Read` first chooses a cache/buffer-pool path. Background pool reads may still `Peek` the cache to count hits without populating it. Normal reads use `CacheHandle.GetWithReadHandle` to coordinate a single physical read among concurrent callers. Cache hits call `recordCacheHit`; cache misses call `doRead`, then install the cache value through the cache read handle. `doRead` optionally acquires `LoadBlockSema`, reads `Length+TrailerLen`, traces slow reads, updates stats, validates checksum, truncates off the trailer, decompresses if the compression indicator is nonzero, records decompression counters, initializes metadata through a caller-provided function, and returns a `Value`.
+
+State and persistence behavior: The durable surface includes block handle varint encoding, trailer checksum bytes, compression indicator, and checksum type semantics. In-memory state includes `Reader` options/readable, block-cache `cache.Value`s, `BufferPool`-owned buffers, and per-block metadata stored before data in the same allocation.
+
+Dependencies and integration points: Integrates with `objstorage.Readable/ReadHandle`, `sstableinternal.CacheOptions`, `internal/cache`, `internal/base` stats/tracing/corruption, `crlib/fifo` semaphore, `objiotracing`, `blockkind`, `crc`, `xxhash`, `bitflip`, and `bytesprofile`. Higher SSTable iterators pass `ReadEnv`, block kind, handles, and metadata initialization.
+
+Risks: The reader depends on accurate handle lengths and valid trailers; malformed lengths can route into slice bounds in checksum/decompression code. Unknown checksum or compression indicators panic/assert rather than returning soft errors in several helpers. Metadata casting uses unsafe overlays and requires `MetadataSize`/alignment to remain adequate. Cache read-handle error propagation is subtle because each caller must report corruption with its own object context.
+
+Test signals: This file has no direct test in the subset, but many SSTable reader/iterator tests exercise it. Neighboring tests cover `PhysicalBlockMaker`, temp buffers, compression stats, buffer pools, and block properties that rely on `Reader`.

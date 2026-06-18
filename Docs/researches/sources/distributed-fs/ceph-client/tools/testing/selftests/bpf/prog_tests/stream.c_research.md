@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/stream.c
+
+Purpose: tests BPF program stream output APIs and verifier success/failure skeleton suites. It includes `RUN_TESTS(stream_fail)`, `RUN_TESTS(stream)`, direct `bpf_prog_stream_read` syscall checks, and arena fault-address reporting.
+
+Control flow `test_stream_syscall` loads `stream`, runs `stream_syscall`, checks invalid program fd, invalid stream id, NULL buffer, reads stdout in two chunks, and confirms stdout/stderr drain. `test_stream_arena_fault_address` is architecture-gated to x86_64/aarch64, runs read and write fault programs, reads stderr stream, and checks reported fault address string from BSS. State includes stream buffers inside kernel, skeleton BSS fault address, and local read buffers. Dependencies are `bpf_prog_stream_read`, `bpf_test_run_opts`, stream skeletons, and supported arena fault reporting architecture. Risks are syscall ABI changes, buffer sizing, and architecture skip coverage. Test signals are expected `-EINVAL`, `-ENOENT`, `-EFAULT`, exact byte counts `2`, `1`, `0`, and stderr containing hex fault address.

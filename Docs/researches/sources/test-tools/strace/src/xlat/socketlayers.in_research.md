@@ -1,0 +1,17 @@
+# sources/test-tools/strace/src/xlat/socketlayers.in
+
+Purpose: `socketlayers.in` is a strace xlat input table for socket option level constants. The xlat generator turns these rows into C lookup data so syscall decoders can print symbolic names instead of raw integers for this kernel ABI surface. Source provenance is `include/uapi/linux/vm_sockets.h`, and the declared prefix is `AF_ SOL_`.
+
+Important APIs/types/functions: this file has no executable functions; its API is the xlat mini-language consumed by strace's build tooling. Directives seen here are `#sorted sort -k2,2n`, `#From include/linux/socket.h`, `#From include/uapi/asm-generic/socket.h`, `#From include/uapi/linux/can.h`, `#From include/uapi/linux/can/raw.h`, `#From include/uapi/linux/rds.h`, `#From include/uapi/linux/tipc.h`, `#From include/uapi/linux/vm_sockets.h`, ... (13 directives total). Generation behavior is `#sorted sort -k2,2n`. Representative constants are `SOL_IP`, `SOL_SOCKET`, `SOL_TCP`, `SOL_UDP`, `AF_VSOCK`, `SOL_IPV6`, `SOL_ICMPV6`, `SOL_CAN_BASE`, ... (45 total), `SOL_SMC`, `SOL_VSOCK`, `SOL_SOCKET`.
+
+Control flow: at build time, strace's xlat generation includes this `.in` file, interprets directives, evaluates the listed macros or explicit values against bundled/system headers, and emits a decoder table. At runtime, syscall-specific printers consult that generated table when decoding socket option level arguments, flags, attributes, ioctl values, socket options, or netlink fields.
+
+State/persistence behavior: the file is static source data and stores no runtime state. Persistence is through the generated C/header artifacts in the build tree; correctness depends on keeping the table synchronized with upstream UAPI definitions and preserving row ordering when `#sorted` or explicit values are present.
+
+Dependencies: primary dependency is `include/uapi/linux/vm_sockets.h` plus the strace xlat generation scripts and compatibility headers. Prefix handling (`AF_ SOL_`) controls printed-name normalization.  Lookup is by normal xlat entries rather than an explicitly value-indexed dense table. Availability follows the usual generated-header checks unless individual rows are unconditional through included definitions.
+
+Integration points: integrated by syscall decoders that include the generated xlat for socket option level. Common integration surfaces in this group include ioctl decoders, netlink attribute decoders, socket option printers, memory-management/syscall flag printers, signal/prctl/perf/KVM/io_uring/V4L2 paths, and architecture-specific decoders.
+
+Risks: stale constants, wrong explicit numeric values, accidental prefix drift, or broken sort/value-indexing directives would produce misleading strace output without changing traced program behavior. Host-header variability is also a risk for rows without `#unconditional`. The sorted directive is a test signal: row order is intentional and should remain compatible with the requested sort.
+
+Test signals: useful checks are rebuilding generated xlat artifacts, running strace's decoder tests that exercise the relevant syscall family, comparing printed symbolic names against kernel UAPI headers, and verifying unknown-bit fallback output. This file has 58 source lines, 45 data rows, and value style: All 45 rows carry explicit numeric values or expressions, so decoder output does not depend on contiguous enum ordering. Inline category comments: none.

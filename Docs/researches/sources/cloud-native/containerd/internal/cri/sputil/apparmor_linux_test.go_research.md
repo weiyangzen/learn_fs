@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/sputil/apparmor_linux_test.go
+
+This Linux test file verifies AppArmor profile parsing and OCI spec option generation. `TestGenerateApparmorSpecOpts` uses table cases spanning legacy string profiles and direct CRI `SecurityProfile` structs. It checks disabled AppArmor behavior, defaulting when profile is unset, privileged container bypass for runtime default, unconfined no-op behavior, invalid profile strings, undefined localhost profiles, and invalid struct combinations.
+
+When a spec option is expected, the test applies both the expected and actual `oci.SpecOpts` to copied OCI runtime specs and compares the resulting specs. This validates behavior at the mutation level rather than comparing function pointers. Undefined localhost profiles are expected to error because the test does not provision entries in `/sys/kernel/security/apparmor/profiles`.
+
+The test signal covers most policy branches in `GenerateApparmorSpecOpts`, including Kubernetes `SecurityProfile` struct migration. It does not cover a successful existing localhost profile, real kernel profile scanning success, default profile creation/cleanup, or non-Linux build behavior. It also relies on local spec mutation helpers and does not launch containers. Risks guarded are accidental AppArmor application to privileged containers, silent acceptance of unsupported AppArmor requests, and malformed localhost handling.

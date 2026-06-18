@@ -1,0 +1,13 @@
+# sources/object-store/apache-ozone/hadoop-hdds/container-service/src/test/java/org/apache/hadoop/ozone/container/keyvalue/TestContainerReconciliationWithMockDatanodes.java
+
+Purpose: simulates three datanodes with local key-value container replicas and verifies checksum/Merkle-tree reconciliation repairs missing blocks and corrupt chunks, even when one peer fails during protocol calls.
+
+Important APIs/types/functions: `DNContainerOperationClient`, static mocks of `ContainerProtocolCalls.getContainerChecksumInfo/getBlock/readChunk`, `ContainerChecksumTreeManager`, `OnDemandContainerScanner`, `KeyValueHandler.reconcileContainer`, `MockDatanode`, `FailureLocation`, `corruptionValues()`, and helpers for checksum uniqueness and scan-count waiting.
+
+Control flow: `@BeforeAll` creates three `MockDatanode` instances, each with a closed 15-block container containing deterministic chunk data, performs an initial scan to write Merkle trees, records the healthy data checksum, resets scan metrics, and installs protocol mocks that route "network" calls to the local peer objects. Main reconciliation tests corrupt two replicas differently, rescan, verify divergent checksums, reconcile each datanode against its peers, wait for reconciliation-triggered scans, and assert all data checksums return to the original healthy value. Peer-failure tests inject IO exceptions at checksum-info, block, or chunk-read stages for one healthy peer and assert the corrupted node still repairs from the other peer. A scan-failure test spies checksum reads to throw and asserts reconciliation propagates `IOException` while still triggering on-demand scans.
+
+State and persistence behavior: `MockDatanode.addContainerWithBlocks()` creates real container directories, block files, DB metadata, and checksum files. Corruption removes block DB rows and files or overwrites bytes at chunk offsets. Reconciliation reads peer checksum trees, fetches missing/corrupt block/chunk data, writes repairs locally, and runs on-demand scans to refresh persisted checksum trees.
+
+Dependencies and integration points: integrates `KeyValueHandler`, block/chunk managers, container scanner, checksum tree manager, HDDS pipeline protocol call static APIs, mocked datanode details, volume setup, RocksDB metadata, and file corruption helpers. It avoids a real network/cluster but exercises production reconciliation call paths.
+
+Risks and test signals: strong end-to-end signal for reconciliation correctness across many corruption counts and partial peer failures. Risks include static mock lifecycle sensitivity and test cost from real file/DB operations. The TODO notes unsupported broader corruption combinations.

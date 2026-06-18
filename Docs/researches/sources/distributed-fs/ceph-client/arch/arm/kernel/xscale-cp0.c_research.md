@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/kernel/xscale-cp0.c
+
+Purpose: probes and manages XScale CP0/CP1 DSP or iWMMXt coprocessor support. It detects iWMMXt versus DSP behavior, registers thread notifiers, publishes `HWCAP_IWMMXT` when supported, and sets coprocessor access bits.
+
+Control flow: late init first filters non-XScale CPUs, enables CP0 temporarily, probes by writing/reading a 64-bit coprocessor register, then either installs iWMMXt lazy context/undef handling or keeps DSP access enabled and saves/restores accumulator state on every context switch. Persistent state lives in per-thread CPU context extras or iWMMXt state managed elsewhere. Dependencies include CP15 c15 access control, CP0 instructions, `thread_register_notifier`, `iwmmxt_task_switch/release`, `register_iwmmxt_undef_handler`, and `elf_hwcap`. Risks are probing on unsupported CPUs, missing CONFIG_IWMMXT, stale coprocessor state across switches, and access-control mismatches. Test signals include hwcap presence, context-switch stress using DSP/iWMMXt instructions, and boot warnings when hardware exists without support.

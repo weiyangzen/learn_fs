@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/sctp/associola.c
+
+Purpose: implements SCTP association lifecycle and core per-association behavior: initialization, timers, queues, transports, state-machine input dispatch, migration/update, PMTU/fragmentation, receive-window accounting, association IDs, and ASCONF cleanup.
+
+Important APIs/types/functions: `sctp_association_init()` derives association defaults from endpoint/socket state, including timers, TSNs, rwnd, streams, queues, bind address, peer capabilities, AUTH, and random parameters. `sctp_association_new/free/hold/put/destroy()` manage allocation, references, endpoint/socket holds, timers, queues, transports, auth, bind addresses, IDR removal, and RCU freeing. `sctp_assoc_add_peer/rm_peer/control_transport/lookup_paddr/del_nonprimary_peers()` manage peer transport lists, hashing, path state, notifications, and PMTU. `sctp_assoc_bh_rcv()` drains chunks into `sctp_do_sm()`. `sctp_assoc_migrate()` and `sctp_assoc_update()` handle peeloff/restart-like transitions. Path selection, frag point, rwnd, bind address setup, association ID, and ASCONF helpers round out the file.
+
+Control flow: creation fills protocol state from the socket, initializes queues/streams/timers/AUTH, and starts with closed association state. Peer addresses become `sctp_transport` objects and the first usable one becomes primary/retransmission path. Incoming chunks are processed from the association inqueue, with special first AUTH-before-COOKIE-ECHO handling and AUTH-required discard rules. Freeing marks the association dead, unlinks endpoint/socket accounting, drains queues/timers/transports/auth/ASCONF, then releases the final ref for RCU destruction.
+
+State and persistence: volatile in-memory SCTP state: association state, timers, TSNs, receive window and pressure counters, peer transport list/hash entries, active/retrans paths, stream state, AUTH keys/vectors, ASCONF queues, bind addresses, PMTU/frag point, stats, and association IDR entry. Refcounts, socket locks, timers, and RCU protect concurrent users.
+
+Dependencies/integration: endpoint/socket code, transport, inqueue/outqueue/ulpqueue, state machine, stream and tsnmap, auth, bind address, ASCONF, ulpevent notifications, timers, IDR, IPv6 helpers, and socket memory accounting.
+
+Risks: lifetime is complex because timers, inqueue work, transports, chunks, endpoint, and socket all hold references. Peer removal must migrate transmitted chunks and clear cached path references. Restart/update must preserve/reset TSNs correctly. Receive-window math can advertise wrong windows if `rwnd`, `rwnd_over`, or `rwnd_press` drift. AUTH discard is silent by design and can complicate diagnosis.
+
+Test signals: create/free under timer activity, listener backlog accounting, peer add/remove/primary changes, UP/DOWN/PF transitions, retrans path election, COOKIE-ECHO restart/update, peeloff migration, AUTH-required discard, AUTH+COOKIE-ECHO first-chunk handling, PMTU sync, rwnd update SACK emission, assoc ID allocation/removal, and ASCONF cache cleanup.

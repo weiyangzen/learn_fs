@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/test_vxlan_mdb.sh
+
+## Purpose
+`test_vxlan_mdb.sh` is a Linux networking selftest for VXLAN multicast database (MDB) support on external, VNI-filtering VXLAN devices. It builds paired IPv4-underlay and IPv6-underlay namespace topologies, maps bridge VLANs 10, 20, and 4000 to VNIs 10010, 10020, and 14000, and tests both IPv4 and IPv6 overlay multicast traffic. The test is split into control-path coverage for `bridge mdb` operations and datapath coverage that injects multicast packets and checks encapsulation/forwarding with `tc flower` counters.
+
+## Important APIs, Functions, and Types
+The script is shell-based and sources `lib.sh` for kselftest helpers such as `setup_ns`, `cleanup_ns`, and `ksft_skip`. Local helpers are `log_test`, `run_cmd`, and `tc_check_packets`. Setup helpers `setup_common_ns`, `setup_common`, `setup_v4`, and `setup_v6` create netns pairs, veth underlays, bridges, VLAN subinterfaces, an external `vx0` VXLAN device, bridge VLAN tunnel mappings, and bridge VNI filters. Control-path helpers include `basic_common`, `star_g_common`, `sg_common`, `dump_common`, and `flush`. Datapath helpers include `encap_params_common`, `starg_exclude_ir_common`, `starg_include_ir_common`, `starg_exclude_p2mp_common`, `starg_include_p2mp_common`, `egress_vni_translation_common`, `all_zeros_mdb_common`, `mdb_fdb_common`, and `mdb_torture_common`.
+
+## Control Flow
+The main routine parses `-t`, `-c`, `-d`, pause, and verbose options, checks root and command availability, verifies `bridge mdb flush` support, cleans stale namespaces, then loops over selected tests. Each test calls `setup`, runs one scenario, and calls `cleanup`. `setup` creates both IPv4 and IPv6 underlay topologies before every scenario, which makes test cases independent but expensive. Control-path cases validate add/get/replace/delete, protocol and encapsulation attribute replacement, invalid combinations, large dump marker handling, and flush selectors. Datapath cases install MDB/FDB state, send traffic with `mausezahn`, and assert specific ingress counter increments in the receiving namespace.
+
+## State and Persistence
+All kernel state is transient: namespaces, veth links, bridges, VXLAN devices, VLAN tunnel mappings, VNI filters, routes, sysctls, MDB entries, FDB entries, qdiscs, and `tc` filters are recreated per test and removed through `cleanup_v4`, `cleanup_v6`, and the `EXIT` trap. The only filesystem persistence is temporary batch files from `mktemp` in `dump_common`; those are removed after use. Global shell counters `nsuccess`, `nfail`, and `ret` summarize the run.
+
+## Dependencies and Integration Points
+The script depends on root privileges, `ip`, `bridge`, `tc`, `mausezahn`, `jq`, and recent iproute2/kernel VXLAN MDB support. It integrates directly with kernel bridge MDB netlink APIs, VXLAN external/vnifilter behavior, bridge VLAN tunnel info, multicast forwarding, FDB fallback, route/sysctl behavior, and kselftest result conventions. It also relies on `tc flower` fields such as `enc_dst_ip`, `enc_key_id`, UDP ports, and packet counters as datapath observability.
+
+## Risks and Test Signals
+Primary risks are environmental flakiness from namespace setup, timing, `mausezahn` availability, iproute2 feature skew, and long runtime from full matrix execution plus the 30-second torture tests. The test is valuable because it checks both user-visible control-plane errors and real encapsulated traffic behavior, including source-filter modes, P2MP/IR destinations, egress VNI translation via PVID, all-zeros catchall behavior, MDB/FDB interaction, and use-after-free style race exposure. Passing signals are `[ OK ]` log lines, expected `bridge` return codes, exact `tc` packet counts, and a final nonzero `ret` only when failures are recorded.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/cpufreq/cpufreq_governor.h
+
+Purpose: defines the shared data model and callback contract for legacy demand-based CPUFreq governors, including common tunables, per-policy/per-CPU sampling structures, the `dbs_governor` wrapper around `struct cpufreq_governor`, and helper macros for sysfs attributes and governor initialization.
+
+Important APIs and control flow: `struct dbs_data` holds shared tunables and governor-specific tuner storage. `struct policy_dbs_info` holds per-policy sampling/work state and links into a tunable set. `struct cpu_dbs_info` stores per-CPU load-sampling history and the scheduler update hook. `struct dbs_governor` embeds the public governor plus callbacks for update, allocation, init/exit/start/limits, and optional shared global data. Macros `gov_show_one`, `gov_show_one_common`, `gov_attr_ro/rw`, and `CPUFREQ_DBS_GOVERNOR_INITIALIZER` reduce boilerplate. The header declares common lifecycle functions, `dbs_update()`, powersave-bias hooks, `sampling_rate_store()`, and `gov_update_cpu_data()`.
+
+State and persistence behavior: the header owns no runtime state but fixes the in-memory contract used by `cpufreq_governor.c`, `cpufreq_ondemand.c`, and `cpufreq_conservative.c`. The `gov_attr_set` inside `dbs_data` is the persistent sysfs/tunable anchor, and `policy_dbs_info.list` joins policy instances to that anchor.
+
+Dependencies and integration points: depends on cpufreq core types, scheduler cpufreq hooks, kernel stats, sysfs/kobject support, mutexes, irq_work, atomics, and module ownership. It integrates concrete governors with the CPUFreq core through standard governor callbacks and with sysfs through `governor_sysfs_ops`.
+
+Risks and test signals: risks include ABI-style coupling between embedded structures and `container_of()` helpers, governor-specific tuner type mismatches in macros, shared tunables being unexpectedly global when drivers do not request per-policy governors, and misuse of exported lifecycle functions outside the intended DBS governors. Test signals include clean compile of both ondemand and conservative, correct sysfs file display/store dispatch, successful per-policy and shared governor tunable lifetimes, and no stale per-CPU `policy_dbs` pointers after governor exit.

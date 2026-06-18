@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/ras/rascore/ras_cper.c
+
+Purpose: this file serializes RAS log-ring entries into CPER-like binary records for runtime, fatal, boot/RMA-style reporting. It converts `struct ras_log_info` batches into packed headers, descriptors, and payload sections suitable for host consumption.
+
+Important functions: `cper_get_timestamp()` converts Unix seconds via `ras_core_convert_timestamp_to_time()`. `fill_section_hdr()` writes CPER signature, revision, severity, platform/device IDs, creator ID, record ID, timestamp, and notify GUID. `fill_section_descriptor()` fills section offsets, severity, FRU text, and flags such as RMA threshold or latent error. `fill_section_runtime()` copies ACA register dumps into the nonstandard/runtime section. `fill_section_fatal()` stores the fatal status/address/IPID/syndrome subset. `ras_cper_generate_cper()` is the exported API, mapping log events to CPER type and severity before writing the caller-provided buffer.
+
+Control flow and state: the implementation is stateless apart from reading system info and trace contents. Runtime and RMA events produce one record with `count` descriptors/sections; UE fatal events produce repeated single-section fatal records. Size is calculated up front by `cper_get_record_size()` and compared with `buf_len`.
+
+Dependencies and integration: this sits behind log-ring retrieval and consumes ACA register index conventions. It calls core timestamp and device-info callbacks. Risks include trusting `trace_list[0]` without null/count validation, relying on packed layout macros from the header, truncating `record_id` and strings into fixed fields, and inconsistent fatal sizing when multiple records are emitted. Test signals should include CE, DE, UE, poison, and RMA event batches, undersized buffers, multi-record fatal output length, and validation of generated offsets against packed struct sizes.

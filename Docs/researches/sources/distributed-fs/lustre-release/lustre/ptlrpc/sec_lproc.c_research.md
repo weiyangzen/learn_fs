@@ -1,0 +1,13 @@
+# sources/distributed-fs/lustre-release/lustre/ptlrpc/sec_lproc.c
+
+Purpose: exposes sptlrpc state through Lustre debugfs/lproc-style files and accepts SELinux policy downcalls from userspace. It gives operators visibility into active client security flavor/context state and a channel for `l_getsepol` results to update cached SELinux policy status.
+
+Important APIs/types/functions: `sptlrpc_info_lprocfs_seq_show()` prints current import security flavor, flags, id, refcount, context count, and GC timing; `sptlrpc_ctxs_lprocfs_seq_show()` delegates context display to the active policy; `sptlrpc_sepol_update_needed()` and `sptlrpc_sepol_update()` maintain an RCU/kref cached `struct sptlrpc_sepol`; `ldebugfs_sptlrpc_sepol_seq_write()` validates `sepol_downcall_data` from userspace and updates the cache; `lprocfs_sptlrpc_sepol_seq_show()` displays cached mtime and policy string; `sptlrpc_lprocfs_cliobd_attach()` creates per-client files; `sptlrpc_lproc_init()` and `sptlrpc_lproc_fini()` create and remove the global `sptlrpc` debugfs directory and kobject.
+
+Control flow: client OBD attach creates `srpc_info`, `srpc_contexts`, and write-only `srpc_sepol`. Reads take an import security reference, print fields or call policy display, then drop the reference. A userspace sepol downcall is copied into a bounded kernel buffer, checked for magic, length, and count consistency, then installed on the current import security if its mtime differs. Older downcall layout support is retained behind a Lustre version check. Global init creates aggregate page-pool debug entries and a sysfs kobject.
+
+State/persistence: per-import SELinux policy status is stored in `imp_sec->ps_sepol` as an RCU pointer with kref lifetime and freed through `sptlrpc_sepol_put()` in `sec.c`. Debugfs files expose live in-memory state only. No on-disk persistence is performed here.
+
+Dependencies/integration: integrates with Lustre debugfs helpers, sequence file APIs, OBD client imports, policy display callbacks, kernel user-copy APIs, RCU, kref, and the SELinux helper path in `sec.c`. Global symbols `sptlrpc_debugfs_dir` and `sptlrpc_kobj` are exported for other security code.
+
+Risks/test signals: user input validation is security-sensitive; bad magic, truncated payloads, zero or oversized policy lengths, and stale imports must return errors without updating the cache. The `lprocfs_sptlrpc_sepol_seq_show()` path references `imp->imp_sec` while also holding an import-sec reference and should be tested across import teardown. Tests should cover debugfs attach filtering by OBD type, sepol update/no-update by mtime, old/new downcall formats where supported, and cleanup removing all debugfs entries.

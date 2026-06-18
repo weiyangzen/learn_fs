@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/perf/hisilicon/hisi_uncore_uc_pmu.c
+
+Purpose: This file implements the HiSilicon unified cache uncore PMU. It exposes UC traffic, pipeline, ring, and cycle events with optional request trace-tag, source ID, and U-ring channel filtering. It is a leaf driver over the common HiSilicon uncore PMU framework.
+
+Important APIs, types, and functions: `hisi_uc_pmu_check_filter()` validates filter dependencies and warns when channel filtering is requested for an unsupported event range. Filter helpers configure and clear request trace tags, source ID trace tags, and U-ring channel bits. Counter operations include event type programming, global enable, per-counter enable, read/write, interrupt mask/status/clear, and a v2 write-counter erratum path. `hisi_uc_pmu_write_counter()` detects identifier `HISI_PMU_V2` and temporarily enables global counting to provide the clock needed to write counters when disabled.
+
+Control flow: module init allocates a dynamic CPU hotplug state, registers the platform driver, and stores the hotplug state ID globally. Probe allocates `struct hisi_pmu`, sets driver data early, validates `sccl-id`, `ccl-id`, and `sub-id`, maps MMIO, reads the UC version, requests IRQ, fills common fields, registers the hotplug node using devm cleanup actions, calls `hisi_pmu_init()`, registers the perf PMU under a name such as `hisi_sccl%d_uc%d_%d`, and installs a devm unregister action. The driver suppresses bind attributes because unbinding during sampling is documented as unsafe.
+
+State and persistence: Runtime state is in `struct hisi_pmu` and hardware registers. Filter configuration is global per PMU and cleared on event stop. The dynamic hotplug state persists for the module lifetime. No persistent storage is used.
+
+Dependencies and integration points: Depends on ACPI ID `HISI0291`, platform resources, perf PMU APIs, CPU hotplug dynamic states, and the exported common HiSilicon uncore functions. Sysfs exposes event aliases including `sq_time`, `pq_time`, `cpu_rd`, `cycles`, `spipe_hit`, `hpipe_hit`, and ring data counters, plus format fields for `event`, `rd_req_en`, `uring_channel`, `srcid`, and `srcid_en`.
+
+Risks: `srcid_en` depends on `rd_req_en`; the code rejects that invalid combination. However, U-ring channel filtering outside events `0x47` through `0x59` only logs a warning and allows the event, so users may get unfiltered or hardware-specific behavior. Shared filter registers can conflict across concurrently running filtered events. The v2 erratum workaround toggles global enable around counter writes when disabled; regressions here can perturb active state or counts if enable-state detection is wrong.
+
+Test signals: Confirm sysfs PMU name and attributes on `HISI0291` systems. Run basic events and filtered variants, including invalid `srcid_en` without `rd_req_en`, expecting `-EINVAL`. Verify the warning path for unsupported U-ring channel filter. Test on identifier `0x30` hardware or with instrumentation to ensure write-counter erratum path is exercised. CPU hotplug should update the cpumask and migrate perf context.

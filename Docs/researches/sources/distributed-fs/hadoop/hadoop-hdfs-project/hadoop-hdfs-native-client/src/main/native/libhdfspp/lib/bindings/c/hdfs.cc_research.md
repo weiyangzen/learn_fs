@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/lib/bindings/c/hdfs.cc -->
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/lib/bindings/c/hdfs.cc
+
+## Purpose
+This file is the libhdfs-compatible C binding for libhdfspp. It wraps the C++ `FileSystem` and `FileHandle` objects in opaque C handles, translates C API calls into synchronous C++ operations, exposes selected libhdfspp extensions, and normalizes errors into `errno`, negative return codes, and a thread-local last-error string.
+
+## Important APIs, Types, And Functions
+`hdfs_internal` owns a `FileSystem` and a mutex-protected working directory; `hdfsFile_internal` owns a `FileHandle`. The exported API covers connection setup (`hdfsConnect*`, `hdfsBuilderConnect`, `hdfsAllocateFileSystem`, `hdfsConnectAllocated`, `hdfsCancelPendingConnection`, `hdfsDisconnect`), file access (`hdfsOpenFile`, `hdfsCloseFile`, `hdfsRead`, `hdfsPread`, `hdfsSeek`, `hdfsTell`, read statistics, cancellation), namespace operations (`hdfsExists`, `hdfsGetPathInfo`, `hdfsListDirectory`, `hdfsCreateDirectory`, `hdfsDelete`, `hdfsRename`, `hdfsChmod`, `hdfsChown`, snapshots, `hdfsFind`), block-location helpers (`hdfsGetBlockLocations`, `hdfsGetHosts`), builder configuration getters/setters, event pre-attach hooks, and logging functions. `Error`, `ReportError`, `ReportException`, `CheckSystem`, `CheckHandle`, and `getAbsolutePath` are the main shared glue.
+
+## Control Flow
+Connection calls construct an `IoService`, create a `FileSystem` with the selected user and `Options`, attach any thread-local event callback, then either connect to an explicit namenode or the configured default filesystem. Most C functions validate opaque handles, resolve relative paths against the per-handle working directory, call the equivalent `FileSystem` or `FileHandle` method, then convert `Status` to libhdfs-style return values. The builder path loads `core-site.xml` and `hdfs-site.xml` through `ConfigurationLoader`, overlays per-builder values, and frees the builder on `hdfsBuilderConnect`. Directory/stat calls allocate C structs and strings that are later released by paired free functions. Logging installs a `CForwardingLogger` that converts C++ `LogMessage` data to the public C `LogData` layout.
+
+## State And Persistence
+State is process-local and in-memory: opaque handles own C++ objects, `hdfs_internal` stores a working directory string guarded by `wd_lock_`, `errstr` stores the last error per thread, and event callbacks are thread-local templates for subsequently opened filesystems/files. The file allocates C arrays and strings for caller-owned `hdfsFileInfo`, block-location, host, statistics, and log-copy outputs. No durable state is written; HDFS mutations are delegated to the remote namenode.
+
+## Dependencies And Integration Points
+The binding depends on libhdfspp public headers, `common/hdfs_configuration.h`, `ConfigurationLoader`, logging, `fs/filesystem.h`, `fs/filehandle.h`, x-platform basename/syscall helpers, and the event and log C extension headers. It is the compatibility boundary for existing libhdfs consumers while still exposing libhdfspp-only features such as monitor callbacks, preallocated filesystem connection, snapshot helpers, cancellation, and structured block locations.
+
+## Risks
+The file is a high-risk ownership and compatibility boundary. Many functions allocate memory manually and depend on callers invoking the matching free API. `hdfsConnectAsUser` unconditionally constructs `std::string(nn)` and `std::string(user)`, so null inputs are dangerous unless callers follow libhdfs conventions. `hdfsFreeHosts` uses `delete` for an array allocated with `new[]`, which is an allocator-pairing risk. Relative path handling intentionally lacks `.` and `..` semantics. Only read mode is meaningfully implemented; write checks are placeholders. Several functions return positive errno-like values on extension paths while classic libhdfs calls return `-1`, so callers must follow each API contract exactly.
+
+## Test Signals
+Useful tests connect through explicit namenode, default FS, builder config, and allocated-connect paths; verify thread-local error strings; read files with `hdfsRead`, `hdfsPread`, seek/tell, and cancellation; exercise path resolution after `hdfsSetWorkingDirectory`; allocate/free file info, hosts, block locations, read statistics, and log data under ASAN; run namespace mutations and snapshot calls against a mini cluster; and attach monitor/log callbacks that return normal and simulated-error responses.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/lib/bindings/c/hdfs.cc -->

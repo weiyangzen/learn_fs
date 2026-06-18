@@ -1,0 +1,128 @@
+# Folder Research: sources/user-network-fs/samba/source3/modules
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 114
+- Recursive researched files: 114
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/user-network-fs/samba/source3/modules/getdate.c`
+- `sources/user-network-fs/samba/source3/modules/getdate.h`
+- `sources/user-network-fs/samba/source3/modules/getdate.y`
+- `sources/user-network-fs/samba/source3/modules/hash_inode.c`
+- `sources/user-network-fs/samba/source3/modules/hash_inode.h`
+- `sources/user-network-fs/samba/source3/modules/lib_vxfs.c`
+- `sources/user-network-fs/samba/source3/modules/nfs4_acls.c`
+- `sources/user-network-fs/samba/source3/modules/nfs4_acls.h`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr.h`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_ndr.c`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_ndr.h`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_nfs.c`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_nfs.h`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_util.c`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_util.h`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_xdr.c`
+- `sources/user-network-fs/samba/source3/modules/nfs4acl_xattr_xdr.h`
+- `sources/user-network-fs/samba/source3/modules/non_posix_acls.c`
+- `sources/user-network-fs/samba/source3/modules/non_posix_acls.h`
+- `sources/user-network-fs/samba/source3/modules/offload_token.c`
+- `sources/user-network-fs/samba/source3/modules/offload_token.h`
+- `sources/user-network-fs/samba/source3/modules/posixacl_xattr.c`
+- `sources/user-network-fs/samba/source3/modules/posixacl_xattr.h`
+- `sources/user-network-fs/samba/source3/modules/test_nfs4_acls.c`
+- `sources/user-network-fs/samba/source3/modules/test_vfs_full_audit.c`
+- `sources/user-network-fs/samba/source3/modules/test_vfs_gpfs.c`
+- `sources/user-network-fs/samba/source3/modules/test_vfs_posixacl.c`
+- `sources/user-network-fs/samba/source3/modules/util_reparse.c`
+- `sources/user-network-fs/samba/source3/modules/util_reparse.h`
+- `sources/user-network-fs/samba/source3/modules/varlink_keybridge.c`
+- `sources/user-network-fs/samba/source3/modules/varlink_keybridge.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_acl_common.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_acl_common.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_acl_tdb.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_acl_xattr.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_afsacl.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aio_fork.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aio_pthread.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aio_ratelimit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aixacl.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aixacl.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_aixacl2.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aixacl_util.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_aixacl_util.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_audit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_btrfs.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_cacheprime.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_cap.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_catia.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_ceph.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_ceph_new.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_ceph_snapshots.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_commit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_crossrename.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_default.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_default_quota.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_delay_inject.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_dfs_samba4.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_dirsort.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_error_inject.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_expand_msdfs.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_extd_audit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_fake_acls.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_fake_dfq.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_fake_perms.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_fileid.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_fruit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_full_audit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_glusterfs.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_glusterfs_fuse.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_gpfs.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_hpuxacl.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_hpuxacl.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_io_uring.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_linux_xfs_sgid.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_media_harmony.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_nfs4acl_xattr.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_not_implemented.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_offline.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_posix_eadb.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_posixacl.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_posixacl.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_prealloc.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_preopen.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_readahead.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_readonly.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_recycle.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_shadow_copy.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_shadow_copy2.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_shell_snap.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_snapper.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_solarisacl.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_solarisacl.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_streams_depot.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_streams_xattr.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_syncops.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_time_audit.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_tsmsm.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_unityed_media.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_clamav.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_common.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_dummy.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_fsav.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_sophos.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_utils.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_virusfilter_utils.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_vxfs.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_vxfs.h`
+- `sources/user-network-fs/samba/source3/modules/vfs_widelinks.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_worm.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_xattr_tdb.c`
+- `sources/user-network-fs/samba/source3/modules/vfs_zfsacl.c`
+- `sources/user-network-fs/samba/source3/modules/wscript_build`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

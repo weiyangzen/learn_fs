@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/spi/mcp251xfd/mcp251xfd-core.c
+
+Purpose: Main Linux SocketCAN SPI driver body for Microchip MCP2517FD, MCP2518FD, MCP251863, and generic MCP251xFD CAN/CAN-FD controllers. It owns probe/remove, runtime PM, chip detection, mode switching, bit timing, interrupt dispatch, error recovery, GPIO exposure, regulator/clock setup, and netdev open/stop integration.
+
+Important APIs, types, and functions: `mcp251xfd_probe()` allocates and initializes the CAN netdev and `struct mcp251xfd_priv`; `mcp251xfd_register()` powers and soft-resets the chip, detects the concrete model, initializes ethtool/GPIO support, and registers the CAN device; `mcp251xfd_open()` and `mcp251xfd_stop()` connect SocketCAN lifecycle to power, rings, interrupts, workqueues, RX offload, and the transceiver regulator. `mcp251xfd_irq()` is the threaded IRQ loop and dispatches to handlers for RX, TEF, RX overflow, invalid messages, controller errors, mode changes, system errors, ECC, and SPI CRC errors.
+
+Control flow: Probe validates IRQ/clock/regulators, chooses PLL and SPI speed limits, initializes regmap and RX offload, then registers the device. Registration enables power/clock, performs wake/config/reset/clock setup, may reinitialize regmap after autodetecting the chip, checks optional RX_INT, and registers the CAN netdev. Open allocates rings, enables the transceiver, initializes timestamps, starts the chip, enables RX offload, creates TX fallback workqueue, requests the threaded IRQ, enables chip interrupts, and starts the TX queue. The IRQ loop first drains optional RX_INT fast-path RX, then repeatedly reads pending interrupt/status bits, acknowledges clearable bits before handling, processes data and error sources, and stops/dumps/disables on failures.
+
+State and persistence behavior: Runtime state is in `mcp251xfd_priv`: CAN state, `flags`, saved bus error counters for bus-off, `regs_status`, ECC state/counter, ring state, timestamp counter, power resources, detected model/quirks, optional RX_INT/XSTBYEN/GPIO state, and SPI speed limits. No persistent storage is used; all hardware state is reconstructed during probe/open/runtime resume.
+
+Dependencies and integration points: Integrates Linux SPI, regmap, SocketCAN, `can_rx_offload`, ethtool helpers, GPIO chip API, regulators, clocks, runtime PM, device properties, OF/SPI IDs, and the split MCP251xFD helpers.
+
+Risks: Hardware errata dominate the risk surface: mode transitions can timeout, CRC reads may fail during wake, ECC in TX RAM may require retransmit recovery, RX/TX MAB faults can present as mixed interrupts, and RX_INT may need disabling after reset. IRQ ordering regressions could lose interrupts, process stale registers, or leave queues stuck.
+
+Test signals: Probe all compatible strings, runtime suspend/resume, CAN 2.0 and CAN-FD bit timing, loopback/listen-only modes, bus-off and restart, BERR reporting, RX/TX stress with and without coalescing, SPI CRC/ECC fault injection, RX_INT/XSTBYEN variants, GPIO conflicts, and devcoredump generation.

@@ -1,0 +1,13 @@
+# sources/object-store/apache-ozone/hadoop-ozone/integration-test/src/test/java/org/apache/hadoop/fs/contract/AbstractContractMultipartUploaderTest.java
+
+Purpose: `AbstractContractMultipartUploaderTest` is the multipart upload contract suite. It validates `MultipartUploader` lifecycle, cross-uploader handles, part ordering, empty parts, abort semantics, invalid handles, completion validation, directory conflicts, concurrent uploads, consistency delay handling, and path capability reporting.
+
+Important APIs/types/functions: extends `AbstractFSContractTestBase`; uses `MultipartUploader`, `UploadHandle`, `PartHandle`, `PathHandle`, `BBUploadHandle`, `CommonPathCapabilities.FS_MULTIPART_UPLOADER`, `FutureIO.awaitFuture`, `DurationInfo`, MD5 digest utilities, `GenericTestUtils.waitFor`, and IO statistics logging. Subclasses must implement `partSizeInBytes()`, `finalizeConsumesUploadIdImmediately()`, and `supportsConcurrentUploadsToSamePath()`, and may override payload count and consistency delay.
+
+Control flow: `setup()` assumes the path capability and creates two uploaders. `teardown()` aborts any active upload, aborts uploads under the test path, logs statistics, and closes uploaders. Helpers generate deterministic per-part payloads, upload parts with uploader selected by part number, complete with random or specified uploaders, verify file length and MD5 digest, and abort quietly. Tests cover single-part upload with repeated completion behavior, multi-part upload, empty part/block upload, reverse and non-contiguous part completion, abort after parts, unknown/empty handles, complete with no parts, empty upload ID in put/complete, completion blocked by a directory, concurrent same-destination uploads, and capability declaration.
+
+State and persistence behavior: state spans server-side upload sessions, part handles, final file metadata, and cleanup of outstanding uploads. Finalization may consume upload IDs immediately or later, and tests branch on subclass contract. Concurrent upload verification uses different payload sizes and optional consistency waiting before final digest checks.
+
+Dependencies and integration points: this is a direct integration point for Ozone's multipart implementation through Hadoop's builder-based uploader API. It also exercises asynchronous futures and teardown cleanup APIs.
+
+Risks and test signals: catches leaked uploads, invalid handle acceptance, wrong part ordering, non-deterministic cross-uploader behavior, incomplete abort cleanup, directory/file conflicts at completion, stale visible length after concurrent completion, and incorrect capability claims. Random uploader selection can expose race-sensitive implementations but may make intermittent failures harder to localize.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/eos/mgm/proc/user/NewfindCmd.cc
+
+Purpose: implements the protobuf-backed `NewfindCmd` command, replacing much of legacy `find` with structured request parsing, QDB namespace exploration, optional in-memory cache traversal, richer formatting, and optional gRPC streaming.
+
+Important APIs and types: includes filter helpers for name regex, UID/GID, time, permissions, attributes, and faulty ACLs; output helpers for paths, replicas, checksums, `du`, formatted fields, and metadata IDs; `TraversalFilter`; `FindResult`; and `FindResultProvider`. It uses `NamespaceExplorer`, `QClient`, `QuarkFileMD`, `QuarkContainerMD`, `AccessChecker`, `BalanceCalculator`, `Prefetcher`, `gOFS->_find`, metadata views, `ProcCommand` delegation for `fileinfo` and file layout, and compile-time `EOS_GRPC`.
+
+Control flow: `ProcessRequest()` validates regex and path existence, resolves real paths, enforces tree-token scope, opens temporary output files, parses purge options, selects either in-memory `_find` or QDB `NamespaceExplorer`, then iterates DFS results. Directory results are expansion-permission checked, converted to metadata, filtered unless treecount is active, counted, optionally purged, or printed. File results are converted, optionally accounted for balance, filtered for size/mixed groups/stripe mismatch, counted, optionally purged or layout-modified, and printed. The gRPC overload mirrors much of the logic but batches output every 100 records through `ServerWriter`.
+
+State and persistence: ordinary find is read-only except stats and temporary output files. Purge modes can delete atomic files or purge versions. `ModifyLayoutStripes` invokes a nested file layout command that mutates file layout. QDB traversal reads directly from the namespace backend, while cache mode uses the in-memory view.
+
+Dependencies and integration: bridges console protobufs, QDB namespace exploration, MGM auth/access checks, EOS metadata types, legacy proc commands, and optional gRPC service output.
+
+Risks: non-gRPC and gRPC implementations duplicate logic and differ in details. In the gRPC cache branch `findResultProvider` is dereferenced before initialization. Some gRPC printing helpers write to `mOfsOutStream` instead of the local response stream. `hasStripeDiff` returns true for nominal layout but is used as an exclusion for `stripediff`, suggesting inverted semantics or confusing naming. Tests should cover QDB and cache modes, invalid regex, tree token denial, expansion permission errors, count/treecount, balance, custom format tokens, symlinks, purge and layout mutations, result limits, gRPC batching, and parity between gRPC and non-gRPC output.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/spinlock_types.h
+
+Type and initializer definitions for ARC raw locks. arch_spinlock_t is a volatile integer with unlocked 0 and locked 1. arch_rwlock_t stores a reader counter initialized to 0x01000000 and optionally embeds a mutex spinlock on non-LLSC systems. Control flow is owned by spinlock.h; this file defines the state shape consumed by generic locking. Dependencies are CONFIG_ARC_HAS_LLSC and Linux raw lock initializer conventions. Risks are changing counter constants without updating lock algorithms or static initializers, and volatile assumptions interacting with memory barriers. Test signals are compile coverage for LLSC/non-LLSC/SMP/UP builds and runtime lock stress.

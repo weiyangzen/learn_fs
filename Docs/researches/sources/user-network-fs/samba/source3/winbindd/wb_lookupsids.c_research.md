@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source3/winbindd/wb_lookupsids.c
+
+Purpose: implements the async bulk SID-to-name lookup helper used by winbindd request handlers and idmap helper paths. It takes an ordered SID array and returns an `lsa_RefDomainList` plus an `lsa_TransNameArray` whose name indexes match the input SID indexes.
+
+Important APIs and types: `wb_lookupsids_send/recv` are the public tevent API. `struct wb_lookupsids_state` owns input SIDs, per-domain bulk queues, single-SID fallback indexes, temporary `LookupRids`/`LookupSids` outputs, and final LSA result arrays. `struct wb_lookupsids_domain` groups SIDs by `winbindd_domain_ref`, stores `lsa_SidArray`, and tracks original indexes. Helpers include `wb_lookupsids_bulk`, `wb_lookupsids_get_domain`, `wb_lookupsids_find_dom_idx`, and `wb_lookupsids_move_name`.
+
+Control flow: `wb_lookupsids_send` preallocates result arrays sized to `num_sids`, classifies each SID into a bulk domain bucket or the `single_sids` fallback list, then calls `wb_lookupsids_next`. Bulk local SAM SIDs use `dcerpc_wbint_LookupRids_send`; other accepted domain SIDs use `dcerpc_wbint_LookupSids_send`; fallback SIDs use `wb_lookupsid_send` one at a time. Completion callbacks splice temporary names into the final result arrays with preserved input indexes and advance to the next domain or single SID. `recv` validates that the output name count equals the input SID count before moving results to the caller.
+
+State and persistence: runtime state is talloc-scoped to the request. The file does not persist directly, but it consults domain lists, server role flags, local SAM SID/name state, and domain references that can become stale. Domain identity in final `lsa_RefDomainList` is deduplicated by SID.
+
+Dependencies and integration points: depends on `winbindd.h`, generated `ndr_winbind_c.h`, SID utility helpers, machine SID/passdb state, LSA structures, and child RPC handles from `dom_child_handle`. It integrates with `wb_sids2xids.c` when type hints are needed and with winbindd LOOKUPSIDS command handlers elsewhere.
+
+Risks: preserving original indexes is critical; a mismatch returns `NT_STATUS_INTERNAL_ERROR` only at `recv`, so callback logic must keep counts aligned. `wb_lookupsids_get_domain` has a suspicious allocation check using `domains->sids.sids` immediately after assigning `domain->sids.sids`, which deserves review because it can reference the first element rather than the new bucket. Bulk eligibility changes can leak special local/well-known SIDs to a DC or miss batching opportunities. Stale domain refs are silently skipped in domain mode, potentially producing fewer names and tripping final count validation.
+
+Test signals: exercise zero SID input, all local SAM SIDs, trusted-domain SIDs, builtin/well-known/unix SIDs that should take fallback, mixed mapped/unmapped results, stale domain refs, and lookup result arrays whose counts do not match requested SIDs. Regression tests should assert output ordering against input ordering.

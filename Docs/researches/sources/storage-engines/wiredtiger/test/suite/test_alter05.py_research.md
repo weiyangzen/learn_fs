@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_alter05.py
+
+Purpose: verifies that altering a file after timestamped modifications succeeds, triggers checkpoint accounting, and fails correctly while a cursor remains open. It focuses on file URI behavior with statistics enabled and tiered storage configuration.
+
+Important APIs are `conn_config`, `session.create`, `conn.set_timestamp`, transaction begin/commit with commit timestamps, `session.alter`, statistics cursor access to `wiredtiger.stat.conn.session_table_alter_trigger_checkpoint`, and metadata lookup. Control flow creates a logged file, pins timestamps, writes timestamped data, advances stable timestamp, alters logging off, checks metadata, and asserts the alter-triggered checkpoint statistic increments. It then writes through an open cursor and asserts altering back to logged fails, while checkpoint count still advances. State/persistence behavior involves stable timestamp movement, metadata durability, and checkpoint side effects. Risks include file-only assumptions and exact statistic semantics. Test signals are metadata checks, statistic increments, and `WiredTigerError` on open-handle alter.

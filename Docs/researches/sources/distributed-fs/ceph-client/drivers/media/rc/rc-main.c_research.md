@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/rc/rc-main.c
+
+Purpose: core remote-controller module. It manages keymap registration, scancode-to-keycode tables, input device event generation, rc class/sysfs devices, protocol/filter attributes, LIRC registration sequencing, rc device allocation/registration, and module init/exit.
+
+Important APIs and functions: public exports include `rc_map_get/register/unregister`, `rc_g_keycode_from_table`, `rc_keyup`, `rc_repeat`, `rc_keydown`, `rc_keydown_notimeout`, `rc_allocate_device`, `rc_free_device`, `devm_rc_allocate_device`, `rc_register_device`, `devm_rc_register_device`, and `rc_unregister_device`. Internal groups cover keymap allocation/resizing/updating, input `getkeycode`/`setkeycode`, protocol parsing/autoloading, filter validation, wakeup protocol sysfs, open/close reference counting, and rc class lifecycle.
+
+Control flow: driver code allocates an `rc_dev`, fills capabilities/callbacks/map name, then calls `rc_register_device`. Registration assigns a minor, prepares raw state for raw drivers, loads/installs keymaps and default protocols, adds the rc class device, registers LIRC before the input device, registers input, and starts raw event processing. Keydown/repeat paths look up scancodes, emit MSC_SCAN/EV_KEY events, update timers, and send LIRC scancode events. Sysfs protocol writes parse `+proto`, `-proto`, or replacement requests, autoload raw decoder modules, call driver `change_protocol`, and refresh filters.
+
+State and persistence: global state includes registered keymap list, rc feedback LED trigger, and the IDA of rc minors. Per-device state includes sorted keymap table, enabled protocols, filters, wakeup settings, timers, user count, last key state, input device, raw state, and class device. State is volatile; user keymap edits and sysfs settings do not persist across unregister.
+
+Dependencies and integration points: integrates Linux input, device class/sysfs, LED triggers, kmod module autoload, LIRC, optional CEC rc map, raw IR internals, and driver callbacks for hardware protocol/filter/timeout/open/close operations.
+
+Risks and edge cases: keytable resizing happens under spinlock and can fail during input keymap updates. Protocol autoload sleeps and assumes decoder modules register soon after load. Registration ordering is deliberate; changing LIRC/input sequencing can expose userspace opens before LIRC is ready. `rc_unregister_device` calls driver close for active users while unregistering, so driver close paths must tolerate disappearing hardware. Wakeup filter validation depends on one active wake protocol and rejects masked raw-encoded wake filters.
+
+Test signals: rc class creation, keymap module autoload, EVIOCGKEY/EVIOCSKEY updates, protocol sysfs changes, filter and wakeup_filter sysfs validation, raw and scancode driver registration/unregistration, LIRC device presence, repeat/keyup timing per protocol, CEC-specific repeat behavior, devm cleanup, and concurrent open/unplug tests.

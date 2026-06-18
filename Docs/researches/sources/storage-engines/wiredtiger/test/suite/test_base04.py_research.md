@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_base04.py
+
+Purpose: tests correctness when tables become empty, both without and with forced reconciliation through connection reopen. It covers create, search missing key, insert, delete, and drop.
+
+Important APIs are `session.create`, `open_cursor`, cursor assignment/search/remove, `reopen_conn`, `dropUntilSuccess`, and `wiredtiger.WT_NOTFOUND`. Control flow creates a string/string table, checks missing-key search, then for reconciliation modes inserts a key, verifies it exists, optionally reopens after insert, removes it, optionally reopens after remove, and verifies it is gone before dropping. State behavior specifically targets reconciliation of empty trees and deleted content after reopen. Dependencies are `wttest` and `wiredtiger`. Risks include a likely typo in `test_insert_delete`, where the loop variable `reconcile` is not assigned to `self.reconcile`, so the reopen path may not run there. Test signals are search return codes before and after insert/remove.

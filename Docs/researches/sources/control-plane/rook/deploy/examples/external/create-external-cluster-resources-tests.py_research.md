@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/control-plane/rook/deploy/examples/external/create-external-cluster-resources-tests.py -->
+# sources/control-plane/rook/deploy/examples/external/create-external-cluster-resources-tests.py
+
+Purpose: unit tests for the external cluster resource generation script using `DummyRados`.
+Important APIs/types/functions: `unittest.TestCase` `TestRadosJSON`, dynamic import of `create-external-cluster-resources`, setup with `RadosJSON` arguments, DummyRados substitution, and tests for JSON/bash output, CephFS keyring permissions, command failures, multi-filesystem/data-pool handling, RGW endpoint validation, permission upgrade, monitoring endpoint validation, skip-monitoring behavior, and v2 monitor port.
+Control flow: each test constructs or mutates a `RadosJSON` instance, adjusts dummy command output maps or parser flags, calls target methods, and asserts exceptions or output state. State is in-memory test object fields and dummy command fixtures; no real Ceph/Kubernetes resources are mutated. Dependencies are Python stdlib, sibling script import path, and DummyRados coverage. Risks: tests print heavily and use broad try/except patterns instead of precise assertions; real rados paths are bypassed. Test signals: `python3 -m unittest --verbose create-external-cluster-resources-tests` passes and covers error branches.
+<!-- END_FILE_RESEARCH: sources/control-plane/rook/deploy/examples/external/create-external-cluster-resources-tests.py -->

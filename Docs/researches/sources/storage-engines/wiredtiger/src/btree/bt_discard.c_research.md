@@ -1,0 +1,15 @@
+# sources/storage-engines/wiredtiger/src/btree/bt_discard.c
+
+Purpose: owns teardown of in-memory B-tree pages, refs, update chains, insert lists, modification metadata, and safe freeing of ref address memory. It is the central memory ownership cleanup path used by eviction, close/discard, split error handling, and obsolete update cleanup.
+
+Important APIs/types/functions: exported helpers include `__wt_ref_out`, `__wt_page_out`, `__wti_ref_addr_safe_free`, `__wt_ref_addr_free`, `__wti_free_ref`, `__wti_free_ref_index`, `__wt_free_update_list`, and `__wt_free_obsolete_updates`. Static cleanup helpers free page modify structures, column leaf repeat metadata, internal-page ref indexes, row leaf instantiated keys, skip arrays/lists, and update arrays.
+
+Control flow: `__wt_ref_out` asserts the ref is not the eviction thread target, verifies hazard-pointer absence in diagnostic mode, then delegates to `__wt_page_out`. `__wt_page_out` nulls the caller pointer, handles disaggregated materialization-frontier stats, clears dirty state only for dead handles or connection close, asserts the page is clean/not reconciling/not queued, recursively frees root-split pages, updates page history and cache accounting, releases mapped/shared disk images, optionally leaks memory on process-exit configuration, frees modify metadata and page-type-specific structures, releases disk images, and overwrites the page. Ref cleanup frees optional child pages, instantiated row keys, off-page addresses, fast-truncate metadata, and the ref itself.
+
+State and persistence behavior: this file frees only in-memory state; it must not discard dirty or reconciling pages except during dead-handle/closing cleanup where dirty state is explicitly cleared. Ref address freeing is generation-protected using `WT_GEN_SPLIT` stash so concurrent readers inside a split generation cannot observe freed address cookies. `__wt_free_obsolete_updates` trims update chains after a globally visible update while updating cache footprint.
+
+Dependencies and integration points: tightly coupled to eviction/cache accounting, hazard pointers, split generations, reconciliation result structures (`WT_PM_REC_*`), overflow reuse/discard tracking, shared disk cache, disaggregated metadata, page history diagnostics, and row/column page layout macros.
+
+Risks: cleanup order is critical. Freeing a dirty page, a page queued for eviction, a reconciling page, or a ref address still visible through a page index would corrupt readers. Failed split paths can set `WT_PAGE_UPDATE_IGNORE`, requiring update chains to be retained instead of freed. Shared disk cache accounting must avoid double-decrementing disk image bytes.
+
+Test signals: cover page-out by page type, root split cleanup, multiblock/replace reconciliation cleanup, shared disk cache release, mapped image discard, leak-memory mode, ref address races under split-generation stress, free-ref-index error paths, obsolete update chain trimming, and assertions for dirty/reconciling/hazard-protected pages.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/seeq/ether3.c
+
+Purpose: Implements the Acorn/ANT Ether3 SEEQ NQ8005 network driver for Acorn expansion-card systems. It manages slow MMIO register access, local buffer memory, open/close, TX/RX handling, multicast mode, timeout recovery, expansion-card probe/remove, and module registration.
+
+Important APIs and flow: `ether3_probe()` claims expansion-card resources, allocates a netdev, maps MEMC space, reads the MAC address from the card chunk directory, detects bus width, performs chip reset and RAM tests, registers netdev ops, and registers the device. `ether3_open()` requests the IRQ, initializes chip state in `ether3_init_for_open()`, and starts the queue. `ether3_sendpacket()` pads frames, writes packet data and chained TX headers into card buffer memory, starts TX if idle, and stops the queue when the ring is full. `ether3_interrupt()` acknowledges RX/TX interrupts and calls `ether3_rx()` and `ether3_tx()`. RX reads chained packet headers from local RAM, filters looped-back own-source frames, reports hardware errors, builds skb data, and advances `REG_RECVEND`. TX scans completed headers and updates stats.
+
+State and dependencies: `struct dev_priv` stores MMIO base, SEEQ window, cached command/config registers, TX head/tail, RX head, LED timer, owning netdev, and broken-card flag. It depends on Acorn `ecard` APIs, legacy SEEQ buffer windows, manual IRQ control, netdev stats, and `ether3.h` register/header constants.
+
+Risks and test signals: Hardware timing requires udelay after register accesses. Probe ignores the return value of `ether3_addr()` before setting the MAC, and timeout handling uses local IRQ masking plus direct buffer reads. Tests should cover bus-width detection, RAM-test failure, open/close IRQ lifecycle, TX ring full, RX wraparound, malformed next pointer, multicast/promiscuous changes, timeout reset, LED timer removal, and resource cleanup after probe failures.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/adjtimex/adjtimex03.c
+
+Purpose: CVE-2018-11508 regression test for a 4-byte kernel data leak via `adjtimex()` invalid mode handling. It loops ten times, zeroes a `struct timex`, sets invalid mode `0x8000`, expects `EINVAL`, then checks that `buf->tai` remains zero. Important APIs are `adjtimex`, `memset`, and LTP expected error reporting. State is only the userspace timex buffer; the invalid mode should not apply clock changes. Dependencies are standard `adjtimex` support. Risks are depending on `tai` as the leak sentinel and exact invalid-mode behavior. Test signal is all iterations returning `EINVAL` without nonzero `tai`, tagged to CVE and fix `0a0b98734479`.

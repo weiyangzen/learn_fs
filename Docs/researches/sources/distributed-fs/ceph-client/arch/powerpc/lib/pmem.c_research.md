@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/pmem.c
+
+This file implements PowerPC persistent-memory cache maintenance hooks. It exports `arch_wb_cache_pmem`, `arch_invalidate_pmem`, and `memcpy_flushcache`, and defines `copy_from_user_flushcache` for `CONFIG_ARCH_HAS_UACCESS_FLUSHCACHE` style users.
+
+The internal helpers compute L1 cacheline size and alignment, then loop over every cacheline intersecting `[start, stop)`. `__clean_pmem_range()` uses `PPC_DCBSTPS` to push dirty data toward persistence; `__flush_pmem_range()` uses `PPC_DCBFPS` to flush/invalidate persistent-storage cache state. Public `clean_pmem_range()` and `flush_pmem_range()` only execute those instructions when `CPU_FTR_ARCH_207S` is present. `copy_from_user_flushcache()` masks the user pointer, copies with `__copy_from_user`, then cleans the entire destination range; `memcpy_flushcache()` does a normal `memcpy` and cleans the destination.
+
+State persistence is literal persistent-memory durability: the goal is flushing cachelines for pmem writes. Dependencies include libnvdimm, uaccess, cacheflush definitions, CPU feature detection, and low-level dcbf/dcbst persistent-storage opcodes. Risks are cleaning bytes that were not copied when `__copy_from_user` faults, missing required ordering barriers outside this helper, and no-op behavior on CPUs without ARCH_207S. Test signals include pmem/DAX tests, libnvdimm flush validation, faulted user-copy cases, and CPU feature coverage.

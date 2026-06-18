@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/drivers/crypto/hifn_795x.c
+
+## Purpose
+This file is a complete PCI driver for HIFN 7955/7956 crypto accelerator chips. It exposes asynchronous Linux Crypto API skcipher implementations for AES, DES, and 3DES in ECB/CBC modes, optionally registers the chip RNG as an `hwrng`, and owns all device bring-up, DMA descriptor ring handling, IRQ/tasklet completion, and teardown.
+
+## Important APIs, Types, and Functions
+Key private types are `struct hifn_device`, `struct hifn_dma`, `struct hifn_desc`, `struct hifn_context`, `struct hifn_request_context`, and `struct hifn_crypto_alg`. `struct hifn_dma` contains command, source, destination, and result descriptor rings plus command/result bounce buffers. `struct hifn_device` stores PCI BAR mappings, coherent descriptor memory, ring-associated skcipher requests in `sa[]`, the `crypto_queue`, tasklet, watchdog work item, RNG state, and counters such as `started`, `active`, `success`, and `reset`.
+
+Core hardware helpers are `hifn_read_0/1()`, `hifn_write_0/1()`, `hifn_reset_dma()`, `hifn_init_dma()`, `hifn_init_pll()`, `hifn_init_registers()`, `hifn_init_pubrng()`, and `hifn_enable_crypto()`. Request setup flows through `hifn_setup_crypto_req()`, `hifn_handle_req()`, `hifn_setup_session()`, `hifn_setup_dma()`, `hifn_setup_cmd_desc()`, `hifn_setup_src_desc()`, `hifn_setup_dst_desc()`, and `hifn_setup_res_desc()`. Completion flows through `hifn_interrupt()`, `hifn_tasklet_callback()`, `hifn_clear_rings()`, `hifn_process_ready()`, and `hifn_complete_sa()`.
+
+The registered skcipher templates are `cbc(des3_ede)`, `ecb(des3_ede)`, `cbc(des)`, `ecb(des)`, `ecb(aes)`, and `cbc(aes)`. Module entry is `hifn_init()`/`hifn_fini()`, PCI binding is `hifn_probe()`/`hifn_remove()`, and the module parameter `hifn_pll_ref` selects `ext` or `pci` reference clock plus optional MHz value.
+
+## Control Flow
+Module initialization validates `hifn_pll_ref`, then registers the PCI driver. Probe enables the PCI function, sets 32-bit DMA, requests BARs, maps three BARs, allocates coherent `struct hifn_dma`, initializes the tasklet and crypto queue, requests the shared IRQ, starts the device, optionally registers the RNG, registers all skcipher algorithms, and starts a one-second delayed watchdog.
+
+Device start resets DMA, performs the HIFN unlock/signature sequence, resets the processing unit, initializes descriptor rings and hardware registers, initializes the PLL, and enables public/RNG units. A skcipher request sets operation/type/mode in `hifn_request_context`, queues or directly prepares the DMA transaction, and returns `-EINPROGRESS` on successful hardware submission. Source and destination scatterlist entries are converted to DMA descriptors; destination entries with unsupported alignment are redirected through temporary page-backed scatterlist cache entries and copied back on completion.
+
+The interrupt handler acknowledges DMA/engine/public-key bits, handles overflow and abort status, toggles command-wait interrupts, and schedules the tasklet. The tasklet scans result/source/command/destination rings for descriptors whose valid bit has been cleared by hardware, completes associated skcipher requests, releases `sa[]` entries, and drains the software crypto queue while ring space remains. The delayed work item disables idle rings and acts as a watchdog; if submitted requests stop making progress for repeated ticks, it completes visible stuck requests with `-ENODEV`, resets DMA, restarts hardware, and schedules the tasklet.
+
+## State and Persistence Behavior
+There is no filesystem persistence. Persistent-for-module state includes global `hifn_dev_number`, `hifn_pll_ref`, registered crypto algorithms, and optional hwrng registration. Per-device runtime state lives in `struct hifn_device`, coherent descriptor memory, BAR registers, the software queue, ring indices (`cmdi/srci/dsti/resi`, usage counts, and cleanup cursors), `sa[]` request pointers keyed by result slot, and watchdog counters. Per-transform state stores key material in `struct hifn_context`; request-local state stores IV metadata and temporary walk pages.
+
+## Dependencies and Integration Points
+The driver depends on PCI, MMIO, Linux DMA mapping, scatterlists, tasklets, delayed work, the skcipher crypto API, DES key verification helpers, and optional `hwrng`. It integrates with module/device tables through `MODULE_DEVICE_TABLE(pci, hifn_pci_tbl)`, registers algorithms with `crypto_register_skcipher()`, and exposes RNG data through `hwrng_register()` when configured.
+
+## Risks and Edge Cases
+DMA source/destination mappings are created per request but this file does not visibly call `dma_unmap_page()` for the per-page mappings after completion; the research signal is a potential DMA mapping lifetime/leak concern unless the platform treats this path specially. Misaligned destination handling is fragile: one branch logs a message and calls `BUG()` if a temporary page cannot cover the required aligned chunk. `hifn_setkey()` uses `verify_skcipher_des_key()` even for AES templates, so key validation behavior should be checked against the kernel version represented by this tree. Several ring fields are `volatile` and are manipulated from IRQ, tasklet, workqueue, and request contexts; lock coverage is partial and should be stress-tested. The watchdog reset path force-completes requests and restarts hardware, which is useful for liveness but can mask underlying ring-accounting bugs.
+
+## Test Signals
+Useful tests include module load/unload against supported PCI IDs, skcipher known-answer tests for all registered modes and key sizes, asynchronous queue saturation around `HIFN_QUEUE_LENGTH`, scatterlists with misaligned destination offsets/lengths, forced IRQ overflow/abort paths, watchdog reset behavior under a hung device, RNG read interval behavior, and probe/remove error unwinding with fault injection for BAR mapping, coherent allocation, IRQ request, RNG registration, and algorithm registration.

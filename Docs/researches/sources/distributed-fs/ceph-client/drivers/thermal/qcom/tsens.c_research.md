@@ -1,0 +1,21 @@
+# sources/distributed-fs/ceph-client/drivers/thermal/qcom/tsens.c
+
+Purpose: shared Qualcomm TSENS platform driver core. It binds `qcom,*-tsens` device-tree compatibles, initializes TSENS register maps, reads calibration data, registers each TSENS sensor as a thermal zone, handles upper/lower/critical threshold IRQs, and exposes optional debugfs and hwmon views.
+
+Important APIs, types, and functions: `qfprom_read()`, `tsens_read_calibration()`, `tsens_read_calibration_legacy()`, `compute_intercept_slope()`, `init_common()`, `get_temp_tsens_valid()`, `get_temp_common()`, `tsens_set_trips()`, `tsens_register_irq()`, `tsens_register()`, `tsens_probe()`, and `tsens_resume_common()`. The implementation consumes `struct tsens_priv`, `struct tsens_sensor`, `struct tsens_ops`, `struct tsens_features`, and `enum regfield_ids` from `tsens.h`.
+
+Control flow: probe selects `struct tsens_plat_data` from the OF match table, optionally overrides the sensor count from `#qcom,sensors`, allocates a flexible `tsens_priv`, assigns hardware sensor IDs, and calls the SoC-specific `ops->init()` callback. `init_common()` maps split or legacy SROT/TM register spaces, creates `regmap_field` handles for status, valid, threshold, mask, clear, watchdog, and control fields, enables TSENS where required, and globally enables interrupts for modern IP. Calibration then runs through the SoC callback, and `tsens_register()` creates per-sensor thermal zones and requests either one combined IRQ or separate `uplow` and `critical` IRQs.
+
+Temperature path: `get_temp_tsens_valid()` waits for a per-sensor valid bit on v0.1+ hardware, then uses `tsens_hw_to_mC()` to convert either ADC code or deci-Celsius register data to milli-Celsius. `get_temp_common()` is used for older ADC-code hardware and polls the `TRDY` bit on version 0 before converting with `code_to_degc()`.
+
+Calibration and conversion: modern NVMEM calibration is read from named cells such as `mode`, `base1`, `base2`, `sN_p1`, and `sN_p2`; legacy calibration reads packed QFPROM blobs described by `struct tsens_legacy_calibration_format`. One-point and two-point modes feed `compute_intercept_slope()`, which derives per-sensor slope and offset for threshold and reading conversion. Calibrationless fallback uses synthetic `p1=500`, `p2=780`.
+
+Trip and IRQ behavior: `tsens_set_trips()` clamps requested low/high trips to hardware limits, converts to ADC or deci-Celsius register values, writes per-sensor threshold fields, and enables lower/upper interrupts under `ul_lock`. IRQ handling first checks threshold status fields; upper/lower IRQs update the thermal zone, critical IRQs clear watchdog bark and mask unused critical interrupts. Pre-v0.1 hardware has shared threshold/interrupt registers and special handling for sensor 0.
+
+State and persistence: persistent state lives in hardware registers, NVMEM calibration cells, per-sensor `slope`, `offset`, `tzd`, and debugfs dentries. `tsens_remove()` removes debugfs, disables global TSENS IRQs, and calls optional SoC disable logic. Suspend/resume delegates to SoC callbacks; `tsens_resume_common()` re-enables watchdog/interrupt state after suspend-to-RAM on v2+.
+
+Dependencies and integration points: Linux thermal OF registration, hwmon sysfs helper, debugfs, platform resources, NVMEM, regmap/regmap_field, syscon for legacy GCC-backed TSENS, PM sleep hooks, DT compatibles, and SoC data exported by `tsens-v0_1.c`, `tsens-v1.c`, `tsens-v2.c`, and `tsens-8960.c`.
+
+Risks: the enum ordering in `regfield_ids` is assumed by `init_common()` allocation loops; bad DT resource layouts can map the wrong SROT/TM region; missing or malformed NVMEM cells abort calibration; legacy shared IRQ/threshold hardware cannot reliably interrupt on multiple sensors; critical IRQ masking is intentionally conservative because Linux does not use TSENS critical interrupts directly.
+
+Test signals: probe each compatible with split and legacy register layouts; verify NVMEM modes including no calibration, one-point, two-point, and backup cells; exercise thermal-zone `get_temp` and `set_trips`; confirm `uplow`, `critical`, and `combined` IRQs update zones and clear masks; check suspend-to-RAM resume reinitializes watchdog and interrupts; inspect debugfs `version` and `sensors` plus hwmon attributes.

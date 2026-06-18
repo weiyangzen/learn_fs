@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/mm/book3s64/radix_pgtable.c
+
+Purpose: Implements radix page-table initialization, kernel/direct mapping, strict RWX changes, partition/process table setup, memory hotplug removal, vmemmap population/free/optimization, THP helpers, PTE access updates, and generic hugepage page-table helpers.
+
+Important APIs and functions: Mapping/init APIs include `radix__map_kernel_page()`, `radix__early_init_devtree()`, `radix__early_init_mmu()`, `radix__early_init_mmu_secondary()`, and `radix__mmu_cleanup_all()`. Memory/VMEMMAP APIs include `radix__create_section_mapping()`, `radix__remove_section_mapping()`, `radix__vmemmap_create_mapping()`, `radix__vmemmap_populate()`, `vmemmap_populate_compound_pages()`, `radix__vmemmap_remove_mapping()`, and `radix__vmemmap_free()`. THP and PTE APIs include `radix__pmd_hugepage_update()`, `radix__pud_hugepage_update()`, `radix__pmdp_collapse_flush()`, deposit/withdraw helpers, `radix__ptep_set_access_flags()`, `radix__ptep_modify_prot_commit()`, `pud_set_huge()`, `pud_clear_huge()`, `pud_free_pmd_page()`, `pmd_set_huge()`, `pmd_clear_huge()`, and `pmd_free_pte_page()`.
+
+Control flow: Early mapping allocates page tables from memblock until slab is available, selecting PUD/PMD/PTE mappings based on alignment and supported page sizes. Direct-map creation walks mem ranges, splits around kernel text/rodata boundaries, updates direct-page counters, and handles KFENCE early pool mapping. Radix MMU init sets page-table geometry, builds process table, reserves guard PID, configures LPCR/PTCR or pseries backend, switches to init guard PID, and flushes TLBs. Hotplug removal recursively clears leaf/non-leaf tables and frees empty page tables. Vmemmap population chooses PMD-sized backing where possible, falls back to base pages for altmap boundaries, and supports compound-page tail-page deduplication. Access updates handle POWER9 NMMU permission-relaxation erratum by invalidating before installing relaxed PTEs.
+
+State and persistence: Persistent state includes `mmu_base_pid`, radix process table, partition table entries, init-mm page tables, direct-map counters, vmemmap mappings/backing pages, and optional KFENCE pool. PTE/PMD/PUD contents are the primary durable runtime state.
+
+Dependencies and integration: Integrates with memblock, sparsemem, altmap/DAX vmemmap optimization, KFENCE, strict RWX, THP, hugetlb, page_table_check, radix TLB flush helpers, powernv/pseries firmware, ultravisor, and generic memory hotplug.
+
+Risks: Mapping-size selection must honor alignment, debug_pagealloc, and rodata/text boundaries. Vmemmap altmap boundary checks prevent mapping device memory outside its range. Recursive removal must not free non-empty tables. Process table and PID setup must avoid PID 0 aliases and stale user mappings. POWER9 coprocessor flush rules are subtle.
+
+Test signals: Radix boot on bare metal and LPAR, direct-map page-size accounting, strict RWX, KFENCE early init, memory hotplug add/remove, sparsemem vmemmap with altmap/DAX compound optimizations, THP collapse/split, hugetlb huge PUD/PMD operations, and coprocessor permission-upgrade faults.

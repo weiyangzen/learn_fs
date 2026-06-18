@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/firmware/tegra/bpmp-debugfs.c
+
+Debugfs mirror for Tegra BPMP firmware debug nodes. It supports two firmware ABIs: in-band `MRQ_DEBUG` open/read/write/close operations and shared-memory `MRQ_DEBUGFS` operations. `tegra_bpmp_init_debugfs()` creates `/sys/kernel/debug/bpmp/debug` and populates files/directories from firmware if either ABI is supported.
+
+Helpers `seqbuf_*()` parse firmware directory listings made of attributes/depth/name records. `get_filename()` maps a Linux debugfs dentry path back to the BPMP-relative path by subtracting the mirror root path. In-band helpers open a firmware path, transfer data chunks under global `bpmp_debug_lock`, validate read lengths, and close the firmware fd. Shared-memory helpers allocate coherent DMA buffers for names/data, pass 32-bit DMA addresses in MRQ payloads, and use firmware dumpdir/read/write commands.
+
+Control flow for reads goes through `bpmp_debug_show()` for in-band files or `debugfs_show()` for shared-memory files; writes go through `bpmp_debug_store()` or `debugfs_store()`. Directory population is recursive: `bpmp_populate_debugfs_inband()` reads each directory path and descends, while `bpmp_populate_debugfs_shmem()` dumps a flattened tree and `bpmp_populate_dir()` reconstructs hierarchy by depth.
+
+State is mostly firmware-owned. Linux keeps only debugfs dentries and temporary buffers; in-band open file descriptors are opened and closed per operation. Dependencies include debugfs, coherent DMA allocation with `GFP_DMA32`, BPMP MRQ transport, BPMP ABI debug structures, `seq_file`, and user-copy helpers.
+
+Risks include trusting firmware-supplied directory metadata, path lengths, and file lengths. Shared-memory requests cast DMA addresses to `u32`, so the `GFP_DMA32` constraint is essential. In `mrq_debug_write()`, the close return overwrites an earlier write error, unlike read paths that preserve the original error. Debugfs lifetime cleanup is only explicit on initialization failure; normal driver removal is not implemented in the BPMP core. Test signals include probing both ABI variants, nested directory population, oversize filename/data rejection, malformed depth/listing handling, user read/write propagation to firmware, and DMA address range validation.

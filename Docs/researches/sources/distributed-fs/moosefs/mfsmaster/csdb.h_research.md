@@ -1,0 +1,13 @@
+# sources/distributed-fs/moosefs/mfsmaster/csdb.h
+
+Purpose: public interface for the MooseFS master chunkserver database. It exposes connection lifecycle, server status queries, operator mutations, metadata persistence, initialization, and master-replay operations to the rest of the master.
+
+Important APIs/types/functions: connection APIs are `csdb_new_connection()`, `csdb_get_csid()`, `csdb_temporary_maintenance_mode()`, `csdb_lost_connection()`, and the declared `csdb_accept_server()`. Status and list APIs are `csdb_server_load()`, `csdb_server_is_overloaded()`, `csdb_server_is_being_maintained()`, `csdb_servlist_data()`, `csdb_have_all_servers()`, `csdb_stop_chunk_jobs()`, `csdb_servers_count()`, `csdb_get_server_counters()`, `csdb_sort_servers()`, and `csdb_getnumber()`. Mutators include `csdb_remove_server()`, `csdb_back_to_work()`, and `csdb_maintenance()`. Persistence and replay APIs are `csdb_store()`, `csdb_load()`, `csdb_mr_op()`, plus `csdb_mr_csadd` and `csdb_mr_csdel` macros.
+
+Control flow: `matocsserv` creates and updates opaque csdb entry pointers for live chunkserver connections; `matoclserv` asks for server-list data and applies administrative operations; `metadata.c` calls load/store during master startup and checkpointing; replay code uses `csdb_mr_op()` or the add/delete macros to apply changelog entries. Callers treat `void *` handles as opaque and pass them back for id, load, maintenance, and sort-number queries.
+
+State/persistence: the header hides all internal tables. Its persistence contract is explicit through `bio`-based load/store and the replay op API. `csdb_store(NULL)` is used as a metadata format-version query in the implementation pattern, returning the current format code rather than writing data.
+
+Dependencies/integration: includes `bio.h` and fixed-width integer types. It depends semantically on MooseFS status/error constants for return values, even though those constants come from other headers in callers. The macro op numbers must stay synchronized with `csdb.c`'s internal `CSDB_OP_ADD` and `CSDB_OP_DEL` values.
+
+Risks/test signals: `csdb_accept_server()` appears in the header but not in the inspected implementation file, which can indicate a stale API declaration or an implementation hidden by build configuration elsewhere; build/link tests should catch it. Since most APIs accept opaque pointers, misuse after `csdb_cleanup()` or after server removal is possible unless higher layers own lifetime strictly. Tests should compile all consumers, verify replay macro values against actual changelog parsing, and exercise null-pointer-tolerant counter APIs.

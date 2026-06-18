@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/powermac/sleep.S
+
+Purpose: contains low-level 32-bit Book3S PowerMac sleep, wake, and CPU-offline assembly. It saves processor state before PMU-triggered sleep, installs ROM wake vectors, disables caches and translation, enters HID0 sleep, and restores CPU/MMU state on wake.
+
+Important APIs/types/functions: exported labels are `low_sleep_handler`, `low_cpu_offline_self`, and `core99_wake_up`; local resume label is `grackle_wake_up`. The `sleep_storage` BSS block uses `SL_*` offsets to store stack pointer, resume PC, MSR, SDR1, SPRGs, BATs, timebase, TOC, CR, LR, and r12-r31. It calls shared low-level helpers such as `__save_cpu_setup`, `flush_disable_caches`, `load_segment_registers`, `__restore_cpu_setup`, `reloc_offset`, `__init_fpu_registers`, and `__inval_enable_L1`.
+
+Control flow: when configured for PM, CPU frequency, or hotplug, `low_sleep_handler` saves volatile return state, callee-saved registers, MSR, SDR1, timebase, SPRGs, normal BATs, and high BATs when supported. It saves CPU setup, writes OldWorld/PowerBook wake information at physical address 0/4 using the `Lars` magic, writes Core99 wake vector data at physical addresses 0x80/0x84, then falls through to `low_cpu_offline_self`. CPU offline flushes and disables caches, disables data relocation, applies a 7450 workaround when needed, sets HID0 sleep, sets MSR POW, and loops sleeping. `core99_wake_up` sanitizes HID0/MSR, locates physical `sleep_storage`, then resumes through `grackle_wake_up`, which restores segment registers, CPU setup, FPU state, L1 cache, SDR1, SPRGs, BATs, TLBs, timebase, CR, TOC, saved GPRs, stack, SRR0/SRR1, and returns with `rfi`.
+
+State and persistence: state is preserved only in `sleep_storage` and in fixed low physical wake-vector locations consumed by ROM/firmware. Hardware state includes HID0, MSR, BATs, SDR1, SPRGs, TLBs, and timebase. There is no external persistence.
+
+Dependencies/integration: called by PMU sleep flows, CPU frequency code, and 32-bit CPU hotplug paths. It depends on PowerPC assembly macros, MMU feature fixup sections, CPU feature fixups, kernel physical mapping assumptions, and firmware wake-vector conventions for Grackle/older and Core99 machines.
+
+Risks: this code runs with caches, translation, and normal kernel services unavailable. Wrong physical addresses, missing cache flushes, or incomplete BAT/SPR restoration can prevent resume. It is compiled out for non-Book3S-32. The sleep loop intentionally never returns except through firmware wake, so accidental calls are terminal. Fixed low-memory wake-vector writes must not conflict with other early-resume users.
+
+Test signals: suspend/resume on Wallstreet/Lombard and Core99 systems; CPU hotplug/offline on PPC32; high-BAT CPUs with `MMU_FTR_USE_HIGH_BATS`; 7450 cache workaround paths; timebase continuity after resume; TLB/BAT restoration under memory above 256 MiB; build coverage with PM, CPU frequency, hotplug, and non-Book3S configs.

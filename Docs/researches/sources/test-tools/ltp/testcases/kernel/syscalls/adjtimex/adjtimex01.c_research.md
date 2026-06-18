@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/adjtimex/adjtimex01.c
+
+Purpose: positive root test for `adjtimex()` setting clock adjustment fields. Setup saves current timex parameters; `verify_adjtimex` copies them, sets `SET_MODE` fields, expects a return status in `TIME_OK..TIME_ERROR`, then repeats with `ADJ_OFFSET_SINGLESHOT`. Important APIs are `adjtimex`, `struct timex`, and LTP buffer allocation. State is system clock discipline parameters, with saved values used as the base but no explicit cleanup restoration in this file. Dependencies are root/CAP_SYS_TIME. Risks are altering live system time discipline and environmental clock status. Test signal is successful syscall status range for both mode sets.

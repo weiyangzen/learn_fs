@@ -1,0 +1,28 @@
+# Research: sources/security-integrity/selinux/python/sepolicy/sepolicy/gui.py
+
+## Purpose
+`gui.py` implements the GTK 3 graphical SELinux policy management application. It displays domains, booleans, file labels, network ports, transitions, login mappings, SELinux users, file equivalences, lockdown toggles, current/default enforcement mode, policy type, relabel state, and import/export functions. It stages user edits in memory and applies them through an SELinux DBus service.
+
+## Important APIs and structure
+The module defines page constants, display strings, a `cmp()` helper, reverse file-type mapping, and class `SELinuxGui`. Construction loads `/usr/lib*/python*/site-packages/sepolicy/sepolicy.glade` via `Gtk.Builder`, creates `SELinuxDBus`, obtains existing customized policy state, wires hundreds of widgets, builds the domain/application completion list from `sepolicy.get_all_domains()` and init entrypoints, connects signal handlers, initializes status polling with `GLib.timeout_add_seconds()`, and enters `Gtk.main()`.
+
+Core state includes `cur_dict` for staged changes by semanage category, `cust_dict` for existing customized records parsed from `dbus.customized()`, selected `application`, page pointers (`opage`, tree/list/filter references), DBus handle, local file-context data, status/enforcement widgets, and popup/update window state.
+
+## Control flow
+Application selection clears current liststores, resolves executable paths to domains when needed, refreshes DBus customized state, calls `sepolicy.reinit()`, repopulates booleans, executable files, network ports, writable files, transitions, app file types, and file transitions, then updates labels/tooltips.
+
+Display initialization methods read from `sepolicy` and `sepolicy.network`: `boolean_initialize()`, `executable_files_initialize()`, `writable_files_initialize()`, `application_files_initialize()`, `network_initialize()`, `transitions_*_initialize()`, `user_initialize()`, `login_initialize()`, and `file_equiv_initialize()`. Filtering is implemented through GTK tree model visible functions. Add/modify/delete handlers open popups, collect values, validate simple file/port inputs, update liststores, and stage semanage-like operations in `cur_dict`.
+
+Applying changes is a two-step flow: `update_or_revert_changes()` renders a confirmation tree in `update_gui()`, then `apply_changes_button_press()` either calls `update_the_system()` or removes unchecked changes through `revert_data()`. `update_the_system()` builds a newline-separated semanage command buffer with `format_update()` and sends it to `self.dbus.semanage()`. System-level actions call DBus immediately: setenforce, default mode, default policy type, relabel-on-boot, restorecon, module enable/disable, deny_ptrace, import config, and export config.
+
+## State and persistence
+GUI state is mostly in GTK liststores plus `cur_dict` and `cust_dict`. Persistent system effects are delegated to `SELinuxDBus`: semanage operations, enforcement changes, default mode/policy changes, relabel marker changes, module toggles, and restorecon. Export writes the customized policy buffer to a user-chosen file; import reads a file and passes its contents to DBus semanage. The GUI also reads live file labels and default contexts to mark mislabeled files.
+
+## Dependencies and integration points
+Dependencies are PyGObject GTK/GDK/GLib, DBus, `sepolicy.sedbus.SELinuxDBus`, `sepolicy`, `sepolicy.network`, `sepolicy.manpage`, `selinux`, filesystem access, regex, Unicode normalization, and Glade/help/image files installed under the `sepolicy` Python package path. It integrates the query facade in `__init__.py` with a privileged DBus backend that applies policy changes.
+
+## Risks and edge cases
+Several paths appear bug-prone or broken. `update_gui()` expects boolean staged entries to contain `action`, but `on_toggle()` stores only `active`. `format_update()` tests `if k in "boolean"` and similar string-membership expressions instead of equality; this is fragile and can execute the wrong block for short key names. The fcontext and port formatting paths reference missing or wrong keys: file updates store no `class` value, port updates use `self.cur_dict[k][f]` where `f` is from another loop or undefined, and modify paths call nonexistent `self.unmark()` while also using `set_value()` where `get_value()` was intended. `update_to_file_equiv()` similarly calls `set_value()` while reading old values. User modification records `oldlevel` from column 1 instead of column 2. Network validation accepts only one integer port, while the UI and semanage allow ranges/lists elsewhere. Many broad exception handlers hide DBus, parsing, and policy errors. Import passes arbitrary file content to privileged semanage through DBus after only file selection. `fix_mislabeled()`, default policy changes, module toggles, and enforcement changes produce immediate system effects with limited rollback. The constructor starts `Gtk.main()`, making the class hard to unit-test directly despite the `test` flag.
+
+## Test signals
+Useful tests include widget-independent unit tests for `previously_modified_initialize()`, `format_update()`, `revert_data()`, `error_check_files()`, `error_check_network()`, `autofill_add_files_entry()`, `recursive_path()`, and `filter_the_data()`. DBus should be mocked for apply/import/export/system toggles. Integration tests should load the Glade file in a headless GTK environment and simulate add/modify/delete flows for booleans, fcontexts, ports, users, logins, and file equivalences. Regression tests should specifically cover boolean apply, fcontext modify, port add/modify, file-equivalence modify, and `sepolicy.reinit()` followed by application refresh.

@@ -1,0 +1,13 @@
+# `sources/test-tools/filebench/procflow.c`
+
+Purpose: Implements Filebench process-flow lifecycle management. A parser-defined `FLOW_MASTER` procflow describes an f-language process, and runtime worker procflows fork/exec child Filebench processes that attach to the shared memory segment and create their threadflows.
+
+Important APIs and functions: Public entry points are `procflow_define()`, `proc_create()`, `proc_shutdown()`, `procflow_shutdown()`, and `procflow_exec()`. Internals include `procflow_createproc()` for `fork()`/`fork1()` plus `execlp()` or `system()`, `procflow_create_all_procs()` for cloning masters into instances, `procflow_find()`, `procflow_createnwait()` for monitor/wait behavior, `procflow_allstarted()`, `procflow_cleanup()`, and `procflow_cancel()`.
+
+Control flow: `proc_create()` clears abort/error state, takes the shared run lock, starts the creator/waiter thread through `procflow_init()`, waits for all worker processes and threadflows to be defined, allocates interprocess shared memory if required, releases the run lock, records start time, and resets event generation. Child processes enter through `procflow_exec()`, find their procflow by name/instance, set `my_procflow`, apply nice value, run `threadflow_init()`, decrement `shm_procs_running`, and return. The creator thread continues in a wait loop and aborts the run on unexpected child exit.
+
+State and persistence: State lives primarily in `filebench_shm`: procflow list, locks, abort flags, process counts, run lock, start time, and shared memory requirements. Per-process globals `my_pid` and `my_procflow` identify the current process. Process lifetime is persistent only for the active workload run; entities are allocated/freed through Filebench IPC allocators.
+
+Dependencies and integration: Depends on `filebench.h`, `threadflow` via `threadflow_init()`/`threadflow_allstarted()`/`threadflow_delete_all()`, IPC locks and flags, `eventgen_reset()`, `ipc_ismcreate()`/`ipc_ismdelete()`, and platform process APIs. It is the bridge between parser-created procflow definitions and threadflow runtime execution.
+
+Risks and test signals: Fork/exec argument handling depends on shared memory address/path compatibility between parent and child. Shutdown uses `SIGUSR1`, `kill()`/`sigsend()`, and wait loops, so stuck or already-exited children can expose race conditions. `procflow_sleep()` uses bitwise `&` rather than logical `&&`, which works for nonzero integers but is fragile. Tests should exercise multi-process workloads, abnormal child exit, start-time synchronization flags, `nice`, shared memory allocation/deletion, and signal-driven shutdown.

@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/client/src/main/java/org/apache/hadoop/ozone/client/io/ECKeyOutputStream.java
+
+Purpose: This final output stream implements erasure-coded key writes. It buffers client bytes into EC data cells, generates parity cells, asynchronously flushes stripes to datanodes, retries failed stripes on new block groups, and commits the logical key length to OM.
+
+Important APIs and types: Public behavior comes from `write`, `close`, unsupported `flush`/`hflush`/`hsync`, `setPreCommits`, and testing hooks `insertFlushCheckpoint` and `getFlushCheckpoint`. Internally it uses `ECChunkBuffers`, `ArrayBlockingQueue`, `RawErasureEncoder`, `ECBlockOutputStreamEntryPool`, `ECBlockOutputStreamEntry`, `ECBlockOutputStream`, `ByteBufferPool`, S3 auth thread-local propagation, and `OzoneClientConfig` EC retry/queue settings.
+
+Control flow: Writes fill the current data cell; when all data cells in a stripe are full, `generateParityCells` pads partial data, flips buffers, encodes parity, queues the stripe, and starts a fresh buffer set. A background flush task takes stripes, writes data cells, writes parity cells, executes putBlock, checks write and putBlock futures, and retries after excluding failed pipelines/datanodes and rolling back offset. Close queues a final partial stripe if needed, sends an EOF marker, waits for the flush future, runs pre-commit hooks, commits the key, closes the current entry, and cleans the pool.
+
+State and persistence behavior: Runtime state includes current EC buffers, queue, chunk index, logical `offset`, ingested `writeOffset`, flush checkpoint, closed/closing flags, and background flush future. Persistent state is written through datanode chunk/putBlock calls and OM `commitKey`. Stripe retries discard preallocated blocks on the failed pipeline and rewrite still-buffered stripe data.
+
+Dependencies and integration points: It integrates the generic `KeyOutputStream` constructor only for pool/commit plumbing, then implements its own EC write path. It touches erasure-code raw coder selection, xceiver/block stream APIs, OM commit, S3 authentication context, client byte-buffer pooling, and container exclusion logic.
+
+Risks: Flush, hflush, and hsync are unsupported or no-op, which callers must understand. Background failure surfaces through `flushFuture.get`, so write calls check for early flush-thread termination while enqueueing. Offset rollback assumes data buffer limits accurately reflect logical bytes. Partial-stripe padding and checksum collection are subtle and high-risk. Closing while writes are in progress sets `closing` and prevents stream reopening.
+
+Test signals: Valuable tests cover full and partial stripe encoding, parity padding, queue backpressure, flush checkpoint ordering, S3 auth propagation to the flush thread, retry count exhaustion, failed datanode/pipeline exclusion, offset/writeOffset equality at close, buffer release to the pool, pre-commit execution, and unsupported sync semantics.

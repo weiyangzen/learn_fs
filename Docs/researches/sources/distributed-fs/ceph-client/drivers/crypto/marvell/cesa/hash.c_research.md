@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/crypto/marvell/cesa/hash.c Research
+
+## sources/distributed-fs/ceph-client/drivers/crypto/marvell/cesa/hash.c
+
+### Purpose
+`hash.c` implements the Marvell CESA asynchronous hash provider for MD5, SHA1, SHA256, and HMAC variants. It supports both the older direct SRAM copy path and the TDMA path, translates Linux `ahash_request` state into CESA operation descriptors, handles hash padding, and registers the `mv-*` kernel-only async hash algorithms.
+
+### Important APIs, Types, And Functions
+The main request state is `struct mv_cesa_ahash_req`, with DMA-specific cache/padding state under `req.dma`, software/SRAM offset state under `req.std`, operation template `op_tmpl`, current digest state, total byte count, cached partial block length, source SG count, `last_req`, and digest endianness. Important helpers are `mv_cesa_ahash_init()`, `mv_cesa_ahash_update()`, `mv_cesa_ahash_final()`, `mv_cesa_ahash_finup()`, `mv_cesa_ahash_req_init()`, `mv_cesa_ahash_dma_req_init()`, `mv_cesa_ahash_std_step()`, `mv_cesa_ahash_dma_step()`, `mv_cesa_ahash_complete()`, export/import helpers, and HMAC key setup through `mv_cesa_ahmac_setkey()`. Exported algorithm descriptors are `mv_md5_alg`, `mv_sha1_alg`, `mv_sha256_alg`, `mv_ahmac_md5_alg`, `mv_ahmac_sha1_alg`, and `mv_ahmac_sha256_alg`.
+
+### Control Flow, State, And Persistence
+`init` seeds digest constants and a first-fragment CESA op template. `update` advances `creq->len`, caches data smaller than one block when possible, or maps SG entries and builds TDMA descriptors when TDMA is available. Non-DMA requests copy cached bytes and SG payload into engine SRAM, update fragment mode, append manual padding if hardware cannot use a total-length final operation, then starts accelerator channel 0. DMA requests assemble cache transfers, source transfers, operation descriptors, dummy launch/end descriptors, optional result copies, and padding buffers, then queue through the common CESA request engine. Completion either copies a DMA result from an op context or reads `CESA_IVDIG()` registers and writes final digest bytes in MD5 little-endian or SHA big-endian format. Export/import persists hash state as Linux hash state structures plus cached partial blocks.
+
+### Dependencies, Integration Points, Risks, And Test Signals
+The file depends on `cesa.h`, crypto ahash/HMAC APIs, DMA pools, SG mapping, `mv_cesa_queue_req()`, TDMA helpers in `tdma.c`, engine load accounting, and CESA SRAM/register helpers. Risks include digest corruption around cached partial blocks, final padding crossing the SRAM payload boundary, TDMA chain break semantics when state must be explicitly reloaded, DMA-map cleanup after partial descriptor construction, MD5/SHA endian conversion, and HMAC IV state byte order. Test signals include crypto manager vectors for md5/sha1/sha256/hmac variants, multi-update requests with sub-block boundaries, export/import continuation, zero-length final, large messages requiring manual padding, TDMA and non-TDMA builds, SG lists with offsets, and async backlog/error cleanup.

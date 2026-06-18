@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_fence.c
+
+Purpose: this file implements KFD eviction fences on top of Linux `dma_fence`. These fences prevent TTM from moving KFD-owned BOs until user-mode queues for the owning process, or an SVM BO range, are evicted/quiesced. It bridges memory pressure and GPU scheduler fence signaling to KFD process eviction/restore work.
+
+Important APIs and functions: `amdgpu_amdkfd_fence_create` allocates `struct amdgpu_amdkfd_fence`, grabs an `mm_struct` reference with `mmgrab`, stores the optional `svm_range_bo`, context id, and task command as the timeline name, initializes a spinlock, and calls `dma_fence_init` with a monotonically increasing atomic sequence. `to_amdgpu_amdkfd_fence` validates that a generic fence uses `amdkfd_fence_ops`. `amdkfd_fence_enable_signaling` is the key scheduler callback: if the fence is unsignaled, it schedules either `kgd2kfd_schedule_evict_and_restore_process` for process eviction fences or `svm_range_schedule_evict_svm_bo` for SVM BO fences. `amdkfd_fence_release` drops the mm reference and frees through RCU. `amdkfd_fence_check_mm` prevents TTM from evicting BOs belonging to the same process, except SVM BO fences where overcommitment is allowed.
+
+Control flow: TTM and the GPU scheduler encounter this fence while moving BOs. `enable_signaling` returns true when the fence is already signaled or scheduling indicates the eviction path is already complete; otherwise it returns false after queuing async eviction/restore work. Release occurs when the final fence reference is dropped.
+
+State and persistence: fence state is held in `dma_fence` core fields, `fence_seq`, the referenced `mm`, optional `svm_bo`, and `context_id`. The mm reference persists until `release`. The fence name is copied from the current task at creation. There is no disk persistence.
+
+Dependencies and integration: depends on Linux DMA fence, spinlock, RCU freeing, `mmgrab/mmdrop`, KFD process eviction, and SVM range eviction. It integrates with AMDGPU BO movement through the fence attached to KFD BO reservations and with TTM's eviction-value checks through `amdkfd_fence_check_mm`.
+
+Risks: `enable_signaling` runs in scheduler/fence contexts, so it must not block on long GPU work itself; it only schedules work. Failure to signal after eviction would block BO moves. Incorrect `mm` matching could either deadlock self-eviction or allow moving BOs still referenced by active queues. Test signals include memory-pressure eviction of KFD BOs, process teardown with outstanding fences, SVM overcommit eviction, repeated fence release under RCU, and negative tests for non-AMDKFD fences passed to `to_amdgpu_amdkfd_fence`.

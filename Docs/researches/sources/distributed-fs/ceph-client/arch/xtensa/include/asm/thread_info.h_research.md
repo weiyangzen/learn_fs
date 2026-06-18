@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/include/asm/thread_info.h -->
+# sources/distributed-fs/ceph-client/arch/xtensa/include/asm/thread_info.h
+
+Purpose: defines low-level per-thread state used directly by Xtensa assembly, including `struct thread_info`, current-thread lookup, thread flags, and stack size constants. Important fields are `task`, `flags`, `status`, `cpu`, `preempt_count`, optional `atomctl8`, optional `ps_woe_fix_addr`, `cpenable`, `cp_owner_cpu`, optional coprocessor save areas, and `xtregs_user`. Important APIs/macros are `INIT_THREAD_INFO`, `current_thread_info`, `GET_THREAD_INFO`, `_TIF_WORK_MASK`, `THREAD_SIZE`, and `THREAD_SIZE_ORDER`.
+
+Control flow is macro/inline: current thread is computed by masking stack pointer low bits, and assembly uses generated offsets to read flags and CPU/coprocessor state. Persistent state is per-task low-level execution state at the base of the kernel stack. Dependencies include `asm/kmem_layout.h`, `asm/processor.h`, coprocessor types, and generated offsets. Integration points are `entry.S`, scheduler, syscall return work loop, coprocessor lazy switching, SMP CPU identity, and user ABI probing. Risks are layout drift without offset regeneration, cacheline-size assumptions, stack masking errors, and lost `_TIF_WORK_MASK` bits. Test signals include context switch, syscall tracing/seccomp, signal delivery, coprocessor state tests, and SMP/preemption stress.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/include/asm/thread_info.h -->

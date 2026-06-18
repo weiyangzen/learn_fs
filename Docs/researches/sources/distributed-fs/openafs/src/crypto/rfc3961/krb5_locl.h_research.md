@@ -1,0 +1,7 @@
+# sources/distributed-fs/openafs/src/crypto/rfc3961/krb5_locl.h
+
+This private shim header turns selected Heimdal `krb5` crypto sources into a standalone OpenAFS RFC3961 library. It selects kernel or userspace includes, pulls hcrypto headers, imports `rfc3961.h`, configures Heimdal mutex macros, disables unused crypto families and random-file methods, defines missing Kerberos types/constants/errors, and renames many Heimdal symbols to `_oafs_h_*` to avoid clashes with external Kerberos libraries.
+
+Important types include `EncryptedData`, `krb5_salttype`, `krb5_keytype` aliased to `krb5_enctype`, `krb5_salt`, and `krb5_crypto_iov`. Important macros include `HEIMDAL_SMALLER`, `HEIM_CRYPTO_NO_TRIPLE_DES`, `HEIM_CRYPTO_NO_ARCFOUR`, `HEIM_CRYPTO_NO_PK`, key usage values, Kerberos error constants, `ALLOC`, and symbol-renaming for crypto, data, keyblock, checksum, and n-fold functions. It also declares local prototypes used across upstream source files and kernel-only stubs for ARCFOUR and DES3 routines.
+
+There is no runtime persistence, but it defines the ABI and link namespace for the library. Dependencies are hcrypto, roken, OpenAFS threading, and upstream `crypto.h`. Risks include macro breadth, incomplete symbol renaming, disabling algorithms while public enums still exist, and no-op mutexes under LWP assumptions. Test signals are full RFC3961 vector coverage, link tests alongside system Kerberos, and kernel/userspace builds.

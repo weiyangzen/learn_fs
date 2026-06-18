@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/alpha/lib/strcpy.S
+
+Purpose: small public wrapper for Alpha `strcpy`. Important APIs/types/functions: exports `strcpy` and delegates all copy mechanics to `__stxcpy`. Control flow: sets the C return value to original destination, moves the real return address into the helper convention register, and branches to the internal copy routine. State and persistence: destination memory is modified by the helper; wrapper has no state. Dependencies/integration: depends on `__stxcpy` being linked from the selected helper file. Risks: wrapper correctness depends entirely on internal linkage conventions and helper preserving `v0`. Test signals: symbol export/link tests plus generic `strcpy` behavior for aligned and misaligned buffers.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/nfs/fscache.c
+
+Purpose: connects the NFS client to the Linux fscache/netfs caching infrastructure. It creates per-superblock cache volumes, per-inode cookies, manages cache use on open/release, and implements netfs read issue/completion glue over NFS pageio.
+
+Important APIs and functions: cache volume/key routines include `nfs_fscache_get_super_cookie`, `nfs_fscache_release_super_cookie`, `nfs_fscache_get_client_key`, and `nfs_append_int`. Inode/file routines are `nfs_fscache_init_inode`, `nfs_fscache_clear_inode`, `nfs_fscache_open_file`, and `nfs_fscache_release_file`. Netfs integration includes `nfs_netfs_read_folio`, `nfs_netfs_readahead`, `nfs_netfs_init_request`, `nfs_netfs_free_request`, `nfs_netfs_issue_read`, `nfs_netfs_initiate_read`, `nfs_netfs_folio_unlock`, `nfs_netfs_read_completion`, and `const struct netfs_request_ops nfs_netfs_ops`.
+
+Control flow: a mounted NFS server with fscache enabled builds a volume key from NFS version, address, fsid, mount/server flags, sizes, attribute timers, auth flavor, and optional uniquifier. Regular inode initialization binds a filehandle-indexed cookie with auxiliary coherency data. File open calls use the cookie and invalidate on write opens. Netfs read requests retain the NFS open context, create an NFS pageio descriptor, add folios from the requested xarray range, complete pageio, and use a per-subrequest refcount so only the last split RPC terminates the netfs subrequest.
+
+State and persistence behavior: fscache volume and cookie state persists in the local cache backend, keyed by generated strings and filehandles. Auxiliary coherency data stores mtime, ctime, and NFSv4 change attribute. Runtime state includes `netfs_inode(inode)->cache`, `nfss->fscache`, `nfss->fscache_uniq`, and temporary `nfs_netfs_io_data` objects. Cache invalidation updates auxdata and file size before calling fscache.
+
+Dependencies and integration points: depends on fscache, netfs, NFS pageio/read completion, NFS open contexts from `inode.c`, NFS mount/server settings from `fs_context.c`, and trace/iostat infrastructure. The header provides no-op stubs when `CONFIG_NFS_FSCACHE` is disabled, so callers can remain unconditional.
+
+Risks: volume key construction has a fixed maximum; overflow falls through to no volume without surfacing most errors. The NFS pageio layer may split one netfs request into several RPC completions, making the refcount/termination contract critical. Cache coherency depends on correct auxdata updates and invalidation during writes/truncation. `PG_private_2` use is marked deprecated but still participates in folio release/unlock behavior.
+
+Test signals: fscache mount option with and without uniquifier, IPv4/IPv6 cache key generation, duplicate volume key `-EBUSY`, regular vs non-regular inode cookie creation, read-only open enabling cache, write open invalidation, readahead/read_folio cache hit/miss behavior, split RPC completion, EOF tail clearing, and operation with `CONFIG_NFS_FSCACHE=n` stubs.

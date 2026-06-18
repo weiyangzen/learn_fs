@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/arch/arm/lib/backtrace-clang.S
+
+Purpose: implements `c_backtrace` for Clang frame-pointer builds, compensating for Clang's frame layout that lacks saved PC/SP in prologues.
+
+Control flow builds a false frame, walks saved frame pointers, treats the current frame LR as saved PC, attempts to recover function starts from BL call instructions, prints entries with `dump_backtrace_entry`, and optionally prints saved registers if the function prologue pattern is recognized. Exception-table entries abort cleanly on bad frame memory. State is transient stack/register state; no persistent storage. Dependencies include CONFIG_FRAME_POINTER, CONFIG_PRINTK, ARM/Thumb mode masks, `_printk`, and trap dump helpers. Risks are inaccurate function-start recovery for indirect calls, bad frame pointers, discontiguous IRQ stacks, and compiler prologue changes. Test signals are readable stack traces from Clang kernels, graceful abort messages on bad frames, and comparison against unwinder output.

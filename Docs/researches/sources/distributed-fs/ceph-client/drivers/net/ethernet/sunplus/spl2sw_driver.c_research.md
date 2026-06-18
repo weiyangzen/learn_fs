@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/sunplus/spl2sw_driver.c
+
+Purpose: Implements the Sunplus SP7021 platform/netdev driver: resource acquisition, netdev registration, open/stop/xmit/ioctl operations, MAC address retrieval, PHY/MDIO setup, NAPI registration, and teardown.
+
+Important APIs/functions: `spl2sw_probe()` maps registers, gets IRQ/clock/reset, initializes descriptors/MAC/MDIO, parses `ethernet-ports/port` child nodes, registers up to two netdevs, programs static MAC table entries, connects PHYs, and enables RX/TX NAPI. `spl2sw_ethernet_open()` marks the port enabled, starts hardware, unmasks TX/RX interrupts, starts PHY, and starts the queue. `spl2sw_ethernet_stop()` stops queue/PHY, clears the enabled-port bit, and may stop hardware. `spl2sw_ethernet_start_xmit()` pads short frames, maps one linear SKB, fills one TX descriptor with VLAN/length/SOP/EOP, advances the ring, optionally stops the queue, and triggers CPU TX. `spl2sw_ethernet_tx_timeout()` stops all queues, soft-resets hardware, and wakes queues. MAC address helpers read nvmem cells, repair reversed Sunplus OUI byte order, or generate random addresses.
+
+Control flow and state: One `struct spl2sw_common` is shared by both netdevs, and each `struct spl2sw_mac` binds one netdev to a switch port/VLAN. TX ring state is global, protected by `tx_lock`, so both netdev queues feed the same descriptor ring. `comm->enable` is a bitmask controlling whether CPU and LAN ports are disabled or active. NAPI contexts are attached to the first valid netdev but process shared rings for both ports.
+
+Dependencies and integration points: Integrates platform bus, device tree child-port parsing, nvmem, phylib, MDIO, clocks, reset controls, DMA descriptor helpers, Sunplus MAC helpers, and netdev operations. Compatible string is `sunplus,sp7021-emac`.
+
+Risks and test signals: Error paths after `spl2sw_descs_init()` and `spl2sw_mdio_init()` do not always free descriptors, and child `phy_node` references from `of_parse_phandle()` are not put in this file. Shared TX queue stop/wake must be valid for two netdevs. Test no valid ports, one-port and two-port DTs, nvmem defer/invalid MAC/random fallback, concurrent traffic on both ports, TX timeout recovery, open/stop one port while the other remains active, and remove after partial probe failure.

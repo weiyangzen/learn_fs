@@ -1,0 +1,11 @@
+## sources/user-network-fs/samba/source3/lib/substitute.c
+
+Purpose: Samba string substitution engine for `%` variables used in configuration, paths, commands, and service/user contexts. It maintains connection/user identity strings and expands standard, specified, advanced, and full substitution sets into talloc-owned output strings.
+
+Important state includes static `local_machine`, `remote_machine`, `remote_proto`, `sub_peeraddr`, `sub_peername`, `sub_sockaddr`, and global `userdom_struct current_user_info`. Important APIs include setters/getters for remote protocol, machine names, socket IDs, and current user info, plus `standard_sub_basic`, `talloc_sub_basic`, `talloc_sub_specified`, `talloc_sub_advanced`, and `talloc_sub_full`.
+
+Control flow: machine-name setters trim, filter through `SAFE_NETBIOS_CHARS`, lower-case, and optionally lock the value permanently. `sub_set_socket_ids` normalizes IPv4-mapped peer addresses and stores peer name/socket address. `talloc_sub_basic` loops over `%` markers, replacing `%U`, `%G`, `%D`, `%I/%J`, `%i/%j`, `%L`, `%N`, `%M`, `%R`, `%T/%t`, `%a`, `%d`, `%h`, `%m`, `%v`, `%w`, `%V`, and `%$(ENV)` with runtime values. `talloc_sub_specified` first substitutes explicitly supplied user/group/domain fields, then invokes basic substitution. `talloc_sub_advanced` handles service/path/home/group/user-specific tokens, and `talloc_sub_full` chains advanced then basic.
+
+State and persistence: state is process-global and memory-only; `sub_peername` is talloc-owned off NULL and replaced when socket IDs change. Dependencies are loadparm, passwd/group lookups, hostname/version/time helpers, secrets/auth includes, CTDB VNN, and generic string replacement in `substitute_generic.c`.
+
+Risks: process-global substitution state can be stale or cross-context-sensitive in long-lived daemons. Environment expansion logs unset variables and can expose deployment-specific values into configured strings. Several replacements depend on NSS/group lookups and may block. `standard_sub_basic` uses `strncpy` into caller storage and depends on caller-supplied length. Test signals should cover each substitution token, permanent-name behavior, IPv6 path-safe conversion, NULL source handling, and talloc ownership.

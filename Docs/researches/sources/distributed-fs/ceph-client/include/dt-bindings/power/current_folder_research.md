@@ -1,0 +1,120 @@
+# Folder Research: sources/distributed-fs/ceph-client/include/dt-bindings/power
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 106
+- Recursive researched files: 106
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/allwinner,sun20i-d1-ppu.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/allwinner,sun55i-a523-pck-600.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/allwinner,sun55i-a523-ppu.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/allwinner,sun60i-a733-pck-600.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,a4-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,a5-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,c3-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,s6-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,s7-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,s7d-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/amlogic,t7-pwrc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/fsl,imx93-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/imx7-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/imx8mm-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/imx8mn-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/imx8mp-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/imx8mq-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/imx8ulp-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/marvell,mmp2.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/marvell,pxa1908-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mediatek,mt6735-power-controller.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mediatek,mt6893-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mediatek,mt8188-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mediatek,mt8189-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mediatek,mt8196-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mediatek,mt8365-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson-a1-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson-axg-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson-g12a-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson-gxbb-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson-s4-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson-sm1-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/meson8-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt2701-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt2712-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt6765-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt6795-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt6797-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt7622-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt7623a-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt8167-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt8173-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt8183-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt8186-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt8192-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/mt8195-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/nvidia,tegra264-bpmp.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/owl-s500-powergate.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/owl-s700-powergate.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/owl-s900-powergate.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/px30-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/qcom,rpmhpd.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/qcom-rpmpd.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7742-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7743-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7744-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7745-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77470-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a774a1-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a774b1-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a774c0-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a774e1-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7779-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7790-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7791-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7792-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7793-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7794-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7795-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a7796-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77961-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77965-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77970-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77980-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77990-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a77995-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a779a0-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a779f0-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/r8a779g0-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/raspberrypi-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/renesas,r8a779h0-sysc.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3036-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3066-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3128-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3188-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3228-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3288-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3328-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3366-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3368-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3399-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3568-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rk3588-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rockchip,rk3528-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rockchip,rk3562-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rockchip,rk3576-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rockchip,rv1126-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/rockchip,rv1126b-power-controller.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/starfive,jh7110-pmu.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/summit,smb347-charger.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/tegra186-powergate.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/tegra194-powergate.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/tegra234-powergate.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/thead,th1520-power.h`
+- `sources/distributed-fs/ceph-client/include/dt-bindings/power/xlnx-zynqmp-power.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

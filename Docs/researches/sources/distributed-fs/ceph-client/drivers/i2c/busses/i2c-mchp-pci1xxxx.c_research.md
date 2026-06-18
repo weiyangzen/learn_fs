@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/i2c/busses/i2c-mchp-pci1xxxx.c
+
+Purpose: implements the Microchip PCI1xxxx PCIe switch I2C/SMBus adapter. It uses the device's SMBus master core and 128-byte buffer/DMA engine to perform I2C transfers, supports SMBus block-read handling, wake-capable SMBALERT, configurable bus speed from a protected GPR, and PCI PM integration.
+
+Important APIs, types, and functions: `struct pci1xxxx_i2c` stores the adapter, MMIO base, completion, transfer-in-progress flag, selected frequency, and flags for direct mode, STOP, and SMBus block read. `pci1xxxx_i2c_xfer()` is the algorithm hook. Key helpers configure system lock, core enable, pad control, timing registers, high/low-level interrupts, transfer direction, buffer contents, START/STOP, counts, auto-start-read, and DMA run/proceed.
+
+Control flow: probe enables the PCI function, maps BAR0, initializes the SMBus core, installs a devm shutdown action, allocates one IRQ vector, requests the IRQ, initializes adapter metadata, and registers it. Each transfer marks progress, iterates messages, derives the 8-bit address, sets STOP and SMB block flags, and calls read or write. Reads and writes split transfers into chunks of up to 128 bytes, program buffer/count registers, arm DMA termination interrupts, start DMA, wait up to one second for completion, inspect completion status for NAK, copy data from/to MMIO buffer, then mask interrupts and clear flags.
+
+State and persistence: persistent hardware state includes core timing registers, pad controls, pull-up for SMBALERT, direct-buffer mode, and interrupt masks. `i2c_xfer_in_progress` persists across suspend so suspend waits for active transfers. `freq` is selected from `SMB_GPR_REG` under `SMB_GPR_LOCK_REG`, defaulting to fast mode if lock is unavailable.
+
+Dependencies and integration points: integrates with PCI ids for EFAR devices `0xA003` through `0xA043`, PCI managed MMIO/IRQ APIs, I2C adapter quirks, I2C SMBus helper definitions, PM sleep ops, PCI wake from D3, and high/low-level interrupt status registers in the device.
+
+Risks: several control/status registers have write-one-to-clear semantics, so read-modify-write is explicitly avoided for core control but still used for other registers. Chunked reads require different setup for the first chunk versus subsequent chunks and special FW_ACK handling so only the final read NACKs. NAK currently maps to `-ETIMEDOUT` in read/write paths. Suspend busy-waits in 20 ms sleeps until transfer completion. System lock failure silently forces default fast-mode programming.
+
+Test signals: PCI probe on all ids, speed selection values 0/1/2/3 and lock failure, standard/fast/fast-plus timing programming, writes and reads shorter/equal/longer than 128 bytes, SMBus block read with length byte copyout, no-zero-length quirk, NAK and DMA timeout paths with core reinit, IRQ ack for buffer master and SMBALERT, suspend during active transfer, wake interrupt enable/disable, and shutdown disabling pads/core.

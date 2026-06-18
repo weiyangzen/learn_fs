@@ -1,0 +1,63 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/scsi/megaraid/megaraid_sas.h -->
+# sources/distributed-fs/ceph-client/drivers/scsi/megaraid/megaraid_sas.h
+
+## Purpose
+`megaraid_sas.h` is the main shared contract for the Linux MegaRAID SAS driver. It defines PCI identities, firmware command opcodes, direct command numbers, firmware states, on-wire MFI frame layouts, controller/drive inquiry buffers, ioctl ABI structures, adapter-private runtime state, and the function prototypes shared by `megaraid_sas_base.c`, `megaraid_sas_fusion.c`, `megaraid_sas_fp.c`, and `megaraid_sas_debugfs.c`.
+
+The file is not algorithm-heavy by itself. Its importance is ABI and coordination: most structures are packed hardware/firmware layouts or SCSI/user-space interfaces that must match firmware, DMA buffers, MMIO register offsets, and ioctl callers exactly.
+
+## Important APIs, Types, And Functions
+- Driver metadata and device matching: `MEGASAS_VERSION`, `MEGASAS_RELDATE`, `PCI_DEVICE_ID_LSI_*`, Intel SSDID/branding constants, and `enum MR_ADAPTER_TYPE` identify controller families and drive template selection during probe.
+- Firmware state and reset protocol: `MFI_STATE_*`, `MFI_RESET_*`, `MFI_INIT_*`, `HOST_DIAGNOSTIC_OFFSET`, `WRITE_SEQUENCE_OFFSET`, `DIAG_*`, and fault code/subcode masks are consumed by ready transition, online controller reset, snap dump, and crash-dump paths.
+- MFI command protocol: `enum MFI_CMD_OP`, `enum MFI_STAT`, `MR_DCMD_*`, `MFI_FRAME_*`, `MFI_MBOX_SIZE`, and `MFI_CMD_STATUS_POLL_MODE` define how management, logical-drive I/O, physical-drive passthrough, SMP/STP, NVMe passthrough, aborts, and toolbox requests are encoded.
+- Firmware data buffers: `struct MR_PD_INFO`, `struct MR_TARGET_PROPERTIES`, `struct MR_PD_ADDRESS`, `struct MR_PD_LIST`, `struct MR_LD_LIST`, `struct MR_HOST_DEVICE_LIST`, `struct megasas_ctrl_prop`, and `struct megasas_ctrl_info` describe controller, physical drive, logical drive, host-device, capability, queue, cluster, SR-IOV, thermal, timeout, crash-dump, and feature flags returned by direct commands.
+- Hardware register and DMA frame layouts: `struct megasas_register_set`, `struct megasas_sge32`, `struct megasas_sge64`, `struct megasas_sge_skinny`, `union megasas_sgl`, `struct megasas_header`, `struct megasas_init_frame`, `struct megasas_init_queue_info`, `struct megasas_io_frame`, `struct megasas_pthru_frame`, `struct megasas_dcmd_frame`, `struct megasas_abort_frame`, `struct megasas_smp_frame`, `struct megasas_stp_frame`, and `union megasas_frame`.
+- SCSI private/runtime objects: `struct MR_PRIV_DEVICE`, `struct megasas_instance`, `struct megasas_cmd`, `struct megasas_cmd_priv`, `megasas_priv()`, `MEGASAS_TARGET_ID()`, `MEGASAS_IS_LOGICAL()`, `MEGASAS_DEV_INDEX()`, and `MEGASAS_PD_INDEX()` connect Linux SCSI devices and commands to firmware target IDs and command pools.
+- Per-controller operation dispatch: `struct megasas_instance_template` supplies family-specific hooks for command firing, interrupt control, status reads, adapter reset, ISR/tasklet handling, adapter initialization, SCSI command build/issue, and direct command issue.
+- User ABI: `struct megasas_iocpacket`, `struct compat_megasas_iocpacket`, `struct megasas_aen`, `MEGASAS_IOC_FIRMWARE`, `MEGASAS_IOC_FIRMWARE32`, and `MEGASAS_IOC_GET_AEN` define the management character-device ioctl protocol.
+- Cross-file prototypes: RAID-map/fast-path helpers (`MR_BuildRaidContext`, `MR_TargetIdToLdGet`, `MR_LdRaidGet`, `MR_ValidateMapInfo`, `get_updated_dev_handle`, `mr_update_load_balance_params`), controller-management helpers (`megasas_get_ctrl_info`, `megasas_sync_pd_seq_num`, `megasas_get_target_prop`, `megasas_get_snapdump_properties`, crash buffer helpers), command lifecycle helpers (`megasas_get_cmd`, `megasas_return_cmd`, `megasas_issue_polled`, `megasas_issue_blocked_cmd`, `__megasas_return_cmd`), fusion reset/watchdog helpers, debugfs setup/teardown, and blk-mq polling entry points.
+
+## Control Flow
+Probe-time control starts in `megaraid_sas_base.c`: PCI IDs and `enum MR_ADAPTER_TYPE` select the appropriate `megasas_instance_template`, MMIO BAR space is mapped as `struct megasas_register_set`, firmware state is read with `MFI_STATE_MASK`, and the controller is transitioned to ready or reset. MFI-series controllers use xscale/ppc/gen2/skinny hooks, while newer adapter types use the fusion template from `megaraid_sas_fusion.c`.
+
+Internal management commands use `struct megasas_cmd` plus a `union megasas_frame`. Callers fill a `megasas_dcmd_frame`, `megasas_init_frame`, or related frame, set SGL/DMA addresses with helpers such as `megasas_set_dma_settings`, then issue through `instance->instancet->issue_dcmd`. `megasas_issue_polled()` marks the frame as not posted to the reply queue and waits by polling; `megasas_issue_blocked_cmd()` waits on `int_cmd_wait_q` for ISR completion.
+
+Normal SCSI I/O enters the selected template's `build_and_issue_cmd` hook. Legacy MFI paths build `megasas_io_frame` or `megasas_pthru_frame`; fusion paths build MPT request descriptors while still relying on shared state, target mapping, command pools, and passthrough conversion from this header. `MR_BuildRaidContext()` and related fast-path prototypes in `megaraid_sas_fp.c` translate logical drive requests through the firmware RAID map into device handles, spans, arms, and load-balancing decisions.
+
+Interrupt completion flows through the template ISR/tasklet callbacks. Reply queues and producer/consumer DMA pointers in `struct megasas_instance` back MFI completion, while fusion uses the shared instance state plus fusion-specific structures from `megaraid_sas_fusion.h`. Event notification uses `struct megasas_evt_detail`, `struct megasas_evt_log_info`, and `struct megasas_aen_event` to decode firmware events and schedule hotplug work.
+
+Reset and fault handling are also centered on this header. `adprecovery`, `fw_reset_no_pci_access`, reset flags, work items, timers, heartbeat host memory, crash-dump buffers, and `MFI_STATE_FAULT`/`MFI_STATE_FORCE_OCR` constants coordinate online controller reset, SR-IOV heartbeat, blocked user access, outstanding command drain, command refire, and crash-dump capture.
+
+## State And Persistence Behavior
+Most state is volatile kernel or device state, not filesystem persistence. `struct megasas_instance` is the per-adapter soft state: DMA-coherent buffers, command pools, controller info buffers, target property buffers, physical/logical device lists, queue indices, interrupt contexts, reset flags, firmware counters, target ID status arrays, RAID map IDs, crash-dump state, and feature capability booleans.
+
+Firmware-visible state persists on the controller and disks. Direct commands expose logical-drive lists, physical-drive metadata, controller properties, event logs, cluster IDs, VF affiliations, crash-dump settings, snapdump properties, and cache/shutdown behavior. Driver updates to these fields can affect controller behavior across reset or until firmware changes them.
+
+User-space state crosses the kernel boundary through ioctl structures. `MEGASAS_IOC_FIRMWARE` and `MEGASAS_IOC_GET_AEN` preserve a stable ABI for management tools, including a 32-bit compat packet. Changing layout, packing, field width, or ioctl numbers would break existing tools.
+
+DMA and MMIO state is explicit: physical addresses are split into low/high fields in frame structures, reply queue producer/consumer pointers live in DMA memory, and register offsets in `struct megasas_register_set` must match hardware. Packed structures and `__le*` fields document where byte conversion is required before comparing or assigning firmware-provided data.
+
+## Dependencies And Integration Points
+- Kernel subsystems: PCI, DMA mapping/pools, MMIO accessors, SCSI mid-layer (`struct scsi_cmnd`, `struct scsi_device`, `struct Scsi_Host`), blk-mq polling, IRQ/MSI-X, tasklets, workqueues, timers, wait queues, semaphores, mutexes, spinlocks, atomics, debugfs, and compat ioctl support.
+- Local MegaRAID files: `megaraid_sas_base.c` owns probe/remove, legacy MFI command building, ioctl dispatch, management commands, SCSI device properties, and template selection; `megaraid_sas_fusion.c` owns fusion adapter initialization, reset, fast I/O issue/completion, watchdog, task management, crash dump, and the fusion template; `megaraid_sas_fp.c` owns RAID map validation and logical-to-physical fast-path calculations; `megaraid_sas_debugfs.c` consumes `struct megasas_instance` for diagnostics; `megaraid_sas_fusion.h` supplies fusion-only request/RAID map types referenced by prototypes here.
+- Firmware protocol: MFI frames, direct command opcodes, event formats, controller info/property buffers, RAID map validation, crash-dump handshakes, and feature-capability bits are firmware contracts.
+- User space: the management char-device ioctl layer in `megaraid_sas_base.c` dispatches `MEGASAS_IOC_FIRMWARE`, `MEGASAS_IOC_FIRMWARE32`, and `MEGASAS_IOC_GET_AEN` using the structures defined here.
+
+## Risks And Edge Cases
+- ABI drift is the highest risk. Many structures are `__packed`, contain endian-sensitive bitfields, or represent exact firmware/user-space layouts. Adding fields, changing types, reordering bitfields, or removing padding can corrupt DMA exchanges or break ioctl tools.
+- Endianness must be handled carefully. The header mixes `__le16`/`__le32`/`__le64`, native fields, and `__BIG_ENDIAN_BITFIELD` layouts. Consumers must use CPU-to-little-endian and little-endian-to-CPU conversions consistently.
+- Flexible and counted arrays need size validation. `MR_HOST_DEVICE_LIST` uses a counted flexible array, `MR_PD_LIST` and VF maps use variable-length patterns, and many firmware buffers rely on command-reported counts. Incorrect allocation or trust in firmware counts risks overrun or truncated device discovery.
+- Reset paths are race-prone. `struct megasas_instance` combines ISR completion, polling commands, SCSI command submission, ioctl commands, heartbeat timers, workqueue reset, crash-dump capture, and command refire. Missing synchronization around `adprecovery`, command pools, or queue indices can cause double completion, command loss, or use-after-free during OCR.
+- Queue depth and target mapping are capability-dependent. Fields such as `supportmax256vd`, `support_morethan256jbod`, `enable_fw_dev_list`, `use_seqnum_jbod_fp`, `enable_sdev_max_qd`, NVMe page settings, and performance mode alter discovery and I/O build decisions. New firmware features must be gated by the correct capability bit.
+- User ioctl passthrough is security-sensitive. The SGL count, offsets, sense buffer length, host number, SR-IOV restrictions, and compat layout must be validated before copying or issuing firmware commands.
+- Crash-dump and snapdump handling can consume large memory and uses state bits shared with reset/fault handling. Incorrect state transitions can hang reset or lose diagnostic data.
+
+## Test Signals
+- Build coverage should include this driver with `CONFIG_MEGARAID_SAS`, `CONFIG_COMPAT`, `CONFIG_DEBUG_FS`, and big-endian or endian-sparse checks where available. Compiler warnings about packed members, flexible arrays, or incompatible prototypes are meaningful.
+- Static analysis should focus on endian conversions for `__le*` fields, bounds for firmware-reported counts, ioctl copy/offset validation, command-pool lifetime, and reset/concurrent completion paths.
+- Runtime probe tests should cover representative MFI, skinny/gen2, fusion/invader/ventura/aero controllers or emulated hardware where available, verifying firmware ready transition, template selection, DMA mask setup, MSI-X vector setup, queue depth, logical/physical discovery, and removal cleanup.
+- I/O tests should exercise logical drive reads/writes, physical/JBOD passthrough, NVMe passthrough where supported, sync-cache behavior, high queue depth, blk-mq polling, and error injection for timeout/OCR paths.
+- Management tests should issue `MEGASAS_IOC_FIRMWARE`, `MEGASAS_IOC_FIRMWARE32`, and `MEGASAS_IOC_GET_AEN`, including invalid SGL counts and offsets, SR-IOV VF restrictions, event waits, and command timeouts.
+- Firmware event and hotplug tests should validate physical-drive insertion/removal, logical-drive create/delete/offline, foreign config import, controller property change, and host bus scan events.
+- Reset/fault tests should validate online controller reset, forced OCR, firmware fault detection, outstanding command drain/refire, heartbeat behavior for VF mode, and crash-dump/snapdump state transitions.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/scsi/megaraid/megaraid_sas.h -->

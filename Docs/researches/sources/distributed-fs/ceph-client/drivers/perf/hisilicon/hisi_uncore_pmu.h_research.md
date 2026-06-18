@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/perf/hisilicon/hisi_uncore_pmu.h
+
+Purpose: This header is the contract between the HiSilicon common uncore PMU framework and the individual HiSilicon uncore PMU drivers. It defines event/sysfs macros, core data structures, topology representation, leaf operation callbacks, and exported function prototypes.
+
+Important APIs, types, and functions: `struct hisi_uncore_ops` is the key abstraction and contains callbacks for event validation, event type programming, counter allocation, counter read/write, counter enable/disable, interrupt enable/disable, global start/stop, interrupt status/clear, and optional filter enable/disable. `struct hisi_pmu_dev_info` carries per-compatible metadata such as sysfs groups, counter width, event range, and private register data. `struct hisi_pmu_hwevents` tracks active event pointers and the used counter bitmap. `struct hisi_pmu_topology` records `sccl_id`, `sicl_id` or `scl_id`, `ccl_id`, `index_id`, and `sub_id`. `struct hisi_pmu` embeds `struct pmu` and stores ops, device info, topology, CPU ownership, IRQ, MMIO base, counters, event limit, and identifier.
+
+Control flow: Leaf drivers include this header, define format/event attributes with `HISI_PMU_FORMAT_ATTR()` and `HISI_PMU_EVENT_ATTR()`, decode custom perf config fields with `HISI_PMU_EVENT_ATTR_EXTRACTOR()`, fill a `struct hisi_pmu`, then call exported common functions. The common framework uses the callback table to translate generic perf operations into leaf-specific MMIO accesses.
+
+State and persistence: The header itself has no runtime state, but it defines all in-memory state that persists for a probed PMU lifetime. `HISI_MAX_COUNTERS` bounds bitmap and event arrays. The topology struct uses `-1` sentinel values for absent firmware topology fields.
+
+Dependencies and integration points: Depends on Linux perf, platform device, cpumask, module, device, bitfield, and type headers. It exports common attribute groups and functions from namespace `HISI_PMU`, so leaf modules use `MODULE_IMPORT_NS("HISI_PMU")`.
+
+Risks: Because leaf callbacks are raw function pointers, incomplete ops tables can fail at runtime if the common framework calls a missing mandatory callback. `HISI_PMU_EVENT_ATTR_EXTRACTOR()` assumes the selected bit range maps to `event->attr.config` or `config1` as passed by macro users; mistakes silently decode wrong fields. `HISI_MAX_COUNTERS` must cover all leaf hardware counter counts. Topology union naming means SCCL, SICL, and SCL share storage, so callers must interpret the field according to device type.
+
+Test signals: Compile coverage is important because this header is shared by several modules. Static checks should confirm all leaf ops tables satisfy the callbacks used by `hisi_uncore_pmu.c`. Sysfs format output should match the extractor bit ranges documented by each driver. Runtime tests should verify event IDs are masked by `HISI_EVENTID_MASK` and that counter arrays are not indexed past `HISI_MAX_COUNTERS`.

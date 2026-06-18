@@ -1,0 +1,17 @@
+## sources/cloud-native/composefs-rs/crates/composefs-oci/src/delta.rs
+
+Purpose: this module detects and applies `oci-delta` artifacts. A delta artifact embeds the target manifest/config and changed layer blobs, reconstructing omitted layers from an already-present source image in the composefs repository.
+
+Important APIs and types: `MEDIA_TYPE_DELTA`, `is_delta_artifact`, `DeltaBlobReader`, `import_delta`, and `delta_layer_descriptors` are the main integration points. Internal state includes `SourceImage`, `ComposeFsDataSource`, `CurrentFile`, `OciHasher`, `HashingWriter`, `DeltaLayer`, and `ParsedDelta`. Tar-diff parsing uses opcodes for data, open, copy, add-data, and seek plus size limits for filenames and add-data payloads.
+
+Control flow: `parse_delta_manifest` reads artifact annotations, finds embedded target manifest/config blobs and layer mappings by `io.github.containers.delta.*` annotations, fetches and parses the embedded target JSON, and returns a `ParsedDelta`. `import_delta` exits early if the target manifest already exists. Otherwise it extracts target diff_ids, verifies the source config stream exists and has an EROFS image ref, parses that source EROFS into a filesystem, and processes target layers in parallel with a semaphore. Changed layers are fetched through `DeltaBlobReader`, reconstructed in blocking tasks with `reconstruct_layer`, then imported through the normal layer importer. Reused layers must already be present. Finally, it writes target config and manifest splitstreams using raw embedded bytes and returns a normal `PullResult`.
+
+Tar-diff behavior: `tar_patch_apply` verifies the magic header, wraps the stream in a zstd decoder, reads varint-sized op records, and writes reconstructed tar bytes. `OP_OPEN` selects a source file from the source EROFS, `OP_COPY` copies bytes from it, `OP_ADD_DATA` adds byte-wise deltas to source data, and `OP_SEEK` moves the source cursor. `reconstruct_layer` hashes reconstructed uncompressed tar bytes and rejects diff_id mismatches.
+
+State and persistence: delta import reads existing source config, source EROFS, existing layer streams, and source objects. It writes reconstructed changed layers as normal tar splitstreams, writes target config and manifest splitstreams, and returns stats for imported/skipped layers. It does not tag images directly in this module; callers perform normal pull/tag handling.
+
+Dependencies and integration: integrates with OCI layout and skopeo paths through `DeltaBlobReader`, with `composefs::erofs::reader` for source filesystem access, with `crate::import_layer`, `write_config_raw`, and `oci_image::rewrite_manifest`, and with progress reporters for apply-delta progress.
+
+Risks: delta application is security-sensitive because it parses untrusted binary patch streams and compressed data. Size limits protect filenames and add-data records, and diff_id verification protects final layer integrity, but CPU/memory pressure remains possible. Reused layers and source EROFS must be present; otherwise the delta is not applicable. Parallel tasks fetch and write layers concurrently, so repository operations must remain safe under that concurrency.
+
+Test signals: unit tests cover uvarint normal, overflow, and truncated cases. End-to-end tests conditionally require `oci-delta` and sometimes `skopeo`; they build source/target/delta OCI layouts, import source, import delta, import target directly, and compare manifest/config digests. Idempotent delta pull is also tested.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/video/fbdev/s3fb.c
+
+Purpose: implements a PCI fbdev driver for legacy S3 Trio and ViRGE VGA adapters. It maps PCI framebuffer memory, identifies chip variants, programs VGA/S3 extended timing registers and PLLs, supports palette and pseudo-palette color, and optionally exposes DDC through bit-banged I2C.
+
+Important APIs/types/functions: `struct s3fb_info` stores chip ID, revision, MCLK, saved VGA state, open count, pseudo palette, and optional DDC adapter/MMIO state. The fbdev entry points are `s3fb_open`, `s3fb_release`, `s3fb_check_var`, `s3fb_set_par`, `s3fb_setcolreg`, `s3fb_blank`, `s3fb_pan_display`, `s3fb_get_caps`, plus custom image/fill helpers for packed and interleaved 4 bpp. PCI lifecycle is `s3_pci_probe`, `s3_pci_remove`, suspend/resume, `s3fb_init`, and `s3fb_cleanup`.
+
+Control flow: init parses module or boot options and registers the PCI driver unless modesetting is disabled. Probe rejects non-primary VGA devices, removes conflicting apertures, enables PCI, requests regions, maps BAR0 write-combined, determines the VGA I/O base, unlocks S3 registers, identifies undecided chips, derives VRAM and MCLK from CRTC/sequencer registers, optionally sets up DDC and EDID modes, chooses a mode, sizes virtual Y for scrolling, allocates a cmap, registers fbdev, and optionally registers a write-combine MTRR. `set_par` unlocks VGA/S3 registers, blanks the display, programs default VGA state, S3 linear framebuffer and timing extensions, mode-specific CR/SR bits, PLL, timings, DTPC, clears visible memory, and re-enables output.
+
+State and persistence: open/release save and restore VGA mode/fonts/cmap around active users using `open_lock` and `ref_count`. Persistent runtime state includes mapped framebuffer, screen size, chip identity, DDC adapter registration, pseudo palette, and `wc_cookie`. Suspend only powers down when the framebuffer is open; resume unlocks registers, restores power bits, reprograms mode, and clears fb suspend.
+
+Dependencies and integration: uses fbdev, PCI, aperture arbitration, `linux/svga.h` helpers, VGA register access from `video/vga.h`, console locking for PM, optional `CONFIG_FB_S3_DDC` I2C bit-banging, and optional MTRR/write-combining.
+
+Risks: this driver directly manipulates global VGA legacy resources and explicitly lacks VGA arbitration beyond ignoring secondary devices. Many mode-setting paths are chip-specific magic values. Some accelerated 4 bpp helpers assume 8-pixel alignment and only fall back when wrappers detect unsupported shapes. `pci_disable_device` is intentionally commented out. `FBIOGTYPE` is not present; users rely on standard fbdev ops. DDC MMIO mapping uses framebuffer base plus a fixed offset and must match the chip.
+
+Test signals: probe/remove on each PCI ID family, primary-vs-secondary VGA behavior, EDID and fallback mode selection, mode setting for text/1/2/4/8/16/24/32 bpp with chip-specific 24/32 restrictions, palette writes, panning, blank levels, open/release VGA restoration, suspend/resume while open and closed, and 4 bpp image/fill alignment fallback.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/rc/keymaps/rc-pixelview-mk12.c
+
+Purpose: registers the `RC_MAP_PIXELVIEW_MK12` rc-core keytable for the MK-F12 IR remote controller keytable. The file is data-oriented: it binds remote scan codes to Linux input `KEY_*` codes so rc-core can translate decoded IR protocol values into input events for the matching receiver or board driver.
+
+Important APIs and types: the central object is `static struct rc_map_table pixelview_mk12[]` with 31 mappings (0x866b03 -> KEY_TUNER; 0x866b07 -> KEY_RADIO). `static struct rc_map_list` supplies `.scan`, `.size = ARRAY_SIZE(pixelview_mk12)`, `.rc_proto = RC_PROTO_NECX`, and `.name = RC_MAP_PIXELVIEW_MK12`. Module lifecycle is `init_rc_map_pixelview` calling `rc_map_register()` and `exit_rc_map_pixelview` calling `rc_map_unregister()`. The only external headers are `<media/rc-map.h>` for rc-core table declarations and keymap names, and `<linux/module.h>` for module metadata.
+
+Control flow: module insertion registers the static map list with rc-core; lookup is then performed by the rc-core/input stack when a receiver selects `RC_MAP_PIXELVIEW_MK12`. Module removal unregisters the same map list. There is no runtime parsing, allocation, IRQ handling, or direct hardware access in this file.
+
+State and persistence: all state is immutable static table data plus the registration record held by rc-core while the module is loaded. The table literal order is scancode-to-keycode. Duplicate key targets: none; duplicate scan codes: none. Duplicate key targets are acceptable when multiple remote buttons intentionally emit the same Linux input semantic, but duplicate scan codes would make lookup ambiguous.
+
+Dependencies and integration points: depends on rc-core keymap registration and Linux input keycode definitions. It is consumed indirectly by receiver drivers, board definitions, device tree `linux,rc-map-name` properties, or default map selection that names `RC_MAP_PIXELVIEW_MK12`. Protocol correctness depends on the upstream decoder delivering scan codes in `RC_PROTO_NECX` format. Source comments preserve device-specific labels/quirks such as Timeshift; power; loop; +100; source.
+
+Risks: because this file is pure table data, the main risks are incorrect protocol selection, mistyped scan codes, mismatched key semantics, and legacy maps using `RC_PROTO_UNKNOWN`, which leaves protocol handling to the receiver/decoder path. Changing values is user-visible because key names affect applications, media center bindings, and LIRC/scancode mode output. For modules with repeated key targets, tests should verify that the repetition reflects remote labeling rather than accidental copy/paste.
+
+Test signals: build the keymap module, load/unload it, confirm `rc_map_register()` succeeds, select `RC_MAP_PIXELVIEW_MK12` on a compatible rc-core device, and use `ir-keytable -t` or evtest to verify representative buttons against the table. Regression coverage should include protocol-specific decode for `RC_PROTO_NECX`, numeric keys, navigation keys, power/mute/volume, and any device-specific or commented buttons.

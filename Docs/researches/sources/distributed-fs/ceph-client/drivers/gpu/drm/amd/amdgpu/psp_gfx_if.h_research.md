@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/psp_gfx_if.h
+
+Purpose: defines the host-driver to PSP Trusted Execution Environment graphics interface ABI. It describes mailbox command IDs, ring control registers, command-buffer structures, firmware type identifiers, TA command layouts, command responses, and ring-buffer frame layout used by `amdgpu_psp.c` and the generation-specific PSP backends.
+
+Important APIs/types/functions: important definitions include `PSP_GFX_CMD_BUF_VERSION`, command/response masks, `C2PMSG_CMD_GFX_USB_PD_FW_VER`, `enum psp_gfx_crtl_cmd_id`, `struct psp_gfx_ctrl`, `enum psp_gfx_cmd_id`, boot config enums, `struct psp_gfx_cmd_load_ta`, `struct psp_gfx_cmd_unload_ta`, `struct psp_gfx_buf_desc`, `struct psp_gfx_buf_list`, `struct psp_gfx_cmd_invoke_cmd`, `struct psp_gfx_cmd_setup_tmr`, the large `enum psp_gfx_fw_type`, `union psp_gfx_commands`, `struct psp_gfx_resp`, `struct psp_gfx_cmd_resp`, and `struct psp_gfx_rb_frame`.
+
+Control flow: no executable control flow exists in the header. Runtime code populates a fixed 1024-byte `psp_gfx_cmd_resp`, points a 64-byte ring frame at it, advances PSP ring write pointers, and waits for PSP status/fence updates. Register-control commands initialize or destroy RBI/GPCOM rings, enable interrupts, request mode1 reset, reroute IH state, or notify PSP that a VF produced commands.
+
+State and persistence behavior: the structures define transient shared-memory command and response state. Persistent runtime state is owned by `struct psp_context`, its `km_ring`, TA contexts, TMR/VMR allocations, and PSP firmware; this header fixes field offsets, address alignment requirements, and response unions so host and PSP firmware agree.
+
+Dependencies and integration points: consumed by `amdgpu_psp.h/c` and the PSP version files. Firmware type IDs connect AMDGPU firmware descriptors to `GFX_CMD_ID_LOAD_IP_FW`, while TA structures support XGMI, RAS, HDCP, DTM, RAP, secure display, spatial partitioning, memory partitioning, SQ perfmon configuration, firmware reservation queries, and attestation database access.
+
+Risks and test signals: ABI drift is the main risk: structure padding, enum values, buffer sizes, command IDs, and alignment rules must match PSP firmware. The `GFX_BUF_MAX_DESC` scatter/gather limit and fixed command-buffer reserved regions are contract-sensitive. Test signals include PSP ring command submission, TA load/invoke/unload, TMR setup/destruction, firmware load through PSP, SR-IOV GPCOM operation, USB-C PD firmware version reads, boot config queries, and checks that command responses report expected `TEE_SUCCESS` or device-specific errors.

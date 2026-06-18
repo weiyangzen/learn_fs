@@ -1,0 +1,15 @@
+## sources/distributed-fs/openafs/src/WINNT/afsapplib/al_creds.cpp
+
+Purpose: Implements AFS credential acquisition, credential cracking, validation, bad/expired credential warnings, and the reusable Open Cell/New Credentials dialogs used by Windows admin UI code.
+
+Important APIs and functions: `AfsAppLib_CrackCredentials`, `AfsAppLib_GetCredentials`, and `AfsAppLib_SetCredentials` bridge callers to either the admin-server client (`asc_*`) or dynamically loaded local AFS client admin APIs. `AfsAppLib_ShowOpenCellDialog` and `AfsAppLib_ShowCredentialsDialog` wrap modal dialogs. Dialog procedures `OpenCell_DlgProc`, `NewCreds_DlgProc`, and `BadCreds_DlgProc` dispatch help hooks, command handling, and initialization. `AfsAppLib_CheckCredentials`, `AfsAppLib_IsUserAdmin`, `AfsAppLib_CheckForExpiredCredentials`, and `OnExpiredCredentials` implement validation and warning policy.
+
+Control flow: Credential read/set operations first prefer `AfsAppLib_GetAdminServerClientID`; without an admin server, they call `OpenClientLibrary`, convert Unicode/TCHAR inputs to ANSI buffers, call `afsclient_Token*`, then close the library. The Open Cell dialog populates the cell combo, starts `OpenCell_OnCell_ThreadProc` on cell edits, and receives `WM_REFRESHED_CREDENTIALS` with current credential status. OK handlers disable controls, show an hourglass, set tokens, and then call `AfsAppLib_CheckCredentials`.
+
+State and persistence: Dialog state is stored in caller-supplied parameter structs via `DWLP_USER`. `AfsAppLib_SetCredentials` posts `WM_REFRESHED_CREDENTIALS` with a token handle. `AfsAppLib_CheckForExpiredCredentials` uses static `hCredsPrevious` and `fHadGoodCredentials` to detect transitions from valid to expired/destroyed. Warning suppression is persisted only through the caller-owned `pfShowWarningEver` pointer.
+
+Dependencies and integration points: Requires Win32 dialogs/messages, `TaLocale` formatting, `al_dynlink` function pointers, `TaAfsAdmSvrClient`, `al_messages.h`, and resource IDs from `al_resource.h`. It also depends on `AfsAppLib_GetLocalCell`, `AfsAppLib_IsTimeInFuture`, `FormatString`, `ModalDialogParam`, and main-window routing.
+
+Risks: Background credential checks can race with cell changes, partially mitigated by comparing returned cell text. Created threads are not joined and handles are not closed. Fixed-size ANSI buffers (`cchRESOURCE`) and password copies increase truncation/sensitive-data lifetime risk. `AfsAppLib_CrackCredentials` only writes `pStatus` when `!hCreds`, which may hide failure detail for invalid non-null handles. Under default non-`USE_KASERVER`, `AfsAppLib_IsUserAdmin` returns `TRUE`, so admin validation is compile-time dependent.
+
+Test signals: Exercise admin-server and local-client paths; verify empty/default cell behavior; test invalid, expired, destroyed, and non-admin credentials; confirm warning suppression; verify `WM_REFRESHED_CREDENTIALS` and `WM_EXPIRED_CREDENTIALS`; test cancellation, help routing, and dialog hooks.

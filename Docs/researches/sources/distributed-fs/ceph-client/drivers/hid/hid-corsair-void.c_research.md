@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/hid/hid-corsair-void.c
+
+Purpose: supports Corsair Void wired and wireless headsets by exposing battery state, wireless connection status, microphone boom position, firmware versions, sidetone control, and alert requests through HID, USB control transfers, sysfs, and power_supply.
+
+Important APIs/types/functions: `struct corsair_void_drvdata` stores device identity, wired/wireless type, sidetone limit, battery data, mic/connection status, firmware versions, power-supply descriptor, delayed status/firmware work, and battery work flags. `corsair_void_process_receiver()` decodes status reports. `corsair_void_battery_get_property()` exposes battery properties. Sysfs methods expose `microphone_up`, receiver/headset firmware versions, `sidetone_max`, write-only `send_alert`, and write-only `set_sidetone`. `corsair_void_request_status()` requests status/firmware refresh. Battery add/remove/update is serialized by `corsair_void_battery_work_handler()`. `corsair_void_raw_event()` decodes report IDs `0x64` and `0x66`.
+
+Control flow: probe requires USB, allocates driver data, determines wired/wireless from ID-table `driver_data`, initializes unknown battery/wireless state, parses the HID descriptor, prepares a battery descriptor, creates the sysfs group, starts HID hardware, and schedules delayed status and firmware refreshes. Raw status reports update mic state, connection state, battery status/capacity/level, USB wireless status, and queue power_supply changes. Wireless connection transitions add or remove the battery and request firmware data. Sysfs writes send either HID output/feature reports or a USB control message depending on headset type.
+
+State/persistence: battery, mic, connection, and firmware values are cached in driver data. Battery registration is dynamic for wireless headsets and stable for connected/wired state. Work flags in `battery_work_flags` serialize add/remove/update decisions. No persistent configuration is stored.
+
+Dependencies/integration: depends on HID raw reports, USB interface wireless-status helpers, USB control messages, power_supply, sysfs attribute groups, delayed work/workqueues, bitfield helpers, and Corsair USB IDs.
+
+Risks: packet layouts are reverse-engineered and comments note uncertainty. `microphone_up` and write sysfs operations reject disconnected devices, so connection state must be accurate. Battery work can race with remove and connection transitions; remove cancels work and unregisters the supply if present. The status report handler assumes sufficient packet length for indexed fields.
+
+Test signals: verify all matched wired/wireless IDs, battery registration/removal on wireless connect/disconnect, power_supply property changes for normal/low/critical/full/charging, USB wireless status updates, mic boom sysfs value, firmware refresh values, sidetone bounds for wired versus wireless, alert send rejection on wired/disconnected devices, and remove with pending delayed/battery work.

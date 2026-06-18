@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_modem_ops.h
+
+This header defines the modem lifecycle data model. `enum hif_ex_stage` names exception handshake phases; `struct mtk_runtime_feature` models feature negotiation records; `struct t7xx_sys_info` tracks per-core runtime feature state and control port; `struct t7xx_modem` aggregates CLDMA controllers, FSM, port proxy, handshake work, exception state, and reset flags; and `enum reset_type` distinguishes FLDR, PLDR, and fastboot reset.
+
+Its functions are the public modem operations used by PCI, MHCCIF, FSM, and reset paths. State is long-lived for the PCI device lifetime and is reset during modem reprobe and exception recovery. Dependencies include CLDMA, PCI, workqueues, spinlocks, and port/FSM types. Risks are ABI drift in feature record parsing, unclear ownership of the modem context because it is devm-allocated but has explicit workqueue teardown, and concurrent reset/exit paths. Tests should exercise initialization rollback, state transitions, exception handshakes, and reset type selection.

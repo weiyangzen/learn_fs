@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/usb/misc/legousbtower.c
+
+Purpose: Character driver for the LEGO USB Tower infrared transceiver. It exposes `/dev/legousbtower%d` for legacy robotics tools and manages packetizing, read timeouts, write buffering, and interrupt URBs.
+
+Important APIs and types: `struct lego_usb_tower`, module parameters `read_buffer_size`, `write_buffer_size`, `packet_timeout`, `read_timeout`, and interrupt intervals; `tower_open()`, `tower_read()`, `tower_write()`, callbacks, poll, release, probe, and disconnect. Vendor requests reset the tower and read firmware version.
+
+Control flow: probe finds interrupt-IN/OUT endpoints in reverse, allocates buffers/URBs, reads firmware version, and registers a USB class node. Open is exclusive, sends a reset control request, clears read buffers, and starts the interrupt-IN URB. The IN callback appends received bytes into a shared read buffer, records arrival time, and resubmits. `tower_check_for_read_packet()` exposes bytes only after packet timeout or when the buffer is full. Reads wait for packetized bytes and shift the remaining buffer after copy. Writes serialize one interrupt-OUT URB at a time.
+
+State and persistence: read buffer length, packet length, last-arrival jiffies, busy flags, open/disconnected state, and endpoint buffers are in memory. Disconnect poisons URBs and defers freeing if open. Risks include O(n) buffer shifting after every read, dropped bytes on read buffer overflow, long timeout-dependent ABI behavior, mutable module parameters affecting allocation and timing, and no autosuspend. Test signals include firmware-version control request, reset-on-open, packet timeout behavior, nonblocking read/write, poll readiness, partial reads, disconnect while open, and long packet writes up to buffer limits.

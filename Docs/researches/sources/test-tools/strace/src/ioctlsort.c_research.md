@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/ioctlsort.c
+
+Build utility that sorts ioctl table entries for efficient lookup by `ioctl.c`. It reads generated ioctl entries, orders them by numeric code while preserving duplicate-symbol handling, and emits sorted data for compilation. Persistent state is generated output. Dependencies are libc sorting/io, ioctl entry structure definitions, and build scripts. Risks are unstable ordering for duplicate codes, malformed input handling, and mismatch with `ioctl_lookup` expectations. Tests should run the utility on fixture tables with duplicates and verify generated tables are sorted and bsearch-compatible.

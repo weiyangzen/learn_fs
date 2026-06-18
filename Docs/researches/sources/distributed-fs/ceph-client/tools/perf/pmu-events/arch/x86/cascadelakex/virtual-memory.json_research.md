@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/cascadelakex/virtual-memory.json
+
+Purpose: Defines 28 Cascade Lake X core PMU aliases for virtual-memory translation behavior. It covers DTLB load and store misses, ITLB misses, EPT walks, instruction TLB flushes, DTLB thread flush attempts, and STLB flush attempts.
+
+Important APIs/types/functions: The file uses the core perf event schema with `EventName`, `EventCode`, `UMask`, `Counter`, `CounterMask`, `SampleAfterValue`, `BriefDescription`, and `PublicDescription`. All programmable entries use counters `0,1,2,3`. Event families are `DTLB_LOAD_MISSES`, `DTLB_STORE_MISSES`, `ITLB_MISSES`, `EPT`, `ITLB`, and `TLB_FLUSH`. `WALK_ACTIVE` events use `CounterMask: 1` with `UMask: 0x10`; `WALK_PENDING` uses the same umask without the counter mask to count PMH-busy cycles per page-miss handler.
+
+Control flow: `jevents.py` parses the virtual-memory topic into generated Cascade Lake X core aliases. At runtime, perf maps alias names such as `dtlb_load_misses.walk_completed_4k` or `itlb_misses.walk_pending` to raw core PMU event encodings. The load, store, and instruction families share a pattern: cause-a-walk, STLB hit, active cycles, completed walks for all page sizes, and completed walks split by 4K, 2M/4M, and 1G pages.
+
+State and persistence behavior: The JSON is immutable build metadata. The observed hardware state is per-core translation activity while counters run. Completed walk events include page walks that end with or without faults; EPT walk pending counts nested translation work; TLB flush events count attempts rather than necessarily completed invalidations. `SampleAfterValue` provides perf's default sampling period, with high periods for common events and lower values for rarer flush/walk events.
+
+Dependencies: Depends on the core Cascade Lake X mapfile selection, perf event generation, and the CPU core PMU supporting event codes `0x08`, `0x49`, `0x4f`, `0x85`, `0xAE`, and `0xBD`. The descriptions assume Skylake-derived page-miss-handler semantics and explicitly note that EPT page-walk duration is excluded from the DTLB/ITLB walk-active and walk-pending events on Skylake-family cores.
+
+Integration points: Integrates with `perf stat`/`perf record` for page-walk and TLB-pressure profiling. It can be paired with memory, cache, and pipeline events to diagnose translation overhead versus cache misses, and with virtualization workloads through `EPT.WALK_PENDING`. It is source-tree-aligned with the Cascade Lake X topic files generated into the same CPU model table.
+
+Risks: `MISS_CAUSES_A_WALK` does not require walk completion, while `WALK_COMPLETED` does; mixing them in ratios can produce misleading fault or cancellation interpretations. `WALK_ACTIVE` and `WALK_PENDING` share the same umask but different counting semantics, so losing `CounterMask` would change the meaning. The public descriptions mention Skylake behavior even though the file is Cascade Lake X, which is probably intentional lineage but may confuse users. Flush attempt events may overcount relative to effective TLB invalidations.
+
+Test signals: Parse the JSON, run `jevents.py`, and verify `perf list` shows all load/store/ITLB walk aliases plus `EPT.WALK_PENDING`, `ITLB.ITLB_FLUSH`, and `TLB_FLUSH.*`. Hardware tests should compare page-walk events under 4K pages versus huge pages, check store and load walks separately, and confirm `WALK_ACTIVE`/`WALK_PENDING` increase under TLB-stressing workloads.

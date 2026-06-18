@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/alpha/lib/stycpy.S
+
+Purpose: composition file that selects the concrete unbounded Alpha string-copy and concatenation implementations for the build. Important APIs/types/functions: includes `strcpy.S`, either `ev67-strcat.S` or `strcat.S`, and either `ev6-stxcpy.S` or `stxcpy.S`. Control flow: entirely preprocessor-driven based on `CONFIG_ALPHA_EV67` and `CONFIG_ALPHA_EV6`; no runtime code of its own. State and persistence: none. Dependencies/integration: controls which object code supplies `strcpy`, `strcat`, and `__stxcpy`. Risks: include order and duplicate symbol selection must stay mutually exclusive across CPU configs. Test signals: Alpha defconfig matrix builds for EV6, EV67, and generic configurations.

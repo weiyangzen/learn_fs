@@ -1,0 +1,16 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/protocol/ClientProtocol.java
+
+## Purpose
+`ClientProtocol` is the central private/evolving Java interface used by `DFSClient` and `DistributedFileSystem` to talk to the NameNode while insulating callers from the protobuf wire protocol. Its comments explicitly require any interface change to be mirrored in `ClientNamenodeProtocol.proto`; `versionID` is fixed at `69L` because this class no longer directly drives serialization versioning. It covers file I/O, namespace mutation, leases, block allocation, snapshots, cache directives, ACLs, xattrs, encryption zones, erasure coding, HA/read consistency, and administrative operations.
+
+## Important APIs and Control Flow
+The interface is organized around RPC families. File content APIs include `getBlockLocations`, `create`, `append`, `addBlock`, `getAdditionalDatanode`, `complete`, `abandonBlock`, `updateBlockForPipeline`, and `updatePipeline`. Namespace APIs include `rename`, `rename2`, `concat`, `truncate`, `delete`, `mkdirs`, and listing/status calls. Admin/stat APIs include safe mode, namespace save/roll, datanode reports, storage policies, quotas, rolling upgrade, slow datanode reports, and edit-log/inotify calls. Security and metadata APIs include delegation tokens, data encryption keys, snapshots, cache pools/directives, ACLs, xattrs, encryption zones, re-encryption, EC policy management, open-file listing, `msync`, and `getEnclosingRoot`.
+
+## State, Persistence, and Dependencies
+The interface does not store state itself; state is held in the NameNode namespace, edit log, block manager, lease manager, cache manager, encryption zone manager, and EC policy manager. Annotations such as `@Idempotent`, `@AtMostOnce`, and `@ReadOnly` are critical integration metadata for retry, HA observer routing, and failover behavior. Return and parameter DTOs in this subset include `LocatedBlocks`, `LocatedBlock`, `LastBlockWithStatus`, `HdfsFileStatus`, `DirectoryListing`, `CorruptFileBlocks`, `DatanodeInfo`, `ECBlockGroupStats`, `ReplicatedBlockStats`, `RollingUpgradeInfo`, `EncryptionZone`, `ErasureCodingPolicy`, and `OpenFileEntry`.
+
+## Integration Points
+Callers are primarily `DFSClient`, `DistributedFileSystem`, admin tools, and Router-Based Federation forwarding paths. The protocol integrates with Kerberos and delegation tokens via `@KerberosInfo` and `@TokenInfo`; with HA via `ReadOnly` annotations and `HAServiceProtocol.HAServiceState`; and with tracing/listing iterators through batched APIs. Many methods are documented as active-only or coordinated reads because observer/standby NameNodes may not have sufficiently fresh quota, atime, or alignment state.
+
+## Risks and Test Signals
+The highest risk is RPC contract drift between this interface and protobuf definitions. Retry semantics must match side effects: mutating calls marked `@AtMostOnce` should not be retried blindly, while idempotent calls must remain truly idempotent. Tests should cover client retry/failover, active-only routing, namespace write rejection in safe mode/snapshots, lease recovery retry loops, block pipeline recovery, batched listing cursors, ACL/xattr/encryption permission enforcement, EC policy lifecycle, and compatibility of stats-array indexes.

@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/armada/armada_overlay.c
+
+Purpose: implements the Armada overlay/video plane, including YUV/RGB format support, color conversion, color-key properties, brightness/contrast/saturation properties, legacy `update_plane` tracing, and atomic hardware programming.
+
+Important types/functions are `struct armada_overlay_state`, `armada_drm_overlay_plane_atomic_update`, `armada_drm_overlay_plane_atomic_disable`, `armada_overlay_plane_update`, state reset/duplicate handlers, property get/set handlers, `armada_overlay_create_properties`, and `armada_overlay_plane_create`. The plane reuses `armada_drm_plane_atomic_check` from `armada_plane.c` for geometry, pitches, addresses, and interlace decisions.
+
+Control flow: an atomic check precomputes plane state, then update queues register writes for DMA start addresses, Y/U/V pitches, source/destination rectangles, format/modifier bits, interlace frame toggling, horizontal smoothing, CBSH, CSC, and color-key registers. Visibility transitions power YUV FIFOs up or down through `LCD_SPU_SRAM_PARA1`. Legacy update allocates an atomic state, sets plane fields, traces `armada_ovl_plane_update`, and commits nonblocking.
+
+State persists in custom atomic plane state and in hardware registers. Dependencies include DRM atomic helpers, fourcc format metadata, Armada GEM framebuffer `dev_addr`, CRTC register queues, and tracepoints. Risks are packed-YUV odd-x UV swap compensation, unsupported interlaced overlay behavior marked FIXME, property creation only checking one allocation, and ADV color-key writes gated by variant support. Test signals are property round trips, color-key edge cases, YUV/RGB overlay scanout, scaling/smoothing, interlace rejection/behavior, underflow-free flips, and tracepoint coverage.

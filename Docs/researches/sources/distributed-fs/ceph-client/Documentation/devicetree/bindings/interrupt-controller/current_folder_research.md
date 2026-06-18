@@ -1,0 +1,153 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 139
+- Recursive researched files: 139
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/abilis,tb10x-ictl.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/actions,owl-sirq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/al,alpine-msix.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/allwinner,sun4i-a10-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/allwinner,sun6i-a31-r-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/allwinner,sun7i-a20-sc-nmi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/altr,msi-controller.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/amazon,al-fic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/amlogic,meson-gpio-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/andestech,plicsw.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/apm,xgene1-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/apple,aic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/apple,aic2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,gic-v3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,gic-v5-iwb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,gic-v5.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,gic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,nvic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,versatile-fpga-irq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/arm,vic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/aspeed,ast2400-i2c-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/aspeed,ast2400-vic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/aspeed,ast2500-scu-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/aspeed,ast2700-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/atmel,aic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2712-msix.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2836-l1-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm6345-l1-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/brcm,l2-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/cdns,xtensa-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/chrp,open-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/cirrus,ep7209-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/cnxt,cx92755-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/csky,apb-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/csky,mpintc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/econet,en751221-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ezchip,nps400-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/faraday,ftintc010.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,icoll.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,imx8qxp-dc-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,intmux.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,irqsteer.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,ls-extirq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,ls-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,mpic-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,mu-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,qe-ports-ic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,tzic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/fsl,vf610-mscm-ir.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/google,goldfish-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/hisilicon,mbigen-v2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/idt,32434-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/img,pdc-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ingenic,intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/intel,ce4100-ioapic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/intel,ce4100-lapic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/intel,ixp4xx-interrupt.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/jcore,aic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/kontron,sl28cpld-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,cpu-interrupt-controller.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,eiointc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,htpic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,htvec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,liointc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,ls1x-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,pch-lpc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,pch-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/loongson,pch-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/lsi,zevio-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,ap806-gicp.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,ap806-sei.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,armada-8k-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,cp110-icu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,mpic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,odmi-controller.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/marvell,orion-bridge-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mediatek,mt6577-sysirq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mediatek,mtk-cirq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/microchip,lan966x-oic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/microchip,pic32mzda-evic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/microchip,sama7g5-eic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mrvl,intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mscc,ocelot-icpu-intr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/msi-controller.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mstar,mst-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mti,cpu-interrupt-controller.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/mti,gic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/nuvoton,wpcm450-aic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/nvidia,tegra20-ictlr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/nxp,lpc3220-mic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/opencores,or1k-pic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/openrisc,ompic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/qca,ar7100-cpu-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/qca,ar7100-misc-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/qcom,mpm.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/qcom,pdc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ralink,rt2880-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/rda,8810pl-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/realtek,rtl-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/renesas,intc-irqpin.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/renesas,irqc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/renesas,r9a09g077-icu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/renesas,rza1-irqc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/renesas,rzg2l-irqc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/renesas,rzv2h-icu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/riscv,aplic.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/riscv,cpu-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/riscv,imsics.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/riscv,rpmi-mpxy-system-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/riscv,rpmi-system-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/samsung,exynos4210-combiner.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/sifive,plic-1.0.0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/snps,arc700-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/snps,archs-idu-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/snps,archs-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/snps,dw-apb-ictl.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/socionext,synquacer-exiu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/socionext,uniphier-aidet.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/sophgo,sg2042-msi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/st,spear300-shirq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/st,stih407-irq-syscfg.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/st,stm32-exti.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/starfive,jh8100-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/sunplus,sp7021-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/technologic,ts4800-irqc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/thead,c900-aclint-mswi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/thead,c900-aclint-sswi.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,cp-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,keystone-irq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,omap-intc-irq.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,omap4-wugen-mpu.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,pruss-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,sci-inta.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/ti,sci-intr.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/via,vt8500-intc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/interrupt-controller/xlnx,intc.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

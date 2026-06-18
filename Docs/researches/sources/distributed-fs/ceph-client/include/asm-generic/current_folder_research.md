@@ -1,0 +1,140 @@
+# Folder Research: sources/distributed-fs/ceph-client/include/asm-generic
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 126
+- Recursive researched files: 152
+- Direct child folders represented: 2
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/include/asm-generic/Kbuild`
+- `sources/distributed-fs/ceph-client/include/asm-generic/access_ok.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/agp.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/archrandom.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/asm-offsets.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/asm-prototypes.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/atomic.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/atomic64.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/audit_change_attr.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/audit_dir_write.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/audit_read.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/audit_signal.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/audit_write.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/barrier.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/bitops.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/bitsperlong.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/bug.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/cache.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/cacheflush.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/cfi.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/checksum.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/cmpxchg-local.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/cmpxchg.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/codetag.lds.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/compat.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/current.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/delay.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/device.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/div64.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/dma-mapping.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/dma.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/early_ioremap.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/emergency-restart.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/error-injection.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/exec.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/extable.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/fixmap.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/flat.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/fprobe.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/ftrace.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/futex.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/getorder.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/hardirq.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/hugetlb.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/hw_irq.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/int-ll64.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/io.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/ioctl.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/iomap.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/irq.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/irq_regs.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/irq_work.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/irqflags.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/kdebug.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/kmap_size.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/kprobes.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/kvm_para.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/kvm_types.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/linkage.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/local.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/local64.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/logic_io.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mcs_spinlock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/memory_model.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mm_hooks.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mmiowb.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mmiowb_types.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mmu.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mmu_context.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mmzone.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/module.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/module.lds.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/mshyperv.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/msi.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/nommu_context.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/numa.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/param.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/parport.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pci.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pci_iomap.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/percpu.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pgalloc.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pgtable-nop4d.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pgtable-nopmd.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pgtable-nopud.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/pgtable_uffd.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/preempt.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/qrwlock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/qrwlock_types.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/qspinlock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/qspinlock_types.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/resource.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/rqspinlock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/runtime-const.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/rwonce.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/seccomp.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/sections.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/serial.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/set_memory.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/shmparam.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/signal.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/simd.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/softirq_stack.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/spinlock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/spinlock_types.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/statfs.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/string.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/switch_to.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/syscall.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/syscalls.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/text-patching.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/thread_info_tif.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/ticket_spinlock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/timex.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/tlb.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/tlbflush.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/topology.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/trace_clock.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/uaccess.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/unwind_user.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/user.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/vermagic.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/vga.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/video.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/vmlinux.lds.h`
+- `sources/distributed-fs/ceph-client/include/asm-generic/word-at-a-time.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

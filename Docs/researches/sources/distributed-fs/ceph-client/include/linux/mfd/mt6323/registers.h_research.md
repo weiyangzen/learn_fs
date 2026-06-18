@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6323/registers.h -->
+# sources/distributed-fs/ceph-client/include/linux/mfd/mt6323/registers.h
+
+This MT6323 register header maps the PMIC register address space as symbolic offsets. It covers charger control (`CHR_CON*`), startup (`STRUP_CON*`), speaker (`SPK_CON*`), chip ID and top clock/reset/test/status registers, interrupt mask/status/control, over-current gear/control, SPI/DEW wrapper diagnostics and cipher/CRC registers, buck regulators for VPROC/VSYS/VPA, current sinks, analog and digital LDO blocks, efuse values and outputs, RTC mix registers, audio top, AUXADC data/control, and accessory-detect registers.
+
+There are no functions or types; child drivers use these constants with a regmap supplied by the MFD core. Control flow is convention-based: set/clear companion registers allow atomic bit manipulation, status registers are read during IRQ demux and health checks, and regulator/ADC/audio/charger drivers address their block-specific ranges. State is entirely hardware register state, including volatile status/interrupts and persistent-ish efuse/trim values.
+
+Dependencies include MT6323 core IRQ numbering, MediaTek PMIC regmap configuration with 16-bit aligned offsets, regulator, charger, audio, AUXADC, and accessory-detect drivers. Risks include silent breakage from wrong offsets, gaps in numbered register series, set/clr misuse, and treating efuse/DEW/test registers as normal writable configuration. Test signals include compile-time users resolving all symbols, regmap access traces for each functional block, IRQ status reads from `INT_STATUS0/1`, regulator enable/voltage tests, and ADC/accessory-detect smoke tests.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/mfd/mt6323/registers.h -->

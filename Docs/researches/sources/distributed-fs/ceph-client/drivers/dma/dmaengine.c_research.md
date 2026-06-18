@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/dma/dmaengine.c
+
+Purpose: Core Linux DMAengine subsystem implementation. It manages DMA provider registration, channel allocation/release, public channel rebalancing for async_tx users, OF/ACPI/filter-map channel requests, sysfs/debugfs exposure, unmap-data pools, descriptor metadata helpers, and dependency submission.
+
+Important APIs/types/functions: Global state includes `dma_device_list`, `dma_list_mutex`, `dma_ida`, `dmaengine_ref_count`, per-transaction per-CPU `channel_table`, DMA sysfs class, and optional debugfs root. Exported APIs include `dma_sync_wait`, `dma_find_channel`, `dma_issue_pending_all`, `dma_get_slave_caps`, `dma_get_slave_channel`, `dma_get_any_slave_channel`, `__dma_request_channel`, `dma_request_chan`, `dma_request_chan_by_mask`, `dma_release_channel`, `devm_dma_request_chan`, `dmaengine_get`, `dmaengine_put`, `dma_async_device_channel_register`, `dma_async_device_register`, `dma_async_device_unregister`, `dmaenginem_async_device_register`, metadata helpers, `dmaengine_get_unmap_data`, `dmaengine_unmap_put`, `dma_async_tx_descriptor_init`, `dma_wait_for_async_tx`, and `dma_run_dependencies`.
+
+Control flow: init allocates per-CPU channel tables, creates unmap mempools, registers the DMA class, and initializes debugfs. Provider registration validates capability callbacks, assigns device/channel IDs, creates channel devices and per-CPU stats, takes references for existing async clients, adds the device to the global RCU list, and rebalances public channels. Client request paths resolve firmware mappings first, then filter maps or capability masks, mark exclusive channels private, allocate provider resources on first reference, and create sysfs links to slave devices. Release unwinds resources, router mappings, sysfs links, debug names, references, and private caps. Unregister removes debugfs, channel devices, privateizes the provider, rebalances, and drops the final kref. Async helpers maintain unmap pools, metadata mode consistency, wait loops, and dependency chains.
+
+State and persistence: All state is in kernel memory: global provider list, ref counts, krefs, per-channel client/table counts, sysfs/debugfs objects, per-CPU stats, and mempools. No persistent storage.
+
+Dependencies/integration: DMA provider drivers, async_tx clients, OF/ACPI DMA helpers, sysfs class model, debugfs, module refs, RCU/kref/IDA, mempool/slab, and DMA mapping APIs.
+
+Risks: Locking boundaries are critical: global list under mutex with RCU readers, channel lists mostly immutable after registration. Providers without `device_release` are unsafe to unbind while referenced. Exclusive/private channel accounting must stay balanced. Metadata modes cannot be mixed per descriptor. Busy waits use fixed 5s timeouts.
+
+Test signals: provider registration/unregistration under active clients, devm request auto-release, OF/ACPI/filter-map request paths, sysfs links/counters, public channel rebalancing under `dmaengine_get/put`, metadata attach/get/set errors, unmap pool sizes, and dependency-chain submission.

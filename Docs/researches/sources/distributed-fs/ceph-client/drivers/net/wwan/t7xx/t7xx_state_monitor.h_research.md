@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_state_monitor.h
+
+This header defines the modem FSM contract. Enums describe FSM control states, asynchronous event IDs, command IDs, exception reasons, modem IRQ sources, and externally broadcast modem states. `struct t7xx_fsm_ctl` stores the current state, queues, waitqueues, locks, notifier list, thread, and modem pointer. `struct t7xx_fsm_event`, `struct t7xx_fsm_command`, and `struct t7xx_fsm_notifier` model queued input and observer callbacks.
+
+The API lets other T7xx modules append commands/events, clear events, broadcast state, reset/init/uninit the FSM, receive modem interrupts, query MD state, and register/unregister notifiers. State persists for modem lifetime and is reset on reprobe. Dependencies include completions, krefs, list heads, spinlocks, waitqueues, and modem forward declarations. Risks include misuse of command flags, event data ownership mistakes, notifier lifetime issues, and callers assuming a stable `md_state` without locking. Tests should cover each enum transition, command completion, event payload freeing, and notifier behavior across reset/uninit.

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/alluxio/core/server/master/src/test/java/alluxio/master/block/ConcurrentBlockMasterTest.java -->
+## sources/distributed-fs/alluxio/core/server/master/src/test/java/alluxio/master/block/ConcurrentBlockMasterTest.java
+
+**Purpose:** Stress-tests `DefaultBlockMaster` locking semantics under concurrent reader/writer and writer/writer races involving commit, remove, register, and heartbeat paths. It validates that concurrent operations expose only legal before/after states and that block metadata, worker usage, to-remove commands, and orphan handling remain consistent.
+
+**Important APIs/types/functions:** Uses `SignalBlockMaster` to signal after `lockBlock`, `BlockMasterTestUtils.verifyBlockOnWorkers`, `verifyBlockNotExisting`, `findWorkerInfo`, `commitBlock`, `commitBlockInUFS`, `removeBlocks`, `workerRegister`, `workerHeartbeat`, `getBlockInfo`, and `getWorkerReport`. It also uses `Command`, `CommandType.Free`, `CommandType.Nothing`, `RegisterWorkerPOptions`, `WorkerInfo`, `BlockInfo`, and `BlockLocation`.
+
+**Control flow:** The fixture starts a primary `SignalBlockMaster` with a two-thread master executor and a separate client executor. `concurrentWriterWithReaders` schedules 20 readers blocked on a latch; the writer releases the latch inside `lockBlock`. `concurrentWriterWithWriter` schedules a second writer blocked on the same signal, runs the first writer in the calling thread, then verifies final state. Commit races cover register of same/different blocks and same/different worker heartbeats. Remove races run with `deleteMetadata` true and false and cover new worker register, same worker heartbeat, different worker heartbeat, same block, and different block permutations.
+
+**State and persistence behavior:** The tests use a `NoopJournalSystem`, so state is volatile. They intentionally observe transient states such as worker usage not being rectified until heartbeat, blocks with zero locations, metadata removed while worker usage remains, and deferred `Free` commands in workers' to-remove lists. The `ManuallyScheduleHeartbeat` class rule isolates lost-worker detection heartbeats.
+
+**Dependencies and integration points:** Integrates block master with worker registration, worker reports, heartbeat command generation, worker storage accounting, protobuf metadata locations, and the lock path exposed by `DefaultBlockMaster.lockBlock`. It depends on `SignalBlockMaster` to turn internal lock acquisition into deterministic concurrency coordination.
+
+**Risks:** Concurrency tests still depend on thread scheduling after latch release; failures may be intermittent if operations complete too quickly or executor behavior changes. Some assertions intentionally allow multiple legal outcomes, especially whether a heartbeat sees a `Free` command before or after to-remove list update. The tests assume lock ordering prevents deadlock while mixing block locks and worker metadata locks.
+
+**Test signals:** Passing signals include zero uncaught throwables from concurrent tasks, expected worker counts and used-byte values, correct block location sets, `BlockInfoException` when metadata is removed, `FREE_BLOCK1_CMD` when a worker must free removed block 1, and `EMPTY_CMD` when no worker action is required.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/alluxio/core/server/master/src/test/java/alluxio/master/block/ConcurrentBlockMasterTest.java -->

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/mm/mmap_test.h
+
+Purpose: shared helper for RISC-V mmap layout tests. It defines `TOP_DOWN`, `BOTTOM_UP`, protection/flag constants, and `memory_layout()`, which performs two anonymous private mappings and returns whether the second address is higher than the first. State is the process virtual address space after two mappings. Dependencies are `mmap`, resource-limit-driven kernel layout selection, and kselftest harness includes. Risks are interpreting pointer ordering as layout direction under ASLR, not unmapping test allocations, and helper simplicity hiding failures where `mmap` returns `MAP_FAILED`. Test signals are correct expectations in `mmap_default` and `mmap_bottomup`.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/sgi-ip30/ip30-irq.c
+
+Purpose: SGI IP30 HEART interrupt-controller support. It creates a HEART irq-domain, handles normal/error cascades, supports affinity, and reserves special HEART bits.
+
+Important APIs and control flow: `heart_alloc_int()` reserves interrupt bits. `ip30_normal_irq()` reads ISR/IMR, handles SMP reschedule/call IPIs specially, or dispatches the first pending bit through the irq-domain. `ip30_error_irq()` masks and acknowledges HEART L4 error interrupts, logs ISR/IMR/CAUSE and memory error address, then panics on cause. IRQ chip methods ack/mask/unmask bits in per-CPU IMRs, and affinity retargets chip data to another online CPU. `heart_domain_alloc()` creates level IRQ mappings. `ip30_install_ipi()` enables per-CPU IPI bits. `arch_init_irq()` masks/acks all HEART IRQs, enables error masks, reserves hardware/software bits, creates the domain, and chains CPU IRQ lines.
+
+State, persistence, and integration: state includes `heart_irq_map`, per-CPU enable masks, irq-domain mappings, and HEART IMR/ISR registers. Dependencies include initialized `heart_regs`, CPU online masks, SMP IPI handlers, and generic IRQ domains. Risks include `heart_domain_alloc()` not setting an initial CPU explicitly, fatal panic on HEART cause, and affinity selecting an invalid CPU if no mask intersection exists. Test signals are HEART domain creation, IPIs, device IRQ delivery, error IRQ panic diagnostics, and interrupt affinity updates.

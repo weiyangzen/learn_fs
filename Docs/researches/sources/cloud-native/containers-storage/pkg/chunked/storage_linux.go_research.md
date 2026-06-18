@@ -1,0 +1,15 @@
+## sources/cloud-native/containers-storage/pkg/chunked/storage_linux.go
+
+Purpose: Linux implementation of chunked partial layer application. It chooses a zstd:chunked, eStargz, or conversion differ, reads TOC metadata, stages filesystem entries, deduplicates content from prior layers or OSTree repos, range-fetches missing chunks, records fs-verity digests, and returns graph-driver differ output.
+
+Important APIs/types/functions: `chunkedDiffer`, `pullOptions`, `parsePullOptions`, `NewDiffer`, `getProperDiffer`, `makeConvertFromRawDiffer`, `makeZstdChunkedDiffer`, `makeEstargzChunkedDiffer`, `ApplyDiff`, `mergeTocEntries`, `retrieveMissingFiles`, `storeMissingFiles`, `mergeMissingChunks`, `getBlobAt`, `copyAllBlobToFile`, `makeEntriesFlat`, `findFileInOtherLayers`, `findFileInOSTreeRepos`, `recordFsVerity`, and `stagedFileGetter`.
+
+Control flow: `NewDiffer` requires partial images and a graph driver supporting staged differs, then dispatches by TOC annotations. zstd:chunked readers require tar-split unless unpredictable content is explicitly allowed; eStargz requires that same insecure opt-out. `ApplyDiff` is one-shot: optional raw-to-zstd conversion first validates the compressed digest, then parses the generated manifest; entries are merged with following `TypeChunk` records; IDs may be remapped; directories/symlinks/hardlinks are created; regular files are copied from cache/OSTree when possible; remaining chunks are merged into bounded range requests, fetched, decompressed or hole-punched, hashed, and attributed.
+
+State and persistence: mutates the destination root with files, dirs, xattrs, whiteouts, hardlinks, holes, override xattrs, and fs-verity state. Maintains per-differ zstd/gzip readers, tar-split file ownership, layer cache reference, copy buffer, fs-verity digest map, and one-shot `used` guard. Output BigData stores manifest and chunked-layer metadata; Artifacts include TOC and fs-verity digests.
+
+Dependencies and integration points: central integration point with `storage.Store`, graph drivers, `archive.TarOptions`, `idtools`, `fsverity`, tar-split, eStargz, zstd/gzip, OCI digests, layer cache helpers, compression helpers, securejoin, and fd-safe filesystem helpers.
+
+Risks: high-complexity security path involving TOC trust, digest validation, fd containment, whiteout conversion, and ID mapping. The boolean expression in `maybeDoIDRemap` depends on operator precedence and may be easy to misread. `useHardLinks` dedupe skips metadata changes by design. Full uncompressed digest reconstruction is expensive but needed for consistency unless insecure opt-out is enabled. Concurrent copy workers write into a shared result slice by unique indexes; correct job indexing is essential.
+
+Test signals: `storage_linux_test.go` focuses on `getBlobAt` stream/error channel normalization and `typeToOsMode`; `zstdchunked_test.go` validates manifest generation/read integration. There is no focused unit test for `ApplyDiff`, request merging, fs-verity, OSTree dedupe, ID remap, or whiteout behavior in the selected files. Local `go test` could not run because `go` is not installed.

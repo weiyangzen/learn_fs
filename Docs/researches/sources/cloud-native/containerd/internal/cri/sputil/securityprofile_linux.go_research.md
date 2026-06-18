@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/sputil/securityprofile_linux.go
+
+This shared Linux helper parses legacy profile path strings into CRI `runtime.SecurityProfile` structs for AppArmor and seccomp. It defines common constants: `profileNamePrefix` (`localhost/`), `runtimeDefault`, `dockerDefault`, `appArmorDefaultProfileName`, `unconfinedProfile`, and `seccompDefaultProfile`.
+
+`generateSecurityProfile` maps `runtime/default`, `docker/default`, and empty string to `SecurityProfile_RuntimeDefault`, maps `unconfined` to `SecurityProfile_Unconfined`, and requires every other value to start with `localhost/`. Localhost values become `SecurityProfile_Localhost` with `LocalhostRef` stripped of the prefix. Invalid non-prefixed custom values return an error.
+
+There is no persistence or external state in this file. It is a policy normalization layer used by `GenerateApparmorSecurityProfile` and `GenerateSeccompSecurityProfile`, preserving compatibility with older string-based security profile configuration while feeding newer CRI structured profiles. Risks include treating empty string as runtime default for callers that invoke this helper directly, while higher-level helpers may choose nil for unset; accepting `docker/default` as runtime default; and strict rejection of custom names without `localhost/`. Test coverage is indirect through AppArmor and seccomp test tables.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kcmp/kcmp02.c
+
+Purpose: negative errno test for `kcmp()`, covering nonexistent PID (`ESRCH`), invalid comparison types (`EINVAL`), and invalid file descriptor (`EBADF`). Setup stores current PID, gets an unused PID, and opens two files. The table feeds `kcmp(pid1, pid2, type, fd1, fd2)` through `TST_EXP_FAIL`, including `KCMP_TYPES + 1`, `-1`, `INT_MIN`, and `INT_MAX`. State is only two open file descriptors and pid values. Dependencies are Linux `kcmp` syscall wrapper and tmpdir files. Risks include ptrace/security restrictions that can alter kcmp failures in hardened environments. Test signal is exact errno for each invalid case.

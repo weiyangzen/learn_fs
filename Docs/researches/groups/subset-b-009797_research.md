@@ -1,0 +1,253 @@
+# subset-b-009797 fdcache source research
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache.cpp
+
+Purpose: Implements `FdManager`, the process-wide owner of s3fs local cache configuration, path-to-`FdEntity` mapping, temporary-file fallback, disk-space accounting, cache cleanup, rename handling, and cache/stat consistency checking. It is the top-level coordinator used by FUSE operations through `s3fs.cpp` and by signal handlers for cache diagnostics.
+
+Important APIs and functions: static configuration helpers include `SetCacheDir`, `MakeCachePath`, `DeleteCacheDirectory`, `DeleteCacheFile`, `SetTmpDir`, `MakeTempFile`, `HaveLseekHole`, `SetEnsureFreeDiskSpace`, `ReserveDiskSpace`, `FreeReservedDiskSpace`, and `IsSafeDiskSpace`. Entity lifecycle APIs include `GetFdEntityHasLock`, `Open`, `GetExistFdEntity`, `OpenExistFdEntity`, `Rename`, `Close`, `ChangeEntityToTempPath`, `UpdateEntityToTempPath`, and `CleanupCacheDir`. Diagnostics are handled by `RawCheckAllCache` and `CheckAllCache`.
+
+Control flow: `Open` locks `fd_manager_lock`, normalizes delayed temp-path moves, searches `fent` by object path or by open entity when cache is disabled, optionally reuses an entity, or creates a new `FdEntity` with a bucket-scoped cache path. No-cache mode keys entities with a generated dummy path while preserving the logical object path in the entity. `Close` removes a pseudo-fd from the entity and erases all map entries for the entity once no pseudo-fds remain. `Rename` removes the old map entry, delegates cache/stat rename to `FdEntity::RenamePath`, and reinserts under the returned key. `CleanupCacheDir` recursively deletes cache files that are not present in `fent`; it skips files if it cannot take the manager lock.
+
+State and persistence: static state tracks the cache root, temp root, cache-check output path, free-space reserve, fake free-space offset for tests, and lseek capability. `fent` maps logical or generated paths to live `FdEntity` instances. `except_fent` is a delayed-deletion/remap lane used when an entity must be moved away from a cache path while another operation still references it. Persistent state lives on disk under `<cache_dir>/<bucket>` for cache data, `.<bucket>.mirror` for linked mirror files, and `.<bucket>.stat` through `CacheFileStat`.
+
+Dependencies and integration: Depends on `FdEntity`, `CacheFileStat`, `S3fsCred::GetBucket`, logger macros, `mkdirp`, `delete_files_in_dir`, `check_exist_dir_permission`, `statvfs`, `mkstemp`, and sparse-file `lseek`. It is called from FUSE front-end code, `AutoFdEntity`, `CacheFileStat`, and `sighandlers.cpp`.
+
+Risks: Lock ordering is central: manager methods call into entity methods while holding `fd_manager_lock`, and cleanup uses `try_lock` to avoid deadlock. Disk reservation is global and manually balanced; missing `FreeReservedDiskSpace` on new error paths would throttle later I/O. `RawCheckAllCache` depends on `dirent.d_type` and `SEEK_DATA`/`SEEK_HOLE`, which vary by filesystem. No-cache dummy paths are deliberately synthetic and can complicate lookup, rename, and diagnostics.
+
+Test signals: Integration tests exercise multipart/cache behavior through `integration-test-main.sh` and `small-integration-test.sh`, including `use_cache`, `ensure_diskfree`, `fake_diskfree`, multipart, mixed multipart, stream upload, and boundary-write scenarios. `sighandlers.cpp` exposes the `CheckAllCache` path for runtime cache validation when sparse-file support exists.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache.h
+
+Purpose: Declares `FdManager`, the singleton manager for local cache directories, pseudo-fd-backed `FdEntity` objects, disk-space reservations, and cache consistency checks.
+
+Important APIs and types: `FdManager::get()` returns the singleton. Public static APIs configure and inspect cache paths, disk limits, temp directory, lseek-hole support, and open-count queries. Public instance APIs open, find, rename, close, move, clean, and check entities. Private members include global mutexes, cache/temp path strings, reserve accounting, `fdent_map_t fent`, and delayed-remap `except_fent`.
+
+Control flow contract: Callers open or find an entity through `Open`, `GetFdEntity`, `GetExistFdEntity`, or `OpenExistFdEntity`, then must eventually call `Close` unless ownership has been intentionally detached by an RAII wrapper. Header annotations document lock expectations for internal methods such as `GetFdEntityHasLock`, `GetPseudoFdCount`, and `CleanupCacheDirInternal`.
+
+State and persistence behavior: The header defines where global cache state is centralized but leaves persistence to `fdcache.cpp`, `FdEntity`, `PageList`, and `CacheFileStat`. `fent` is the authoritative in-memory live entity map; on-disk cache path shape is generated by static helpers.
+
+Dependencies and integration points: Includes `common.h`, `fdcache_entity.h`, and `s3fs_util.h`. This makes `FdManager` visible to FUSE operation code, `AutoFdEntity`, cache-stat code, signal handlers, and entity no-cache fallback code.
+
+Risks: The class exposes many global mutable knobs, so initialization order and option parsing must be disciplined. Returning raw `FdEntity*` requires callers to honor pseudo-fd reference ownership. The lock annotations are valuable but do not prevent all runtime lock-order mistakes in non-Clang-thread-safety builds.
+
+Test signals: Exercise via integration paths that mount with and without `use_cache`, open the same path multiple times, rename open files, force disk-space fallback, and invoke cache checking.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_auto.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_auto.cpp
+
+Purpose: Implements `AutoFdEntity`, an RAII helper that pairs a raw `FdEntity*` with its pseudo-fd and automatically closes it through `FdManager`.
+
+Important APIs and functions: Constructor initializes empty state. Destructor calls `Close`. `Close` delegates to `FdManager::Close` and clears local state. `Detach` transfers pseudo-fd ownership to the caller without closing. `Attach` binds to an existing pseudo-fd without creating a new one. `Open`, `GetExistFdEntity`, and `OpenExistFdEntity` wrap the corresponding `FdManager` APIs.
+
+Control flow: Before every attach/open operation, `Close` releases any previous association. `Open` initializes `pseudo_fd` to `-EIO` before calling `FdManager::Open` so early failure paths can still return a meaningful negative error through the optional `error` pointer. `GetExistFdEntity` intentionally returns an entity without storing it in the RAII state because it does not create a new pseudo-fd.
+
+State and persistence behavior: Stores only `pFdEntity` and `pseudo_fd`; it owns no on-disk state. Persistence effects come from the manager/entity close path, which may serialize page stats and release cache/mirror descriptors.
+
+Dependencies and integration points: Depends on `fdcache.h` and logger macros. Used by s3fs FUSE operations to keep entity reference counts balanced across early returns.
+
+Risks: `Detach` disables automatic close and must be used only when the caller will later close the pseudo-fd. `GetExistFdEntity` returns a raw entity while leaving `pFdEntity` null, so code must not assume all returned entities are RAII-owned. If `FdManager::Close` fails, `Close` leaves state uncleared to surface the problem.
+
+Test signals: Open/close leak tests are indirect; relevant integration signals are multi-open, release, flush, and error-path tests. The explicit `-EIO` initialization is a regression guard for early `FdManager::Open` failures returning useful errors.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_auto.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_auto.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_auto.h
+
+Purpose: Declares the small RAII wrapper that protects `FdEntity` pseudo-fd reference accounting.
+
+Important APIs and types: `AutoFdEntity` is non-copyable and non-movable. It exposes `Close`, `Detach`, `Attach`, `GetPseudoFd`, `Open`, `GetExistFdEntity`, and `OpenExistFdEntity`. It stores a raw `FdEntity*` and an integer pseudo-fd.
+
+Control flow contract: Construct empty, call an open/attach method, use the returned entity and `GetPseudoFd`, then let the destructor or explicit `Close` release it. `Detach` is an escape hatch that transfers close responsibility to the caller.
+
+State and persistence behavior: No direct persistence; the wrapped entity may persist page-list metadata and cache files when closed.
+
+Dependencies and integration points: Includes `metaheader.h` and `filetimes.h`, forward-declares `FdEntity`, and provides a header-level wrapper for FUSE operation code.
+
+Risks: Raw pointer plus pseudo-fd state is intentionally minimal but easy to misuse if detached pseudo-fds are not closed. The class prevents copying/moving to avoid double-close, but callers still need clear ownership after `Detach`.
+
+Test signals: Indirectly covered by file operation tests that open, reopen, flush, release, and hit early errors.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_auto.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_entity.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_entity.cpp
+
+Purpose: Implements `FdEntity`, the per-object engine behind s3fs file I/O. It owns the physical cache or temp fd, pseudo-fd records, original metadata, file timestamps, dirty/pending state, page loaded/modified ranges, untreated ranges for upload, and all read/write/flush upload strategies.
+
+Important APIs and functions: Static mode toggles are `SetNoMixMultipart` and `SetStreamUpload`. Lifecycle and descriptor APIs include `Open`, `Close`, `DupWithLock`, `OpenPseudoFd`, `RenamePath`, `GetStatsHasLock`, `GetStatsFromMeta`, `LoadAll`, `Load`, `Read`, `Write`, `RowFlushHasLock`, `Flush`, and `PunchHole`. Upload implementations include `RowFlushNoMultipart`, `RowFlushMultipart`, `RowFlushMixMultipart`, `RowFlushStreamMultipart`, `NoCacheLoadAndPost`, `NoCachePreMultipartUploadRequest`, `NoCacheMultipartUploadRequest`, and `NoCacheMultipartUploadComplete`. Metadata/pending helpers include `MergeOrgMeta`, `UploadPendingHasLock`, `MarkDirtyNewFile`, `MarkDirtyMetadata`, and xattr/mode/uid/gid/content-type setters.
+
+Control flow: `Open` either resizes an already-open fd or opens/restores a cache file and its `PageList` from `CacheFileStat`; without cache it creates an unlinked temp file. Cache mode opens a hard-linked mirror file so the fd remains valid if the primary cache path changes. Reads reserve disk space for unloaded pages, prefetch up to multipart-size times worker-count, call `Load`, then `pread`. Writes grow holes if needed, mark pages modified, add untreated ranges, then choose no-multipart, normal multipart, mixed multipart, or stream-upload behavior. Flush checks write permissions and dirty state, chooses upload strategy, clears modified state on success, serializes cache stats, and deletes cache files on upload failure.
+
+State and persistence behavior: `fdent_lock` protects descriptor/path/pseudo-fd metadata; `fdent_data_lock` protects `PageList`, cache/mirror paths, pending status, and timestamps. `ro_path_lock` protects a lookup-friendly copy of the logical path. On close/clear, if the current cache inode still matches the entity inode, `PageList::Serialize` writes the `.stat` sidecar. `pending_status_t` distinguishes no pending update, metadata-only update, and new-file creation. `size_orgmeta` is the original S3 object size used to decide whether unloaded pages should be downloaded or zero-filled.
+
+Dependencies and integration points: Integrates with `FdManager` for cache paths, temp files, disk reservations, cleanup, and map remapping; `PageList` for range state; `CacheFileStat` for sidecar persistence; `PseudoFdInfo` for multipart upload bookkeeping; `UntreatedParts` for stream/no-cache pending ranges; `S3fsCurl` and `s3fs_threadreqs` for GET, PUT, multipart, copy, complete, abort, and metadata update requests; `ThreadPoolMan` for async PUT; and metadata helpers in `metaheader`/`s3fs_util`.
+
+Risks: This is the highest-risk cache layer. Lock order must remain `fdent_lock` before `fdent_data_lock`, with manager interactions carefully controlled. Multipart fallback switches from cache-backed to temp-key no-cache mode and deletes cache/stat files; errors there can leave partially uploaded multipart sessions that must be aborted. Pending metadata during active upload depends on correct `pending_status` transitions. Disk reservation is manual. Sparse hole punching is Linux/filesystem dependent. `CheckPseudoFdFlags` is called with `writable=false` in `Write`, relying on later write-path checks and should be reviewed carefully if flags semantics change.
+
+Test signals: Integration tests cover multipart upload, multipart copy, mixed multipart overwrite, utimens during multipart, skipped/hole writes, non-boundary writes, cache and no-cache modes, fake/ensured disk-free behavior, and `streamupload` in small integration options. Any change here needs full integration coverage plus targeted tests for cache stat persistence and error cleanup.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_entity.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_entity.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_entity.h
+
+Purpose: Declares `FdEntity`, the per-open-object abstraction for cached reads, writes, uploads, metadata changes, page-list state, and pseudo-fd management.
+
+Important APIs and types: Defines `fdinfo_map_t` and `fdent_map_t`. `FdEntity` is `enable_shared_from_this` and non-copyable/non-movable. Public methods cover open/close, pseudo-fd lookup/duplication, path rename, stats and metadata access, timestamp/mode/owner/xattr/content-type mutation, load/read/write/flush, hole punching, dirty marking, and untreated-part manipulation. Private `pending_status_t` represents metadata and create-file pending work.
+
+Control flow contract: `FdManager` owns shared instances and calls `Open`/`Close`; FUSE-facing code usually reaches methods through `AutoFdEntity`. Callers must pass pseudo-fds obtained from this entity. Lock annotations document which helpers require `fdent_lock` and/or `fdent_data_lock`.
+
+State and persistence behavior: Header documents the split between logical path/physical fd/upload info and data/cache/page metadata. `PageList` plus `CacheFileStat` persist loaded/modified ranges by cache inode. `orgmeta`, `timestamps`, and `pending_status` determine whether flush performs data upload, metadata copy update, or new-file creation.
+
+Dependencies and integration points: Includes `fdcache_page.h`, `fdcache_untreated.h`, `metaheader.h`, `s3fs_util.h`, and `filetimes.h`; forward-declares `PseudoFdInfo`. Used by `FdManager`, `PseudoFdInfo`, `AutoFdEntity`, and FUSE operations.
+
+Risks: The class exposes a broad surface with raw pseudo-fd integers and manual lock discipline. `friend class FdEntity` access to `PageList` internals and `get_shared_ptr` use during manager remap make ownership assumptions important. Header-level lock annotations are only as strong as tooling support.
+
+Test signals: Compile-time coverage comes from the main build. Runtime coverage should include open/reopen, truncate, sparse writes, metadata-only updates, multipart modes, stream upload, no-cache fallback, and rename while open.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_entity.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.cpp
+
+Purpose: Implements `PseudoFdInfo`, the per-pseudo-fd state holder for open flags and multipart upload bookkeeping. It tracks upload id, duplicated upload fd, uploaded part list, ETag storage, async upload instruction count, last thread result, and completion semaphore.
+
+Important APIs and functions: Descriptor helpers include constructor/destructor, `Set`, `Writable`, `Readable`, `OpenUploadFd`, and `CloseUploadFd`. Upload state helpers include `ClearUploadInfo`, `InitialUploadInfo`, `PreMultipartUploadRequest`, `GetUploadId`, `GetEtaglist`, `AppendUploadPart`, `InsertUploadPart`, `ParallelMultipartUpload`, `ParallelMultipartUploadAll`, `WaitAllThreadsExit`, and `CancelAllThreads`. Stream/mixed planning helpers are `UploadBoundaryLastUntreatedArea`, `ExtractUploadPartsFromUntreatedArea`, and `ExtractUploadPartsFromAllArea`.
+
+Control flow: Construction obtains a pseudo-fd from `PseudoFdManager` if a physical fd is supplied. Multipart starts with `PreMultipartUploadRequest`, which obtains an upload id and stores it. Parts are appended sequentially for no-cache upload or inserted by part number for parallel mixed/copy upload. `ParallelMultipartUpload` duplicates the fd, creates ETag entities that remain stable for worker threads, schedules upload/copy part requests, increments `instruct_count`, and later `WaitAllThreadsExit` drains semaphore completions. Stream upload aligns the last untreated area to multipart boundaries, cancels overlapping previously uploaded parts, uploads full boundary parts, and leaves remainders untreated.
+
+State and persistence behavior: State is in-memory and protected by `upload_list_lock`. `upload_id` means a multipart upload is active. `upload_list` stores `filepart` records with ETag pointers owned by `etag_entities`. No disk persistence is written here, but remote S3 multipart state is created and must be completed or aborted by `FdEntity`.
+
+Dependencies and integration points: Uses `PseudoFdManager`, `FdEntity`, `UntreatedParts`, `types.h` multipart structs, `Semaphore`, `ThreadPoolMan`, and `s3fs_threadreqs` request functions. It is tightly coupled to `FdEntity` stream and flush paths.
+
+Risks: Multipart correctness depends on continuous part ranges, stable ETag pointers, correct part-number ordering, and waiting when re-uploading an in-flight part. `CancelAllThreads` relies on worker cooperation through `last_result = -ECANCELED`. `CloseUploadFd` does not reset `upload_fd` after close, so callers must avoid reusing the object in a way that assumes it is `-1` unless `ResetUploadInfo` semantics remain sufficient. Boundary math must respect S3 minimum part sizes and 10,000-part limits handled higher up.
+
+Test signals: Integration coverage comes from multipart upload/copy/mix, streamupload, non-boundary writes, and skipped-write tests. Direct unit coverage for `ExtractUploadPartsFromAllArea` and cancellation ordering would be valuable because most failures appear only under multipart race/error conditions.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.h
+
+Purpose: Declares `PseudoFdInfo`, which binds a pseudo-fd to a physical fd and records multipart upload state for that open handle.
+
+Important APIs and types: Public APIs expose pseudo/physical fd and flags, readability/writability checks, upload-state initialization/clearing, upload id and ETag retrieval, part append, parallel multipart scheduling, pre-multipart initiation, thread waiting, boundary upload, and full-file upload/copy/download plan extraction. `fdinfo_map_t` maps pseudo-fd integers to owned `PseudoFdInfo` objects.
+
+Control flow contract: `FdEntity` creates one `PseudoFdInfo` per open pseudo-fd and calls its upload APIs while holding entity locks where annotated. Multipart callers must initiate upload before adding parts and must collect ETags before complete.
+
+State and persistence behavior: In-memory only. `upload_list_lock` protects all upload fields. `uploaded_sem` coordinates asynchronous worker completion. Remote multipart state is represented by `upload_id` and uploaded part metadata but is completed/aborted elsewhere.
+
+Dependencies and integration points: Includes `fdcache_entity.h`, `psemaphore.h`, `metaheader.h`, and `types.h`; forward-declares `UntreatedParts`. It is a bridge between entity-local writes and thread-request upload APIs.
+
+Risks: Header exposes complex planning APIs with many output lists; callers must interpret all lists consistently. Lock annotation on `UploadBoundaryLastUntreatedArea` requires the caller to hold the owning `FdEntity` mutex, tying this class to entity internals.
+
+Test signals: Needs integration coverage for concurrent multipart, stream upload, copy-vs-upload decisions, aborted uploads, and metadata updates during upload.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_fdinfo.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_page.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_page.cpp
+
+Purpose: Implements `PageList`, the range map that records which byte ranges of a cache file are loaded from S3 and/or modified locally. It also serializes/deserializes that state, plans multipart download/upload ranges, and validates sparse cache files against sidecar stats.
+
+Important APIs and functions: Utility compressors merge adjacent `fdpage` ranges and split large modified ranges by multipart size. Public methods include `Init`, `Size`, `Resize`, `Compress`, `IsPageLoaded`, `SetPageLoadedStatus`, `FindUnloadedPage`, `GetTotalUnloadedPageSize`, `GetUnloadedPages`, `GetPageListsForMultipartUpload`, `GetNoDataPageLists`, `BytesModified`, `IsModified`, `ClearAllModified`, `Serialize`, `Deserialize`, `Dump`, and `CompareSparseFile`. Static helpers use `SEEK_DATA`/`SEEK_HOLE` and zero scanning for cache validation.
+
+Control flow: Mutations split ranges at boundaries via `Parse`, update flags, and compress adjacent compatible ranges. Reads ask for unloaded ranges and mark them loaded after downloads. Writes mark ranges `LOAD_MODIFIED` or `MODIFIED`. Mixed multipart planning compresses by modified status, downloads too-small neighboring areas to satisfy S3 minimum part size, and emits upload/copy page lists split by max part size. Serialization writes a header `<inode>:<size>` followed by `offset:bytes:loaded:modified` rows; deserialization supports old headers without inode and old rows without modified flag.
+
+State and persistence behavior: `pages` is the in-memory ordered range list; `is_shrink` keeps truncation dirty even if no range is marked modified. Persistent state is written through `CacheFileStat::OverWriteFile`. Deserialization rejects inode mismatches and size mismatches to avoid applying stale sidecars to a different cache file.
+
+Dependencies and integration points: Used heavily by `FdEntity` for read/write/flush/load decisions and by `FdManager::CheckAllCache` for consistency diagnostics. Depends on `CacheFileStat`, sparse-file lseek behavior, logger macros, and `string_util` conversion helpers.
+
+Risks: Off-by-one and size-vs-end mistakes are high impact because ranges drive both data downloads and remote upload part selection. Sparse-file validation depends on filesystem support and can produce warnings for zero-filled data blocks where stats expected holes. `SetPageLoadedStatus` can grow the logical file by marking beyond the current size. Multipart planning must preserve minimum-part constraints and avoid generating invalid final parts.
+
+Test signals: `src/test_page_list.cpp` directly tests compression, loading status, and unloaded-page discovery. Integration tests for skipped writes, non-boundary writes, mixed multipart, cache stat deletion/reload, and cache checking are the main behavioral coverage.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_page.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_page.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_page.h
+
+Purpose: Declares the `fdpage` range record and `PageList` range-map API used to track cache-file loaded/modified byte regions.
+
+Important APIs and types: `fdpage` stores `offset`, `bytes`, `loaded`, and `modified`, with `next()` and `end()` helpers. `fdpage_list_t` is a vector of pages. `PageList::page_status` enumerates unloaded/unmodified, loaded, modified, and loaded+modified states. Public methods cover initialization, resizing, loaded checks, range status updates, unloaded-page extraction, multipart range planning, no-data extraction, dirty-byte accounting, serialization, deserialization, dump, and sparse-file comparison.
+
+Control flow contract: `FdEntity` owns and locks `PageList`; `PageList` itself has no mutex. `size=0` parameters generally mean “to end of list.” `FdEntity` is a friend so it can access `pages` directly for no-cache upload flows.
+
+State and persistence behavior: Header exposes the serializable state shape but persistence happens in `fdcache_page.cpp` through `CacheFileStat`.
+
+Dependencies and integration points: Defines fallback `SEEK_DATA`/`SEEK_HOLE` constants for platforms lacking them. Forward-declares `CacheFileStat` and `FdEntity`.
+
+Risks: The API uses raw `off_t` and `size_t` with sentinel `0` meanings; callers must avoid negative/overflow ranges. Friendship with `FdEntity` bypasses normal encapsulation.
+
+Test signals: `test_page_list.cpp` gives focused unit coverage; integration tests exercise multipart planning and sparse write behavior.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_page.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_pseudofd.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_pseudofd.cpp
+
+Purpose: Implements the singleton `PseudoFdManager`, which allocates small integer pseudo-fds used by s3fs instead of exposing raw physical cache fds.
+
+Important APIs and functions: Static `Get` allocates a pseudo-fd; static `Release` releases it. Internals include `GetManager`, `GetUnusedMinPseudoFd`, `CreatePseudoFd`, and `ReleasePseudoFd`.
+
+Control flow: Allocation locks `pseudofd_list_lock`, finds the smallest unused integer starting at 2, pushes it into `pseudofd_list`, sorts the vector, and returns it. Release locks, linearly searches, erases a matching value, and reports success/failure.
+
+State and persistence behavior: Process-local only; no persistence. The minimum starts at 2 to avoid confusion with standard descriptors 0 and 1.
+
+Dependencies and integration points: Used by `PseudoFdInfo` construction, reset, and destruction. Indirectly used by `FdEntity` and `AutoFdEntity` for all open handles.
+
+Risks: Allocation is O(n log n) due to sort after every push and linear scans, though open pseudo-fd counts are likely small. Pseudo-fds are process-global, not per-entity, so leaks in any entity can exhaust or inflate the vector.
+
+Test signals: Indirect coverage through open/dup/close integration tests. A targeted unit test could verify reuse of released low-number pseudo-fds and release-failure behavior.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_pseudofd.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_pseudofd.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_pseudofd.h
+
+Purpose: Declares `PseudoFdManager`, the global allocator for pseudo-fd integers.
+
+Important APIs and types: `pseudofd_list_t` is a vector of active pseudo-fds. Public static APIs are `Get` and `Release`. The singleton constructor/destructor are private; copying and moving are disabled.
+
+Control flow contract: Call `Get` when a pseudo-fd is created and `Release` exactly once when it is destroyed. All internal list access is guarded by `pseudofd_list_lock`.
+
+State and persistence behavior: No disk state; live process state only.
+
+Dependencies and integration points: Included by `fdcache_fdinfo.cpp`; uses thread-safety annotations from `common.h`.
+
+Risks: The API does not encode ownership, so correctness depends on `PseudoFdInfo` lifecycle. Duplicate release returns false but does not otherwise repair callers.
+
+Test signals: Open/close lifecycle and pseudo-fd duplication paths are the relevant integration signals.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_pseudofd.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_stat.cpp -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_stat.cpp
+
+Purpose: Implements `CacheFileStat`, the sidecar file manager for persisted `PageList` metadata under the cache stat tree.
+
+Important APIs and functions: Static helpers build and manage paths: `GetCacheFileStatTopDir`, `MakeCacheFileStatPath`, `CheckCacheFileStatTopDir`, `DeleteCacheFileStat`, `DeleteCacheFileStatDirectory`, and `RenameCacheFileStat`. Instance APIs include constructor/destructor, `SetPath`, `OverWriteFile`, `RawOpen`, `Open`, `ReadOnlyOpen`, and `Release`.
+
+Control flow: Sidecar paths are `<cache_dir>/.<bucket>.stat/<object path>`. `OverWriteFile` writes to a temporary `.tmpstat.XXXXXX` in the same directory and renames it over the target. `RawOpen` creates parent directories, opens read-only or read-write, takes an exclusive `flock`, seeks to the start, and stores the fd. `Release` unlocks and closes. Rename uses hard-link-plus-unlink after removing an existing destination sidecar.
+
+State and persistence behavior: Each object stores a `path` and open sidecar `fd`. The sidecar content is produced by `PageList::Serialize`. File locking serializes sidecar readers/writers within local processes using advisory locks.
+
+Dependencies and integration points: Depends on `FdManager` for cache root, `S3fsCred::GetBucket`, and utility functions `mkdirp`, `mydirname`, `delete_files_in_dir`, and permission checks. Used by `FdEntity`, `PageList`, and `FdManager::CheckAllCache`.
+
+Risks: Advisory `flock` only works with cooperating processes. `OverWriteFile` does not fsync the temp file or containing directory before rename, so crash durability is best-effort. `RenameCacheFileStat` with hard links can fail across filesystems, though source and target should be in the same stat tree. Empty cache root or bucket disables stat paths.
+
+Test signals: Cache mode integration tests that delete cache/stat files, reopen cached objects, and run cache checks exercise this path. Unit tests for `PageList` stub `CacheFileStat` rather than using real sidecars, so persistence needs integration coverage.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_stat.cpp -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_stat.h -->
+# sources/user-network-fs/s3fs-fuse/src/fdcache_stat.h
+
+Purpose: Declares `CacheFileStat`, the lockable sidecar-file abstraction for cache page metadata.
+
+Important APIs and types: Static APIs check, delete, rename, and locate the cache-stat tree. Instance APIs open sidecars for read/write or read-only, release locks/fds, set object path, return fd, and atomically overwrite content.
+
+Control flow contract: Construct with an object path or call `SetPath`, open with `Open`/`ReadOnlyOpen`, use `GetFd` or `OverWriteFile`, then call `Release` or rely on the destructor. Copy/move are disabled to keep fd/lock ownership singular.
+
+State and persistence behavior: Stores the logical object path and current sidecar fd. Persistent content format is defined by `PageList`.
+
+Dependencies and integration points: Included by `fdcache_page.cpp`, `fdcache_entity.cpp`, and `fdcache.cpp`. The private `MakeCacheFileStatPath` centralizes path derivation.
+
+Risks: Callers must respect lock lifetime and not hold stale fds after object rename/delete. Header hides path creation, so tests generally need real cache configuration or stubs.
+
+Test signals: Cache persistence, cache cleanup, and cache consistency diagnostics are the main validation paths.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/s3fs-fuse/src/fdcache_stat.h -->

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/daemon/internal/libcontainerd/local/local_windows.go -->
+# sources/cloud-native/moby/daemon/internal/libcontainerd/local/local_windows.go
+
+Purpose: implements the legacy in-process Windows libcontainerd client using HCS/hcsshim rather than the remote containerd task service. It provides Docker's daemon-facing `types.Client`, `Container`, `Task`, and `Process` behavior for Windows container creation, task/exec lifecycle, stats, pause/resume, restore cleanup, and event delivery.
+
+Important APIs and types: `client`, `container`, `task`, and `process` back the libcontainerd interfaces. `NewClient`, `NewContainer`, `createWindows`, `extractResourcesFromSpec`, `NewTask`, `Exec`, `Kill`, `Pause`, `Resume`, `Stats`, `Summary`, `LoadContainer`, `Delete`, `ForceDelete`, `Status`, `shutdownContainer`, `terminateContainer`, and `reap` are the key functions. Helpers such as `setCommandLineAndArgs`, `escapeArgs`, `newIOFromProcess`, `getHCSContainer`, and `assertIsCurrentTask` encapsulate HCS-specific details.
+
+Control flow: container creation validates Windows OCI spec shape, maps resources, networking, layers, mounts, credentials, devices, process-vs-Hyper-V isolation, and root paths into `hcsshim.ContainerConfig`, creates and starts the HCS container, then queues a create event. `NewTask` constructs the initial HCS process from `spec.Process`, attaches stdio, stores the current task, queues a start event, and starts a `reap` goroutine. `Exec` mirrors process creation for secondary processes and emits exec-added/exec-started events. Stop handling maps `SIGKILL` to HCS terminate and other signals to shutdown. Reaping waits for process exit, reads exit code, closes HCS resources, records a `containerd.ExitStatus`, closes `waitCh`, and queues an exit event.
+
+State and persistence: state is in-memory and protected by `process.mu` and `container.mu`; HCS owns the persistent compute system/process state. `ociSpec == nil` marks a loaded/restored container that cannot be started. `task` tracks the current task, `hcsContainer` becomes nil after deletion, `hcsProcess` becomes nil after exit, and `waitCh` synchronizes exit status visibility. `queue.Queue` serializes backend callbacks per container ID.
+
+Dependencies and integration: depends on `hcsshim`, containerd client types, Docker errdefs, Windows syscall support, OCI specs, `cio.DirectIO`, and the daemon backend callback. It is the Windows-local counterpart to `remote/client.go` and feeds daemon container state through `libcontainerd/types`.
+
+Risks: the file has complex lock ordering (`process.mu` before container mutex), so changes can deadlock if that invariant is violated. Windows HCS error normalization is partial, especially around pending/already-stopped/broken-pipe cases. Restore behavior force-terminates HCS state rather than reattaching. Many unsupported paths return generic errors or no-ops, including checkpoints and resource updates. Hyper-V and process isolation validate different spec fields, making OCI spec changes risky.
+
+Test signals: direct coverage in this subset is limited to environment parsing in `utils_windows_test.go`; most behavior requires Windows/HCS integration coverage outside this subset. Event ordering and reaping are indirectly protected by the per-container queue design but not unit-tested here.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/daemon/internal/libcontainerd/local/local_windows.go -->

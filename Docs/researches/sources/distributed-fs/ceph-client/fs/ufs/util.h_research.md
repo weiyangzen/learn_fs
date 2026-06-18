@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/fs/ufs/util.h
+
+`util.h` provides inline helpers and macros for variant-specific UFS field access, fragmented-buffer bitmap manipulation, free-fragment accounting, UFS1/UFS2 data pointer access, and timestamp conversion.
+
+Key helpers include `UCPI_UBH()`, `USPI_UBH()`, `ufs_get_fs_state()`, `ufs_set_fs_state()`, `ufs_get_fs_npsect()`, `ufs_get_fs_qbmask()`, `ufs_get_fs_qfmask()`, directory entry helpers (`ufs_get_de_namlen()`, `ufs_set_de_namlen()`, `ufs_set_de_type()`), UID/GID helpers, `ubh_get_usb_*()` superblock accessors, `ubh_get_addr*()` buffer-address macros, bitmap search/set/clear helpers, `ubh_isblockset()`, `ubh_clrblock()`, `ubh_setblock()`, `ufs_fragacct()`, and data-pointer accessors that choose 32-bit UFS1 or 64-bit UFS2 formats.
+
+Most control flow dispatches on UFS variant masks or `uspi->fs_magic`. The helpers read/write persistent superblock state, directory fields, inode owners, cylinder-group free maps, fragment counters, and block pointers. Dependencies are `ufs_fs.h`, `ufs.h`, `swab.h`, Linux buffer-head/pagecache APIs, and bitops. Risks include variant field confusion, comments noting 44BSD directory length handling may be wrong, pointer arithmetic across fragmented buffers, and timestamp wrap behavior. Tests should cover old/44BSD/Sun/Sunx86/UFS2 images, bitmap allocation/free invariants, UID/GID round trips, and fast symlink/block pointer writes.

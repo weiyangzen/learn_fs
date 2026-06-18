@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listmount/listmount04.c
+
+Purpose: negative `listmount()` errno matrix for invalid request pointer, invalid result pointer, flags, request size, spare/mount namespace fd, param, mount ID zero, and nonexistent mount ID. It allocates a `mnt_id_req` buffer, fills fields per table, and calls raw `__NR_listmount`. Setup classifies kernels before/after 6.17.9 because invalid `mnt_ns_fd` changed expected errno from `EINVAL` to `EBADF`. State is a request buffer and fixed mount ID result array. Dependencies include kernel >= 6.11 and version-aware errno behavior. Risks are backports changing validation order. Test signals are expected `EFAULT`, `EINVAL`, `EBADF`, or `ENOENT`, with TCONF for version-inappropriate rows.

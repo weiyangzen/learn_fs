@@ -1,0 +1,15 @@
+## sources/distributed-fs/glusterfs/rpc/rpc-lib/src/rpc-clnt.c
+
+Purpose: implements GlusterFS's RPC client core: connection setup, request serialization/submission, saved-frame tracking, reply dispatch, callback program dispatch, reconnect, timeout bailout, ping integration, authentication credential construction, reconfiguration, and refcounted destruction.
+
+Important APIs and functions: public entry points include `rpc_clnt_new`, `rpc_clnt_start`, `rpc_clnt_cleanup_and_start`, `rpc_clnt_register_notify`, `rpc_clnt_submit`, `rpc_clnt_ref`, `rpc_clnt_unref`, `rpc_clnt_disable`, `rpc_clnt_reconfig`, `rpc_clnt_connection_cleanup`, `rpc_clnt_reconnect_cleanup`, `rpc_clnt_connection_status`, and `rpcclnt_cbk_program_register`. Internal machinery includes saved-frame helpers, `call_bail`, `rpc_clnt_reconnect`, `rpc_clnt_notify`, reply decoding, auth serialization, and record header construction.
+
+Control flow: creation allocates the client, request and saved-frame mem pools, initializes connection locks/options, loads a transport, registers transport notifications, and initializes saved-frame queues. Start schedules reconnect attempts. Submit allocates `rpc_req`, creates an XID, builds an RPC call header with AUTH_NULL or AUTH_GLUSTERFS credentials, attaches payload iovecs, connects if needed, submits through the transport, saves the frame for reply matching, starts ping management, and on failure unwinds the caller callback with status -1. Incoming transport events update timestamps, route replies by XID through saved frames, dispatch callback RPC calls to registered programs, handle connect/disconnect notifications, and trigger cleanup/destroy.
+
+State and persistence: state is entirely in memory: connection status, transport pointer, saved frames, lock-FOP saved frames, timers, reconnect generation, auth version, XID counter, callback programs, mem pools, ping/message counters, and refcount. No durable persistence is used.
+
+Dependencies and integration: this file sits between translators and `rpc-transport.c`, XDR helpers, Gluster timers, iobuf/iobref pools, auth XDR schemas, `rpc-clnt-ping.c`, and protocol constants. Client translators use it to submit FOPs and management requests.
+
+Risks: concurrency and ownership are the main risks. Saved frames are removed under `conn->lock` but callbacks run outside some lock contexts; timers hold refs that must be released on cancel or callback. `call_bail` times out non-lock FOPs separately from lock FOPs, so lock operations may remain queued longer. Reply lookup failure drops the message. Auth header size depends on group and lock-owner limits; oversized lock owners fail submit with `E2BIG`. `rpc_clnt_trigger_destroy` reads `conn->trans` outside the lock because it assumes last ref, so refcount correctness is critical.
+
+Test signals: request/reply round trips, timeout bailout, disconnect/reconnect, ping cleanup, auth v2/v3 serialization boundaries, callback program dispatch, transport cleanup, and leak/race tests around timer cancellation and saved-frame unwinding.

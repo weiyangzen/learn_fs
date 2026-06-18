@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/rb532/devices.c
+
+Purpose: registers RB532 platform devices for Ethernet, CompactFlash, NAND, LED, UART, watchdog, and button. It also manages the board latch used by NAND and LEDs.
+
+Important APIs and control flow: `set_latch_u5()` and `get_latch_u5()` protect `dev3.state` with a spinlock and update the mapped latch byte. Static resources describe Korina Ethernet, CF, NAND, UART, and watchdog MMIO/IRQs. `rb532_cmd_ctrl()` drives NAND CLE/ALE latch bits. `plat_setup_devices()` probes CF availability from device-controller masks, maps DEV3, initializes NAND platform data, sets UART clock from `idt_cpu_freq`, registers GPIO lookup tables and platform devices, then creates property-backed NAND and button devices. `setup_kmac()` parses `kmac=`.
+
+State, persistence, and integration: state includes latch value, platform device registrations, MTD partitions, MAC address, and GPIO software node metadata. Dependencies include `gpio.c` registering `gpio0`, rc32434 device controller registers, MTD NAND core, 8250 serial, Korina Ethernet, and gpiod lookup APIs. Risks include a likely index/comment mismatch when disabling CF (`rb532_devs[2]` is LED, not CF), direct MMIO assumptions, hard-coded NAND partitions, and MAC validation only logging failures. Test signals are platform device enumeration, NAND partitions, Ethernet MAC, CF presence, and working button GPIO.

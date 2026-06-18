@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/core/server/proxy/src/main/java/alluxio/proxy/s3/signature/AwsSignatureProcessor.java
+
+Purpose: `AwsSignatureProcessor` extracts AWS authentication information from either Jersey `ContainerRequestContext` or servlet `HttpServletRequest` and converts it into `AwsAuthInfo`.
+
+Important APIs are two constructors, `parseSignature`, and `getAuthInfo`. Control flow reads Authorization, `x-amz-date`, and query parameters from the active request representation. It attempts V4 header parsing first, then V2 header parsing, then V4 query parsing. If parsing succeeds, `getAuthInfo` builds a V4 string-to-sign through `StringToSignProducer`; V2 returns an empty string-to-sign. It requires a non-empty access ID and wraps unexpected failures as internal S3 errors.
+
+State is request-scoped through either `mContext` or `mServletRequest`; no persistence. Dependencies include parser utilities, `S3RestUtils.fromMultiValueToSingleValueMap`, `StringToSignProducer`, `SignatureInfo`, and `AwsAuthInfo`. Integration is via `S3RestUtils.getUserFromSignature` for both proxy architectures. Risks include taking only the first query parameter value in servlet mode, relying on case-insensitive map lookup for headers, accepting V2 parse results though the validator path is V4-oriented, and converting many non-S3 exceptions into internal errors. Test signals cover parser utilities more than this orchestration class directly.

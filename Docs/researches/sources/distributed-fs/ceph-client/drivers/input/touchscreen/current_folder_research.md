@@ -1,0 +1,133 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/input/touchscreen
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 119
+- Recursive researched files: 119
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/88pm860x-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ad7877.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ad7879-i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ad7879-spi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ad7879.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ad7879.h`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ads7846.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/apple_z2.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ar1021_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/atmel_mxt_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/auo-pixcir-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/bcm_iproc_tsc.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/bu21013_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/bu21029_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/chipone_icn8318.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/chipone_icn8505.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/colibri-vf50-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cy8ctma140.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cy8ctmg110_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cyttsp5.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cyttsp_core.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cyttsp_core.h`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cyttsp_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/cyttsp_spi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/da9034-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/da9052_tsi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/dynapro.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/edt-ft5x06.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/eeti_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/egalax_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/egalax_ts_serial.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ektf2127.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/elants_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/elo.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/exc3000.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/fsl-imx25-tcq.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/fujitsu_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix.h`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix_berlin.h`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix_berlin_core.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix_berlin_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix_berlin_spi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/goodix_fwupload.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/gunze.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/hampshire.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/hideep.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/himax_hx83112b.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/himax_hx852x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/hp680_ts_input.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/htcpen.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/hycon-hy46xx.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/hynitron-cst816x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/hynitron_cstxxx.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ili210x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ilitek_ts_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/imagis.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/imx6ul_tsc.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/inexio.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ipaq-micro-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/iqs5xx.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/iqs7211.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/jornada720_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/lpc32xx_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/mainstone-wm97xx.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/max11801_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/mc13783_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/melfas_mip4.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/migor_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/mms114.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/msg2638.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/mtouch.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/mxs-lradc-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/novatek-nvt-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/pcap_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/penmount.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/pixcir_i2c_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/raspberrypi-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/raydium_i2c_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/resistive-adc-touch.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/rohm_bu21023.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/s6sy761.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/silead.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/sis_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/st1232.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/stmfts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/stmpe-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/sun4i-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/sur40.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/surface3_spi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/sx8654.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ti_am335x_tsc.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/touchit213.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/touchright.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/touchwin.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tps6507x-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/ts4800-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc2004.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc2005.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc2007.h`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc2007_core.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc2007_iio.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc200x-core.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc200x-core.h`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/tsc40.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/usbtouchscreen.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wacom_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wacom_w8001.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wdt87xx_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wm831x-ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wm9705.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wm9712.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wm9713.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/wm97xx-core.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/zet6223.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/zforce_ts.c`
+- `sources/distributed-fs/ceph-client/drivers/input/touchscreen/zinitix.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

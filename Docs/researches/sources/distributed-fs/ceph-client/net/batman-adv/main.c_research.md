@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/net/batman-adv/main.c -->
+# sources/distributed-fs/ceph-client/net/batman-adv/main.c research
+
+Purpose: is the central module lifecycle and mesh-interface coordinator for batman-adv. It initializes global algorithm, packet receive dispatch, netdevice/netlink integration, creates the shared event workqueue, initializes per-mesh subsystems, and provides common helpers for packet priority, VLAN IDs, counters, receive dispatch, and uevents.
+
+Important APIs and functions: module entry/exit are `batadv_init()` and `batadv_exit()`. Public mesh lifecycle functions are `batadv_mesh_init()` and `batadv_mesh_free()`. Other public helpers include `batadv_is_my_mac()`, `batadv_max_header_len()`, `batadv_skb_set_priority()`, `batadv_batman_skb_recv()`, receive handler register/unregister, `batadv_get_vid()`, `batadv_vlan_ap_isola_get()`, and `batadv_throw_uevent()`.
+
+Control flow: module init creates TT cache, initializes global hardif list and algorithms, installs default receive handlers, initializes protocol variants and TP meter, creates the single-thread `bat_events` workqueue, registers netdevice notifier, RTNL link ops, and generic netlink family. Mesh init initializes many spinlocks/lists, then brings up originator, TT, bat_v, BLA, DAT, gateway, and multicast subsystems; failures unwind in reverse order and mark mesh inactive. Mesh free marks deactivating, purges queued packets, stops TP sessions, frees gateway nodes, v mesh, DAT, BLA, multicast, TT, originator, gateway TVLVs, and per-cpu counters. Receive dispatch validates hard-interface reference, skb shareability, minimum header, Ethernet header, mesh active state, interface active state, and compatibility version before zeroing `skb->cb` and calling `batadv_rx_handler[packet_type]`.
+
+State and persistence: global state includes `batadv_hardif_list`, `batadv_hardif_generation`, `batadv_rx_handler[256]`, and `batadv_event_workqueue`. Per-mesh state in `bat_priv` is initialized from scratch for each mesh netdev and is in-memory only. Uevents are generated from transient state and sent via the mesh netdev kobject.
+
+Dependencies and integration: integrates all major modules: algorithms, bat_iv, bat_v, BLA, DAT, gateway, hard-interface, mesh-interface, multicast, netlink, originator, routing, send, TP meter, and TT. Receive handlers for BCAST, MCAST, unicast variants, ICMP, TVLV, and fragments are registered in the local handler table. Uevent strings serve gateway and BLA userspace notifications.
+
+Risks: init/free ordering is critical because subsystems share originator and TT data. Receive handler registration is global and returns busy if a type is already owned. `batadv_batman_skb_recv()` treats routing-logical drops as `NET_RX_SUCCESS`, so tests need internal counters/logs. `batadv_get_vid()` can pull skb data and returns no-tag for priority-tag VID 0. `batadv_throw_uevent()` allocates with `GFP_ATOMIC` and must free partial environments on all failure paths.
+
+Test signals: module load/unload, mesh creation failure injection at each subsystem, receive of invalid version/short skb/inactive hardif, receive handler registration conflicts, VLAN tag extraction including VID 0, priority mapping from VLAN/IP/IPv6 DSCP, uevent generation for gateway and BLA, and RCU barrier cleanup on module unload.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/net/batman-adv/main.c -->

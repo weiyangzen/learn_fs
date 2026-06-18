@@ -1,0 +1,7 @@
+# sources/cloud-native/moby/daemon/graphdriver/fuse-overlayfs/fuseoverlayfs.go
+
+Purpose: Linux graphdriver using the external `fuse-overlayfs` mount program, primarily for rootless or overlayfs-incompatible environments.
+
+Important APIs and control flow: `Init` requires the binary and kernel >=4.18, creates driver home and short-link directory, and returns a driver with naive diff. Layer layout mirrors overlay2: per-layer `diff`, optional `work`, `merged`, `lower`, `link`, and root `l/` symlinks. `Create` rejects storage options, creates diff/link metadata, marks parents committed, and writes lower chains up to 128 layers. `Get` returns `diff` for base layers or invokes `fuse-overlayfs -o <lower/upper/work,label> <merged>` for layered mounts with refcounting. `Put` unmounts via `fusermount3`/`fusermount`, falling back to `syncfs` plus `unix.Unmount`. `ApplyDiff` writes directly to the upper diff path for direct parents using AUFS whiteouts; `Diff`, `DiffSize`, and `Changes` use naive diff.
+
+State, dependencies, and risks: persistent state is overlay-like layer directories and link files; runtime state is FUSE mounts tracked by `mountref.Counter` and per-layer locks. Dependencies include the external binary, kernel, FUSE mount utilities, SELinux labels, user namespace detection, and archive helpers. Risks include binary availability, FUSE unmount failures, no storage-opt support, and whiteout-format differences from kernel overlay2. Tests use shared graphtest and benchmarks.

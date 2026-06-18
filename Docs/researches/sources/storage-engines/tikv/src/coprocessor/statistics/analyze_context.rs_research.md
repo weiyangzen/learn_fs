@@ -1,0 +1,9 @@
+# sources/storage-engines/tikv/src/coprocessor/statistics/analyze_context.rs
+
+Purpose: request handler for analyze coprocessor requests. It selects the correct analyze algorithm, constructs scanners/builders, serializes tipb responses, and exposes storage statistics.
+
+Important APIs/types: `AnalyzeVersion` maps protobuf version integers to V1/V2. `AnalyzeContext<S,F>` stores the request, optional `TikvStorage<SnapshotStore<S>>`, key ranges, accumulated storage stats, quota limiter, and auto-analyze flag. `new` constructs a `SnapshotStore` with request isolation/cache/lock settings and wraps it in `TikvStorage`. Helper methods handle column, mixed, full-sampling, and index analyze.
+
+Control flow in `handle_request`: `TypeIndex`/`TypeCommonHandle` validates table ranges, builds a key-only `RangesScanner`, and calls `handle_index`. Index analysis parses record/index key datums, appends histogram values, fills FM and optional CM sketches, and for V2 maintains TopN by grouping repeated sorted values and moving them from CM sketch into TopN. `TypeColumn` and `TypeMixed` use `SampleBuilder`; `TypeFullSampling` uses `RowSampleBuilder` with quota limiter; `TypeSampleIndex` returns not implemented. Successful data is wrapped in `MEMTRACE_ANALYZE`; `Error::Other` is converted to `Response.other_error`.
+
+State/persistence: request-local only; `storage` is an `Option` so it can be taken exactly once. Dependencies include analyze builders, sketches, histogram, table codecs, `RangesScanner`, and quota limiter. Integration point is endpoint's analyze request builder. Risks include `AnalyzeVersion::from` panic on unknown versions, strict key format validation, TopN heap correctness, and response error-shape differences between `Other` and structured errors. No local tests in this file; analyze algorithm tests live in `analyze.rs` and sketch modules.

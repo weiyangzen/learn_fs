@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pci/controller/dwc/pcie-eswin.c
+
+Purpose: This is the ESWIN EIC7700 DesignWare PCIe root-complex glue driver. It sequences ESWIN ELBI registers, PWR/DBI resets, per-root-port PERST resets, clocks, runtime PM, link start/link-up detection, vendor/device ID override, and PME turn-off policy for hardware that cannot enter L2/L3 Ready.
+
+Important APIs, types, and functions: `struct eswin_pcie` embeds `struct dw_pcie`, clock bulk data, two reset controls (`pwr`, `dbi`), a list of parsed ports, and SoC data. `struct eswin_pcie_port` stores a per-port PERST reset and lane count. DWC callbacks are `eswin_pcie_start_link()` and `eswin_pcie_link_up()`. Host callbacks are `eswin_pcie_host_init()`, `eswin_pcie_host_deinit()`, and `eswin_pcie_pme_turn_off()`. Probe and PM entry points are `eswin_pcie_probe()`, `eswin_pcie_suspend_noirq()`, and `eswin_pcie_resume_noirq()`.
+
+Control flow: Probe obtains SoC data, allocates the controller, fetches all clocks and the two named resets, parses child Root Port nodes for PERST reset and optional `num-lanes`, enables runtime PM, then calls `dw_pcie_host_init()`. The host init callback enables clocks, deasserts PWR/DBI resets, sets the DWC device type to Root Port in ELBI, cycles each child PERST reset, releases `APP_HOLD_PHY_RST`, polls `PM_SEL_AUX_CLK` until the PHY clock switch is ready, and writes ESWIN VID/DID into DBI with DBI read-only writes enabled. Link start simply sets the ELBI LTSSM enable bit; link-up reads the PCI Express Link Status DLL Link Active bit.
+
+State and persistence behavior: Persistent effects are limited to hardware register programming while the device is active. In-memory state tracks clock count, reset descriptors, port list, lane count, and SoC data. Runtime PM keeps the device active after successful probe. `skip_l23_ready` is set during PME turn-off based on SoC data so the common DWC host code skips waiting for an unsupported L2/L3 Ready handshake.
+
+Dependencies and integration points: Integrates with the DWC host core, runtime PM, reset framework, clock bulk APIs, OF child parsing, PCI capability/DBI helpers, and ESWIN-specific ELBI registers. The driver is built in and matches `eswin,eic7700-pcie`.
+
+Risks: The error path in `eswin_pcie_host_init()` drops/reset-controls and list entries after failures; incorrect reuse after partial init would be risky. PERST must be deasserted before PHY configuration as described in comments. The PM_SEL_AUX_CLK poll is the main readiness gate; timeout indicates invalid PHY/clock sequencing. The driver writes vendor/device IDs over invalid defaults, so DBI read-only write bracketing must remain correct. L2/L3 behavior is intentionally skipped for EIC7700.
+
+Test signals: Verify EIC7700 probe with child Root Port reset nodes, `num-lanes` parsing, clock/reset enable sequencing, VID/DID override visible in config space, link training, suspend/resume noirq through DWC helpers, PME turn-off without L2/L3 Ready wait, and failure injection for missing clocks/resets/PERST and PM_SEL_AUX_CLK timeout.

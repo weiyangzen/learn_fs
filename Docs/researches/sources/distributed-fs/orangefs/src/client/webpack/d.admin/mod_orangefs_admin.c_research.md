@@ -1,0 +1,13 @@
+## sources/distributed-fs/orangefs/src/client/webpack/d.admin/mod_orangefs_admin.c
+
+Purpose: Implements an Apache HTTP module exposing administrative OrangeFS operations as REST-like endpoints for attributes, directories, distribution metadata, extended attributes, file I/O, and filesystem/server stats.
+
+Important APIs, types, and functions: Core request state is `req_t` with Apache request, resolved OrangeFS path/fsid, and credentials. Handlers include `handler_attr_get/put`, `handler_dir_delete/get/put`, `handler_dist_get`, `handler_eattr_get`, `handler_io_get/put`, `handler_statfs`, dispatcher `handler`, config hook `post_config`, directives `PVFSInit` and `OrangeFSAdminCertpath`, and Apache `register_hooks`. `HANDLE_ERR` maps OrangeFS errors to HTTP responses and logs failures.
+
+Control flow: Apache calls `handler` for requests with handler `orangefs_admin`. It builds credentials from the authenticated username, passwd data, subprocess env, and optional cert path; parses `path_info` as `<method>/<OrangeFS path>`; resolves the path with `PVFS_util_resolve`; then dispatches by method string. Sub-handlers use `PVFS_sys_*` and `PVFS_mgmt_*` APIs to read/write attributes, list/create/delete dirs, stream file bytes in 4 KiB chunks, list extended attrs, decode distribution metadata, or emit statfs JSON. `post_config` optionally initializes PVFS defaults.
+
+State and persistence: Global `certpath` and `pvfsinit` hold module config. Requests can persistently mutate OrangeFS through setattr, mkdir, remove, create, truncate, and write. Apache response JSON is generated directly with `ap_rprintf`.
+
+Dependencies and integration points: Depends on Apache httpd/APR APIs, OrangeFS system and management APIs, passwd lookup, jsmn, and internal PINT distribution decoding. Build requires PVFS source headers through the d.admin Makefile.
+
+Risks and test signals: JSON output is manually escaped poorly; filenames, xattr keys, distribution params, and server addresses can break JSON. `handler_dir_put` has an unconditional `return HTTP_NOT_FOUND` immediately after parent lookup, making mkdir unreachable. `handler_io_put` uses `lookup_parent.ref` after a successful existing-file lookup path where `lookup_parent` was not initialized. Credential fallback can concatenate `certpath` when it is null in the no-passwd branch. Static `err[256]` is shared across requests. Request-body JSON parsing returns 500 for bad client JSON. Test every endpoint/method, OPTIONS allow headers, authenticated and anonymous users, certpath/no-certpath, mkdir and overwrite file upload paths, JSON escaping, xattr binary values, concurrent requests, and PVFS init directive semantics.

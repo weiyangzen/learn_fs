@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/include/asic_reg/mp/mp_14_0_2_offset.h -->
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/include/asic_reg/mp/mp_14_0_2_offset.h
+
+Purpose: generated AMD MP 14.0.2 register-address metadata for SMU/MP1 and MPASP blocks. It maps symbolic register names to offsets and base-index selectors so the amdgpu driver can address MP1 firmware messaging, interrupt, scratch, and public firmware-flag registers for this ASIC revision.
+
+Important APIs/types/functions: this header exports `reg...` and `reg..._BASE_IDX` macros. Major families include `regMP1_SMN_C2PMSG_0` through `regMP1_SMN_C2PMSG_127` at offsets `0x0040` through `0x00bf` with base index `1`, MP1 interrupt/status registers `regMP1_SMN_IH_CREDIT`, `regMP1_SMN_IH_SW_INT`, `regMP1_SMN_IH_SW_INT_CTRL`, `regMP1_SMN_FPS_CNT`, `regMP1_SMN_PUB_CTRL`, scratch registers `regMP1_SMN_EXT_SCRATCH0` through `regMP1_SMN_EXT_SCRATCH31`, MPASP C2P message subset macros such as `regMPASP_SMN_C2PMSG_32` through `39`, `60` through `89`, `100` through `103`, `109`, `115`, `116`, and `regMPASP_SMN_C2PMSG_119_BASE_IDX`, plus `regMPASP_SMN_IH_*` and public `regMP1_CRU1_MP1_FIRMWARE_FLAGS`.
+
+Control flow: there is no executable flow. Register access code selects a symbolic offset and its `_BASE_IDX`, then the AMD register accessor infrastructure resolves that pair to the correct MMIO/SMN aperture. The header separates address blocks with comments: `mp_SmuMp1_SmnDec`, `mp_SmuMpASP_SmnDec`, and `Mp1MmioPublic_SmuMp1Pub_CruDec`.
+
+State and persistence: no software state is stored. The constants address persistent hardware state held by MP1/MPASP firmware-facing registers. C2P message registers carry host-to-microcontroller commands and parameters, IH registers carry software interrupt and acknowledgement state, scratch registers provide firmware/driver exchange slots, and the public firmware-flags register advertises firmware interrupt state.
+
+Dependencies and integration points: depends on the generated AMD ASIC register layout and on downstream register accessor macros that consume `reg*` and `reg*_BASE_IDX`. It is intended to pair with `mp_14_0_2_sh_mask.h` for field extraction and with amdgpu SMU/MP firmware code that selects ASIC-specific headers through build-time includes.
+
+Risks: the most notable irregularity is `regMPASP_SMN_C2PMSG_119_BASE_IDX` without a matching `regMPASP_SMN_C2PMSG_119` offset macro in this file; that may be deliberate if the offset is inherited or unused, but it is worth validating against the generator input because consumers cannot address that register from this header alone. Public firmware flags use base index `7` in this revision, while similar MP1 public blocks in other revisions may use different base indexes; accidental cross-version inclusion would direct accesses to the wrong aperture. Repetitive C2P sequences also create off-by-one and omitted-register risk.
+
+Test signals: build coverage should reveal missing symbols used by MP 14.0.2 code. Better tests are generated-header diff checks against the AMD register database, scripts that ensure every `_BASE_IDX` has an intended offset partner or an explicit exception, and hardware/firmware tests that send SMU messages through MP1 and MPASP paths.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/include/asic_reg/mp/mp_14_0_2_offset.h -->

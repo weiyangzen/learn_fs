@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/keyctl/keyctl03.c
+
+Purpose: regression for uninstantiated keyring garbage collection crash fixed by `f05819df10d7`. The test adds a user key to the session keyring, calls `request_key("keyring", "foo", "bar", KEY_SPEC_THREAD_KEYRING)` to create/request an uninstantiated keyring path, then unlinks the user key from the session keyring. State is the session and thread keyrings plus one user key and one failed/requested keyring object. Dependencies are keyrings support and `lapi/keyctl.h`. Risks are environment-specific request-key helper behavior, though the test does not assert the request result. Test signal is `KEYCTL_UNLINK` success and no kernel crash during GC-triggering state transitions.

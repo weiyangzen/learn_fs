@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/samsung/samsung,exynos5433-mic.yaml
+
+## Purpose
+This file is a Linux Devicetree binding schema for Samsung Exynos5433 SoC Mobile Image Compressor (MIC). It validates nodes matched by `samsung,exynos5433-mic`. Source description: MIC (Mobile Image Compressor) resides between DECON and MIPI DSI. MIPI DSI is not capable of transferring high resoltuion frame data as DECON can send. MIC solves this problem by compressing the frame data by 1/2 before it is transferred through MIPI DSI. The compressed frame data must be uncompressed in the panel PCB. In the kernel tree, this documents the persistent DT ABI for display, panel, framebuffer, graphics, or media pipeline nodes.
+
+## Important APIs, Types, and Schema Contracts
+This is declarative schema code, so it defines no C/Python functions or classes. The important APIs are the Devicetree properties, compatible strings, referenced schema fragments, and validation keywords consumed by dt-schema and kernel subsystem drivers. `$id` is `http://devicetree.org/schemas/display/samsung/samsung,exynos5433-mic.yaml#` and `$schema` is `http://devicetree.org/meta-schemas/core.yaml#`. Compatible contract: `samsung,exynos5433-mic`. Required properties: `compatible`, `clocks`, `clock-names`, `ports`, `reg`, `samsung,disp-syscon`. Notable properties: `compatible`, `clocks`, `clock-names`, `ports`, `power-domains`, `reg`, `samsung,disp-syscon`. Referenced schemas: `/schemas/graph.yaml#/properties/ports`, `/schemas/types.yaml#/definitions/phandle`. Validation keywords and constraints: additionalProperties: false. The example instantiates `image-processor@13930000` and exercises the main required properties with 2 dt-bindings include(s). File-specific integration notes: Graph bindings define endpoint topology, so remote-endpoint correctness is part of the contract. Clock array order and `clock-names` are ABI-sensitive because drivers request resources by fixed names or indexes.
+
+## Control Flow
+dt-schema selects this schema through the `compatible` value and validates the node before DTS output is accepted. Required-property checks run first for the node contract. Graph endpoint validation then checks the display/media pipeline links to bridges, panels, PHYs, or sibling controllers. At runtime the matching kernel driver maps register resources from `reg`, requests clocks/resets/IRQs, and probes only if those resources line up with the schema contract. Example blocks, when present, act as executable validation fixtures for dt-schema and document intended node construction for board DTS authors.
+
+## State and Persistence
+The YAML file stores no runtime state and defines no executable persistence path. Its stateful effect is the Devicetree ABI it accepts: once a DTS using these properties ships in firmware or a board file, driver code and users rely on those property names, array orders, and child-node layouts. For display/media bindings, endpoint graph links persist as the topology used to assemble DRM, V4L2, bridge, or panel pipelines.
+
+## Dependencies and Integration Points
+Depends on Devicetree core meta-schema, /schemas/graph.yaml#/properties/ports, /schemas/types.yaml#/definitions/phandle, clock provider bindings, power-domain providers. Integration points are DTS board files, `make dt_binding_check`, `make dtbs_check`, matching kernel drivers, and any subsystem helpers that parse these properties.
+
+## Risks
+Key risks are missing or misordered required resources can make the driver fail probe even though the node still matches by compatible; strict property closure can reject legacy or vendor DTS properties unless intentionally modeled; incorrect graph endpoints break pipeline assembly without obvious schema errors in the peer node; clock-name drift between schema, DTS, and driver resource lookup is a common integration failure.
+
+## Test Signals
+Useful signals are `make dt_binding_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/samsung/samsung,exynos5433-mic.yaml`, `make dtbs_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/display/samsung/samsung,exynos5433-mic.yaml` against in-tree DTS users, example-schema validation from the `examples` block, driver probe logs for nodes using the listed compatibles, DRM/V4L2 graph walk or bridge/panel attachment tests.

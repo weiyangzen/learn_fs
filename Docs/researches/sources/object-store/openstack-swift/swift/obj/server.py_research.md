@@ -1,0 +1,40 @@
+# sources/object-store/openstack-swift/swift/obj/server.py
+
+## Purpose
+Implements the Swift object-server WSGI application. It handles object `PUT`, `GET`, `HEAD`, `POST`, and `DELETE` requests, internal `REPLICATE` hash requests, internal `SSYNC` streaming replication requests, container update fan-out, expiring-object queue updates, metadata validation, DiskFile access, request logging, and optional zero-copy object reads.
+
+## Important APIs, Types, And Functions
+Top-level helpers include `iter_mime_headers_and_bodies()` for multipart MIME request bodies, `drain()` for discarding remaining request bytes with timeouts, `get_obj_name_and_placement()` for path/policy validation, and `_make_backend_fragments_header()` for serializing EC fragment metadata.
+
+`EventletPlungerString` is a byte string with inflated length used to force Eventlet WSGI to flush response headers before zero-copy send. `ObjectController` is the main `BaseStorageServer` subclass. Its constructor reads timeouts, chunk sizes, logging flags, upload limits, cache behavior, cooperative iterator period, ETag validation sampling, allowed metadata headers, expirer configuration, and initializes `DiskFileRouter`.
+
+Storage and side-effect helpers include `get_diskfile()`, `async_update()`, `container_update()`, `delete_at_update()`, `_conditional_delete_at_update()`, `_check_container_override()`, and `_post_commit_updates()`. PUT helpers include `_pre_create_checks()`, `_do_multi_stage_mime_continue_headers()`, `_stage_obj_data()`, `_get_request_metadata()`, `_read_mime_footers_metadata()`, `_apply_extra_metadata()`, `_send_multi_stage_continue_headers()`, and `_drain_mime_request()`. Public request handlers are `POST()`, `PUT()`, `GET()`, `HEAD()`, `DELETE()`, `REPLICATE()`, `SSYNC()`, and `__call__()`. `global_conf_callback()` creates a shared replication semaphore, `app_factory()` builds the WSGI app, and `main()` launches `run_wsgi()`.
+
+## Control Flow
+All requests enter `__call__()`, which creates a `Request`, records the transaction ID, validates UTF-8/internal path rules, dispatches only public methods, maps DiskFile collisions to 403 and unexpected exceptions to 500, fixes conditional responses, logs normal client traffic at info and replication traffic at debug, optionally delays PUT/DELETE for the `slow` setting, and uses zero-copy send for eligible 200 GET responses.
+
+`PUT()` validates object creation, message length, timestamp freshness, `If-None-Match`, target DiskFile availability, and optional fragment-index/next-part-power headers. It supports proxy multi-stage MIME bodies for metadata footers and multiphase commit: the object body is staged through a DiskFile writer, footer metadata can override allowed sys/user/transient metadata and ETag, the writer is put and optionally committed unless `X-Backend-No-Commit` is set, the remaining MIME stream is drained, expirer/container updates are sent, and 201 is returned.
+
+`POST()` reads existing metadata, enforces newer data or content-type timestamps, writes metafile metadata, conditionally updates expirer tasks, sends a PUT-style container update for object metadata changes, and returns current sysmeta/content-type response headers. It preserves existing data metadata when only content type changes and carries EC override fields into container updates for compatibility.
+
+`GET()` and `HEAD()` open or read the DiskFile with optional fragment preferences and open-expired behavior. They apply conditional ETag support, allowed metadata headers, backend timestamps, durable timestamp, EC fragment listings, content encoding, content length, and cache policy. `GET()` streams a DiskFile reader and may use zero-copy transfer after headers are flushed. Missing, quarantined, expired, state-changed, and xattr unsupported states map to 404, 503, or 507 responses as appropriate.
+
+`DELETE()` validates timestamps, handles existing data, tombstones, expired objects, and `X-If-Delete-At`, updates expirer queues, writes a tombstone when the request is newer, sends a DELETE container update, and returns 204, 404, or 409 with backend timestamp/content-type headers. `REPLICATE()` is an internal replication endpoint that returns pickled suffix hashes for a device/partition/suffix set and skips rehash when suffixes are explicitly supplied. `SSYNC()` instantiates `ssync_receiver.Receiver`, exposes `X-Backend-Accept-No-Commit`, labels metrics with policy, and streams the receiver generator.
+
+## State And Persistence
+The object server persists object data files, metadata files, tombstones, non-durable EC fragments, durable commits, async-pending container update pickles, expirer task updates, suffix hashes, quarantine data, and tmp files through DiskFile managers. PUT/POST/DELETE mutate object metadata and container/expirer state; failed container updates are pickled for later async processing. REPLICATE may refresh or return suffix hashes through the DiskFile hash subsystem. SSYNC routes replication subrequests back through the same PUT/POST/DELETE handlers, so replication writes use normal object-server semantics.
+
+Process-level state includes the shared replication semaphore, logger transaction IDs/thread locals, statsd labeled timing labels, tpool sizing, cache/upload configuration, and allowed header sets. The module intentionally changes tpool size for servers-per-port deployments to avoid excessive thread counts.
+
+## Dependencies And Integration Points
+The server is the integration point for Swift proxy object requests, object replicator/reconstructor backend traffic, ssync receiver, container servers, object expirer, DiskFile implementations, storage policies, statsd, Eventlet WSGI, and recon/replication daemons. It depends on `DiskFileRouter`, request helper metadata classification, `http_connect` for container updates, expirer task construction, swob response classes, object constraints, and concurrency primitives.
+
+Important protocol contracts include backend storage policy headers, `X-Backend-Replication`, `X-Backend-Replication-Headers`, `X-Backend-Ssync-Frag-Index`, `X-Backend-No-Commit`, `X-Backend-Fragment-Preferences`, container update override prefixes, delete-at headers, and pickled REPLICATE hash responses. `global_conf_callback()` must run before worker fork so the replication semaphore is shared across object-server workers.
+
+## Risks And Edge Cases
+This file is concurrency- and persistence-sensitive. Timestamp ordering protects newer data and metadata, but live writes can still race with reads, replication, and deletes; `DiskFileStateChanged` returns 503 to force retries when on-disk files shift mid-operation. Multi-stage MIME PUT must validate footer MD5/JSON, drain request bodies, send correct 100-continue phases, and avoid committing bad data. `X-Backend-No-Commit` support is essential for EC non-durable fragment replication.
+
+Async container and expirer updates are best-effort and can redirect or fall back to local async-pending pickles; bad container path headers, mismatched host/device lists, or inconsistent expirer container names can create delayed or orphaned side effects. REPLICATE uses pickle protocol 2 for compatibility, so callers must treat it as a trusted internal endpoint. Zero-copy send bypasses normal iterator reads after headers are flushed and must correctly handle socket options and exceptions.
+
+## Test Signals
+High-value tests should cover PUT timestamp conflicts, `If-None-Match`, multipart footer validation, ETag mismatch, `X-Backend-No-Commit`, metadata header copying, POST content-type timestamp ordering, DELETE tombstone and `X-If-Delete-At` behavior, expirer update creation/removal, async container update fallback and redirect handling, GET/HEAD backend timestamp/fragment headers, REPLICATE hash response and skip-rehash behavior, SSYNC receiver wiring, request logging levels, and zero-copy eligibility. The local source shard lacks upstream tests, so test signals are inferred from the request handlers and internal protocol contracts.

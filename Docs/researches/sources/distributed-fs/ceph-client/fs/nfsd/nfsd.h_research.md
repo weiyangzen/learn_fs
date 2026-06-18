@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/nfsd/nfsd.h
+
+Purpose: `nfsd.h` is a central NFSD internal header. It collects protocol version constants, service prototypes, shared error constants, NFSv4 attribute masks, service-thread helpers, and feature-conditional declarations used throughout the server. The source was read as a complete 608-line file.
+
+Important APIs/types/functions: declarations include `nfsd_svc`, `nfsd_dispatch`, `nfsd_nrthreads`, `nfsd_nrpools`, `nfsd_get_nrthreads`, `nfsd_set_nrthreads`, `nfsd_shutdown_threads`, `nfsd_current_rqst`, `nfsd_vers`, `nfsd_minorversion`, `nfsd_reset_versions`, `nfsd_create_serv`, and `nfsd_destroy_serv`. Types include `struct nfsd_genl_rqstp`, `struct nfsd_thread_local_info`, `struct nfsdfs_client`, `struct nfsd_voidargs`, and `struct nfsd_voidres`. It exports `nfsd_programs`, `nfsd_mutex`, `nfsd_th_cnt`, `nfsd_max_blksize`, cache-mode globals, NFSv4 setup/shutdown hooks, and many pre-XDR `nfserr_*` constants.
+
+Control flow: the header has no standalone runtime flow, but it fixes cross-file call paths: admin entry points invoke service lifecycle functions; SunRPC dispatch invokes `nfsd_dispatch`; NFSv2/v3/v4 procedure tables reference shared void XDR helpers; and NFSv4 processing consults supported attribute masks and state-management prototypes. Inline helpers such as `nfsd_v4client`, `nfsd_user_namespace`, `nfsd4_set_netaddr`, `bmval_is_subset`, and `nfsd_attrs_supported` participate in validation and encoding.
+
+State and persistence: this file defines contracts for live state, not storage. It centralizes global and per-net state access points and constants that shape service allocation, version availability, NFSv4 lease/state subsystems, and response encoding. Persistent NFSv4 recovery is represented only through declarations such as `nfs4_reset_recoverydir`, `nfs4_recoverydir`, client tracking registration, and grace-state hooks.
+
+Dependencies and integration points: dependencies include Linux NFS protocol headers, SunRPC service/xprt headers, mount and namespace types, export metadata, `netns.h`, and `stats.h`. The header forms a high-risk internal contract for procedure tables, error handling, service startup, NFSv4 attributes, callbacks, and optional features such as ACLs, pNFS, localio, debugfs, and security labels.
+
+Risks: changing constants such as `NFSD_SUPPORTED_MINOR_VERSION`, XDR-size assumptions, pre-encoded error symbols, or NFSv4 attribute masks can alter wire behavior. The NFSv4 attribute masks must stay synchronized with decoder and encoder support. Feature-conditional stubs must match real function semantics closely enough that non-V4 or non-pNFS builds compile and behave predictably.
+
+Test signals: compile matrix coverage across `CONFIG_NFSD_V2`, `CONFIG_NFSD_V4`, ACL, pNFS, localio, security-label, POSIX-ACL, and debugfs combinations. Protocol tests should validate version enablement, NFSv4 supported/writeable attribute masks, error-code mapping, callback availability, and no-op stub behavior when features are disabled.

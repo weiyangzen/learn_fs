@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/contrib/observability_splunk_dashboard/transaction_latency.xml
+
+Purpose: defines a Splunk dashboard for tracing long latency in ClusterController-issued FoundationDB transactions across GRV, get-value, and commit phases for FDB 6.3 and 7.0+.
+
+Important APIs/types/functions: exposed dashboard tokens are `Index`, `LogGroup`, optional `transactionID`, `time_token`, and drilldown-set tokens `BeginTime`, `EndTime`, `ReadID`, `GrvID`, and `CommitID`. The SPL API centers on attach-ID events (`TransactionAttachID`, `GetValueAttachID`, `CommitAttachID`), debug events (`TransactionDebug`, `GetValueDebug`, `CommitDebug`), `join`, `return`, `stats list`, `eventstats min(Time)`, calculated `Delta`/duration fields, and ordered `case()` maps for known debug locations.
+
+Control flow: the first table finds complete transactions by requiring all three attach IDs, joins each phase to its completion event, computes phase durations and a scoped time range, and sorts by total duration. Its cell drilldown sets the phase IDs and begin/end time tokens. Subsequent panels use those tokens to show ordered GRV events, a 6.3-specific raw committed-version substep, get-value events, full commit events, resolver substeps, and TLog commit substeps grouped by machine and sorted by duration.
+
+State and persistence: the dashboard persists no data. User input and drilldown selections drive all downstream state. The underlying persistent source is trace data indexed in Splunk, and the dashboard assumes timestamps are comparable numeric `Time` fields, IDs are preserved across attach events, and debug locations have stable names.
+
+Dependencies and integration: integrates tightly with FoundationDB transaction tracing instrumentation and version-specific naming. It recognizes native API, proxy, master, resolver, storage server, and TLog location strings. The main table intentionally does not cover getrange operations or operations without commit, so it is scoped to a narrower transaction shape than general client tracing.
+
+Risks: downstream tables are empty until a transaction row is selected. Completeness filtering (`Count=3`) excludes partial, read-only, getrange, or failed flows, which is useful for latency decomposition but can hide important incidents. The ordering logic is hard-coded to exact `Location` strings; trace schema changes or role renames can misorder or drop steps. Some commit ordering strings use `TLogServer.tLogCommit.*` while related dashboards/searches often use `TLog.tLogCommit.*`; version mismatch can leave TLog panels empty. Nested `join` and `return $To` subsearches can hit Splunk subsearch limits for broad `transactionID=*` windows.
+
+Test signals: test with a known complete CC transaction that has GRV, read, and commit attach IDs. Confirm the first table sets all drilldown tokens, the GRV panel shows ordered proxy/master steps for both 6.3 and 7.0+ traces, the get-value panel sorts by the intended location order, commit panels show resolver and TLog duration rows, and narrowing `transactionID` to a single hex ID avoids broad subsearch behavior.

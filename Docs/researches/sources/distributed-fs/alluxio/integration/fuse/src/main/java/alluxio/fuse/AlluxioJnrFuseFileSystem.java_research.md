@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/integration/fuse/src/main/java/alluxio/fuse/AlluxioJnrFuseFileSystem.java
+
+Purpose: legacy JNR-FUSE implementation of the Alluxio FUSE callbacks. It predates the newer `FuseFileStream` abstraction and directly manages `FileInStream`/`FileOutStream` pairs in `OpenFileEntry`.
+
+Important APIs and flow: `create` creates an Alluxio file, records an output stream, and optionally sets owner/group from FUSE context. `open` opens existing files for reading, waiting for incomplete files to complete. `read` seeks and copies into JNR `Pointer`; `write` copies bytes from `Pointer`, ignores duplicate lower-offset writes, and writes sequentially to the output stream. `getattr`, `readdir`, `mkdir`, `chmod`, `chown`, `rename`, `rmInternal`, `statfs`, `flush`, and `release` map JNR callbacks to Alluxio client APIs.
+
+State, dependencies, risks, and tests: mutable state includes `mOpenFiles`, `mNextOpenFileId`, path cache, and user/group translation flag. It depends on JNR FUSE structs, Alluxio client streams, shell UID/GID translation utilities, and block master client creation. Risks include no path-scoped lock manager, `MAX_OPEN_FILES` effectively unbounded, direct `ClientContext.create()` in statfs rather than injected context, unsupported truncate, weaker rename overwrite semantics than JNI, and legacy errno differences. `AlluxioJnrFuseFileSystemTest` covers the main operations, incomplete-file wait, read offsets, path translation, statfs, and chown edge cases.

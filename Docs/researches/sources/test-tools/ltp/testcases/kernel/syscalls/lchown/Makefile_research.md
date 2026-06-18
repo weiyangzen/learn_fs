@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/lchown/Makefile
+
+Purpose: builds `lchown` syscall tests, including compatibility variants for 16-bit ownership APIs. It includes common `testcases.mk`, then `../utils/compat_16.mk`, and finally generic leaf targets. There is no runtime state; the Makefile's key integration point is compatibility infrastructure used by `lchown02.c` through `compat_tst_16.h` and UID/GID range checks. Risks are build incompatibilities on architectures without compat variants or missing utility include paths. Test signal is successful build of the lchown test binaries and any generated compat targets.

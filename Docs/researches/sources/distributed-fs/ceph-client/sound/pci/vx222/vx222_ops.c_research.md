@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/pci/vx222/vx222_ops.c
+
+Purpose: Implements VX222 low-level hardware operations consumed by the shared VX core: register IO, DSP/Xilinx loading, pseudo-DMA transfer, IRQ acknowledge/enable, codec reset and gain programming, clock/audio source selection, board reset, and Mic-specific controls.
+
+Important APIs/types/functions: `vx2_reg_offset[]` and `vx2_reg_index[]` map VX core register enums to PLX or DSP IO windows. `vx2_inb/outb/inl/outl()` implement IO access. `vx2_reset_dsp()`, `vx2_test_xilinx()`, `vx2_load_xilinx_binary()`, and `vx2_load_dsp()` cover firmware stages. `vx2_dma_write()` and `vx2_dma_read()` stream PCM data through pseudo-DMA using `VX_DMA` and maintain `pipe->hw_ptr` with buffer wrap. `vx2_test_and_ack()` validates/acknowledges memory IRQs. `vx2_validate_irq()` toggles PLX PCI interrupt and CDSP IRQ bits. `vx2_write_akm()`, `vx2_old_write_codec_bit()`, and `vx2_reset_codec()` program codecs. Mic controls use `vx_input_level_*`, `vx_mic_level_*`, and `vx2_set_input_level()`. Operation tables `vx222_ops` and `vx222_old_ops` expose callbacks to `snd_vx_create()`.
+
+Control flow: Firmware load stage 1 resets and serial-loads the Xilinx image bit-by-bit via PLX control/GPIO lines, then tests it; stage 2 boots the DSP; stage 3 loads the DSP image. During PCM transfer, pseudo-DMA enables host request mode, copies 32-bit words to/from the DMA register with wrap handling, then disables request mode. IRQ handling first checks that Xilinx is loaded and that `VX_STATUS_MEMIRQ_MASK` is set, then pulses acknowledge bits. Codec reset toggles DSP/codec reset lines and, for AKM hardware, powers and mutes/unmutes DAC/ADC state; Mic boards additionally initialize SELMIC.
+
+State and persistence: Uses `struct snd_vx222` cached registers for CDSP/CFG/SELMIC and mixer levels. Mic capture and mic gains are persistent ALSA control state, protected by the VX core `mixer_mutex`. DMA pointer state is held in VX core pipe structures. Firmware-loaded FPGA/DSP state is reflected in VX core chip status.
+
+Dependencies/integration: Depends on Linux firmware, delays, IO ports, mutexes, ALSA core/control/TLV, VX core callback contracts, and `vx222.h`. It integrates with shared VX firmware and PCM code via `struct snd_vx_ops`.
+
+Risks: Xilinx bitstream loading is timing-sensitive and uses `cond_resched()` inside a large loop. Pseudo-DMA requires 4-byte counts and correct wrap math. `vx2_validate_irq()` must keep PLX and CDSP interrupt bits synchronized. AKM gain mapping uses a fixed lookup table and bounds checks; off-by-one changes can mute or overdrive output. Mic preamp calculation assumes a fixed encoded dB model. Old and new board operation tables differ in codec programming callback.
+
+Test signals: Validate Xilinx/DSP firmware load on old and new boards, confirm IRQ ack path, run playback/capture with buffer wrap, test analog/digital source and clock selection, verify AKM output levels and Mic capture/mic volume controls, and suspend/resume through VX core with IRQ revalidation.

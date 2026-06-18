@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/ipc/TestFairCallQueue.java
+
+Purpose: exercises `FairCallQueue<Schedulable>` as both Hadoop IPC scheduling machinery and a `BlockingQueue` implementation. It validates subqueue capacity allocation, priority spillover, multiplexer-driven dequeue order, overflow exception semantics, blocking put/take behavior, JMX exposure, and metrics.
+
+Important APIs/types/functions: `FairCallQueue`, `Schedulable`, `RpcMultiplexer`, `CallQueueManager.CallQueueOverflowException`, `RpcServerException`, `RetriableException`, `StandbyException`, `UserIdentityProvider`, `Putter`, and `Taker`. The local `mockCall()` helper builds priority-tagged schedulables with mocked `UserGroupInformation`.
+
+Control flow: setup builds a two-level queue under namespace `ns`. Tests then construct queues with custom level counts, capacities, and weights; enqueue mocked calls; override the multiplexer index when deterministic polling is required; and assert which internal `offerQueue`/`putQueue` paths are used. Overflow tests fill each subqueue and verify whether `add()` produces retryable, fatal, or failover-triggering exceptions. Blocking tests use `SubjectInheritingThread` plus latches to prove `put` blocks when full and `take` blocks when empty.
+
+State and persistence behavior: queue state is entirely in-memory, split across priority subqueues. Tests assert aggregate `size()` and `remainingCapacity()` as calls move among queues. No durable state is written, but the queue registers runtime MXBean and metrics state (`QueueSizes`, `FairCallQueueSize_pN`, `FairCallQueueOverflowedCalls_pN`), making cleanup and namespace reuse relevant between tests.
+
+Dependencies and integration points: integrates with Hadoop `Configuration` keys for IPC priority levels, Hadoop metrics assertions, platform MBeanServer, Mockito spies/mocks, `UserGroupInformation`, and IPC exception classes consumed by RPC clients. It indirectly documents how scheduler priority, user identity, queue overflow, and client retry/failover behavior connect.
+
+Risks and test signals: strong coverage of capacity accounting, priority fairness fallback, queue-full error mapping, metrics, and MXBean behavior. Concurrency tests are latch-based but still depend on thread scheduling; MBean object naming can be sensitive to duplicate registration if queue lifecycle changes. A notable test signal is the distinction between non-lowest priority overflow (`ERROR`/retriable) and lowest-priority overflow (`FATAL`) plus the failover mode that wraps `StandbyException`.

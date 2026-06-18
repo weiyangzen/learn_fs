@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/xfs/xfs_notify_failure.c
+
+Purpose: Implements DAX holder failure notification for XFS. It translates physical DAX failure ranges into filesystem/log/realtime ranges, reports media errors, kills affected DAX mappings, invalidates pages for pre-remove, and shuts down or force-unmounts when metadata or log integrity is at risk.
+
+Important APIs, types, and functions: Exports `xfs_dax_holder_operations` with `.notify_failure = xfs_dax_notify_failure`. Internal `struct xfs_failure_info` tracks group-relative failure ranges, memory-failure flags, and whether a shutdown is required. `xfs_dax_translate_range` maps DAX device offsets to XFS daddrs and basic-block lengths. `xfs_dax_notify_logdev_failure` handles external-log failures. `xfs_dax_notify_dev_failure` walks data or realtime reverse maps. `xfs_dax_failure_fn` processes each rmap owner and calls `mf_dax_kill_procs`, page invalidation, and `fserror_report_data_lost`.
+
+Control flow: The DAX core calls `xfs_dax_notify_failure`; XFS rejects notifications before the superblock is born, dispatches external log devices separately, otherwise treats the DAX device as data or realtime. Device failures are range-clipped to the filesystem area, reported to health monitoring, and require rmapbt support to identify affected owners. Pre-remove freezes the filesystem to stop new mappings, iterates groups and rmap records under an empty transaction, then force-shuts down for unmount and thaws. Non-pre-remove failures shut down if metadata/non-inode owners are encountered or if rmap/query/DAX kill operations fail.
+
+State and persistence behavior: Does not repair disk state. It can freeze/thaw the superblock, invalidate page cache ranges, report lost data to fs error reporting, notify healthmon, and force shutdown with `SHUTDOWN_FORCE_UMOUNT` or `SHUTDOWN_CORRUPT_ONDISK`. It reads AGF or realtime rmapbt state under transaction context.
+
+Dependencies and integration points: Integrates with Linux DAX holder operations, memory failure flags, filesystem freeze/thaw, reverse mapping btrees, realtime groups, XFS health monitor, inode cache, page cache invalidation, and VFS address spaces. `xfs_buf.c` attaches these operations to DAX buffer targets.
+
+Risks: Correct range clipping is essential for partition offsets and whole-device notifications. Without rmapbt the function cannot identify affected files and returns unsupported. Pre-remove must thaw even after errors. Metadata owners cannot be remediated at file granularity and force shutdown. Group/rmap cursor teardown must release AG/RT locks and references on every path.
+
+Test signals: Inject DAX failures for data, external log, realtime, whole-device, out-of-range, pre-remove, file data, attr fork, bmbt block, metadata owner, non-incore inode, and rmap query errors. Verify healthmon reports device type and range, DAX processes are killed for mapped files, page cache invalidates on pre-remove, freeze/thaw balance is maintained, and shutdown flags match failure mode.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/bench/offline_add/main.go
+
+Purpose: standalone Go benchmark driver for measuring `ipfs add` throughput in an offline-style fresh-repo loop. It creates an isolated temporary IPFS repo, runs `ipfs init`, generates deterministic random file contents, and times only the `ipfs add` command.
+
+Important APIs and functions: `main` calls `compareResults`; `compareResults` iterates `unit.Information` sizes and logs `testing.BenchmarkResult`; `benchmarkAdd` uses `testing.Benchmark`, `b.SetBytes`, `b.TempDir`, `exec.Command`, `config.EnvDir`, `config.DefaultPathName`, and `random.NewSeededRand`. Control flow stops the benchmark timer for repo setup and test-file generation, starts it around `ipfs add`, then stops again before the next iteration. The loop condition in `compareResults` starts at `10 * unit.MB` and doubles while `amount > 0`, so it intentionally runs until integer overflow wraps to non-positive.
+
+State and persistence: all repo state is under `b.TempDir()` via the IPFS path environment variable; input data is a temporary OS file removed with `defer os.Remove`. Dependencies are the installed `ipfs` binary, Kubo config constants, and go-test deterministic random data. Integration is external-process based, so benchmark validity depends on PATH, binary build, and host filesystem behavior. Risks include extremely long/overflow-driven benchmarking, no result comparison despite the TODO, and benchmark noise from repeated repo initialization. Test signal is performance-only, not a unit assertion.

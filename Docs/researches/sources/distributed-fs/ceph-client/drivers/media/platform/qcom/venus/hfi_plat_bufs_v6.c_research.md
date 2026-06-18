@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/qcom/venus/hfi_plat_bufs_v6.c
+
+This file implements Iris/v6 platform buffer-requirement calculations for decode and encode sessions. It encodes firmware-aligned formulas for input bitstream buffers, raw output buffers, internal scratch buffers, scratch1/scratch2 working buffers, and persistent codec-private buffers.
+
+Important APIs are the exported `hfi_plat_bufreq_v6()` and the internal `bufreq_dec()`/`bufreq_enc()` dispatchers. Decoder sizing is organized through `struct dec_bufsize_ops` tables for H.264, HEVC, VP8, VP9, and MPEG2. Encoder sizing uses `struct enc_bufsize_ops` for H.264, HEVC, and VP8. Notable calculators include `calculate_dec_input_frame_size()`, `calculate_enc_output_frame_size()`, `calculate_enc_scratch_size()`, `calculate_enc_scratch1_size()`, `enc_scratch2_size()`, codec-specific `*_scratch_size()`, `*_scratch1_size()`, and `*_persist1_size()`.
+
+Control flow starts in `hfi_plat_bufreq_v6()`, branches by session type, selects codec operations, initializes common requirement fields, then switches on HFI buffer type. Input buffers use minimum counts and compressed/raw frame size formulas. Output buffers use raw frame size helpers and codec-specific min counts. Internal buffers combine line-buffer, command-buffer, collocated-motion-vector, UBWC metadata, VPP pipe, reference count, ten-bit, interlace, split-output, work-mode, and rate-control terms.
+
+State is transient: the file mutates the caller-provided `hfi_buffer_requirements` and reads only `hfi_plat_buffers_params`. Dependencies include Linux alignment helpers, V4L2 pixel formats, `hfi.h`, `hfi_helper.h`, and `venus_helper_get_framesz_raw()`.
+
+Risks are high because constants mirror firmware expectations. Arithmetic overflow, width/height alignment mistakes, wrong minimum counts, VP9/HEVC 10-bit assumptions, or incorrect secondary-output handling can produce under-sized DMA buffers and firmware failures. Test signals include `REQBUFS` minimum counts, successful stream-on for each codec, 4K/8K boundary cases, 10-bit UBWC/P010, VP9 minimum buffer quirk, rate-control-off encoder output sizing, and internal buffer allocation failures.

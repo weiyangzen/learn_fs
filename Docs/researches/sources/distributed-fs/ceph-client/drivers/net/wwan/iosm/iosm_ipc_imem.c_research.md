@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/iosm/iosm_ipc_imem.c
+
+Purpose: owns the IOSM shared-memory runtime state machine. It initializes MMIO, protocol shared memory, task queue, timers, devlink boot channel, runtime mux/WWAN/control ports, and processes MSI events into message-ring, UL, DL, boot, crash, and power-management actions.
+
+Important functions: `ipc_imem_init`, `ipc_imem_cleanup`, `ipc_imem_irq_process`, `ipc_imem_phase_update`, `ipc_imem_ipc_init_check`, channel allocation/open/close/update/cleanup helpers, TD update timers, `ipc_imem_ul_write_td`, `ipc_imem_ul_send`, and `ipc_imem_devlink_trigger_chip_info`. `ipc_imem_run_state_worker` creates mux, WWAN, control ports, debugfs, and sends modem-ready events once CP reaches `IPC_MEM_DEVICE_IPC_RUNNING`.
+
+Control flow: IRQs are debounced into task-queue work; the handler updates AP phase from CP execution stage, runs boot/ROM completions, processes protocol messages, drains DL TDs to devlink/trace/WWAN ports, frees UL TDs, encodes mux uplink data, and schedules HP doorbells. Timers handle delayed TD updates, fast DL updates, DL buffer allocation retry, startup polling, and aggregation flush.
+
+State/dependencies: `struct iosm_imem` holds phase, channel array, timer state, completions, CP status, flags, and subsystem pointers. Dependencies include MMIO, PCIe DMA, protocol ops, mux codec, WWAN, devlink, task queue, uevents, debugfs, trace, and hrtimers. Risks: race-sensitive phase transitions, completion waits, timer cancellation on cleanup, channel index/state mismatches, and bounded DL SKB allocation retries. Test signals include simulated execution-stage transitions, IRQ vector debounce, channel open/close failure unwind, pending UL/DL close waits, and runtime worker device-specific port filtering.

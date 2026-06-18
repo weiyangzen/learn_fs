@@ -1,0 +1,36 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/radeon/btc_dpm.c
+
+## Purpose
+This file implements dynamic power management for AMD Radeon BTC-era ASICs, covering Barts, Turks, and Caicos. It programs static clock-gating/light-sleep register sequences, initializes and controls the SMC DPM state table, adjusts requested power states against clock, voltage, display, PCIe, UVD, and memory-timing constraints, and exposes the BTC DPM hooks used by the Radeon ASIC table.
+
+## Important APIs, Types, and Functions
+Public driver hooks include `btc_dpm_init`, `btc_dpm_setup_asic`, `btc_dpm_enable`, `btc_dpm_disable`, `btc_dpm_pre_set_power_state`, `btc_dpm_set_power_state`, `btc_dpm_post_set_power_state`, `btc_dpm_fini`, `btc_dpm_vblank_too_short`, `btc_dpm_get_current_sclk`, `btc_dpm_get_current_mclk`, `btc_dpm_get_sclk`, `btc_dpm_get_mclk`, and `btc_dpm_debugfs_print_current_performance_level`. Shared helper APIs declared in `btc_dpm.h` include `btc_read_arb_registers`, `btc_program_mgcg_hw_sequence`, `btc_skip_blacklist_clocks`, `btc_adjust_clock_combinations`, `btc_apply_voltage_dependency_rules`, `btc_get_max_clock_from_voltage_dependency_table`, `btc_apply_voltage_delta_rules`, `btc_dpm_enabled`, `btc_reset_to_default`, and `btc_notify_uvd_to_smc`.
+
+The file is built around `struct evergreen_power_info`, its embedded `struct rv7xx_power_info`, `struct radeon_ps`, `struct rv7xx_ps`, `struct rv7xx_pl`, `RV770_SMC_STATETABLE`, and Evergreen memory-controller register table structures. Large static triplet arrays hold register, value, and mask sequences for CGCG/CGLS, MGCG, and SYSLS defaults/enables/disables for Barts, Turks, and Caicos.
+
+## Control Flow
+Initialization allocates `evergreen_power_info`, parses ATOMBIOS power tables, creates a display-clock voltage dependency table, establishes default response times, thresholds, arbitration timing defaults, clock-gating capability flags, PCIe Gen2 policy, thermal policy, ULV defaults, valid SCLK values, and DC clock limits. `btc_dpm_setup_asic` loads memory-controller firmware, discovers memory and PCIe state, reads boot clock and voltage registers, snapshots memory arbitration registers, advertises PCIe Gen2 if ACPI supports performance requests, and enables ACPI PM.
+
+Enable flow applies default clock-gating sequences, rejects an already running SMC, enables voltage/MVDD/backbias/spread-spectrum/thermal controls as configured, optionally builds dynamic AC memory timing tables, programs RV770/Cypress DPM timing and throttling parameters, enables dynamic PCIe Gen2, uploads firmware, locates SMC tables, builds the BTC SMC state table, uploads MC timing tables, starts SMC/DPM, enables SCLK and optional MCLK control, applies clock-gating enable sequences, enables thermal auto-throttle, initializes stutter mode, and snapshots the boot power state as current.
+
+Power-state transition flow copies the requested state, applies adjustment rules, disables ULV, restores boot arbitration timing, restricts performance levels before switching, performs optional PCIe link-speed notifications, coordinates UVD clocks, halts the SMC, updates activity thresholds/UVD soft registers, uploads the software state and optional MC timing table, programs memory timing parameters, resumes SMC, requests the software state, restores UVD clocks, performs post PCIe notifications, and conditionally re-enables ULV when the low state matches the ULV memory/VDDCI requirements. Post-transition commits requested state into current state.
+
+Disable flow clears voltage controller setup, disables thermal protection and dynamic PCIe Gen2, disables thermal IRQ delivery, disables clock-gating sequences, stops DPM, sends SMC reset-to-defaults, waits for display reset state to clear before stopping the SMC, disables spread spectrum, and restores current state to the boot state.
+
+## State and Persistence Behavior
+Persistent runtime state is stored in `rdev->pm.dpm.priv` as `evergreen_power_info`, in `rdev->pm.dpm.dyn_state`, in SMC SRAM tables, and in hardware registers. Current and requested Radeon power states are copied into `eg_pi->current_rps/current_ps` and `eg_pi->requested_rps/requested_ps` with corrected `ps_priv` pointers. The SMC table persists in SRAM until reset/disable, while clock-gating and memory-timing register programming persists in hardware until explicitly changed or reset.
+
+Dynamic AC timing state is initialized from ATOMBIOS memory-controller tables, expanded with LP/S0 register aliases and special MRS/EMRS registers, marked with valid flags only where entries differ, and uploaded during state changes. ULV state persists as SMC state and selected hardware timing until disabled or replaced by another transition. `btc_dpm_fini` frees per-power-state private data, power-state arrays, the private power-info block, the display-clock voltage dependency table, and extended power-table allocations.
+
+## Dependencies and Integration Points
+This file depends on Radeon register macros, ATOMBIOS parsers, RV770 and Cypress DPM helpers, Evergreen power structures, SMC message and SRAM copy helpers, PCIe port register access, ACPI PCIe performance requests, UVD state classification, thermal IRQ handling, memory-controller firmware loading, and debugfs `seq_file` output. `radeon_asic.c` wires its DPM hooks into the BTC ASIC entry, while `ni_dpm.c` and `si_dpm.c` reuse several BTC helper functions for later ASIC families.
+
+The register names and bitfields come from `btcd.h` and related Radeon headers. The public helper surface is declared by `btc_dpm.h`, and defaults such as UVD activity thresholds and CG ULV constants also come from that header.
+
+## Risks
+The file directly programs power, voltage, memory, and PCIe hardware registers, so ordering mistakes can hang the GPU, corrupt display output, or cause unstable voltage/clock combinations. VBIOS MC timing table bounds are checked, but malformed firmware still disables dynamic AC timing or returns errors. Clock and voltage adjustment is heavily policy-based; regressions can appear only under multi-monitor, short-vblank, UVD, DC power, or Gen2 PCIe cases. `btc_valid_sclk` contains a suspicious `11500` entry among otherwise 5,000-step values, which may be intentional legacy data but looks like a potential typo for `115000`.
+
+ULV programming is especially sensitive because it rewrites ARB[0] timing and requires low-state memory/VDDCI compatibility. The recursive blacklist skipper only changes SCLK upward and relies on the valid clock table to terminate. Error paths in enable can leave some hardware features enabled after a later step fails because cleanup is handled by higher-level DPM teardown rather than local unwinding.
+
+## Test Signals
+Useful signals include kernel build coverage for BTC, NI, and SI DPM users; boot and module load on Barts/Turks/Caicos boards; suspend/resume and DPM enable/disable cycles; AC/DC transitions; multi-monitor modes with short vblank intervals; UVD playback power-state transitions; PCIe Gen1/Gen2 link speed changes; thermal throttle and IRQ tests; debugfs current performance level reporting; memory clock switching with GDDR5 and non-GDDR5 memory; and fault injection for SMC message failures, firmware load failure, and malformed ATOMBIOS MC timing tables.

@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/klog.go
+
+Purpose: bridges Kubernetes `klog`/`logr` output into logrus. `InitKlogShim` disables stderr logging and installs `logSink`. `logSink.Info` writes klog info as logrus debug; `Error` writes logrus error with optional error text; `writeKeysAndValues` formats key/value pairs, quotes strings/errors/Stringers/bytes, and fills odd missing values with `[MISSING]`. State is global klog logger configuration only. Dependencies include logr, klog, logrus, fmt, and strings. Risks include global side effects, all verbosity levels enabled, formatting differences from structured logging, and possible sensitive value inclusion. Tests cover info-to-debug conversion, key/value formatting, and missing values.

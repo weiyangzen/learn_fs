@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/pantherlake/frontend.json
+
+**Purpose:** Panther Lake frontend event topic with 56 records for branch-address clears, decode and microcode-sequencer activity, DSB/MITE transitions, frontend-retired latency attribution, instruction-cache and instruction-TLB misses, IDQ delivery paths, frontend bubbles, and atom microsequencer decoded events.
+
+**Schema and important records:** The file uses standard event fields plus several precise-distribution selectors. `FRONTEND_RETIRED.*` core records share `EventCode: 0xc6`, `UMask: 0x3`, and use `MSRIndex: 0x3F7` with distinct `MSRValue` encodings to tag retired instructions by frontend source or latency threshold. Atom records include direct `FRONTEND_RETIRED.ITLB_MISS` and `FRONTEND_RETIRED_SOURCE.*` definitions without the same MSR selector pattern. `IDQ.*` and `IDQ_BUBBLES.*` use `CounterMask`, `Invert`, and `EdgeDetect` for cycle, switch, and starvation-style measurements. `BACLEARS.ANY` is duplicated across atom and core with different event codes and meanings.
+
+**Control flow and integration:** Perf builds these records into the Panther Lake frontend topic. At runtime, plain events program event code/umask pairs, while frontend-retired core events also program MSR-based selector values. These events feed top-down frontend-bound analysis, instruction-cache miss diagnosis, branch predictor resteer analysis, and DSB/MITE/MS delivery breakdowns. The `Unit` field controls whether the core or atom frontend pipeline encoding is used.
+
+**State and persistence:** Static JSON metadata only. Generated perf tables persist event selectors and MSR values; runtime state consists of programmed counters and optional frontend-retired tagging controlled by the kernel PMU driver.
+
+**Dependencies:** Depends on Panther Lake frontend PMU encodings, PEBS/PDist-style retired tagging support, perf's MSR selector handling, and counter availability from `counter.json`. It also integrates with top-down metrics that use `IDQ_BUBBLES.*`, `FRONTEND_RETIRED.*`, and instruction-cache events.
+
+**Risks:** Frontend-retired records are high risk because many names differ only by `MSRValue`; a wrong selector will still count but attribute stalls to the wrong source or latency threshold. `CounterMask`, `Invert`, and `EdgeDetect` fields must survive generation for cycle and transition events. Duplicate names across atom/core must be retained by unit. Several descriptions are short, so downstream documentation may need to rely on names and encodings rather than prose.
+
+**Test signals:** Validate JSON and generated table count for all 56 records. `perf list frontend` should expose BACLEARS, DSB/MITE, frontend-retired, ICACHE, IDQ, and MS_DECODED names. Runtime tests should include instruction-cache pressure, branch-heavy code, and microcode-heavy instructions to confirm representative event movement. A build or parser test should assert that all `MSRIndex: 0x3F7` records preserve their intended `MSRValue`.

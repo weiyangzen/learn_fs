@@ -1,0 +1,15 @@
+# sources/distributed-fs/xrootd/src/XrdCms/XrdCmsProtocol.cc
+
+Purpose: implements the CMS wire protocol plugin and connection lifecycle. It covers protocol loading, port discovery, outbound manager connections, inbound login admission, request dispatch, async job scheduling, forwarding/reissue, redirector handling, ping timeouts, and protocol object pooling.
+
+Important APIs/functions: exported `XrdgetProtocol()` and `XrdgetProtocolPort()` integrate with Xrd protocol loading. `Execute()` routes a parsed request to `XrdCmsNode` methods and optionally forwards it. `Match()` recognizes CMS logins. `Pander()` maintains outgoing manager/supervisor sessions. `Process()` handles inbound sessions. `Admit()` validates login roles, builds `XrdCmsNode`, registers paths, updates cluster/meter state, and chooses response routing. `Admit_Redirector()` registers redirectors in `RTable`. `Dispatch()` reads headers/payloads, validates route options, parses arguments, and runs sync or scheduled async work. `Reissue()`, `Reply_Delay()`, `Reply_Error()`, `SendPing()`, and `Sync()` handle downstream protocol responses and thread quiescence.
+
+Control flow: phase 0/1/2 configuration flows through `XrdgetProtocolPort()` then `XrdgetProtocol()`. Inbound links first `Match()`, then `Process()` calls `Admit()` and dispatches until timeout or disconnect. Outbound manager links use `Pander()` in a reconnect loop with alternate managers, redirection handling, login mode updates, and cleanup after `Dispatch()`. Async requests allocate `XrdCmsJob` and increment protocol refs so `Sync()` can wait before node deletion.
+
+State and persistence: static state includes `ProtStack`, `ProtMutex`, `readWait`, and `ProtArgs`. Per-connection state includes `Link`, `Routing`, `myNode`, manager pointer, redirector slot, ref count/semaphore, login flag, and nonblocking send queue state. Persistent cluster state is external to this file; this file mutates in-memory cluster/path/meter state.
+
+Dependencies/integration: this is a central integration point for `Config`, `Cluster`, `Cache`, `Manager`, `ManTree`, `Meter`, `CmsState`, `RTable`, `XrdCmsLogin`, `XrdCmsRouting`, `XrdCmsRole`, `XrdCmsNode`, `XrdCmsJob`, Xrd networking/link APIs, and `XrdOucPup` parsing.
+
+Risks: `Dispatch()` bounds payloads to 16 KiB but relies on route tables and parser schemas staying synchronized. `AddPath()` accepts path type characters and mutates node write/stage flags; bad exported path types fail login. Protocol object pooling requires `Init()` to reset every field. Ref counting is manual across async jobs. Login role compatibility is dense and should be regression-tested for proxy/peer/meta-manager cases. `ConfigCheck()` removes path masks and bounces cache on CRC changes, so path string normalization matters.
+
+Test signals: integration tests for login roles, redirector admission limits, payload size rejection, malformed request parsing, async job ref synchronization, manager redirection, suspend/delay behavior, forwarded operation TTL, and path reconfiguration cleanup.

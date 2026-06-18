@@ -1,0 +1,20 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/ulp/ipoib/ipoib_main.c
+
+## Purpose
+`ipoib_main.c` is the central netdevice and module implementation for IPoIB. It registers the RDMA client, creates one IPoIB netdevice per IB-capable port, wires netdev operations, handles open/stop/MTU/mode/MAC/sysfs behavior, resolves unicast paths through the subnet administrator, manages neighbour caching, supports child P_Key interfaces, and coordinates module init/exit.
+
+## Important APIs, Types, And Functions
+Public entry points include `ipoib_open()`, `ipoib_intf_init()`, `ipoib_intf_alloc()`, `ipoib_intf_free()`, `ipoib_set_mode()`, `__path_find()`, `ipoib_flush_paths()`, `ipoib_mark_paths_invalid()`, `ipoib_neigh_get()`, `ipoib_neigh_alloc()`, `ipoib_neigh_free()`, `ipoib_del_neighs_by_gid()`, `ipoib_set_umcast()`, `ipoib_add_pkey_attr()`, `ipoib_add_umcast_attr()`, and `ipoib_setup_common()`. Internal high-value logic includes `ipoib_start_xmit()`, `neigh_add_path()`, `unicast_arp_send()`, `path_rec_completion()`, `path_rec_start()`, `ipoib_dev_init()`, `ipoib_ndo_init()`, `ipoib_add_port()`, `ipoib_add_one()`, `ipoib_remove_one()`, `ipoib_init_module()`, and `ipoib_cleanup_module()`.
+
+## Control Flow And State
+Module init clamps queue-size module parameters, validates CM copybreak assumptions, registers debugfs, creates the global flush workqueue, registers the SA client and IB client, registers rtnl link ops, and optionally debug netdevice notifiers. `ipoib_add_one()` scans RDMA ports and calls `ipoib_add_port()`, which allocates/initializes the netdev, registers the IB event handler, queues a heavy flush to sync P_Key state, registers the netdev, installs sysfs attributes, and stores the per-device list in RDMA client data.
+
+Netdev open sets admin-up, opens verbs resources through `ipoib_ib_dev_open()`, starts multicast joins, brings child interfaces up, and starts the queue. Stop clears admin-up, stops queues, downs/stops the IB datapath, and brings children down. MTU changes differ by mode: connected mode permits up to CM MTU and warns above multicast MTU; datagram mode clamps to the multicast/admin MTU and tells lower `rn_ops` when available. `ipoib_set_mode()` toggles `IPOIB_FLAG_ADMIN_CM`, updates features/MTU/queue count, and flushes paths.
+
+Transmit builds on the pseudo-header inserted by `ipoib_hard_header()`. Multicast destinations are validated and sent through `ipoib_mcast_send()`. Unicast IP/IPv6/TIPC packets use the neighbour hash; misses create an SA path record and queue packets until completion. Unicast ARP/RARP always path-resolve. `path_rec_completion()` creates an AH from the SA path record, updates all neighbours waiting on the path, optionally starts CM, and requeues pending skbs. Neighbours are stored in an RCU hash sized from ARP GC thresholds, reaped after two GC intervals, and flushed synchronously during uninit.
+
+## Dependencies And Integration Points
+The file integrates Linux netdevice, rtnl, sysfs, notifier, RCU, ARP/IPv6 address lookup, and RDMA client/SA/cache APIs. It calls into `ipoib_ib.c` for verbs open/stop/flush, `ipoib_multicast.c` for multicast membership, `ipoib_cm.c` for connected-mode creation, `ipoib_vlan.c` for legacy child sysfs, `ipoib_netlink.c` for rtnl link ops, and `ipoib_fs.c` for debug files. Lower hardware-specific behavior is delegated through `rdma_netdev` ops retained in `priv->rn_ops`.
+
+## Risks And Test Signals
+The highest-risk areas are lock ordering across rtnl/netdev/TX/spin locks, async work during unregister, path completion after flush, neighbour refcount/RCU removal, child interface lifetime, mode switching while packets are queued, and MAC/GID/P_Key changes. Test signals include module load/unload, IB device add/remove, parent and child open/stop, sysfs `create_child`/`delete_child`/`mode`/`umcast`, rtnl-created child links, path resolution success/failure, duplicate IP matching for RDMA clients, TX timeout recovery, and debug builds with netdev rename/unregister.

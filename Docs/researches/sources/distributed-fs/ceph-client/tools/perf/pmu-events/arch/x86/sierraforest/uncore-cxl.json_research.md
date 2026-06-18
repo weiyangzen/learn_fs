@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/sierraforest/uncore-cxl.json
+
+Purpose: defines three Sierra Forest CXL-related uncore PMU aliases for perf. The file covers the B2CXL clock domain and two CXL data movement points: allocation into a CXL cache/memory receive-side memory-data packing buffer and allocation into a CXL data-path transmit command AGF for M2S data.
+
+Important APIs/types/functions: the JSON records use the same perf uncore event schema as the other architecture files. `UNC_B2CXL_CLOCKTICKS` uses `Unit: B2CXL`, `EventCode: 0x01`, counters `0,1,2,3`, `PerPkg: "1"`, and `PortMask: "0x000"`. `UNC_CXLCM_RxC_PACK_BUF_INSERTS.MEM_DATA` uses `Unit: CXLCM`, `EventCode: 0x41`, `UMask: 0x10`, and counters `4,5,6,7`. `UNC_CXLDP_TxC_AGF_INSERTS.M2S_DATA` uses `Unit: CXLDP`, `EventCode: 0x02`, `UMask: 0x20`, and counters `0,1,2,3`. There are no public descriptions or experimental flags in this file.
+
+Control flow: perf parses the file into PMU aliases, then maps requested aliases to the corresponding CXL uncore unit and counter set. The clockticks event can be used as a denominator or liveness signal for the B2CXL block. The insert events count specific CXL buffer/AGF allocation points and can be sampled directly or used by future derived metrics to estimate CXL memory data movement and pressure.
+
+State and persistence: static metadata only. Runtime state is held in package-scoped CXL uncore counters and is visible only while perf is collecting. The file does not store history or configure CXL devices itself; it relies on the kernel exposing the package CXL PMU units and the hardware generating the matching allocation events.
+
+Dependencies and integration: depends on Linux perf pmu-events support and kernel uncore PMU support for the `B2CXL`, `CXLCM`, and `CXLDP` units. It complements CXL-filtered CHA TOR aliases in `uncore-cache.json`; together, those files let perf users distinguish CXL traffic observed at CHA from CXL fabric/data-path activity. It may also feed platform-specific bandwidth or occupancy metrics if later metric JSON references these aliases.
+
+Risks: the small file gives little semantic detail beyond brief descriptions, so users must rely on hardware documentation to interpret allocation counts and convert them to bytes or rates. Counter availability differs between `CXLCM` and `CXLDP` entries, so grouping all three events can fail or multiplex depending on PMU layout. CXL units may be absent, disabled, or unexposed on systems without relevant CXL hardware. The event names contain mixed-case path fragments (`RxC`, `TxC`, `M2S`) that must remain stable for scripts and metrics.
+
+Test signals: validate syntax with `jq`, verify `perf list` exposes all three aliases on a Sierra Forest perf build, and run `perf stat -e UNC_B2CXL_CLOCKTICKS` as a liveness check on hardware with B2CXL support. On a CXL workload, compare `UNC_CXLCM_RxC_PACK_BUF_INSERTS.MEM_DATA` and `UNC_CXLDP_TxC_AGF_INSERTS.M2S_DATA` against CXL-specific CHA TOR hit/miss aliases from `uncore-cache.json`.

@@ -1,0 +1,15 @@
+# sources/control-plane/rook/pkg/operator/ceph/cluster/controller.go
+
+Purpose: wires the controller-runtime `CephCluster` controller, watches cluster-owned resources and relevant cluster-wide resources, performs reconcile entry/exit handling, and owns deletion gating/finalizer cleanup.
+
+Important APIs and types: `ClusterController` stores shared context, rook image, cached cluster map, controller client, recorder, and operator manager context. `ReconcileCephCluster` is the reconcile adapter. `Add`, `newReconciler`, `add`, and `watchOwnedCoreObject` register watches. `isSecretRefFromCluster` identifies Ceph config secret references. `Reconcile` wraps `reconcile` with panic recovery and reporting. `reconcileDelete`, `reconcileCephCluster`, `requestClusterDelete`, `csiVolumesAllowForDeletion`, `checkPVPresentInCluster`, `removeFinalizers`, `removeFinalizer`, and `deleteOSDEncryptionKeyFromKMS` implement lifecycle operations.
+
+Control flow: `add` creates the controller with optional `ROOK_RECONCILE_CONCURRENT_CLUSTERS`, watches `CephCluster`, owned Deployments/Services/Secrets/ConfigMaps, Nodes, referenced config Secrets, hotplug ConfigMaps unless disabled, and cluster ConfigMaps. `reconcile` sets clients on shared context, fetches the CR, adds a finalizer, handles deletion, respects `SkipReconcileLabelKey`, and delegates active reconciliation to `ClusterController.reconcileCephCluster`. Deletion sets a Deleting condition, blocks if dependent custom resources remain, optionally starts cleanup jobs, checks CSI PVs unless allowed, purges external artifacts or KMS OSD keys, removes cached cluster state, and removes mon/cluster finalizers.
+
+State and persistence behavior: updates finalizers, status conditions, event recorder events, clusterMap entries, deletion-blocked condition reporting, mon disaster-protection finalizers, CephCluster finalizers, external-mode ConfigMaps/Secrets, and optionally KMS keys. It reads PersistentVolumes clusterID/driver attributes to gate deletion.
+
+Dependencies and integration points: controller-runtime manager/client/cache/predicates, CSI Addons and Ceph CSI operator schemes, Rook controller/reporting helpers, mon/osd/csi/kms packages, Kubernetes fake or real clients, and predicates defined elsewhere in the package. It assumes one CephCluster per namespace when managing cached cluster instances and deletion.
+
+Risks: deletion safety depends on complete dependent-kind enumeration and accurate PV `clusterID` attributes. `requestClusterDelete` may skip deletion if another cached cluster name exists in the namespace, matching the one-cluster-per-namespace rule. Cleanup jobs are launched in a goroutine with operator manager context while deletion continues. The shared `clusterd.Context.Client` is overwritten per reconcile, which is typical for this controller but worth noting with concurrent reconciles.
+
+Test signals: `controller_test.go` covers deletion blocked/unblocked by dependents, finalizer removal, and skip-reconcile event behavior. It does not directly test controller watch registration, PV gating, external purge, or KMS deletion.

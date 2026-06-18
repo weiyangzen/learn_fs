@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/fnic/fnic_res.c
+
+Purpose: this file reads vNIC firmware configuration, clamps it to driver-supported ranges, counts firmware-provided resources, allocates/frees vNIC queue/CQ/interrupt objects, and initializes those resources for the selected interrupt mode.
+
+Important APIs and functions: `fnic_get_vnic_config()` fetches `struct vnic_fc_config` fields through `vnic_dev_spec()` and clamps descriptor counts, payload size, FC timeouts, login retries, I/O throttle, link/port-down timeouts, LUNs per target, interrupt timer, and copy-WQ count. `fnic_set_nic_config()` wraps `CMD_NIC_CFG` for NIC features such as VLAN stripping. `fnic_get_res_counts()` reads WQ/RQ/CQ/INTR counts from firmware and seeds raw/copy WQ counts. `fnic_alloc_vnic_resources()` allocates WQ, copy-WQ, RQ, CQ, interrupt resources, initializes their control blocks, performs an initial stats dump, and clears LIF stats. `fnic_free_vnic_resources()` frees those resources.
+
+Control flow: probe calls config fetch, resource count discovery, interrupt-mode selection, then allocation. Allocation creates one raw WQ for FCS frames, copy WQs for SCSI I/O, RQs for received FCS/FIP frames, CQs for each RQ/WQ/copy-WQ, and interrupt controllers. CQ indices are laid out as RQs first, raw WQs next, copy WQs last. Error interrupt setup differs by interrupt mode: INTx/MSI-X enable queue error interrupts, MSI disables them. CQ interrupt offsets are per-CQ for MSI-X and zero otherwise.
+
+State and persistence: the primary state is `fnic->config`, queue count fields, `legacy_pba`, queue rings/control blocks, interrupt controls, and `fnic->stats` backing storage. All state is runtime hardware/driver state. Clamping firmware config is persistent only for this probe instance.
+
+Dependencies and integration: this file uses vNIC core helpers (`vnic_dev`, `vnic_wq`, `vnic_wq_copy`, `vnic_rq`, `vnic_cq`, `vnic_intr`, `vnic_nic`) and descriptor definitions. `fnic_main.c` owns call order; `fnic_isr.c` provides interrupt mode; `fnic_fcs.c` and `fnic_scsi.c` consume the queues.
+
+Risks: queue count and CQ index assumptions must match ISR and completion handlers. Copy-WQ CQs are allocated with three times the copy-WQ descriptor count to cover multiple firmware completion types. On allocation failure, cleanup frees all resource arrays based on current counts, so partially initialized resource helpers must tolerate freeing unallocated entries. Test signals include config clamp validation with boundary firmware values, resource count shortage, each interrupt mode, stats dump failure, queue error interrupt routing, and queue/CQ index consistency under multi-copy-WQ configurations.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/vector/v_helpers.h
+
+Purpose: declares shared vector helper functions for RISC-V vector tests: capability checks, vector register length discovery, and child launch. It has no runtime state. Integration is with `vstate_prctl.c`, `vstate_ptrace.c`, `validate_v_ptrace.c`, and initial-value tests. Dependencies are the implementation in `v_helpers.c` and linked `sys_hwprobe.o`. Risks are signature drift and consumers assuming helpers distinguish standard vector from XTheadVector consistently. Test signals are successful linking and correct skip/execute behavior in vector tests.

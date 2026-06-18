@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/soc/mediatek/mt8192/mt8192-afe-pcm.c
+
+This is the MT8192 AFE platform driver. It registers the ALSA component, FE memory-interface DAIs, DAPM routes for memif capture/playback, memif metadata, IRQ metadata, regmap caching policy, runtime PM, and platform probe/remove.
+
+Important data includes `mt8192_afe_hardware`, `mt8192_memif_dai_driver[]`, `memif_data[]`, `irq_data[]`, and `memif_irq_usage[]`. The FE DAIs cover DL1/DL12/DL2-DL9 playback, UL1-UL8 capture, mono DAI captures, and HDMI playback. `memif_data[]` maps each memif to base/current/end registers, sample-rate fields, mono/quad/HD/alignment fields, enable bits, and pbuf/minlen fields. `irq_data[]` maps fixed IRQ slots to counter/fs/enable/clear registers.
+
+Probe sets a 34-bit DMA mask, allocates `mtk_base_afe` and MT8192 private state, initializes reserved memory or preallocation, initializes clocks, resets audiosys, enables runtime PM, attaches the parent syscon regmap, warms/reinitializes regcache with clocks temporarily enabled, allocates memif/IRQ arrays, requests the IRQ, registers all sub-DAI families, combines them, fills AFE callbacks, and registers the ASoC component. Runtime resume enables clocks, restores regcache, enables DCM, configures HD alignment and 24-bit output ports, then enables AFE. Runtime suspend disables AFE, polls for off, clears IRQs, resets sinegen, marks regcache cache-only/dirty, and disables clocks.
+
+The IRQ handler masks `AFE_IRQ_MCU_STATUS` by `AFE_IRQ_MCU_EN`, calls `snd_pcm_period_elapsed()` for active memifs whose assigned IRQ bit fired, then writes `AFE_IRQ_MCU_CLR`. DAPM routing tables connect ADDA, I2S, PCM, CONNSYS I2S, SRC, and DL paths into capture memifs; `ul_tinyconn_event()` toggles tiny connection use bits.
+
+Persistent state includes devm-owned `afe`, `afe_priv`, memif array, IRQ array, combined DAI tables, and regcache state. Dependencies are MediaTek common FE/platform helpers, clock/GPIO/DAI registration files, reset/PM/DMA/reserved-memory APIs, and `mt8192-reg.h`. Risks are regcache volatile coverage, fixed memif-to-IRQ mapping mistakes, runtime-PM ordering, and DT resource completeness. Test signals include probe, ALSA PCM enumeration, period interrupts for each memif, suspend/resume, HDMI/TDM IRQ31, and route-specific loopback.

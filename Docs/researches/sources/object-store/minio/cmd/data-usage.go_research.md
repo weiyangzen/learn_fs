@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/minio/cmd/data-usage.go -->
+## sources/object-store/minio/cmd/data-usage.go
+
+Purpose: This file stores and loads high-level data usage JSON and provides a backend prefix-usage loader for erasure deployments. It bridges scanner/cache internals with MinIO metadata objects under the bucket metadata prefix.
+
+Important APIs and functions: Constants define metadata object names and paths: `.usage.json`, `.usage-cache.bin`, `.bloomcycle.bin`, `.background-heal.json`, and backup paths under `bucketMetaPrefix`. `storeDataUsageInBackend(ctx, objAPI, dui)` consumes a channel of `DataUsageInfo`, marshals each value with json-iterator, saves the primary `.usage.json`, and periodically writes `.usage.json.bkp`. `loadPrefixUsageFromBackend(ctx, objAPI, bucket)` returns a prefix-to-size map for a bucket by reading `.usage-cache.bin` from all erasure sets. `loadDataUsageFromBackend(ctx, objAPI)` reads `.usage.json`, falls back to backup, unmarshals it, and performs compatibility migrations.
+
+Control flow: Store flow is channel-driven: for each usage update, marshal JSON, optionally write a backup when the attempt counter exceeds ten, then write the primary config and log errors. Prefix loading first type-asserts `ObjectLayer` to `*erasureServerPools`; non-erasure deployments return an empty map. The cachevalue wrapper is initialized once with a 30-second TTL, `ReturnLastGood`, and `NoWait`. The loader iterates pools and sets, gives each cache load a two-second timeout, finds the bucket root entry, flattens children, decodes directory-object names, and sums sizes per prefix. JSON load flow falls back to backup on read failure, returns an empty `DataUsageInfo` for missing config, then fills `BucketsUsage` from legacy `BucketSizes` or `BucketSizes` from `BucketsUsage` when either side is absent.
+
+State and persistence behavior: Primary persisted state is JSON in MinIO metadata plus an occasional backup. Prefix usage is derived from binary scanner cache files on each erasure set, but the returned map itself is cached in process for 30 seconds. Compatibility code also migrates legacy replication V1 fields into the newer `ReplicationInfo` map keyed by the bucket replication role ARN when a replication config is available.
+
+Dependencies and integration points: The file depends on `jsoniter`, `cachevalue`, ObjectLayer config helpers (`readConfig`, `saveConfig`), erasure server pool internals, `dataUsageCache`, scanner logging, and replication config lookup. It integrates with background scanner output and admin/bucket usage consumers.
+
+Risks: `storeDataUsageInBackend` runs until its input channel closes and has no explicit cancellation inside the loop beyond the context passed to save/log operations. Backup frequency is attempt-count based and only starts after more than ten updates. `loadPrefixUsageFromBackend` uses one global cache keyed only by its update function, so callers should be aware of the 30-second cached result behavior. The prefix loader silently skips sets where cache loading fails or where a bucket root is absent, which favors availability but can underreport prefixes during cache corruption or partial set failures.
+
+Test signals: There are no direct tests for these functions in the listed files. Indirect coverage comes from scanner/cache serialization tests and from any object-layer tests that exercise stored data usage JSON.
+<!-- END_FILE_RESEARCH: sources/object-store/minio/cmd/data-usage.go -->

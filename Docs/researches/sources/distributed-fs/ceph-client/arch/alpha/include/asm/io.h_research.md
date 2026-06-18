@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/arch/alpha/include/asm/io.h
+
+This is Alpha's central I/O abstraction. It defines the kernel identity mapping base `IDENT_ADDR`, HAE update helpers, `virt_to_phys`/`phys_to_virt`, deprecated ISA bus mapping helpers, compile-time or generic machine-vector dispatch for chipset I/O, external I/O function declarations, inline `ioport_map`, `ioremap`, `iounmap`, `__is_ioaddr`, `__is_mmio`, barrier-wrapped read/write and ioread/iowrite wrappers, relaxed accessors, string I/O operations, RTC port defaults, and generic I/O inclusion.
+
+Control flow depends on `CONFIG_ALPHA_GENERIC`: generic kernels route through `alpha_mv.mv_*`; fixed-platform kernels include one `core_*.h` header and set `__IO_PREFIX`. If the selected backend marks operations trivial, this header emits inline wrappers around backend loads/stores with `mb()` before/after. `__set_hae` raises IPL to `IPL_MAX`, updates the machine-vector HAE cache/register, issues barriers and a readback, then restores IPL.
+
+State includes HAE register/cache, HWRPB physical address width, direct-map base/size, machine-vector function pointers, and memory-mapped device state. Risks are broad: Alpha memory ordering, HAE atomicity against interrupts, generic versus fixed backend selection, deprecated ISA mappings returning 0/NULL, and classifying MMIO versus port space. Test signals include all driver I/O paths, PCI resource mapping, DMA users, and multi-chipset builds.

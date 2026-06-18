@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/net/ipv6/reassembly.c
+
+Purpose: Implements core IPv6 fragment reassembly for normal IPv6 input. It registers the Fragment header protocol handler, manages per-net fragment queues and sysctls, validates RFC 8200 fragment rules, reassembles completed datagrams, and reports errors/stats.
+
+Important APIs, types, and functions: `ip6_frags` is the global `inet_frags` cache. `ipv6_frag_rcv()` is the `inet6_protocol` handler for `IPPROTO_FRAGMENT`. `fq_find()`, `ip6_frag_queue()`, and `ip6_frag_reasm()` manage queue lookup, fragment insertion, and reassembly. `ipv6_frag_init()` and `ipv6_frag_exit()` register the cache, protocol, sysctls, and pernet fragment directories. Sysctl helpers expose `ip6frag_high_thresh`, `ip6frag_low_thresh`, `ip6frag_time`, and deprecated `ip6frag_secret_interval`.
+
+Control flow: `ipv6_frag_rcv()` rejects already reassembled packets, increments reassembly request stats, rejects jumbo payloads and short fragment headers, fast-paths atomic fragments by advancing transport header and marking `IP6SKB_FRAGMENTED`, validates that the first fragment contains all headers through an upper-layer header, finds the per-net queue, and calls `ip6_frag_queue()` under lock. Queueing validates offset/end bounds, ECN, checksum adjustment, final-fragment consistency, 8-byte alignment, non-empty payload, trimming, overlap/duplicate insertion, memory accounting, max size, first-fragment nhoffset, and completion. `ip6_frag_reasm()` removes the Fragment header, shifts headers, finishes generic reassembly, updates payload length, ECN, `IP6CB`, stats, and returns `1` so the protocol dispatch continues.
+
+State and persistence: Per-net `net->ipv6.fqdir` stores active fragment queues, thresholds, timeout, and sysctl header. Each queue tracks fragment tree/tail, length, meat, ECN, max size, input interface, timestamps, and next-header offset. State is volatile and expires by timer or netns teardown.
+
+Dependencies and integration: Uses generic `inet_frags`, IPv6 protocol dispatch tables, ICMPv6 parameter-problem generation, SNMP stats, sysctl, checksum helpers, RCU, and pernet lifecycle. It complements but is distinct from netfilter conntrack reassembly.
+
+Risks and test signals: High-risk areas include overlap/drop behavior, ICMP pointer correctness for malformed fragments, atomic fragment handling, ECN merge failure, memory accounting, stat increments, and queue lifetime on namespace exit. Tests should cover complete reassembly, out-of-order fragments, duplicates, overlaps, non-8-byte non-final fragments, oversize payloads, truncated first fragments, atomic fragments, timeout expiry, sysctl threshold changes, link-local/multicast iif keying, and concurrent namespace teardown.

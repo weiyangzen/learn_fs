@@ -1,0 +1,9 @@
+# sources/distributed-fs/ipfs-kubo/core/node/provider.go
+
+Purpose: owns content providing and reprovide orchestration for DHT and routing systems. Important APIs/types include `DHTProvider`, `NoopProvider`, `LegacyProvider`, `LegacyProviderOpt`, `SweepingProviderOpt`, `OnlineProviders`, `OfflineProviders`, strategy key-provider helpers, keystore migration helpers, unique-count persistence, and DHT availability checks.
+
+Control flow: online provider setup validates strategy, creates a key provider, then chooses sweeping provider when DHT sweep and DHT routing are available, otherwise legacy provider. Legacy mode wraps boxo `provider.System`, defers key-provider injection until lifecycle start to break dependency cycles, and reports slow reprovide throughput. Sweeping mode builds resettable provider keystores, optionally purges unused on-disk keystores when interval is zero, migrates old inline keystore data, creates dual/single/fullrt providers with buffered queues, initializes and periodically syncs keystores from the selected strategy, closes provider before keystore, and monitors slow periodic queues.
+
+State and persistence: repo datastore keys include `/provider`, `/provider/keystore`, `/reprovideStrategy`, and `/reprovideLastUniqueCount`; separate provider keystore datastores live under `<repo>/provider-keystore/{0,1}`. Unique strategies persist bloom counts. Queue clearing occurs when strategy changes.
+
+Dependencies/integration: boxo blockstore/walker/mfs/pinner/provider, go-datastore/mount/namespace/query, Kubo config/repo/fsrepo/routing, libp2p DHT/fullrt/keystore/buffered providers, fx, shutdown. Risks include datastore migration interruption, path deletion guarded by suffix validation, long DAG walks, fullrt readiness delaying provides, HTTP-only routing falling back to legacy, and shutdown races. Tests cover unique-count persistence; other behavior is integration-heavy.

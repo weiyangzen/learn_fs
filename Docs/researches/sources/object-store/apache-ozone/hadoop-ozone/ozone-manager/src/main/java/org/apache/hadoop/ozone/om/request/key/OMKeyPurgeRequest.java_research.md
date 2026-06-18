@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/request/key/OMKeyPurgeRequest.java
+
+Purpose: `OMKeyPurgeRequest` handles internal purge transactions from key deletion services. It permanently removes deleted-table entries and renamed-key entries, updates snapshot transaction fencing, and reduces per-bucket snapshot-used counters after blocks have become reclaimable.
+
+Important APIs and types: The class extends `OMKeyRequest` and uses `PurgeKeysRequest`, `DeletedKeys`, `SnapshotMoveKeyInfos`, `BucketPurgeKeysSize`, `BucketNameInfo`, `SnapshotInfo`, `TransactionInfo`, `DeletingServiceMetrics`, `OMKeyPurgeResponse`, `SnapshotUtils`, `validatePreviousSnapshotId`, and multi-bucket lock helpers.
+
+Control flow: `validateAndUpdateCache` reads deleted keys, renamed keys, keys-to-update, and optional snapshot table key. It loads the source snapshot info if present, validates the expected previous snapshot ID for new requests, aggregates keys to purge, updates deletion metrics, rejects empty purge requests, records the current term/index into snapshot info or AOS deletion metrics, updates bucket snapshot-used sizes under bucket locks, optionally writes system audit details in debug mode, and returns an `OMKeyPurgeResponse` containing the purge lists, snapshot info, key updates, and updated bucket infos.
+
+State and persistence behavior: For snapshot-origin purges, the snapshot info table cache is updated with `lastTransactionInfo` to deduplicate background-service requests. For active object store purges, deletion metrics record the last AOS transaction info. `updateBucketSize` groups purge sizes by volume/bucket, acquires write locks for all touched buckets, verifies bucket IDs before applying purged bytes/namespace, and returns copied bucket info objects to persist through the response. The response is responsible for deleting keys and renamed-key entries from the relevant tables.
+
+Dependencies and integration points: This is an internal/system request used by OM key deleting and snapshot deleting services. It integrates with snapshot chain validation, bucket lock batching, bucket snapshot-used accounting, deletion metrics, system audit logging, and response-side batch mutation for deleted tables, renamed tables, and snapshot move records.
+
+Risks: Snapshot chain validation is a concurrency guard; skipping or weakening it can add redundant tombstones when a new snapshot is created between scan and purge. Bucket accounting updates are bucket-ID guarded because bucket names can be reused after deletion. Multi-bucket locking must be consistently ordered by lock implementation to avoid deadlocks. Empty purge requests are treated as errors, so callers must filter no-op batches.
+
+Test signals: `TestOMKeyPurgeRequestAndResponse` should validate key and renamed-entry purges, snapshot transaction info updates, expected previous snapshot mismatch failures, deletion metric increments, AOS transaction recording, bucket snapshot-used bytes/namespace reduction with matching bucket IDs, ignored updates for deleted/recreated buckets, and failure on empty purge requests.

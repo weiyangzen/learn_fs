@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/munlock/Makefile
+
+Purpose: generic LTP build file for `munlock` tests. Important APIs/types/functions: `top_srcdir`, `testcases.mk`, and `generic_leaf_target.mk`. Control flow: includes the standard test-case rules with no local targets or flags. State/persistence: only build artifacts under the standard LTP build tree. Dependencies/integration: integrates `munlock01.c` and `munlock02.c` into the kernel syscall test suite. Risks: no local flags means both tests must compile with common defaults. Test signals: a successful leaf build produces the two `munlock` executables using shared LTP rules.

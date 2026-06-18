@@ -1,0 +1,9 @@
+# sources/object-store/minio/cmd/metrics-v3-types.go
+
+This file is the shared framework for MinIO v3 metric groups. It turns collector paths into Prometheus name prefixes, models metric type and descriptor metadata, stores loader-produced values, converts them to Prometheus metrics, joins loader functions, and implements `prometheus.Collector` for a `MetricsGroup`.
+
+Important types are `collectorPath`, `MetricType`, `MetricDescriptor`, `MetricValues`, `MetricsLoaderFn`, `BucketMetricsLoaderFn`, and `MetricsGroup`. `MetricDescriptor` owns metric name, type, help, and variable labels; `getLabelSet` caches the label set. `MetricValues.Set` validates metric names and labels against descriptors and panics on descriptor or label misuse. `SetHistogram` converts an existing `HistogramVec` through `getHistogramMetrics`, applies label filters, bucket filters, label renames, and extra labels, then stores non-zero samples. `MetricsGroup.Collect` invokes either a normal loader or bucket loader, wraps any loader error with `logger.CriticalIf`, converts the collected values, and emits them.
+
+State is mostly in-memory: descriptor maps, cached label sets, a shared `metricsCache`, and a locked bucket list for bucket metric collection. There is no persistence. Integration is broad: every v3 metric file contributes descriptors and loaders that plug into this contract, while `metrics-v3.go` registers groups and sets the cache.
+
+Risks: `Set` and validation paths deliberately panic on programmer errors; this is useful at startup but can turn bad loader output into scrape failures. `Collect` uses `GlobalContext`, so it is coupled to server lifecycle globals. Values of zero are dropped. Test signal is implicit through any metrics loader or scrape tests; this file itself has no direct unit tests.

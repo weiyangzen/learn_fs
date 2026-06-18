@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/net/tipc/msg.c
+
+## Purpose
+`msg.c` implements the allocation, initialization, validation, construction, fragmentation, bundling, extraction, reversal, cloning, destination lookup, and reassembly helpers for TIPC packets carried in Linux `sk_buff` objects. It is the concrete implementation behind the protocol header accessors in `msg.h` and is used by sockets, links, broadcast, name distribution, connection management, and rejection paths.
+
+## Important APIs, Types, And Functions
+Important exported functions include `tipc_buf_acquire()`, `tipc_msg_init()`, `tipc_msg_create()`, `tipc_buf_append()`, `tipc_msg_append()`, `tipc_msg_validate()`, `tipc_msg_fragment()`, `tipc_msg_build()`, `tipc_msg_try_bundle()`, `tipc_msg_extract()`, `tipc_msg_reverse()`, `tipc_msg_skb_clone()`, `tipc_msg_lookup_dest()`, `tipc_msg_assemble()`, `tipc_msg_reassemble()`, `tipc_msg_pskb_copy()`, `__tipc_skb_queue_sorted()`, and `tipc_skb_reject()`. File-level constants compute crypto-aware headroom and the exported `one_page_mtu` fallback.
+
+## Control Flow
+Outbound message construction starts by allocating an skb with reserved link-layer/crypto headroom, initializing the TIPC header, and either copying data directly or splitting it into `MSG_FRAGMENTER` packets when the message exceeds the selected MTU. `tipc_msg_build()` can fall back from `MAX_MSG_SIZE` to `one_page_mtu`, then immediately reassemble the resulting local fragment list when the large allocation failed. `tipc_msg_append()` supports stream-like appending into a queue of MSS-sized buffers and updates block accounting. Bundling checks that the new message is not already a fragment, tunnel, or broadcast message, optionally pushes an outer `MSG_BUNDLER` header onto the previous skb, appends aligned inner messages, and consumes the appended skb on success.
+
+Receive-side validation first mitigates extreme `skb->truesize` versus rounded payload length by copying into a right-sized skb, then enforces minimum pullability, header size bounds, protocol version, message size consistency, maximum user payload size, and actual skb length. Fragment reassembly uses `tipc_buf_append()` to linearize the first fragment, coalesce or chain later fragments, validate the completed packet, and carefully repair ownership when validation replaces the skb. Bundled extraction linearizes the outer skb, copies one inner message by `pos`, validates it, and frees the outer skb on exhaustion or error. Reversal builds a new reply buffer, avoids returning droppable or already errored traffic, caps returned payload at `MAX_FORWARD_SIZE`, expands short headers to basic headers, swaps ports/nodes, and sets the requested error code.
+
+## State And Persistence
+This file owns no global persistent table, but it mutates skb-local state. `TIPC_SKB_CB(skb)->validated` caches header validation; `TIPC_SKB_CB(head)->tail` tracks fragment-chain tail during reassembly; message header words carry sequence numbers, sizes, user/type fields, reroute count, destination ports/nodes, and error codes. Queue order and skb ownership are part of the state contract: many helpers consume input buffers on both success and failure.
+
+## Dependencies And Integration Points
+The file depends on Linux skb primitives, iterator copying from userspace, endian conversion through `msg.h`, `name_table.h` for named-service anycast lookup, `addr.h` scope helpers, and optional crypto headroom/tag sizing from `crypto.h`. Link code calls fragmentation, validation, clone/copy, sorted queueing, and reassembly helpers. Socket and transport code use build/append/reverse/reject paths. Name lookup reroutes named data messages via `tipc_nametbl_lookup_anycast()`.
+
+## Risks And Edge Cases
+The highest risk is skb lifetime confusion: several functions consume, replace, or null caller pointers, and error paths must not double free partially assembled chains. Header validation is a security boundary for untrusted network input. Fragment reassembly must keep `truesize`, `data_len`, and `len` consistent after coalescing. Bundling relies on 4-byte alignment and sufficient tailroom. `tipc_msg_lookup_dest()` deliberately rejects repeated reroutes to avoid loops. `tipc_msg_reverse()` must not amplify traffic by returning large payloads or SYN overload data.
+
+## Test Signals
+Useful tests include malformed header fuzzing, non-linear skb validation, `truesize` stress, fragmentation/reassembly across MTU boundaries, first/middle/last fragment loss or duplication, bundle extraction with padding, user iterator short-copy faults, named-message reroute success/failure, rejection path behavior for droppable and already errored packets, skb clone/copy allocation failures, sorted sequence queue insertion including duplicates, and crypto-enabled versus crypto-disabled headroom builds.

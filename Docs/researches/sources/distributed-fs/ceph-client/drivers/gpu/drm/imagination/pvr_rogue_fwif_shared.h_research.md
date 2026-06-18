@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/imagination/pvr_rogue_fwif_shared.h
+
+Purpose: This header defines FWIF structures shared by userspace, kernel, and firmware across command submission and context management. It contains the common pieces that remain stable across BVNC-specific geometry/fragment command layouts.
+
+Important APIs/types/functions: Constants set counts for RT data, geometry data, freelists, geometry cores, maximum UFOs, independent DM command size, and partial-render buffer IDs. Core structs include `rogue_fwif_dma_addr`, `rogue_fwif_ufo`, `rogue_fwif_sync_checkpoint`, `rogue_fwif_cleanup_ctl`, `rogue_fwif_cmd_common`, `rogue_fwif_cmd_geom_frag_shared`, `rogue_fwif_cccb_ctl`, `rogue_fwif_geom_registers_caswitch`, `rogue_fwif_cdm_registers_cswitch`, `rogue_fwif_static_rendercontext_state`, `rogue_fwif_static_computecontext_state`, `rogue_fwif_prbuffer`, and `rogue_context_reset_reason_data`. Enums define PR-buffer backing states and context reset reasons including lockup, overrun, HCS, WGP/TRP checksum, ECC, watchdog, FW page fault, execution error, host watchdog, and geometry OOM-disabled.
+
+Control flow: The key described flow is CCCB scheduling: host `write_offset`, firmware `read_offset`, and dependency `dep_offset` partition commands into executing, runnable, and fenced/not-ready ranges. Geometry/fragment commands start with `rogue_fwif_cmd_geom_frag_shared` so the kernel can patch RTData and PR-buffer FW addresses while leaving BVNC-specific payload interpretation to client/FW. Cleanup controls count submitted vs executed commands for resource reclamation. PR buffers move through unbacked, backed, backing pending, and unbacking pending states.
+
+State and persistence behavior: These structs live in shared memory and persist across submissions. CCCB offsets persist queue progress. Cleanup counters persist resource-lifetime handshakes. Static context-switch register images persist render/compute context state. PR buffers persist backing state and cleanup status. Reset reason data persists the last context reset reason and external job reference.
+
+Dependencies and integration points: Includes Linux `compiler`/`types` and its check header. It integrates with `pvr_rogue_fwif_client.h`, `pvr_rogue_fwif.h`, sync/fence handling, command queues, context switch setup, partial render/Z/S/MSAA buffer management, and reset reporting.
+
+Risks: The shared geometry/fragment prefix must remain first and exactly 16 bytes. Queue offsets must be 16-byte aligned and wrap-mask consistent. UFO address tagging (`ROGUE_FWIF_UFO_ADDR_IS_SYNC_CHECKPOINT`) means consumers must distinguish sync checkpoints from sync prims. Typo-like field `cleanup_sate` is ABI and should not be renamed without coordinated firmware changes.
+
+Test signals: Compile-time shared layout checks, CCCB wrap/fence tests, geometry/fragment submission through kernel patching, sync checkpoint fence merge tests, PR buffer on-demand backing/unbacking, and HWR reset reason propagation.

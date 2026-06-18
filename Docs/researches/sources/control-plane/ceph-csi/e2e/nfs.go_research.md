@@ -1,0 +1,15 @@
+# sources/control-plane/ceph-csi/e2e/nfs.go
+
+Purpose: defines the ordered NFS CSI e2e suite and helper functions for deploying the NFS CSI plugin, creating a Ceph NFS server, and validating NFS-backed volumes built on CephFS subvolumes.
+
+Important APIs/types/functions: `NFSDeployment` embeds `DriverInfo`. `deployNFSPlugin()`, `deleteNFSPlugin()`, `createNFSPool()`, and `createORDeleteNFSResources()` manage NFS CSI and Rook CephNFS resources. `createNFSStorageClass()` injects NFS cluster/server, CephFS, secret, pool, and clusterID parameters and sets the provisioner to `nfsDriverName`. `createNFSVolumeAttributesClass()` and `deleteNFSVolumeAttributesClass()` exercise Kubernetes VolumeAttributesClass. `unmountNFSVolume()` manually unmounts a pod volume from the nodeplugin. The Ginkgo `Describe("nfs")` owns setup, teardown, and specs.
+
+Control flow: setup skips unless NFS testing is enabled and not upgrade/helm, chooses normal or operator deployment metadata, creates namespace if needed, creates `.nfs` pool and CephNFS resource, deploys CSI if requested, resets `subvolumegroup` to `csi`, writes configmap, creates CephFS-style provisioner/node users and Secrets, creates the subvolume group, and discovers the metadata pool. Teardown logs on failure, deletes config/Secrets/storageclass/subvolume group/plugin/namespace. Specs validate CSI readiness, SELinux mount options, RWOP, pool-backed binding, relocated server via VolumeAttributesClass on Kubernetes 1.34+, security flavors, restricted NFS clients, normal binding and normal-user access, multi-PVC lifecycle, data persistence, manual unmount deletion, service-account restrictions, read-only mounts, a currently skipped resize check, concurrent snapshot-to-PVC clones with checksum validation, concurrent PVC-to-PVC clones, and Ceph user cleanup.
+
+State and persistence: creates NFS CSI resources, Rook CephNFS deployment, `.nfs` pool, CephFS subvolumes/snapshots/omap entries, Kubernetes StorageClasses/PVCs/PVs/Pods/VolumeSnapshots/VolumeAttributesClasses, and Ceph users. Backend counts are checked after create/delete phases.
+
+Dependencies and integration points: uses CephFS helper functions because NFS exports are backed by CephFS subvolumes, plus NFS examples under `../examples/nfs/`, deployment YAML under `../deploy/nfs/kubernetes/`, snapshot helpers, resize/PVC helpers, client-go, and Ginkgo/Gomega.
+
+Risks: NFS tests share global CephFS state (`subvolumegroup`, `fileSystemName`, `metadataPool`) and depend on CephFS users/caps. `createNFSPool()` intentionally does not delete `.nfs`, so external CephNFS config may persist. Some checksum mismatches are logged but only checksum calculation errors fail directly in clone loops. The resize test is disabled due to observed size mismatch. VolumeAttributesClass coverage depends on Kubernetes version.
+
+Test signals: NFS CSI readiness, successful NFS mount and app binding, exports matching restricted clients, RWOP/read-only enforcement, CephFS subvolume/omap/snapshot counts returning to zero, checksum parity for snapshot/PVC clones, and clean user deletion are the core signals.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/glusterfs/xlators/performance/quick-read/src/quick-read.c
+
+Purpose: implements the maintained `quick-read` translator, an entire-small-file client cache populated from lookup/readdirp content and served directly for readv when fresh.
+
+Important APIs, types, and functions: `qr_local_t` carries inode/fd and incident generation. Per-inode state is `qr_inode_t`; global state is `qr_private_t` with `qr_conf_t`, LRU table, child-down time, lock, counters, and generation. Core helpers are `qr_inode_ctx_get_or_new`, `qr_content_extract`, `qr_content_update`, `qr_content_refresh`, `qr_readv_cached`, `qr_inode_prune`, `qr_cache_prune`, `qr_get_priority_list`, and `qr_invalidate`.
+
+Control flow: `qr_lookup` requests `GF_CONTENT_KEY` up to `max-file-size` when content is not already cached; callback extracts content and stores it with stat/timestamps, or refreshes/prunes existing content using returned stat. `qr_readv` serves from cached bytes if data exists, offset is in range, and `last_refresh` is within timeout and newer than child-down time; otherwise it winds to child. Write/truncate/fallocate/discard/zerofill callbacks prune cached content. `qr_open` sets priority from path patterns, and `readdirp` refreshes known cached entries from directory stats.
+
+State and persistence: cache is process memory only. Cached content bytes live in `qr_inode->data`; LRU buckets are partitioned by configured priority. `cache_used`, `files_cached`, hit/miss counters, and invalidation counters are maintained in memory. Generation and rollover logic prevent stale async callbacks from repopulating after invalidation. Child-down time invalidates older cache entries.
+
+Dependencies and integration: uses Gluster dict/content conventions, iobuf/iobref for readv responses, inode ctx, list/lock/atomic helpers, upcall-utils, statedump, and xlator options. Options include `quick-read`, `priority`, `cache-size`, `cache-timeout`, `max-file-size`, `quick-read-cache-invalidation`, and `ctime-invalidation`.
+
+Risks: entire-file caching is sensitive to invalidation completeness; without quick-read-cache-invalidation, freshness relies on TTL and fop callbacks. `qr_local_get` uses `gf_common_mt_char` instead of a qr-specific local type, reducing accounting clarity. `qr_forget` frees the inode ctx object without deleting/resetting the inode ctx slot in this file, which relies on forget semantics and deserves leak/UAF scrutiny. Cache-size validation uses total memory fallback and max option metadata. Tests should cover lookup content population, cached partial reads, stale timeout, mtime vs ctime invalidation, child-down invalidation, write/truncate pruning, priority LRU pruning, upcall write invalidation, and large-file non-caching.

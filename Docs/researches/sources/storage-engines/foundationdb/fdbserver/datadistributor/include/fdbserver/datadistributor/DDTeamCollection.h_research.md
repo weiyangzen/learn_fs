@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbserver/datadistributor/include/fdbserver/datadistributor/DDTeamCollection.h
+
+Purpose: declares the main team-collection control plane for DD. It tracks storage servers, TSS pairs, server teams, machine teams, locality validity, failures, exclusions, recruitment, wiggle, under-replication, and team selection requests.
+
+Important APIs and types: `TSSPairState` coordinates paired SS/TSS recruitment. `ServerStatus` and `ServerStatusMap` track failed, undesired, wiggling, wrong-configuration, and locality state. `IDDTeamCollection` exposes `getTeam`. `DDTeamCollectionInitParams` packages transaction processor, lock, relocation output, shard mapping, configuration, DC filters, readiness, health flags, request streams, failed-server removal promises, average-shard requests, storage-queue rebalance streams, and bulk-load collection. `DDTeamCollection` declares methods for building teams, adding/removing servers, tracking teams and servers, recruitment, wiggle, health waits, exclusion safety, under-replication repair, machine-team management, and public `run()`.
+
+Control flow: implementation is elsewhere, but declared flow is clear: initialize from `InitialDataDistribution`, build machine teams and server teams that satisfy replication policy, track server list and excluded-server changes, recruit new storage/TSS when needed, mark bad teams, emit `RelocateShard` work, wait for data removal before final server removal, and maintain wiggle progress through system-key metadata. Template `addTeam()` converts UID ranges to server refs before adding concrete teams.
+
+State and persistence: in-memory maps/vectors hold server info, machine info, teams, machine teams, lagging zones, recruiting IDs, invalid localities, team pivots, under-replication, and status maps. Persistent interactions are declared through transaction processor/database context and wiggle metadata key-backed maps; this header itself does not write.
+
+Dependencies and integration: it depends on FDB options/types, storage interfaces, management APIs, replication policy, `MoveKeys`, `TCInfo`, `DataDistribution`, quiet database, server DB info, Flow actors, and bulk-load/task streams. It supplies teams to DD queue and reacts to tracker output, server list updates, exclusions, and wiggle configuration.
+
+Risks: this is a high-coupling class with many invariants: `teams` and `teamsByServerIDs` must stay synchronized; machine-team and server-team counts must match policy; actors may reference raw `this` and rely on `shutdown`; removal paths must wait for data to leave; wiggle and exclusion states overlap. The protected surface is large, so regression tests should exercise lifecycle, not just individual helpers.
+
+Test signals: the friend `DDTeamCollectionUnitTest` indicates direct unit-test access. Critical signals include team building under locality policy, server removal and data-drain, TSS pair success/failure, exclusion safety, perpetual wiggle pause/resume, under-replication fixes, and `getTeam` scoring under disk/read/storage-queue preferences.

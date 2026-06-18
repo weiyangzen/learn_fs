@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/sputil/seccomp_linux.go
+
+This Linux security-profile helper converts CRI seccomp settings into containerd OCI `SpecOpts`. `GenerateSeccompSecurityProfile` parses an explicit profile path first; when unset, it parses `unsetProfilePath` as the configured default; when both are empty it returns nil. The shared parser recognizes runtime/docker default, unconfined, and localhost-prefixed paths.
+
+`GenerateSeccompSpecOpts` returns nil for privileged containers before checking seccomp support. If seccomp is disabled, any non-unconfined specified profile is an error, while nil or unconfined returns nil. When enabled, nil and unconfined both mean no spec option, runtime default returns `seccomp.WithDefaultProfile`, and localhost returns `seccomp.WithProfile` after trimming a possible `localhost/` prefix. Non-localhost profiles carrying `LocalhostRef` are rejected, as are unknown profile types.
+
+State behavior is stateless until the returned spec option mutates an OCI spec. Dependencies include CRI runtime security profile types, containerd seccomp contrib helpers, and OCI spec option APIs. Risks include privileged containers bypassing even invalid profile settings, no existence validation for localhost seccomp profile paths in this helper, support-disabled errors depending on profile type, and default profile fallback semantics. Tests cover explicit/default/unset profiles, disabled support, privileged behavior, default profile variants, localhost prefix trimming, and invalid struct combinations.

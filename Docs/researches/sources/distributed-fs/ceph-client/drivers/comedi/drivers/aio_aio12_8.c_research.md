@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/comedi/drivers/aio_aio12_8.c Research
+
+Provides a legacy Comedi driver for ACCES I/O PC-104 AIO12-8, AI12-8, and AO12-4 boards. It supports synchronous AI/AO, 8255 DIO, and 8254 counter subdevices, with board variants enabling AI and/or AO.
+
+`struct aio12_8_boardtype` encodes variant names and AI/AO availability. `aio_aio12_8_attach()` requests the I/O region, allocates an 8254 pacer, creates four subdevices, and marks absent AI/AO subdevices unused. `aio_aio12_8_ai_read()` programs ADC mode/range/channel, polls `aio_aio12_8_ai_eoc()`, reads 12-bit data, and munges bipolar two's-complement samples. `aio_aio12_8_ao_insn_write()` enables DAC reference and writes AO registers. `aio_aio12_8_counter_insn_config()` reports clock-source information.
+
+Manual attach validates a 32-byte I/O region, initializes 8254 access, then creates AI, AO, 8255 DIO, and 8254 counter subdevices. AI reads clear the EOC latch by reading status, then perform setup/start/wait/read for each sample. AO writes enable the DAC reference before writing the target DAC and updating readback. Counter config is read-only for clock source reporting. Runtime state is limited to AO readback, 8255 state managed by the helper, and hardware registers.
+
+Dependencies are legacy Comedi device APIs, `comedi_8255`, `comedi_8254`, `comedi_timeout()`, raw I/O ports, and `module_comedi_driver()`. The driver is marked experimental and only supports synchronous operations. Risks include ADC EOC timeout, bipolar munging correctness, variant subdevice availability, and counter clock metadata. Tests should validate region alignment, AI/AO variant masking, ADC range/channel control byte construction, bipolar offset munging, AO readback, 8255 initialization, and counter clock-source responses for channels 0-2.

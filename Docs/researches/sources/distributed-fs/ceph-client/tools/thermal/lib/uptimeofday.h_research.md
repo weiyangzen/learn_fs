@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/thermal/lib/uptimeofday.h
+
+Purpose: public declarations for uptime-of-day helper functions. APIs: init, millisecond timestamp retrieval, and `msec_to_timespec()`. Control flow: consumers call init before first timestamp, then use conversions for output and timer setup. State: implementation keeps static offset/timeval. Dependencies: sysinfo/time headers for types. Integration: pulled in by `thermal-tools.h`, used mainly by thermometer. Risks: header exposes `struct timespec` while only including sysinfo/time headers; consumers rely on those headers providing the type on the target libc. Test signals: successful build and correct timer/timestamp behavior.

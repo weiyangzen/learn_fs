@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_GPFS/fsal_lock.c
+
+- **Purpose:** Implements GPFS-backed lock, lock-test, blocking-lock, and delegation-lock operations for the FSAL.
+- **Important APIs/types/functions:** `GPFSFSAL_lock_op`, `fsal_lock_op_t`, `fsal_lock_param_t`, `struct set_get_lock_arg`, `struct glock`, and GPFS opcodes `OPENHANDLE_SET_DELEGATION`, `OPENHANDLE_GET_LOCK`, and `OPENHANDLE_SET_LOCK`.
+- **Control flow:** The function chooses a GPFS ioctl based on the requested lock type and operation: leases use delegation, lock-test uses get-lock, and all other operations use set-lock. On success it populates `confl_lock` for lock-test conflicts or clears it. On failure it may run a follow-up `GET_LOCK` to populate conflict owner details for lock requests, handles GPFS queued-blocked-lock return `1`, maps `EGRACE` to `ERR_FSAL_IN_GRACE`, and otherwise maps errno to FSAL status.
+- **State and persistence behavior:** Persistent lock/delegation state lives in GPFS and Ganesha state owners. This file mutates caller-provided conflict-lock output and may update `glock->cmd` to `F_GETLK` after a failed set-lock.
+- **Dependencies and integration points:** Integrated through the object `lock_op2` implementation in neighboring file I/O code and ultimately through NFS lock/delegation handling. It depends on GPFS lock ABI structures from `gpfs_nfs.h`, FSAL lock types, `gpfs_ganesha`, and POSIX lock constants.
+- **Risks:** `_FILE_OFFSET_BITS` is intentionally undefined because the GPFS kernel module expects plain `F_GETLK/SETLK/SETLKW` values, making this file sensitive to platform and build flags. Conflict reporting after a failed set-lock can itself fail. `EUNATCH` is fatal.
+- **Test signals:** Cover nonblocking and blocking locks, lock-test conflicts and no-conflict responses, delegation locks, grace-period errors, queued-blocked-lock return `1`, and conflict detail retrieval after failed lock acquisition.

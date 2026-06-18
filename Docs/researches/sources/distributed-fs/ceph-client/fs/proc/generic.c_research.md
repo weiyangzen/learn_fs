@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/proc/generic.c
+
+Purpose: Provides generic procfs directory-entry management: `struct proc_dir_entry` allocation/freeing, name lookup, directory iteration, dynamic inode numbers, proc entry creation helpers, and removal/rundown.
+
+Important APIs and types: Uses global `proc_subdir_lock`, `proc_dir_entry_cache`, red-black trees under each directory `subdir`, `proc_inum_ida`, and `struct proc_dir_entry` fields such as name, mode, nlink, proc ops, seq ops, data, parent, flags, refcount, and in-use state. Exported APIs include `proc_symlink()`, `_proc_mkdir()`, `proc_mkdir_data()`, `proc_mkdir_mode()`, `proc_mkdir()`, `proc_create_mount_point()`, `proc_create_data()`, `proc_create()`, `proc_create_seq_private()`, `proc_create_single_data()`, `proc_set_size()`, `proc_set_user()`, `remove_proc_entry()`, `remove_proc_subtree()`, `proc_get_parent_data()`, and `proc_remove()`.
+
+Control flow: Creation parses slash-separated proc names, finds the parent, validates the final component, allocates a PDE, initializes ownership/mode/name/refcount, sets operation flags, allocates a dynamic inode number, and inserts the entry into the parent RB tree under a write lock. Lookup finds a child PDE under a read lock, pins it, creates a VFS inode with `proc_get_inode()`, and splices a dentry with the appropriate dentry ops. Readdir walks the RB tree by position, pins entries while emitting, and releases them after advancing. Removal erases entries from the tree, refuses permanent entries, runs `proc_entry_rundown()`, warns on non-empty single removal, and drops references; subtree removal recursively erases children before rundown.
+
+State and persistence: The proc entry tree is in-memory global procfs metadata. Dynamic inode numbers are allocated from an IDA range starting at `PROC_DYNAMIC_FIRST`. Entry lifetime is controlled by PDE refcounts and in-use/rundown synchronization; no on-disk state exists.
+
+Dependencies and integration points: Integrates with proc root setup, VFS inode/dentry operations, seq_file and single_open helpers, module-exported proc creation APIs used by drivers/subsystems, proc net force-lookup behavior, and `proc_get_inode()`/`proc_entry_rundown()` from proc internals.
+
+Risks: Global tree locking and PDE refcounts must prevent use-after-free while allowing concurrent lookup/readdir/remove. Name translation must not allow manual creation of numeric `/proc/<pid>` entries. Permanent entries must not be removed. Recursive removal must not leak children if a permanent child is encountered. In this snapshot, duplicated `return`/assignment lines in a few paths should be source-integrity checked.
+
+Test signals: Create/remove regular, seq, single, symlink, mount-point, and directory entries; nested names; duplicate registration warnings; removal during open/read; subtree removal; permanent-entry removal refusal; pidonly procfs mode hiding non-pid entries; proc net force lookup; and dynamic inode allocation/free reuse.

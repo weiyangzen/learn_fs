@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chmod/chmod09.c
+
+Purpose: regression test for blocking mode changes of symlinks via an `O_PATH|O_NOFOLLOW` procfd path, tagged to `5d1f903f75a8`. Setup creates a file and symlink; run opens the symlink itself with nofollow, builds `/proc/self/fd/<fd>`, expects `chmod` to fail `ENOTSUP`, then stats both target and symlink to ensure neither mode became zero. Important APIs are `SAFE_OPEN` with `O_PATH|O_NOFOLLOW`, `chmod`, `SAFE_STAT`, `SAFE_LSTAT`, and procfd paths. State includes a symlink fd, target file, and symlink metadata. Dependencies are kernel >= 6.6, procfs fd paths, and all-filesystems support. Risks are filesystem-specific ENOTSUP behavior. Test signal is failed chmod and unchanged target/symlink modes.

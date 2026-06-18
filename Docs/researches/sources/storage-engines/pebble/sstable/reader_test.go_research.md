@@ -1,0 +1,22 @@
+# sources/storage-engines/pebble/sstable/reader_test.go
+
+## Purpose
+This is the main SSTable reader test and benchmark suite. It validates reader construction, table-format behavior, virtual readers, point iteration, bloom filters, block-property filters, obsolete-point hiding, range deletion/key iteration, prefix/suffix transforms, compaction iterator read-ahead, checksum validation, corruption reporting, and core iterator performance.
+
+## Important APIs, Types, And Functions
+`Reader.get` is a test helper that manually checks table filters before using an iterator to find a key. `TestVirtualReader` and `runVirtualReaderTest` exercise virtual SSTable bounds, synthetic suffix/prefix transforms, compaction iteration, raw range deletion/key iteration, bound constraining, and point iteration under virtual `ReadEnv`. `TestReader`, `TestReaderHideObsolete`, `TestHamletReader`, `TestReaderStats`, `TestReaderWithBlockPropertyFilter`, and `TestReaderAttributes` run datadriven fixtures across formats and options. `runTestReader` is the central datadriven harness for `build`, `iter`, and `get`. `TestReaderCheckComparerMerger`, `TestInjectedErrors`, `TestInvalidReader`, `indexLayoutString`, and `forEveryTableFormat` cover metadata and error paths. The `readerWorkload`, `readCall`, and `checker` helpers support `TestRandomizedPrefixSuffixRewriter`. `TestReaderChecksumErrors`, `TestValidateBlockChecksums`, `TestReader_TableFormat`, and `TestReaderReportsCorruption` cover corruption and metadata validation. Benchmark helpers include `buildTestTableWithProvider`, `buildBenchmarkTable`, `basicBenchmarks`, and many `Benchmark*` functions.
+
+## Control Flow
+The datadriven harnesses repeatedly build SSTables with varying writer options, open readers, create point/range/compaction iterators, run scripted iterator commands, and print stable output. Virtual-reader tests build a physical table, create `virtual.VirtualReaderParams`, estimate disk usage, then run iterators with constrained bounds and optional synthetic suffixes. Randomized prefix/suffix rewriting builds a control table and a transformed table, positions both iterators, generates random calls across seek and directional methods, and asserts identical results after applying transforms. Corruption tests write valid tables, inspect layouts, flip bytes in selected blocks, reopen or continue using readers, and require checksum or corruption errors to surface.
+
+## State And Persistence Behavior
+Most tests use `vfs.NewMem`, temporary directories, or copied fixture SSTables. Reader lifecycle, cache handles, block buffer pools, and object storage providers are explicitly closed. Persistent table bytes are generated through Pebble writers and reopened through `NewReader`/`newReader`. Tests manipulate in-memory/copy-on-temp persisted SSTable bytes to simulate corruption. Virtual-reader state is carried in `ReadEnv.Virtual` and transform structs, not by mutating table bytes.
+
+## Dependencies And Integration Points
+The file touches nearly every SSTable reader dependency: cache, block readers, block iterators, filters, table formats, `testkeys`, object storage, remote storage, value blocks, virtual bounds, block properties, compression, checksums, and datadriven fixtures. It is also a performance signal for public iterator APIs because benchmarks use `Reader.NewIter`, `NewPointIter`, `NewCompactionIter`, `Layout`, `ValidateBlockChecksums`, `SeekGE`, `SeekLT`, `Next`, `Prev`, `NextPrefix`, and value reads.
+
+## Risks
+The suite is broad and therefore sensitive to legitimate format/output changes. Randomized tests depend on logged seeds for reproduction and cover subtle iterator invalid-state recovery. Corruption tests rely on layout positions and safe error details; changes in checksum implementation or block layout can affect expected errors. Some tests force two-level indexes by small index block sizes and may need adjustment if writer/index heuristics change. Resource handling is important because many subtests create readers, caches, pools, remote providers, and iterators.
+
+## Test Signals
+Strong signals include datadriven output drift, mismatch between transformed and control iterators, checksum validation misses, missing corruption callbacks for remote objects, wrong read-ahead setup for compaction, and incorrect counts when hiding obsolete points. Benchmarks establish baseline costs for seeks, scans, layout inspection, prefix advancement, many-version scans, obsolete-point filtering, and value-block-backed reads.

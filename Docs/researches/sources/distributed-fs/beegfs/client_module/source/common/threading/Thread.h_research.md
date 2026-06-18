@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/threading/Thread.h -->
+## sources/distributed-fs/beegfs/client_module/source/common/threading/Thread.h
+
+**Purpose:** Declares the BeeGFS kernel thread abstraction and cooperative termination helpers. **APIs/types:** `ThreadRoutine`, `Thread` fields for termination flags, mutex/conditions, initial name, task pointer, and routine; public lifecycle and query functions; inline `_Thread_waitForSelfTerminateOrder`, `Thread_getSelfTerminate`, and `__Thread_setSelfTerminated`. **Control flow/state:** wait-for-terminate sleeps interruptibly for a bounded interval and returns the flag; self-terminated broadcasts to joiners. **Dependencies/integration:** uses `Mutex`, `Condition`, `StringTk`, `Time`, and kernel `task_struct`. **Risks/tests:** callers must periodically poll/wait for self-terminate in their routines; tests should verify condition signaling and thread-name buffer length.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/threading/Thread.h -->

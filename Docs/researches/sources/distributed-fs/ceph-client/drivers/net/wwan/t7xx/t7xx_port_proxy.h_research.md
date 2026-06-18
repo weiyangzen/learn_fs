@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_port_proxy.h
+
+This header defines the CCCI proxy protocol and proxy data structure. `struct port_proxy` indexes ports by RX channel and by CLDMA queue. `struct ccci_header` and `struct ctrl_msg_header` are the on-wire message headers. Macros define CCCI status fields, control message IDs, exception magic values, and port enumeration payload fields/patterns.
+
+The exported API initializes/uninitializes/reset ports, switches configuration, toggles debug ports, dispatches RX SKBs, handles dedicated early queues, publishes modem-state notifications, parses port enumeration, and enables/disables channels. State is owned by the proxy allocated in `t7xx_port_proxy.c` and points into modem/port structures. Dependencies include CLDMA, modem ops, port ops, WWAN debugfs conditionals, and hardware CCCI framing. Risks include packed protocol assumptions without explicit struct packing, endian handling mistakes, invalid flexible-array sizing, and control message ID drift. Tests should validate header encoding/decoding, enumeration parsing, and proxy reconfiguration.

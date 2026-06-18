@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/main/java/org/apache/hadoop/ozone/om/request/key/OMOpenKeysDeleteRequest.java
+
+Purpose: `OMOpenKeysDeleteRequest` is an internal cleanup request that removes stale open keys from the open key table and moves their block metadata toward deletion through the response. It is used by background open-key cleanup rather than direct client deletes.
+
+Important APIs and types: The class extends `OMKeyRequest` and uses `DeleteOpenKeysRequest`, `OpenKeyBucket`, `OpenKey`, `OmKeyInfo`, `OmBucketInfo`, `OMOpenKeysDeleteResponse`, `Pair<Long, OmKeyInfo>`, bucket locks, open-key-table cache entries, system audit action `OPEN_KEY_CLEANUP`, and open-key deletion metrics.
+
+Control flow: `validateAndUpdateCache` counts submitted open keys, increments request/submitted metrics, iterates each bucket group, and calls `updateOpenKeyTableCache`. That helper acquires the bucket lock for the group, reads bucket info to capture bucket ID, iterates full open-key DB names from the request, skips missing open keys because they may have committed already, skips entries whose current update ID is newer than the cleanup transaction, rebuilds key info with the cleanup update ID, records it in the deleted-open-keys map, tombstones the open-key-table cache entry, and increments deleted-open-key metrics. The main method returns an `OMOpenKeysDeleteResponse`, emits system audit success/failure, and records failure metrics.
+
+State and persistence behavior: Only open-key-table cache tombstones are written directly by this request. The deleted-open-keys map carries full open-key DB name to `(bucketId, OmKeyInfo)` for response-side movement into the deleted table. It deliberately does not add delete-table cache entries because delete-table contents are not used for client response validation. Bucket quota is not adjusted here; the keys were never committed as visible namespace entries.
+
+Dependencies and integration points: It integrates with the OM open key cleanup service, bucket locks, open-key table, deletion service response path, system audit logger, and metrics tracking open-key cleanup throughput. The request uses `BucketLayout` so the same logic can target layout-specific open-key tables.
+
+Risks: The request trusts full open-key DB names supplied by the cleanup scanner; malformed names are not re-derived from volume/bucket/key args. The transaction-index guard is important to avoid deleting a newer open-key update, and tests should protect it. Missing bucket info maps bucket ID to zero, which response/delete handling must tolerate. Because no delete-table cache entry is created, any code that starts depending on delete-table cache for validation would need this contract revisited.
+
+Test signals: `TestOMOpenKeysDeleteRequest` and `TestOMOpenKeysDeleteResponse` should verify stale open-key tombstones, missing open keys skipped, newer update IDs skipped, bucket ID propagation, deleted-open-keys response payload, metrics for submitted/deleted/failures, system audit fields, and layout-specific open-key table behavior.

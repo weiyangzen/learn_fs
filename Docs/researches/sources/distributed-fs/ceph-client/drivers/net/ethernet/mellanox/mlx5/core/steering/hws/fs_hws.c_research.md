@@ -1,0 +1,28 @@
+# Research: sources/distributed-fs/ceph-client/drivers/net/ethernet/mellanox/mlx5/core/steering/hws/fs_hws.c
+
+## Purpose
+`fs_hws.c` adapts the mlx5 flow-steering command interface to the HWS backend. It creates and destroys HWS namespaces, flow tables, groups, FTEs, packet reformat objects, modify-header objects, cached destination actions, counters, ASO meter actions, sampler actions, and default miss wiring. It is the compatibility layer that lets existing flow-steering users drive hardware steering for FDB tables while delegating unsupported firmware-termination tables back to the firmware command backend.
+
+## Important APIs, types, and functions
+The file exports `mlx5_fs_cmd_get_hws_cmds()`, `mlx5_fs_hws_is_supported()`, `mlx5_fs_hws_action_get_pkt_reformat_id()`, `mlx5_fs_get_hws_action()`, and `mlx5_fs_put_hws_action()`. The static command table `mlx5_flow_cmds_hws` binds flow-steering operations such as `create_flow_table`, `create_flow_group`, `create_fte`, `update_fte`, `packet_reformat_alloc`, and `modify_header_alloc`.
+
+Important internal flows include `mlx5_cmd_hws_create_ns()` and `mlx5_cmd_hws_destroy_ns()` for context lifetime, `mlx5_fs_init_hws_actions_pool()` and `mlx5_fs_cleanup_hws_actions_pool()` for shared action pools, `mlx5_cmd_hws_create_flow_table()` and `mlx5_cmd_hws_destroy_flow_table()` for table lifecycle, `mlx5_cmd_hws_create_flow_group()` for BWC matcher creation, and `mlx5_fs_fte_get_hws_actions()` for translating a legacy `fs_fte` action bitmap into ordered `mlx5hws_rule_action` entries.
+
+## Control flow
+Namespace creation opens an HWS context with up to 16 queues and queue size 256, then creates shared tag, VLAN, drop, decap, remove-header, insert-header, and decap-L3 pools plus xarray caches for dynamic destinations and actions. Flow-table creation rejects non-FDB HWS tables, creates an HWS table, sets default miss when requested, records the HWS table ID as the flow-table ID, and creates a destination-table action cached by table ID. Firmware termination tables are created by the firmware command set but still get an HWS destination action.
+
+Flow groups become BWC matchers using the group's PRM mask and priority. FTE creation first calls `mlx5_fs_fte_get_hws_actions()`, which enforces the HWS action order: decap, remove header, VLAN pops, modify header, VLAN pushes, insert/encap reformat, counters, tag, ASO meter, drop and forwarding destinations, destination array, and final `LAST`. It tracks actions that need later release in `fte->fs_hws_rule.hws_fs_actions`. The rule is then inserted through `mlx5hws_bwc_rule_create()`. Update rebuilds the action array, calls `mlx5hws_bwc_rule_action_update()`, and either destroys old actions or restores them on failure. Delete destroys the BWC rule and releases stored actions.
+
+Packet reformat allocation validates supported types, chooses or creates a packet-reformat pool by action type and header size, acquires an offset, stores duplicated header data and header index, and marks ownership as HWS. Modify-header allocation groups identical action patterns into pools and acquires per-rule argument offsets. Deallocation frees duplicated data and releases pool indexes. `mlx5_fs_hws_action_get_pkt_reformat_id()` lazily creates a firmware reformat object for an HWS reformat when a firmware ID is required, guarding the cached ID with a mutex.
+
+## State and persistence behavior
+State is held under `ns->fs_hws_context`: the HWS context pointer and `mlx5_fs_hws_actions_pool`. Shared actions persist for namespace lifetime. Table destination actions are xarray entries keyed by flow-table ID. Vport destination actions are cached by vport or VHCA/vport tuple. ASO meter and sampler actions use `mlx5_fs_hws_data` objects with mutex-protected lazy creation and refcounts. Per-FTE actions own references to counters, ASO/sampler actions, destination arrays, range actions, and `LAST` actions until rule deletion or successful update replacement.
+
+## Dependencies and integration points
+This file integrates `fs_core` and `fs_cmd` with `mlx5hws.h`, `fs_hws_pools.h`, Linux xarrays, mlx5 counter bulks, execute-ASO meters, packet reformat resources, modify-header resources, firmware flow commands, BWC matchers/rules, and root namespace peer setup. HWS support is gated by device capabilities exposed through `mlx5hws_is_supported()`.
+
+## Risks and edge cases
+Action ordering is hardware-sensitive; reordering can break steering. Cleanup paths are mixed: some actions are shared, some cached with refcounts, some rule-owned, and some owned by generic flow-steering objects. Missing a release leaks firmware objects or pool indexes. Dynamic xarray insertion handles `-EBUSY` for vport actions but not all cache paths have identical race behavior. `packet_reformat_dealloc()` appears to use the L2-to-L2 pool path for L2-to-L3 tunnel release, which is a high-value review point. The remove-header allocation logs unsupported VLAN parameters but does not immediately return a distinct error after `hws_action` remains NULL, so callers depend on later failure behavior. Only FDB HWS tables are supported; non-FDB callers must get `-EOPNOTSUPP`.
+
+## Test signals
+Test namespace open/close, FDB table create/destroy/modify/default miss, firmware termination table fallback, group create/destroy, FTE create/update/delete for each action combination, multi-destination arrays, counters, ASO meters, samplers, range destinations, vport/VHCA/uplink destinations, packet reformat allocate/free for all supported types, modify-header pattern reuse, concurrent vport/ASO/sampler action creation, and failure injection through allocation, xarray insert, HWS action creation, and BWC rule update.

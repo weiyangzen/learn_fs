@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/arch/mips/Kconfig
+
+## Purpose
+`arch/mips/Kconfig` is the root configuration contract for the Linux MIPS port in this source tree. It declares the architecture-wide `MIPS` symbol, selects generic kernel capabilities, exposes the machine and CPU selection menus, wires platform sub-Kconfig files, and defines the ABI, memory, timer, bus, power-management, device-tree, and virtualization options that control the rest of the MIPS build.
+
+## Important APIs, Types, And Symbols
+The file is declarative Kconfig, so its main "APIs" are configuration symbols consumed by Makefiles and C preprocessor checks. The root `config MIPS` selects core facilities such as cache alias handling, DMA ops, generic VDSO, tracing, perf, KASAN/KCSAN-adjacent hooks, module ELF relocation styles, queued locks, RTC support, and MIPS-specific syscall/compat support. Machine selectors include `MIPS_GENERIC_KERNEL`, `MIPS_ALCHEMY`, `ATH25`, `ATH79`, `BMIPS_GENERIC`, Broadcom, DECstation, Ingenic, Lantiq, Loongson, Malta, Mobileye EyeQ, Nintendo64, Ralink, Realtek, SGI, Sibyte, SNI, TX49xx, Mikrotik, and Octeon families. The Alchemy option selects `PHYS_ADDR_T_64BIT`, R4K clockevent/clocksource support, MIPS CPU IRQs, noncoherent DMA, GPIO, zboot support, and common clk.
+
+Later menus expose support flags such as `DMA_NONCOHERENT`, `SYS_SUPPORTS_RELOCATABLE`, `CPU_BIG_ENDIAN`, `CPU_LITTLE_ENDIAN`, `MIPS_L1_CACHE_SHIFT`, firmware symbols, CPU-family symbols, `32BIT`/`64BIT`, highmem, NUMA, relocatable/kASLR, SMP, timer `HZ`, crash/kexec, appended DTB, command-line source, bus support, compat ABIs, hibernation/suspend, cpufreq/cpuidle, KVM, and vDSO. `source "arch/mips/alchemy/Kconfig"` and sibling `source` lines import platform-specific machine choices after the machine family choice.
+
+## Control Flow
+Kconfig evaluates this file top-down while resolving user choices and `select` dependencies. First, `MIPS` auto-enables architecture capabilities. The "Machine selection" choice selects exactly one primary system type, each of which selects CPU availability, firmware models, I/O and IRQ helpers, endian support, PCI style, boot format, and feature constraints. After that choice, platform-specific Kconfig fragments refine board-level choices. The CPU menu then offers only CPU families exposed by the selected machine symbols, and the kernel-type/menu options are constrained by the selected CPU and machine support flags.
+
+The bottom sections compose derived behavior. For example `DMA_NONCOHERENT` selects DMA mapping hooks, `MIPS_CLOCK_VSYSCALL` follows clocksource choices, `HIGHMEM` depends on 32-bit kernels and known-safe cache/platform support, `RELOCATABLE` depends on supported CPUs and selects relocation metadata, and appended DTB/command-line choices only appear under `USE_OF`.
+
+## State And Persistence
+The persistent state is the generated `.config` and derived autoconf headers. This file does not execute runtime code, but its symbols shape compiled code, linker layout, generated boot images, selected platform directories, kernel ABI exposure, and driver availability. Several symbols also encode hardware promises, such as cache behavior, DMA coherency, supported endianness, interrupt controller type, and bootloader interface.
+
+## Dependencies And Integration Points
+The primary consumers are `arch/mips/Makefile`, `arch/mips/Kbuild.platforms`, platform Makefiles, assembly/C `#ifdef CONFIG_*` blocks, and generic kernel subsystems gated by architecture support symbols. `MIPS_ALCHEMY` integrates directly with `arch/mips/alchemy/Kconfig` and the Alchemy common files in this work item. `CPU_*`, `SYS_HAS_CPU_*`, and `SYS_SUPPORTS_*` symbols feed compiler flags, memory model decisions, and CPU feature code. `USE_OF`, appended DTB choices, and command-line policies integrate with early boot and device-tree parsing.
+
+## Risks
+The file has a high blast radius because `select` can force generic features without dependency prompts. Incorrect machine or CPU support selections can produce kernels that compile but boot with wrong endianness, DMA coherency, interrupt routing, or boot-image format. Adding a platform can accidentally expose incompatible CPU choices, ABI combinations, PCI behavior, or timer frequencies. The machine choice also gates platform Kconfig fragments, so moving `source` lines or dependency expressions can hide board options. Several historical erratum options are declarative and easy to misapply because they encode CPU revision assumptions.
+
+## Test Signals
+Useful validation includes `make ARCH=mips olddefconfig` for representative machines, all generic defconfig targets, and Alchemy-specific configurations such as `MIPS_ALCHEMY` plus each board choice. Kconfig warnings about unmet direct dependencies, invalid defaults, or recursive selects are strong failure signals. Build matrix coverage should include 32-bit/64-bit, both endian choices where supported, `USE_OF` appended-DTB variants, `RELOCATABLE`/`RANDOMIZE_BASE`, compat ABIs on 64-bit, and power-management menus. For this subset, verify that `MIPS_ALCHEMY` exposes `arch/mips/alchemy/Kconfig` and selects the common dependencies required by the Alchemy C files.

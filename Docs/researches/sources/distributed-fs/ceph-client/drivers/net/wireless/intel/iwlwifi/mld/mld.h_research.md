@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/mld/mld.h
+
+Purpose: Defines the top-level MLD op-mode data structure, global module parameters, cleanup/reset helpers, firmware lifecycle prototypes, firmware-ID allocation macro, notification handler contracts, band/rate conversion helpers, and debug/test exports.
+
+Important APIs/types/functions: `struct iwl_mld`, `CLEANUP_STRUCT`, `iwl_cleanup_mld()`, `struct iwl_mld_mod_params`, `IWL_OP_MODE_GET_MLD`, `IWL_MAC80211_GET_MLD`, firmware lifecycle prototypes, RF-kill setters, antenna helpers, band conversion helpers, `struct iwl_rx_handler`, `struct iwl_notif_struct_size`, `IWL_MLD_ALLOC_FN`, `iwl_mld_fw_id_to_link_conf()`, `iwl_mld_mac80211_ac_to_fw_tx_fifo()`, `iwl_mld_get_lmac_id()`, and `iwl_mld_error_before_recovery()`.
+
+Control flow: The header codifies the resource lifecycle described in its documentation: MLD owns VIF/link/STA mappings, restart-sensitive fields are grouped for zeroing, and async firmware notifications can be tied to object instances. `iwl_cleanup_mld()` zeroes restart-cleaned top-level and scan state, clears D3 state, and resets low-latency runtime counters. The allocation macro finds an unused RCU mapping slot, optionally randomized, with array size adjusted for station/link firmware capability limits.
+
+State/persistence: `struct iwl_mld` is the central persistent state object. Restart-cleaned fields include firmware link/VIF/TXQ mappings, used PHY IDs, IGTK count, monitor data, netdetect, P2P/NAN VIF pointers, and BT activity. Persistent fields include transport/config/firmware/HW/wiphy pointers, capabilities arrays, NVM data, firmware runtime, notification wait/list/work, thermal work, firmware status/rfkill flags, power budget, MAC addresses, scan/survey, WoWLAN, LED, MCC source, puncturing policy, BA sessions, RXQ sync, deferred TXQ list/work, recovery buffer, multicast filter, antenna masks, rate version, low-latency state, thermal/PTP/time-sync/FTM data, and station mapping that survives restart.
+
+Dependencies/integration: Pulls together iwl transport/op-mode, firmware runtime and command APIs, mac80211, notification, scan, RX, thermal, low-latency, PTP, time-sync, FTM, NAN, and constants. Its types are included by nearly every MLD source file.
+
+Risks: Because this header is widely included, layout or helper changes have large blast radius. Restart grouping must be maintained carefully: putting a field in the wrong group can either leak stale firmware state across restart or erase state needed for recovery. `IWL_MLD_ALLOC_FN` uses compile-time type checks and RCU pointer arrays; misuse with an unexpected type would be dangerous. The exported KUnit symbol name `global_iwl_mld_goups_size` appears misspelled and consumers must match it.
+
+Test signals: KUnit should validate allocation macro behavior under full tables, restart cleanup field boundaries, band/rate conversions, LMAC selection with and without CDB, firmware ID lookup bounds checks, and notification handler registration/cancellation behavior.

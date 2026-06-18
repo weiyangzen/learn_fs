@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/storage-engines/foundationdb/flow/ProtocolVersion.h.cmake -->
+# sources/storage-engines/foundationdb/flow/ProtocolVersion.h.cmake
+- Purpose: CMake template for the generated `flow/ProtocolVersion.h`, defining type-safe protocol version constants, feature gates, comparison behavior, trace formatting, and serialized software-version metadata.
+- Important APIs/types/functions: `ProtocolVersion`, `PROTOCOL_VERSION_FEATURE`, constants for default/min-compatible/min-invalid/future protocol versions, feature predicates such as `hasTenants()`, `currentProtocolVersion`, `useFutureProtocolVersion`, and `SWVersion`.
+- Control flow: `PROTOCOL_VERSION_FEATURE` emits a tag type, `hasFeature()` predicate, and `withFeature()` factory for each configured feature value. Static assertions validate masks, downgrade windows, and accidental patch/low-byte changes at compile time.
+- State and persistence behavior: `ProtocolVersion` wraps a `uint64_t` and supports an object-serializer flag in the high bits while comparisons ignore flags. `SWVersion` serializes newest, last-run, and lowest-compatible protocol versions for software-version tracking.
+- Dependencies and integration points: Depends on generated values from `ProtocolVersions.cmake`, `Traceable`, Flow serialization, and `FileIdentifier`. The feature list is consumed broadly by network interfaces, storage metadata, special keys, backup, encryption, tenant, and mutation-format code.
+- Risks: This template is a compatibility contract. Incorrect feature values can break mixed-version clusters or persisted data decoding. The object-serializer flag must not leak into normal comparisons. Adding a feature above `defaultProtocolVersionValue` trips compile-time guards.
+- Test signals: Build-time static assertions are the first gate. Runtime tests should cover compatibility masking, flag add/remove behavior, `Traceable<ProtocolVersion>`, feature predicates at boundary values, and `SWVersion` serialization round trips.
+<!-- END_FILE_RESEARCH: sources/storage-engines/foundationdb/flow/ProtocolVersion.h.cmake -->

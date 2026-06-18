@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/net/sched/act_ct.c
+
+Purpose: implements the `ct` TC action, integrating traffic control with netfilter conntrack, NAT, helpers, zones, labels/marks, defragmentation, and flow-table hardware offload.
+
+Important APIs/functions: `tcf_ct_act()` is the runtime action; `tcf_ct_init()` parses and installs parameters; `tcf_ct_fill_params()` builds conntrack templates, marks, labels, helpers, zones, and NAT ranges; `tcf_ct_act_nat()` applies NAT; `tcf_ct_flow_table_get()` manages per-net/per-zone flow tables; `tcf_ct_flow_table_lookup()` accelerates established flows; `tcf_ct_flow_table_process_conn()` adds eligible TCP/UDP/GRE flows; `tcf_ct_offload_act_setup()` maps TC action offload. A global `zones_ht` rhashtable indexes `tcf_ct_flow_table` by net and zone, and `act_ct_wq` handles RCU cleanup.
+
+Control flow: init rejects binding to unsupported non-ingress/non-clsact qdiscs, parses netlink attributes, allocates or replaces an IDR action, validates control action, fills params, obtains a zone flow table, then RCU-swaps params. Runtime handles `CLEAR` by removing skb ct state. Otherwise it identifies IPv4/IPv6, temporarily pulls to L3, handles fragments through nf defrag, trims network data, reuses cached ct only if net/zone/helper/direction match, tries flow-table lookup, associates a template for zone tracking, calls `nf_conntrack_in()`, applies NAT, assigns helpers and sequence adjustment when committing, runs helpers when needed, applies mark/label updates, confirms unconfirmed connections on commit, optionally promotes flow-table offload, restores skb headers, and records post-ct metadata.
+
+State and persistence: per-action params are RCU-managed and may hold helper refs, label namespace refs, conntrack templates, NAT ranges, and a ref to a shared zone flow table. Conntrack table entries, marks, labels, NAT status, helper state, and flow offload entries persist outside the action. Global zone flow tables are refcounted and removed asynchronously.
+
+Dependencies and integration: deeply integrates TC action API, netfilter conntrack/NAT/helper/label/zone/accounting/event APIs, nf_flow_table, IPv6 defrag, skb control blocks, flow offload, rhashtable, ordered workqueues, and the `tcf_frag_xmit_count` static branch.
+
+Risks: lifetime and concurrency are high risk: params, templates, helper refs, flow tables, and ct references cross RCU, refcounting, and netfilter ownership. Header pull/push around L3 processing must balance on every path. NAT/helper combinations can require seqadj extensions. Flow offload only supports restricted protocols and no helpers/seqadj; stale/offloaded state must be refreshed or torn down safely. Confirmed conntrack clashes can drop the ct pointer, which the code explicitly reloads.
+
+Test signals: ct clear, lookup-only, commit, force, zone, mark, label, SNAT/DNAT IPv4/IPv6, helper assignment, fragmented packets, cached ct reuse/mismatch, ingress-only binding rejection, flow-table promotion and teardown, hardware offload actions, concurrent action replacement, module unload cleanup, and nf_conntrack event/accounting verification.

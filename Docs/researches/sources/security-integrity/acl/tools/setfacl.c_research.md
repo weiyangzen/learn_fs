@@ -1,0 +1,5 @@
+## sources/security-integrity/acl/tools/setfacl.c
+
+Purpose: CLI front end for setting, modifying, deleting, and restoring POSIX ACLs.
+
+Important functions are `main`, `restore`, `next_file`, `help`, `has_any_of_type`, and `xquote`. Control flow builds a `seq_t` from options (`-m/-M/-x/-X/-b/-k`, plus non-POSIX `--set`, `--restore`, recursion and test mode), then applies it to file arguments through `walk_tree` and `do_set`. Restore mode reads `getfacl` comment headers, clears existing ACLs, parses replacement entries, then restores owner/group and setuid/setgid/sticky flags when needed. State includes global options for walk mode, mask recalculation, default ACL promotion, POSIX compatibility, and test mode. Dependencies include parser/sequence modules, `do_set`, `walk_tree`, gettext, getopt, stat/chown/chmod. Risks include global mutable option state, ACL restore ordering around `chown` clearing mode bits, parse-mode differences under `POSIXLY_CORRECT`, stdin-driven file lists, and symlink recursion semantics. Test signals are CLI exit statuses, restore round trips from `getfacl -R`, recursive traversal, and mask recalculation cases.

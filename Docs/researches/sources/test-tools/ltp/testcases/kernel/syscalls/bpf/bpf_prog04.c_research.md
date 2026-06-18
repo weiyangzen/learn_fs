@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/bpf/bpf_prog04.c
+
+Purpose: CVE-2018-18445 regression test for verifier handling of 32-bit right-shift arithmetic. It loads crafted bytecode that should be rejected; if accepted, the test reports failure and runs it to expose possible kernel damage. Important APIs are BPF ALU32/ALU64 macros, `bpf(BPF_PROG_LOAD)`, verifier logs, taint checking, and dropped CAP_SYS_ADMIN. State includes a one-entry array map, optional bad program fd, log buffer, and message buffer. Dependencies are BPF verifier and taint detection. Risks are intentional potentially harmful bytecode on vulnerable kernels. Test signal is verifier rejection; acceptance is failure.

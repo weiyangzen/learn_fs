@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/irq.h
+
+Purpose: ARC IRQ namespace and architecture IRQ entry declarations. Important APIs/types/functions: defines `NR_IRQS` as 512, ARCv2 platform interrupt numbers `IPI_IRQ`, `SOFTIRQ_IRQ`, `FIRST_EXT_IRQ`, and declares `arc_init_IRQ` plus `arch_do_IRQ`. Control flow: constants and prototypes only. State and persistence: IRQ descriptor state is managed elsewhere. Dependencies/integration: included by interrupt controllers and generic IRQ code. Risks: insufficient `NR_IRQS` or wrong reserved IRQ numbers break SMP/IPI and device interrupt routing. Test signals: interrupt controller init, SMP IPI tests, softirq trigger tests, and platform device IRQ enumeration.

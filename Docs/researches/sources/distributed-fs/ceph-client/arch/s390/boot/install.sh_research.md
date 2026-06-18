@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/install.sh -->
+# sources/distributed-fs/ceph-client/arch/s390/boot/install.sh
+
+Purpose: is the fallback `make install` script for s390 kernel images when no external `INSTALLKERNEL` command is available. Important inputs are kernel version, image path, System.map path, and install directory. Control flow enables `set -e`, prints a bootloader warning, renames existing `vmlinuz-$version` and `System.map-$version` to `.old`, writes the new image with `cat`, and copies the map. State changes are filesystem writes in the install path; no kernel runtime persistence. Dependencies include POSIX shell, `mv`, `cat`, `cp`, and build-system-provided arguments. Risks include overwriting previous `.old` files, partial install if disk/write fails, no bootloader configuration update, and install path assumptions. Test signals: `make ARCH=s390 install`, existing-file rollover, missing install directory, and failure propagation from shell commands.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/install.sh -->

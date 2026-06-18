@@ -1,0 +1,13 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/test/java/org/apache/hadoop/hdds/scm/container/replication/TestRatisUnderReplicationHandler.java
+
+Purpose: Tests `RatisUnderReplicationHandler`, which chooses replication sources and targets for under-replicated Ratis containers, including unhealthy, decommissioning, maintenance, quasi-closed, and vulnerable replica cases.
+
+Important APIs and types: Uses `RatisUnderReplicationHandler`, `RatisReplicationConfig`, `UnderReplicatedHealthResult`, `PlacementPolicy`, `ContainerReplica`, `ContainerReplicaOp`, `SCMCommand`, `NodeStatus`, `ReplicationManagerMetrics`, `InsufficientDatanodesException`, and throttled replication/delete dispatch.
+
+Control flow: Setup creates a closed Ratis container, simple placement policy, push-replication config, metrics, pending-op mock, healthy node-status behavior, and command capture. Early tests check pending adds, unrecoverable empty containers, decommission/maintenance under-replication, and maintenance minimums. Placement failure tests distinguish no targets, insufficient targets with partial replication metrics, and no-node fallbacks that may delete a removable unhealthy replica only when enough healthy replicas remain and no pending delete exists. Source-selection tests prefer healthy closed replicas, use unhealthy only when no healthy source exists, avoid wrong-sequence quasi-closed replicas when better sources exist, choose highest BCSID, and verify used/excluded target lists. Vulnerable quasi-closed tests replicate unique unhealthy replicas on decommissioning or entering-maintenance nodes and continue across overloaded sources while rethrowing. Final tests define when quasi-closed replicas can be sources for closed and quasi-closed containers.
+
+State and persistence behavior: No durable writes. State is replica/op-state/sequence sets, pending ops, min healthy for maintenance, command captures, and metrics counters. Delete fallback emits forced delete commands for selected unhealthy replicas.
+
+Dependencies and integration points: Integrates with placement policy, replication manager metrics, pending-op accounting, node health/op-state, throttled push replication, delete fallback, and health-result flags such as `hasVulnerableUnhealthy`.
+
+Risks and test signals: Risks include selecting stale or wrong-sequence sources, ignoring pending add/delete exclusions, deleting unhealthy replicas when unsafe, failing to preserve vulnerable unique unhealthy replicas, and losing partial progress after overload. Signals include command counts, command target/source identity, metrics, captured placement arguments, exception assertions, and source equality checks.

@@ -1,0 +1,17 @@
+# sources/storage-engines/rocksdb/db/write_batch.cc
+
+Purpose: This is the core implementation of RocksDB `WriteBatch`. It owns the compact serialized batch format, public mutation APIs, record iteration, savepoints, optional per-key protection checksums, timestamp updates, write-batch append logic, and insertion of batch records into memtables during normal writes and WAL recovery.
+
+Important APIs/types/functions: Major units include `WriteBatch` constructors/copy/move/clear/release, content queries (`HasPut`, `HasMerge`, etc.), `ReadRecordFromWriteBatch`, `WriteBatchInternal::Iterate`, mutation APIs for `Put`, `TimedPut`, `PutEntity`, `Delete`, `SingleDelete`, `DeleteRange`, `Merge`, `PutBlobIndex`, transaction markers, `SetSavePoint`/`RollbackToSavePoint`/`PopSavePoint`, `UpdateTimestamps`, `VerifyChecksum`, `MemTableInserter`, `WriteBatchInternal::InsertInto`, `Append`, `SetContents`, and `UpdateProtectionInfo`.
+
+Control flow: A batch is a 12-byte header followed by tagged records. Mutators validate key/value sizes, install a `LocalSavePoint`, increment the count, append the tag and length-prefixed fields, set content flags, add protection info when enabled, and commit or roll back if `max_bytes_` is exceeded. `Iterate` decodes records with `ReadRecordFromWriteBatch`, dispatches to `Handler` callbacks, honors `Continue`, handles transaction markers and `TryAgain`, and verifies decoded write count for whole-batch scans.
+
+State and persistence behavior: `rep_` is the persisted serialized batch body used for WAL and replay. The header stores starting sequence and count. `content_flags_` can be eagerly updated or lazily recomputed for externally supplied contents. `save_points_` records byte size, count, and flags for rollback. `prot_info_` stores checksum/protection entries per counted write. Timestamp-enabled column families append placeholder timestamps and later mutate keys in place through `TimestampUpdater`.
+
+Memtable integration: `MemTableInserter` implements `WriteBatch::Handler` to turn records into memtable entries. It resolves column families, skips already-applied WAL updates by log number, schedules flush/trim work, advances sequence numbers per key or per batch, rebuilds prepared transactions during recovery, handles commit/rollback markers, collapses excessive merges when possible, validates range tombstones, and propagates protection info to memtable key/value/sequence checksums.
+
+Dependencies and integration points: This file integrates with column families, `DBImpl`, memtables, flush and trim schedulers, snapshots, merge operators, wide-column serialization, blob indexes, write thread groups, transaction recovery, duplicate detection, and checksum utilities.
+
+Risks: The serialized tag format is compatibility-sensitive. Count/header mismatches are corruption. Savepoint and protection-info counts must stay aligned. `TryAgain` paths assume retry semantics and manually decrement protection indexes. Timestamp in-place mutation depends on correct per-CF timestamp-size discovery. Recovery paths require DB mutex discipline and correct write policy settings. Wide-column V2 entities must be preserved byte-for-byte when handlers rebuild batches.
+
+Test signals: `write_batch_test.cc` covers serialization, append, savepoints, content flags, handler continuation, column families, wide-column entities, large size limits, timestamp APIs, and transaction markers. Broader DB tests cover memtable insertion and recovery behavior.

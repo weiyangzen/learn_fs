@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/uapi/asm/cachectl.h
+
+Userspace cacheflush flag ABI for ARC. It defines fine-grained flags CF_I_INV, CF_D_FLUSH, CF_D_FLUSH_INV, CF_DEFAULT, and conventional ICACHE/DCACHE/BCACHE aliases. Control flow is sys_cacheflush users passing these flags to kernel cache maintenance. State is syscall argument bits. Dependencies are process/sys cacheflush implementation and Android/uClibc expectations. Risks include flag compatibility with existing binaries and under-specified address/length semantics outside this header. Test signals are cacheflush syscall tests, JIT/self-modifying-code workloads, and Android ABI consumers.

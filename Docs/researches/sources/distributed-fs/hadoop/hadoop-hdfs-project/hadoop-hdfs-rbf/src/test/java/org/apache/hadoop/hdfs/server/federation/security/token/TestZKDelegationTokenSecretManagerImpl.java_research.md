@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/security/token/TestZKDelegationTokenSecretManagerImpl.java
+
+Purpose: tests router-specific ZooKeeper delegation-token manager synchronization when token watchers are disabled and multiple manager instances operate concurrently.
+
+Important APIs/types/functions: extends Hadoop `TestZKDelegationTokenSecretManager`; uses `ZKDelegationTokenSecretManagerImpl`, `ZKDelegationTokenSecretManager`, `DelegationTokenManager`, web `DelegationTokenIdentifier`, `Token`, `SecretManager.InvalidToken`, `UserGroupInformation`, `Text`, `Time`, and config keys `ZK_DTSM_TOKEN_WATCHER_ENABLED`, `ZK_DTSM_ROUTER_TOKEN_SYNC_INTERVAL`, `RENEW_INTERVAL`, and `REMOVAL_SCAN_INTERVAL`.
+
+Control flow: teardown stops any created managers. `testMultiNodeOperationWithoutWatch()` starts multiple managers without watchers, issues tokens from one, validates retrieval/renew/cancel behavior through another after sync intervals. `testMultiNodeTokenRemovalShortSyncWithoutWatch()` and `testMultiNodeTokenRemovalLongSyncWithoutWatch()` use different router sync intervals to prove expired/cancelled token removal propagates without watchers after the configured sync/removal timing. The tests use waits and invalid-token assertions to confirm propagation.
+
+State and persistence behavior: token/key state is persisted in ZooKeeper by the base test infrastructure and cached locally by each manager. Watchers are disabled, so periodic sync is the persistence-to-cache bridge. Integration points include router-specific ZK sync, Hadoop web delegation-token manager, token expiration/removal scans, and multi-instance coordination. Risks are timing flakiness from sync intervals and reliance on inherited ZK test setup. Test signals are successful cross-manager token operations before removal and `InvalidToken`/failure after propagated removal.

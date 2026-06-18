@@ -1,0 +1,30 @@
+# sources/storage-engines/rocksdb/utilities/transactions/write_committed_transaction_ts_test.cc
+
+## Purpose
+This file is the parameterized test suite for write-committed `TransactionDB` behavior when user-defined timestamps are present. It validates commit timestamp requirements, timestamped reads and iterators, WAL recovery across enabled/disabled timestamp modes, transaction-level and DB-level API restrictions, merge behavior, `GetForUpdate()` and `GetEntityForUpdate()` validation, blind writes, and refined read timestamps.
+
+## Important APIs, Types, and Functions
+The suite instantiates `WriteCommittedTxnWithTsTest` across stackable/non-stackable DBs, one/two write queues, transaction indexing enabled/disabled, point lock manager variants, and deadlock timeout values. The fixture comes from `transaction_test.h` and provides `NewTxn()` and `GetFromDb()`.
+
+`CheckKeyValueTsWithIterator()` is a local helper that validates iterator key, value, and timestamp triples in both forward and backward traversal.
+
+Test cases include `SanityChecks`, `WritesBypassTransactionAPIs`, `ReOpenWithTimestamp`, `RecoverFromWal`, `EnabledUDTDisabledRecoverFromWal`, `UDTNewlyEnabledRecoverFromWal`, `ChangeFromWriteCommittedAndDisableUDT`, `TransactionDbLevelApi`, `Merge`, `GetForUpdate`, `GetForUpdateUdtValidationNotEnabled`, `BlindWrite`, `RefineReadTimestamp`, `CheckKeysForConflicts`, and `GetEntityForUpdate`. The file ends with the normal RocksDB test `main()` installing a stack trace handler and running all tests.
+
+## Control Flow
+Most tests create or reopen a DB, create an extra column family with `BytewiseComparatorWithU64TsWrapper()`, reopen with both default and timestamped column families, then run transactions through prepare, commit, rollback, or recovery. `SanityChecks` asserts timestamped writes cannot commit without a commit timestamp and that malformed batches referencing nonexistent column families fail. `WritesBypassTransactionAPIs` deliberately writes into transaction batches below transaction APIs to document timestamp-size tracking pitfalls and WAL/flush-dependent corruption symptoms.
+
+`ReOpenWithTimestamp` verifies timestamped commit updates write-batch/iterator-visible timestamps and preserves non-UDT merge behavior in the default column family. `RecoverFromWal` leaves prepared transactions, committed transactions, commit-without-prepare transactions, no-op named transactions, and rolled-back transactions in WAL, reopens, and verifies recovery state and timestamped visibility. `EnabledUDTDisabledRecoverFromWal` and `UDTNewlyEnabledRecoverFromWal` test WAL replay when a column family switches between timestamp-aware and bytewise comparators with `persist_user_defined_timestamps=false`. `ChangeFromWriteCommittedAndDisableUDT` asserts that simultaneously disabling UDT and changing to write-prepared or write-unprepared is rejected.
+
+`TransactionDbLevelApi` checks that direct DB write APIs are not supported for timestamped column families but remain supported for the default non-timestamped column family. `Merge` validates timestamped transaction merge output. `GetForUpdate` and `GetEntityForUpdate` enforce read timestamp validation rules: stale validation timestamps produce `Busy`, matching or newer ones succeed, mismatched `ReadOptions.timestamp` is invalid, and validation-disabled calls have narrower allowed timestamp usage. `GetForUpdateUdtValidationNotEnabled` disables DB-wide UDT validation and verifies sequence-only validation and possible out-of-order timestamp hazards. `BlindWrite`, `RefineReadTimestamp`, and `CheckKeysForConflicts` exercise blind-write assumptions, updating validation timestamps after conflict, and tombstone timestamp conflict detection through `DBImpl::GetLatestSequenceForKey` sync-point inspection.
+
+## State and Persistence Behavior
+The tests repeatedly persist and replay WAL entries using `options.avoid_flush_during_shutdown`, synchronous writes, prepared transaction names, and `ReOpenNoDelete()`. They mix column families that do and do not store timestamps, and in some cases disable timestamp persistence so replay must adapt to the current comparator. Timestamp strings are encoded as fixed-width uint64 values. Transaction state spans in-memory write batches, prepared WAL records, commit markers, rollback records, and recovered transactions obtainable by name.
+
+## Dependencies and Integration Points
+The suite depends on `TransactionDB`, `PessimisticTransactionDB`, `PessimisticTransaction`, `WriteBatchWithIndex`, `WriteBatchInternal`, timestamp comparators from test utilities, merge operators, `TransactionUtil` conflict behavior through transaction APIs, sync points, and the shared fixture in `transaction_test.h`. It directly validates public APIs (`Put`, `Delete`, `SingleDelete`, `Merge`, `Write`, `BeginTransaction`, `GetTransactionByName`) and internal-ish paths such as `CommitBatch()` and `WriteWithConcurrencyControl()`.
+
+## Risks and Edge Cases
+The suite documents several intentionally unsupported or hazardous patterns: bypassing transaction write APIs can corrupt timestamped keys if timestamp-size tracking is disabled; direct DB-level writes to timestamped column families are rejected; skipping UDT validation can allow commit timestamp order to diverge from sequence order; and changing write policy while disabling UDT during WAL replay is rejected. Many assertions depend on exact status categories (`InvalidArgument`, `NotSupported`, `Busy`, `NotFound`) and on WAL recovery preserving names for prepared but uncommitted transactions while dropping no-op and rolled-back transactions.
+
+## Test Signals
+A passing run signals that write-committed transactions maintain correct timestamp assignment, validation, recovery, API gating, merge semantics, iterator timestamp exposure, and conflict detection across the full parameter matrix. Failures localize timestamp regressions in transaction commit, WAL replay, read-for-update validation, or unsupported direct-write pathways.

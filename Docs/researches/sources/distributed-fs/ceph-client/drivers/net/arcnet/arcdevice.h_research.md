@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/arcnet/arcdevice.h
+
+Purpose: shared ARCNET internal header. It defines debug flags, packet size constants, hardware status/command bits, protocol plug-in contracts, per-device private state, LED event APIs, exported core helpers, and bus access macros.
+
+Important types and macros: `struct ArcProto` is the protocol plug-in ABI with receive, header-build, transmit, continuation, and ack callbacks. `struct arcnet_local` is the private state for all ARCNET netdevices: hardware configuration, tx/rx buffer indexes, locks, LED triggers, timers, work items, reconfiguration counters, RFC1201 assembly state, outgoing packet state, hardware operation callbacks, and optional mapped memory. `Incoming` and `Outgoing` hold split-packet state. Constants define `MTU`, `MinTU`, `XMTU`, `TXFREEflag`, `TXACKflag`, `RECONflag`, `RESETflag`, `TXcmd`, `RXcmd`, `CFLAGScmd`, `NORMALconf`, `EXTconf`, and COM20020 feature flags.
+
+Control flow and integration: the header itself has no runtime flow, but it sets the contracts between `arcnet.c`, packet modules such as raw/cap mode, and chipset drivers such as RIM I and COM20020. Hardware drivers fill `lp->hw`; the core calls those callbacks under its locking model.
+
+State and dependencies: this header defines all persistent in-memory ARCNET state but stores none by itself. Dependencies include kernel interrupt/workqueue APIs, `linux/if_arcnet.h`, I/O accessors, and LED support. Risks are ABI coupling across many modules, flag overlap (`TESTflag` and `EXCNAKflag` both 0x08 in different contexts), buffer queue invariants, and debug macro compile-time filtering. Test signals include building every ARCNET module together, struct field use across hardware drivers, buffer queue stress, and LED trigger lifecycle.

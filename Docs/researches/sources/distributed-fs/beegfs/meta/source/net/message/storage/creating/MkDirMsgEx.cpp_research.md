@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/meta/source/net/message/storage/creating/MkDirMsgEx.cpp -->
+# sources/distributed-fs/beegfs/meta/source/net/message/storage/creating/MkDirMsgEx.cpp
+
+Purpose: Implements the MkDirMsgEx server-side message extension: mirrored mkdir handler coordinating local or remote directory-inode creation, dentry insertion, ACLs, and event logging.
+
+Important APIs/types/functions: Implemented entry points: bool MkDirMsgEx::processIncoming(ResponseContext& ctx); std::unique_ptr<MirroredMessageResponseState> MkDirMsgEx::executeLocally(ResponseContext& ctx, bool isSecondary); std::tuple<HashDirLock, FileIDLock, ParentNameLock> MkDirMsgEx::lock(EntryLockStore& store); std::unique_ptr<MkDirMsgEx::ResponseState> MkDirMsgEx::mkDirPrimary(ResponseContext& ctx); std::unique_ptr<MkDirMsgEx::ResponseState> MkDirMsgEx::mkDirSecondary(); FhgfsOpsErr MkDirMsgEx::mkDirDentry(DirInode& parentDir, const std::string& name, const EntryInfo* entryInfo, const bool isBuddyMirrored); FhgfsOpsErr MkDirMsgEx::mkRemoteDirInode(DirInode& parentDir, const std::string& name, EntryInfo* entryInfo, const CharVector& defaultACLXAttr, const CharVector& accessACLXAttr); FhgfsOpsErr MkDirMsgEx::mkRemoteDirCompensate(EntryInfo* entryInfo); ...
+
+Control flow: Control flow enters processIncoming(), delegates to BaseType/MirroredMessage, obtains the declared locks, executes the local primary or secondary branch, serializes a ResponseState, and forwards the same operation to the secondary when the entry is mirrored.
+
+State and persistence behavior: does not define standalone persistence; state lives in App-owned services and common message payloads.
+
+Dependencies and integration points: Direct includes: <common/components/streamlistenerv2/IncomingPreprocessedMsgWork.h>, <common/net/message/control/GenericResponseMsg.h>, <common/net/message/storage/creating/MkLocalDirMsg.h>, <common/net/message/storage/creating/MkLocalDirRespMsg.h>, <common/net/message/storage/creating/MkDirRespMsg.h>, <common/toolkit/MessagingTk.h>, <components/FileEventLogger.h>, <components/ModificationEventFlusher.h>, <program/Program.h>, <storage/PosixACL.h>, ... Integration dependencies: uses the global App singleton to reach MetaStore, node stores, syncers, sessions, or statistics; integrates with MetaStore/DirInode/FileInode persistence; uses EntryLockStore locks to serialize metadata mutation or query with writers; participates in buddy-mirror primary/secondary replay through MirroredMessage; emits file/modification events when enabled.
+
+Risks and test signals: mirror replay must preserve lock order, response semantics, and idempotence between primary and secondary referenced metadata objects must be released on every error path The remote-inode compensation path is a critical failure mode; tests should cover owner selection, remote failure, duplicate names, ACL propagation, and buddy-mirrored secondary replay.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/meta/source/net/message/storage/creating/MkDirMsgEx.cpp -->

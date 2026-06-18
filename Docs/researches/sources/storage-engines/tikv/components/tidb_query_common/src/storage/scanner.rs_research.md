@@ -1,0 +1,11 @@
+# sources/storage-engines/tikv/components/tidb_query_common/src/storage/scanner.rs
+
+Purpose: implements `RangesScanner`, an async scanner over multiple point and interval ranges backed by an abstract `Storage`. It handles scan direction, key-only reads, optional commit timestamps, scanned row accounting, scanned physical range reporting, cacheability checks, and cooperative rescheduling.
+
+Important APIs and control flow: `RangesScannerOptions` carries storage, ranges, scan flags, range-awareness, and commit-ts loading. `RangesScanner::new` initializes the `RangesIterator`, stats buffers, scanned-range buffers, and `RescheduleChecker`. `next` delegates to `next_opt(true)`. `next_opt` loops over `IterStatus`: point ranges call `get_entry` and drain immediately; new intervals call `begin_scan` then `scan_next_entry`; continues call `scan_next_entry`; drained updates scanned range and returns `None`. Non-null rows increment the last range count, trigger reschedule checks, convert `(key,value,commit_ts)` through `KvFormat::make_kv_pair`, and return. Empty reads notify range drained and continue.
+
+State and persistence behavior: state includes the storage cursor, range iterator, per-range scanned row counts, current/working scanned range boundaries, and reschedule counters. `collect_storage_stats` delegates to storage; `collect_scanned_rows_per_range` drains row counts into a destination then seeds a new zero bucket; `take_scanned_range` returns and advances working boundaries for streaming partial retry. No durable persistence is performed.
+
+Dependencies and integration: depends on `api_version::KvFormat` to shape returned kv entries, `yatp::task::future::reschedule` for coroutine fairness, storage/range traits from this crate, and `tikv_util::time`. Executors use it as the common multi-range scan primitive.
+
+Risks and test signals: scanned range correctness assumes ordered ranges; comments warn unordered ranges make streaming retry ranges unsound. `take_scanned_range` asserts range awareness is enabled. Rescheduling checks every 32 scanned keys or on new range when elapsed time exceeds 1 ms. Tests cover forward/backward scans, key-only mode, scanned-row collection, forward/backward scanned range reporting, empty ranges, point ranges, and `next_opt(false)` behavior.

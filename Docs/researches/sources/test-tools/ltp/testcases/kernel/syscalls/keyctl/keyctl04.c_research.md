@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/keyctl/keyctl04.c
+
+Purpose: regression for CVE-2017-7472, ensuring `KEYCTL_SET_REQKEY_KEYRING` does not replace and leak an existing thread keyring. The test creates/gets the thread keyring with `KEYCTL_GET_KEYRING_ID(..., create=1)`, stores the serial, sets default request-key destination to `KEY_REQKEY_DEFL_THREAD_KEYRING`, then retrieves the thread keyring without creating. State is the current thread keyring and request-key default setting. Dependencies are keyrings support and keyctl constants. Risks are per-thread keyring side effects persisting for the test process only. Test signal is the second keyring ID equaling the original; a different ID indicates leak/regression.

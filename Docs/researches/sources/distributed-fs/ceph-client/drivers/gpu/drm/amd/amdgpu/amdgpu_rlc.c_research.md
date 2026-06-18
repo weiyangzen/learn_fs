@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_rlc.c
+
+Purpose: implements generic GFX RLC support: safe-mode transitions for clock/power gating updates, allocation/setup/free of RLC save-restore, clear-state, and CP jump-table buffers, and parsing/registering RLC firmware components from versioned firmware headers.
+
+Important APIs and functions: `amdgpu_gfx_rlc_enter_safe_mode()` and exit call IP-specific RLC functions when clock-gating flags require safe updates. `amdgpu_gfx_rlc_init_sr()`, `init_csb()`, and `init_cpt()` allocate BOs and initialize save/restore, clear-state, and CP table buffers. `amdgpu_gfx_rlc_setup_cp_table()` copies jump-table data from CE/PFP/ME/MEC/MEC2 firmware headers into the CP table. `amdgpu_gfx_rlc_fini()` releases the allocated BOs. `amdgpu_gfx_rlc_init_microcode()` parses RLC firmware header v2.0 plus optional v2.1 through v2.5 sections and registers PSP-loadable firmware images in `adev->firmware.ucode` while increasing `fw_size`.
+
+Control flow: safe mode exits early if already in desired state or RLC is disabled, then calls set/unset hooks only for relevant CG flags. Buffer initialization uses AMDGPU BO helpers; failure calls `amdgpu_gfx_rlc_fini()` to clean partial state. Firmware parsing always requires major version >= 2, runs v2.0 first to extract common version/register restore data and allocate combined register-list storage, then conditionally parses additional minor-version sections. PSP firmware registration is conditional on `adev->firmware.load_type == AMDGPU_FW_LOAD_PSP` and component sizes being non-zero.
+
+State and persistence: RLC state is held in `adev->gfx.rlc`: BO pointers/GPU addresses/CPU mappings, safe-mode flags per RLC instance, firmware version/feature fields, byte sizes, and pointers into firmware blobs. Hardware-visible state includes VRAM/GTT BOs consumed by RLC/CP firmware. The code does not write disk state.
+
+Dependencies and integration points: depends on Linux firmware support, `amdgpu_gfx.h`, firmware header layouts, AMDGPU BO helpers, PSP firmware loader bookkeeping, and per-ASIC `amdgpu_rlc_funcs`. It integrates with GFX power/clock gating, firmware loading, CP command processor setup, and SR-IOV RLCG register-access ranges.
+
+Risks: firmware header offsets and sizes are trusted; malformed firmware could lead to invalid pointers without extensive local validation. `register_list_format` allocation is not freed in this file's `fini()` path, so ownership must be handled elsewhere or this is leak-prone. CP table setup assumes firmware pointers for each ME index are present and table sizes fit the allocated table. Minor-version parsing uses equality for 3/4/5, so a newer minor version would only get sections up to v2.2 unless updated.
+
+Test signals: firmware load logs, PSP `fw_size` accounting, RLC safe-mode transitions during CG/PG changes, BO allocation failure handling, CP table validation, and ASIC bring-up across RLC firmware header versions 2.0 through 2.5.

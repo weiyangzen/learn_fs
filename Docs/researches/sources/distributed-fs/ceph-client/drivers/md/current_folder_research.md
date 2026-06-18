@@ -1,0 +1,129 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/md
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 115
+- Recursive researched files: 296
+- Direct child folders represented: 4
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/md/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/md/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-audit.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-audit.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-bio-prison-v1.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-bio-prison-v1.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-bio-prison-v2.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-bio-prison-v2.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-bio-record.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-bufio.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-builtin.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-background-tracker.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-background-tracker.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-block-types.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-metadata.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-metadata.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-policy-internal.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-policy-smq.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-policy.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-policy.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-cache-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-clone-metadata.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-clone-metadata.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-clone-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-core.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-crypt.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-delay.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-dust.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ebs-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-era-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-exception-store.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-exception-store.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-flakey.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ima.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ima.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-init.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-integrity.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-io-rewind.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-io-tracker.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-io.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ioctl.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-kcopyd.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-linear.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-log-userspace-base.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-log-userspace-transfer.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-log-userspace-transfer.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-log-writes.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-log.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-mpath.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-mpath.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-path-selector.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-path-selector.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ps-historical-service-time.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ps-io-affinity.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ps-queue-length.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ps-round-robin.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-ps-service-time.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-raid.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-raid1.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-region-hash.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-rq.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-rq.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-snap-persistent.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-snap-transient.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-snap.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-stats.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-stats.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-stripe.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-switch.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-sysfs.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-table.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-thin-metadata.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-thin-metadata.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-thin.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-uevent.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-uevent.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-unstripe.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity-fec.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity-fec.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity-loadpin.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity-verify-sig.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity-verify-sig.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-verity.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-writecache.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-zero.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-zone.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-zoned-metadata.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-zoned-reclaim.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-zoned-target.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm-zoned.h`
+- `sources/distributed-fs/ceph-client/drivers/md/dm.c`
+- `sources/distributed-fs/ceph-client/drivers/md/dm.h`
+- `sources/distributed-fs/ceph-client/drivers/md/md-autodetect.c`
+- `sources/distributed-fs/ceph-client/drivers/md/md-bitmap.c`
+- `sources/distributed-fs/ceph-client/drivers/md/md-bitmap.h`
+- `sources/distributed-fs/ceph-client/drivers/md/md-cluster.c`
+- `sources/distributed-fs/ceph-client/drivers/md/md-cluster.h`
+- `sources/distributed-fs/ceph-client/drivers/md/md-linear.c`
+- `sources/distributed-fs/ceph-client/drivers/md/md-llbitmap.c`
+- `sources/distributed-fs/ceph-client/drivers/md/md.c`
+- `sources/distributed-fs/ceph-client/drivers/md/md.h`
+- `sources/distributed-fs/ceph-client/drivers/md/raid0.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid0.h`
+- `sources/distributed-fs/ceph-client/drivers/md/raid1-10.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid1.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid1.h`
+- `sources/distributed-fs/ceph-client/drivers/md/raid10.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid10.h`
+- `sources/distributed-fs/ceph-client/drivers/md/raid5-cache.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid5-log.h`
+- `sources/distributed-fs/ceph-client/drivers/md/raid5-ppl.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid5.c`
+- `sources/distributed-fs/ceph-client/drivers/md/raid5.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

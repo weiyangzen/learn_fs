@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/sandbox/fixtures/expanded_resolv.conf
+
+Purpose: expected resolver output fixture for `ParseDNSOptions` when many search domains are provided. It contains one `search` line with seven search entries, two `nameserver` lines, and one `options` line. There are no APIs or runtime control flow; it is static test data. State and persistence are limited to the repository fixture and temporary comparison files created by tests. It integrates with `infra_test.go` to verify that CRI-O writes DNS config without truncating expanded Kubernetes search lists. Risks are fixture drift if resolver rendering rules change. Test signal is direct byte equality against generated `fixtures/resolv_test.conf`.

@@ -1,0 +1,15 @@
+# sources/object-store/minio/cmd/bucket-replication-stats.go
+
+Purpose: Owns the process-local `ReplicationStats` aggregator and cluster aggregation helpers for bucket and site replication metrics. It connects low-level metric primitives to replication events and API-visible stats.
+
+Important APIs/types: `ReplicationStats`, `replStat`, `NewReplicationStats`, `trackEWMA`, `updateMovingAvg`, `ActiveWorkers`, `collectWorkerMetrics`, `collectQueueMetrics`, `Delete`, `UpdateReplicaStat`, `Update`, `GetAll`, `getSRMetricsForNode`, `Get`, `getAllLatest`, `calculateBucketReplicationStats`, `getLatestReplicationStats`, `incQ`, `decQ`, `incProxy`, and `getProxyStats`.
+
+Control flow: Construction creates a metrics registry, queue/proxy/site caches, active-worker histogram, and 2-second tickers for worker and queue collection. `trackEWMA` updates transfer moving averages until `GlobalContext` ends. `Update` translates a `replicatedTargetInfo` and status transition into a `replStat`, updates site-replication stats for completed/failed data replication, then locks the per-bucket cache and updates target counters, failure stats, latency, and large/small transfer rates. `GetAll` clones local bucket stats and overlays queue stats. Cluster paths call `globalNotificationSys.GetClusterAllBucketStats` or `GetClusterBucketStats`, merge per-node queue/proxy/stat maps, update `mostRecentStats`, and return `BucketStats`.
+
+State and persistence: State is in memory: `Cache`, `srStats`, `qCache`, `pCache`, `mrfStats`, `mostRecentStats`, histograms, and tickers. There is no direct disk persistence. `mostRecentStats` acts as a recent non-empty cache for replication stats. Queue counts are atomically incremented/decremented per bucket and site-wide.
+
+Dependencies and integration points: Depends on replication status/type enums, `go-metrics`, global notification fanout, site replication deployment ID lookup, global boot time, `BucketReplicationStats`/`BucketStats` types elsewhere in `cmd`, and metric primitives from `bucket-replication-metrics.go`.
+
+Risks: Tickers are created in `NewReplicationStats`; only worker/queue goroutines are started there, while `trackEWMA` must be started elsewhere or transfer rates will not advance. `updateMovingAvg` assumes `XferRateLrg.measure` and `XferRateSml.measure` are non-nil. Queue counters can go negative if event accounting is unbalanced. Cluster aggregation mutates `mostRecentStats` only for buckets with non-empty replication stats, which can retain stale non-empty data if not invalidated. Some parameters such as `isDeleteRepl`, `isDelMarker`, and `opType` in queue helpers are not used in this file, so callers cannot rely on them changing queue behavior.
+
+Test signals: No direct tests in this subset exercise `ReplicationStats.Update`, cluster aggregation, ticker behavior, or queue/proxy accounting. Serialization tests cover the metric structs used by this file, and utility tests cover the replicated target/status values that feed `Update`.

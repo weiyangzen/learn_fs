@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/kvm/arm64/vgic_init.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/kvm/arm64/vgic_init.c
+
+Purpose: this is a broad VGIC initialization and device-attribute validation selftest for arm64 KVM. It checks GICv2/GICv3 device creation, distributor/redistributor address rules, first-run initialization errors, GICv3 redistributor region semantics, ITS address validation, GICR_TYPER layout, nASSGIcap mutability, and CPU sysreg accessibility.
+
+Important APIs, types, and functions: `struct vm_gic` carries VM, VGIC fd, and device type. `struct vgic_region_attr` describes address region size/alignment for GICv2 and GICv3. `subtest_dist_rdist()` validates common distributor and redistributor or CPU interface address attributes. `subtest_v3_redist_regions()` exercises `KVM_VGIC_V3_ADDR_TYPE_REDIST_REGION`. `test_vgic_then_vcpus()`, `test_vcpus_then_vgic()`, `test_v2_uaccess_cpuif_no_vcpus()`, `test_v3_new_redist_regions()`, `test_v3_typer_accesses()`, `test_v3_last_bit_redist_regions()`, `test_v3_last_bit_single_rdist()`, `test_v3_redist_ipa_range_check_at_vcpu_run()`, `test_v3_its_region()`, `test_v3_nassgicap()`, and `test_v3_sysregs()` cover the major scenarios. `test_kvm_device()` checks create/test/create-twice behavior and GICv2/GICv3 mutual exclusion.
+
+Control flow: `main()` disables the framework default VGIC, computes the maximum IPA size from guest mode parameters, probes GICv3 and GICv2 devices, and runs the shared or version-specific test suite for each supported device. Many tests deliberately configure invalid overlap or insufficient redistributor space and then assert that the first `KVM_RUN` fails with the expected errno. GICv3 sysreg tests create a vCPU, initialize VGIC, and read/write back advertised CPU sysregs, allowing priority-register array holes when priority bits make them unavailable.
+
+State, persistence, and dependencies: state is KVM VM/device state only. Dependencies include `vgic.h`, `gic_v3.h`, arm64 sysreg definitions, KVM device attr groups (`KVM_DEV_ARM_VGIC_GRP_ADDR`, `KVM_DEV_ARM_VGIC_GRP_CTRL`, `KVM_DEV_ARM_VGIC_GRP_REDIST_REGS`, `KVM_DEV_ARM_VGIC_GRP_DIST_REGS`, `KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS`), and guest mode IPA limits.
+
+Risks and edge cases: address tests cover misalignment, out-of-range bases, partial frames above IPA limits, overlapping distributor/redistributor windows, mixing legacy and multi-region redistributor APIs, missing redistributors, and late VGIC initialization. GICR_TYPER tests rely on vCPU creation order and sparse vCPU IDs. CPU sysreg tests handle the awkward case where a register is advertised but read/write may be invalid due to implemented priority bits.
+
+Test signals: expected errnos include `ENODEV`, `EEXIST`, `EINVAL`, `E2BIG`, `ENXIO`, `ENOENT`, `EFAULT`, and `EBUSY` in specific paths. Successful runs print GIC version test banners; total absence of GICv2 and GICv3 support skips the test.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/kvm/arm64/vgic_init.c -->

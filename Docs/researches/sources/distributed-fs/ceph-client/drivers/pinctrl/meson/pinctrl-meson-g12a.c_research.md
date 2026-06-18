@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/meson/pinctrl-meson-g12a.c
+
+Purpose: Defines Meson G12A pinctrl data for peripheral and always-on domains. It is an AXG-generation 4-bit mux driver data file with expanded G12A pin coverage, interrupt binding identifiers, drive-strength-aware banks, special AO/GPIOE handling, and platform-driver matches for `amlogic,meson-g12a-periphs-pinctrl` and `amlogic,meson-g12a-aobus-pinctrl`.
+
+Important APIs and types: The central objects are `meson_g12a_periphs_pinctrl_data` and `meson_g12a_aobus_pinctrl_data`. The file uses `struct meson_bank` entries built with `BANK_DS()` and IRQ IDs from `dt-bindings/interrupt-controller/amlogic,meson-g12a-gpio-intc.h`, `struct meson_pmx_bank` entries built with `BANK_PMX()`, and AXG-style `GROUP()` entries. It defines a local `meson_g12a_aobus_parse_dt_extra()` hook that aliases AO pull and pull-enable regmaps to `pc->reg_gpio`.
+
+Control flow: Device-tree matching selects periphs or AO data and runs `meson_pinctrl_probe()`. For peripheral muxing, `meson_axg_pmx_ops` writes mux selectors for Z, H, BOOT, C, A, and X banks. AO muxing uses separate AO and E mux banks. During AO probe, `meson_g12a_aobus_parse_dt_extra()` adjusts regmap pointers before the common core registers pin config support.
+
+State and persistence: Static tables are immutable. Hardware state includes mux selectors, GPIO direction/output/input, pulls, and drive strength. Periphs banks Z/H/BOOT/C/A/X use interrupt IDs from the G12A GPIO interrupt-controller binding. AO banks include GPIOAO_0..GPIOAO_11 and GPIOE_0..GPIOE_2; GPIOE is explicitly noted as physically located in the AO bank and uses offset 16 for pull/dir/out/in control fields.
+
+Dependencies and integration points: Depends on `dt-bindings/gpio/meson-g12a-gpio.h`, G12A GPIO interrupt-controller dt-bindings, common Meson pinctrl, and AXG PMX. Peripheral functions include storage (eMMC/NAND/NOR/SDIO/SDCard), SPI0/1, I2C0-3, UART A/B/C and AO UART routed on H/C, ISO7816, Ethernet, PWM A-F, CEC on H pins, JTAG, BT565, TS inputs, HDMI TX, PDM, SPDIF, MCLK/TDM audio, and PCIe clock request. AO functions include AO UART/I2C, remote input/output, AO PWMs, JTAG A, CEC, TSIN AO, SPDIF AO, TDM AO, and MCLK AO.
+
+Risks: G12A combines periphs, AO, and GPIOE special placement, making register-map setup more subtle than single-domain files. IRQ ID definitions must match the interrupt-controller binding, or GPIO IRQ consumers receive wrong hwirqs. `meson_g12a_aobus_parse_dt_extra()` changes pull regmaps to the GPIO regmap; omitting it would break AO pulls. Dense alternate functions and multiple placements for SDCard, SPI, UART, CEC, and audio functions increase risk of group/function mismatch.
+
+Test signals: Build and boot on G12A-family hardware with both compatible strings. Check GPIO IRQ mapping against the interrupt controller, pin config for pulls and drive strength, AO GPIOE operations, and muxing for eMMC/SDIO/SDCard, SPI, I2C, UART, Ethernet, HDMI/CEC, TSIN, PDM/SPDIF/TDM/MCLK, PCIe clock request, and AO remote/PWM/CEC functions. Register dumps should confirm AO pull bits live in the GPIO regmap.

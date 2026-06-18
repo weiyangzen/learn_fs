@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/riscv/sifive.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/riscv/sifive.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/riscv/sifive.yaml` is a Linux devicetree YAML schema for the `SiFive SoC-based boards` RISC-V SoC/platform binding. SiFive SoC-based boards It is not executable Ceph or kernel logic; it is a hardware-description ABI used by DTS authors, dt-schema, and Linux subsystem drivers so that board descriptions match what the driver will parse at probe or early boot.
+
+## Important APIs, Types, and Functions
+The public API surface is the schema's accepted node shape. `compatible` uses `oneOf` with 2 accepted compatible forms and covers 6 compatible tokens: `sifive,hifive-unleashed-a00`, `sifive,fu540-c000`, `sifive,fu540`, `sifive,hifive-unmatched-a00`, `sifive,fu740-c000`, `sifive,fu740`. Top-level properties are `$nodename`, `compatible`. Across nested schemas and child nodes this file mentions 2 distinct property names; required properties observed at all levels include none. Node naming is constrained by {'const': '/'}. RISC-V properties capture CPU, ISA, cache, MMU, and platform-compatible contracts. Relevant RISC-V keys are none, addressing or child topology keys none, and interrupt/timer integration none. Required properties are none; these fields shape CPU enumeration, ISA extension probing, and platform matching.
+
+## Control Flow, State, and Persistence
+Control flow is declarative JSON-schema evaluation. `dt-doc-validate`, `dt_binding_check`, and `dtbs_check` load the YAML, expand `$ref` links, match nodes by `compatible` or referenced common-schema use, enforce required properties, evaluate composition/conditional keywords, and validate inline DTS examples. At runtime, early RISC-V platform and CPU discovery uses the compatible strings and CPU/ISA properties to select platform hooks, enumerate harts, configure timers, and expose ISA features. The YAML itself stores no mutable runtime state and writes no persistent data; persistence is the source-controlled devicetree ABI and the DTB blobs built from DTS. External references used in evaluation are none; schema composition/conditional keywords present are `oneOf`.
+
+## Dependencies and Integration Points
+Maintainers: Paul Walmsley <paul.walmsley@sifive.com>, Palmer Dabbelt <palmer@sifive.com>. Integration points include the Linux devicetree core meta-schema, any referenced common binding schemas, in-tree DTS/DTSI users under the Ceph-client kernel source, and driver `of_match_table` entries for the compatible strings. `$ref` dependencies are none; pattern-property child-node APIs are none. The file provides 0 example blocks that should stay aligned with the schema and driver expectations.
+
+## Risks
+Risks are ABI and integration risks. Changing compatible ordering, required keys, resource names, child-node patterns, cell counts, or strictness can reject existing DTS files or let invalid hardware descriptions reach runtime probe. This schema has 2 top-level properties, 2 distinct property names across nested schemas, and this strictness profile: unknown top-level properties are allowed. Conditional branches and shared `$ref` schemas should be checked against all in-tree users because schema-only edits can still break board builds or driver binding.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/riscv/sifive.yaml` for targeted schema and example validation, then `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/riscv/sifive.yaml` against representative DTS users using `sifive,hifive-unleashed-a00`, `sifive,fu540-c000`, `sifive,fu540`, `sifive,hifive-unmatched-a00`, `sifive,fu740-c000`, `sifive,fu740`. The file contains 0 inline examples, so example compilation should be part of the signal. Integration signals include platform match selection, hart enumeration, ISA extension exposure in `/proc/cpuinfo` or hwprobe paths, cache/MMU property parsing, and boot coverage on DTS files that use the platform compatible.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/riscv/sifive.yaml -->

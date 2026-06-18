@@ -1,0 +1,22 @@
+# sources/test-tools/syzkaller/pkg/report/testdata/linux/report/602
+
+## Purpose
+Static Linux reporter parse fixture for syzkaller. It pins expected title `BUG: unable to handle kernel paging request in vmx_vcpu_run`, expected type `MEMORY_SAFETY_BUG`, and parser behavior for a architecture fault/oops diagnostic using x86/GCE syzkaller console format, panic-on-warn trailer. The source is immutable kernel-console text plus expectation headers, not executable code; its purpose is to prevent regressions in Linux crash detection, title normalization, crash-type mapping, panic/corruption flags, and report-boundary extraction.
+
+## Important APIs, Types, And Functions
+The file is consumed by `pkg/report/report_test.go` through `parseReport`, `testParseImpl`, `Reporter.ContainsCrash`, `Reporter.Parse`, and `Reporter.ParseFrom`. Parsed expectations are represented by `ParseTest` fields such as `Title`, `AltTitles`, `Type`, `Corrupted`, `Panicked`, `HasReport`, and `Report`, then compared with `testFromReport` output and `pkg/report/crash.TitleToType`. It exercises architecture fault/oops recognizers, bad-access alternate title generation, and stack-frame extraction from the architecture-specific register dump. Parser-relevant local signals: key stack symbols include `intel_pmu_pebs_disable`, `vmx_vcpu_run`, `asm_sysvec_apic_timer_interrupt`, `vmx_set_host_fs_gs`, `vmx_prepare_switch_to_guest`, `__fpregs_load_activate`, `vcpu_enter_guest`, `irqentry_exit`; alternate title(s): `bad-access in vmx_vcpu_run`; expected panicked flag is `Y`. First non-header signal: `[   67.921889][T10420] Not enough msr switch entries. Can't add msr abd1e896`.
+
+## Control Flow
+Test execution enumerates `pkg/report/testdata/linux/report`, reads the header block until the blank line, treats the remaining text as the console log, and optionally separates an exact expected report body after a standalone `REPORT:` marker. For this fixture, `ContainsCrash` must return true and `Parse` must produce the expected report with stable title/type/flags, and `ParseFrom` must rediscover the same report at its start offset while rejecting offsets at/after the parsed end. The raw log has 98 lines and is intentionally stored under an opaque numeric filename so the header and transcript are the behavioral contract.
+
+## State And Persistence Behavior
+All persistent state is the text fixture itself: expectation headers, optional comments, console bytes, alternate titles, and optional `REPORT:` body. The test creates only transient parser state such as report start/end offsets, selected frame, panic/corruption booleans, crash type, executor metadata, and normalized report bytes. There is no filesystem, network, device, or kernel mutation by this file; kernel actions are represented only as historical log input.
+
+## Dependencies And Integration Points
+This fixture integrates with syzkaller's Linux reporter implementation in `linux.go`, generic report shaping in `report.go`, crash taxonomy in `pkg/report/crash`, and the fuzz/test invariants that require `ContainsCrash` and `Parse` to agree. Product integrations depending on this behavior include dashboard crash grouping, duplicate detection, repro triage, guilty-file/frame inference, bisection routing, and maintainer-facing report rendering. The fixture also protects Linux printk prefix stripping across task/CPU contexts and architecture-specific stack formats.
+
+## Risks And Edge Cases
+The main risk is parser overfitting: timestamps, task prefixes, helper frames, panic trailers, sanitizer helper functions, allocator wrappers, architecture register dumps, and noisy subsystem lines can all bias title extraction. Because this fixture expects a precise non-corrupted title, the parser must keep enough specificity to avoid merging unrelated crashes. Panic detection must remain attached to the original warning/oops instead of starting a second report. There is no explicit `REPORT:` body, so the test focuses on parsed metadata and report span consistency.
+
+## Test Signals
+A passing run of `go test ./pkg/report` for this fixture returns title `BUG: unable to handle kernel paging request in vmx_vcpu_run`, type `MEMORY_SAFETY_BUG`, alternate titles `bad-access in vmx_vcpu_run`, corrupted `N`, panicked `Y`, and exact-body comparison `no`. It must preserve the meaningful frame named by the expected title when one is available, avoid helper-only titles, maintain `Parse`/`ParseFrom` agreement, and avoid false positives on fixture text that is intentionally noisy or negative.

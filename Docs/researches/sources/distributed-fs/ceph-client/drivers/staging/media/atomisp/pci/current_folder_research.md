@@ -1,0 +1,152 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 138
+- Recursive researched files: 587
+- Direct child folders represented: 10
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp-regs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_cmd.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_cmd.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_common.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_compat.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_compat_css20.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_compat_css20.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_csi2.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_csi2.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_csi2_bridge.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_dfs_tables.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_fops.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_fops.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_gmin_platform.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_ioctl.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_ioctl.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_subdev.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_subdev.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_tables.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_trace_event.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_v4l2.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/atomisp_v4l2.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/bits.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/cell_params.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/css_receiver_2400_common_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/css_receiver_2400_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/css_trace.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/dma_v2_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/gdc_v2_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/gp_timer_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/gpio_block_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/hive_isp_css_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/hive_isp_css_streaming_to_mipi_types_hrt.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/hive_types.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_3a.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_acc_types.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_buffer.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_control.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_device_access.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_device_access.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_dvs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_env.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_err.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_event_public.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_firmware.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_frac.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_frame_format.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_frame_public.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_host_data.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_input_port.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_irq.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_isp_configs.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_isp_configs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_isp_params.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_isp_params.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_isp_states.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_isp_states.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_metadata.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_mipi.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_mmu.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_mmu_private.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_morph.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_pipe.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_pipe_public.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_prbs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_properties.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_shading.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_stream.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_stream_format.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_stream_public.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_timer.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_types.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_version.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/ia_css_version_data.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/if_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_formatter_subsystem_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_selector_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_switch_2400_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_system_ctrl_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_system_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_system_global.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_system_local.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_system_private.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/input_system_public.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/irq_controller_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/irq_types_hrt.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2400_input_system_global.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2400_input_system_local.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2400_input_system_private.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2400_input_system_public.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2400_support.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2401_input_system_global.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2401_input_system_local.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp2401_input_system_private.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp_acquisition_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/isp_capture_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/mamoiada_params.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/mmu_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/scalar_processor_2400_params.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_firmware.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_firmware.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_frac.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_host_data.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_hrt.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_hrt.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_legacy.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_metrics.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_metrics.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_mipi.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_mipi.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_mmu.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_param_dvs.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_param_dvs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_param_shading.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_param_shading.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_params.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_params.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_params_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_properties.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_sp.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_sp.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_stream_format.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_stream_format.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_struct.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_uds.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/sh_css_version.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/str2mem_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/streaming_to_mipi_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/system_global.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/system_local.c`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/system_local.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/timed_controller_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/staging/media/atomisp/pci/version.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

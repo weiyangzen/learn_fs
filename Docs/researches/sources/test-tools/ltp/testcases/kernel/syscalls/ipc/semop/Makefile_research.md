@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/semop/Makefile
+
+Purpose: builds the `semop` and `semtimedop` syscall tests. It includes LTP common testcase rules, sets `LTPLIBS = newipc`, links `semop01`, `semop02`, and `semop03` against `-lltpnewipc`, and adds `-lpthread` for `semop05`. There is no runtime logic here, but the Makefile defines integration boundaries: most tests depend on the new IPC helper library, while the legacy pthread SEM_UNDO test needs POSIX threads. Build state is limited to target-specific library flags. Risks are omitted target-specific libraries causing unresolved references. Test signal is successful compilation/linking of each semop test binary through `generic_leaf_target.mk`.

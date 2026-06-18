@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/netdev_features.h
+
+Purpose: defines the 64-bit network-device feature bit namespace, feature constants, iteration helpers, and masks used by netdev, ethtool, virtual devices, VLAN/tunnel stacks, checksum/GSO/GRO, and hardware offload negotiation.
+
+Important APIs and types: `netdev_features_t` is `u64`. The feature enum assigns bit positions for scatter-gather, IPv4/IPv6/all checksum offload, high DMA, fraglists, VLAN CTAG/STAG TX/RX/filter, GSO/GRO/LRO, all GSO subtypes from TSO through AccECN, FCoE/SCTP CRC, ntuple, RX hash/checksum/FCS/all, loopback, L2 forwarding offload, TC, ESP/TLS/MACsec/HSR hardware offloads, UDP tunnel ports, GRO fraglist/UDP forwarding, and `NETDEV_FEATURE_COUNT`. `__NETIF_F_BIT()` and `__NETIF_F()` build masks, with one macro per feature. `find_next_netdev_feature()` and `for_each_netdev_feature()` iterate set bits from high to low. Masks include `NETIF_F_NEVER_CHANGE`, `NETIF_F_ETHTOOL_BITS`, `NETIF_F_GSO_MASK`, `NETIF_F_CSUM_MASK`, `NETIF_F_ALL_TSO`, `NETIF_F_GSO_SOFTWARE`, `NETIF_F_ONE_FOR_ALL`, `NETIF_F_ALL_FOR_ALL`, `NETIF_F_UPPER_DISABLES`, `NETIF_F_SOFT_FEATURES`, VLAN/GSO-encap and master-upper feature masks. `netdev_base_features()` normalizes aggregate feature sets.
+
+Control flow: drivers declare supported, wanted, VLAN, hardware encapsulation, and active feature masks using these bits. Core netdev and ethtool code validate user changes, combine lower-device features into upper devices, disable incompatible features, and iterate masks to display or reconcile capabilities. GSO bit ordering is intentionally aligned with `SKB_GSO_*` bits.
+
+State and persistence: feature masks are in-memory per-netdev capability/configuration state. Some bits cause hardware programming, but this header only defines bit positions and policy masks.
+
+Dependencies and integration points: depends on generic bit operations, fixed-width types, and byteorder. It integrates with ethtool strings, `Documentation/networking/netdev-features.rst`, SKB GSO types, VLAN/tunnel/master devices, hardware offload drivers, and userspace feature toggles.
+
+Risks and test signals: risks include exceeding 64 feature bits, changing enum order and breaking SKB GSO alignment or userspace expectations, not updating ethtool string tables/docs, contradictory checksum bits (`HW_CSUM` with IP/IPV6), incorrect upper/lower feature propagation, and offloads enabled without hardware support. Test ethtool feature toggles, feature iteration boundaries, GSO/GRO/checksum/VLAN/tunnel aggregation, virtual upper-device feature inheritance, all offload masks, and compile-time review when adding new bits.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/StorageErrors.c -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/StorageErrors.c
+
+**Purpose:** Maps BeeGFS operation error enum values to human strings and negative Linux errno values. **APIs/functions:** global `__FHGFSOPS_ERRLIST`, `FhgfsOpsErr_toErrString`, and `FhgfsOpsErr_toSysErr`. **Control flow:** lookups cast the enum to `size_t`, return indexed string/negative errno when in range, optionally log/dump stack in debug builds when unknown, and fall back to `"Unknown error code"` or `-EPERM`. **State/persistence:** static table is protocol-adjacent and must match enum order. **Dependencies/integration:** used by VFS and messaging paths to translate server results into kernel errors. **Risks/tests:** enum/table order mismatch silently returns wrong errno; tests should assert every enum value maps to intended errno, especially newer values such as metadata-version mismatch, inode-locked, access-denied, and remote I/O.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/StorageErrors.c -->

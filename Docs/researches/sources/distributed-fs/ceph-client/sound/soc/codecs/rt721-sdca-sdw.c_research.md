@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/rt721-sdca-sdw.c
+
+Purpose: SoundWire bus driver for the RT721 SDCA codec. It supplies normal and MBQ regmap configurations, SoundWire slave properties, SDCA interrupt handling, attach-driven component initialization, device ID binding, and PM behavior for the ASoC component in `rt721-sdca.c`.
+
+Important APIs and functions: `rt721_sdca_sdw_probe()` creates a 16-bit MBQ regmap with `devm_regmap_init_sdw_mbq()` and an 8-bit SDCA regmap with `devm_regmap_init_sdw()`, then calls `rt721_sdca_init()`. Readable/volatile filters are split between `rt721_sdca_readable_register()`/`volatile_register()` for normal SDCA/HID registers and `rt721_sdca_mbq_readable_register()`/`mbq_volatile_register()` for 16-bit vendor/volume controls. `rt721_sdca_read_prop()` advertises source ports 2 and 6, sink ports 1 and 3, full data-port behavior, paging, wake capability, lane control, parity/bus-clash masks, and a long clock-stop timeout.
+
+Control flow: `rt721_sdca_update_status()` clears `hw_init` on unattach, restores SDCA interrupt masks on attach when a jack is registered, and calls `rt721_sdca_io_init()` only for first attach after reset. `rt721_sdca_interrupt_callback()` cancels pending jack detection work, captures SDCA interrupt status registers, clears cascade/status bits with up to three retries, preserves pending status if work was canceled, and schedules `jack_detect_work` unless system suspend has set `disable_irq`. It uses `disable_irq_lock` to coordinate with suspend.
+
+PM and state persistence: runtime suspend cancels jack work and marks both regmaps cache-only. System suspend first disables SDCA interrupt masks under lock and sets `disable_irq`, then uses the runtime suspend path. Resume waits up to 5 seconds for SoundWire initialization if the slave detached, re-enables interrupt masks when appropriate, clears `unattach_request`, disables cache-only mode, and syncs both regmaps. Remove cancels work, disables runtime PM after first init, and destroys mutexes.
+
+Dependencies and integration points: integrates with SoundWire `sdw_slave_ops`, SDCA interrupt registers, regmap cache, runtime PM, and shared helpers from `rt-sdw-common.h` through the component source. Device ID is Realtek `0x025d`, part `0x721`, SDW v3 class tuple `(0x3,0x1,0)`.
+
+Risks: interrupt clearing depends on SoundWire SDCA cascade semantics and races with delayed work and system suspend. Readable/volatile allowlists must include every register touched by the component; missing entries can break regcache or debug access. Resume sync of both regmaps can replay stale values if initialization presets and cache dirtiness are not coordinated.
+
+Test signals: build and probe RT721 SDCA, inspect advertised DP1/DP2/DP3/DP6 ports, trigger headset insertion and button interrupts, run runtime and system suspend/resume during jack work, validate interrupt mask restoration after detach/re-attach, and confirm cached volume/mute/routing controls survive resume.

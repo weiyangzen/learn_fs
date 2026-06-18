@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/suite_test.go
+
+Purpose: Ginkgo suite setup for internal log package tests. It registers `TestLog`, creates a CRI-O `TestFramework`, and provides `beforeEach` to reset the standard logrus logger level/output to a fresh buffer. State is package globals `t`, `sut`, and `buf`, with `sut` referencing the standard logger. Dependencies include bytes, testing, Ginkgo/Gomega, logrus, and the CRI-O test framework. Risks include shared global logger side effects between specs and packages. Test signal is foundational for all log tests, ensuring consistent in-memory capture for assertions.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/security/UserGroupInformation.java
+
+Purpose: Hadoop's central user identity and credential wrapper around JAAS `Subject`. It initializes authentication mode, logs in local/Kerberos users, manages proxy users, groups, delegation tokens, credentials, and Kerberos ticket/keytab relogin.
+
+Important APIs/types/functions: static initialization/configuration (`setConfiguration`, `reset`, `isSecurityEnabled`), user lookup (`getCurrentUser`, `getLoginUser`, `getBestUGI`, `getUGIFromTicketCache`, `getUGIFromSubject`), login (`loginUserFromSubject`, `loginUserFromKeytab`, `loginUserFromKeytabAndReturnUGI`), relogin/logout (`checkTGTAndReloginFromKeytab`, `reloginFromKeytab`, `forceReloginFromKeytab`, `reloginFromTicketCache`, `logoutUserFromKeytab`), identity factories (`createRemoteUser`, `createProxyUser`, testing variants), group access, token/credential mutation, and `doAs`.
+
+Control flow: `ensureInitialized` lazily configures authentication, Kerberos name rules, group service, metrics, and relogin intervals. `getLoginUser` atomically creates one login user, optionally wrapping it with `HADOOP_PROXY_USER`, then loads tokens from configured files and base64 values. JAAS login is built by `HadoopConfiguration`, combining OS login, Kerberos login, and `HadoopLoginModule`. Relogin synchronizes on subject private credentials, logs out, creates a new `HadoopLoginContext`, logs in, fixes TGT ordering, and updates the attached login context.
+
+State/persistence: static `conf`, auth method, `Groups`, metrics, login user `AtomicReference`, and optional renewal executor. Each UGI holds a `Subject` and cached `User`. Tokens and secret credentials are in the subject private/public credentials; token files are read at login but not written here. Renewal threads update Kerberos credentials in memory.
+
+Dependencies/integration: JAAS, Kerberos tickets/principals, Hadoop `Groups`, `Credentials`, `Token`, `SecurityUtil`, `Shell`, metrics2, retry policies, `SubjectUtil`, and environment/system properties (`HADOOP_USER_NAME`, `HADOOP_PROXY_USER`, `KRB5*`, token variables).
+
+Risks: global mutable static config affects all security behavior; background renewal executor is static and single-user oriented; subject credential locking is security-critical; environment-driven proxy user and token loading can surprise services; private credential iteration can expose mutable state under incorrect locks. Test signals include simple vs Kerberos login, external subject validation, keytab/ticket relogin throttle and forced paths, TGT ordering fix, token loading, proxy real-user semantics, group fallback, `doAs` exception translation, metrics, and reset behavior.

@@ -1,0 +1,15 @@
+# sources/control-plane/longhorn/chart/templates/clusterrolebinding.yaml
+
+Purpose: Binds chart service accounts to the cluster-scoped roles required by Longhorn. It connects `longhorn-service-account` to `longhorn-role`, grants the support bundle service account `cluster-admin`, and optionally binds Longhorn service accounts to OpenShift SCC permissions.
+
+Important APIs/types/functions: Kubernetes type is `rbac.authorization.k8s.io/v1` `ClusterRoleBinding`. Helm helpers are `include "longhorn.labels"` for labels and `include "release_namespace" .` for subject namespaces, so `namespaceOverride` is respected. Bindings are `longhorn-bind` to `ClusterRole/longhorn-role`, `longhorn-support-bundle` to `ClusterRole/cluster-admin`, and conditional `longhorn-ocp-privileged-bind` to `ClusterRole/longhorn-ocp-privileged-role`.
+
+Control flow: Helm emits the manager binding and support-bundle binding unconditionally. The manager binding supplies the permissions defined in `clusterrole.yaml` to the service account used by `daemonset-sa.yaml`. The support-bundle binding authorizes support bundle collection with `cluster-admin`. If `.Values.openshift.enabled` is true, Helm also binds `longhorn-service-account`, `longhorn-ui-service-account`, and the namespace `default` service account to the OpenShift privileged SCC role, with an inline note that the support bundle agent uses the default service account.
+
+State and persistence behavior: These are persistent cluster-level authorization relationships. They store no Longhorn data, but they define the effective permissions of Longhorn manager, UI, and support bundle workloads for the lifetime of the Helm release. Namespace changes through `namespaceOverride` change the subject identities, not the cluster-scoped binding names.
+
+Dependencies and integration points: Depends on service accounts rendered by `serviceaccount.yaml` and consumed by `daemonset-sa.yaml`, `deployment` templates, UI templates, and support bundle resources. Depends on `clusterrole.yaml` for `longhorn-role` and the conditional OpenShift role. The `cluster-admin` role is a Kubernetes built-in assumption and not rendered by this chart.
+
+Risks: The support bundle service account receives `cluster-admin`, which is a deliberate but high-privilege grant. The OpenShift branch grants SCC use to the namespace default service account, broadening privileges beyond named Longhorn accounts because the support-bundle agent uses it. ClusterRoleBinding names are static, so multiple releases in one cluster can collide unless the chart is constrained to a single release. If `namespaceOverride` diverges from the actual namespace where service accounts are created, subjects can point at the wrong identities.
+
+Test signals: Render tests should cover default and OpenShift modes and confirm subject namespaces match `release_namespace`. Runtime checks should verify `longhorn-service-account` can perform manager operations and support bundle creation works without auth failures. Security review should flag `cluster-admin` and default-service-account SCC binding as expected exceptions rather than accidental privilege grants.

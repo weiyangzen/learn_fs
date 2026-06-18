@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/sh/maple/maple.c
+
+Purpose: Sega Dreamcast Maple bus core. It registers a Linux bus, discovers Maple devices and subdevices, queues Maple packets, drives Maple DMA on VBLANK, and exposes driver registration helpers for Maple client drivers.
+
+Important APIs and functions: exported `maple_driver_register/unregister`, `maple_getcond_callback`, and `maple_add_packet` are the client-facing APIs. `maple_bus_init` registers the bus/root/unsupported driver, allocates DMA buffers and queue cache, requests Maple DMA and VBLANK IRQs, allocates base port devices, and starts initial DEVINFO scans. `maple_send` builds DMA command blocks from `maple_waitq`. `maple_vblank_handler` schedules periodic get-condition and plug-and-play scans. `maple_dma_handler` parses responses, invokes callbacks, registers/detaches devices, and continues scans.
+
+Control flow: IRQ handlers only schedule work. VBLANK work queues commands and triggers DMA; DMA-complete work consumes sent packets, interprets response codes, updates busy flags, attaches/detaches devices, wakes waiters, and starts the next DMA. Device matching checks Maple function bits against driver function masks.
+
+State and dependencies: global wait/sent queues, mutex, DMA buffer pointers, scanning flags, per-port checked/empty/subdevice maps, base unit devices, cache, and root bus. Dependencies include Dreamcast Maple registers, SH DMA/cache primitives, sysasic IRQs, Linux device model, and Maple protocol constants. Risks include global shared state, cache coherency, workqueue/IRQ ordering, PnP false negatives, `free_irq` dev_id mismatch in cleanup paths, and packet buffer ownership. Test signals are bus registration log, initial port scan, device attach/detach, periodic condition callbacks, DMA completion responses, and clean failure-path resource release.

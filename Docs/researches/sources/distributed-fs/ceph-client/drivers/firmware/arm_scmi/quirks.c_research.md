@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/firmware/arm_scmi/quirks.c
+
+Purpose: This file implements the SCMI quirk framework. It defines named firmware/workaround static keys, parses activation constraints, stores quirk descriptors in a runtime hash table, and enables matching quirks after the SCMI server advertises vendor, sub-vendor, implementation version, and optional compatible strings.
+
+Important APIs/types/functions: `struct scmi_quirk` stores the quirk name, vendor/sub-vendor match strings, implementation version range, parsed start/end values, static key pointer, hash node/key, enabled flag, and optional compatible list. `DEFINE_SCMI_QUIRK()` and `DEFINE_SCMI_QUIRK_EXPORTED()` create static-key-backed descriptors. Current global quirks are `clock_rates_triplet_out_of_spec` and exported `perf_level_get_fc_force` style support via declarations in the header. `scmi_quirk_signature()` builds a case-insensitive hash from vendor/sub-vendor. `scmi_quirk_range_parse()` accepts `NULL`, `X`, `X-`, `-X`, and `X-Y`. `scmi_quirks_initialize()` parses and hashes the static table. `scmi_quirks_enable()` walks fallback match signatures and calls `static_branch_enable()`.
+
+Control flow: Initialization iterates `scmi_quirks_table`, validates version ranges, computes a hash key for each descriptor, and inserts it into `scmi_quirks_ht`. At platform probe time, `scmi_quirks_enable()` tries increasingly generic match keys from full vendor/sub-vendor to wildcard signatures, filters by range, compatible list, prior enablement, and exact hash key, then enables the quirk static branch.
+
+State and persistence: Quirk state is in static descriptors and a read-mostly hash table. `enabled` prevents repeated static key enables. Parsed ranges and hash keys persist for the life of the module/kernel. No data is persisted outside memory.
+
+Dependencies and integration points: It depends on static keys, device tree compatibility matching, kernel string hashing, `kstrtouint()`, and `quirks.h`. Local SCMI code associates workaround snippets with a quirk using `SCMI_QUIRK(name, block)`, so the framework integrates by making those snippets nearly free when disabled.
+
+Risks and edge cases: Hash collisions are explicitly handled by rechecking `hkey`, but quirk match semantics can still be surprising because generic fallback signatures can match descriptors with `NULL` vendor/sub-vendor. Bad range strings skip registration. `dev_dbg()` in enablement references `quirk->compats[0]`, `vendor`, and `sub_vendor_id`; nullable values are acceptable with `%s` only if kernel formatting handles NULL. Compatible-list matching makes quirk activation dependent on global machine compatibles, not just the SCMI node.
+
+Test signals: Boot logs should show registered quirks under dynamic debug and "Enabling SCMI Quirk" only for intended firmware. Unit-style tests can cover all range string forms and inverted ranges. Platform tests should verify enabled static branches change behavior in clock/perf code and remain disabled on nonmatching vendor/version/compatible combinations.

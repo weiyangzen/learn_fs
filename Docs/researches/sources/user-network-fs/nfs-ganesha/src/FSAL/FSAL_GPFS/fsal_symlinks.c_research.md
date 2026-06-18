@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_GPFS/fsal_symlinks.c
+
+- **Purpose:** Implements symlink read and symlink creation for GPFS object handles.
+- **Important APIs/types/functions:** `GPFSFSAL_readlink`, `GPFSFSAL_symlink`, `fsal_readlink_by_handle`, `fsal_internal_handle2fd`, `fsal_internal_get_handle_at`, `GPFSFSAL_getattrs`, and POSIX `symlinkat`.
+- **Control flow:** `GPFSFSAL_readlink` unwraps the private GPFS handle and delegates to `fsal_readlink_by_handle`. `GPFSFSAL_symlink` checks export symlink support, opens the parent directory by handle, switches to caller credentials, creates the link using `symlinkat`, restores credentials, fetches the new GPFS handle, fetches attributes, verifies the resulting object is actually a symlink, closes the directory fd, and returns status.
+- **State and persistence behavior:** Creation persists a new symlink in GPFS via the opened parent directory fd. The function fills caller-provided handle and attribute outputs. It stores no module-level state.
+- **Dependencies and integration points:** Used by `handle.c` `makesymlink` and `readsymlink`. Depends on export capability checks, credentials, POSIX directory-fd symlink creation, GPFS handle lookup, and attribute conversion.
+- **Risks:** There is a race between `symlinkat` and handle lookup by name; comments acknowledge a similar lower-level race. If creation succeeds but lookup or attrs fail, the symlink may remain. Mode bits are effectively ignored for symlinks. Type verification maps a non-symlink result to `ERR_FSAL_EXIST`.
+- **Test signals:** Cover readlink buffer termination, symlink support disabled, successful create/read, permission and existing-name failures, race-like replacement between create and lookup, non-symlink type verification failure, and fd close on every error path.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_assert07.py
+
+Purpose: regression coverage for resolved-update assertions when reserved updates appear at different positions in an update chain. It runs string-row and column key formats and uses prepared timestamped transactions.
+
+Important APIs are cursor `reserve`, repeated cursor assignments to the same key, transaction prepare/commit/durable timestamps, and scenario generation. Control flow creates one file, writes an initial value, then exercises reserved updates at the start, end, between updates, and multiple times in the same transaction, always committing with increasing timestamps. State behavior is entirely in the update chain for a single key; persistence is less important than avoiding assertion failure during update resolution. Dependencies include `suite_subprocess` for failure isolation and `wttest`. Risks include lack of explicit final-value assertions, meaning the signal is mostly “no assertion/no crash.” Test signal is successful completion across reserve/update ordering permutations.

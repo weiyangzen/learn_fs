@@ -1,0 +1,15 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestQuotaAllowOwner.java
+
+Purpose: validates the `dfs.permissions.allow.owner.set.quota` permission feature for `DFSAdmin` quota commands. The test proves that a non-superuser who owns a parent directory may set and clear namespace and space quotas on subdirectories when the feature is enabled, while unrelated users and same-group non-owners cannot, and that the same owner path is denied when the feature is disabled.
+
+Important APIs and types: `MiniDFSCluster`, `HdfsConfiguration`, `DistributedFileSystem`, `DFSAdmin`, `ContentSummary`, `UserGroupInformation.doAs`, `DFSConfigKeys.DFS_PERMISSIONS_ALLOW_OWNER_SET_QUOTA_KEY`, `DFSConfigKeys.DFS_BLOCK_SIZE_KEY`, and the shared `TestQuota.runCommand` helper. The class uses JUnit 5 `@BeforeAll`, `@AfterAll`, and per-test `@Test` methods around static cluster state.
+
+Control flow: `setUpClass` enables owner quota delegation and starts a three-DN cluster via `restartCluster`. `createDirssAndSetOwner` creates a parent directory, assigns owner/group, and creates a child. Positive tests run `DFSAdmin -setQuota`, `-setSpaceQuota`, `-clrQuota`, and `-clrSpaceQuota` as the owner inside a `UserGroupInformation` context and check `ContentSummary`. Negative tests run the same commands as unrelated users and expect `TestQuota.runCommand(..., true)` failure. `testOwnerCanNotSetIfNotEanbled` flips the config, restarts the cluster, verifies denial, then restores the feature in `finally`.
+
+State and persistence behavior: the test mutates filesystem namespace ownership and quota metadata in the NameNode and exercises restart-sensitive configuration by tearing down and rebuilding the `MiniDFSCluster` when the feature flag changes. It does not persist state across JVM runs, but it does verify that the permission decision is bound to live NameNode configuration and current user identity rather than to group membership alone.
+
+Dependencies and integration points: integrates the HDFS permission checker, quota RPCs behind `DFSAdmin`, UGI impersonation, NameNode quota metadata, and the existing `TestQuota` command harness. It depends on `dfs` static state being refreshed after each cluster restart.
+
+Risks and edge cases: the test is sensitive to cluster restart cleanup because static `conf`, `cluster`, and `dfs` are shared. It checks owner and non-owner cases but not nested ownership changes beyond one parent-child level. The method name `createDirssAndSetOwner` and test name `testOwnerCanNotSetIfNotEanbled` contain typos only. A failure here would signal privilege escalation risk for quota management or an accidental regression disabling legitimate owner delegation.
+
+Test signals: command return status from `TestQuota.runCommand`, `UserGroupInformation.getCurrentUser()`, `ContentSummary.getQuota()`, `ContentSummary.getSpaceQuota()`, and explicit success/failure expectations for superuser, owner, unrelated user, same-group user, and disabled-feature cases.

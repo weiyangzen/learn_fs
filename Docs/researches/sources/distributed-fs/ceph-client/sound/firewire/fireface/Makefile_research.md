@@ -1,0 +1,5 @@
+## sources/distributed-fs/ceph-client/sound/firewire/fireface/Makefile
+
+Purpose: Kbuild fragment for the RME Fireface ALSA FireWire module. It composes `snd-fireface.o` from common driver, transaction, MIDI, proc, AMDTP packet, stream, PCM, hwdep, and both former/latter protocol implementation objects, then includes it when `CONFIG_SND_FIREFACE` is enabled.
+
+There is no runtime control flow or persistence, but the object ordering documents the integration surface: `ff.o` supplies driver registration, `ff.h` defines shared state, `ff-protocol-former.o` and `ff-protocol-latter.o` provide the protocol vtable instances used by the core. Dependencies are Kbuild and the kernel config symbol. Risks include missing a newly added implementation object, stale object names after file rename, or building protocol code without the shared declarations it needs. Test signals are kernel build coverage with `CONFIG_SND_FIREFACE=m/y`, modpost symbol checks, and ensuring all protocol symbols referenced by `ff.c` resolve.

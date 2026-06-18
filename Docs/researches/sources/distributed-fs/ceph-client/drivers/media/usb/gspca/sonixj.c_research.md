@@ -1,0 +1,30 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/gspca/sonixj.c
+
+## Purpose
+`sonixj.c` is the GSPCA subdriver for Sonix SN9C102P/SN9C105/SN9C110/SN9C120 JPEG USB cameras. It binds many USB IDs to a bridge/sensor tuple, initializes the Sonix bridge plus one of many sensors, produces V4L2 JPEG modes, assembles JPEG frames from isochronous packets, and exposes image controls for brightness, contrast, saturation, white balance, gamma, sharpness, illuminators, flip, gain, exposure, power-line frequency, and autogain where supported.
+
+## Important APIs, types, and functions
+The central private type is `struct sd`, with `struct gspca_dev` first for GSPCA casting. It persists sensor/bridge selection, I2C address, cached Sonix bridge registers `reg01/reg17/reg18`, JPEG quality and header data, packet accounting (`pktsz`, `npkt`, `nchg`, `short_mark`), autogain state (`avg_lum`, `ag_cnt`, `exposure`), V4L2 control pointers, and a work item used to update JPEG quality outside interrupt context.
+
+The register APIs are `reg_r`, `reg_w1`, and `reg_w`, all issuing vendor USB control messages through endpoint zero and using `gspca_dev->usb_buf` plus `usb_err` for error propagation. Sensor access is layered through `i2c_w1`, `i2c_w8`, `i2c_r`, and `i2c_w_seq`; these build Sonix I2C transactions in 8 byte commands and choose 100 kHz or 400 kHz encodings based on the sensor family. Probe helpers such as `mi0360_probe`, `ov7630_probe`, `ov7648_probe`, and `po2030n_probe` can refine the sensor from the USB-ID default after reading sensor IDs.
+
+The GSPCA entry points are wired through `sd_desc`: `sd_config`, `sd_init`, `sd_init_controls`, `sd_start`, `sd_stopN`, `sd_stop0`, `sd_pkt_scan`, `dq_callback = do_autogain`, and optionally `sd_int_pkt_scan` for `KEY_CAMERA` button events. Module integration is through `device_table`, `sd_probe`, `usb_driver`, and `module_usb_driver`.
+
+## Control flow
+Probe stores `bridge`, `sensor`, and flags from `id->driver_info`, selects CIF mode for ADCM1700 or VGA JPEG modes otherwise, sets 24 isochronous packets per URB, initializes quality to 70, and prepares `qual_upd`. Resume/probe initialization reads the Sonix chip ID through register `0xf1/0x00`, verifies it matches the expected bridge generation, optionally probes ambiguous sensors, configures GPIO/audio, leaves the sensor clock available for camera-button support, and records the sensor I2C address from `sn_tb`.
+
+Stream start builds a JPEG 4:2:2 header with `jpeg_define`, writes the bridge register template for the selected sensor, sequences bridge clock/power/GPIO operations, performs sensor-specific wakeups, writes the selected sensor init table, configures auto-exposure and auto-white-balance windows, gamma/color matrix/sharpness, writes any mode-specific sensor parameter table, configures compression/window registers, derives `reg18` from the selected mode, uploads JPEG quantization tables with `setjpegqual`, enables video transfer, and resets packet counters. Stream stop clears video transfer, may send sensor-specific stop I2C sequences, powers down the sensor path, disables the sensor clock bit but deliberately does not disable the hardware path that would break the camera button. `sd_stop0` drops the USB mutex, flushes the JPEG-quality work item, and re-takes the mutex.
+
+Controls are installed conditionally by sensor capability. Control writes are ignored while not streaming; when streaming, `sd_s_ctrl` maps each V4L2 ID to a sensor or bridge register writer. Some controls are clustered, including red/blue balance, PO2030N flip, and PO2030N autogain/exposure/gain.
+
+## State and persistence
+The persistent runtime state is entirely per-device in `struct sd` plus the GSPCA core state. No data is written outside the device. `usb_err` short-circuits later register operations once a control transfer fails. JPEG quality is adaptive: `sd_pkt_scan` updates `quality` based on malformed frames and isochronous fill rate, then schedules `qual_upd`, which locks `usb_lock`, resets `usb_err`, uploads quantization tables, and toggles `reg18`. Autogain uses `avg_lum` from packet markers and `ag_cnt` as a decimator so exposure changes are not attempted every frame.
+
+## Dependencies and integration points
+This driver depends on the Linux USB core, GSPCA core, V4L2 control framework, optional input subsystem, and local `jpeg.h` helpers. It integrates with GSPCA through `gspca_dev_probe`, frame assembly via `gspca_frame_add`, dequeue callback autogain, and USB power-management callbacks. Sensor knowledge is encoded as static register tables and I2C sequences for ADCM1700, GC0307, HV7131R, MI0360/MI0360B, MO4000, MT9V111, OM6802, OV7630/OV7648/OV7660, PO1030/PO2030N, SOI768, and SP80708.
+
+## Risks
+Most risk is hardware-protocol risk. Many tables are trace-derived and comments mark assumptions or fixmes. Ambiguous USB IDs can represent multiple sensors, so bad probing can select an incorrect table. `sd_pkt_scan` assumes at most one marker per packet and has special handling for split markers, making frame-boundary bugs plausible. Adaptive quality depends on URB packet length and marker status bits; incorrect marker parsing can discard frames or oscillate quality. Register helpers guard buffer length, but `i2c_r` always reads 5 bytes after accepting a requested length, so callers depend on the fixed Sonix response layout. Some control transfers in `setjpegqual` do not update `usb_err` from return values. The input interrupt path is enabled only with `CONFIG_INPUT`.
+
+## Test signals
+Useful tests are hardware or emulation focused: successful bind for every USB ID tuple, `sd_init` accepting only matching Sonix chip IDs, stream start/stop cycles for each sensor family, V4L2 control writes while streaming and idle, JPEG header validity and frame completion from packet traces including split markers and USB-full markers, adaptive quality changes under high/low packet fill, autogain convergence from controlled luminance markers, no workqueue use-after-free after stop/disconnect, and input button events for interrupt packets containing one byte equal to `1`.

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/filter.h
+
+Header declaring qualification/filter state used by command-line `-e` options and trace decisions. It exposes global number sets for traced syscalls, fd filters, signal/status/quiet/decode controls, and functions such as `qualify` and `qual_flags`. Runtime state lives in the corresponding globals allocated by `filter_qualify.c`. Dependencies include `number_set` and syscall-personality metadata. Risks are global mutable state ordering, null-set semantics, and external users assuming a set is allocated. Test signals are option-parsing tests for every qualifier plus syscall dispatch observing expected `QUAL_*` bits.

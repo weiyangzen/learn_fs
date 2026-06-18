@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/boot/dts/Makefile
+
+Purpose: builds ARC device tree blobs for builtin DTB support and all-DTB testing. Important APIs/types/functions: sets `dtb-y` from `CONFIG_BUILTIN_DTB_NAME`, `dtb-` from all local `.dts` files, and `DTC_FLAGS_hsdk += --pad 20`. Control flow: kbuild DTB list generation only. State and persistence: generated `.dtb` files. Dependencies/integration: consumed by generic DTB build logic and ARC builtin DTB selection. Risks: wrong DTB name or missing padding can break platform boot. Test signals: `make dtbs`, `CONFIG_OF_ALL_DTBS`, and HSDK boot with padded DTB.

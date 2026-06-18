@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/usb/host/xhci-debugfs.c
+
+Purpose: builds the xHCI debugfs hierarchy for controller registers, extended capabilities, command/event/endpoint rings, device contexts, port status/link information, stream selection, stream context arrays, and roothub bandwidth queries.
+
+Important APIs and functions: `xhci_debugfs_create_root()`/`xhci_debugfs_remove_root()` manage the top-level `usb_debug_root/xhci` directory. Per-controller lifecycle is `xhci_debugfs_init()` and `xhci_debugfs_exit()`. Per-device and endpoint hooks are `xhci_debugfs_create_slot()`, `xhci_debugfs_remove_slot()`, `xhci_debugfs_create_endpoint()`, `xhci_debugfs_remove_endpoint()`, and `xhci_debugfs_create_stream_files()`. Internal helpers create regsets, ring files, context files, ports, and bandwidth views.
+
+Control flow: controller init creates a directory named after the controller device, attaches regset32 files for capability/operational/runtime and selected extended capability registers, creates command and event ring directories, a devices directory, per-port `portsc`/`portli` files, and bandwidth files. Device allocation creates a slot directory with EP0 ring and context files; endpoint configuration adds per-endpoint ring directories; stream setup adds stream selector and stream context dump files. Exit removes debugfs recursively, then frees the regset metadata list.
+
+State and persistence: debugfs state is volatile. `xhci->debugfs_root`, `xhci->debugfs_slots`, per-device `debugfs_private`, per-endpoint `xhci_ep_priv`, and the `regset_list` hold metadata and live pointers into xHCI rings/contexts. No persistent configuration exists, except debugfs writes can trigger actions: `portsc` accepts `compliance`, and `stream_id` selects which stream ring a debugfs endpoint directory shows.
+
+Dependencies and integration points: depends on Linux debugfs, seq_file, uaccess, xHCI decode helpers, xHCI port helpers, runtime PM for bandwidth query, and endpoint/device lifecycle calls from `xhci.c` and `xhci-mem.c`. Extended capability scanning uses `xhci_find_next_ext_cap()`.
+
+Risks: most files dereference live xHCI pointers with minimal locking; correctness relies on debugfs teardown ordering and device/endpoint removal hooks. `bw_context_open()` assumes file names match one of the static maps. The `portsc` write path can put a port into compliance mode and must obey link-state and CTC constraints. `stream_id` changes `show_ring` based on user input and must reject stream 0/out-of-range IDs. Bandwidth files resume the controller with runtime PM, so PM error handling matters.
+
+Test signals: debugfs tree presence after controller init; register dumps for legacy/protocol/DbC capabilities; ring TRB dumps before and after endpoint creation; endpoint removal while files are open; writing `compliance` only from RxDetect; stream ring switching; bandwidth query behavior across SS/HS/FS and runtime PM suspended controllers; debugfs-disabled build stubs from the header.

@@ -1,0 +1,13 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/orangefs/src/common/mgmt/pint-mgmt.c -->
+# sources/distributed-fs/orangefs/src/common/mgmt/pint-mgmt.c
+
+Purpose: central orchestration layer for posting service operations to workers, mapping queues to workers, testing or waiting for completions, cancellation, and operation lifecycle events.
+
+Important state: `struct PINT_manager_s` owns a default context, mutex, mapping callback list, worker list, `queue_to_worker` quickhash, `ops` quickhash of live `PINT_op_entry` objects, operation count, blocking-worker id, and event handlers. Each `struct PINT_worker_s` contains a type, `PINT_worker_impl` vtable, implementation instance union, generated id, and list link. Global ids define implicit worker selection (`0`) and a special blocking-worker sentinel (`0xffffffffffffffff`).
+
+Control flow: `PINT_manager_init()` allocates a manager, references the default context, initializes tables, and always adds a blocking worker. `PINT_manager_worker_add()` selects an implementation by type and initializes it; `PINT_manager_queue_add()` delegates queue attachment and records queue-to-worker mapping. Posting via `PINT_manager_ctx_post()` resolves a worker/queue through explicit ids or mapping callbacks, special-cases blocking workers to run synchronously, otherwise creates and registers a `PINT_op_entry`, then calls the worker `post()` callback. Worker implementations call `PINT_manager_service_op()` to invoke the user callout with event notifications and timing, and `PINT_manager_complete_op()` to send results to the completion context and remove the op from the manager table.
+
+Test/wait paths drive non-threaded workers through `do_work()` before polling contexts. Queue contexts use `PINT_manager_test*`; callback contexts use `PINT_manager_wait*`. Persistence is absent; all state is process memory. Dependencies are contexts, queues, workers, quickhash, generated ids, hints, locks, and gossip/debug.
+
+Risks: several cleanup paths leak or omit unregister operations; `PINT_manager_destroy()` does not free the manager itself in the visible code. `PINT_manager_complete_op()` completes to `manager->context` instead of `entry->ctx_id`, which is risky for explicit-context posts. `PINT_manager_test_op()` nulls `entry` then later dereferences it in the do-work path, suggesting a latent bug. Cancellation calls worker `cancel` with `context` where the vtable expects `queue_id`. Tests should exercise explicit contexts, implicit mapping, blocking/threaded/non-threaded workers, cancellation, destroy with live ops, and event callbacks.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/orangefs/src/common/mgmt/pint-mgmt.c -->

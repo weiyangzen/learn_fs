@@ -1,0 +1,13 @@
+# sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_VFS/export.c
+
+Purpose: this file implements FSAL_VFS export lifecycle, dynamic filesystem info, quotas, wire-handle validation, filesystem claiming, export creation, and export updates.
+
+Important functions: `release` tears down sub-FSAL state, unclaims filesystems, detaches the export, frees ops, and frees the export object. `get_dynamic_info` obtains a usable fd via `find_fd`, calls `fstatvfs`, and fills byte/file counts. `get_quota` and `set_quota` wrap `quotactl` under caller credentials and root filesystem device selection. `wire_to_host` validates incoming handles through `vfs_check_handle`. `get_fsal_obj_hdl` maps a global `fsal_fd` back to its containing object. `vfs_export_ops_init` populates export ops. `vfs_claim_filesystem` gets and stores a root fd in filesystem private data. `vfs_unclaim_filesystem` closes root fds. `vfs_create_export` loads config, initializes sub-FSAL ops, attaches the export, resolves/claims POSIX filesystems, initializes sub-FSAL export state, and installs `op_ctx->fsal_export`. `vfs_update_export` validates mutable config updates and forbids changes to `fsid_type` and `async_hsm_restore`.
+
+Control flow and state: exports own filesystem claims and root fds indirectly through `fsal_filesystem::private_data`; `unclaim_all_export_maps` releases them. Export creation is staged with cleanup labels for config, attach, filesystem resolution, and sub-FSAL initialization. Dynamic info and quotas temporarily switch credentials where kernel permission/quota behavior requires it.
+
+Dependencies and integration points: depends on Ganesha FSAL commonlib, config parsing, localfs filesystem registry, handle syscall helpers, export manager, sub-FSAL API, and OS quota/mount wrappers. It is called from the generated module entry point in `vfs/main-c.in.cmake`.
+
+Risks: root fd lifetime is central to `open_by_handle_at` on Linux; leaked or prematurely closed root fds break persistent handle reopening. Quota calls use `root_fs->device`, with comments noting cross-mount ambiguity. Update validation only checks selected options, so other config changes are delegated to default update logic. `root_fd(fs) > 0` skips closing fd 0, which is intentional in normal cases but worth watching if a root fd can be 0.
+
+Test signals: export create/release under valid/invalid paths, filesystem claim/unclaim, cross-device exports, config reload changing and not changing `fsid_type`/`async_hsm_restore`, dynamic info on regular files/directories, quota get/set with privilege failures, and stale/spoofed wire handles.

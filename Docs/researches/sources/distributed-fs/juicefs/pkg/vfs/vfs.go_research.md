@@ -1,0 +1,21 @@
+# sources/distributed-fs/juicefs/pkg/vfs/vfs.go
+
+## Purpose
+This file is the central JuiceFS VFS operation layer. It maps FUSE-style filesystem operations onto the metadata client, chunk reader/writer, internal pseudo-files, access logging, Prometheus metrics, ACL encoding, xattr handling, and directory-handle invalidation. It also defines the exported configuration structures used by mount setup: `FuseOptions`, `SecurityConfig`, `Config`, `AnonymousAccount`, and the `VFS` object itself.
+
+## Important APIs, Types, and Functions
+`FuseOptions.StripOptions` canonicalizes mount options for comparisons by dropping kernel-only or non-user options, removing `nonempty`, and sorting options. `Lookup`, `GetAttr`, `Mknod`, `Mkdir`, `Unlink`, `Rmdir`, `Symlink`, `Readlink`, `Rename`, and `Link` perform namespace operations with name-length checks and special internal-node protection. `Create`, `Open`, `Read`, `Write`, `Truncate`, `Fallocate`, `CopyFileRange`, `Flush`, `Fsync`, and `Release` drive file I/O through `DataReader` and `DataWriter`. `SetXattr`, `GetXattr`, `ListXattr`, and `RemoveXattr` handle normal xattrs plus POSIX ACL xattr translation through `encodeACL` and `decodeACL`. `NewVFS`, `FlushAll`, `InitMetrics`, and `InitMemoryBufferMetrics` initialize runtime state and metrics.
+
+## Control Flow and State
+Most methods validate special-node rules, bounds, and handle state, call `v.Meta`, then update read/write caches or directory handles. File creation and open allocate file handles with reader/writer subobjects. Writes lock the handle, write into the async data writer, invalidate reader ranges, and mark attributes modified. Reads flush pending writer data for read-after-write consistency, then read through the reader. `Truncate`, `Fallocate`, and `CopyFileRange` flush pending data before metadata mutations and update writer/reader length or invalidation state. Directory reads maintain a per-handle `dirHandler` and `readAt` timestamp; offset updates tell the handler how far the kernel consumed.
+
+Persistent state lives mainly outside this file in metadata and object storage. This file keeps volatile mount state: open handles, handle-to-inode maps, recently modified inode timestamps, internal file buffers, metrics registry, and cache filler. `NewVFS` can load prior open-handle state from `_FUSE_STATE_PATH` or `/tmp/state<ppid>.json`, renames that file to `.bak`, starts modified-state cleanup, and trims internal nodes for subdir mounts.
+
+## Dependencies and Integration Points
+The file depends heavily on `pkg/meta` for inode state, permissions, directory listings, xattrs, locks, and copy/truncate/fallocate operations; `pkg/chunk` for data storage; `pkg/acl` for ACL rule representation; `pkg/utils` for buffers, logging, and helpers; and Prometheus for metrics. Internal nodes such as `.control`, `.stats`, `.config`, and `.accesslog` integrate with control-message handlers, metrics collection, config JSON serialization with secrets removed, and access-log streams. Platform differences are delegated to `vfs_unix.go` and `vfs_windows.go`.
+
+## Risks and Edge Cases
+Correctness depends on flushing before reads and metadata-changing operations; missing a flush would expose stale data or commit metadata before data. Handle locking is central: cancellation paths can return `EINTR`, and release waits for active readers/writers before flushing and unlocking server-side locks. Special internal nodes bypass normal metadata and must remain protected from destructive operations. Size bounds use `maxFileSize`; off-by-one behavior rejects offsets or ranges where `off+size >= maxFileSize`. ACL decode rejects malformed or incomplete mask-bearing ACLs. `O_TMPFILE` support creates a temporary named file and unlinks it, with a warning that `O_EXCL` is unsupported.
+
+## Test Signals
+`vfs_test.go` exercises basic namespace operations, long-name failures, I/O, truncate, fallocate, copy-file-range errors, xattrs, internal files, control messages, hide-internal behavior, and directory cache behavior across metadata engines. Separate tests for access and locks cover helper behavior in platform files. Metrics registration is indirectly covered by `.stats` internal file reads.

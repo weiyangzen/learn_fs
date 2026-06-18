@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+
+Purpose: implements the brcmfmac USB bus backend for Broadcom/Cypress FullMAC WLAN devices. It binds USB IDs, discovers bulk endpoints, identifies whether firmware is already running, downloads TRX firmware when required, exposes brcmf bus operations, and moves data/control packets between BCDC/core code and USB URBs.
+
+Important APIs and types: `struct brcmf_usbdev_info` is the private bus state and must start with public `struct brcmf_usbdev`. It owns USB pipes, URB queues, control request state, firmware image metadata, flow-control watermarks, wait queue, and module settings. Bus entry points are `brcmf_usb_register()`, `brcmf_usb_exit()`, `brcmf_usb_probe()`, `brcmf_usb_disconnect()`, PM callbacks, and `brcmf_usb_bus_ops` (`preinit`, `stop`, `txdata`, `txctl`, `rxctl`, `get_blob`).
+
+Control flow: probe validates USB class/interface, finds one bulk IN and one bulk OUT endpoint, allocates `devinfo`, and calls `brcmf_usb_probe_cb()`. Probe callback attaches request queues, creates a `brcmf_bus`, loads module parameters, checks `DL_GETVER`, and either attaches immediately for postboot firmware or requests firmware asynchronously. Phase 2 validates TRX headers, sends the image with bootloader commands (`DL_START`, bulk chunks, `DL_GO`, `DL_RESETCFG`), then calls `brcmf_alloc()` and `brcmf_attach()`. Runtime RX preposts URBs from `rx_freeq`; completions feed skb data to `brcmf_rx_frame()` and refill. Runtime TX dequeues `tx_freeq`, submits bulk URBs, reports completion through `brcmf_proto_bcdc_txcomplete()`, and toggles BCDC flow block around low/high watermarks.
+
+State and persistence: all state is kernel memory and USB device state. Persistent external inputs are firmware files and module parameters. `bus_pub.state` transitions among DOWN, DL_FAIL, DL_DONE, UP, and SLEEP; upper bus state changes are forwarded through `brcmf_bus_change_state()`. The asynchronous firmware completion protects disconnect with `dev_init_done`.
+
+Dependencies and integration: depends on Linux USB, firmware loader, skb allocation, brcmf core/bus/BCDC/firmware/common helpers, Broadcom chip IDs, and PM autosuspend. It integrates with cfg80211 indirectly after `brcmf_attach()`.
+
+Risks and test signals: high-risk paths are async probe versus disconnect, URB queue accounting under spinlock, timeout cleanup of shared control URB, TRX length validation, reset-resume firmware reload, and flow-block release after TX completions. Useful signals are USB probe logs, firmware request/download errors, BCDC tx/rx counters, suspend/resume cycling, disconnect during firmware load, zero-length RX URBs, and queue exhaustion under traffic.

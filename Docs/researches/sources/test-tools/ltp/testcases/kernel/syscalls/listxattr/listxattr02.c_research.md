@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listxattr/listxattr02.c
+
+Purpose: negative `listxattr()` errno coverage for too-small buffer (`ERANGE`), empty path (`ENOENT`), invalid path pointer (`EFAULT`), and too-long path (`ENAMETOOLONG`). Setup creates `testfile`, sets `security.ltptest`, and fills a `PATH_MAX + 2` long pathname buffer. Each case allocates a stack buffer of the requested size and expects `listxattr()` failure with the configured errno. State is one file with xattr plus path buffers. Dependencies include root, xattr header/support, and path validation semantics. Risks are filesystem xattr policy during setup. Test signal is exact errno match per row.

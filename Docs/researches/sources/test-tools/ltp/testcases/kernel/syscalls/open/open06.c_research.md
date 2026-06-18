@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/open/open06.c
+
+Purpose: verify nonblocking write-only open of a FIFO with no readers fails with `ENXIO`. Important APIs/types/functions: `SAFE_MKFIFO`, `open(O_NONBLOCK|O_WRONLY)`, and `TST_EXP_FAIL2`. Control flow: setup creates a FIFO in tempdir; run attempts the nonblocking writer open and expects failure. State/persistence: one FIFO in tempdir. Dependencies/integration: filesystem support for FIFOs. Risks: if another process opens the FIFO for reading unexpectedly, result would change, but tempdir isolation makes that unlikely. Test signals: pass confirms FIFO open semantics for no-reader nonblocking writers.

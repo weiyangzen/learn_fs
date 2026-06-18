@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/nydus-snapshotter/pkg/manager/manager.go
+
+This file defines `Manager`, the owner of daemon and RAFS persistence for one filesystem driver. It holds a store, daemon cache, daemon config template, optional cgroup manager, liveness monitor, death event channel, binary path, recovery policy, and optional supervisor set. `NewManager` creates the store and monitor, creates supervisors for failover policy, starts the monitor, and launches death-event handling.
+
+Recovery is split between `recoverDaemons` and `recoverRafsInstances`. Daemons are loaded from store, cached, optionally assigned supervisors/configs, queried for current state, classified as recovering or live, added to cgroups/metrics, and subscribed asynchronously. RAFS instances are loaded, attached to matching recovering/live daemons, and added to the global RAFS cache. CRUD methods keep daemon and RAFS store/cache in sync. `DestroyDaemon` deletes DB state first, removes RAFS refs, unmounts, unsubscribes, destroys supervisor, terminates/waits process, records metrics, and cleans config/log/socket resources.
+
+State is both persistent DB data and in-memory cache. Integration points include store, daemon, RAFS, config, supervisor, cgroup, metrics, and monitor. Risks include cleanup after DB deletion failures, recovery silently skipping non-running daemons, asynchronous subscription errors, global RAFS cache coupling, and sparse unit coverage.

@@ -1,0 +1,7 @@
+## sources/distributed-fs/eos/mgm/balancer/FsBalancer.cc
+
+Purpose: implements the runtime loop for per-space filesystem balancing. `ConfigUpdate()` reads space configuration from `FsView::gFsView.mSpaceView`, enables/disables balancing, and refreshes thresholds, per-node transfer limits, queue size, thread pool size, and stats interval. `Balance()` is the assisted background thread: it waits for namespace boot, only runs on the master MGM, refreshes `FsBalancerStats`, rotates through unbalanced groups from a random start point, chooses source/destination pairs, and dispatches `DrainTransferJob` tasks on `mThreadPool`.
+
+Important flow: `GetFileToBalance()` samples up to ten random files from the source filesystem, claims each file ID in `gOFS->mFidTracker`, prefetches metadata, excludes existing/unlinked locations as destinations, then chooses a destination with an available node slot. `TakeTxSlot()` and `FreeTxSlot()` update node slot counters, destination filesystem balance-transfer counters, running job count, and file-ID tracking.
+
+State and dependencies: global `gOFS`, `FsView`, `IMaster`, namespace services, `Prefetcher`, `DrainTransferJob`, and `BackOffInvoker`. Risks include reliance on global master state during async task execution, destination selection fairness tied to set order and fid parity, and cleanup waiting on both queue size and `mRunningJobs`. Test signals should cover disabled/slave behavior, malformed config values, slot accounting, fid tracker removal on failures, and destination avoidance for existing replicas.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/nfs4.h
+
+Purpose: Defines the NFSv4 protocol constants, operation numbers, status values, stateids, attribute bitmaps, pNFS layout enums, session identifiers, callback opnums, and feature masks used by client and server XDR paths.
+
+Important APIs, types, and functions: Important exports include NFSv4 operation/status enums, `nfs4_stateid`, verifier and session-id types, file attribute bit definitions across words 0-2, pNFS layout/device enums, net location structures, xattr options, and callback op numbers. Detected source surface: 918 lines; includes `linux/list.h`, `linux/sunrpc/msg_prot.h`, `linux/sunrpc/xdrgen/nfs4_1.h`, `linux/uidgid.h`, `uapi/linux/nfs4.h`; macros `FATTR4_WORD0_ACL`, `FATTR4_WORD0_ACLSUPPORT`, `FATTR4_WORD0_ARCHIVE`, `FATTR4_WORD0_CANSETTIME`, `FATTR4_WORD0_CASE_INSENSITIVE`, `FATTR4_WORD0_CASE_PRESERVING`, `FATTR4_WORD0_CHANGE`, `FATTR4_WORD0_CHOWN_RESTRICTED`, `FATTR4_WORD0_FH_EXPIRE_TYPE`, `FATTR4_WORD0_FILEHANDLE`, `FATTR4_WORD0_FILEID`, `FATTR4_WORD0_FILES_AVAIL`, `FATTR4_WORD0_FILES_FREE`, `FATTR4_WORD0_FILES_TOTAL`, `FATTR4_WORD0_FSID`, `FATTR4_WORD0_FS_LOCATIONS`, `FATTR4_WORD0_HIDDEN`, `FATTR4_WORD0_HOMOGENEOUS`, and 89 more; structs `nfs42_netaddr`, `nfs4_ace`, `nfs4_acl`, `nfs4_deviceid`, `nfs4_label`, `nfs4_op_map`, `nfs4_sessionid`, `nfs4_stateid_struct`, `nl4_server`; enums `createmode4`, `data_content4`, `filelayout_hint_care4`, `gddrnf4_status`, `limit_by4`, `lock_type4`, `netloc_type4`, `nfs4_acl_whotype`, `nfs4_change_attr_type`, `nfs4_open_delegation_type4`, `nfs4_setxattr_options`, `nfs_cb_opnum4`, `nfs_ftype4`, `nfs_opnum4`, and 14 more; typedefs `nfs4_stateid`, `nfs4_verifier`; function-like declarations/helpers `seqid_mutating_err`.
+
+Control flow: No functions execute here. XDR encoders/decoders and state-management code use these constants to build COMPOUND calls, interpret server replies, select supported attributes, and negotiate sessions/layouts.
+
+State and persistence behavior: The header defines protocol ABI values that persist on the wire and in saved client state. `stateid`, `deviceid`, and session ids are carried through runtime structs but storage is elsewhere.
+
+Dependencies and integration points: Depends on base types, NFS UAPI/protocol definitions, and XDR users in `nfs_xdr.h`, NFSv4 client state code, pNFS layout drivers, and callback handling.
+
+Risks and test signals: Risks are wrong bitmap word shifts, status-code mapping mistakes, and pNFS enum drift. Test NFSv4.0/4.1/4.2 mount, open/close/lock, delegations, session creation, pNFS layoutget/return, xattrs, and callback dispatch.

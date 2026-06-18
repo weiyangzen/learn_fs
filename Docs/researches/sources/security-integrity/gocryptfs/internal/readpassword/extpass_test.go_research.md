@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/readpassword/extpass_test.go -->
+# sources/security-integrity/gocryptfs/internal/readpassword/extpass_test.go
+
+- Purpose: Test coverage for sources/security-integrity/gocryptfs/internal/readpassword, centered on TestMain, TestExtpass, TestOnceExtpass, TestOnceExtpass2, TestOnceExtpass3, TestOnceExtpassSpaces, TestTwiceExtpass, TestExtpassEmpty. It records expected compatibility, error, and boundary behavior for the implementation files nearby.
+- Important APIs/types/functions: `func TestMain(m *testing.M)`, `func TestExtpass(t *testing.T)`, `func TestOnceExtpass(t *testing.T)`, `func TestOnceExtpass2(t *testing.T)`, `func TestOnceExtpass3(t *testing.T)`, `func TestOnceExtpassSpaces(t *testing.T)`, `func TestTwiceExtpass(t *testing.T)`, `func TestExtpassEmpty(t *testing.T)`.
+- Control flow and state: treats invalid internal invariants as fatal/panic conditions; can terminate the process on unrecoverable setup or external command errors; is non-persistent test/benchmark code. Source size is 1827 bytes across 91 lines, read as part of this work item.
+- Dependencies and integration points: standard library: os, testing; external/internal modules: github.com/rfjakob/gocryptfs/v2/internal/tlog. It integrates with the surrounding gocryptfs package through the source path `sources/security-integrity/gocryptfs/internal/readpassword/extpass_test.go` and the declarations listed above.
+- Risks and review notes: secret input handling must avoid truncation surprises, command injection assumptions, and accidental logging of sensitive material; test/helper code can mask regressions if expected constants or environment assumptions drift.
+- Test signals: Direct test/benchmark declarations: TestMain, TestExtpass, TestOnceExtpass, TestOnceExtpass2, TestOnceExtpass3, TestOnceExtpassSpaces, TestTwiceExtpass, TestExtpassEmpty.
+<!-- END_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/readpassword/extpass_test.go -->

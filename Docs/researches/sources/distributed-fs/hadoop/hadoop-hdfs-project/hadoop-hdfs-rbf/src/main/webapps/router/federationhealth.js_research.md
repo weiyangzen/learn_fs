@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/main/webapps/router/federationhealth.js
+
+This browser-side module renders the Router federation health dashboard. It loads Router and NameNode JMX beans, normalizes JSON fields that arrive as serialized strings, renders Dust templates for each tab, and initializes DataTables and a D3 datanode usage histogram.
+
+Important functions are `load_overview`, `load_namenode_info`, `load_router_info`, `load_datanode_info`, and `load_mount_table`. They fetch JMX endpoints such as `Hadoop:service=Router,name=FederationState`, `Hadoop:service=Router,name=Router`, `java.lang:type=Memory`, and `Hadoop:service=NameNode,name=NameNodeInfo`. Helper functions convert timestamp fields, classify Router/NameNode state into icon/status labels, parse mount-table read-only and fault-tolerant fields, derive datanode web URLs from info addresses, and render usage bars/histograms. `load_page` dispatches based on the location hash.
+
+State is transient DOM state, `window.liveNodes` for histogram click behavior, and parsed copies of JMX payloads. Persistence lives outside the UI in Router JMX/state-store data; this script only presents it. Dependencies include jQuery, Dust, DataTables, Moment, D3, and Hadoop's `load_json` helper.
+
+Integration points are the Router metrics MBeans and federation state structures: `Nameservices`, `Namenodes`, `Routers`, `MountTable`, and datanode maps must remain parseable JSON strings. Risks include fragile parsing of non-standard JMX string fields, TypeError masking in `guard_with_startup_progress`, global state pollution via `window.liveNodes`, and stale UI assumptions when Router status enums or JMX field names change. Test signals should cover each tab against representative JMX fixtures, router safemode/startup states, unavailable namenodes, disabled nameservices, mount-table status formatting, and datanode address parsing for IPv4/IPv6 and HTTPS.

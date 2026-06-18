@@ -1,0 +1,9 @@
+# sources/object-store/apache-ozone/hadoop-ozone/ozone-manager/src/test/java/org/apache/hadoop/ozone/om/request/file/TestOMDirectoryCreateRequestWithFSO.java
+
+Tests FSO/prefix-layout `OMDirectoryCreateRequestWithFSO`. It validates object-id parent-chain directory creation, directory table persistence, namespace quota, missing volume/bucket, existing directory and file conflicts, 255-level depth limit, metrics, default ACL inheritance, and client ACL filtering.
+
+Setup enables optimized paths with `OMRequestTestUtils.configureFSOptimizedPaths`, then creates mocked OM, real metadata manager, metrics, audit logger, resolved bucket, and layout version manager. Helpers include `createDirKey`, `verifyDirectoriesInDB`, `verifyDirectoriesNotInCache`, `verifyDirectoriesInheritAcls`, and `createDirectoryRequest`.
+
+Control flow builds FSO create-directory requests, preExecutes, validates, and inspects `directoryTable`. Some tests preseed parent `OmDirectoryInfo` rows; others insert `OmKeyInfo` rows into the FSO key table to simulate files at the requested leaf or in an intermediate path. Depth tests generate 255 and 256 component paths. ACL tests seed bucket default ACLs and walk the resulting directory ACL chain.
+
+State behavior differs from default layout: directories are in `directoryTable` keyed by `getOzonePathKey(volumeId, bucketId, parentId, name)`, not trailing-slash key-table entries. Bucket namespace and `numKeys` metrics increase by directory count. Existing-directory failures avoid new cache entries. Risks are wrong parent object ID traversal, duplicate directory creation, invalid depth acceptance, file/directory confusion, and ACL propagation errors. Signals include `OK`, `QUOTA_EXCEEDED`, `VOLUME_NOT_FOUND`, `BUCKET_NOT_FOUND`, `DIRECTORY_ALREADY_EXISTS`, `FILE_ALREADY_EXISTS`, `INVALID_KEY_NAME`, directory table counts, cache absence, namespace usage, ACLs, and metrics.

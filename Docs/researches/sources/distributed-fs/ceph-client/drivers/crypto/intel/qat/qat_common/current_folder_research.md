@@ -1,0 +1,157 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 143
+- Recursive researched files: 143
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_accel_engine.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_admin.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_admin.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_aer.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_anti_rb.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_anti_rb.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_bank_state.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_bank_state.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg_common.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg_services.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg_services.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg_strings.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cfg_user.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_clock.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_clock.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cnv_dbgfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_cnv_dbgfs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_common_drv.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_ctl_drv.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_dbgfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_dbgfs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_dc.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_dc.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_dev_mgr.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_fw_config.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_fw_counters.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_fw_counters.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_config.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_config.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_hw_csr_data.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_hw_csr_data.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_hw_data.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_hw_data.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_pfvf.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen2_pfvf.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_config.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_config.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_hw_csr_data.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_hw_csr_data.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_hw_data.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_hw_data.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_pfvf.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_pfvf.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_pm.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_pm.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_pm_debugfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_ras.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_ras.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_tl.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_tl.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_vf_mig.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen4_vf_mig.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_pm.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_pm_dbgfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_ras.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_ras.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_shared.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_shared.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_tl.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_gen6_tl.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_heartbeat.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_heartbeat.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_heartbeat_dbgfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_heartbeat_dbgfs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_heartbeat_inject.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_hw_arbiter.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_init.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_isr.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_mstate_mgr.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_mstate_mgr.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_msg.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_pf_msg.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_pf_msg.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_pf_proto.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_pf_proto.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_utils.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_utils.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_vf_msg.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_vf_msg.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_vf_proto.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pfvf_vf_proto.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pm_dbgfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pm_dbgfs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pm_dbgfs_utils.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_pm_dbgfs_utils.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_rl.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_rl.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_rl_admin.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_rl_admin.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sriov.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs_anti_rb.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs_anti_rb.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs_ras_counters.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs_ras_counters.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs_rl.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_sysfs_rl.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_telemetry.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_telemetry.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_timer.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_timer.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_tl_debugfs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_tl_debugfs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_transport.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_transport.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_transport_access_macros.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_transport_debug.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_transport_internal.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/adf_vf_isr.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_fw.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_fw_comp.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_fw_init_admin.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_fw_la.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_fw_loader_handle.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_fw_pke.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_hal.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_hw.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_hw_20_comp.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_hw_20_comp_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_hw_51_comp.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_hw_51_comp_defs.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/icp_qat_uclo.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_algs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_algs_send.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_algs_send.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_asym_algs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_bl.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_bl.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_comp_algs.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_comp_req.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_comp_zstd_utils.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_comp_zstd_utils.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_compression.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_compression.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_crypto.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_crypto.h`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_hal.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_mig_dev.c`
+- `sources/distributed-fs/ceph-client/drivers/crypto/intel/qat/qat_common/qat_uclo.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

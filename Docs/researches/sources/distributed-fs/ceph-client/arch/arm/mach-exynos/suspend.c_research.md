@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/arm/mach-exynos/suspend.c -->
+## sources/distributed-fs/ceph-client/arch/arm/mach-exynos/suspend.c
+
+### Purpose
+`sources/distributed-fs/ceph-client/arch/arm/mach-exynos/suspend.c` belongs to Samsung Exynos ARM machine support in the Ceph-client kernel source snapshot. It implements platform suspend, resume, wakeup, and low-power register programming, including syscore or CPU PM hooks where present.
+
+### Important APIs, Types, And Functions
+Notable functions/entry points: `exynos_read_eint_wakeup_mask`, `exynos_irq_set_wake`, `exynos_pmu_domain_translate`, `exynos_pmu_domain_alloc`, `exynos_pmu_irq_init`, `exynos_cpu_do_idle`, `exynos_flush_cache_all`, `exynos_cpu_suspend`, `exynos3250_cpu_suspend`, `exynos5420_cpu_suspend`, `exynos_pm_set_wakeup_mask`, `exynos_pm_enter_sleep_mode`, `exynos_pm_prepare`, `exynos3250_pm_prepare`, `exynos5420_pm_prepare`, `exynos_pm_suspend`, `exynos5420_pm_suspend`, `exynos_pm_resume`, `exynos3250_pm_resume`, `exynos5420_prepare_pm_resume`, `exynos5420_pm_resume`, `exynos_suspend_enter`, `exynos_suspend_prepare`, `exynos_suspend_finish`, and 2 more. Types: structs `exynos_wkup_irq`, `exynos_pm_data`, `exynos_pm_state`, `irq_fwspec`, `device_node`, `irq_domain`, enums none. Important macros/register names include `REG_TABLE_END`, `EXYNOS5420_CPU_STATE`, `EXYNOS_PMU_IRQ(symbol, name)`. Registration macros/init hooks: `symbol, name, exynos_pmu_irq_init`.
+
+### Control Flow
+IRQ initialization maps MMIO, creates an irq domain/chip, translates firmware specs, then forwards mask/unmask/eoi/type operations to parent domains where applicable. Suspend paths save selected registers, mask non-wakeup IRQs, enter firmware or CPU suspend callbacks, then restore register state and wake masks during resume. SMP/hotplug paths compute logical-to-physical CPU or cluster IDs, program reset/power bits, synchronize with locks/cache maintenance, and release or park secondary CPUs.
+
+### State, Persistence, And Dependencies
+Dependencies include `linux/init.h`, `linux/suspend.h`, `linux/syscore_ops.h`, `linux/cpu_pm.h`, `linux/io.h`, `linux/irq.h`, `linux/irqchip.h`, `linux/irqdomain.h`, `linux/of_address.h`, `linux/err.h`, `linux/regulator/machine.h`, `linux/soc/samsung/exynos-pmu.h`, `linux/soc/samsung/exynos-regs-pmu.h`, `asm/cacheflush.h`, `asm/hardware/cache-l2x0.h`, `asm/firmware.h`, `asm/mcpm.h`, `asm/smp_scu.h`, and 3 more. Local/static state or exported register data includes `struct exynos_wkup_irq {`, `unsigned int hwirq`, `u32 mask`, `struct exynos_pm_data {`, `const struct exynos_wkup_irq *wkup_irq`, `unsigned int wake_disable_mask`, `const struct syscore_ops *syscore_ops`, `struct exynos_pm_state {`, `int cpu_state`, `unsigned int pmu_spare3`, `void __iomem *sysram_base`, `bool secure_firmware`, and 41 more. Compatible strings or firmware/device-tree identifiers observed: `samsung,exynos3250-pmu`, `samsung,exynos4210-pmu`, `samsung,exynos4212-pmu`, `samsung,exynos4412-pmu`, `samsung,exynos5250-pmu`, `samsung,exynos5420-pmu`. State is kernel-resident and hardware-backed: MMIO registers, interrupt masks, reset vectors, wakeup masks, clock/regulator settings, and cached CPU revision variables survive only as long as the running kernel unless the underlying PMU/SRAM/firmware register preserves them across suspend.
+
+### Integration Points
+Integration points are Linux irqchip/irqdomain hierarchy, PM core, syscore, and CPU suspend/resume, ARM firmware/SMC interface, ARM SMP, hotplug, and MCPM, legacy platform devices such as LED, RTC, timer, and ISA DMA. Callers should treat `exynos_read_eint_wakeup_mask`, `exynos_irq_set_wake`, `exynos_pmu_domain_translate`, `exynos_pmu_domain_alloc`, `exynos_pmu_irq_init`, `exynos_cpu_do_idle`, `exynos_flush_cache_all`, `exynos_cpu_suspend` as platform hooks rather than generic APIs when those symbols are visible.
+
+### Risks
+Primary risks include MMIO or port-I/O ordering, missing barriers, and incorrect register bit definitions, interrupt masking/wakeup regressions, resume failures, lost wakeups, and low-power state mismatches, CPU bring-up/hotplug races and coherency/cache maintenance bugs, secure firmware ABI drift, missing devicetree nodes or leaked mappings/references on error paths.
+
+### Test Signals
+Useful test signals include ARM build coverage for the relevant CONFIG symbols, devicetree boot logs showing compatible match and platform device population, interrupt storm, mask/unmask, and wake-capable IRQ tests, suspend-to-RAM, idle entry/exit, and wake-source validation, secondary CPU online/offline hotplug loops under load, GPIO/LED state readback on target hardware. Source reading signal: 714 lines; 21 includes; 26 function/entry points; 3 macro/defines.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/arm/mach-exynos/suspend.c -->

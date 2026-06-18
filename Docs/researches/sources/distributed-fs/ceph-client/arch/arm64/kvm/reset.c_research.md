@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/arm64/kvm/reset.c
+
+Purpose: centralizes arm64 KVM vCPU reset/finalization and IPA-limit initialization. It initializes SVE virtualization limits, finalizes per-vCPU SVE state, frees vCPU-owned hyp-shared resources, resets core and system registers for EL1/EL2/AArch32 entry, applies PSCI-provided reset state, resets timers, and computes the maximum physical/IPA size KVM exposes.
+
+Important APIs and functions: `kvm_arm_init_sve()`, `kvm_arm_vcpu_finalize()`, `kvm_arm_vcpu_is_finalized()`, `kvm_arm_vcpu_destroy()`, `kvm_reset_vcpu()`, `kvm_get_pa_bits()`, `get_kvm_ipa_limit()`, and `kvm_set_ipa_limit()` are public to the KVM arm64 subsystem. Internal helpers include `kvm_vcpu_enable_sve()`, `kvm_vcpu_finalize_sve()`, and `kvm_vcpu_reset_sve()`.
+
+Control flow: boot-time SVE initialization records the maximum virtualizable and host vector lengths, publishes the host max to nVHE, caps guest VL at `VL_ARCH_MAX`, and warns if guests are limited below host max. VCPU reset snapshots and clears pending `reset_state` under `mp_state_lock`, disables preemption, fully puts loaded vCPU state if necessary, enables or clears SVE state depending on finalization, chooses reset PSTATE based on AArch32, nested virt, or normal EL1, zeroes general/FPSIMD and legacy SPSR state, resets sysregs, then applies PSCI reset overrides for PC, Thumb bit, endianness, pending exception flags, and x0/r0. It resets the virtual timer and reloads hardware state if the vCPU was loaded.
+
+State and persistence: VM-wide immutable state includes `kvm_ipa_limit`, `kvm_sve_max_vl`, and `kvm_host_sve_max_vl`. Per-vCPU persistent state includes `sve_max_vl`, `sve_state`, finalized flags, `reset_state`, core registers, sysregs, FPSIMD context, VNCR allocations, CCSIDR cache, and timer state. SVE buffers are shared with hyp on finalize and unshared/freed on destroy.
+
+Dependencies and integration: depends on SVE/FPSIMD helpers, KVM hyp sharing APIs, nested virtualization helpers, sysreg reset, arch timer reset, PSCI reset state from `psci.c`, CPU feature registers, LPA2 and stage-2 granule support checks, and VM physical address-size policy. It is called from vCPU init ioctls and from PSCI CPU_ON reset requests.
+
+Risks: reset can run while a vCPU is loaded, so preemption and put/load ordering are critical. SVE finalization is a userspace ABI boundary: once finalized, vector lengths and buffer size are fixed. Failing to unshare SVE or vCPU memory from hyp leaks protected mappings. Reset-state application must happen after sysreg reset or PSCI PC/endianness/x0 values would be overwritten. IPA limit setup must reject unsupported stage-2 granules and cap address sizes correctly without LPA2.
+
+Test signals: coverage should include vCPU init reset, PSCI CPU_ON reset while loaded, AArch32 Thumb entry, nested EL2 reset PSTATE, SVE enable/finalize/destroy, vector length caps, timer reset, clearing pending exception/PC increment flags, and boot on systems with unsupported TGRAN_2 or PARange above 48 bits without LPA2.

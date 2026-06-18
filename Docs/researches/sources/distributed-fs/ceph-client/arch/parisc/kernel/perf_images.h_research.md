@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/parisc/kernel/perf_images.h
+
+Purpose: stores the internal performance-counter programming images used by the legacy PA-RISC `/dev/perf` driver, replacing user-supplied raw images with kernel-owned constants to reduce the chance of programming invalid CPU diagnostic state.
+
+Important definitions are `PCXU_IMAGE_SIZE`, `PCXW_IMAGE_SIZE`, the `onyx_images` and `cuda_images` two-dimensional `uint32_t` arrays, and image-count macros such as `MAX_ONYX_IMAGES` and `MAX_CUDA_IMAGES`. The images correspond to named event sets documented in comments, including CPI, bus utilization, TLB miss variants, branch prediction/taken/not-taken behavior, instruction/data misses, local stalls, Runway transactions, shared-library CPI, floating-point instructions, cache miss reporting, branch reports, call-return stack behavior, and icache reporting. The arrays are marked `__ro_after_init`.
+
+Control flow is data-driven through `perf.c`: user space writes a 32-bit selector with interface and image id; `perf_write` validates the id against these arrays and calls `perf_config`; `perf_write_image` then streams the selected image across RDRs and Runway debug/status registers using RDR tables and write-control bitmasks. The disabled `perf_patch_images` block in `perf.c` documents that some TLB-oriented images were intended to receive IVA/miss-handler addresses if image formats changed.
+
+State persists as read-only kernel data after init and as hardware programming once copied into CPU registers. Dependencies include exact PCX-U/Onyx and PCX-W/Cuda image formats, RDR widths/order in `perf.c`, and Runway register programming conventions.
+
+Risks are dominated by opaque magic constants from HP-UX-era tooling: any edit can silently program the wrong diagnostic paths or hang the CPU. Array dimensions must match the driver-selected image sizes, comments must stay aligned with image ordering, and `__ro_after_init` prevents later mutation except for currently disabled patching. Test signals are compile-time array sizing, successful selection of every image id on matching hardware, plausible counter semantics for each image, and no CPU faults when images are repeatedly downloaded.

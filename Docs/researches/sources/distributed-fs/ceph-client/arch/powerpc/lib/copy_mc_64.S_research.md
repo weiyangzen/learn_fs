@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/copy_mc_64.S
+
+`copy_mc_64.S` exports `copy_mc_generic`, a 64-bit copy routine intended for machine-check tolerant memory copy paths. It copies from `from` to `to`, returns zero on success, and returns the number of bytes left when an exception occurs. This is integrated through `asm/uaccess.h` for copy-machine-check helpers.
+
+Control flow keeps the original size in `r7`, aligns the source to 8 bytes with byte/halfword/word copies, then for large regions creates a stack frame and saves `r14-r22`. The main loop copies 128-byte cacheline-sized blocks with unrolled 16 doubleword loads and stores, followed by 64-, 32-, 16-, 8-, 4-, 2-, and 1-byte tails. `err1`, `err2`, and `err3` macros attach exception table entries. Large-loop faults restore nonvolatile registers and fall into a byte-by-byte retry path to find the precise remaining count; final faults return the current CTR count.
+
+State is limited to registers and exception tables; no persistent data is modified beyond the destination bytes already copied. Dependencies are the PPC64 ABI, `EX_TABLE`, and uaccess machine-check wrappers. Risks include returning an imprecise residual count, failing to restore callee-saved registers on an exception, and treating write faults and source machine checks identically. Test signals include NVDIMM or machine-check injection tests, copy_mc uaccess fallbacks, and exception-table validation.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/Raid0Pattern.c -->
+## sources/distributed-fs/beegfs/client_module/source/common/storage/striping/Raid0Pattern.c
+
+**Purpose:** Implements RAID0 stripe-pattern behavior over a vector of storage target IDs. **APIs/functions:** deserialization, target index/ID lookup, target vector copy/reference, min/default target counts. **Control flow:** deserialization reads default target count and target ID vector and rejects empty vectors; index is `(pos / chunkSize) % target_count`. **State/persistence:** target IDs and default count are in-memory representation of the serialized pattern. **Dependencies/integration:** created by `StripePattern_createFromBuf` for `STRIPEPATTERN_Raid0` and used to route file chunks to storage targets. **Risks/tests:** chunk-size validity is checked only at the base header level for nonzero; tests should cover vector decode failure, empty vector rejection, and chunk boundary routing.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/beegfs/client_module/source/common/storage/striping/Raid0Pattern.c -->

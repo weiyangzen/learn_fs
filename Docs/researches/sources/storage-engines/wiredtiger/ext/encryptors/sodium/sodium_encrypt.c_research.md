@@ -1,0 +1,8 @@
+
+## sources/storage-engines/wiredtiger/ext/encryptors/sodium/sodium_encrypt.c
+
+Purpose: real at-rest encryption extension using libsodium's XChaCha20-Poly1305 AEAD construction. It is scoped to protecting a shut-down database at rest, not live-memory compromise.
+
+Important APIs/types/functions: constants define key, nonce, MAC, and 4-byte header lengths. `SODIUM_ENCRYPTOR` stores the secret key allocated with `sodium_malloc`. `sodium_encrypt` writes a version/construction header, random nonce, and AEAD ciphertext+tag using the header as associated data. `sodium_decrypt` verifies and decrypts using the header and nonce. `sodium_sizing` reports constant expansion. `sodium_customize` rejects simultaneous `keyid` and `secretkey`, requires one, rejects keyid because key services are unsupported, decodes a 64-character hex key, and validates `KEY_LEN`. `wiredtiger_extension_init` calls `sodium_init` and registers `sodium`.
+
+State and persistence: persistent format is header, nonce, ciphertext, authentication tag. Per-key customized encryptors hold secret key memory until `sodium_terminate`, which calls `randombytes_close`, `sodium_free`, and `free`. Risks: decrypt length arithmetic can underflow for inputs shorter than header+nonce; there is no explicit pre-decrypt header version/construction validation beyond AEAD authentication over supplied header; key material remains in process memory while open; keyid services are not implemented. Tests should include valid key round trips, non-hex and wrong-length keys, rejected keyid, tampered header/nonce/ciphertext, short ciphertext, sizing, and repeated customize/terminate cycles.

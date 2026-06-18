@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/nouveau/nvkm/engine/gr/ctxtu102.c
+
+Purpose: `ctxtu102.c` defines the Turing TU102 graphics-context function table for Nouveau's GF100-style GR implementation. It does not build a full context generator itself; instead it selects existing GV100/GP100/GM107/GM200 helpers and supplies TU102-specific register programming, bundle initialization, SM ID writes, and an unknown context-buffer patch region.
+
+Important APIs/types/functions: the public symbols are `tu102_grctx_generate_unknown(struct gf100_gr_chan *, u64 addr, u32 size)` and `const struct gf100_grctx_func tu102_grctx`. Private helpers are `tu102_grctx_generate_r419c0c(struct gf100_gr *)`, `tu102_grctx_generate_sm_id(struct gf100_gr *, int gpc, int tpc, int sm)`, and the `tu102_grctx_pack_sw_bundle64_init` pack around `struct gf100_gr_init` entries. Register writes use `nvkm_mask`, `nvkm_wr32`, `TPC_UNIT()`, and `gf100_grctx_patch_wr32()`.
+
+Control flow: the generic GF100 context-generation path calls through `tu102_grctx`. The `.main` slot delegates to `gf100_grctx_generate_main`; `.unkn`, `.bundle`, `.pagepool`, `.attrib_cb`, `.attrib`, `.rop_mapping`, `.r406500`, and `.r400088` are inherited from prior GPU generations. TU102-specific callbacks mask registers `0x419c0c`, `0x40584c`, and `0x400080`, translate logical TPC indices through `gv100_gr_nonpes_aware_tpc()` before writing SM IDs to TPC offsets `0x608` and `0x088`, and patch channel context registers `0x408070`, `0x408074`, `0x419034`, and `0x408078` with an address/size pair.
+
+State and persistence: this file encodes persistent per-channel context sizing constants: bundle size `0x3000`, pagepool size `0x20000`, unknown buffer size `0x80000`, attribute maximum/current counts `0x800/0x700`, alpha counts `0xc00/0x800`, and `gfxp_nr = 0xfa8`. The patch helper stores an address shifted by 8 into two context registers and stores a guessed size field shifted by 8. `skip_pd_num_tpc_per_gpc = true` changes how topology-derived state is emitted.
+
+Dependencies and integration points: it includes `ctxgf100.h`, is declared there as `extern const struct gf100_grctx_func tu102_grctx`, and is selected by `tu102.c` through `.grctx = &tu102_grctx`. It integrates TU102 into the shared Fermi-and-newer GR context framework rather than the NV50 ctxprog system.
+
+Risks: the `/*XXX: guess */` on the unknown size patch is a direct correctness risk. Register masks and shifted addresses are hardware contracts; a wrong value can break context allocation, SM identification, per-TPC scheduling, or channel restore. The non-PES-aware TPC mapping is essential on Volta/Turing-style topology, so bypassing it would write SM IDs to the wrong hardware TPC.
+
+Test signals: TU102 and compatible Turing boards should initialize GR, create channels, switch contexts, and run graphics/compute workloads without FECS/GPCCS context errors. Specific checks include correct SM numbering exposed to shaders/debug paths, no faults from the unknown buffer address/size patch, and no regressions in topology variants with disabled GPC/TPC units.

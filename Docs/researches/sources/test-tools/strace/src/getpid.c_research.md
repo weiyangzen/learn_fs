@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/getpid.c
+
+Decoders for pid/session/process-group syscalls: `getpid`, `gettid`, `getpgrp`, `getpgid`, `getsid`, and `setpgid`. Pure getters return typed return-value flags (`RVAL_TGID`, `RVAL_TID`, `RVAL_PGID`, `RVAL_SID`) so pid namespace/comm rendering can apply; argumented calls print pid/pgid values. State is syscall arguments and return formatting. Dependencies are pid-type printers and return-value flags. Risks are wrong pid type tagging and namespace translation mismatches. Tests should cover all getters, `getpgid`/`getsid` with target pids, `setpgid`, failures, and pid namespace decoding.

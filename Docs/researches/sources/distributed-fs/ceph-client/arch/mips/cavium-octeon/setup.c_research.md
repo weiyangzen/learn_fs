@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/mips/cavium-octeon/setup.c
+
+Purpose: performs Octeon early platform setup: imports bootloader descriptors, initializes CVMX system information, parses command-line and memory limits, sets reboot/halt/kexec hooks, creates memblock ranges from Octeon bootmem, initializes device tree selection, and registers late platform devices such as EDAC and dummy PCI I/O space.
+
+Important APIs and functions: exported helpers include `octeon_is_simulation()`, `octeon_is_pci_host()`, `octeon_get_clock_rate()`, `octeon_get_io_clock_rate()`, `octeon_get_boot_coremask()`, `octeon_check_cpu_bist()`, `octeon_user_io_init()`, `prom_putchar()`, `octeon_bootinfo`, `octeon_bootbus_sem`, and `octeon_should_swizzle_table`. Core entry points are `prom_init()`, `fw_init_cmdline()`, `plat_get_fdt()`, `plat_mem_setup()`, `prom_free_prom_memory()`, and `device_tree_init()`.
+
+Control flow: `prom_init()` receives the boot descriptor from `fw_arg3`, maps CVMX bootinfo, fills `cvmx_sysinfo`, sets I/O clock rate, installs multiplier save/restore snippets, initializes board LEDs, reserves optional low 32-bit memory, applies L2 locking options, parses `mem=` and `crashkernel=`, chooses console UART, initializes timers and SMP operations, and configures CP0 CVMMEMCTL. `plat_mem_setup()` converts CVMX bootmem allocations into memblock regions, excluding PCIe holes and crashkernel regions. `device_tree_init()` chooses appended, bootloader-passed, or internal DTB, optionally prunes it, fills MAC addresses, then unflattens and records system type.
+
+State and persistence: persistent runtime state includes global boot descriptor and bootinfo pointers, selected UART, memory limit/reservation values, crashkernel reservation values, system type string, EDAC-disable flag, dummy I/O-space allocation, and exported bootbus semaphore. Hardware state includes watchdog disable/reset behavior, LED display messages, CVMMEMCTL settings, soft-BIST settings, and bootmem named-block allocation/free state.
+
+Dependencies and integration points: depends on CVMX bootmem/sysinfo, Octeon model/feature macros, memblock, OF/FDT, MIPS reboot/kexec hooks, serial 8250 early printk, EDAC platform drivers, and optional PCI. It calls into `octeon-platform.c` for device-tree pruning and MAC filling and into `smp.c` for SMP registration.
+
+Risks: early boot code is order-sensitive. Bad boot descriptors, bad FDT headers, bootmem allocation failures, or incorrect memory exclusion can panic or expose invalid memory. Kexec paths mutate bootmem named blocks and segment reservations; crashkernel parsing is explicitly old-style. String concatenation is bounded but still depends on bootloader arguments fitting `arcs_cmdline`.
+
+Test signals: boot on simulator and hardware variants; verify parsed command line and console UART; confirm memblock map avoids crashkernel and PCIe hole pages; kexec and crash-kexec should boot or dump cleanly; EDAC devices should register unless disabled; `prom_putchar()` should work for early watchdog output.

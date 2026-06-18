@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63m0.h
+
+Purpose: This header is the shared contract between the S6E63M0 core and its DSI/SPI transport adapters. It defines the manufacturer command-set opcodes and exports the core probe/remove interfaces.
+
+Important APIs, control flow, and state: the `MCS_*` macro namespace covers ELVSS, temperature SWIRE, pentile controls, gamma delta tables, MIE/BC mode, error check, MTP read IDs, level/MTP keys, display/source/interface/panel controls, and positive gamma control. `s6e63m0_probe()` accepts the parent device, opaque transport pointer, DCS read/write callbacks, and a `dsi_mode` boolean that selects connector type and DSI-specific init values in the core. `s6e63m0_remove()` removes the core panel from the device drvdata. The header stores no state but fixes the ABI between transport files and core command logic.
+
+Dependencies, integration, risks, and tests: dependencies are Linux `struct device`, `u8`, `size_t`, and the core/adapter compilation units. Risks are command macro drift breaking table writes in the core, callback prototype changes desynchronizing adapters, and duplicate compatible handling across buses depending on this shared interface. Test signals are successful compilation of all three S6E63M0 objects, both transport probes invoking the exported core, ID read commands matching DBI whitelist, and modpost/export resolution.

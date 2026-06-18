@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/keyctl/keyctl06.c
+
+Purpose: regression for keyring read buffer sizing bugs fixed by `e645016abc80` and `3239b6f29bdf`. The test adds two user keys to the process keyring, then calls `KEYCTL_READ` on the keyring with a buffer only large enough for one `key_serial_t` but backed by a two-element array. It verifies the second element remains zero and the return value is the full required size for both key IDs. State is the process keyring with two transient user keys and a stack buffer. Dependencies are keyrings support and `add_key`. Risks are unspecified contents inside the too-small part of the buffer, which the test intentionally avoids checking. Test signal is no overrun and full-count return.

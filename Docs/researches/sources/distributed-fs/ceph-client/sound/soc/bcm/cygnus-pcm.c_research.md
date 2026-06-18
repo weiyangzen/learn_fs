@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/soc/bcm/cygnus-pcm.c
+
+Purpose: Cygnus ASoC PCM platform driver for Broadcom Cygnus audio. It maps ALSA PCM buffers onto hardware source/destination ring-buffer registers and uses ESR/R5 interrupt status to advance periods for playback and capture.
+
+Important APIs, types, and functions: `cygnus_pcm_hw` defines S16/S32 interleaved mmap PCM constraints with 256-byte period granularity. Ring-buffer register selection is done through `configure_ringbuf_regs()` and `RINGBUF_REG_PLAYBACK/CAPTURE` macros from `cygnus-ssp.h`. `ringbuf_set_initial()` programs start/end/free/full marks and initial read/write pointers. `enable_intr()` and `disable_intr()` manage ESR masks. `cygnus_dma_irq()`, `handle_playback_irq()`, and `handle_capture_irq()` dispatch ESR status. `cygnus_pcm_open`, `close`, `prepare`, `trigger`, `pointer`, and `cygnus_dma_new` form `cygnus_soc_platform`. `cygnus_soc_platform_register()` requests the shared IRQ and registers the component.
+
+Control flow: the SSP DAI startup sets a `cygnus_aio_port` as DMA data; PCM open fetches it, applies hardware constraints, and stores the substream on the port. Prepare maps the port to a hardware ring buffer, computes buffer and period sizes, and programs base/end/mark and initial pointers. Trigger START/RESUME unmasks ESR interrupts; STOP/SUSPEND masks them. The IRQ handler reads R5 status, handles playback ESR0/1/3 and capture ESR2/4, calls `snd_pcm_period_elapsed()` on freemark/fullmark events, adjusts ring-buffer pointers to full or empty, clears ESR bits, and rearms mark logic. Pointer reads the hardware read pointer for playback or write pointer for capture and converts the offset from base to frames.
+
+State and persistence: `cygnus_aio_port` keeps substream pointers and selected ring-buffer register offsets. Ring-buffer base/end/read/write/mark registers and ESR mask/status registers are the active state. DMA buffers are managed by ALSA with a 32-bit DMA mask. There is no persistence beyond device runtime.
+
+Dependencies and integration: integrated by `cygnus-ssp.c`, which passes `struct cygnus_audio` to `cygnus_soc_platform_register()`. Uses `writel/readl` MMIO, `snd_pcm_set_managed_buffer_all`, ALSA component PCM ops, and shared IRQ handling.
+
+Risks: IRQ handlers call `cygnus_pcm_period_elapsed()` using per-port substream pointers and do not visibly guard against NULL if an enabled ESR bit arrives after close/disable. The port-to-ring-buffer mapping skips ring buffers in pairs and must stay aligned with hardware channel layout. Pointer arithmetic masks the MSB but otherwise trusts hardware addresses. Interrupt mark programming assumes periods are multiples of 256 bytes.
+
+Test signals: validate playback and capture with each TDM port and SPDIF playback, period sizes at 256-byte boundaries, ESR underflow/overflow debug paths, pointer movement, stream close clearing substream pointers, and no duplicate/lost period notifications during START/STOP and suspend/resume.

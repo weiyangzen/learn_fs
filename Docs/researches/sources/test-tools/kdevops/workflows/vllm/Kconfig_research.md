@@ -1,0 +1,13 @@
+# sources/test-tools/kdevops/workflows/vllm/Kconfig
+
+Purpose: Kconfig menu for the kdevops vLLM workflow. It exposes deployment choices for latest Docker, official Production Stack Helm chart, and bare-metal/systemd deployments, then emits selected values to YAML for Ansible and Helm automation.
+
+Important APIs/types/functions: Kconfig `choice`, `config`, `if`, `depends on`, `default`, `range`, `help`, and kdevops-specific `output yaml`. Key symbols include `VLLM_DEPLOYMENT_TYPE`, `VLLM_K8S_MINIKUBE`, `VLLM_K8S_EXISTING`, model identity fields, `VLLM_CLI_VERSION_OVERRIDE`, `VLLM_ENGINE_IMAGE_TAG`, CPU/GPU resource settings, router/observability toggles, benchmark settings, Production Stack chart settings, and bare-metal runtime/systemd settings.
+
+Control flow: the whole file is gated by `KDEVOPS_WORKFLOW_ENABLE_VLLM`. The first choice selects one deployment mode. Kubernetes-specific options appear only for Docker or Production Stack. Version defaults are chosen from CLI environment override state, Production Stack CPU mode, and stable defaults. Production Stack and bare-metal subsections are conditionally enabled by their deployment choice, and nested options such as LMCache, router routing algorithm, monitoring ports, autoscaling bounds, custom values file, and declared-host GPU shape appear only when their parent booleans are enabled.
+
+State/persistence behavior: the file does not execute deployment itself; it persists user-selected and computed configuration into generated YAML. Defaults encode operational state assumptions, especially CPU inference for libvirt, GPU count zero under CPU mode, memory guidance for Production Stack, Helm namespace/release names, model defaults, and benchmark result directory `/data/vllm-benchmark`.
+
+Dependencies/integration: depends on surrounding kdevops symbols such as `LIBVIRT`, `TERRAFORM`, `USE_LIBVIRT`, `KDEVOPS_USE_DECLARED_HOSTS`, and `LIBVIRT_MEM_*`. Generated YAML feeds the vLLM Ansible playbook and templates that deploy Kubernetes, Helm, Docker, Minikube, LMCache, observability, and bare-metal services.
+
+Risks/test signals: several version help strings are time-sensitive and may drift from actual vLLM releases. `VLLM_VERSION_CUSTOM` defaults the image tag to `v0.10.2` instead of accepting a custom prompt value, so custom-version semantics likely depend on external override paths. CPU inference defaults use `latest`, which can reduce reproducibility. Test signals are kconfig parsing, generated YAML shape, menu visibility under each backend, and successful downstream Ansible/Helm deployment with CPU and GPU configurations.

@@ -1,0 +1,15 @@
+## sources/cloud-native/stargz-snapshotter/estargz/testutil.go
+
+Purpose: defines the shared compression conformance suite used by gzip, external-TOC gzip, and zstd-chunked tests. It verifies that a `Compression` implementation can build valid eStargz blobs, preserve/transform tar input correctly, expose chunked random access, compute DiffID, and enforce TOC/chunk digest verification.
+
+Important APIs/types/functions: `TestingController` extends `Compression` with `TestStreams`, `DiffIDOf`, and `String`. `TestRunner` adapts `testing.T`-style subtests. `CompressionTestSuite` runs `testBuild`, `testDigestAndVerify`, and `testWriteAndOpen`. Helpers include `compressBlob`, `parseStargz`, `rewriteTOCJSON`, `listDigests`, `checkStargzTOC`, `checkVerifyTOC`, invalid verification checks, many `stargzCheck` implementations, tar entry builders (`file`, `dir`, `symlink`, hardlink/device/fifo helpers), landmark builders, random data, gzip stream detection, and DiffID calculation.
+
+Control flow: `testBuild` compares archives built through the writer path against archives built through `Build`, for uncompressed/gzip/zstd input tars, multiple tar formats, path prefixes, chunk sizes, and min chunk sizes. `testDigestAndVerify` builds digest maps for expected chunks, checks raw TOC digests, verifies all chunk digests, rewrites TOCs or data to confirm failures, and validates invalid stargz inputs. `testWriteAndOpen` writes tar entries through lossy and lossless append paths, opens the result, validates telemetry callbacks, stream offsets, chunk counts, file reads at many offsets, xattrs, owners, modes, links, devices, landmarks, hardlink coalescing, and multi-file-in-one-chunk behavior.
+
+State and persistence: all source tars, compressed blobs, rewritten TOCs, and caches are in memory. Digest maps persist expected chunk identifiers across checks. Random 64 KiB data is generated for chunk grouping tests, so failures may include randomized content but deterministic structure.
+
+Dependencies and integration points: this file is tightly coupled to internal `estargz` writer/reader APIs such as `Build`, `Open`, `OpenFile`, `OpenFileWithPreReader`, `VerifyTOC`, `ChunkEntryForOffset`, TOC marshaling, stream offsets, and lossless append. Compression implementations in sibling packages implement `TestingController` to inherit this suite.
+
+Risks: because it is test-only, helper behavior may encode assumptions that make implementation changes hard, especially exact stream counts and offsets. Some random-content tests are probabilistic around compression size assumptions. Invalid-path tests cover digest mismatches and malformed TOC entries but not every malformed tar/gzip/zstd condition. The helper reads and reconstructs whole blobs, so it is not a performance benchmark.
+
+Test signals: very high value cross-implementation regression suite. It catches incompatible compression implementations, wrong TOC shape, broken DiffID, broken chunk digests, lost metadata, incorrect stream boundaries, and cache/preread regressions.

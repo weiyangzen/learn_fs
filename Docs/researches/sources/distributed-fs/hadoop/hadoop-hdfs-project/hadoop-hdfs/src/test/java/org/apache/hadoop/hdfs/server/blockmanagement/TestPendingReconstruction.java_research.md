@@ -1,0 +1,21 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/blockmanagement/TestPendingReconstruction.java
+
+## Purpose
+`TestPendingReconstruction` validates the queue and BlockManager integration behavior for blocks whose reconstruction work has been scheduled but not yet completed. It covers the standalone `PendingReconstructionBlocks` timeout map, BlockManager transitions after timeout, incremental block reports, file deletion cleanup, NameNode metrics, and duplicate scheduling suppression for the same destination DataNode.
+
+## Important APIs, types, and functions
+The main production types under test are `PendingReconstructionBlocks`, `BlockManager`, `LowRedundancyBlocks`, `BlocksMap`, `FSNamesystem`, and the NameNode RPC path `blockReceivedAndDeleted`. Test helpers include `genBlockInfo`, `BlockManagerTestUtil.computeAllPendingWork`, `BlockManagerTestUtil.updateState`, `DataNodeTestUtils.pauseIBR`, `DataNodeTestUtils.setHeartbeatsDisabledForTests`, and `GenericTestUtils.waitFor`. The tests directly use `DatanodeStorageInfo`, `DatanodeDescriptor`, `StorageReceivedDeletedBlocks`, `ReceivedDeletedBlockInfo`, and `BlockStatus.RECEIVED_BLOCK` to simulate reconstruction reports.
+
+## Control flow
+`testPendingReconstruction` builds an in-memory pending queue, inserts blocks with distinct target sets, decrements targets, checks duplicate increments, waits for timeout monitor cleanup, and verifies timed-out block accounting. `testProcessPendingReconstructions` creates a MiniDFSCluster, manually inserts pending entries, updates the corresponding `BlocksMap` generation stamp, waits for timeout, and asserts only the stored block with the current generation stamp enters `neededReconstruction`. It then stops the redundancy thread and checks that `addBlock` only clears a pending record when the reported block generation stamp matches the pending block.
+
+`testBlockReceived` creates a one-replica file, disables DataNode heartbeats, raises replication to the DataNode count, computes work, then sends two incremental block reports from new DataNodes. After flushing async block operations, the pending target count drops once per reporting DataNode and remains idempotent on duplicate reports. `testPendingAndInvalidate` corrupts two replicas, schedules reconstruction, deletes the file, and polls until pending reconstruction count returns to zero. `testReplicationCounter` constructs three block states to drive successful, timed-out, and unscheduled reconstruction metrics. `testPendingReConstructionBlocksForSameDN` pauses IBR, runs work computation twice, and checks block state logs contain only one reconstruction assignment for the block.
+
+## State and persistence behavior
+The file is concerned with volatile NameNode state: pending reconstruction entries, timeout counters, low-redundancy queues, block map membership, incremental block operation queues, corrupt replica state, invalidation cleanup, and metrics counters. It does not test edit-log or fsimage persistence directly, but it does verify that deleting namespace state removes pending records before the normal timeout window. Generation stamp matching is a critical state invariant: stale reports must not clear pending reconstruction for a newer block version.
+
+## Dependencies and integration points
+The tests integrate with MiniDFSCluster, DistributedFileSystem, NameNode metrics, DataNode heartbeat/IBR controls, `NameNodeAdapter`, `FSDirectory`, and BlockManager internals guarded by `RwLockMode.BM`. They depend on asynchronous background threads for pending timeout and redundancy monitoring, so multiple tests use sleeps or `GenericTestUtils.waitFor`.
+
+## Risks and test signals
+The test suite signals regressions where reconstruction work is double-counted, never times out, times out against stale block metadata, fails to decrement on incremental block reports, survives file deletion incorrectly, or corrupts metrics. Flakiness risks come from real timers, background monitors, and log counting. The strongest behavioral signals are exact queue sizes, generation-stamp equality, NameNode metric counters, and idempotent pending replica counts after duplicate block reports.

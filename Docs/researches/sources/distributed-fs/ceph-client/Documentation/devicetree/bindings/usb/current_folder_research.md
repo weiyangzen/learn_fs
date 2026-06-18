@@ -1,0 +1,141 @@
+# Folder Research: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 127
+- Recursive researched files: 127
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/allwinner,sun4i-a10-musb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/amlogic,meson-g12a-usb-ctrl.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/analogix,anx7411.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/apple,dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/aspeed,ast2600-udc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/aspeed,usb-vhub.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/atmel,at91rm9200-udc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/atmel,at91sam9rl-udc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/brcm,bcm7445-ehci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/brcm,bdc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/brcm,usb-pinmap.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/cdns,usb3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/chipidea,usb2-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/chipidea,usb2-imx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ci-hdrc-usb2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/corechips,sl6341.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/cypress,cypd4226.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/cypress,hx3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/dwc2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/eswin,eic7700-usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/faraday,fotg210.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fcs,fsa4480.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fcs,fusb302.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fsl,imx8mp-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fsl,imx8mq-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fsl,imx8qm-cdns3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fsl,ls1028a.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fsl,usb2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/fsl,usbmisc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/generic-ehci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/generic-ohci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/generic-xhci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/genesys,gl850g.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/google,lga-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/gpio-sbu-mux.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/hisilicon,hi3798mv200-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ingenic,musb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/intel,ixp4xx-udc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/intel,keembay-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ite,it5205.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/marvell,pxau2o-ehci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/maxim,max33359.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/maxim,max3420-udc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/maxim,max3421.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/mediatek,mt6360-tcpc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/mediatek,mt6370-tcpc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/mediatek,mtu3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/mediatek,musb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/microchip,lan9691-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/microchip,mpfs-musb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/microchip,usb2514.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nvidia,tegra-xudc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nvidia,tegra124-xusb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nvidia,tegra186-xusb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nvidia,tegra194-xusb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nvidia,tegra210-xusb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nvidia,tegra234-xusb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nxp,imx-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nxp,isp1760.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nxp,lpc3220-udc.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nxp,ptn36502.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/nxp,ptn5110.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/onnn,nb7vpq904m.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/parade,ps5511.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/parade,ps8830.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/qcom,dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/qcom,pmic-typec.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/qcom,wcd939x-usbss.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/realtek,rtd-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/realtek,rtd-type-c.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/realtek,rts5411.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,rzg3e-xhci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,rzn1-usbf.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,rzv2m-usb3drd.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,usb-xhci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,usb3-peri.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/richtek,rt1711h.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/richtek,rt1719.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/rockchip,dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/rockchip,rk3399-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/samsung,exynos-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/samsung,exynos-usb2.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/smsc,usb3503.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/snps,dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/socionext,uniphier-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/spacemit,k1-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/st,st-ohci-300x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/st,stusb160x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/st,typec-stm32g0.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/starfive,jh7110-usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/starfive,jhb100-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/terminus,fe11.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,am62-usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,hd3ss3220.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,j721e-usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,keystone-dwc3.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,omap4-musb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,tps6598x.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,tusb1046.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,tusb73x0-pci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,twl4030-usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,twl6030-usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,usb8020b.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/ti,usb8041.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-device.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-drd.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-hcd.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-hub.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-nop-xceiv.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-switch-ports.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-switch.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-uhci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb-xhci.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/usb251xb.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/vialab,vl817.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/wch,ch334.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/willsemi,wusb3801.yaml`
+- `sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/fakecontext/context.go -->
+# sources/cloud-native/moby/internal/testutil/fakecontext/context.go
+
+Purpose: creates temporary Docker build contexts for tests. Important APIs are `New`, modifiers `WithFile`, `WithDockerfile`, `WithFiles`, `WithBinaryFiles`, `Fake.Add`, `Fake.Delete`, `Fake.Close`, and `Fake.AsTarReader`. Control flow creates a 0755 temp directory when no directory is supplied, applies modifiers with fatal test failures on error, writes requested files with parent directory creation, deletes paths recursively, and tars the directory through `moby/go-archive`. State is the temporary filesystem tree and optional tar stream. Dependencies are standard filesystem APIs and archive generation. Risks include path traversal through caller-supplied file names, binary buffers being converted through `String`, and callers needing `Close` or test cleanup to remove temp state. Test signal is broad because many build and fake storage tests depend on reproducible context layout.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/fakecontext/context.go -->

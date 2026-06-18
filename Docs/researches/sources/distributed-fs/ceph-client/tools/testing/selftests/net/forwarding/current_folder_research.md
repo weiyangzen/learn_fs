@@ -1,0 +1,145 @@
+# Folder Research: sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 131
+- Recursive researched files: 131
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/Makefile`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_activity_notify.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_fdb_learning_limit.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_fdb_local_vlan_0.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_igmp.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_locked_port.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_mdb.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_mdb_host.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_mdb_max.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_mdb_port_down.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_mld.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_port_isolation.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_sticky_fdb.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_vlan_aware.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_vlan_mcast.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/bridge_vlan_unaware.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/config`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/custom_multipath_hash.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/devlink_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/dual_vxlan_bridge.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/fib_offload_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/gre_custom_multipath_hash.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/gre_inner_v4_multipath.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/gre_inner_v6_multipath.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/gre_multipath.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/gre_multipath_nh.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/gre_multipath_nh_res.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6_forward_instats_vrf.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_custom_multipath_hash.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_flat.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_flat_key.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_flat_keys.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_hier.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_hier_key.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_hier_keys.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_inner_v4_multipath.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_inner_v6_multipath.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ip6gre_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_flat_gre.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_flat_gre_key.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_flat_gre_keys.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_hier_gre.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_hier_gre_key.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_hier_gre_keys.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipip_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/ipmr.c`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/lib_sh_test.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/local_termination.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/min_max_mtu.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_bound.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_bridge_1d.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_bridge_1d_vlan.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_bridge_1q.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_bridge_1q_lag.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_changes.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_flower.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_lag_lacp.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_neigh.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_nh.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_topo_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_vlan.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_gre_vlan_bridge_1q.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_topo_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/mirror_vlan.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/no_forwarding.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/pedit_dsfield.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/pedit_ip.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/pedit_l4port.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/q_in_vni.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/q_in_vni_ipv6.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_1d.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_1d_lag.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_lag.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_pvid_vlan_upper.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_vlan.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_vlan_upper.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_bridge_vlan_upper_pvid.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_broadcast.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_mpath_nh.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_mpath_nh_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_mpath_nh_res.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_mpath_seed.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_multicast.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_multipath.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_nh.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/router_vid_1.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_ets.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_ets_core.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_ets_tests.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_red.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_tbf_core.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_tbf_ets.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_tbf_etsprio.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_tbf_prio.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/sch_tbf_root.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/skbedit_priority.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_actions.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_chains.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_common.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_flower.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_flower_cfm.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_flower_l2_miss.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_flower_port_range.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_flower_router.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_mpls_l2vpn.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_police.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_shblocks.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_taprio.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_tunnel_key.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tc_vlan_modify.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/tsn_lib.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_asymmetric.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_asymmetric_ipv6.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1d.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1d_ipv6.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1d_port_8472.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1d_port_8472_ipv6.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1q.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1q_ipv6.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1q_mc_ul.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1q_port_8472.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_bridge_1q_port_8472_ipv6.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_reserved.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_symmetric.sh`
+- `sources/distributed-fs/ceph-client/tools/testing/selftests/net/forwarding/vxlan_symmetric_ipv6.sh`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_stat.c
+
+Mpers fetcher for legacy/native `struct stat`. It conditionally enables layout support per personality, fetches tracee stat data, normalizes device, inode, size, blocks, mode, uid/gid, timestamps, and optional nanoseconds into `struct strace_stat`. State is only the destination structure. Dependencies are `asm_stat.h`, `stat.h`, `MPERS_DEFS`, and compile-time `HAVE_*` probes. Risks are unsupported compat layouts, signed/unsigned timestamp conversion, and missing nanosecond fields. Tests should cover stat-family syscalls on supported personalities, nanosecond-preserving platforms, unsupported-layout fallback, and bad pointers.

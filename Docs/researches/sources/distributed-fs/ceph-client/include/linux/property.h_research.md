@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/property.h
+
+Purpose: provides the unified firmware-node and device-property interface used by drivers to read DT/ACPI/software-node properties, traverse child nodes and graph endpoints, manage software nodes, and discover device connections independent of firmware source.
+
+Important APIs and types: `enum dev_prop_type`, `struct property_entry`, `struct software_node_ref_args`, and `struct software_node` describe typed property data and software-provided firmware nodes. Device and fwnode readers cover presence, bools, integer arrays/scalars, strings, string matching, reference args, IRQs, DMA attributes, PHY mode, I/O mapping, and match data. Traversal helpers include parent and child iteration macros, scoped cleanup variants, named child lookup/counts, and graph endpoint/remote endpoint helpers. Property constructors include `PROPERTY_ENTRY_*` and `SOFTWARE_NODE_REFERENCE()`. Software node lifecycle APIs include register/unregister group, create/remove fwnode, attach/remove device software node, and managed creation.
+
+Control flow: a driver obtains `dev_fwnode(dev)` or a child fwnode, reads typed properties, traverses children/endpoints with reference release handled manually or by scoped macros, and may synthesize software nodes where firmware is incomplete. Graph helpers walk endpoints and remote ports for media/display-style topologies. Software node property arrays can be duplicated/freed and attached to devices for later property lookup.
+
+State and persistence: property data is firmware or software-node state owned by firmware backends, device core, or registering drivers. Fwnode handles are reference-managed; software nodes persist until unregistered or removed. Properties describe hardware configuration and are not mutable runtime state unless a software node provider replaces them.
+
+Dependencies and integration points: depends on `fwnode.h`, cleanup annotations, array/count macros, device core, ACPI/OF/software-node backends, IRQ mapping, device links/connections, graph bindings, PHY helpers, and DMA attribute code. It is a major integration layer for portable drivers.
+
+Risks and test signals: risks include leaking fwnode references when breaking loops, wrong typed property sizes, inline vs pointer property lifetime bugs, graph endpoint reference leaks, firmware-backend semantic differences, and accidental use of unavailable child nodes. Test DT, ACPI, and software-node devices; property count/read error paths; scoped iteration early returns; graph remote endpoint parsing; software node register/unregister; and device-managed cleanup.

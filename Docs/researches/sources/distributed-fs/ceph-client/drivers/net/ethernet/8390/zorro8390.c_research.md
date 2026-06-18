@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/8390/zorro8390.c
+
+Purpose: this is the Amiga Zorro-II NS8390 driver for Ariadne II and older X-Surf boards containing RTL8019AS-compatible controllers. It adapts Zorro memory-mapped, word-spaced registers to the 8390 core.
+
+Important APIs, types, and functions: `cards[]` maps Zorro IDs to board names and register offsets. The file includes `lib8390.c` directly after redefining `ei_inb/outb` and `EI_SHIFT`, producing local `__ei_*` and `__NS8390_*` core entry points. `zorro8390_reset_8390()`, `zorro8390_get_8390_hdr()`, `zorro8390_block_input()`, and `zorro8390_block_output()` implement the hardware callbacks. `zorro8390_init()` performs board reset, SAPROM reading, IRQ request, `ei_status` setup, netdev ops assignment, core init, and registration. `zorro8390_init_one()` matches Zorro devices, allocates a netdev, reserves memory, and calls init. `zorro8390_remove_one()` unregisters and frees resources.
+
+Control flow: module init registers a Zorro driver. Probe maps the Zorro product ID to a register offset, reserves a double-size NE I/O extent due to word-spaced registers, allocates a private 8390 netdev, and calls `zorro8390_init()`. Init resets the board, primes remote-DMA registers to read the SAPROM, reads every other byte from the dataport, programs word mode, requests the shared Amiga ports IRQ, sets the MAC, fills ring pages and callbacks in `ei_status`, assigns register offsets, initializes the 8390 core, and registers the netdev. Packet I/O uses zorro byte/word reads and writes to the remote-DMA dataport, with TX completion polling and timeout reset/reinit. Remove unregisters, frees `IRQ_AMIGA_PORTS`, releases the memory region, and frees the netdev.
+
+State and persistence: state lives in the Zorro drvdata netdev, global `ei_status`, static register-offset table, and hardware registers. `dev->base_addr` stores a virtual Zorro address; release converts it back with `ZTWO_PADDR()`. There is no persistent storage.
+
+Dependencies and integration points: depends on Zorro bus IDs, Amiga hardware/interrupt helpers, Zorro-II address conversion, and the 8390 core included as source. It provides netdev operations that call the included `__ei_*` symbols. Shared interrupt behavior depends on the Amiga ports IRQ.
+
+Risks: including `lib8390.c` directly makes macro definitions and symbol names highly order-dependent. Release uses `NE_IO_EXTENT * 2`, while probe reservation also uses doubled extents; mistakes in address conversion would leak or release wrong regions. Remote-DMA conflict handling is diagnostic only. Word swapping of the packet header count and odd-byte RX/TX tails are endian-sensitive. A shared IRQ without a board-specific IRQ-status filter can rely heavily on the 8390 interrupt path to reject non-device interrupts.
+
+Test signals: build for Amiga/Zorro configs. Runtime signs include correct product match and offset selection, MAC read from SAPROM, shared IRQ stability, packet RX/TX with odd lengths, TX RDC timeout absence, clean remove/unload, and no endian-swapped packet length errors.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/ptp/ptp_vclock.c
+
+Purpose: implements virtual PTP clocks layered on a physical PTP clock. A virtual clock has independent time and frequency adjustment while deriving its raw cycle base from the parent clock, allowing multiple consumers to discipline separate PHC views.
+
+Important APIs/types/functions: `struct ptp_vclock` is defined in `ptp_private.h`. This file maintains an RCU hash table from virtual PHC index to vclock for timestamp conversion. `ptp_vclock_register()` creates and registers a child PTP clock. `ptp_vclock_unregister()` removes it. `ptp_get_vclocks_index()` returns child PHC indexes for a physical clock when the PTP core is built in. `ptp_convert_timestamp()` converts a hardware timestamp to a selected virtual clock domain. Clock operations include `ptp_vclock_adjfine()`, `adjtime()`, `gettime()`, `gettimex()`, `settime()`, `getcrosststamp()`, and periodic refresh.
+
+Control flow: registration allocates a vclock, copies default info, selects `gettimex64` when the parent provides `getcyclesx64` otherwise `gettime64`, enables crosstimestamp if the parent provides `getcrosscycles`, registers the child with the parent device, sets a lockdep subclass, initializes the timecounter at zero, schedules refresh, and inserts into the hash. Reads either call parent `getcycles64()` through the cyclecounter or use parent cycle/crosstimestamp APIs to convert parent cycles through the virtual timecounter. Adjustments update the timecounter and multiplier under the vclock mutex.
+
+State and persistence: virtual time offset/frequency live in the child timecounter/cyclecounter and are lost when the vclock is unregistered. The global RCU hash persists only while children exist. Parent `vclock_index[]` state is managed by sysfs code.
+
+Dependencies and integration: tightly coupled to `ptp_sysfs.c`, `ptp_private.h`, parent PTP driver cycle APIs, timecounter/cyclecounter math, RCU, and PTP class device lookup. Built-in-only exported helpers are used by timestamp consumers that need to map hardware timestamps into virtual clock time.
+
+Risks and test signals: virtual clocks cannot safely stack on other virtual clocks. Parent clocks without cycle support may need free-running behavior while children exist. `ptp_convert_timestamp()` returns zero time if the vclock index is not found or the mutex is interrupted, so callers need to treat zero carefully. Test child creation/deletion, parent removal with children, independent adjfine/adjtime/settime, crosstimestamp conversion, RCU lookup during unregister, and built-in export users.

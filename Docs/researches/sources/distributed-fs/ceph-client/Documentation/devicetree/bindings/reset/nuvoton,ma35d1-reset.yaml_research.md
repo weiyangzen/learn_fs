@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/reset/nuvoton,ma35d1-reset.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/reset/nuvoton,ma35d1-reset.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/reset/nuvoton,ma35d1-reset.yaml` is a Linux devicetree YAML schema for the `Nuvoton MA35D1 Reset Controller` reset controller binding. The system reset controller can be used to reset various peripheral controllers in MA35D1 SoC. It is not executable Ceph or kernel logic; it is a hardware-description ABI used by DTS authors, dt-schema, and Linux subsystem drivers so that board descriptions match what the driver will parse at probe or early boot.
+
+## Important APIs, Types, and Functions
+The public API surface is the schema's accepted node shape. `compatible` uses ordered `items` sequence and covers 2 compatible tokens: `nuvoton,ma35d1-reset`, `syscon`. Top-level properties are `compatible`, `reg`, `#reset-cells`. Across nested schemas and child nodes this file mentions 3 distinct property names; required properties observed at all levels include `#reset-cells`, `compatible`, `reg`. Node naming is constrained by no explicit node-name constraint. Reset-controller properties publish reset lines or reset-adjacent control registers to consumers: register resources `reg`, reset provider cells and names `#reset-cells`, and clock/power hooks `#reset-cells`. Required properties are `compatible`, `reg`, `#reset-cells`; consumer phandles depend on the cell count and identifier headers remaining stable.
+
+## Control Flow, State, and Persistence
+Control flow is declarative JSON-schema evaluation. `dt-doc-validate`, `dt_binding_check`, and `dtbs_check` load the YAML, expand `$ref` links, match nodes by `compatible` or referenced common-schema use, enforce required properties, evaluate composition/conditional keywords, and validate inline DTS examples. At runtime, reset-controller drivers register reset lines with the Linux reset framework, while consumers assert or deassert those lines through phandle specifiers validated by this schema. The YAML itself stores no mutable runtime state and writes no persistent data; persistence is the source-controlled devicetree ABI and the DTB blobs built from DTS. External references used in evaluation are none; schema composition/conditional keywords present are none.
+
+## Dependencies and Integration Points
+Maintainers: Chi-Fang Li <cfli0@nuvoton.com>, Jacky Huang <ychuang3@nuvoton.com>. Integration points include the Linux devicetree core meta-schema, any referenced common binding schemas, in-tree DTS/DTSI users under the Ceph-client kernel source, and driver `of_match_table` entries for the compatible strings. `$ref` dependencies are none; pattern-property child-node APIs are none. The file provides 1 example block that should stay aligned with the schema and driver expectations.
+
+## Risks
+Risks are ABI and integration risks. Changing compatible ordering, required keys, resource names, child-node patterns, cell counts, or strictness can reject existing DTS files or let invalid hardware descriptions reach runtime probe. This schema has 3 top-level properties, 3 distinct property names across nested schemas, and this strictness profile: unknown top-level properties are rejected. Conditional branches and shared `$ref` schemas should be checked against all in-tree users because schema-only edits can still break board builds or driver binding.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/reset/nuvoton,ma35d1-reset.yaml` for targeted schema and example validation, then `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/reset/nuvoton,ma35d1-reset.yaml` against representative DTS users using `nuvoton,ma35d1-reset`, `syscon`. The file contains 1 inline example, so example compilation should be part of the signal. Integration signals include reset-controller registration, consumer phandle validation, SoC DTSI builds with reset ID headers, and device probe paths that can assert/deassert the documented reset lines.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/reset/nuvoton,ma35d1-reset.yaml -->

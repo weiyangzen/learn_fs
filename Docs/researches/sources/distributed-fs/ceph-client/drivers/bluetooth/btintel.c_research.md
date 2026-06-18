@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/drivers/bluetooth/btintel.c
+
+## Purpose
+Provides the common Intel Bluetooth controller support used by transports such as USB and PCIe. It owns Intel vendor HCI command helpers, legacy and TLV version parsing, firmware and DDC download flows, boot and reset handshakes, diagnostics and devcoredump hooks, ACPI/UEFI platform policy handling, SAR/PPAG/DSBR configuration, and the combined setup/shutdown callbacks installed on `struct hci_dev`.
+
+## Important APIs, Types, And Functions
+- Exported setup and operation entry points include `btintel_configure_setup`, `btintel_shutdown_combined`, `btintel_recv_event`, `btintel_hw_error`, `btintel_set_bdaddr`, `btintel_set_diag`, `btintel_set_quality_report`, `btintel_set_msft_opcode`, and `btintel_print_fseq_info`.
+- Firmware entry points include `btintel_read_version`, `btintel_read_boot_params`, `btintel_download_firmware`, `btintel_bootloader_setup_tlv`, `btintel_bootup`, and `btintel_secure_send_result`.
+- Version and firmware data structures come from `btintel.h`: `struct intel_version`, `struct intel_version_tlv`, `struct intel_boot_params`, `struct intel_reset`, `struct intel_debug_features`, and SAR/DDC command structs.
+- Internal helpers split secure firmware headers by RSA, ECDSA, or hybrid ECDSA+LMS format, stream aligned payload fragments through opcode `0xfc09`, parse `CMD_WRITE_BOOT_PARAMS`, select firmware names, and apply DDC records through opcode `0xfc8b`.
+- `btintel_regmap_init` exposes an HCI-command-backed regmap bus for transports that need register-like access over Intel vendor opcodes.
+
+## Control Flow
+Combined setup starts in `btintel_setup_combined`. It may send an initial HCI reset for controllers with broken command credits or shutdown LED state, then issues Intel Read Version (`0xfc05`) with the TLV selector. Legacy responses are routed to legacy ROM patching or legacy bootloader setup; TLV responses are validated, quirked, and routed to `btintel_bootloader_setup_tlv`. Legacy ROM patching enters manufacturing mode, replays a `.bseq` stream of expected command/event pairs, and exits manufacturing mode with or without reset/patch activation. Bootloader setup requests `.sfi` firmware, sends secure header fragments and aligned data fragments, waits for a firmware-download vendor event, sends Intel reset to boot the loaded image, waits for bootup, applies `.ddc`, and enables Intel event masks.
+
+The TLV boot path can perform a two-stage load. It downloads IML or operational firmware based on `img_type`, reads a fresh TLV version after the first boot, applies DSBR if the product/transport requires it, optionally downloads the second image, then applies DDC, SCO offload callbacks, SAR, PPAG, MSFT extension opcode, and final version logging. Vendor events are intercepted by `btintel_recv_event`: bootloader firmware-download events clear `INTEL_DOWNLOADING`, bootup events clear `INTEL_BOOTING`, diagnostics events can become devcoredumps, and all other events fall through to `hci_recv_frame`.
+
+## State And Persistence
+Persistent driver state is mostly in `struct btintel_data` attached as HCI private data. Its bitmap tracks `INTEL_BOOTLOADER`, `INTEL_DOWNLOADING`, `INTEL_FIRMWARE_LOADED`, `INTEL_FIRMWARE_FAILED`, `INTEL_BOOTING`, legacy ROM quirks, ACPI reset state, and `INTEL_WAIT_FOR_D0`. These flags are used as wait-bit synchronization points between setup code and vendor event receive paths. `coredump_info` caches driver name, hardware variant, and firmware build for common devcoredump headers. Firmware and DDC blobs are requested from the firmware loader and released after use. ACPI reset method selection persists as `btintel_data.acpi_reset_method`; ACPI/UEFI values are read on demand and not written back by this file.
+
+## Dependencies And Integration Points
+The file depends on Bluetooth HCI core command synchronization, HCI quirk and callback registration, firmware loading, regmap, ACPI DSM/_PRR/_RST methods, EFI runtime variables, device coredump support, and Intel vendor HCI opcodes. Transports call these helpers directly or install them through `btintel_configure_setup`; the PCIe transport additionally depends on the shared boot flags and event helpers while supplying its own receive/event path. Firmware artifacts live under `intel/*.sfi`, `intel/*.ddc`, and legacy `intel/*.bseq` names selected from hardware version fields.
+
+## Risks And Edge Cases
+Firmware parsing assumes command headers and fragment alignment inside untrusted firmware files; malformed sizes or missing boot-parameter commands can abort setup. The version matrix is conservative, so new hardware variants fail until enumerated. Timeout-driven waits depend on vendor events being consumed by the transport receive path; missed boot/download events leave setup blocked until timeout. PCIe skips USB-style reset-to-bootloader recovery, so transport reset must cover those failures. ACPI package parsing for PPAG/SAR assumes exact package shape after minimal validation, and SAR/DDC writes are policy-sensitive. The static `coredump_info` is shared across devices, which is acceptable for typical controller counts but can blur metadata in multi-device cases.
+
+## Test Signals
+Useful tests include default Intel BDADDR detection, legacy `.bseq` replay with expected event mismatch, missing and malformed `.sfi`/`.ddc` files, TLV parsing with truncated or unknown TLVs, RSA/ECDSA/hybrid firmware header variants, firmware download timeout and secure-send failure events, IML-to-OP two-stage boot on PCIe, ACPI PPAG/BRDS/_PRR presence and malformed package cases, EFI DSBR absent/present values, diagnostics event devcoredump creation, and shutdown LED workaround behavior.

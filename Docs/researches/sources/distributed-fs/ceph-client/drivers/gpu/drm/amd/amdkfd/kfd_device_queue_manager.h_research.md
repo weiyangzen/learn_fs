@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdkfd/kfd_device_queue_manager.h
+
+This header defines the DQM abstraction used by device lifecycle, process queue management, debug, reset, and ASIC-specific queue-manager files. It separates generic scheduling behavior from generation-specific SH_MEM, MQD, and SDMA details.
+
+`struct device_queue_manager_ops` is the scheduler vtable for create/destroy/update, process register/unregister, initialize/start/stop/uninitialize, halt/unhalt, kernel queues, cache policy, process termination, eviction/restore, wave-state retrieval, reset, and CRIU checkpoint operations. `struct device_queue_manager_asic_ops` supplies per-ASIC QPD update, cache policy, SDMA VM setup, and MQD-manager construction. `struct device_queue_manager` stores the vtables, MQD managers, packet manager, device pointer, queue list, counters, bitmaps, VMID/PASID state, fence memory, runlist flags, scheduler flags, debug trap VMID, GFX9.4.3 logical XCC state, wait tuning, destroy waitqueue, and hang-detection records.
+
+Control flows through `dqm->ops`; generic init installs the correct ops and ASIC init functions populate `asic_ops`. Exported helpers expose queue geometry, SDMA counts, debug trap VMID reservation, debug runlist unmap/remap, queue suspend/resume, snapshots, and queue lookup by doorbell. Inline helpers encode SH_MEM base extraction, protect DQM mutation with `dqm_lock` plus `memalloc_noreclaim_save`, read SDMA activity from userspace RPTR+8, and refresh wait times.
+
+Dependencies include `kfd_priv.h`, MQD manager declarations, Linux mutex/list/mm APIs, and queue/process types. Risks are broad semantic coupling and lock misuse. Test with all ASIC builds, lockdep under reclaim/MMU notifier scenarios, queue snapshot correctness, SDMA counter fault handling, and debug suspend/resume under MES and packet-manager schedulers.

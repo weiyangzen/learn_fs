@@ -1,0 +1,5 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_pci.h
+
+This header defines the central T7xx PCI device context and PM entity interface. `struct t7xx_addr_base` stores mapped PCIe MAC, external register, translation, infracfg, and MHCCIF bases. `struct t7xx_pci_dev` is the shared object passed through modem, CLDMA, DPMAIF, and port layers. `struct md_pm_entity` lets internal hardware modules register suspend/resume callbacks with an ID.
+
+Control-flow contracts include interrupt callback arrays indexed by `enum t7xx_int`, device modes exposed through sysfs and reset flows, sleep-disable acquire/release APIs, PM entity registration, and reprobe helpers. State persists for the PCI device lifetime and is guarded by mutexes, spinlocks, atomics, and completions. Dependencies are PCI core, completions, IRQ callbacks, and `t7xx_reg.h`. Risks are callback array misuse, PM entity ID collisions, sleep-lock imbalance, and mode reads outside `T7XX_MODE_LAST`. Tests should cover PM entity duplicate/unregister behavior, mode transitions, and concurrent sleep disable/enable users.

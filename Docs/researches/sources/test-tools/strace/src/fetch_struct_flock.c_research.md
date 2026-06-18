@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_flock.c
+
+Mpers fetcher for `struct flock` and `struct flock64`. It compares tracee layout with native `struct flock64`; when layouts match it fetches directly, otherwise it copies individual lock fields into a native `flock64` destination. State is only caller-provided destination data. Dependencies are `<linux/fcntl.h>`, `MPERS_DEFS`, and `umove_or_printaddr`. Risks are struct-layout assumptions, signedness of offsets/pids, and printing from a fetch helper on bad pointers. Tests should cover native and compat `F_GETLK`/`F_SETLK`, 32-bit offsets, `flock64`, and bad pointer handling.

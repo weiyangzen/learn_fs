@@ -1,0 +1,15 @@
+# sources/control-plane/mayastor/io-engine/tests/lvs_pool.rs
+
+Purpose: comprehensive LVS pool integration suite covering create/import/export/destroy, lvol and share persistence, sector-size support, encrypted pools, I/O error alerting, stall detection/recovery, and hot-remove/hot-reattach behavior.
+
+Important APIs/types/functions: uses `Lvs`, `LvsLvol`, `PoolArgs`, `ReplicaArgs`, `PoolOps`, `pool_to_proto`, `PoolErrors`, `PoolAlerts`, `PoolState`, `NvmfSubsystem`, `UntypedBdev`, `bdev_create`, crypto `EncryptionKey`, LVM `VolumeGroup`, dmsetup state helpers, and reactor I/O helpers. Constants configure pool alert thresholds. `pool_info` converts a pool to proto and extracts error/alert state. `StallBdev` abstracts AIO vs uring stall cases. `TestHotRmGuard` creates/deletes ublk loop devices.
+
+Control flow: `lvs_pool_test` walks the happy-path matrix: failed import of absent pool, create, duplicate create failure, import/export preserving UUID, destroy/recreate with new UUID, multiple lvol creation, second pool filtering, export/import preserving lvols, NVMf share cleanup on pool destroy, share property persistence/non-persistence, import restoring only persisted shares, 4K sector AIO/uring pools, final cleanup, default driver behavior, and encrypted pool creation with crypto base checks. `lvs_errors` borks an LVM logical volume to force EIO, verifies alert escalation from attention to warning at threshold, reset behavior, and cleanup on create/import/export/destroy failures. `lvs_stall` suspends dm devices to create stalled I/O, checks critical stall alerts, recovery after resume, intermittent stall alert escalation, and transition-window reset. `lvs_hot_remove` and `lvs_hot_detach_and_reattach` use ublk hot deletion to verify removing pools leave `iter_all` but not active `iter`, reject reimport while removing, eventually clean up, support reattach/import, and allow a faulted nexus child to be onlined after reattach.
+
+State and persistence: uses `/tmp/io-engine-tests` disk files, loop devices, LVM VGs/LVs, ublk devices, LVS on-disk metadata, share properties stored as lvol properties, and encrypted crypto vbdev state. The hot-remove tests intentionally exercise transient removing state in the LVS registry.
+
+Dependencies and integration points: SPDK LVS blobstore, AIO/uring bdevs, crypto vbdevs, NVMf subsystem registry, LVM/dmsetup shell tooling, ublk kernel module, pool gRPC proto conversion, device monitor, reactor scheduling, and Mayastor pool CLI thresholds.
+
+Risks and edge cases: very environment-sensitive: requires loop, LVM, dmsetup, ublk support, kernel behavior, and enough privileges. Some cleanup is in `Drop` guards and shell scripts. Hot-remove paths have comments documenting known races around lvol destroy callbacks during bdev removal. Fixed paths and names can collide.
+
+Test signals: broadest pool signal in this subset. It validates durable metadata, share restoration, cleanup invariants, alert thresholds, stalled I/O recovery, encrypted backing stack, and hot-remove state-machine behavior.

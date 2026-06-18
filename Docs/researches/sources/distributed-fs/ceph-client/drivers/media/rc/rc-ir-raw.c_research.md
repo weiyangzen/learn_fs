@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/rc/rc-ir-raw.c
+
+Purpose: implements rc-core raw IR event handling. It queues pulse/space events from drivers, runs decoder handlers in a per-device kernel thread, exposes encoder helper routines, manages raw protocol module registration, and bridges raw events to LIRC/BPF paths.
+
+Important APIs and functions: driver-facing exports are `ir_raw_event_store`, `ir_raw_event_store_edge`, `ir_raw_event_store_with_timeout`, `ir_raw_event_store_with_filter`, `ir_raw_event_set_idle`, and `ir_raw_event_handle`. Encoder exports include `ir_raw_gen_manchester`, `ir_raw_gen_pd`, `ir_raw_gen_pl`, `ir_raw_encode_scancode`, and `ir_raw_encode_carrier`. Lifecycle functions are `ir_raw_event_prepare`, `ir_raw_event_register`, `ir_raw_event_unregister`, `ir_raw_event_free`, `ir_raw_handler_register`, and `ir_raw_handler_unregister`.
+
+Control flow: `ir_raw_event_prepare` allocates per-device raw state and installs `change_protocol`. Drivers push events into the kfifo from IRQ or process context, optionally merging samples and entering idle through `ir_raw_event_store_with_filter`. `ir_raw_event_handle` wakes the per-device thread, which drains the FIFO, checks event sanity, runs matching raw handlers under `ir_raw_handler_lock`, forwards events to LIRC, and remembers the previous event. Edge-only hardware uses a timer to batch wakeups and synthesize timeout events. Protocol changes call handler raw register/unregister hooks and adjust receive timeout based on enabled handlers.
+
+State and persistence: global state includes raw client and handler lists plus an atomic available-protocol bitmask. Per-device state includes the raw FIFO, worker thread, edge timer, previous/current events, idle state via the parent `rc_dev`, and conditional decoder/BPF state. All state is volatile and removed during unregister/free.
+
+Dependencies and integration points: depends on kthreads, kfifo, timers, mutexes, kmod autoloading from `rc-main.c`, LIRC hooks, and `rc-core-priv.h`. Protocol decoder modules register `ir_raw_handler` entries here. rc drivers call the event-store APIs from hardware interrupt paths.
+
+Risks and edge cases: FIFO overflow drops IR samples and only reports `-ENOSPC` to the caller. Handler decode runs under the global raw handler mutex, so slow decoders can block protocol changes and other raw clients. `ir_raw_event_unregister` stops the thread and deletes the edge timer but leaves `dev->raw` allocated until release, relying on lock ordering to protect BPF queries. Edge timeout synthesis can enqueue zero-duration or repeated events if hardware timestamps are erratic. Encoder helpers write partial buffers on `-ENOBUFS`.
+
+Test signals: raw receiver drivers delivering pulses, edge-only drivers generating timeout events, protocol sysfs enable/disable, decoder module autoload/unload, LIRC mode2 output, BPF attach/detach while unregistering, FIFO saturation tests, and encoder round trips for NEC/RC5/RC6/JVC/Sony protocols.

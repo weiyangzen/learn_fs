@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/fakegit/fakegit.go -->
+# sources/cloud-native/moby/internal/testutil/fakegit/fakegit.go
+
+Purpose: builds a throwaway HTTP-served bare Git repository for build-context tests. Important APIs are `FakeGit`, `New`, and `Close`; the local `gitServer` abstraction supports either a local `httptest.Server` or `fakestorage` so the daemon can access the repo on remote test hosts. Control flow creates a fake context, initializes a Git repo, configures identity, commits files, clones it bare into a temp root, runs `git update-server-info`, and exposes `<server>/<name>.git`. State persists in temp directories and an HTTP server until `Close`. Dependencies include the system `git` binary, `fakecontext`, `fakestorage`, and `httptest`. Risks include host Git availability, current working directory mutation, remote daemon reachability, and cleanup on fatal paths; test signal is for Docker build-from-git behavior.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/internal/testutil/fakegit/fakegit.go -->

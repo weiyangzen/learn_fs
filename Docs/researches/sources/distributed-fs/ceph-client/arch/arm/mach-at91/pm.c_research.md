@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/arm/mach-at91/pm.c
+
+Purpose: implements AT91/Microchip suspend, standby, ultra-low-power, backup, and cpuidle integration for several AT91 families. It owns global `soc_pm` state, maps PMC/RAMC/SHDWC/SFRBU/DDR PHY resources from device tree, copies the final suspend trampoline into SRAM, and installs `platform_suspend_ops`.
+
+Important APIs/types/functions: defines `struct at91_pm_bu`, `struct at91_pm_sfrbu_regs`, Ethernet quirk structures, `struct at91_soc_pm`, wake-source tables, and `pm_modes`. Exported API is `at91_suspend_entering_slow_clock()`. Init entry points include `at91rm9200_pm_init()`, `at91sam9_pm_init()`, `sam9x60_pm_init()`, `sam9x7_pm_init()`, `sama5_pm_init()`, `sama5d2_pm_init()`, and `sama7_pm_init()`. Core paths are `at91_pm_begin()`, `at91_pm_enter()`, `at91_suspend_finish()`, `at91_pm_modes_init()`, `at91_dt_ramc()`, `at91_pm_sram_init()`, and `at91_pm_backup_init()`.
+
+Control flow: early parameter `atmel.pm_modes=` selects standby/suspend modes. The SoC-specific init validates supported modes, maps RAM controller and optional PM controllers, sets wake-source callbacks, and registers suspend ops only after SRAM code is copied. Suspend begins by selecting `soc_pm.data.mode`, programming ULP1 wake sources, and marking backup state. Enter checks Ethernet quirks and slow-clock safety, calls the SRAM suspend routine directly or through `cpu_suspend()` for backup, then restores outer cache and wake-source programming.
+
+State and persistence: persistent state lives in global `soc_pm`, mapped controller pointers, Ethernet device/node references, SRAM function pointer `at91_suspend_sram_fn`, and secure RAM backup structure `soc_pm.bu`. Backup mode stores a canary, resume physical address, DDR PHY calibration, and the first memory words that may be corrupted by recalibration.
+
+Dependencies and integration: depends on ARM suspend/cache APIs, genalloc SRAM pools, OF platform lookup, Atmel PMC/RAMC register definitions, SMCCC secure calls via `sam_secure`, clock framework, wakeup-source accounting, and platform cpuidle. Device tree compatibility strings choose RAMC, PMC, wake sources, Ethernet clocks, SHDWC, SFRBU, secure SRAM, and DDR PHY.
+
+Risks: this code writes raw power, clock, and memory-controller registers while RAM may be in self-refresh, so ordering, cache flushes, and SRAM copy correctness are critical. Missing DT nodes silently downgrade requested modes in some cases, while backup mode can fail without secure RAM or DDR PHY mapping. Ethernet WoL quirks deliberately disable clocks or block suspend, so regressions can either lose wake capability or hang affected MACs. The secure PM fallback path relies on firmware return values and mode indexes matching `pm_modes`.
+
+Test signals: boot on each supported SoC with `CONFIG_ATMEL_PM`, suspend/resume for `standby`, `ulp0`, `ulp0-fast`, `ulp1`, and `backup` where supported, `atmel.pm_modes=` parsing, WoL-only and mixed wake-source cases, missing-controller DT fallback, secure PM firmware paths, and repeated backup resume preserving DDR contents.

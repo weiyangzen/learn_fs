@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source4/dsdb/tests/python/ad_dc_medley_performance.py
+
+Purpose: this is a long-running AD DC performance medley that grows a temporary OU tree, exercises user/group/link churn, runs LDAP searches of different selectivity, and repeatedly performs `samba-tool domain join` against the populated database. It is intended as a performance signal rather than a pure correctness test.
+
+Important APIs/types/functions: option parsing uses Samba, credential, version, and optional `SubunitOptions` groups; the legacy `ANCIENT_SAMBA` path falls back to `subunit.run.SubunitTestRunner`. `UserTests` owns all tests, backed by class-level `GlobalState` counters and `active_links`. Core helpers are `_add_users()`, `_add_users_ldif()`, `_test_join()`, `_test_unindexed_search()`, `_test_indexed_search()`, `_test_base_search()`, `_test_complex_search()`, `_test_member_search()`, `_test_memberof_search()`, `_link_user_and_group()`, `_unlink_user_and_group()`, `_test_link_many_users()`, `_test_link_many_users_batch()`, `_test_ldif_well_linked_group()`, and `_test_delete_many_users()`. The important external types are `SamDB`, `Message`, `MessageElement`, `Dn`, `LdbError`, LDAP scopes, and modify flags.
+
+Control flow: module import parses `<host>`, builds `lp` and `creds`, normalizes a bare host to `ldap://` or `tdb://`, then runs either `TestProgram` or the ancient Samba fallback. Each test opens a new `SamDB`, computes a PID-scoped OU layout, reseeds randomness from the test number, and mutates shared `GlobalState` so later tests depend on earlier additions, links, and deletions. The test ordering is encoded in method names such as `test_00_03_*`, `test_09_02_*`, and `test_24_02_*`.
+
+State and persistence behavior: the script deliberately leaves objects in the target database across test methods. The OU name includes `os.getpid()`, but there is no final tree delete; state persists until manually removed or overwritten by another run. `GlobalState.active_links` is an in-memory model used to avoid duplicate link add/delete operations and to choose victims for removal.
+
+Dependencies and integration points: integrates with Samba Python modules from `bin/python`, the live AD database through `SamDB`, LDB modify/search APIs, and `samba.netcmd.main.samba_tool` for domain joins. `--use-paged-search` injects the `modules:paged_searches` LDB option.
+
+Risks: this is order-dependent, destructive within its PID OU, and expensive. `_test_delete_many_users()` has a suspicious stale-link condition `if s >= x[0] > e` that can never be true for normal `s < e`, leaving `active_links` inaccurate after deletions. The join helper removes its tempdir only on success. Search timings are printed but not bounded by assertions, so regressions are detected by external performance comparison rather than test failures.
+
+Test signals: successful subunit completion means Samba survived the churn, while stderr timing lines for indexed, unindexed, base, member, memberOf, and complex searches are the main performance signal.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/kernel/irq.c
+
+Generic ARC C interrupt entry. init_IRQ() initializes the whole DT irqchip tree, then invokes per-CPU SMP and machine hooks. arch_do_IRQ() is called from assembly with a hardware IRQ number and pt_regs; it enters IRQ context, installs irq_regs, dispatches generic_handle_domain_irq(NULL,hwirq), restores old regs, and exits IRQ context. State is current irq_regs and generic irq accounting. Dependencies are irqchip_init, machine_desc, plat_smp_ops, genirq domains, and assembly vector handlers. Risks are missing default irqdomain, incorrect hwirq from assembly, and irq_enter/exit imbalance. Test signals are boot interrupt initialization, timer interrupts, external IRQ delivery, /proc/interrupts, and IRQ tracing.

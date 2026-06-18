@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/prog_tests/test_bpf_smc.c
+
+Purpose: `test_bpf_smc.c` validates BPF policy control over transparent TCP-to-SMC protocol selection. It sets up loopback service topology, optionally configures SMC UEID through generic netlink, attaches `bpf_smc` programs, populates a policy map, opens client/server links, and verifies SMC versus fallback counters.
+
+Important APIs/types/functions: `smc_policy_ip_key` and `smc_policy_ip_value` define the policy map key/value. Non-s390x builds include generic-netlink helpers `send_cmd()`, `get_smc_nl_family_id()`, `smc_ueid()`, `setup_ueid()`, and `cleanup_ueid()` for `SMC_GEN_NETLINK` UEID configuration. `setup_netns()` creates `bpf_smc_netns` and adds loopback addresses. `set_client_addr_cb()` binds client source addresses. `run_link()` starts a TCP server, connects from a selected source address, and closes both ends. `block_link()` inserts block-mode entries in `smc_policy_ip`. `test_topo()` loads/attaches the skeleton, writes `/proc/sys/net/smc/hs_ctrl`, updates policy, runs topology links, and checks counters. `test_bpf_smc()` handles setup, subtest execution, skip, and cleanup.
+
+Control flow: setup first ensures UEID requirements are met, then creates a test net namespace with `127.0.1.0/8` and `127.0.2.0/8` on loopback. The topology subtest attaches the BPF programs and obtains `smc_policy_ip`. It writes `linkcheck` to `hs_ctrl`, blocks `CLIENT_IP -> SERVER_IP_VIA_RISK_PATH` and `SERVER_IP -> SERVER_IP`, then runs service links: client to primary server service 1, server to itself service 2, client to primary server service 2, and client to risky server service 3. It asserts `smc_cnt` and `fallback_cnt` after stages to confirm policy and fallback decisions.
+
+State and persistence: state includes SMC UEID table entries, a named network namespace, loopback IP aliases, `/proc/sys/net/smc/hs_ctrl`, BPF links/programs/maps, policy map contents, and skeleton BSS counters. Cleanup removes the UEID and frees the namespace. There is no repository-file persistence, but sysctl/UEID failures could leave system SMC state changed until cleanup succeeds.
+
+Dependencies: depends on SMC kernel support, IPPROTO_SMC availability or local fallback definition, generic netlink SMC family on non-s390x, loopback networking, `network_helpers.h`, generated `bpf_smc.skel.h`, BPF fmod_ret/update-socket-protocol hooks used by the skeleton, and privileges to write SMC sysctls and create namespaces.
+
+Integration points: the test integrates BPF programs with kernel SMC protocol selection, generic netlink management, BPF maps as policy storage, and normal TCP socket helpers. It models a service graph where some links should use SMC and some should fall back.
+
+Risks: unsupported or misconfigured SMC causes setup failure and an explicit skip. Generic-netlink parsing is hand-written and assumes response layout sufficient to find `CTRL_ATTR_FAMILY_ID`. `send_cmd()` sets `nla_len = nla_len + 1 + NLA_HDRLEN`, which relies on string-style payload expectations. Writing `hs_ctrl` and UEID management are system-level side effects. The test uses fixed addresses and namespace name, so stale resources can collide.
+
+Test signals: setup success or skip is the first signal. Topology success is indicated by skeleton load/attach, valid policy map fd, successful service connections, `smc_cnt` progressing from 2 to 3 to 4, and `fallback_cnt` progressing from 1 to 2 according to blocked/risky links.

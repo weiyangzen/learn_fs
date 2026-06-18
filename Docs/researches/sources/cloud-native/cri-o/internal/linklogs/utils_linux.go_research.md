@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/linklogs/utils_linux.go
+
+Purpose: Linux mount helpers for linked pod logs. `mountLogPath` performs a read-only bind mount from kubelet pod logs into the emptyDir target; `unmountLogPath` performs a lazy detach. State is host mount table changes. Dependencies are `golang.org/x/sys/unix`. Integration is called by `link_logs.go` after path validation and before SELinux relabeling. Risks include requiring privileges, read-only bind semantics varying by kernel, lazy unmount hiding busy users, and no direct path validation in this layer. Test signals are likely integration-level; no direct unit tests are present in this subset.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/sibyte/bcm1480/irq.c
+
+Purpose: BCM1480 interrupt mapper support. It initializes interrupt maps/masks, owns IRQ affinity, acknowledges LDT/HT interrupts, and dispatches CP0 interrupt pins.
+
+Important APIs and control flow: `bcm1480_mask_irq()` and `bcm1480_unmask_irq()` update high/low IMR mask registers under a raw spinlock. SMP affinity retargets interrupt masks from the old physical CPU to the new one. `ack_bcm1480_irq()` clears LDT pending bits on all CPUs when needed, optionally writes HT EOI space, then masks the interrupt. `init_bcm1480_irqs()` installs one `irq_chip` for all BCM1480 IRQs. `arch_init_irq()` maps all interrupts to IP2, mailbox interrupts to IP3, clears mailboxes, masks everything except mailbox bits, and enables CP0 IP lines. `plat_irq_dispatch()` routes timer IP4, mailbox IP3, or IP2 through status registers.
+
+State, persistence, and integration: state includes `bcm1480_irq_owner[]`, IMR mapping/mask/mailbox registers, and Linux IRQ descriptors. Dependencies include physical CPU maps, optional HT EOI space, SMP mailbox handler, and BCM1480 register definitions. Risks include global raw spinlock contention, possible off-by-one checks using `<= BCM1480_NR_IRQS`, dispatching only one pending interrupt, and HT assumptions. Test signals are timer IRQs, mailbox IPIs, PCI/LDT IRQ acknowledgement, affinity changes, and no stale mailbox interrupts.

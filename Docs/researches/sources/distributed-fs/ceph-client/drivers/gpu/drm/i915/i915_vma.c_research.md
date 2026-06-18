@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/i915_vma.c
+
+Purpose: implements the core i915 virtual memory area lifecycle for GEM objects bound into GGTT, DPT, or per-process GPU address spaces. It creates per-object/per-VM/per-view singleton VMAs, pins and binds them into `drm_mm`, builds special scatter-gather views, tracks GPU activity, and unbinds or destroys VMAs safely.
+
+Important APIs/functions: exports `i915_vma_instance`, `i915_vma_bind`, `i915_vma_pin_ww`, `i915_vma_pin`, `i915_ggtt_pin`, `i915_vma_unbind`, `i915_vma_unbind_async`, `__i915_vma_evict`, `i915_vma_wait_for_bind`, `i915_vma_pin_iomap`, `i915_vma_revoke_mmap`, `i915_vma_parked`, and shrinkability helpers. Internal helpers cover allocation from `slab_vmas`, VMA lookup/creation in the object rb-tree, `i915_vma_insert`, rotated/remapped/partial page-table construction, active callbacks, GGTT fencing, scanout flag cleanup, and forced destruction.
+
+Control flow: `i915_vma_instance()` first looks up a matching VMA under `obj->vma.lock`; `vma_create()` resolves races while inserting into the object tree and VM unbound list. Pinning gets pages, optionally prepares async bind work and page-table stash, locks `vm->mutex`, inserts a `drm_mm_node` when needed, binds missing global/local PTEs, records active page counts, and increments the pin count. Unbind waits for active/async bind completion, revokes mmap/fences/iomap, snapshots resource state into `i915_vma_resource_unbind()`, clears bind flags, detaches the node, invalidates TLBs for synchronous unbind, and drops page pins. Closed VMAs are deferred to `i915_vma_parked()` for idle-time destruction.
+
+State and persistence: state is in `struct i915_vma`: `node`, `vm`, `obj`, `pages`, `iomap`, `fence`, `guard`, pin/bind/error flags, `active`, `pages_count`, `gtt_view`, object/vm/closed list links, and current `resource`. It is in-memory only and lifetime is bounded by the GEM object or VM close. Async bind/unbind fences can outlive the live VMA through refcounted `i915_vma_resource` snapshots.
+
+Dependencies and integration: depends on GEM object locking and page pinning, `drm_mm`, `i915_active`, dma fences, `i915_vma_resource`, GGTT fencing, GT runtime PM, TLB invalidation, display frontbuffer and scanout code, TTM/lmem object helpers, and selftests. Display exports use `i915_display_vma_interface`.
+
+Risks: lock ordering is delicate across object reservation locks, `vm->mutex`, runtime PM, async fence work, and shrinkers. Incorrect page-view SG construction can corrupt display mappings. Failing to flush GGTT writes, revoke userfault mmap, or invalidate TLBs before page release risks stale CPU/GPU access. Pin-count overflow, stale closed-list entries, and async bind/unbind races are guarded mostly by assertions and fence ordering.
+
+Test signals: `CONFIG_DRM_I915_SELFTEST` includes `selftests/i915_vma.c`; runtime signals include GEM debug assertions, tracepoints `trace_i915_vma_bind/unbind`, error logging of allocator stacks, eviction/execbuf tests, display scanout paths, and suspend/resume or VM teardown exercising async unbind.

@@ -1,0 +1,15 @@
+# sources/cloud-native/nydus-snapshotter/pkg/auth/kubelet.go
+
+Purpose: implements Kubernetes kubelet credential provider plugin support for registry auth. It reads kubelet credential provider config, executes matching plugin binaries, caches plugin responses according to kubelet cache key semantics, and returns the best matching auth for an image.
+
+Important APIs and functions: `InitKubeletProvider` initializes global `kubeletProvider`; `NewKubeletProvider` loads YAML/JSON config and validates providers; `validateCredentialProvider` enforces name, API version, match images, cache duration, and env constraints; `KubeletProvider.GetCredentials` is the main provider method; helper functions include `evictExpired`, `getCachedCredential`, `bestKeychainMatch`, `computeCacheKey`, `parseRegistry`, `resolveCacheDuration`, `isImageAllowed`, `execPlugin`, and Kubernetes-ported `urlsMatch` helpers.
+
+Control flow: initialization requires non-empty config path and plugin bin dir, reads `CredentialProviderConfig`, rejects empty or duplicate provider definitions, and stores pointers to config providers. Credential lookup parses/normalizes the ref, evicts expired cache entries, tries cache lookup in image, registry, then global order, and checks `ValidUntil` so renewal can demand credentials that survive the next interval. On cache miss, every matching plugin is executed serially. Each response's auth map is folded into an all-keychains map where earlier plugins win overlapping auth keys. Positive TTL responses are cached by image/registry/global key. The returned credential is the most specific registry/path glob match.
+
+State and persistence: global `kubeletProvider` is initialized once under `kubeletProviderMu`. Per-provider cache is an in-memory `map[string]*kubeletCredential` guarded by an RW mutex. Plugin execution inherits the process environment plus configured env vars. No disk persistence is used.
+
+Dependencies and integration points: consumes `k8s.io/kubelet/config/v1` and `credentialprovider/v1` types, executes external plugin binaries, uses `sigs.k8s.io/yaml`, and mirrors kubelet matching/cache semantics. It is included in renewable providers only after `InitKubeletProvider` succeeds.
+
+Risks: plugin execution is serial and uses a hard-coded one-minute timeout. `execPlugin` checks API version but not response kind. Cache entries with zero expiry are removed by eviction and are also treated as no-cache. `bestKeychainMatch` uses reverse alphabetical ordering as a specificity proxy; this works for tested path cases but is not a full path-length comparator. Config provider pointers are taken from the unmarshaled slice; because the slice lives in the provider, the pointers remain valid.
+
+Test signals: `kubelet_test.go` thoroughly covers config validation, plugin execution, no-match/no-auth behavior, provider precedence, path specificity, global initialization, URL glob matching, cache eviction, `ValidUntil`, TTL behavior, cache key types, and registry parsing.

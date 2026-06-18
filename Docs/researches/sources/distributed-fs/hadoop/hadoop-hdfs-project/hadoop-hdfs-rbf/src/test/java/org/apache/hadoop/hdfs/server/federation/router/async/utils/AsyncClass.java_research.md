@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/async/utils/AsyncClass.java
+
+Purpose: test utility implementation that mirrors `SyncClass` behavior using `AsyncUtil` primitives, serving as a compact model for async chaining, exception handling, foreach control, finally cleanup, and concurrent composition.
+
+Important APIs/types/functions: extends `SyncClass`; uses `CompletableFuture`, `ExecutorService`, `Executors`, `Async.CUR_COMPLETABLE_FUTURE`, `asyncApply`, `asyncCatch`, `asyncComplete`, `asyncCurrent`, `asyncFinally`, `asyncForEach`, `asyncReturn`, `asyncThrowException`, and `asyncTry`. The constructor creates a single daemon worker named `Async Worker`.
+
+Control flow: methods call `timeConsumingMethod()` to seed the current future, then compose async transformations. `applyMethod` adds prefixes or optional exceptions. `exceptionMethod` emits async exceptions directly. `forEachMethod`, `forEachBreakMethod`, and `forEachBreakByExceptionMethod` iterate asynchronously with normal break or exception-driven break. `applyThenApplyMethod` demonstrates an async apply that can enqueue another async call. `applyCatchThenApplyMethod` recovers from IO exceptions by rerunning input 1. `applyCatchFinallyMethod` wraps/catches and always clears resources. `currentMethod` dispatches multiple current async calls and aggregates future results.
+
+State and persistence behavior: state is in the executor service, mutable result builders, provided resource lists, and thread-local async future context. There is no persistent storage. Risks include no explicit executor shutdown, shared mutable builders captured by async callbacks, and reliance on `AsyncUtil` thread-local ordering. Test signals come from `TestAsyncUtil`, which compares this async implementation with `SyncClass`.

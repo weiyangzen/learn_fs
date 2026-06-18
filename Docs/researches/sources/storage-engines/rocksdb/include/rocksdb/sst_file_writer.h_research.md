@@ -1,0 +1,15 @@
+# sources/storage-engines/rocksdb/include/rocksdb/sst_file_writer.h
+
+Purpose: This header declares the public offline SST writer used to create external SST files for later ingestion into RocksDB. All generated keys have sequence number zero unless timestamp APIs encode user-defined timestamps.
+
+Important APIs and types: `ExternalSstFileInfo` records file path, smallest/largest point keys, smallest/largest range-deletion keys, checksum and checksum function name, sequence number, file size, entry counts, range-deletion count, and file version. `SstFileWriter` is a non-thread-safe class with constructors from `EnvOptions`, `Options`, optional comparator/column family, page-cache invalidation flag, and IO priority. It exposes `Open(file_path, Temperature)`, `Put()` overloads with and without timestamp, `PutEntity()` for wide columns, `Merge()`, `Delete()` overloads, `DeleteRange()` overloads, `Finish(ExternalSstFileInfo*)`, `FileSize()`, and static `CreatedBySstFileWriter()`.
+
+Control flow: Users construct a writer with DB-compatible options, call `Open()`, add sorted point entries through `Put`/`Merge`/`Delete`, optionally add range tombstones in any order, and call `Finish()` to close and optionally fill metadata. Point keys must be strictly after previous point keys according to the comparator. Timestamp overloads require timestamp size matching the comparator and respect `persist_user_defined_timestamps`; when persistence is disabled, only the minimum timestamp is accepted and not stored.
+
+State and persistence behavior: The writer creates a real SST file at the target path, with optional filesystem temperature and page-cache invalidation while writing. It owns opaque writer state in `rep_`, tracks file size, writes table properties including creation identity, and returns metadata useful for ingestion. Range tombstones in the same file do not delete point keys in that same file.
+
+Dependencies and integration points: It depends on advanced options, Env, options, table properties, types, and wide columns. It integrates with external file ingestion (`IngestExternalFileOptions`), offline sorting/bulk-load pipelines, tests, file checksums, compression/table factories, column-family metadata, and `SstFileReader`.
+
+Risks and edge cases: The class is not thread-safe. Incorrect key ordering causes errors. Comparator/table options must match the target DB/CF or ingestion/read behavior is unsafe. Timestamp-aware comparators reject non-timestamp point APIs. Range tombstone ordering differs from point ordering and does not affect same-file point entries, which can surprise callers. Failing to call `Finish()` leaves an incomplete file. Page-cache invalidation and IO priority depend on Env/FileSystem support.
+
+Test signals: Tests should cover sorted-key enforcement, timestamp persistence rules, wide-column writes, merge/delete/range-delete entries, file-info population, checksum metadata, `CreatedBySstFileWriter()`, ingestion into compatible and incompatible CFs, page-cache invalidation hooks, file size reporting, and incomplete/open/finish lifecycle errors.

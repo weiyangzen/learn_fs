@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.h
+
+Purpose: interface and state definition header for the RTL8821A one-antenna coexistence module. It defines BT firmware bitfields, RSSI tolerance, BT and Wi-Fi status enums, coexistence algorithm IDs, persistent decision/status structs, and external notification callbacks.
+
+Important APIs/types/functions: `BT_INFO_8821A_1ANT_B_*` decodes BT C2H profile and busy flags. `BT_INFO_8821A_1ANT_A2DP_BASIC_RATE()` interprets extension bit 0. `enum _BT_INFO_SRC_8821A_1ANT`, `enum _BT_8821A_1ANT_BT_STATUS`, and `enum _BT_8821A_1ANT_WIFI_STATUS` define normalized source/state values. `enum BT_8821A_1ANT_COEX_ALGO` mirrors the profile-combination decision tree. `struct coex_dm_8821a_1ant` stores firmware, software, algorithm, TX-limit, and error state; `struct coex_sta_8821a_1ant` stores observed BT/Wi-Fi status. The `ex_btc8821a1ant_*` prototypes expose the callback surface, including debug control.
+
+Control flow: no executable logic, but the declarations describe the one-antenna lifecycle: initialize hardware and coexistence DM, react to IPS/LPS/scan/connect/media/special packet/BT-info/halt/PNP/periodic events, and display debug state. The Wi-Fi status enum gives the C file labels for connected scan, special packet, idle, busy, and non-connected association/authentication policy branches.
+
+State and persistence: `coex_dm_8821a_1ant` persists previous/current TDMA, ignore-WLAN-active, BT auto-report, LPS/RPWM, low penalty RA, coex table values, backed-up Wi-Fi ARFR/retry/AMPDU registers, algorithm, Wi-Fi channel info, current rate mask, ARFR/retry/AMPDU limit types, ARP count, and last error condition. `coex_sta_8821a_1ant` persists BT disabled/link/profile booleans, IPS/LPS, high-priority Wi-Fi task state, priority counters, BT RSSI, BT TX/RX mask, C2H history/counters, inquiry/page, retry count, and BT extension info.
+
+Dependencies and integration: relies on common Realtek coexistence types and constants included before this header, especially `struct btc_coexist`, `struct seq_file`, `BIT*`, and Linux fixed-width integer aliases. The callback names are consumed by the rtlwifi coexistence operation table for RTL8821A 1-ant devices.
+
+Risks: the file lacks an include guard in the visible content, unlike the 8723B header, so repeated direct inclusion would depend on higher-level include structure. `ex_btc8821a1ant_pnp_notify` is declared twice with different parameter names; this is harmless for C type checking but signals maintenance drift. Fixed 10-byte BT-info storage in the struct must match firmware C2H lengths. Enum additions must be synchronized with C switch statements and debug display expectations.
+
+Test signals: compile all rtlwifi BT coexistence variants to verify declarations. Runtime debug output should expose coherent BT-info source counters, Wi-Fi/BT status values, TDMA case, ignore-WLAN-active state, rate mask, aggregation settings, and backed-up register values after init and during BT profile changes.

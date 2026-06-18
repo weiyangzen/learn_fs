@@ -1,0 +1,11 @@
+# Research: sources/storage-engines/foundationdb/tests/rare/PerpetualWiggleStorageMigration.toml
+
+- **Purpose:** Rare simulation test specification for the `PerpetualWiggleStorageMigration` scenario. It keeps broader, heavier, or less frequently scheduled workloads in the simulation suite.
+- **Source facts:** 18 lines, 414 bytes, executable=False.
+- **Important APIs/types/functions:** Declarative TOML contract: 1 test block(s), titles PerpetualWiggleStorageMigration, workloads PerpetualWiggleStorageMigrationWorkload, top-level keys configuration, testPriority.
+- **Control flow:** The TestRunner passes this TOML to fdbserver simulation with `-f`. The simulator iterates 1 `[[test]]` block(s) (PerpetualWiggleStorageMigration) and schedules each block's workload list (PerpetualWiggleStorageMigration:1). Workload ordering, durations, clear-after-test settings, and failure-injection workloads determine the control flow inside simulation.
+- **State and persistence:** The file is declarative and persists no state by itself. Runtime state is created by the simulation engine, including simulated database contents, backup/restore artifacts, restart information, logs, or workload-specific key ranges named by the workloads. Storage-engine-focused workloads stress on-disk or checkpoint representations in the simulated/noSim environment.
+- **Dependencies:** Depends on the FoundationDB simulator workload registry for: PerpetualWiggleStorageMigrationWorkload. Top-level keys: configuration, testPriority. Configuration/test knobs: config='triple', storageEngineType=0, processesPerMachine=2, coordinators=3, machineCount=45, asanMachineCount=20.
+- **Integration points:** Integrated by suite location `rare` and consumed by `fdbserver -r simulation -f sources/storage-engines/foundationdb/tests/rare/PerpetualWiggleStorageMigration.toml` through the Python TestRunner/CTest path.
+- **Risks:** Storage-engine tests are sensitive to engine selection/exclusion knobs and checkpoint determinism.
+- **Test signals:** Signals are simulator parse success, workload completion, trace absence/presence of severity 40, and any workload-specific invariants for PerpetualWiggleStorageMigrationWorkload. Clear-after-test modes: none. Timeouts: none.

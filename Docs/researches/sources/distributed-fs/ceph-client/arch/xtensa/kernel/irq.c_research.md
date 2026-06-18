@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/irq.c -->
+# sources/distributed-fs/ceph-client/arch/xtensa/kernel/irq.c
+
+Purpose: handles Xtensa interrupt dispatch, IRQ domain translation/mapping, interrupt display, legacy/OF IRQ controller initialization, external IRQ numbering, and hotplug IRQ migration. Important APIs are `do_IRQ`, `arch_show_interrupts`, `xtensa_irq_domain_xlate`, `xtensa_irq_map`, `xtensa_map_ext_irq`, `xtensa_get_ext_irq_no`, `init_IRQ`, and `migrate_irqs`.
+
+Control flow sends hardware IRQs to `generic_handle_domain_irq`, reports SMP IPI and fake-NMI counters, translates device-tree interrupt specs, assigns generic handlers based on XCHAL interrupt type masks, initializes either OF irqchips or legacy PIC/MX controllers, initializes IPIs under SMP, and moves IRQ affinities off offline CPUs. Persistent state includes irq domains, irq descriptors, per-CPU NMI counts, affinity masks, and controller state. Dependencies include irqchip drivers, XCHAL masks, OF, SMP/IPI code, and `asm/traps.h`. Integration points are exception entry interrupt path, generic IRQ subsystem, device tree, `/proc/interrupts`, SMP hotplug, and timer/profiling interrupts. Risks include bad type mapping, invalid external IRQ translation, stack overflow under IRQ, and affinity migration races. Test signals include interrupt boot/probe, `/proc/interrupts`, device IRQs, timer IRQ, SMP IPI counters, and CPU hotplug with active IRQs.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/kernel/irq.c -->

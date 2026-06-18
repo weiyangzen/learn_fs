@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/debug/log_test.go
+
+Purpose: benchmarks for debug logging call overhead and ID formatting. APIs benchmarked are `debug.Log` with static strings, `restic.ID.Str()`, and `restic.ID.String()`. Control flow repeatedly calls logging with no assertions, so measured behavior depends on environment-enabled debug state. State is benchmark-local ID values plus global debug options initialized at package load. Dependencies include `testing` and `restic.ID`. Integration signal is performance-oriented: it helps detect expensive formatting/logging regressions in hot paths. Risks: benchmarks are sensitive to debug environment variables and do not validate correctness.

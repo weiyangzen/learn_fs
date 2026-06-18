@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/keyctl/keyctl01.c
+
+Purpose: basic keyctl syscall exercise for keyring lookup and negative key operations. It first calls `KEYCTL_GET_KEYRING_ID` for `KEY_SPEC_USER_SESSION_KEYRING` and expects success. It then scans downward from `INT32_MAX` until `KEYCTL_READ` returns `ENOKEY`, using that nonexistent key serial to test `KEYCTL_REVOKE` also fails with `ENOKEY`. State is the caller's keyring namespace but no persistent keys are intentionally created. Dependencies are `lapi/keyctl.h` and kernel keyrings support. Risks include the scan cost and unusual key ID allocation density. Test signals are pass for session keyring lookup and expected `ENOKEY` on revoking a missing key.

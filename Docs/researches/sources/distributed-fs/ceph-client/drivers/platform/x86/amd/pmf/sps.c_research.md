@@ -1,0 +1,23 @@
+# sources/distributed-fs/ceph-client/drivers/platform/x86/amd/pmf/sps.c
+
+## Purpose
+`sps.c` implements Static Power Slider support for the AMD Platform Management Framework (PMF). It bridges Linux platform profiles to AMD firmware/APMF power-limit programming so user-visible profile choices such as performance, balanced, and low-power become concrete SPL, SPPT, FPPT, STT, and PMF PPT limits. It supports both the original PMF interface, which stores full per-source/per-mode power-limit tables, and PMF IF v2, which maps source/profile pairs to APTS granular state indexes.
+
+## Important APIs, Types, and Functions
+The file uses `struct amd_pmf_dev` from `pmf.h`, static table caches `config_store`, `config_store_v2`, and `apts_config_store`, and APMF/PMF helper types such as `struct amd_pmf_static_slider_granular`, `struct amd_pmf_static_slider_granular_v2`, and `struct amd_pmf_apts_granular`. `amd_pmf_init_sps()` is the entry point that initializes the balanced profile, reads firmware defaults, applies initial limits, and registers a `platform_profile` device. `amd_pmf_set_sps_power_limits()` converts the current profile to PMF power mode and dispatches either legacy or v2 limit programming. `amd_pmf_update_slider()` is the legacy get/set command dispatcher for SPL, FPPT, SPPT, SPPT_APU_ONLY, STT_MIN, and STT skin temperature limits. `amd_pmf_update_sps_power_limits_v2()` maps legacy profile modes to v2 `POWER_MODE_BEST_PERFORMANCE`, `BALANCED`, or `BEST_POWER_EFFICIENCY` indexes, then calls `amd_pmf_update_slider_v2()`.
+
+The platform profile callbacks are `amd_pmf_profile_probe()`, `amd_pmf_hidden_choices()`, `amd_pmf_profile_get()`, and `amd_pmf_profile_set()`. They advertise low-power, balanced, and performance as visible choices, hide quiet and balanced-performance, and update firmware on every set. Debug-only dump helpers produce table diagnostics when `CONFIG_AMD_PMF_DEBUG` is enabled.
+
+## Control Flow
+Initialization starts in `amd_pmf_init_sps()`. It sets `dev->current_profile` to `PLATFORM_PROFILE_BALANCED`, checks `APMF_FUNC_STATIC_SLIDER_GRANULAR`, loads either legacy defaults via `apmf_get_static_slider_granular()` or v2 defaults via `apmf_get_static_slider_granular_v2()` plus `apts_get_static_slider_granular_v2()` for every APTS state, then immediately applies balanced limits through `amd_pmf_set_sps_power_limits()`. Finally it registers the platform profile provider with `devm_platform_profile_register()`.
+
+Runtime updates are initiated by `amd_pmf_profile_set()`. It stores the requested profile in `pmf->current_profile`, optionally emits an OS power-slider update to the EC through `apmf_os_power_slider_update()`, then optionally updates static-slider limits. `amd_pmf_get_pprof_modes()` normalizes Linux profile choices into PMF modes; unsupported profiles return `-EOPNOTSUPP`. `amd_pmf_power_slider_update_event()` combines AC/DC source and PMF mode into the APMF flag bits expected by firmware.
+
+## State and Persistence
+State is volatile kernel state. Firmware defaults are cached globally in static table stores, while the live selected profile is per-device in `pmf->current_profile`. The driver writes hardware/firmware limits immediately through `amd_pmf_send_cmd()` and does not persist user profile choice across reboot. On module/device reprobe, the balanced profile and firmware default tables are reloaded.
+
+## Dependencies and Integration Points
+The file depends on PMF core helpers in `pmf.h`, APMF function availability checks, power-source detection through `amd_pmf_get_power_source()`, fixed-point conversion through `fixp_q88_fromint()`, and Linux `platform_profile` registration. Firmware commands are sent by `amd_pmf_send_cmd()` using command IDs defined outside this file. It integrates with the OS platform-profile subsystem and with firmware/EC power-slider notification.
+
+## Risks and Test Signals
+Risk centers on firmware table shape and profile mapping. v2 paths trust firmware-provided APTS indexes; invalid or out-of-range indexes would lead to programming from `apts_config_store.val[idx]` without local bounds checking. Legacy `amd_pmf_update_slider()` ignores command return values, so partial firmware programming failures may not propagate. The global static caches also assume one active PMF device or compatible tables across devices. Useful tests include platform profile registration, profile switching under AC and DC, validation of the APMF update flag for each profile/source pair, suspend/resume profile retention at the PMF core level, and debugfs or trace validation that all expected `SET_*` commands are issued with firmware-derived values.

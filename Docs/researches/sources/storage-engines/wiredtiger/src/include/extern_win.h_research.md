@@ -1,0 +1,15 @@
+## sources/storage-engines/wiredtiger/src/include/extern_win.h
+
+Purpose: this generated Windows platform prototype header declares WiredTiger's Windows OS abstraction surface. It covers Windows error translation, path handling, dynamic loading, futex/semaphore equivalents, condition variables, threads, time, UTF conversion, directory listing, file size, and memory mapping.
+
+Important APIs/types/functions: Windows error APIs include `__wt_getlasterror`, `__wt_formatmessage`, and `__wt_map_windows_error`; extension-facing error mapping is exposed through the main extern surface. Path/privilege/process helpers include `__wt_absolute_path`, `__wt_has_priv`, `__wt_path_separator`, `__wt_process_id`, and `__wt_thread_id`. Synchronization APIs include `__wt_cond_*`, `__wt_futex_wait`, `__wt_futex_wake`, and `__wt_semaphore_*`. Runtime wrappers include `__wt_once`, `__wt_os_win`, `__wt_thread_create`, `__wt_thread_join`, `__wt_thread_str`, `__wt_epoch_raw`, `__wt_sleep`, and `__wt_yield`. Windows-specific conversion and filesystem APIs include `__wti_to_utf16_string`, `__wti_to_utf8_string`, `__wti_win_directory_list*`, `__wti_win_fs_size`, `__wti_win_map`, and `__wti_win_unmap`.
+
+Control flow: connection startup initializes Windows OS services through `__wt_os_win`. File and directory operations route through Windows-specific implementations to handle UTF-16 paths and Windows error codes before returning WiredTiger-style `int` statuses. Dynamic loading and symbol resolution wrap Windows library APIs. Synchronization and thread wrappers provide the same internal shape used by POSIX builds.
+
+State and persistence behavior: durable effects occur through Windows filesystem size, mapping, directory, and dynamic-library operations. UTF conversion buffers are transient `WT_ITEM` allocations but are critical for correct path access. Futex/semaphore/condition/thread state is process-local and coordinates workers that can affect persistence.
+
+Dependencies and integration points: it depends on Windows types such as `DWORD` and wide-character APIs, plus WiredTiger session, file-system, file-handle, semaphore, futex, condition, thread, and dynamic-library types. It integrates with extension loading, storage files, backup/directory traversal, memory-mapped reads, and all worker-thread subsystems.
+
+Risks: Windows path and encoding behavior is the major portability risk. UTF-8/UTF-16 conversion errors, path separator assumptions, and Windows error-code mapping can produce misleading diagnostics or inaccessible files. Memory mapping and unmapping must keep cookies and lengths aligned with Windows handles. Futex emulation and semaphore behavior must match expectations from the shared synchronization code. Visibility attributes are absent compared with POSIX, so exports are governed by the Windows build/link configuration.
+
+Test signals: Windows CI builds, path tests with non-ASCII names, directory listing and backup tests, mmap tests, extension DLL load/unload tests, Windows error mapping tests, and concurrency shutdown tests are the best validation signals.

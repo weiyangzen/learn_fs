@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/can/bxcan.c -->
+## sources/distributed-fs/ceph-client/drivers/net/can/bxcan.c
+
+Purpose: this file implements the STM32 bxCAN SocketCAN driver. It handles MMIO controller registers, shared filter-bank configuration through a syscon regmap, RX FIFO offload, three TX mailboxes, state/error interrupts, bit timing, loopback/listen-only modes, and basic system sleep transitions.
+
+Important APIs, types, and functions: `struct bxcan_priv` stores CAN private state, rx-offload, MMIO `struct bxcan_regs`, shared `gcan` regmap, IRQs, clock, config mode (`BXCAN_CFG_SINGLE`, `BXCAN_CFG_DUAL_PRIMARY`, `BXCAN_CFG_DUAL_SECONDARY`), RMW lock, TX head/tail, and timestamp. Key functions include `bxcan_enable_filters()`, `bxcan_chip_softreset()`, init/sleep mode helpers, `bxcan_mailbox_read()`, RX/TX/state-change IRQ handlers, `bxcan_chip_start()`, `bxcan_open()`, `bxcan_stop()`, `bxcan_start_xmit()`, `bxcan_do_set_mode()`, `bxcan_get_berr_counter()`, `bxcan_probe()`, and suspend/resume hooks.
+
+Control flow: probe maps registers, resolves `st,gcan`, chooses primary/secondary/single filter layout from DT booleans, gets clock and named IRQs (`rx0`, `tx`, `sce`), allocates a CAN netdev with three echo slots, configures bittiming and supported modes, adds FIFO rx-offload, and registers the device. Open enables the clock, opens CAN core, enables rx-offload, requests three shared IRQs, starts the chip, and starts the queue. Chip start soft-resets the controller, leaves sleep, enters init, programs MCR/BTR, configures an accept-all filter for the selected bank, clears TX indices, leaves init, seeds the LEC field, and enables RX/TX/error interrupts. TX fills the next mailbox and starts transmission; TX IRQ consumes completion bits and echo skbs.
+
+State and persistence: runtime state includes `tx_head`, `tx_tail`, CAN state, last RX timestamp, active filter bank, and clock state. Hardware state includes MCR/MSR/IER/ESR/BTR, TX/RX mailbox registers, FIFO release state, and global filter registers shared between bxCAN instances. Suspend sleeps a running device, detaches the netdev, marks state sleeping, and disables the clock; resume reverses that.
+
+Dependencies and integration points: the driver depends on platform OF compatible `st,stm32f4-bxcan`, common clocks, `syscon_regmap_lookup_by_phandle()`, SocketCAN core, rx-offload FIFO helpers, bitfield helpers, iopoll polling, and named platform IRQ resources.
+
+Risks: filter registers are shared between CAN instances, so primary/secondary DT properties must be correct. RMW locking protects local controller registers but not all global filter interactions beyond regmap serialization. Timestamping for error frames uses the most recent RX timestamp, not a dedicated error timestamp. Queue stop/wake depends on memory barriers around head/tail updates. Suspend/resume does not fully re-run `bxcan_chip_start()`, so hardware retention assumptions matter.
+
+Test signals: validate single and dual-instance filter assignment, all three IRQs, loopback/listen-only/berr-reporting modes, TX ring full and wake behavior, FIFO RX parsing for SFF/EFF/RTR frames, bus warning/passive/bus-off and LEC error frames, bit timing limits, clock enable/disable, and suspend/resume while the interface is up and down.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/can/bxcan.c -->

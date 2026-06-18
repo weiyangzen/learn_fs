@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c
+
+Purpose: this file implements amdgpu Linux devcoredump support. On GPU reset or job timeout it snapshots device, firmware, VM fault, IP, ring, and IB information, formats it into a readable text dump asynchronously, and publishes it through `/sys/class/drm/card*/device/devcoredump/data`. When `CONFIG_DEV_COREDUMP` is disabled, it provides no-op stubs.
+
+Important APIs and functions: exported functions are `amdgpu_coredump()`, `amdgpu_coredump_init()`, and `amdgpu_coredump_fini()`. Internal helpers include `amdgpu_devcoredump_fw_info()` for firmware/VBIOS details, `amdgpu_devcoredump_format()` for the text report, `amdgpu_devcoredump_read()` for devcoredump reads, `amdgpu_devcoredump_free()` for cleanup, and `amdgpu_devcoredump_deferred_work()` for asynchronous one-time formatting and `dev_coredumpm()` registration.
+
+Control flow: `amdgpu_coredump()` skips creation if formatting work is already busy, allocates a sized `amdgpu_coredump_info` including per-IB metadata when a PASID job is available, captures task info, ring pointer, ring buffers with unsignalled fences, reset time, skip/VRAM-lost flags, and job IB GPU addresses/sizes, stores it on `adev->coredump`, queues work, and logs the sysfs path. Deferred work computes formatted size with a sizing pass, allocates the buffer, formats again, then publishes the coredump. Reads copy from the cached formatted buffer by offset.
+
+State and persistence: the snapshot lives in memory until the devcoredump core frees it. It includes formatted text, ring snapshots, ring metadata, reset task/time, PASID, and IB descriptors. It is exposed through sysfs devcoredump, not written directly to a repository or driver-owned file. `amdgpu_coredump_fini()` flushes work before hardware/IP teardown.
+
+Dependencies and integration: the file depends on Linux `devcoredump`, generated kernel release strings, DRM printers, amdgpu discovery, IP block print hooks, firmware fields, VM fault and VM-by-PASID lookup, BO reservation/kmap/GART/MMIO access, ring/fence state, job metadata, and reset paths. Call sites include job timeout handling and GPU reset handling.
+
+Risks: formatting can be large, capped at 256 MiB, and performs extensive device/VM/BO inspection after a fault. Ring snapshot allocation uses `total_ring_size` bytes for a `u32 *`, matching byte count but requiring careful offset math. IB dumping must avoid mapping lookups during sizing and must reserve/unreserve BOs correctly. If another coredump is already in progress, new faults are dropped. The comment assumes single-threaded callers for `adev->coredump` pointer updates.
+
+Test signals: `CONFIG_DEV_COREDUMP=y/n` builds, forced GPU reset/job-timeout generation, concurrent reset while work is busy, sysfs read offsets and repeated reads, ring snapshot with signalled and unsignalled fences, IB dump for CPU-accessible and NO_CPU_ACCESS VRAM BOs, VM lookup failure paths, allocation failure injection, and device remove flushing while coredump work is pending.

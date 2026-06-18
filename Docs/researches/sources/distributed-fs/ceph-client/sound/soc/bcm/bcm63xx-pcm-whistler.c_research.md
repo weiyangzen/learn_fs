@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/sound/soc/bcm/bcm63xx-pcm-whistler.c
+
+Purpose: Broadcom BCM63xx Whistler ASoC PCM platform support. It exposes ALSA PCM operations for the companion I2S controller, allocates a fixed write-combined DMA buffer, feeds I2S descriptor FIFOs, and reports period progress from a shared I2S DMA interrupt.
+
+Important APIs, types, and functions: `struct i2s_dma_desc` tracks the current DMA area/address/length programmed into hardware; `struct bcm63xx_runtime_data` tracks the current and next DMA addresses for ALSA pointer reporting. `bcm63xx_pcm_open`, `close`, `hw_params`, `hw_free`, `prepare`, `trigger`, and `pointer` populate `struct snd_soc_component_driver bcm63xx_soc_platform`. `i2s_dma_isr()` handles both RX and TX descriptor completion paths. `bcm63xx_soc_pcm_new()` configures DMA masks, stores playback/capture substreams in `struct bcm_i2s_priv`, and sets the fixed buffer. `bcm63xx_soc_platform_probe()` requests the platform IRQ and registers the component; remove is a no-op.
+
+Control flow: open installs the S32_LE-only hardware constraints, enforces 32-byte period/buffer alignment and integer periods, then allocates runtime-private state. `hw_params` allocates a per-substream descriptor and attaches it as CPU DAI DMA data. `prepare` seeds descriptor length/address registers for TX or RX. `trigger` enables or disables I2S IRQ and stream-enable bits. On interrupt, RX/TX status is read, completed OFF descriptors update `dma_addr_next`, available IFF depth is refilled one period at a time with wraparound, ALSA is notified with `snd_pcm_period_elapsed()`, and interrupt bits are cleared.
+
+State and persistence: persistent runtime state is in ALSA runtime private data, CPU DAI DMA data, and `bcm_i2s_priv` substream pointers. Hardware state lives in I2S regmap registers such as IRQ enables, stream config, and descriptor FIFO address/length registers. No on-disk state exists.
+
+Dependencies and integration: depends on ALSA SoC component callbacks, `bcm63xx-i2s.h` register definitions and `struct bcm_i2s_priv`, Linux regmap, platform IRQs, OF DMA configuration, and coherent DMA mask setup. It is integrated by the BCM63xx I2S driver calling the exported probe/remove helpers.
+
+Risks: ISR assumes `play_substream` or `capture_substream` is valid when the matching interrupt is set; stale or spurious interrupts could dereference NULL. The pointer uses the last completed descriptor address, so underrun/overrun behavior depends on hardware status accuracy. `GFP_NOWAIT` in `hw_params` can fail under memory pressure. Only S32_LE is advertised, which must match the I2S DAI and machine driver. There is no explicit synchronization around descriptor fields shared between trigger/ISR/pointer paths.
+
+Test signals: build with the BCM63xx Whistler audio config enabled; boot/probe should request `i2s_dma` and register a PCM component. Playback and capture tests should verify 32-byte-aligned periods, wraparound at 128 KiB, monotonic ALSA pointers, period interrupts, STOP/SUSPEND/PAUSE cleanup, and no IRQs after stream stop.

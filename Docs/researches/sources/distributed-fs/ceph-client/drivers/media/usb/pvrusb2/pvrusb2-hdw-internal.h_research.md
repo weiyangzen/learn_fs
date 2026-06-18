@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/usb/pvrusb2/pvrusb2-hdw-internal.h
+
+Purpose: private hardware-core header for the pvrusb2 USB video driver. It defines the internal `struct pvr2_hdw`, internal control metadata, lock helpers, firmware/pathway state constants, control callback types, and low-level prototypes that implementation files use but public V4L/sysfs-facing layers should not include.
+
+Important APIs, types, and functions: `struct pvr2_ctl_info` describes each control's name, type, V4L/internal IDs, defaults, validation, dirty tracking, symbol conversion, and V4L flag callback. `struct pvr2_ctld_info` adds mutable description storage for dynamically generated MPEG controls. `struct pvr2_ctrl` binds a control descriptor to a `struct pvr2_hdw`. `struct pvr2_hdw` is the central state object: USB handles, V4L2 device, device descriptor, work item, video stream, `big_lock`/`ctl_lock`, I2C adapter and per-address function table, IR configuration, control URBs/buffers, pipeline state bits, timers, firmware buffers, tuner/frequency state, crop and standard caches, V4L minor numbers, input masks, stream type, cx2341x MPEG state, scalar control fields, dynamic MPEG control descriptors, and the control array.
+
+Control flow: the header has no executable flow, but its fields drive the hardware worker in `pvrusb2-hdw.c`. State transitions are scheduled through `workpoll`; timers set readiness flags; control commits inspect dirty bits; low-level USB requests use the control URB fields; I2C initialization fills `i2c_func[]`; and public APIs use the opaque `struct pvr2_hdw` handle declared in `pvrusb2-hdw.h`.
+
+State and persistence: all state is in memory and per device. The only long-lived effects are hardware-side register, firmware, GPIO, I2C subdevice, and streaming state created by implementation code. `fw_buffer` can temporarily hold fetched CPU firmware or EEPROM bytes for debug access. No disk persistence is performed.
+
+Dependencies and integration points: depends on Linux USB/V4L2/I2C/workqueue/mutex APIs, cx2341x MPEG control state, IR I2C init data, `pvrusb2-devattr.h` device descriptors, `pvrusb2-io.h` stream handles, and the public hardware/control headers. Integration risk is high because this header is the shared private ABI among hardware, encoder, I2C, and debug code.
+
+Risks: lock state is tracked manually through `LOCK_TAKE`/`LOCK_GIVE`, so new callers must respect `big_lock` versus `ctl_lock` ownership. `struct pvr2_hdw` is broad and cross-cutting, making stale flags or partially initialized fields easy to misuse. Debug fields can be read unlocked and may be inconsistent by design. Any changes to control layout or state flags affect sysfs, V4L2, streaming, and firmware flows.
+
+Test signals: build coverage with sysfs/debug/I2C/V4L enabled; probe and unplug devices while streaming; inspect state reports for coherent flag transitions; exercise all controls through V4L2 and sysfs; run with lockdep to catch lock inversion between hardware, I2C, and USB control paths.

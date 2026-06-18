@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/memcpy_power7.S
+
+`memcpy_power7.S` implements a POWER7-optimized `memcpy_power7` target. It returns the original destination pointer and supports scalar and optional Altivec/VMX copies. The entry chooses VMX only for copies larger than 4096 bytes when `CPU_FTR_ALTIVEC` is available through feature-fixup logic; otherwise it uses the scalar 128-byte loop.
+
+The scalar path aligns the source to 8 bytes with byte/halfword/word prologue copies, saves `r14-r22` for large loops, copies 128-byte chunks using sixteen doubleword loads/stores, then handles 64/32/16/8/4/2/1-byte tails. The VMX path enters VMX state, configures source and destination touch streams, checks relative 16-byte alignment, aligns destination, and copies 128-byte vector chunks. If source and destination are not relatively aligned, it uses `lvsl`/`lvsr` and `vperm` to assemble aligned destination vectors from adjacent source vectors. It tail-calls `exit_vmx_ops` after restoring stack state.
+
+State is destination memory, saved original destination, optional VMX enablement, and saved nonvolatile registers. Dependencies include Altivec, feature fixups, cache-stream macros, and endian-specific vector permutes. Risks include VMX state leaks, unaligned vector assembly bugs, threshold regressions, and overlap misuse by callers. Test signals include large memcpy benchmarks, VMX enabled/disabled configs, randomized alignment tests, and fallback comparison with generic `memcpy_64.S`.

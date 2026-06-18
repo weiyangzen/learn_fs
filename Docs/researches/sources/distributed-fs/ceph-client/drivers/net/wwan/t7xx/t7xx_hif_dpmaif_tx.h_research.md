@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.h
+
+This header defines the DPMAIF transmit descriptor ABI for T7xx. `struct dpmaif_drb` is a packed 16-byte descriptor union: payload descriptors carry low/high DMA address words, while message descriptors carry per-packet metadata. `struct dpmaif_drb_skb` is the software shadow entry used to remember SKB ownership, DMA address, length, descriptor index, fragment/message flags, and last-descriptor state.
+
+The exported API is the TX half consumed by DPMAIF control and netdev code: send SKB, initialize/release the TX kthread, initialize/free per-queue rings, handle TX-done interrupts, and stop/clear TX state. `DPMAIF_TX_DEFAULT_QUEUE` documents that normal traffic uses queue 0 in the current implementation.
+
+State is maintained by `dpmaif_tx_queue` in the shared DPMAIF header, while this header defines the bit layout (`DRB_HDR_DATA_LEN`, `DRB_HDR_CONT`, `DRB_HDR_DTYP`, `DRB_MSG_CHANNEL_ID`, checksum flags, and count fields) required to build descriptors. Dependencies are Linux bitfield/endian helpers in the implementation, hardware register helpers, DMA mapping, and CCCI/WWAN metadata carried in SKB control blocks. Risks are hardware ABI mismatch, incorrect continuation semantics, and descriptor count accounting changes not reflected in `t7xx_skb_drb_cnt`. Tests should validate descriptor words for linear and fragmented SKBs, queue-0 default behavior, and error paths that free mapped buffers.

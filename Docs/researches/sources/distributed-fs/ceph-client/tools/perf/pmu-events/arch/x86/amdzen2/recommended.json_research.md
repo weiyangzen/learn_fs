@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/amdzen2/recommended.json -->
+# sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/amdzen2/recommended.json
+
+## Purpose
+Defines AMD `amdzen2` recommended perf aliases and derived metrics for branch misprediction, cache access/hit/miss breakdowns, L3 latency, instruction-cache miss ratio, ITLB/DTLB misses, TLB flushes, dispatched uops, and SSE/AVX stalls.
+
+## APIs, Types, and Functions
+The data contract is a perf PMU JSON array with 28 records: 17 raw event aliases and 11 derived metrics. Schema fields present are `BriefDescription`, `EventCode`, `EventName`, `MetricConstraint`, `MetricExpr`, `MetricGroup`, `MetricName`, `PerPkg`, `ScaleUnit`, `UMask`, `Unit`. `jevents.py` maps `EventCode`, `UMask`, `CounterMask`, `MSRIndex`, `MSRValue`, `PerPkg`, `Deprecated`, `MetricExpr`, `MetricGroup`, and `ScaleUnit` into `struct pmu_event` or `struct pmu_metric` entries declared in `pmu-events.h`. Units resolve to `L3PMC`, `default_core`. Representative names: `branch_misprediction_ratio`, `all_dc_accesses`, `all_l2_cache_accesses`, `l2_cache_accesses_from_ic_misses`, `l2_cache_accesses_from_dc_misses`, `l2_cache_accesses_from_l2_hwpf`, `all_l2_cache_misses`, `l2_cache_misses_from_ic_miss`, `l2_cache_misses_from_dc_misses`, `l2_cache_misses_from_l2_hwpf`, plus 18 more.
+
+## Control Flow
+Build control flow is data-driven: `process_one_file()` assigns a model table for the leaf x86 directory, `read_json_events()` creates one `PmuEvent` per JSON object, and metric expressions are parsed by `metric.ParsePerfJson(...).Simplify()`. The 11 metrics reference tokens such as `bp_l1_tlb_fetch_hit`, `bp_l1_tlb_miss_l2_hit`, `bp_l1_tlb_miss_l2_tlb_miss`, `dram_channel_data_controller_0`, `dram_channel_data_controller_1`, `dram_channel_data_controller_2`, `dram_channel_data_controller_3`, `dram_channel_data_controller_4`, `dram_channel_data_controller_5`, `dram_channel_data_controller_6`, `dram_channel_data_controller_7`, `ex_ret_brn`, plus 14 more; at runtime `perf stat -M` resolves those names against generated PMU tables and evaluates the formulas over counter groups selected for the matching CPUID.
+
+## State and Persistence
+The file has no executable state, locks, persistence layer, or runtime mutation. Its durable behavior is the generated perf event/metric table selected by x86 mapfile CPUID matching; kernel PMU drivers own counter state once a user selects an alias.
+
+## Dependencies and Integration
+Integrated by `tools/perf/pmu-events/arch/x86/mapfile.csv` selecting the `amdzen2` directory for matching x86 CPU identifiers. Consumed by `jevents.py`, `pmu-events.h`, `builtin-list.c`, metric parsing, and PMU table lookup helpers. Unit-specific routing depends on `unit_to_pmu()` mappings for `L3PMC`; missing `Unit` means the default core PMU. Metric integration also depends on expression-token resolution, `MetricConstraint` grouping policy, `ScaleUnit`, `MetricThreshold`, and metric groups `branch_prediction`, `data_fabric`, `l2_cache`, `l3_cache`, `tlb`. Entries with `PerPkg` require package-level aggregation behavior in perf's uncore/sys PMU handling.
+
+## Risks
+The main risk is semantic drift from the vendor performance-monitoring documentation: a wrong event code, umask, MSR filter, or PMU unit can make a friendly alias count the wrong hardware condition. Metric formulas can fail or mislead if referenced aliases are unavailable, event grouping cannot be scheduled, `#slots` or topdown constants are wrong for the CPU, or denominators are zero on short samples. AMD uncore-style units such as `L3PMC` and `DFPMC` depend on kernel PMU naming and package aggregation support; unsupported systems may list aliases that cannot be scheduled.
+
+## Test Signals
+Run the perf pmu-events generator over `arch/x86` and the `tools/perf/tests/pmu-events.c` generated-table checks. Inspect `perf list --json` or generated C tables for representative aliases `branch_misprediction_ratio`, `all_dc_accesses`, `all_l2_cache_accesses`, `l2_cache_accesses_from_ic_misses`, `l2_cache_accesses_from_dc_misses`, `l2_cache_accesses_from_l2_hwpf`, plus 22 more. On matching hardware, run `perf stat -M` for metrics such as `branch_misprediction_ratio`, `all_l2_cache_accesses`, `l2_cache_accesses_from_l2_hwpf`, `all_l2_cache_misses`, `l2_cache_misses_from_l2_hwpf`, plus 6 more and verify expression parsing, grouping, scaling, and thresholds. On matching hardware, run `perf stat -e` for events such as `all_dc_accesses`, `l2_cache_accesses_from_ic_misses`, `l2_cache_accesses_from_dc_misses`, `l2_cache_misses_from_ic_miss`, `l2_cache_misses_from_dc_misses`, plus 12 more and verify the kernel accepts the encoding and returns plausible non-negative counts.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/amdzen2/recommended.json -->

@@ -1,0 +1,29 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/pm/swsmu/smu14/smu_v14_0.c
+
+## Purpose
+Provides the shared SMU14 support layer used by SMU14 PPT backends. It handles SMU firmware loading, PPTABLE selection, common SMC table allocation, power context allocation, VBIOS boot value parsing, driver/tool/memory-pool table address notification, allowed feature masks, GFXOFF and system feature control, display-change notification, power limit access, thermal/MP1 interrupt plumbing, DPM table queries, clock limit messages, performance-level ranges, media power gating, deep-sleep and ULV features, BACO/BAMACO transitions, IMU GFX power-up, common OD editing, and thermal alert enablement.
+
+## Important APIs, Types, And Functions
+- Firmware/PPTABLE path: `smu_v14_0_init_microcode`, `smu_v14_0_load_microcode`, `smu_v14_0_fini_microcode`, `smu_v14_0_init_pptable_microcode`, `smu_v14_0_get_pptable_from_firmware`, and `smu_v14_0_setup_pptable`.
+- Table and power lifetime: `smu_v14_0_init_smc_tables`, `smu_v14_0_fini_smc_tables`, `smu_v14_0_init_power`, and `smu_v14_0_fini_power`.
+- Firmware communication helpers include `smu_v14_0_check_fw_status`, `smu_v14_0_notify_memory_pool_location`, `smu_v14_0_set_driver_table_location`, `smu_v14_0_set_tool_table_location`, `smu_v14_0_set_allowed_mask`, and `smu_v14_0_system_features_control`.
+- DPM and performance helpers include `smu_v14_0_get_dpm_ultimate_freq`, `smu_v14_0_set_soft_freq_limited_range`, `smu_v14_0_set_hard_freq_limited_range`, `smu_v14_0_set_single_dpm_table`, and `smu_v14_0_set_performance_level`.
+- Interrupt and thermal helpers include `smu_v14_0_register_irq_handler`, `smu_v14_0_enable_thermal_alert`, `smu_v14_0_disable_thermal_alert`, `smu_v14_0_set_irq_state`, and `smu_v14_0_irq_process`.
+- BACO/media/control helpers include `smu_v14_0_set_vcn_enable`, `smu_v14_0_set_jpeg_enable`, `smu_v14_0_run_btc`, `smu_v14_0_gpo_control`, `smu_v14_0_deep_sleep_control`, `smu_v14_0_gfx_ulv_control`, `smu_v14_0_baco_enter`, `smu_v14_0_baco_exit`, and `smu_v14_0_set_gfx_power_up_by_imu`.
+
+## Control Flow
+Firmware initialization skips SR-IOV VFs, derives the firmware prefix from MP1 IP version, optionally requests kicker firmware, records the SMC firmware version, and registers the firmware with PSP loading when appropriate. Direct loading writes firmware words to MP1 SRAM, toggles MP1 reset, and polls firmware interrupt-enable flags. PPTABLE setup chooses a driver-provided firmware PPTABLE by `pptable_id` or VBIOS PPTABLE for SR-IOV/no-id cases; SCPM plus PSP loading can also register a PPTABLE firmware blob for PSP.
+
+SMC table initialization allocates common driver PPTABLE, max sustainable clocks, optional overdrive tables, and combo PPTABLE memory. Boot values are parsed from ATOM firmware-info and SMU-info table revisions. Runtime helpers notify PMFW of VRAM table addresses, feature masks, GFXOFF permissions, display UCLK fast-switch needs, and power-source/power-limit changes. IRQ registration wires THM high/low events and MP1 SMU-to-host interrupts into the AMDGPU IRQ core; processing schedules software CTF work or adjusts thermal thresholds for fan abnormal/recovery events. DPM helpers query firmware for min/max/count/indexed frequencies, set soft/hard limits, and construct forced performance profiles across GFX, memory, SOC, VCN, and FCLK.
+
+## State And Persistence
+State includes requested firmware in `adev->pm.fw`, PSP firmware accounting, `smu->pptable_firmware`, VBIOS boot values, allocated SMC table buffers, overdrive buffers, combo PPTABLE, power context, DPM contexts, current power limit, `pstate_table` current ranges, IRQ source registration, thermal range, BACO state, and `smu_baco` platform capability. Firmware-visible persistent state includes SMU code in MP1/PSP, selected PPTABLE, feature masks, DRAM table addresses, GFXOFF permission, DPM min/max limits, power limits, VCN/JPEG power state, deep-sleep feature toggles, ULV, BACO state, and thermal interrupt thresholds.
+
+## Dependencies And Integration Points
+The file depends on Linux firmware loading, AMDGPU firmware/PSP infrastructure, ATOM BIOS helpers, SMU common mailbox/table helpers, SOC15 MMIO access, THM/MP1 register definitions, AMDGPU IRQ core, VCN/JPEG harvest configuration, runtime power management, and SWSMU PPT backends that call these shared functions. Userspace sees its effects through power limits, performance levels, media engines, thermal events, BACO runtime suspend, and metrics populated by backend files.
+
+## Risks And Edge Cases
+Firmware header version parsing is strict for driver PPTABLE extraction; unsupported versions fail setup. Direct firmware load loops skip the first and last dwords and poll `usec_timeout`, so firmware layout assumptions matter. Table allocation sizes depend on backend `SMU_TABLE_INIT` ordering before common allocation. IRQ code has separate APU vs dGPU MP1 registers, and one parameter is misspelled `tyep` but unused. DPM range setters round soft max values and use encoded clock IDs; wrong mapping arrays in a backend will send valid messages for the wrong clock. BACO exit clears VBIOS scratch registers for reinit, which is sensitive to runtime PM sequencing.
+
+## Test Signals
+Signals include firmware request names for SMU14.0.2/14.0.3 and kicker firmware, successful PSP firmware accounting, MP1 interrupt-enable polling success, PPTABLE selection by override/id/VBIOS, correct boot clocks from ATOM revisions, balanced SMC/power allocation cleanup, DRAM address messages with high/low halves, allowed mask high then low messages, GFXOFF gating by IP version and feature mask, thermal IRQ enable/disable and fan abnormal threshold adjustment, DPM min/max/index queries, forced performance levels updating pstate current ranges, VCN/JPEG skipping harvested instances, and BACO state transitions.

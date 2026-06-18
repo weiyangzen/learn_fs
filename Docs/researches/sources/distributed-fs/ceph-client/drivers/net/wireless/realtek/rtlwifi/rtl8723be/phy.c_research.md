@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+
+## Purpose
+Implements RTL8723BE PHY/RF configuration and runtime radio control. It programs MAC/BB/RF table data, parses conditional PHY table entries, stores TX-power-by-rate data, computes and writes per-rate TXAGC values, switches bandwidth and channel, handles scan-time DM pause/resume IO commands, runs IQK and LC calibrations, controls antenna/RF path switching, and transitions RF power state.
+
+## Important APIs, Types, And Functions
+Public configuration APIs are `rtl8723be_phy_mac_config()`, `rtl8723be_phy_bb_config()`, `rtl8723be_phy_rf_config()`, and `rtl8723be_phy_config_rf_with_headerfile()`. Register APIs are `rtl8723be_phy_query_rf_reg()` and `rtl8723be_phy_set_rf_reg()`, serialized by `rf_lock`. TX-power APIs include `rtl8723be_phy_set_txpower_level()` and helpers for EFUSE base power, per-rate offsets, relative conversion, and BB TXAGC writes. Channel APIs are `rtl8723be_phy_set_bw_mode()`, `rtl8723be_phy_set_bw_mode_callback()`, `rtl8723be_phy_sw_chnl()`, and `_rtl8723be_phy_sw_chnl_step_by_step()`. Calibration APIs are `rtl8723be_phy_iq_calibrate()`, `_rtl8723be_phy_iq_calibrate()`, path A/B TX/RX IQK helpers, similarity comparison, matrix fill, and `rtl8723be_phy_lc_calibrate()`. Power APIs include `rtl8723be_phy_set_rf_power_state()`, `_rtl8723be_phy_set_rf_power_state()`, `rtl8723be_phy_set_rf_on()`, and `_rtl8723be_phy_set_rf_sleep()`.
+
+## Control Flow
+BB config enables BB/RF-related clocks/resets, applies MAC/PHY/AGC table arrays, applies PG TX-power data if EFUSE autoload succeeded, converts power values to relative offsets, and sets crystal cap. Channel switch builds pre/RF/post command arrays: set TX power first, write RF channel bandwidth register for each RF path, then finish. Bandwidth switch updates MAC BW operation/RRSR sideband fields, BB RF mode and CCK/OFDM sideband fields, then calls RF6052 bandwidth programming. IQK runs up to three calibration rounds, compares candidates, fills path A/B matrices, saves per-channel IQK matrices, and restores backed-up BB/MAC/ADDA/path state. RF power changes wait for TX queues, call NIC enable/disable for IPS halt level, program RF-on or RF-sleep registers, and update LED state.
+
+## State And Persistence
+State lives in `rtlpriv->phy` and EFUSE structures: RF register channel values, current channel/bandwidth, set-in-progress flags, default initial gain/frame sync, TX-power-by-rate offsets and base arrays, IQK backups/matrices/results, RF path type/count, LCK in-progress state, and init-gain backup for scans. Hardware state persists in MAC/BB/RF registers, TXAGC tables, crystal-cap register fields, RF channel/bandwidth registers, IQK matrices, and RF sleep/on state.
+
+## Dependencies And Integration Points
+Depends on rtl8723 common PHY helpers, RF6052 helpers in `rf.c`, generated table arrays in `table.c/table.h`, EFUSE data parsed in `hw.c`, descriptor rate ids in `def.h`, DM scan/power tracking in `dm.c`, rtlwifi power-save helpers, PCI TX rings for RF sleep waits, and mac80211 channel/bandwidth state. `hw.c` calls configuration and calibration during probe; mac80211 config paths call channel and bandwidth changes through rtlwifi ops.
+
+## Risks
+This file contains many direct magic register writes and timing delays. Table conditional parsing must match board/cut/package/interface data or the wrong RF settings are applied. TX-power computation mixes signed EFUSE deltas, per-rate offsets, bandwidth differences, and regulatory mode; overflow or wrong channel indexing can violate power limits or reduce range. IQK/LC calibration can disturb Bluetooth/audio and is guarded with delays and locks but still touches many BB/RF registers. RF power off waits for queues but can time out, and BEACON queue handling differs between ERFOFF and ERFSLEEP.
+
+## Test Signals
+Probe should complete MAC/BB/RF config, firmware start, IQK, LC, and TX-power setup without warnings. Test channels 1-14, 20/40 MHz sideband changes, scanning pause/resume, low/high RSSI TX-power updates, RF-kill/IPS/LPS transitions, BT coexistence active during calibration, and repeated suspend-like card disable/enable. Signals include correct RF channel register values, stable throughput, no stuck `sw_chnl_inprogress`/`set_bwmode_inprogress`, no TX queue sleep timeout spam, and sane TX power across CCK/OFDM/MCS rates.

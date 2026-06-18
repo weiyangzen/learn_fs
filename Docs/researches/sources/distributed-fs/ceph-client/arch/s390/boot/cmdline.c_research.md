@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/cmdline.c -->
+# sources/distributed-fs/ceph-client/arch/s390/boot/cmdline.c
+
+Purpose: pulls the shared s390 command-line parsing helper into the boot/decompressor build. Important content is the include of `../../../lib/cmdline.c`, exposing helpers such as `next_arg` to early boot code. Control flow is inherited from the shared parser and used by `parse_boot_command_line`. State is parser-local only; no persistence. Dependencies include the boot Makefile and freestanding-compatible shared s390 library code. Risks are shared library changes introducing unavailable runtime dependencies, parser behavior changes affecting early options like `mem`, `nokaslr`, `facilities`, and `earlyprintk`, and duplicate definitions. Test signals: command-line option parsing in early boot, malformed option strings, EBCDIC-to-ASCII converted lines, and decompressor link checks.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/s390/boot/cmdline.c -->

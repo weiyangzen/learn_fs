@@ -1,0 +1,11 @@
+## sources/test-tools/fio/client.c
+
+Purpose: implements fio's network client controller for talking to fio server backends. It manages client creation, TCP/Unix socket connection, probing, command-line/job-file transmission, event polling, PDU endian conversion, status aggregation, JSON/text output, iolog receipt, trigger handling, timeout handling, and cleanup.
+
+Important APIs and flow: `fio_client_add()` and `fio_client_add_explicit()` create `struct fio_client` records; `fio_clients_connect()` connects all clients, installs signal handlers, probes servers, and sends command-line arguments; `fio_clients_send_ini()` sends local or remote job files; `fio_start_all_clients()` starts runs and initializes JSON output; `fio_handle_clients()` is the main poll loop. `fio_handle_client()` receives one network command and dispatches by opcode to handlers for text, disk util, thread/group stats, ETA, probe, start/stop, job update, iolog, vtrigger, sendfile, and job options. Conversion helpers translate every wire PDU field to host order before display/aggregation.
+
+State and persistence: process-global lists track active clients, ETA requests, shared argument clients, and a fd hash. Each client stores socket fd, refs, state enum, pending reply list, option lists, sent job files, output buffer, JSON global options, ETA state, and error/signal. Received iologs are persisted as hostname-suffixed files and may be appended, truncated, or written compressed.
+
+Dependencies and integration: depends on fio network protocol definitions in `server.h`, statistics display in `stat.h`, JSON helpers, `verify-state`, zlib when enabled, and OS sockets/poll/signals. It integrates with CLI and GUI clients via `struct client_ops`.
+
+Risks and test signals: it has broad manual endian conversion and pointer-offset reconstruction for variable PDU payloads, so protocol changes require synchronized updates. Timeout recovery treats repeated `SEND_ETA` specially but removes clients on other timed-out replies. File transfer and iolog handling depend on trusted server-provided sizes/paths within fio's protocol assumptions. Test signals include client/server integration tests, JSON/normal/terse output comparisons, compressed-log tests, and multi-client ETA/stat aggregation runs.

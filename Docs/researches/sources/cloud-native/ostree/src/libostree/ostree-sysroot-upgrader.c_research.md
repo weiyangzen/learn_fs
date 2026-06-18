@@ -1,0 +1,28 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/ostree/src/libostree/ostree-sysroot-upgrader.c -->
+# sources/cloud-native/ostree/src/libostree/ostree-sysroot-upgrader.c
+
+## Purpose
+`ostree-sysroot-upgrader.c` implements the `OstreeSysrootUpgrader` GObject, a convenience wrapper for simple upgrade flows. It selects the merge deployment for an OS, reads and parses its origin, pulls or resolves the target commit, enforces timestamp rollback protection unless disabled, handles end-of-life rebases, and deploys the resolved revision through the sysroot deployment APIs.
+
+## Important APIs, Types, And Functions
+The private `OstreeSysrootUpgrader` object stores `sysroot`, optional `osname`, constructor `flags`, the `merge_deployment`, current `origin` key file, parsed `origin_remote`, parsed `origin_ref`, optional `override_csum`, and `new_revision`. `OstreeSysrootUpgraderClass` is a simple GObject class wrapper. The type is registered with `G_DEFINE_TYPE_WITH_CODE` and implements `GInitable`.
+
+Key functions are `parse_refspec`, `ostree_sysroot_upgrader_initable_init`, constructor wrappers `ostree_sysroot_upgrader_new`, `ostree_sysroot_upgrader_new_for_os`, and `ostree_sysroot_upgrader_new_for_os_with_flags`, origin accessors `ostree_sysroot_upgrader_get_origin`, `ostree_sysroot_upgrader_dup_origin`, `ostree_sysroot_upgrader_set_origin`, and `ostree_sysroot_upgrader_get_origin_description`, `ostree_sysroot_upgrader_check_timestamps`, `ostree_sysroot_upgrader_pull`, `ostree_sysroot_upgrader_pull_one_dir`, `ostree_sysroot_upgrader_deploy`, and `ostree_sysroot_upgrader_flags_get_type`.
+
+## Control Flow
+Construction is through `g_initable_new`. `constructed` asserts that `sysroot` was provided, then `initable_init` determines the OS name from the booted deployment unless the caller supplied one, rejects an empty OS name, finds the merge deployment with `ostree_sysroot_get_merge_deployment`, takes a reference to its origin key file, and parses origin metadata. `parse_refspec` optionally rejects origins with `origin/unconfigured-state`, requires `origin/refspec`, splits it into remote/ref with `ostree_parse_refspec`, and validates any `origin/override-commit` checksum.
+
+`ostree_sysroot_upgrader_pull_one_dir` chooses either `override_csum` or `origin_ref` as the fetch target, builds an origin refspec, records the current deployment checksum as `from_revision`, optionally pulls from the remote with options including subdir, flags, refs, and timestamp-check-from-rev, then resolves the commit locally. It reads commit metadata to detect `OSTREE_COMMIT_META_KEY_ENDOFLIFE_REBASE`; if present, it pulls and switches to the new ref and updates the origin key file. It then resolves or sets the new revision, reports `out_changed`, and when changed checks commit timestamps unless `ALLOW_OLDER` was set. `ostree_sysroot_upgrader_pull` is a wrapper with no subdirectory. `ostree_sysroot_upgrader_deploy` uses staging when the object flag or `OSTREE_EX_STAGE_DEPLOYMENTS` environment variable requests it; otherwise it deploys immediately, writes the deployment list through `ostree_sysroot_simple_write_deployment`, and optionally prepares kexec.
+
+## State And Persistence
+The upgrader object owns only in-memory state until `pull` or `deploy` is called. Pulling persists repository objects and refs through `ostree_repo_pull_with_options`, `ostree_repo_pull_one_dir`, or `ostree_repo_set_ref_immediate` for override commits. EOL rebase mutates the in-memory origin key file's `origin/refspec`; deployment later persists that origin into the new deployment via deployment APIs. `new_revision` is the handoff between pull and deploy; calling deploy before a successful pull would leave no resolved target revision.
+
+## Dependencies And Integration Points
+This file depends on GLib/GObject `GInitable`, `GKeyFile`, core OSTree helpers, `OstreeRepo` pull/resolve/load APIs, commit metadata timestamp comparison, and sysroot deployment functions implemented in `ostree-sysroot-deploy.c`. It is a higher-level client of `ostree_sysroot_stage_tree`, `ostree_sysroot_deploy_tree`, `ostree_sysroot_simple_write_deployment`, and `ostree_sysroot_deployment_kexec_load`. It also mirrors the unconfigured-origin behavior noted in repo pull code.
+
+## Risks
+The upgrader API is stateful: callers are expected to pull before deploying, because `new_revision` is populated by the pull path. `ostree_sysroot_upgrader_set_origin` clears the existing origin before parsing the replacement; if parsing fails, the object may be left without a usable origin. Timestamp checks are critical rollback protection and can be disabled with `ALLOW_OLDER` or bypassed by synthetic/local scenarios. EOL rebases update origin metadata in memory, so callers must persist through deployment for the change to survive. `IGNORE_UNCONFIGURED`, override commits, staging, kexec, and the experimental environment variable change safety and runtime semantics.
+
+## Test Signals
+Relevant tests should cover construction when booted and when specifying an OS, missing booted deployment, empty OS name, missing merge deployment, origins without refspecs, unconfigured-state handling with and without ignore flags, valid and invalid override commits, pull changed/unchanged behavior, timestamp rollback rejection and `ALLOW_OLDER`, synthetic pull behavior, subdirectory pulls, EOL rebase metadata rewriting, staged deployment via flag and environment variable, non-staged deployment writing, and kexec flag behavior when supported.
+<!-- END_FILE_RESEARCH: sources/cloud-native/ostree/src/libostree/ostree-sysroot-upgrader.c -->

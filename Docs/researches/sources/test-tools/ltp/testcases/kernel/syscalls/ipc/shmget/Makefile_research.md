@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmget/Makefile
+
+Purpose: builds the `shmget` tests with the LTP new IPC support library. It defines `LTPLIBS = newipc`, includes `testcases.mk`, sets `LTPLDLIBS = -lltpnewipc`, and includes `generic_leaf_target.mk`. Runtime behavior is entirely in the C files; this Makefile's state is target/library configuration. Integration points are shared-memory constants and helpers from `tse_newipc.h` and `tst_safe_sysv_ipc.h`. Risks are build failures if the newipc library is unavailable or if `top_srcdir` is wrong. Test signal is successful compilation and linkage of all listed shmget tests.

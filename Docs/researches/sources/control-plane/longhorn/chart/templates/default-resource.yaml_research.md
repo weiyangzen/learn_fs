@@ -1,0 +1,15 @@
+# sources/control-plane/longhorn/chart/templates/default-resource.yaml
+
+Purpose: Renders a ConfigMap named `longhorn-default-resource` that carries initial default backup resource settings for Longhorn. The `default-resource.yaml` data entry can include backup target URL, backup target credential secret, and backup store poll interval for first-install default resource customization.
+
+Important APIs/types/functions: Kubernetes type is `v1` `ConfigMap`. Helm helpers are `include "release_namespace" .` for namespace and `include "longhorn.labels" .` for labels. The template uses `kindIs "invalid"` guards around `.Values.defaultBackupStore.backupTarget`, `.Values.defaultBackupStore.backupTargetCredentialSecret`, and `.Values.defaultBackupStore.pollInterval`, rendering keys `backup-target`, `backup-target-credential-secret`, and `backupstore-poll-interval` only when the value exists.
+
+Control flow: During Helm rendering, each non-invalid backup store value is written into a YAML block string under `data.default-resource.yaml`. Longhorn manager or installation logic can then read the ConfigMap to initialize default backup resources before existing cluster resources take precedence. No Kubernetes custom resource is created directly by this template; it supplies configuration data for later Longhorn processing.
+
+State and persistence behavior: The ConfigMap is persistent namespaced cluster state. It may influence durable Longhorn backup target configuration on first install. Because the content is a stringified YAML document, value quoting and key spelling matter. Blank or invalid values are omitted, which allows the chart to render an empty or partial `default-resource.yaml` document.
+
+Dependencies and integration points: Depends on `values.yaml` `defaultBackupStore` fields and Rancher questions under `longhorn.default_resource`. It is conceptually paired with `default-setting.yaml`, but it is much narrower and focused on backup resources. It also integrates with any manager code that consumes the `longhorn-default-resource` ConfigMap and expects the exact dashed keys.
+
+Risks: `questions.yaml` exposes `defaultBackupStore.backupstorePollInterval`, while this template reads `.Values.defaultBackupStore.pollInterval`; that mismatch can make the Rancher question ineffective for poll interval. Values are inserted without `quote`, so strings containing YAML-significant characters, URLs with edge cases, or secrets with special characters should be rendered and parsed carefully. The template does not conditionally omit the ConfigMap when all values are invalid, so consumers must tolerate an empty data document.
+
+Test signals: `helm template` should verify rendering for each individual backup store field, all fields together, all fields omitted, and special-character backup target URLs/secrets. A chart metadata test should assert the Rancher question variable names match `values.yaml` and this template. Runtime tests should confirm Longhorn manager consumes `longhorn-default-resource` only at the intended lifecycle phase and applies the expected backup target, credential secret, and poll interval.

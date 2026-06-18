@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/spi-nor/controllers/hisi-sfc.c
+
+Purpose: platform driver for HiSilicon FMC SPI NOR controller. It registers up to two child SPI NOR flashes as MTD devices and implements controller register, DMA read, and DMA write operations for SPI NOR core.
+
+Important APIs/types/functions: `struct hifmc_host` stores MMIO bases, clock, DMA buffer, lock, and registered NOR devices. `struct hifmc_priv` stores chipselect and clock rate per flash. Controller ops are `hisi_spi_nor_prep()`, `unprep()`, `read_reg()`, `write_reg()`, `read()`, and `write()`. Probe uses `hisi_spi_nor_register_all()` and `hisi_spi_nor_register()`.
+
+Control flow: probe maps `control` and `memory` resources, gets the clock, sets a 32-bit DMA mask, allocates a coherent 4 KiB DMA buffer, enables the clock long enough to initialize timings and scan/register children, then disables it. Per operation, `prepare` locks the host and enables the clock at the child `spi-max-frequency`; `unprepare` disables and unlocks. Register ops program command/data-count/chipselect registers, optionally copy payload through the I/O window, start an operation, and poll for done. DMA transfers configure normal mode, address width, address, DMA address/length, chipselect, protocol interface type, dummy cycles, opcode, and operation direction; read/write split requests into 4 KiB chunks through the coherent buffer.
+
+State and persistence: runtime state includes host lock, clock state, per-child chipselect/rate, DMA buffer, and registered MTD devices. Persistent flash contents are changed through write/program operations; controller registers are transient.
+
+Dependencies and integration: depends on platform resources named `control` and `memory`, clocks, DMA API, OF child nodes with `reg` and `spi-max-frequency`, SPI NOR core scanning, and MTD registration. Risks include max two chipselects, 32-bit DMA address assumption, no erase controller op because SPI NOR core handles erase via register ops, timeout handling returning short failure, and clock/lock pairing correctness. Test signals include probe resource failures, multiple child nodes, protocol mapping for standard/dual/quad, 3- and 4-byte address modes, chunked DMA boundaries, timeout paths, unregister on partial registration failure, and suspend-like clock sequencing.

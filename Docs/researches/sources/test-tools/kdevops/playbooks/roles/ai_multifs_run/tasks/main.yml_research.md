@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/ai_multifs_run/tasks/main.yml
+
+This task file is the entry point for executing enabled multi-filesystem AI benchmark configurations. It imports optional `../extra_vars.yaml`, filters `ai_multifs_configurations` down to entries whose `enabled` value equals true, loops over that list with `fs_config` and `fs_index`, includes `run_single_filesystem.yml` for each filesystem, and includes `generate_comparison.yml` only when more than one filesystem was tested.
+
+The primary Ansible APIs are `include_vars`, `set_fact`, and `include_tasks`. Control flow is data-driven by the defaults from `ai_multifs_setup/defaults/main.yml` and any extra vars. State is held in the transient `enabled_fs_configs` fact; persistent benchmark state is delegated to included task files. Integration points are the setup role, per-filesystem runner, comparison generator, and the Milvus benchmark script. A key risk is that `selectattr('enabled', 'equalto', true)` may not match string values produced by templated defaults unless they are resolved to booleans by the inventory. Test signals should cover zero, one, and multiple enabled configurations.

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/compression/zstd/tests/playTests.sh -->
+## sources/compression/zstd/tests/playTests.sh
+
+Purpose: Broad end-to-end zstd CLI acceptance suite covering compression, decompression, file handling, threading, recursion, dictionaries, alternative formats, list mode, trace mode, long distance matching, async I/O, patch mode, and optional large-data paths.
+
+Important APIs and functions: Shell helpers include `die`, `datagen`, `sudoZstd`, `roundTripTest`, `fileRoundTripTest`, `truncateLastByte`, `println`, `assertSameMTime`, `assertFilePermissions`, and `assertSamePermissions`. It uses aliases around `$ZSTD_BIN`, `$DATAGEN_BIN`, `$EXE_PREFIX`, platform-specific `MD5SUM`, `DIFF`, `stat`, and optional `sudo`.
+
+Control flow: Startup normalizes environment, detects platform, terminal state, zstd binary, datagen binary, and multithreading support. The default path runs many bounded tests: basic CLI options, stdout and `-o` precedence, terminal refusal, suffix and overwrite protections, memory limits, progress flags, checksums, executable stack, multithreading arguments, recursive and output-directory modes, file removal, golden decompression cases, multiple-file behavior, FIFOs, permissions, timestamps, filelists, content-size flags, advanced parameters, pass-through, frame concatenation, sparse output, stream-size and size-hint modes, dictionaries and dictionary builders, integrity tests, golden files, benchmark mode, compatibility with gzip/xz/lz4 formats, suffix lists, tar suffixes, round trips, long-distance matching, list mode, trace mode, and asyncio. If invoked with `--test-large-data`, it continues into adaptive, rsyncable, patch-from, very large round trips, and cover dictionary builder tests; otherwise it exits after asyncio checks.
+
+State and persistence: Creates and removes many `tmp*` files and directories, symlinks such as `zstdcat`, `zcat`, `xz`, `lzma`, output dictionaries, traces, and compressed artifacts. It changes `umask` temporarily and restores it in the permissions section. Optional block-device and `/dev/null` permission tests can require sudo and affect system devices if explicitly enabled.
+
+Dependencies and integration points: Integrates the zstd CLI with `datagen`, host `grep`, `diff`, `md5/md5sum`, `stat`, `tar`, optional `readelf`, optional format tools (`gzip`, `xz`, `lzma`, `lz4`), filesystem features such as symlinks and FIFOs, and zstd golden test data directories. It is the primary high-level test signal for many CLI modules.
+
+Risks: The script runs with `set -e` and `set -x`, so command ordering and shell portability matter. It is platform-conditional but still broad enough to be flaky on minimal systems lacking optional tools. Many tests rely on exact diagnostics or mtime/permission behavior. Large-data mode can allocate or stream hundreds of MB to multiple GB and should be opt-in. The `zstd` alias does not affect all non-interactive shells equally, though the script also invokes `$EXE_PREFIX $ZSTD_BIN` in helper paths.
+
+Test signals: Default success reaches the asyncio checks and exits `0` after "Skipping large data tests". With `--test-large-data`, success reaches the final cover dictionary builder cleanup. Any unexpected CLI success/failure, diff mismatch, missing file, permission/mtime mismatch, or grep mismatch aborts via `set -e` or `die`.
+<!-- END_FILE_RESEARCH: sources/compression/zstd/tests/playTests.sh -->

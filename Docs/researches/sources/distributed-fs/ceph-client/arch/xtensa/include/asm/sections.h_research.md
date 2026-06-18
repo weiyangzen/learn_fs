@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/include/asm/sections.h -->
+# sources/distributed-fs/ceph-client/arch/xtensa/include/asm/sections.h
+
+Purpose: extends generic section symbols with Xtensa vector, exception, secondary reset, and XIP section boundaries. Important declarations include `_WindowVectors_text_start/end`, `_DebugInterruptVector_text_start/end`, `_KernelExceptionVector_text_start/end`, `_UserExceptionVector_text_start/end`, `_DoubleExceptionVector_text_start/end`, `_exception_text_start/end`, interrupt-level vector section boundaries, `_SecondaryResetVector_text_start/end`, and XIP section bounds.
+
+Control flow is absent; the file exposes linker-script symbols to C. State is linker-defined address ranges for exception vectors and XIP text/data. Dependencies include `asm-generic/sections.h` and configuration options for vector placement, secondary reset vectors, and XIP. Integration points are linker script, vector relocation/mapping, boot, cache/TLB setup, and module or diagnostics code needing section bounds. Risks are config-gated symbol mismatches with `vmlinux.lds.S` or stale declarations after vector layout changes. Test signals include link success for vector/XIP/SMP configs, boot vector execution, section boundary checks, and objdump/map-file inspection.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/include/asm/sections.h -->

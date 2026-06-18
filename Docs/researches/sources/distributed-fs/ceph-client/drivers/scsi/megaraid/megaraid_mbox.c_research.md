@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/megaraid/megaraid_mbox.c
+
+## Purpose
+`megaraid_mbox.c` is the mailbox-based MegaRAID SCSI low-level driver. It registers a PCI driver for legacy controllers, initializes memory-mapped mailbox firmware handshakes, exposes a SCSI host, translates SCSI commands into firmware mailbox or passthrough commands, handles interrupts and deferred completions, implements abort/reset recovery, integrates with the common management module, and provides sysfs attributes for application handles and logical-drive mapping.
+
+## Important APIs and Functions
+Lifecycle functions are `megaraid_init`, `megaraid_exit`, `megaraid_probe_one`, `megaraid_detach_one`, and `megaraid_mbox_shutdown`. SCSI integration uses `megaraid_template_g`, `megaraid_io_attach`, `megaraid_io_detach`, `megaraid_queue_command`, `megaraid_abort_handler`, and `megaraid_reset_handler`.
+
+Initialization uses `megaraid_init_mbox`, `megaraid_alloc_cmd_packets`, DMA pool setup/teardown, firmware product and capability queries, HA/random-delete/max-SG/channel-class checks, and sysfs resource allocation. The command path uses `megaraid_alloc_scb`, `megaraid_mbox_mksgl`, `mbox_post_cmd`, `megaraid_mbox_build_cmd`, `megaraid_mbox_runpendq`, and passthrough preparation helpers. Completion uses `megaraid_ack_sequence`, `megaraid_isr`, and `megaraid_mbox_dpc`. Management and sysfs use `megaraid_cmm_register`, `megaraid_mbox_mm_handler`, `megaraid_mbox_mm_command`, `wait_till_fw_empty`, `megaraid_mbox_mm_done`, `gather_hbainfo`, `megaraid_sysfs_get_ldmap`, and the two show functions.
+
+## Control Flow and State
+Probe enables PCI, sets DMA mask, initializes adapter lists/locks, maps BAR0, allocates aligned mailbox memory and command pools, synchronizes firmware, requests IRQ, queries firmware, builds device maps, registers with common management, attaches a SCSI host, and scans. Queueing maps logical drives to a virtual channel and physical devices to firmware channel/target pairs. Logical reads/writes become `MBOXCMD_LREAD64` or `MBOXCMD_LWRITE64`; physical commands become standard or extended passthrough packets. Pending SCBs are posted until the mailbox is busy or `adapter->quiescent` is nonzero. Interrupts collect completed command IDs and statuses, then a tasklet maps firmware status to SCSI results, copies sense data, unmaps DMA, frees SCBs, and calls `scsi_done`.
+
+Persistent in-memory state includes SCB pools, pending/completed lists, outstanding command count, firmware/BIOS version, max CDB size, HA/init ID, device mapping, physical drive states, random-delete support, current LD map, sysfs buffers, and `hw_error`. Hardware state is affected by cache flush, reservation reset, and logical-drive deletion commands.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+The file depends on PCI, SCSI, DMA, IRQ, tasklet, timer, waitqueue, sysfs, ioremap, module parameter APIs, and local MegaRAID headers. It integrates with firmware through doorbells and packed mailbox structures, with userspace through `/dev/megadev0` and sysfs, and with the SCSI mid-layer through queue/error/completion callbacks.
+
+Risks include SCB ownership races across pending, firmware, completed, management, and sysfs paths; confusing `quiescent` semantics; late management completions after timeout; mailbox alignment; SG count assumptions; reset waiting up to `MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT`; and `hw_error` transitions on nonresponsive firmware. Test signals include PCI probe/remove, SCSI scan, logical read/write I/O, passthrough inquiry/capacity, extended CDBs, `unconf_disks`, sysfs app handle and LD map, management ioctl commands, logical-drive deletion quiesce/resume, shutdown cache flush, abort of pending commands, reset with outstanding commands, and injected firmware timeout.

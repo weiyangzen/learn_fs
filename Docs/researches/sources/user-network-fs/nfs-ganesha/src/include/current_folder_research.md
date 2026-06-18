@@ -1,0 +1,111 @@
+# Folder Research: sources/user-network-fs/nfs-ganesha/src/include
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 97
+- Recursive researched files: 123
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/user-network-fs/nfs-ganesha/src/include/9p.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/9p_req_queue.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/9p_types.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/Connectathon_config_parsing.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/abstract_atomic.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/abstract_mem.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/atomic_utils.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/avltree.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/bsd-base64.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/city.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/citycrc.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/client_mgr.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/common_utils.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/conf_url.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/conf_url_rados.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/config-h.in.cmake`
+- `sources/user-network-fs/nfs-ganesha/src/include/config_parsing.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/connection_manager.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/delayed_exec.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/display.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/err_inject.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/export_mgr.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/extended_types.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fridgethr.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal_api.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal_convert.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal_handle_syscalls.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal_pnfs.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal_types.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/fsal_up.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_config.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_dbus.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_intrinsic.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_list.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_recovery.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_refstr.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_rpc.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_status.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_types.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_wait_queue.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gsh_xprt_tracepoint.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/gss_credcache.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/hashtable.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/idmapper.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/idmapper_monitoring.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/ip_utils.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/log.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/log_common.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/mdcache.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/mount.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/murmur3.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/netgroup_cache.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs23.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs4.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs4_acls.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs4_fs_locations.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_convert.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_core.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_creds.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_dupreq.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_exports.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_fh.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_file_handle.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_init.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_ip_stats.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_lib.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_metrics.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_proto_data.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_proto_functions.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_proto_tools.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_qos.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_qosmgr.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_rpc_callback.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfs_rpc_callback_simulator.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfsacl.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nfsv41.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nlm4.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nlm_async.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nlm_util.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/nsm.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/pnfs_utils.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/posix_acls.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/pwnam_wrappers.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/rados_grace.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/rbt_node.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/rbt_tree.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/rquota.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/sal_data.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/sal_functions.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/sal_metrics.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/sal_shared.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/server_stats.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/server_stats_private.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/sss_nss_idmap.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/uid2grp.h`
+- `sources/user-network-fs/nfs-ganesha/src/include/xprt_handler.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

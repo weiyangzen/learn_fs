@@ -1,0 +1,13 @@
+# sources/test-tools/stress-ng/stress-mmaprandom.c
+
+Purpose: implements `mmaprandom`, a broad VM stressor that randomly creates, mutates, queries, splits, joins, seals, forks, clones, and unmaps memory mappings. It exercises anonymous maps, file maps, memfd, `/dev/zero`, POSIX/System V shared memory, advice, protection, syncing, NUMA movement, and proc-map queries.
+
+Important APIs/types/functions: `mr_node_t` describes each live/free mapping; `mr_ctxt_t` stores worker context, file descriptors, counters, page buffer, NUMA state, and pidfd. BSD red-black trees track used nodes by address, randomly selected nodes by generated `rand_id`, and free nodes by descriptor address. Operation dispatch is defined by `mr_funcs[]`, including `stress_mmaprandom_mmap_anon()`, `stress_mmaprandom_mmap_file()`, `stress_mmaprandom_munmap()`, shared-memory allocators, read/write/cache paths, `mremap`, `remap_file_pages`, `madvise`, `posix_madvise`, `mincore`, `msync`, `mlock`, `mprotect`, page split/join operations, clone/fork, NUMA movement, `process_madvise`, and proc info reads.
+
+Control flow: `stress_mmaprandom()` allocates shared context, a shared I/O page, per-operation counters, a temporary file, memfd, `/dev/zero`, and a shared node array initialized into the free tree. It then repeatedly runs `stress_oomable_child()`. The child installs SIGSEGV/SIGBUS exit handlers, opens a pidfd, picks random operation functions until stop, increments bogo operations, and finally force-unmaps every tracked mapping. The parent reseeds between child runs and emits per-operation rates.
+
+State and persistence: state is mostly shared anonymous mappings for context/counters/nodes plus temporary file descriptors. The temp file and POSIX shared-memory names are unlinked early. Mapping descriptors are recycled between free/used trees; child exit and explicit cleanup release mappings.
+
+Dependencies and integration: requires BSD red-black tree macros; optionally uses Linux mempolicy, `process_madvise`, `mseal`, `clone`, `mremap`, `remap_file_pages`, System V/POSIX shm, procmap ioctl, file rw hints, cache flush, and many stress-ng mmap/madvise/NUMA helpers.
+
+Risks and test signals: this intentionally explores kernel edge cases and invalid calls, so platform variation is expected. Key risks are stale tree entries after partial unmaps, file-backed expansion without backing store, unsafe operations on shared-memory mappings, and signal-prone protections. Signals are per-operation metrics, no child crashes outside handled SIGSEGV/SIGBUS paths, cleanup of all tracked mappings, and graceful unimplemented status when RB trees are unavailable.

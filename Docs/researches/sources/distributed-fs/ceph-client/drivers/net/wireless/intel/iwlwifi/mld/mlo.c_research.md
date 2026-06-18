@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
+
+Purpose: implements MLD multi-link operation policy, especially EMLSR entry, exit, blocking, retry, and active-link selection. It translates driver, firmware, scan, Bluetooth, channel-load, NAN, ROC, TDLS, and throughput signals into mac80211 `ieee80211_set_active_links*()` decisions.
+
+Important APIs/functions: `iwl_mld_exit_emlsr()`, `iwl_mld_block_emlsr()`, `iwl_mld_block_emlsr_sync()`, `iwl_mld_unblock_emlsr()`, `iwl_mld_update_emlsr_block()`, `iwl_mld_emlsr_check_non_bss_block()`, `iwl_mld_emlsr_check_tpt()`, `iwl_mld_get_emlsr_rssi_thresh()`, KUnit-visible `iwl_mld_emlsr_pair_state()`, `iwl_mld_select_links()`, `iwl_mld_emlsr_check_bt()`, `iwl_mld_emlsr_check_chan_load()`, `iwl_mld_retry_emlsr()`, and NAN/TPT ignore helpers. Static helpers format reason masks, manage prevention timers, score link pairs, and collect link-selection inputs.
+
+Control flow: block requests set `mld_vif->emlsr.blocked_reasons`, optionally cancel TPT work, and force exit to a kept link. Unblock clears one reason and triggers an internal MLO scan once all reasons are clear. Firmware EMLSR notifications either request leave or report transition failure; transition failure can disconnect all relevant interfaces or fall back to a firmware-validated link. Link selection starts from recent MLO scan results, filters stale BSS data, grades each usable link, then tries a two-link EMLSR pair if capability and blocker state allow it.
+
+State and persistence: state is in `struct iwl_mld_vif::emlsr` fields, including blocker mask, selected links/primary, last entry/exit timestamps, repeated exit counters, delayed works, and MPDU counters attached to AP station data. Channel-load history persists in `struct iwl_mld_phy`. No disk persistence exists.
+
+Dependencies and integration: depends on mac80211 MLO link APIs, `iwl_mld_vif/link/sta` private state, scan timestamps, channel context data, firmware ESR notifications, low-latency policy, Bluetooth coexistence, NAN and ROC modules, and KUnit export macros. It assumes callers hold the wiphy lock where asserted.
+
+Risks: delayed work races can produce stale unblocks if blocker lifetime is mishandled; active-link changes are asynchronous in several paths; scan freshness warnings prevent link selection after stale scans; EMLSR channel-load decisions are invalid while EMLSR is active and explicitly clear averages on exit; pair scoring currently warns if more than two active links are supported. Test signals include KUnit coverage of `iwl_mld_emlsr_pair_state()`, forced blocker/unblock paths, firmware transition failure handling, stale scan handling, and TPT counter windows.

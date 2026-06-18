@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/uapi/asm/elf.h
+
+ARC userspace ELF ABI definitions. It defines EF_ARC_OSABI mask/version flags, selects current OSABI by GCC version, and defines elf_greg_t/fpregset, ELF_NGREG, ELF_ARCV2REG, and elf_gregset_t based on UAPI ptrace structs. Control flow is ELF loader/core-dump/ptrace code checking e_flags and sizing regsets. State is userspace-visible ELF metadata. Dependencies are asm/ptrace.h and toolchain ABI versioning. Risks are compiler-version-based EF_ARC_OSABI_CURRENT causing old/new toolchain compatibility failures; process.c enforces this at exec. Test signals are ELF exec, core dumps, gdb regsets, and mixed GCC-version binaries.

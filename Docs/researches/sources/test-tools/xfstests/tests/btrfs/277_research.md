@@ -1,0 +1,22 @@
+# sources/test-tools/xfstests/tests/btrfs/277
+
+## Purpose
+Test sendstreams involving fs-verity enabled files. Override the default cleanup function. In this subset it primarily covers Btrfs send/receive stream generation and replay, fs-verity metadata and recovery behavior.
+
+## Important APIs, Types, and Functions
+The fstest declaration is `auto quick verity send`. Requirement and capability gates: line 23: `_require_scratch_verity`; line 24: `_require_fsverity_builtin_signatures`; line 25: `_require_command "$SETCAP_PROG" setcap`; line 26: `_require_command "$GETCAP_PROG" getcap`; line 27: `_require_btrfs_send_version 3`. Local helper surface: `_cleanup()` (line 13), `_test_send_verity()` (line 37). Important command/API calls include line 10: `_begin_fstest auto quick verity send`; line 27: `_require_btrfs_send_version 3`; line 37: `_test_send_verity() {`; line 42: `_scratch_mkfs >> $seqres.full`; line 43: `_scratch_mount`; line 44: `echo -e "\nverity send/recv test: sig: $sig salt: $salt"`; line 47: `echo "create subvolume"`; line 48: `$BTRFS_UTIL_PROG subvolume create $subv >> $seqres.full`; line 50: `$XFS_IO_PROG -fc "pwrite -q -S 0x58 0 12288" $fsv_file`; line 80: `echo "set subvolume read only"`; line 82: `echo "send subvolume"`; line 83: `$BTRFS_UTIL_PROG send $subv -f $stream -q --proto=3 >> $seqres.full`; line 90: `echo "receive sendstream"`; line 91: `$BTRFS_UTIL_PROG receive $SCRATCH_MNT -f $stream -q >> $seqres.full`.
+
+## Control Flow
+The control flow follows the xfstests pattern: source the common preamble, declare `_begin_fstest auto quick verity send`, install cleanup if needed, enforce requirements, then formats scratch storage, mounts the test filesystem, creates or deletes subvolumes/snapshots, generates and replays send streams, runs btrfs check or xfstests scratch checks, cycles mounts to force persistence. The script then performs its focused state transition and relies on explicit command failures, `_fail`, filtered stdout, content comparisons, filesystem checks, or expected output matching to detect regressions. Cleanup hooks remove temporary send streams, loop devices, scratch pool devices, or `$tmp.*` artifacts when the test defines them.
+
+## State and Persistence Behavior
+The script owns scratch filesystem state and normally reformats, mounts, unmounts, or checks it through xfstests helpers. It persists send streams, fssum files, or received subvolumes in a temporary test directory and validates replay on a freshly formatted scratch filesystem. Snapshot and subvolume roots are deliberate persistent state used to test root items, received UUIDs, cleaner behavior, and metadata references. fs-verity state persists in inode items, Merkle tree extents, descriptor items, orphan cleanup, and read-time verification failures. Sync, remount, unmount, receive, or device-scan boundaries are used to separate in-memory success from on-disk or kernel-global persistence.
+
+## Dependencies and Integration Points
+This file integrates with xfstests `common/preamble`, Btrfs common helpers, scratch-device lifecycle helpers, output filters, and the Btrfs kernel interfaces reached through btrfs-progs, xfs_io. It also depends on the adjacent expected-output file for stable golden-output comparison: `QA output created by 277 |  | verity send/recv test: sig: false salt: false | create subvolume | create file | enable verity | modify other properties | set subvolume read only | ... (59 expected-output lines total)`.
+
+## Risks and Edge Cases
+send-stream ordering bugs can emit invalid paths, clone sources, link records, or parent references that only appear after replaying onto a clean filesystem; fs-verity tests intentionally corrupt on-disk items, so mount recovery and error reporting must distinguish expected EIO from metadata damage. Test reliability can also depend on mkfs defaults, sector size, nodesize, mount options, compression settings, discard support, device size, and whether helper commands support the specific subcommands used by the script.
+
+## Test Signals
+Primary pass signals are successful command completion, no unexpected stderr after filtering, expected `.out` text, clean `btrfs check` or `_check_scratch_fs` results when present, and matching file digests/fssum/byte dumps after replay or remount. Any mismatch in expected output, missing qgroup/device/snapshot state, uncorrected corruption, unexpected swapon success/failure, or receive/check failure indicates a regression for this source.

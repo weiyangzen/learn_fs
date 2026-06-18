@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/statsserver/pressure_metrics_linux.go
+
+Purpose: converts cgroup PSI totals into pressure stall metrics. APIs are `microSecondsToSeconds` and `generateContainerPressureMetrics`. Control flow checks CPU, memory, and blkio stats independently for non-nil PSI data, then emits full/stalled and some/waiting counters converted from microseconds to whole seconds. State is sampled cgroup PSI data only. Dependencies include cgroups PSI structures, CRI metric types, descriptors, and OCI container labels. Risks include truncating sub-second pressure, silently omitting unavailable PSI sources, and terminology differences between kernel/cAdvisor/CRI metric names. Tests cover sample pressure metrics for cardinality and non-empty output.

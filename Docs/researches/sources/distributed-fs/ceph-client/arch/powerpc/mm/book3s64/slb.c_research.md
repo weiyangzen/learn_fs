@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/mm/book3s64/slb.c
+
+Purpose: manages Segment Lookaside Buffer entries for Book3S64 hash MMU kernels, including bolted kernel entries, user SLB miss handling, context switch flushing/preloading, and diagnostic dumps.
+
+Important APIs and control flow: boot parameters `stress_slb` and `no_slb_preload` toggle static keys. `slb_initialize()` builds bolted linear and stack mappings. `switch_slb()` runs with hard IRQs disabled, invalidates user entries by SLBIA or cached SLBIEs, copies the next `mm` to PACA, ages/preloads recorded user ESIDs, and synchronizes before user return. `do_slb_fault()` routes kernel-region misses to `slb_allocate_kernel()` and user misses to `slb_allocate_user()`, which validates regions, chooses segment size/page size, allocates an SLB slot, writes `slbmte`, and updates PACA caches.
+
+State and dependencies: key state is PACA `slb_cache`, bitmaps, shadow save area, `stab_rr`, thread preload rings, `mmu_slb_size`, and per-mm hash context. It depends on slice page-size selection, VSID generation, mmu feature flags, SPU SLB flushing, and text-patching/static keys. Risks are recursive kernel SLB faults, stale shadow entries during hypervisor preemption, bitmap/SLB divergence, and preloading stale user mappings. Test signals include stress SLB boot mode, context-switch heavy workloads, hugepage slice mappings, PMU interrupt coverage, and SLB dump paths after faults.

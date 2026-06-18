@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/microsoft/mana/mana_en.c
+
+## Purpose
+`mana_en.c` is the main Microsoft Azure Network Adapter Ethernet driver implementation. It binds MANA GDMA devices to Linux `net_device` instances, manages vPort creation, TX/RX queue lifecycles, NAPI completion processing, RSS steering, XDP data paths, link-change handling, bandwidth shaping, auxiliary-device exposure, and suspend/resume removal flows.
+
+## Important APIs, Types, And Functions
+The file registers `mana_devops`, including `mana_open`, `mana_close`, `mana_start_xmit`, `mana_select_queue`, `mana_get_stats64`, `mana_change_mtu`, `mana_tx_timeout`, `mana_bpf`, and `mana_xdp_xmit`. It exports MANA core helpers for other namespaces through `EXPORT_SYMBOL_NS`, notably `mana_cfg_vport`, `mana_uncfg_vport`, `mana_create_wq_obj`, `mana_destroy_wq_obj`, `mana_disable_vport_rx`, and `mana_get_primary_netdev`. The central state objects are `struct mana_context`, `struct mana_port_context`, `struct mana_tx_qp`, `struct mana_txq`, `struct mana_rxq`, `struct mana_cq`, and GDMA queue/device types from `<net/mana/*>`.
+
+## Control Flow
+Probe starts in `mana_probe`, registers the GDMA device, allocates or reuses `mana_context`, creates EQs, queries device config, probes each vPort with `mana_probe_port`, registers netdevices, creates an auxiliary Ethernet device, and starts periodic GF stats work. `mana_open` allocates vPort queues and marks the port up; `mana_close` calls `mana_detach`. Queue allocation flows through `mana_create_vport`, `mana_cfg_vport`, `mana_create_txq`, `mana_add_rx_queues`, RSS initialization, PF filter registration, and XDP channel update. Detach clears `port_is_up`, disables TX, drains pending sends, disables RX steering, fences RQs, destroys RX/TX queue objects, unregisters PF filters and vPorts, and optionally detaches the netdevice.
+
+TX starts in `mana_start_xmit`: it verifies the port is up, prepares headroom, chooses short or long OOB format, handles VLAN tags, GSO and checksum offload metadata, maps the SKB to DMA SGEs, posts a GDMA work request, manages queue stop/wake thresholds, rings the doorbell, and updates per-queue stats. TX completions in `mana_poll_tx_cq` validate CQEs, dequeue pending SKBs, unmap DMA, consume SKBs, advance SQ tail, and wake stopped netdev queues. RX queue creation preposts WQEs with page-pool or preallocated buffers. `mana_poll_rx_cq` drains completions, `mana_process_rx_cqe` refills each buffer before handing the old buffer to `mana_rx_skb`, and `mana_rx_skb` runs XDP, builds SKBs, applies checksum/RSS/VLAN metadata, then passes packets to GRO or XDP TX.
+
+## State And Persistence
+Runtime state is entirely kernel memory and hardware state: queue memory, GDMA object handles, debugfs dentries, RSS indirection/hash state, vPort use counts, port speed/shaper handles, XDP attachment, page pools, pending SKB queues, counters, and work items. No filesystem persistence is used except debugfs views. Synchronization relies on RTNL around attach/detach and link work, `vport_mutex` for vPort ownership, queue/NAPI ordering, atomics for pending sends, memory barriers around `port_is_up` and TX queue state, and u64 stat syncp seqlocks.
+
+## Dependencies And Integration Points
+The driver integrates with the Linux networking stack, NAPI, ethtool via `mana_ethtool_ops`, XDP helpers from other MANA files, GDMA hardware command APIs, debugfs, auxiliary bus devices for Ethernet/RDMA exposure, PCI FLR on stuck TX drain, net shaper APIs for bandwidth clamps, and PF/VF hardware command protocols. It also shares vPort programming with the RDMA driver, so `mana_cfg_vport` enforces the RAW QP single-user restriction through `vport_use_count`.
+
+## Risks
+The high-risk areas are DMA mapping/unmapping symmetry, queue teardown while completions are in flight, the 120 second TX drain path and FLR fallback, RX refill-before-delivery behavior under memory pressure, page-pool ownership for single-buffer versus fragment mode, XDP redirect/TX buffer ownership, PF filter/vPort deregistration on error paths, and the vPort sharing contract with RDMA. Hardware command response validation is critical because stale or mismatched activity IDs return `-EPROTO`. MTU, queue count, ring size, and shaper changes all detach and reattach the port, so rollback paths must preserve old state on failure.
+
+## Test Signals
+Useful signals include kernel build coverage with MANA enabled, probe/remove/resume cycles, `ip link set up/down`, MTU changes, ethtool channel/ring/RSS/coalesce changes, XDP attach/detach and redirect/TX tests, traffic with TSO/checksum/VLAN/RSS enabled, TX timeout injection, link event handling, PF mode filter registration, RDMA auxiliary probe/remove, debugfs queue dump sanity, and counter validation through `ip -s link` and ethtool stats.

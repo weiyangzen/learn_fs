@@ -1,0 +1,13 @@
+# sources/object-store/daos/src/vos/vos_tree.c
+
+Purpose: registers and implements VOS object, dkey, akey, single-value, and extent-tree integration on top of DAOS btree/evtree primitives. It owns durable key records, single-value records, subtree creation/opening, DTX/ilog hooks, and punch/delete behavior.
+
+Important APIs/functions: `obj_tree_register`, `obj_tree_init`, and `obj_tree_fini` register/open/close object dkey trees. Key btree callbacks include `ktr_rec_alloc/free/fetch/update`, hashed-key generation/comparison, lexical/default key comparison, and embedded anchor encode/decode. Single-value callbacks include `svt_rec_store/load/alloc/update/free`, `svt_check_availability`, payload free helpers, and overwrite handling. Public helpers include `key_tree_prepare`, `key_tree_release`, `key_tree_punch`, `key_tree_delete`, `vos_tree_mark_corruption`, `vos_evt_desc_cbs_init`, `evt_dop_log_add`, and `vos_irec_is_valid`.
+
+Control flow and state: durable VOS state is stored in `vos_krec_df`, `vos_irec_df`, btree roots, evtree roots, ilogs, DTX record IDs, and BIO addresses. `key_tree_prepare` fetches or creates a key record, updates timestamp conflict tracking, then opens or creates the child btree/evtree based on `SUBTR_*` flags and existing `KREC_BF_BTR/KREC_BF_EVT` bits. `tree_open_create` prevents mixing array and single-value subtrees under one key. Punch paths insert missing keys for replay/propagation as needed, add ilog punch entries, invalidate known-key punch propagation state, and mark keys for aggregation.
+
+Dependencies/integration: tightly coupled to DAOS btree, evtree, umem transactions, BIO allocation/free, DTX registration and availability, VOS ilog timestamp tracking, GC queues, checksums, object type feature selection, and VOS pool features such as dynamic roots and embedded-first trees.
+
+Risks: this is a high-risk persistence module. Same-epoch single-value overwrite is rejected via minor epoch checks; overwrite frees require a DTX handle and cannot handle gang addresses. Free paths must deregister DTX records, release NVMe/SCM payloads, or enqueue GC correctly. Type mismatches between evtree and btree return `-DER_NONEXIST` or `-DER_NO_PERM` depending on create intent. Corruption marking creates missing keys if necessary and sets ilog corruption flags. Hash and timestamp interactions depend on TLS helpers.
+
+Test signals: cover dkey/akey/single-value creation, array-vs-single conflicts, lexical/uint/default key comparisons, DTX availability filtering, same-epoch overwrite rejection, gang/NVMe payload free, punch of existing and missing keys, replay punch, corruption marking, dynamic-root/embedded-first features, and GC enqueue failures.

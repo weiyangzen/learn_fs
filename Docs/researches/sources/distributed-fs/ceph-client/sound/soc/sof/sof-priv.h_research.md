@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/soc/sof/sof-priv.h
+
+Purpose: central private SOF core header. It defines debug flags, common constants, device state, DSP operation vectors, IPC operation vectors, trace/PM/loader interfaces, debugfs descriptors, and prototypes shared by SOF core, IPC, topology, stream, client, and platform code.
+
+Important APIs/types: `struct snd_sof_dsp_ops` is the hardware abstraction for probe/remove, firmware boot/reset, register and block IO, mailbox IO, IPC send, firmware loading, PCM stream ops, PM, clocking, debug dumps, trace DMA, machine selection, IPC clients, DAI drivers, and architecture ops. `struct snd_sof_dev` holds the live SOF device state: device pointer, firmware images, ASoC component, power/firmware state, IPC object, mailbox windows, BARs, debugfs state, topology lists, client lists, core refcounts, tracing state, and platform-private data. `struct sof_ipc_ops` groups IPC-version callbacks for topology, PM, PCM, loader, tracing, transmit, set/get data, reply, and receive. Other key types include `snd_sof_ipc`, `snd_sof_ipc_msg`, `sof_ipc_fw_tracing_ops`, `sof_ipc_pm_ops`, `sof_ipc_fw_loader_ops`, `dsp_arch_ops`, and debugfs map/entry structs.
+
+Control flow/state: this header documents most long-lived SOF persistence. `snd_sof_dev` lists own PCM/kcontrol/widget/pipeline/DAI/route objects loaded from topology; firmware state and boot wait queues coordinate boot; `dsp_core_ref_count` tracks enabled cores; client and event-handler lists coordinate auxiliary clients; mutexes/spinlocks protect IPC, hardware IO, power state, client lists, and DSP boot.
+
+Dependencies/integration: bridges Linux device, ASoC, HDA, SOF public UAPI, firmware, PM, debugfs, IPC3/IPC4 ops, and optional client support. Many helpers are prototypes implemented across SOF core files.
+
+Risks/test signals: because it is broad shared state, field lifecycle mismatches easily become use-after-free or PM bugs. The client stub behavior under `!CONFIG_SND_SOC_SOF_CLIENT` must remain ABI-compatible. Tests should exercise firmware boot/crash/recovery, topology load/unload, stream open/close, runtime/system PM, debugfs access with D0-only regions, IPC TX disable, and both IPC3/IPC4 operation tables.

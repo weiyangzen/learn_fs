@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/misc/vmw_vmci/vmci_queue_pair.c
+
+Purpose: implements VMCI queue pairs for stream-style bidirectional communication. It includes guest endpoint allocation with DMA-backed pages and hypervisor registration, host broker state for guest-backed memory, local queue pairs, map/unmap during quiesce, peer attach/detach events, and exported qpair read/write/index APIs.
+
+Important APIs/functions: `vmci_qpair_alloc()` allocates a client `struct vmci_qp`, routes to guest or host endpoint creation, and registers wakeup callbacks for host-side waits. `vmci_qpair_detach()` detaches and frees the client object. `vmci_qp_broker_alloc()`, `vmci_qp_broker_set_page_store()`, `vmci_qp_broker_detach()`, `vmci_qp_broker_map()`, and `vmci_qp_broker_unmap()` are host broker entry points used by `/dev/vmci`. `vmci_qp_guest_endpoints_exit()` drains guest endpoints. Data APIs include index getters, free-space/ready checks, `vmci_qpair_enquev()`, `vmci_qpair_dequev()`, and `vmci_qpair_peekv()`.
+
+Control flow: guest allocation creates queues, gathers PPNs, sends `VMCI_QUEUEPAIR_ALLOC`, and stores endpoints in `qp_guest_endpoints`. Host allocation enters the broker list, either creating or attaching a `qp_broker_entry`. Broker state moves through NEW, CREATED_NO_MEM/MEM, ATTACHED_NO_MEM/MEM, SHUTDOWN_NO_MEM/MEM, and gone. Guest memory can be registered immediately via page store or later through old-VMX SetPageStore. Map/unmap pins/unpins user pages, maps queue headers, saves headers across quiesce, and wakes blocked host users when memory returns.
+
+State/persistence: volatile global lists `qp_broker_list` and `qp_guest_endpoints` are mutex protected. Broker entries store creator/attacher IDs, flags, refcount, privilege constraints, memory availability state, queue pointers, saved headers, and wakeup callback data. Guest endpoints store produce/consume queue memory and PPN sets. Queue headers persist in shared memory while mapped and may be snapshotted into saved header fields.
+
+Dependencies/integration: uses Linux DMA, page pinning, vmap, mutex/waitqueue, iov_iter, VMCI resource table, context ownership arrays, datagram/event dispatch, guest hypercalls, and queue-header helpers from public VMCI definitions.
+
+Risks: this is the highest-complexity file. Broker transitions are security-sensitive for VM-to-VM rejection, restricted/trusted attach, host queue-pair version compatibility, and create/attach sizing. Page pinning/unpinning and header mapping must not race with enqueue/dequeue. `vmci_qp_broker_exit()` frees broker entries directly without full resource cleanup, so it assumes module teardown context. Several function names use `detatch`, matching existing API spelling.
+
+Test signals: guest endpoint create/detach, local queue pairs, host-created and guest-created broker flows, old VMX SetPageStore, map/unmap quiesce and saved headers, attach/detach events, privilege denial, size overflow/limit checks, queue wraparound enqueue/dequeue/peek, not-ready waits and wakeups, and failure cleanup after partial page pinning.

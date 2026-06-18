@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/tools/perf/bench/numa.c
+
+Purpose: implements `perf bench numa mem`, a NUMA-sensitive workload generator that measures bandwidth, runtime spread, and convergence behavior across processes, threads, CPU bindings, memory-node bindings, and memory access patterns.
+
+Important APIs/types/functions: `bench_numa()` is the command entry. `struct params` holds all CLI-controlled workload settings. `struct global_info` is shared across processes and tracks shared data, synchronization, thread results, stop flags, and copied params. `init_params()`, `init()`, `__bench_numa()`, `worker_process()`, and `worker_thread()` form the main lifecycle. Binding/allocation helpers include `bind_to_cpu()`, `bind_to_node()`, `bind_to_memnode()`, `alloc_data()`, `parse_setup_cpu_list()`, and `parse_setup_node_list()`. Work and convergence helpers include `do_work()`, `calc_convergence()`, `count_process_nodes()`, and `count_node_processes()`.
+
+Control flow: defaults are initialized, options parsed, then `init()` allocates shared global state, parses memory sizes, creates shared global data and shared thread metadata, and applies CPU/node binding lists. `__bench_numa()` forks `nr_proc` children. Each child allocates process data, creates `nr_threads`, and each thread binds CPU/memory policy, allocates thread-local memory, optionally waits for serialized startup, then loops over global/process/thread memory work until loops, seconds, convergence, or stop flag ends. Parent waits for children, aggregates shared thread runtimes and total bytes, prints result metrics, and deinitializes shared mappings.
+
+State and persistence: most state lives in MAP_SHARED anonymous mappings so parent and children share `global_info`, thread result records, stop flags, mutexes, and condition variables. Process/thread private data is anonymous mmap. CPU affinity and memory policy are changed for tasks and restored in limited initialization cases. No output files persist.
+
+Dependencies and integration: depends on libnuma (`numa.h`, `numaif.h`), sched affinity, `set_mempolicy`, pthreads, process-shared mutex/cond wrappers, mmap/madvise THP flags, sysfs CPU online checks, perf option parsing, and bench output globals.
+
+Risks: uses many `BUG_ON()` assertions for runtime/environment errors, so invalid topology or allocation failures abort. Shared flags such as `stop_work` are not fully synchronized for all reads. `free_data()` munmaps the aligned pointer with the original byte count even though allocation added `HPSIZE`, which is a subtle mapping-management risk. Built-in `-a` tests assume large NUMA systems and memory. Binding parser is powerful but fragile around ranges, steps, masks, and multiplicators.
+
+Test signals: default `perf bench numa mem`, explicit CPU and memnode bindings, THP on/off, `--serialize-startup`, read/write/backward/random/zero modes, convergence measurement, quiet/detail formats, offline CPU handling, one-node systems, and resource-heavy `--all` only on suitable hosts.

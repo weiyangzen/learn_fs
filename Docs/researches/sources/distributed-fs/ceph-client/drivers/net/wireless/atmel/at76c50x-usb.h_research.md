@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/atmel/at76c50x-usb.h
+
+This header defines the private hardware/firmware protocol for the Atmel AT76 USB driver. It supplies board IDs, command/status/op-mode constants, MIB IDs, WEP limits, packed command/RX/TX/request/MIB structures, the firmware header format, regulatory-domain records, firmware cache records, and the central `struct at76_priv`.
+
+The most important types are `enum board_type`, `union at76_hwcfg`, `struct at76_card_config`, `struct at76_command`, `struct at76_rx_buffer`, `struct at76_tx_buffer`, `struct at76_req_scan`, `struct at76_req_join`, MIB layouts for local/MAC/management/WEP/PHY/version/domain data, `struct set_mib_buffer`, `struct at76_fw_header`, `struct fwentry`, and `struct at76_priv`. These structures define what `at76c50x-usb.c` sends through USB control messages and bulk endpoints.
+
+There is no executable control flow, but the layout drives probe/startup/TX/RX behavior: firmware parsing uses `at76_fw_header`, startup sends `at76_card_config`, MIB setters use `set_mib_buffer`, scan and join commands use their request structures, and bulk paths exchange Atmel-specific headers plus 802.11 frames. `struct at76_priv` persists all runtime state for the mac80211 device, including USB resources, work/tasklet state, WEP key material, channel/BSSID/ESSID, scan flags, power mode, MAC/regdomain, and firmware version.
+
+Dependencies are private to the kernel driver and assume Linux/mac80211 constants such as `ETH_ALEN`, `IW_ESSID_MAX_SIZE`, `IEEE80211_MAX_FRAG_THRESHOLD`, and `IEEE80211_COUNTRY_STRING_LEN`. The main risks are packed ABI drift, endian mistakes, unknown reserved fields, fixed WEP array sizing, and misuse of the multiplexed MIB buffer. Test signals are successful command/MIB exchanges, firmware parsing, each hardware-config variant, RX/TX header parsing, WEP programming, and compile/runtime validation of packed structure sizes.

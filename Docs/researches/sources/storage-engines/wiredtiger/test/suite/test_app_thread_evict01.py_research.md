@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_app_thread_evict01.py
+
+Purpose: stresses eviction so an application thread is pulled into eviction and refreshes an eviction snapshot. The class uses a 100MB cache, one eviction thread, low eviction trigger/target percentages, and connection statistics.
+
+Key APIs are table creation, large cursor inserts, transaction begin/commit, `statistics:` cursor access, and `wiredtiger.stat.conn.application_evict_snapshot_refreshed`. Control flow creates a row-store table, repeatedly inserts about 40MB of small values, then two 20MB updates in one transaction to exceed eviction triggers; it polls the statistic up to 20 attempts because the app thread races internal eviction. State is in cache residency and statistics rather than durable content. Dependencies are `wttest`, `wiredtiger.stat`, and `make_scenarios`. Risks include timing/probabilistic behavior, memory pressure, and platform speed variability. The test signal is a positive application eviction statistic.

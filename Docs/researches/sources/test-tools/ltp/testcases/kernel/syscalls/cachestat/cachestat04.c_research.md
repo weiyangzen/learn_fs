@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/cachestat/cachestat04.c
+
+Purpose: exercises `cachestat()` over LTP's generic file descriptor corpus and verifies unsupported descriptors fail with `EBADF` while supported non-file-like descriptors report zero counters. `run` iterates `TST_FD_FOREACH`, logs each descriptor description, calls `cachestat`, and checks all counters zero on success. Important APIs are `TST_FD_FOREACH`, `tst_fd_desc`, `cachestat`, and `lapi/mman.h`. State is the fd set created by LTP and a mounted device at `mnt`. Dependencies are descriptor helper support and mount_device. Risks are kernel support expansion changing which descriptors return EBADF vs zero. Test signal is EBADF or all-zero counters only.

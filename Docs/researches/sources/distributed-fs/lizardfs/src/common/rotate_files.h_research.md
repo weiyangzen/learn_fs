@@ -1,0 +1,3 @@
+# sources/distributed-fs/lizardfs/src/common/rotate_files.h
+
+Purpose: declares the file rotation utility. Important API: `void rotateFiles(const std::string& file, int storedPreviousCopies, int byNumber = 1)`. Control flow: callers provide a basename, retention count, and optional rotation stride; implementation performs numbered renames. State/persistence: affects filesystem paths derived from the basename; no in-memory state. Dependencies: `string` and `platform.h`. Integration points: common helper for backup or log file retention. Risks: header does not specify failure behavior; implementation logs and continues rather than reporting errors. Test signals: no direct header or behavior tests in this subset.

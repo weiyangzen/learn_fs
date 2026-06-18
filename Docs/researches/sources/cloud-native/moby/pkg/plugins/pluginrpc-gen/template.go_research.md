@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/cloud-native/moby/pkg/plugins/pluginrpc-gen/template.go -->
+# sources/cloud-native/moby/pkg/plugins/pluginrpc-gen/template.go
+
+Purpose: Go text/template and helper functions for generated plugin RPC client proxies. Important APIs/helpers are `printArgs`, `buildImports`, `marshalType`, `isErr`, `buildTag`, `goduration`, `title`, and `generatedTempl`. Control flow emits generated-code headers/build tags, imports errors/time/plugins plus parsed imports, defines timeout constants, request/response structs per method, marshals errors as strings, calls `CallWithOptions` with short/long timeout, maps response fields back to named returns, and reconstructs errors. State is generated source text only. Dependencies are `text/template`, strings, time, and parser structs. Risks include deprecated `strings.Title`, formatting for unusual durations, named return assumptions, title-casing `id` specially, and generated code compatibility with Go versions. Test signal is `template_test.go` for duration formatting plus parser tests for inputs.
+<!-- END_FILE_RESEARCH: sources/cloud-native/moby/pkg/plugins/pluginrpc-gen/template.go -->

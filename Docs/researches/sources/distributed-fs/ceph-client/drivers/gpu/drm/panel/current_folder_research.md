@@ -1,0 +1,147 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/gpu/drm/panel
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 133
+- Recursive researched files: 133
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-abt-y030xx067a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-arm-versatile.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-asus-z00t-tm5p5-n35596.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-auo-a030jtn01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-boe-bf060y8m-aj0.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-boe-himax8279d.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-boe-td4320.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-boe-th101mb31ig002-28a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-boe-tv101wum-ll2.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-boe-tv101wum-nl6.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-dsi-cm.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ebbg-ft8719.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-edp.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-elida-kd35t133.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-feixin-k101-im2ba02.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-feiyang-fy07024di26a30d.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-himax-hx8279.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-himax-hx83102.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-himax-hx83112a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-himax-hx83112b.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-himax-hx83121a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-himax-hx8394.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-hydis-hv101hd1.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9322.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9341.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9805.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9806e-core.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9806e-core.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9806e-dsi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9806e-spi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9881c.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ilitek-ili9882t.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-innolux-ej030na.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-innolux-p079zca.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-jadard-jd9365da-h3.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-jdi-fhd-r63452.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-jdi-lpm102a188a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-jdi-lt070me05000.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-khadas-ts050.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-kingdisplay-kd097d04.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-leadtek-ltk050h3146w.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-leadtek-ltk500hd1829.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lg-lb035q02.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lg-ld070wx3.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lg-lg4573.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lg-sw43408.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lincolntech-lcd197.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lvds.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lxd-m9189a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-magnachip-d53e6ea8966.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-mantix-mlaf057we51.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-motorola-mot.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-nec-nl8048hl11.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-newvision-nv3051d.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-newvision-nv3052c.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt35510.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt35560.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt35950.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt36523.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt36672a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt36672e.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt37700f.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt37801.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-novatek-nt39016.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-olimex-lcd-olinuxino.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-orisetech-ota5601a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-osd-osd101t2587-53ts.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-panasonic-vvx10f034n00.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-raspberrypi-touchscreen.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-raydium-rm67191.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-raydium-rm67200.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-raydium-rm68200.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-raydium-rm692e5.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-raydium-rm69380.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-renesas-r61307.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-renesas-r69328.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-ronbo-rb070d30.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-ams581vf01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-ams639rq08.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-atna33xc20.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-db7430.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-ld9040.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-ltl106hl02.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6d16d0.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6d27a1.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6d7aa0.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e3fa7.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e3fc2x01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e3ha2.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e3ha8.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63j0x03.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63m0-dsi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63m0-spi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63m0.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e63m0.h`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e88a0-ams427ap24.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e88a0-ams452ef01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e8aa0.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e8aa5x01-ams561ra01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e8fc0-m1906f9.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-sofef00.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-seiko-43wvf1g.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sharp-lq079l1sx01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sharp-lq101r1sx01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sharp-ls037v7dw01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sharp-ls043t1le01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sharp-ls060t1sx01.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-simple.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sitronix-st7701.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sitronix-st7703.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sitronix-st7789v.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sony-acx565akm.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sony-td4353-jdi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-sony-tulip-truly-nt35521.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-startek-kd070fhfid015.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-summit.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-synaptics-r63353.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-synaptics-tddi.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-tdo-tl070wsh30.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-tpo-td028ttec1.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-tpo-td043mtea1.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-tpo-tpg110.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-truly-nt35597.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-visionox-g2647fb105.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-visionox-r66451.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-visionox-rm69299.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-visionox-rm692e5.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-visionox-vtdr6130.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-widechips-ws2401.c`
+- `sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-xinpeng-xpp055c272.c`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

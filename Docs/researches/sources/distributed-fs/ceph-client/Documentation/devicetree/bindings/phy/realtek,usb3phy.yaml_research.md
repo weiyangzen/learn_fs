@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/realtek,usb3phy.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/realtek,usb3phy.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/realtek,usb3phy.yaml` is a Realtek USB PHY binding for `Realtek DHC SoCs USB 3.0 PHY`. It preserves the devicetree ABI for this hardware by constraining compatible matching, provider cells, required board resources, child nodes, and examples. Description signal: Realtek USB 3.0 PHY support the digital home center (DHC) RTD series SoCs. The USB 3.0 PHY driver is designed to support the XHCI controller. The SoCs support multiple XHCI controllers. One PHY device node maps to one XHCI controller. RTD1295/RTD1619 SoCs USB The USB architecture includes three XHCI controllers. Each XHCI maps to one USB 2.0 PHY and map one USB 3.0 PHY on some controllers. XHCI controller#0 -- usb2phy -- phy#0 |- usb3phy -- phy#0 XHCI controller#1 -- usb2phy -- phy#0 XHCI controller#2 -- usb2phy -- phy#0 |- usb3phy -- phy#0 RTD1319/RTD1619b SoCs USB The USB architecture includes three XHCI controllers. Each XHCI maps to one USB 2.0 PHY and map one USB 3.0 PHY on controllers#2. XHCI controller#0 -- usb2phy -- phy#0 XHCI controller#....
+
+## Important APIs, Types, And Functions
+The effective API is the schema contract. `compatible` is `enum` list with values `realtek,rtd1295-usb3phy`, `realtek,rtd1319-usb3phy`, `realtek,rtd1319d-usb3phy`, `realtek,rtd1619-usb3phy`, `realtek,rtd1619b-usb3phy`. Top-level properties are `compatible`, `reg`, `#phy-cells`, `nvmem-cells`, `nvmem-cell-names`, `realtek,amplitude-control-coarse-tuning`, `realtek,amplitude-control-fine-tuning`. Required properties across the composed schema are `#phy-cells`, `compatible`, `reg`. All discovered property names, including nested child-node contracts, include `#phy-cells`, `compatible`, `nvmem-cell-names`, `nvmem-cells`, `realtek,amplitude-control-coarse-tuning`, `realtek,amplitude-control-fine-tuning`, `reg`. Important numeric/constant limits include `maxItems=1`, `const=0`, `const=usb_u3_tx_lfps_swing_trim`, `minimum=0`, `maximum=255`, `maximum=65535`.
+
+## Control Flow
+Control flow is declarative JSON-schema evaluation, not imperative code. `dt-doc-validate` and `dt_binding_check` load the YAML, resolve `$ref` links, apply `allOf`/`oneOf`/`if`/`then` composition, validate embedded examples, and `dtbs_check` later applies the same rules to compiled board DTS. Runtime behavior begins after the matching PHY driver probes: it maps registers, enables clocks and supplies, deasserts resets, registers a PHY provider, and lets host controllers acquire the PHY by phandle using the declared `#phy-cells` shape. Referenced schemas include `/schemas/types.yaml#/definitions/uint32`
+
+## State And Persistence
+State is static firmware description rather than runtime persistence. NVMEM cells provide board/fuse trim data consumed by the driver. Named resources such as none must stay stable because driver probe, suspend/resume, and board DTS validation depend on their order and names.
+
+## Dependencies And Integration Points
+Integrates with Linux generic PHY framework and the consuming USB, PCIe, UFS, SATA, HDMI, DP, DSI, Ethernet, or CAN controller drivers. Schema dependencies are `/schemas/types.yaml#/definitions/uint32`. Observed driver-side references include `sources/distributed-fs/ceph-client/drivers/phy/realtek/phy-rtk-usb3.c`. External providers/consumers are signaled through `nvmem-cells`, `nvmem-cell-names`, `realtek,amplitude-control-coarse-tuning`, `realtek,amplitude-control-fine-tuning`.
+
+## Risks And Edge Cases
+strict property closure makes spelling and resource-name drift fail validation immediately wrong register ranges can point the driver at the wrong PHY lane, PLL, or mux block Closure rule: top-level unknown properties are rejected by `additionalProperties: false`. Representative enum constraints: properties.compatible: realtek,rtd1295-usb3phy, realtek,rtd1319-usb3phy, realtek,rtd1319d-usb3phy, realtek,rtd1619-usb3phy, realtek,rtd1619b-usb3phy.
+
+## Test Signals
+`make dt_binding_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/realtek,usb3phy.yaml` should parse this YAML and validate 1 embedded example. `make dtbs_check` should validate board DTS nodes using the compatible strings and resource names from this schema. spot-check representative compatibles such as `realtek,rtd1295-usb3phy`, `realtek,rtd1319-usb3phy`, `realtek,rtd1319d-usb3phy`, `realtek,rtd1619-usb3phy`, `realtek,rtd1619b-usb3phy` against matching driver OF tables and DTS examples.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/realtek,usb3phy.yaml -->

@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/fsdataset/impl/TestProvidedImpl.java -->
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/fsdataset/impl/TestProvidedImpl.java
+
+Purpose: tests HDFS provided-storage integration inside `FsDatasetImpl`, including provided volume construction, alias-map block loading, block reads, iterators, path containment/suffix handling, DirectoryScanner behavior, and provided replicas backed by path handles.
+
+Important APIs/types/functions: `ProvidedVolumeImpl`, `ProvidedReplica`, `FinalizedProvidedReplica`, `BlockAliasMap<FileRegion>`, `FileRegion`, nested `TestFileRegionIterator`, nested `TestFileRegionBlockAliasMap`, `createStorageDirs`, `getBlocksInProvidedVolumes`, `ProvidedVolumeImpl.containsBlock`, `ProvidedVolumeImpl.getSuffix`, `DirectoryScanner`, `PathHandle`, and tests `testReserved`, `testProvidedVolumeImpl`, `testBlockLoad`, `testProvidedBlockRead`, `testProvidedBlockIterator`, `testProvidedVolumeContents`, `testProvidedReplicaWithPathHandle`.
+
+Control flow: setup mocks a `DataNode` and `DataStorage`, configures one local and one `[PROVIDED]` storage directory, registers `TestFileRegionBlockAliasMap` as the provided alias map, creates `FsDatasetImpl`, collects provided volumes, and adds two block pools. The iterator lazily creates backing files with deterministic content, records block ID to path, and yields `FileRegion` entries for one selected block pool. Tests assert provided volumes have zero reserved space, expected storage UUID/type, used bytes, and block counts; load volume maps and verify only the selected block pool has replicas; read each provided block through `dataset.getBlockInputStream`; exercise block iterators and rewind; test whether provided volume base paths include or exclude candidate block URIs; validate URI/path suffix extraction for file and object-store schemes; verify `ProvidedReplica` prefixes; confirm disabled directory scanning reports no provided blocks; and check `FinalizedProvidedReplica` can keep reading via `PathHandle` after file rename but fails without the handle.
+
+State and persistence behavior: backing files are created under the provided base path and represented in memory as provided replicas sourced from alias-map regions. Provided volumes report usage from alias-map regions rather than normal DataNode-local block files. Path handles persist access across rename for provided replicas.
+
+Dependencies and integration points: integrates `DFS_PROVIDED_ALIASMAP_CLASS`, storage-location parsing with `[PROVIDED]`, block alias map readers, dataset block input streams, DirectoryScanner reports, MiniDFSCluster for path-handle validation, and filesystem handle options.
+
+Risks: only one provided volume is supported by the test constants. The alias-map reader's `resolve` is unimplemented, so lookup coverage is iterator-oriented. `TestFileRegionIterator.hasNext` uses `currentCount < numBlocks`, making nonzero `minId` semantics depend on caller expectations.
+
+Test signals: failures catch provided-volume accounting errors, alias-map load/read regressions, path filtering mistakes across URI schemes, scanner over-reporting, and provided replica read instability after path movement.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/fsdataset/impl/TestProvidedImpl.java -->

@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/dup.c
+
+Small syscall decoder for `dup`, `dup2`, and `dup3`. The shared `dup_123` helper prints `oldfd`, conditionally prints `newfd`, conditionally prints `flags`, and returns `RVAL_FD` so strace formats successful return values as file descriptors. State is limited to `tcp->u_arg`; there is no persistence or private data. It depends on `printfd`, `printflags`, and generic syscall entry formatting from `defs.h`. The main risk is argument-position mismatch across the three wrappers or missed flag decoding for `dup3`. Test signals are expected traces for one-, two-, and three-argument dup variants, including invalid fd failures and `O_CLOEXEC` flag rendering.

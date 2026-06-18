@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/bng_re/bng_sp.c
+
+Purpose: implements the BNG RoCE slow-path device-attribute query path. The file sends firmware command queue requests through `struct bng_re_rcfw`, decodes the `QUERY_FUNC` side-buffer response, records firmware version data, and exposes a single public entry point, `bng_re_get_dev_attr()`, used by higher-level resource and verbs setup to discover device limits.
+
+Important APIs and functions: `bng_re_get_dev_attr()` prepares `CMDQ_BASE_OPCODE_QUERY_FUNC`, allocates a coherent side buffer for `struct creq_query_func_resp_sb`, sends the command with `bng_re_rcfw_send_message()`, and fills `rcfw->res->dattr`. `bng_re_query_version()` is a private helper around `CMDQ_BASE_OPCODE_QUERY_VERSION` and stores four firmware version bytes. `bng_re_is_atomic_cap()` checks PCIe device control 2 for `PCI_EXP_DEVCTL2_ATOMIC_REQ` and feeds the `is_atomic` advertised capability.
+
+Control flow: the top-level query allocates DMA-coherent response memory, sets `req.resp_size`, submits the command, then normalizes firmware values into driver-visible attributes. It adjusts `max_qp` to include QP1, caps outgoing and initiating RDMA atomics at `BNG_RE_MAX_OUT_RD_ATOM`, limits variable-WQE depth and SGE counts to `BNG_VAR_MAX_WQE` and `BNG_VAR_MAX_SGE`, doubles hardware GID capacity for kernel GID-table accounting up to `BNG_RE_NUM_GIDS_SUPPORTED`, optionally adds extended SRQ capacity when `_is_max_srq_ext_supported()` is set, copies TQM allocation requests out of little-endian packed words, queries firmware version, and always frees the side buffer on exit.
+
+State and persistence: this file does not persist state to disk. Runtime state is stored in `struct bng_re_dev_attr` owned by the RCFW resource object. The coherent side buffer exists only for the command duration. Attribute fields are cached after query and become the contract for later resource sizing, feature exposure, and verbs validation.
+
+Dependencies and integration points: depends on PCI helpers, DMA allocation, generated firmware command structures from `bng_fw.h`, RCFW helpers from `bng_fw`/`bng_res`, and TLV-aware command accessors included via `bng_tlv.h`. It integrates with the device bring-up path that has already initialized `rcfw->pdev`, `rcfw->res`, and `rcfw->res->dattr`.
+
+Risks: firmware values are trusted after basic capping; an unexpected side-buffer layout or endian mismatch would corrupt advertised limits. The TQM copy path treats a little-endian word as four bytes after conversion, so tests should catch host-endian assumptions. `bng_re_query_version()` silently leaves version bytes unchanged on failure. If the PCI atomic bit is absent, atomic verbs are disabled even if firmware reports support.
+
+Test signals: exercise successful and failed `QUERY_FUNC` and `QUERY_VERSION` responses, DMA allocation failure, max-limit capping for QP/SRQ/GID/SGE values, PCIe atomic-capability variation, and attribute consumers that reject requests above the populated limits.

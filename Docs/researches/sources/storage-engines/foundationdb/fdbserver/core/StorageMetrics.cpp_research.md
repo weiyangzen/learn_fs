@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbserver/core/StorageMetrics.cpp
+
+## sources/storage-engines/foundationdb/fdbserver/core/StorageMetrics.cpp
+
+Purpose: implements storage-server metric sampling, range estimates, shard split calculations, read-hot range detection, wait-for-metric notifications, and transient metric expiry. It is a core input to data distribution, storage throttling, split/merge decisions, and read hot-spot tooling.
+
+Important APIs/types: `CommonStorageCounters`, `isKeyValueInSample`, `StorageMetrics::readLoadKSecond`, `StorageMetricSample::getEstimate` and `splitEstimate`, `StorageServerMetrics` methods for `getMetrics`, `notify`, `notifyBytesReadPerKSecond`, `notifyBytes`, `notifyNotReadable`, `poll`, `getSplitKey`, `splitMetrics`, `getStorageMetrics`, read-hot range methods, split point methods, wait-map maintenance, and `TransientStorageMetricSample` methods. It also contains unit tests for sample estimates, range split points, and read-hot detection.
+
+Control flow and state: byte sampling hashes the key and samples by size-adjusted probability. Metric samples are stored in indexed sets keyed by FDB keys, with sums used for range estimates and split lookup. `notify` and `notifyBytesReadPerKSecond` add transient sampled write/read/I/O data with expiration and immediately send deltas to watchers in `waitMetricsMap`. `poll` expires queued transient samples and notifies watchers with negative deltas. `splitMetrics` loops over a range until byte or write traffic bounds are satisfied, selecting candidate keys from byte, IOPS, and write samples while enforcing minimum split bytes and max rows. `waitMetrics` first checks whether current metrics are already outside requested min/max, otherwise registers a `PromiseStream` on intersecting ranges, races metric changes against timeout, sends final metrics or wrong-shard, then removes watchers and coalesces the map.
+
+State and persistence behavior: all samples and waiters are in-memory storage-server state. Persistent behavior is indirect: byte sample contents are derived from stored data and affect shard boundaries and movement choices. Comments note `TransientStorageMetricSample::erase` variants are broken because future queued expirations remain.
+
+Dependencies and integration: depends on `StorageMetrics.h`, `SERVER_KNOBS`, `CLIENT_KNOBS`, Flow hashing/random/unit-test utilities, `KeyRangeMap`, `IndexedSet`, request/reply structs, and trace/code probes. Data distribution, storage server disk code, wait metrics RPCs, and read-hot monitors consume this behavior.
+
+Risks and tests: risks include divide-by-zero on untrusted split inputs, incorrect split keys near boundaries, watcher leaks, excessive `waitMetricsMap` fragmentation, sampling bias, and stale queued expirations after erase. Existing unit tests cover simple estimates, split point generation, unsplittable ranges, and read-hot detection including consecutive ranges and equal division; changes should also be exercised in simulation with storage metrics polling and data distribution.

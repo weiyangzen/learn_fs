@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/fsl_ifc.h
+
+Purpose: defines the Freescale Integrated Flash Controller register ABI, bit fields, controller state, and endian-aware MMIO helpers for NAND, NOR, and GPCM local-bus devices.
+
+Important APIs and types: constants define bank count, IFC versions, CSPR/AMASK/CSOR fields, NAND page/ECC/row/page/block/timing fields, NOR and GPCM options, ready/busy status, global control, event/error status, clock control/status, NAND command/address/instruction opcodes, chip select/start bits, event/interrupt enables, ECC status fields, timeout counts, and NOR/GPCM error fields. Register structs map `fsl_ifc_nand`, `fsl_ifc_nor`, `fsl_ifc_gpcm`, `fsl_ifc_global`, and `fsl_ifc_runtime`. `struct fsl_ifc_ctrl` stores device, global/runtime register bases, IRQs, lock, NAND-private pointer, version, bank count, NAND status/waitqueue, and endian mode. Public helpers include `convert_ifc_address()`, `fsl_ifc_find()`, global `fsl_ifc_ctrl_dev`, and inline `ifc_in32/16/8()` and `ifc_out32/16/8()`.
+
+Control flow: IFC controller probe maps global/runtime registers, detects version/bank count/endian mode, services common and NAND IRQs, and child NAND/NOR/GPCM drivers program chip-select properties, timing registers, operation sequences, commands, addresses, and event masks. NAND command sequences use FIR opcodes, CSEL, sequence start, event status, waitqueues, and ECC status registers.
+
+State and persistence: hardware register programming defines flash bus mappings, timing, ECC, events, and operation state until reset. Kernel runtime state in `fsl_ifc_ctrl` serializes access and wakes NAND waiters. Flash contents persist externally; this header defines the controller path used to access them.
+
+Dependencies and integration points: depends on I/O accessors, OF platform, interrupts, waitqueues, and MTD/NAND/NOR platform drivers. It also integrates with SoC address translation and chip-select lookup code.
+
+Risks and test signals: risks are high because bitfield errors can corrupt flash operations. Specific risks include `__ilog2()` macros receiving invalid non-power-of-two values, bank-count differences between IFC versions, endian helper reliance on initialized global state, event/status races, ECC status interpretation, NAND page/spare-size mismatches, and touching absent registers on older controllers. Tests should cover controller probe for v1.0/v1.1/v2.0, NAND read/write/erase with ECC correction/failure, NOR and GPCM timing, interrupt and polling completion, endian variants, address conversion/find, invalid chip-select setup, and suspend/resume register restoration if implemented.

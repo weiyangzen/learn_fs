@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+
+Purpose: this file implements the DPU DRM CRTC object. It coordinates atomic resource reservation, mixer/blend/color programming, performance updates, commit kickoff, vblank/CRC handling, frame-done processing, enable/disable, mode validation, and debugfs reporting.
+
+Important functions: CRC helpers parse sources (`none`, `auto`/`lm`, `encoder`), set up LM or encoder MISR, collect CRCs after skipping initial frames, and integrate with DRM CRC entries. Blend helpers program per-plane stages, active SSPP bitmaps, alpha modes, LM output ROIs, and CTL/LM pending flush masks. Color helpers convert DRM CTM/gamma LUT state into DSPP PCC and GC programming. Atomic hooks include `dpu_crtc_atomic_check()`, `dpu_crtc_atomic_begin()`, `dpu_crtc_atomic_flush()`, `dpu_crtc_enable()`, and `dpu_crtc_disable()`.
+
+Control flow: atomic check reserves LM/CTL/DSPP/CDM-related topology resources on modeset/color changes and SSPP plane resources on plane/zpos changes, computes LM bounds, marks dirtyfb requirements for command/self-refresh paths, increments bandwidth references, and calls `dpu_core_perf_crtc_check()`. Atomic begin programs pending trigger state, blend setup, and color blocks. Atomic flush captures vblank events, updates performance upward, flushes planes, and leaves final kickoff to `dpu_crtc_commit_kickoff()`. Kickoff validates encoders, handles clone-mode writeback ordering, prepares encoders, clears VBIF errors, triggers encoder kickoff, starts frame-done timers, and increments `frame_pending`. Completion updates performance downward and sends page-flip events.
+
+State and persistence: `struct dpu_crtc` stores event pointers, vblank stats, enabled flag, frame-pending counter, frame-event pool/list, completion, locks, current performance, and SMMU transition state. `struct dpu_crtc_state` stores atomic resource assignments, LM bounds, proposed performance, CRC source, and frame-skip count. Frame events are pooled in `DPU_CRTC_FRAME_EVENT_SIZE` entries and processed on KMS event workers.
+
+Dependencies and integration: deeply integrates with DRM atomic helpers, vblank, CRC, self-refresh, DPU RM, DPU planes, encoders, VBIF, CTL/LM/DSPP hardware ops, and `dpu_core_perf`. Encoder callbacks feed vblank and frame-done events back into this file.
+
+Risks: resource allocation depends on topology inference; DSC, CWB clone mode, color management, and split interfaces can change LM/DSPP requirements. `dpu_crtc_get_intf_mode()` warns about locking ambiguity. Frame-event pool overflow is rate-limited but can lose completion events. Bandwidth refs must balance across check, kickoff, frame done, video mode, and disable paths. Gamma LUT allocation failure currently skips programming without failing commit.
+
+Test signals: atomic modeset/plane/zpos/color changes, command and video mode display, self-refresh transitions, clone-mode concurrent writeback, DSC topology, CWB writeback ordering, CRC capture from LM and encoder, vblank enable/disable, frame-done timeout behavior, underrun absence, debugfs `status`/`state`, and high-resolution mode validation.

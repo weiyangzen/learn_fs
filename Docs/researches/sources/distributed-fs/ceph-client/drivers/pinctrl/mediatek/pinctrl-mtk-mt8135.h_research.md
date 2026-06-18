@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/mediatek/pinctrl-mtk-mt8135.h
+
+Purpose: Defines the MT8135 pin descriptor table for the older MediaTek common pinctrl driver. It enumerates 203 pins (`0..202`) with `PINCTRL_PIN()` names, package pad identifiers, chip tag `"mt8135"`, EINT mappings, and alternate mux names. The table is broad because MT8135 exposes storage, NAND, display, camera, audio, modem/debug, keypad, I2C, PWM, and test functions through the same pinmux model.
+
+Important APIs, types, and data: The header exports `static const struct mtk_desc_pin mtk_pins_mt8135[]`. Every entry is an `MTK_PIN()` macro containing a Linux pinctrl descriptor, a package pad string, an EINT descriptor, and a sentinel-terminated list of `MTK_FUNCTION()` values. Pins 0-9 start with MSDC0 data/cmd/clock signals, early pins also expose NAND and audio alternatives, middle ranges cover EINT, keypad, UART, SPI, camera, DPI, LCD/NAND, and debug outputs, and the tail includes I2C (`SDA*`/`SCL*`) and MSDC3 pins. Many entries expose explicit `"EINTnn"` mux names in addition to `MTK_EINT_FUNCTION(...)`, reflecting the legacy hardware mux representation.
+
+Control flow and integration: `pinctrl-mt8135.c` includes this header and places `mtk_pins_mt8135` in `struct mtk_pinctrl_devdata mt8135_pinctrl_data`. Probe uses the `mediatek,mt8135-pinctrl` match entry and `mtk_pctrl_common_probe()`. The companion `.c` file provides drive group definitions, per-pin drive register mappings, special pull handling through a local `struct mtk_spec_pull_set`, fixed IES/SMT offsets, register stride/port alignment, and EINT register offsets. This header supplies the pin/function namespace that those register operations act on.
+
+State and persistence behavior: The table is static read-only configuration. It does not allocate or update runtime state. Pin mux, pull, drive, input-enable, and Schmitt-trigger values persist in hardware registers after the common driver programs them; this header only tells the driver which logical pin and function names are valid.
+
+Dependencies: Depends on `<linux/pinctrl/pinctrl.h>` and `pinctrl-mtk-common.h`. It must stay aligned with `pinctrl-mt8135.c`, the legacy MediaTek pinctrl binding, and the MT8135 DTS file that instantiates `mediatek,mt8135-pinctrl`.
+
+Risks: The table is dense and manually structured, making off-by-one pin numbers, swapped package balls, incorrect EINT muxes, or wrong alternate-function values plausible regressions. Because MT8135 has custom pull handling in the `.c` file, storage and keypad pins that need special PUPD/R0/R1 behavior require cross-checking between this header and `spec_pupd`. Function names containing brackets or numbered debug/test outputs must remain exact for diagnostic and DTS compatibility.
+
+Test signals: Build coverage for the MT8135 pinctrl driver, DT validation and boot of MT8135 pinctrl nodes, debugfs enumeration of all 203 pins, EINT tests across the exposed EINT mux ranges, storage tests for MSDC0/MSDC3, display DPI tests, I2C/PWM/keypad/UART/SPI mux smoke tests, and pull/drive validation on pins covered by the special pull table.

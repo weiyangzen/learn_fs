@@ -1,0 +1,12 @@
+# sources/user-network-fs/samba/source3/script/tests/test_smbclient_tarmode.pl
+
+## Purpose
+This Perl test suite validates `smbclient` tar backup mode for archive creation, extraction, filtering, incremental/archive-bit handling, long paths, large files, regex/wildcard/list filters, and multiple tar operations in one session.
+
+## Important APIs, Types, Functions, and Control Flow
+The script uses `Archive::Tar`, `Digest::MD5`, `File::Path`, `File::Temp`, `Getopt::Long`, `Pod::Usage`, and `Term::ANSIColor`. Global options configure credentials, host/share/IP, local share path, target directory, smbclient binary, selected tests, debug/verbose/subunit, and cleanup. `@TESTS` maps descriptions to test functions. Runner functions `run_test`, `run_test_normal`, and `run_test_subunit` reset state before each test, execute the selected function, and report normal or subunit output. Core helpers are `smb_client_cmd`, `smb_client`, `smb_cmd`, `smb_tar`, `check_tar`, `check_remote`, `reset_remote`, `reset_tmp`, `reset_env`, `file_list`, `combine`, and `make_env`.
+
+The embedded `File` package models local and remote test files. Constructors `File->new_remote` and `File->new_local` create files with random or provided content and cache MD5s. Methods expose `localpath`, `remotepath`, `remotedir`, `tarpath`, `set_attr`, `attr`, `attr_any`, `attr_str`, `set_time`, `md5`, and cleanup-on-destruction. Functions `File::list`, `File::tree`, and `File::walk` inspect remote share state via `smbclient ls`.
+
+## State, Dependencies, Integration, and Risks
+State is deliberately created under `$LOCALPATH/$DIR` and a temp directory `$TMP`; remote state is reset via `smbclient -c "deltree ./*"` and verified by scanning `$LOCALPATH`. The suite depends on `smbclient` tar options (`-Tc`, `-Tx`, `-Tca`, `-Tcg`, `-TcN`, `-TcI/X/F/r`, `tarmode full/inc/reset/nohidden/nosystem`), local tar compatibility through `Archive::Tar`, and MD5 consistency. Risks include command construction through backticks and `quotemeta`, destructive cleanup of the configured local path when `--clean` is used, assumptions that `$LOCALPATH` mirrors the share root, and some annotated BUG expectations in regex extraction helpers where current checks intentionally preserve known behavior. Test signals are exact archive membership and content hashes from `check_tar`, exact remote membership and hashes from `check_remote`, and subunit/normal aggregate error counts.

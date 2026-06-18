@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/landlock/landlock03.c
+
+Purpose: negative errno coverage for `landlock_restrict_self`. Setup creates a ruleset fd and a regular file fd. Each case forks a child to isolate Landlock stacking, then tests invalid flags (`EINVAL`), invalid fd (`EBADF`), non-ruleset fd (`EBADFD`), missing `CAP_SYS_ADMIN` (`EPERM` after dropping cap), and too many stacked rulesets (`E2BIG` after applying 16 layers). State includes one ruleset fd, one file fd, child-local Landlock layers, and capability changes. Dependencies are Landlock enabled, root, CAP_SYS_ADMIN, and tmpdir. Risks are maximum layer count or capability semantics changing. Test signals are expected errno per case without polluting the parent sandbox.

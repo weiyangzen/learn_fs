@@ -1,0 +1,13 @@
+# sources/sync-backup/borg/src/borg/cache.py
+
+Purpose: implements Borg's client-side cache facade, combining a files cache for unchanged-file detection with repository-stored chunk index cache fragments for deduplication and efficient object lookup.
+
+Important APIs and types: `files_cache_name()` hashes archive/series names or honors `BORG_FILES_CACHE_SUFFIX`; `CacheConfig` loads/saves cache config and integrity metadata; `Cache.__new__` returns `AdHocWithFilesCache`; `FilesCacheMixin` reads/builds/writes file metadata entries, compresses entries by replacing chunk IDs with `ChunkIndex` indexes, checks `file_known_and_unchanged`, and memorizes files; chunk-index helpers list/delete/read/write/build `cache/chunks.<hash>` objects; `ChunksMixin` exposes `chunks`, `seen_chunk`, `reuse_chunk`, `add_chunk`, lock refresh, and periodic chunk-index cache writes; `AdHocWithFilesCache` ties manifest, repository, key, security manager, config, and mixins together.
+
+Control flow and state: cache state lives in the local cache directory (`config`, `README`, files cache) and in repository cache objects (`cache/chunks.*`). Files cache load first tries local `IntegrityCheckedFile`, then can rebuild from the newest archive in the same series unless disabled or denied. Writes discard entries that are too new relative to backup start/newest ctime/mtime to avoid races, and age out entries by `BORG_FILES_CACHE_TTL`. Chunk cache writes content-hashed serialized `ChunkIndex` fragments and clears `F_NEW` flags only after repository storage succeeds.
+
+Dependencies and integration: depends on `ChunkIndex`, `ChunkIndexEntry`, `ChunkListEntry`, `IntegrityCheckedFile`, `SecurityManager`, `Manifest`, `Repository`, `repo_lister`, `SaveFile`, borgstore permission errors, msgpack timestamp helpers, and repository lock refresh via `repository.info()`.
+
+Risks: cold chunk-index rebuild has an explicit N=1 storage assumption; for multi-object packs it needs cached pack location data or range loads may be wrong. File-cache correctness depends on chosen cache mode (`d`, `c`, `m`, `s`, `i`, `r`) and timestamp granularity handling. Integrity data can be invalidated by older Borg versions, causing cache rebuild. `Cache.destroy` removes cache directories after deleting config first and must not run on arbitrary paths.
+
+Test signals: cover cache config create/load/save/version errors, integrity metadata mismatch, files cache read corruption fallback, rebuild from previous archive, race and TTL discard, cache-mode comparisons, missing chunks referenced by files cache, chunk cache hash validation, incremental chunk-cache writes, delete cache invalidation, lock refresh during unchanged-file reuse, and compatibility feature wipe behavior.

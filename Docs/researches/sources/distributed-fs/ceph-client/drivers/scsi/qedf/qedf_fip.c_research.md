@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/qedf/qedf_fip.c
+
+Purpose: handles FIP VLAN discovery transmit/receive, driver-side FIP frame transmit over QED LL2, incoming FIP filtering, Clear Virtual Link validation, handoff of ordinary FIP frames to libfcoe, and source-MAC lookup for libfcoe.
+
+Important APIs/types/functions: `qedf_fcoe_send_vlan_req()` builds a VLAN request containing Ethernet, FIP, MAC, and WWNN descriptors and sends it with `QED_LL2_XMIT_FLAGS_FIP_DISCOVERY`. `qedf_fcoe_process_vlan_resp()` parses VLAN descriptors from a FIP VLAN notification, updates the driver's VLAN ID via `qedf_set_vlan_id()`, and completes `fipvlan_compl`. `qedf_fip_send()` is the libfcoe send hook; it tags outgoing FIP frames with `qedf->vlan_id` and sends through `qed_ops->ll2->start_xmit()`. `qedf_fip_recv()` validates destination MACs, handles VLAN notifications and CVL frames in-driver, and passes other frames to `fcoe_ctlr_recv()`. `qedf_get_src_mac()` returns `qedf->data_src_addr`.
+
+Control flow: VLAN request allocation fills descriptors, checks physical link state, and hands the skb to LL2 or frees it on failure. Receive first parses headers and optionally dumps frames, drops packets not addressed to the adapter, all-ENode multicast, or the data-source MAC, then dispatches by FIP op/subcode. VLAN notes are consumed locally. CVL frames are parsed for FCF MAC, switch WWN, and optional VN_ID match against local WWPN, fabric ID, or data-source MAC; a full match triggers `qedf_ctx_soft_reset()`. All other FIP frames have the Ethernet header pulled and are delivered to libfcoe.
+
+State and persistence: runtime state includes current `vlan_id`, `prio`, `data_src_addr`, `mac`, link state, selected FCF, and completion state for VLAN discovery. No persistent storage. skb ownership transfers to LL2/libfcoe on success and is freed locally on local handling or error.
+
+Dependencies and integration: depends on Linux Ethernet/VLAN skb helpers, FC/FIP descriptor definitions, libfcoe controller receive path, QED LL2 transmit operations, QEDF link/VLAN helpers, and QEDF debug/dump-frame module parameters.
+
+Risks and test signals: descriptor parsing trusts FIP descriptor lengths enough to advance through the packet; malformed FIP frames should be fuzzed for bounds behavior. VLAN tagging uses the stored VLAN ID, including fallback/null states, so discovery and link-up sequencing matter. CVL matching must avoid resetting on unrelated fabrics while still honoring switch-initiated clears. Useful tests include link-down VLAN request, LL2 transmit failure, VLAN notification with changed/zero VID, destination-MAC mismatch, CVL with matching and nonmatching descriptors, and libfcoe handoff for ordinary discovery/keepalive frames.

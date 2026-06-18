@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/lgetxattr/lgetxattr02.c
+
+Purpose: negative `lgetxattr()` errno coverage for missing attribute, too-small buffer, and invalid path pointer. Setup creates a file and symlink and sets `security.ltptest` on the symlink. The table calls `lgetxattr("testfile", key, buf, size)` expecting `ENODATA`, `lgetxattr("symlink", key, one-byte buffer)` expecting `ERANGE`, and `lgetxattr((char *)-1, ...)` expecting `EFAULT`. State is one symlink xattr and stack buffers sized per case. Dependencies are root, xattr header/support, and ability to set `security.*`. Risks include filesystem returning `ENOTSUP` during setup. Test signal is exact errno match per row.

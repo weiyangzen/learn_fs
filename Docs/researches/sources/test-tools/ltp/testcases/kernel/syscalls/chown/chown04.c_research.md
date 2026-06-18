@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chown/chown04.c
+
+Purpose: negative `chown()` errno coverage for EPERM, EACCES, EFAULT, ENAMETOOLONG, ENOENT, ENOTDIR, ELOOP, and EROFS. Setup creates a symlink loop, non-directory prefix, files, a protected directory path, substitutes a bad address, and drops to nobody. Each case calls `CHOWN` with current uid/gid and expects a specific errno. Important APIs are `CHOWN`, `SAFE_SYMLINK`, `SAFE_TOUCH`, `SAFE_MKDIR`, `SAFE_SETEUID`, and rofs support. State includes tmpdir fixtures, a read-only mountpoint, bad address pointer, and euid nobody. Dependencies are root, nobody, rofs, and compat chown wrapper. Risks are filesystem permission/errno variations. Test signal is exact errno per condition.

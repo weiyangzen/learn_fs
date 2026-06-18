@@ -1,0 +1,22 @@
+# sources/user-network-fs/samba/source4/torture/raw/streams.c
+
+## Purpose
+`streams.c` is the raw SMB torture suite for Windows alternate data streams. It tests stream creation, I/O, stream enumeration, share modes, delete pending behavior, stream naming rules, stream rename variants, create disposition effects, attribute propagation, summary-information update patterns, and base-file permission enforcement on streams.
+
+## Important APIs, types, and functions
+The suite entry point is `torture_raw_streams()`. Helpers include `check_stream()`, `check_stream_list()`, `qsort_string()`, `qsort_stream()`, and `create_file_with_stream()`. Test cases include `test_stream_dir()`, `test_stream_io()`, `test_stream_sharemodes()`, `test_stream_delete()`, `test_stream_names()`, `test_stream_names2()`, `test_stream_rename()`, `test_stream_rename2()`, `test_stream_rename3()`, `test_stream_create_disposition()`, `test_stream_attributes()`, `test_stream_summary_tab()`, and `test_stream_permissions()`. It uses `RAW_OPEN_NTCREATEX`, `RAW_FILEINFO_STREAM_INFO`, `RAW_FILEINFO_ALL_INFO`, `RAW_SFILEINFO_RENAME_INFORMATION`, `RAW_SFILEINFO_EA_SET`, `RAW_SFILEINFO_SEC_DESC`, `RAW_RENAME_NTRENAME`, and `RAW_RENAME_RENAME`.
+
+## Control flow
+Each test creates `\teststreams`, performs a focused stream scenario, then deletes the tree. Directory tests reject ADS opens on directories and expect no stream list on the base directory. I/O tests create streams on missing and existing base files, write and modify contents, verify case-insensitive `$DATA` naming, enumerate streams, delete streams by unlink and delete-on-close, and confirm deleting the base removes streams. Share-mode tests show different streams do not conflict while the same stream does. Delete tests verify how stream opens with and without `FILE_SHARE_DELETE` control base-file deletion and `DELETE_PENDING` name-based access. Name tests cover control characters, wildcards, invalid stream type syntax, EA rejection on streams, stream metadata equivalence with the base file, per-stream EOF and write-time mutation, and handle-based stream renames. Additional rename tests compare NT rename and trans2 rename forms using `:<stream>`, `<base>:<stream>`, default stream targets, overwrite behavior, and Samba-specific exceptions. Create-disposition tests verify that overwriting, overwrite-if, and supersede of the base file remove non-default streams, while overwriting the stream itself preserves stream list structure. Permission tests make the base file read-only and add a DACL deny ACE for Everyone to prove stream writes are checked against base-file permissions.
+
+## State and persistence behavior
+State is confined to the test directory but exercises persistent server metadata: stream names and contents, stream list records, base-file attributes, EAs, security descriptors, delete-on-close flags, and stream EOF sizes. Stream info is sorted before comparison to avoid depending on server enumeration order. Some tests intentionally leave open handles while performing path operations to observe share-mode and delete-pending state.
+
+## Dependencies and integration points
+The file depends on raw SMB create, pathinfo/fileinfo, unlink, rename, setfileinfo, security descriptor helpers, SID constants, talloc, typed sort helpers, and target settings for Samba/Windows differences. It is an integration test for ADS backends such as xattr/EADB implementations and their coupling to open-file/share-mode and security descriptor code.
+
+## Risks and edge cases
+ADS semantics are full of compatibility exceptions. The tests encode different expected behavior for Samba3/Samba4 versus Windows in timestamp/name reporting and stream overwrite rename cases. Stream names include nonprintable bytes and wildcard characters, so path normalization changes can alter outcomes. Permission and delete tests depend on exact ordering of open handles and close calls. The disabled large stream-info test indicates a potential buffer-overflow/status path that is not normally exercised.
+
+## Test signals
+Strong signals are exact stream lists such as `::$DATA` plus named streams, correct content reads after partial overwrites, correct `OBJECT_NAME_INVALID` versus `OBJECT_NAME_NOT_FOUND` for invalid names, delete-pending behavior after base unlink with an open stream, base overwrite removing ADS entries, stream attribute changes reflecting on the base file, summary stream rename behavior, and access denial when base attributes or DACLs forbid stream writes.

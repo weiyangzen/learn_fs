@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/sound/soc/codecs/rt722-sdca.c
+
+Purpose: ASoC component implementation for the RT722 SDCA SoundWire codec. It supports headphone playback, headset capture, speaker playback, digital-mic capture, combo-jack and button handling, SDCA mixer controls, DAPM power sequencing with power-state polling, SoundWire stream setup, and guarded hardware preset initialization.
+
+Important APIs and functions: `rt722_sdca_init()` allocates private state, stores the regmap/slave, starts regcache cache-only, initializes mutexes/delayed works and default mute booleans, then registers three DAIs. `rt722_sdca_io_init()` enables cache I/O after attach, configures runtime PM on first init, reads hardware version from `RT722_JD_PRODUCT_NUM`, runs `rt722_sdca_dmic_preset()`, `rt722_sdca_amp_preset()`, and `rt722_sdca_jack_preset()`, marks cache dirty on reinit, and sets `hw_init`. `rt722_sdca_index_write/read()` expose vendor NID/register access and are declared in the header.
+
+Control flow: jack detection is local rather than using `rt-sdw-common.h`. `rt722_sdca_headset_detect()` reads SDCA detected mode, maps it to headphone/headset jack bits, and writes selected mode. `rt722_sdca_button_detect()` reads HID owner/offset/message bytes, decodes button bits, and returns ownership to the device. Delayed workers report jack/button state and poll button release. `rt722_sdca_jack_init()` enables SDCA interrupt masks and configures unsolicited/HID behavior under `calibrate_mutex`.
+
+Mixer/DAPM/PCM: gain controls convert ALSA integer values to SDCA 16-bit volume/boost encodings; FU0F and FU1E capture controls combine mixer mutes with DAPM mutes. DAPM widgets model HP, SPK, MIC/LINE/DMIC, PDE supplies, DAC/ADC FUs, muxes, and DP1/DP2/DP3/DP6 endpoints. PDE event handlers request PS0/PS3 and call `rt722_pde_transition_delay()` to poll actual power state. `rt722_sdca_pcm_hw_params()` maps AIF1 playback/capture to ports 1/2, AIF2 speaker playback to port 3, AIF3 DMIC capture to port 6, adds the SoundWire slave, validates channels/rates, and writes sample-frequency indices.
+
+State and persistence: `rt722_sdca_priv` tracks regmap, component/slave, init flags, jack state, interrupt snapshots, delayed work, mutexes, hardware version, and combined mute booleans. Preset functions check SDCA function status `FUNCTION_NEEDS_INITIALIZATION` so some programming is skipped unless the hardware reports the need or this is first init. Regcache is the persistence layer across PM.
+
+Dependencies and integration points: paired with `rt722-sdca-sdw.c` for probe, PM, interrupts, and MBQ sizing. Depends on ASoC, SoundWire, runtime PM, regmap, SDCA macros, and jack reporting APIs.
+
+Risks: many preset writes ignore errors; jack calibration loops can wait up to about one second and only debug-log timeout. `rt722_sdca_pcm_hw_params()` can leave a SoundWire slave added if validation after `sdw_stream_add_slave()` fails. Some source text shows duplicated `SND_JACK_BTN_0/1` in a report mask, probably harmless but noisy. Header declares `rt722_sdca_jack_detect()` but this file provides internal detection helpers, so external declaration drift should be reviewed.
+
+Test signals: build-test, run HP and speaker playback, headset and DMIC capture, exercise jack insertion modes and four button codes, validate function-status guarded presets on first boot and after reset, test DAPM power-state polling, verify hardware-version-specific branches, and suspend/resume during active streams and pending jack work.

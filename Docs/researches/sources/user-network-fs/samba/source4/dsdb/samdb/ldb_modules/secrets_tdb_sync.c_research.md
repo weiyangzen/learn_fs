@@ -1,0 +1,15 @@
+# sources/user-network-fs/samba/source4/dsdb/samdb/ldb_modules/secrets_tdb_sync.c
+
+Purpose: `secrets_tdb_sync.c` implements the `secrets_tdb_sync` LDB module, which mirrors relevant `secrets.ldb` primary domain secret changes into the legacy `secrets.tdb` store at transaction commit time.
+
+Important APIs, types, and functions: `struct secrets_tdb_sync_private` holds a linked list of changed DNs and a `db_context` for `secrets.tdb`. `struct secrets_tdb_sync_ctx` tracks a single add/modify/delete/rename operation. Operation hooks are `secrets_tdb_sync_add()`, `secrets_tdb_sync_modify()`, `secrets_tdb_sync_delete()`, and `secrets_tdb_sync_rename()`. `add_modified()` records primaryDomain messages. `ust_search_modified()` and callbacks detect `kerberosSecret` entries with `privateKeytab`. Transaction hooks start, prepare, commit, or cancel the `secrets.tdb` transaction.
+
+Control flow: Adds, modifies, and renames first forward the operation to lower modules through child requests. When the lower operation completes, the module searches the affected DN for a `kerberosSecret` with `privateKeytab`; if found, it records the corresponding `primaryDomain` object for commit-time sync. Deletes search first, record deletion if applicable, then issue the downstream delete. During `prepare_commit`, all recorded messages are converted into `secrets_store_machine_pw_sync()` calls, including current and prior secrets, flatname, realm, salt principal, encryption types, object SID, timestamp, secure channel type, and delete flag.
+
+State and persistence behavior: The LDB database is modified by downstream modules. This module keeps an in-memory per-transaction list of changed secret messages and opens a separate transaction on `secrets.tdb`. On successful prepare and end transaction, it commits the TDB transaction. On failure or deleted transaction, it cancels the TDB transaction and frees pending changes. Initialization derives the private directory from the LDB URL and initializes the secrets subsystem.
+
+Dependencies and integration points: It depends on Samba credentials and Kerberos headers, `param/secrets.h`, source3 `secrets.h`, dbwrap transactions, DSDB module search helpers, and `secrets_store_machine_pw_sync()`. The module is a bridge between modern LDB secret records and older TDB consumers.
+
+Risks: The file itself notes semi-async concerns: callbacks and synchronous credential/secrets operations are mixed. Consistency depends on the LDB transaction and the TDB transaction staying aligned across prepare, commit, and cancel. Only entries matching both primaryDomain and kerberosSecret/privateKeytab conditions are synced; schema or filter changes could silently desynchronize stores. Commit-time failures cancel the TDB transaction but cannot repair already completed lower-module work except by failing the LDB transaction.
+
+Test signals: Good tests mutate, rename, and delete matching secret entries inside transactions and verify `secrets.tdb` contents after commit and rollback. Coverage should include non-matching entries, failures in `secrets_store_machine_pw_sync()`, and private directory derivation from `tdb://` URLs.

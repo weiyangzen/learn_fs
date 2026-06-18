@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/acpi/tools/ec/ec_access.c -->
+# sources/distributed-fs/ceph-client/tools/power/acpi/tools/ec/ec_access.c
+
+## Purpose
+Command-line utility for reading and writing the ACPI embedded controller debugfs byte array at `/sys/kernel/debug/ec/ec0/io`. It can dump all 256 bytes, re-read after a sleep and mark changes, read one byte, or write one byte.
+
+## Important APIs, Types, And Functions
+`parse_opts()` enforces mutually exclusive read/write modes and hex offsets/values. `main()` opens debugfs read-only or write-only, then dispatches to `dump_ec()`, `read_ec_val()`, or `write_ec_val()`. State is global parse results and debugfs fd offset. Dependencies are root/debugfs EC support, POSIX file APIs, `err()`, getopt, and `basename()`. Risks include `uint8_t write_value = -1` making missing-value detection unreliable, rejecting value `0xff` because of `>= 255`, `atoi()` sleep parsing, and direct EC writes causing platform side effects. Test signals are help, invalid offsets, missing debugfs, dump/read output formatting, sleep diff highlighting, and write permission failure.
+
+## Control Flow
+`parse_opts()` enforces mutually exclusive read/write modes and hex offsets/values. `main()` opens debugfs read-only or write-only, then dispatches to `dump_ec()`, `read_ec_val()`, or `write_ec_val()`. State is global parse results and debugfs fd offset. Dependencies are root/debugfs EC support, POSIX file APIs, `err()`, getopt, and `basename()`. Risks include `uint8_t write_value = -1` making missing-value detection unreliable, rejecting value `0xff` because of `>= 255`, `atoi()` sleep parsing, and direct EC writes causing platform side effects. Test signals are help, invalid offsets, missing debugfs, dump/read output formatting, sleep diff highlighting, and write permission failure.
+
+## State And Persistence
+`parse_opts()` enforces mutually exclusive read/write modes and hex offsets/values. `main()` opens debugfs read-only or write-only, then dispatches to `dump_ec()`, `read_ec_val()`, or `write_ec_val()`. State is global parse results and debugfs fd offset. Dependencies are root/debugfs EC support, POSIX file APIs, `err()`, getopt, and `basename()`. Risks include `uint8_t write_value = -1` making missing-value detection unreliable, rejecting value `0xff` because of `>= 255`, `atoi()` sleep parsing, and direct EC writes causing platform side effects. Test signals are help, invalid offsets, missing debugfs, dump/read output formatting, sleep diff highlighting, and write permission failure.
+
+## Dependencies And Integration Points
+`parse_opts()` enforces mutually exclusive read/write modes and hex offsets/values. `main()` opens debugfs read-only or write-only, then dispatches to `dump_ec()`, `read_ec_val()`, or `write_ec_val()`. State is global parse results and debugfs fd offset. Dependencies are root/debugfs EC support, POSIX file APIs, `err()`, getopt, and `basename()`. Risks include `uint8_t write_value = -1` making missing-value detection unreliable, rejecting value `0xff` because of `>= 255`, `atoi()` sleep parsing, and direct EC writes causing platform side effects. Test signals are help, invalid offsets, missing debugfs, dump/read output formatting, sleep diff highlighting, and write permission failure.
+
+## Risks And Edge Cases
+`parse_opts()` enforces mutually exclusive read/write modes and hex offsets/values. `main()` opens debugfs read-only or write-only, then dispatches to `dump_ec()`, `read_ec_val()`, or `write_ec_val()`. State is global parse results and debugfs fd offset. Dependencies are root/debugfs EC support, POSIX file APIs, `err()`, getopt, and `basename()`. Risks include `uint8_t write_value = -1` making missing-value detection unreliable, rejecting value `0xff` because of `>= 255`, `atoi()` sleep parsing, and direct EC writes causing platform side effects. Test signals are help, invalid offsets, missing debugfs, dump/read output formatting, sleep diff highlighting, and write permission failure.
+
+## Test Signals
+`parse_opts()` enforces mutually exclusive read/write modes and hex offsets/values. `main()` opens debugfs read-only or write-only, then dispatches to `dump_ec()`, `read_ec_val()`, or `write_ec_val()`. State is global parse results and debugfs fd offset. Dependencies are root/debugfs EC support, POSIX file APIs, `err()`, getopt, and `basename()`. Risks include `uint8_t write_value = -1` making missing-value detection unreliable, rejecting value `0xff` because of `>= 255`, `atoi()` sleep parsing, and direct EC writes causing platform side effects. Test signals are help, invalid offsets, missing debugfs, dump/read output formatting, sleep diff highlighting, and write permission failure.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/acpi/tools/ec/ec_access.c -->

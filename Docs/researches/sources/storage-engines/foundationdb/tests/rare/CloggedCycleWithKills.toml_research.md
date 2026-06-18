@@ -1,0 +1,11 @@
+# Research: sources/storage-engines/foundationdb/tests/rare/CloggedCycleWithKills.toml
+
+- **Purpose:** Rare simulation test specification for the `CloggedCycleWithKills` scenario. It keeps broader, heavier, or less frequently scheduled workloads in the simulation suite.
+- **Source facts:** 25 lines, 552 bytes, executable=False.
+- **Important APIs/types/functions:** Declarative TOML contract: 1 test block(s), titles CloggedCycleTestWithKills, workloads RandomClogging(2), Cycle, Attrition, top-level keys testPriority.
+- **Control flow:** The TestRunner passes this TOML to fdbserver simulation with `-f`. The simulator iterates 1 `[[test]]` block(s) (CloggedCycleTestWithKills) and schedules each block's workload list (CloggedCycleTestWithKills:4). Workload ordering, durations, clear-after-test settings, and failure-injection workloads determine the control flow inside simulation.
+- **State and persistence:** The file is declarative and persists no state by itself. Runtime state is created by the simulation engine, including simulated database contents, backup/restore artifacts, restart information, logs, or workload-specific key ranges named by the workloads.
+- **Dependencies:** Depends on the FoundationDB simulator workload registry for: RandomClogging(2), Cycle, Attrition. Top-level keys: testPriority. Configuration/test knobs: CloggedCycleTestWithKills/Cycle.testDuration=30.0, CloggedCycleTestWithKills/Cycle.transactionsPerSecond=5000.0, CloggedCycleTestWithKills/RandomClogging.testDuration=30.0, CloggedCycleTestWithKills/RandomClogging.testDuration=30.0, CloggedCycleTestWithKills/Attrition.testDuration=30.0.
+- **Integration points:** Integrated by suite location `rare` and consumed by `fdbserver -r simulation -f sources/storage-engines/foundationdb/tests/rare/CloggedCycleWithKills.toml` through the Python TestRunner/CTest path.
+- **Risks:** Fault-injection workloads can make failures seed-sensitive; regressions may require preserving the CMake seed and trace output.
+- **Test signals:** Signals are simulator parse success, workload completion, trace absence/presence of severity 40, and any workload-specific invariants for RandomClogging(2), Cycle, Attrition. Clear-after-test modes: none. Timeouts: none.

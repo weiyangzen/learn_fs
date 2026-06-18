@@ -1,0 +1,9 @@
+# sources/object-store/minio/cmd/metrics.go
+
+This file implements the legacy Prometheus metrics endpoint and authentication middleware. It registers legacy histograms and collectors, gathers local server, storage, HTTP, network, healing, bucket usage, and version metrics, and serializes Prometheus output using negotiated exposition format.
+
+Key APIs are `newMinioCollector`, `minioCollector.Collect`, `metricsHandler`, `AuthMiddleware`, and `NoAuthMiddleware`. The collector emits version info and delegates to `storageMetricsPrometheus`, `nodeHealthMetricsPrometheus`, `bucketUsageMetricsPrometheus`, `networkMetricsPrometheus`, `httpMetricsPrometheus`, and `healingMetricsPrometheus`. These functions read global subsystems such as `globalNotificationSys`, `globalBackgroundHealState`, `globalHTTPStats`, `globalConnStats`, replication stats, data usage from backend, endpoint disk metadata, and `ObjectLayer.StorageInfo`.
+
+State is read from global runtime services and object-layer persisted usage data. No metrics state is persisted here beyond the globally registered Prometheus histograms. `metricsHandler` builds a fresh registry per handler setup, combines it with `prometheus.DefaultGatherer`, sets trace context names, negotiates content type, and streams metric families. `AuthMiddleware` calls `metricsRequestAuthenticate`, validates the `prometheus` issuer, builds credentials, and checks `policy.PrometheusAdminAction` via IAM.
+
+Risks: legacy metrics gather many live global systems and can omit metrics when object layer or usage data is unavailable. Several counters are emitted from current snapshots, so semantic correctness depends on upstream stats. Auth failures intentionally map to generic authentication errors. Tests are not in this file; test signal is mostly endpoint integration and compile-time coupling.

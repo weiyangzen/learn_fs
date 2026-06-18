@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/datanode/TestDeleteBlockPool.java
+
+Purpose: integration-tests deleting a block pool from DataNode storage in a federated HDFS cluster, both through direct DataNode API and `DFSAdmin`.
+
+Important APIs and types: `MiniDFSCluster`, `MiniDFSNNTopology.simpleFederatedTopology`, `DataNode.deleteBlockPool`, `DataNode.refreshNamenodes`, `DFSAdmin`, `FsDatasetTestUtils`, `DFSTestUtil`, and `DFSConfigKeys.DFS_NAMESERVICES`.
+
+Control flow: `testDeleteBlockPool` starts two nameservices and two DNs, writes one file in each namespace, and obtains both block pool IDs. It verifies deletion fails while the block-pool offer service is still running, refreshes the DN to only the second nameservice, verifies non-forced deletion fails when blocks remain, then force-deletes and confirms missing storage. On the second DN it deletes the file, waits for replicas in the old block pool to disappear, shuts down the first NN, refreshes namenodes, and confirms non-forced deletion succeeds when no blocks remain. It verifies the second block pool still works by creating and replicating `/gamma`. `testDfsAdminDeleteBlockPool` repeats the scenario through CLI args, requiring `force` for a block pool not served by the active DN config.
+
+State and persistence behavior: DataNode local block-pool directories are created and removed; BPOfferService membership changes with namenode refresh. Integration points are federation, admin CLI, dataset storage verification, and replication after deletion. Risks include polling for replica deletion, force semantics, and namespace config mutation. Signals are expected IOExceptions/return codes, offer-service counts, block-pool exists/missing checks, and successful unaffected namespace replication.

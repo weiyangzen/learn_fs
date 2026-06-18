@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/qcom,dispcc-sc8280xp.h
+
+Purpose: declares Qualcomm display clock-controller binding IDs for `qcom,dispcc-sc8280xp.h`. It exports 85 macros for MDSS AHB/AXI/core/byte/ESC/DP/pixel/VSYNC clocks, display resets, and MDSS GDSC domains where present.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 85 exported defines, numeric range 0..80, first numeric symbols `DISP_CC_PLL0`=0, `DISP_CC_PLL1`=1, `DISP_CC_PLL1_OUT_EVEN`=2, `DISP_CC_PLL2`=3, `DISP_CC_MDSS_AHB1_CLK`=4, and last numeric symbols `DISP_CC_XO_CLK_SRC`=80, `DISP_CC_MDSS_CORE_BCR`=0, `DISP_CC_MDSS_RSCC_BCR`=1, `MDSS_GDSC`=0, `MDSS_INT2_GDSC`=1. Dominant macro prefixes are `DISP`(83), `MDSS`(2); common suffix categories are `CLK`(44), `SRC`(33), `BCR`(2), `GDSC`(2), `EVEN`(1), `PLL0`(1), `PLL1`(1), `PLL2`(1). Source section markers include `DISPCC clocks`, `DISPCC resets`, `DISPCC GDSCs`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The IDs must stay synchronized with `drivers/clk/qcom/dispcc-sc8280xp.c` or the matching display clock provider, plus MDSS/DSI/DP/display-controller DTS and YAML binding examples.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `_DT_BINDINGS_CLK_QCOM_DISP_CC_SC8280XP_H` should remain unique enough to avoid accidental include suppression. Qualcomm generated-style headers often contain multiple domains in one file: clock IDs, reset IDs ending in `BCR`/`RESET`/`ARES`, and GDSC IDs. Provider array order and `num_*` counts are the key review points.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include successful provider probe, `clk_summary` showing expected names/rates, display/camera/GCC consumers acquiring all clocks, reset-controller operations succeeding, and GDSC domains toggling without `-ENOENT` or probe deferral loops.

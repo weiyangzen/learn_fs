@@ -1,0 +1,7 @@
+# sources/cloud-native/moby/daemon/graphdriver/zfs/zfs.go
+
+Purpose: Linux/FreeBSD ZFS graphdriver implementation using datasets, snapshots/clones, legacy mounts, and naive diff.
+
+Important APIs and control flow: `Init` requires the `zfs` command and `/dev/zfs`, parses `zfs.fsname`, verifies or discovers the root dataset, builds a filesystem cache from recursive ZFS listing, creates/chowns the mount path, and returns `NewNaiveDiffDriver`. `Status` reports pool/dataset usage, quota, and compression. `Create` calls `create`, and if dataset-already-exists indicates an aborted build, destroys recursively and retries. Base layers create filesystems with `mountpoint=legacy`; child layers snapshot the parent and clone. `parseStorageOpt` supports per-layer `size` as ZFS quota. `Get` refcount-mounts the dataset at `mountPath/graph/<mountpoint>`, applies SELinux mount labels, and chowns for remapped root. `Put` lazy-unmounts and removes mountpoint. `Remove` destroys datasets recursively and updates the cache.
+
+State, dependencies, and risks: persistent state is ZFS datasets, snapshots/clones, mountpoints, and driver filesystem cache. Dependencies include go-zfs, system `zfs`, `/dev/zfs`, mountinfo, SELinux labels, user mappings, and platform-specific root filesystem checks. Risks include external command availability, dataset discovery failures, snapshot-name nanosecond collisions, quota string validation deferred to ZFS, and mount refcount cleanup. Linux tests use graphtest including quota-required behavior.

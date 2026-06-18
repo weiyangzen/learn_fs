@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/iio/adc/qcom-pm8xxx-xoadc.c
+
+Qualcomm PM8xxx XOADC IIO driver for older PM8018/PM8038/PM8058/PM8921 PMICs. It exposes DT-selected housekeeping ADC channels, performs variant-specific mux/prescale programming, measures mandatory reference channels, and scales raw ADC codes through the common Qualcomm VADC scaling helpers.
+
+`struct xoadc_channel` describes hard-coded hardware muxing, prescale, IIO type, scale function, and RSV reference selector. `struct xoadc_variant` selects channel tables and quirks, notably PM8058 broken ratiometric behavior. `struct pm8xxx_xoadc` stores regmap, regulator, parsed channels, calibration graphs, completion, and mutex. Core functions are `pm8xxx_read_channel_rsv`, `pm8xxx_calibrate_device`, `pm8xxx_read_raw`, `pm8xxx_fwnode_xlate`, and `pm8xxx_xoadc_parse_channel`.
+
+Probe matches a variant, parses child nodes into IIO channels and private channel metadata, fetches the parent regmap and `xoadc-ref` regulator, requests the EOC IRQ, registers IIO, then calibrates absolute and ratiometric graphs. A read locates the channel, serializes hardware access, writes AMUX and RSV selections, programs analog/digital parameters and decimation, enables the arbiter twice, requests conversion, waits for completion, reads DATA0/DATA1, and shuts the arbiter down twice. Processed reads call `qcom_vadc_scale`; raw reads return the ADC code.
+
+Driver state consists of parsed channel descriptors, calibration graph points generated at probe, and the enabled VREF regulator. Hardware configuration is transient per conversion. It depends on parent PMIC `regmap`, IIO direct mode, fwnode child channels with two-cell `reg`, optional `qcom,ratiometric` and `qcom,decimation`, regulator framework, IRQ completion, and `qcom-vadc-common.c`.
+
+Risks are high because several channel tables are reconstructed from vendor trees and marked incomplete/untested. Probe fails without 1.25 V, 0.625 V/internal, and MUXOFF reference channels. PM8058 ratiometric handling is explicitly a workaround. Test with all compatibles, mandatory-reference failures, exact fwnode translation, PM8058 RSV quirk paths, regulator errors, EOC timeout, and raw/processed scaling.

@@ -1,0 +1,12 @@
+# Research: sources/user-network-fs/smblibrary/SMBLibrary/SMB1/TransactionSubcommands/TransactionSubcommand.cs
+
+- **Purpose:** Defines TransactionSubcommand for the classic transaction named-pipe subcommand layer. It is part of the classic transaction named-pipe subcommand surface under `SMBLibrary.SMB1`.
+- **Source facts:** Read in full: 74 lines, 3129 bytes. Namespace `SMBLibrary.SMB1`. Primary type `TransactionSubcommand`.
+- **Important APIs/types/functions:** Types: class TransactionSubcommand. Constructors: TransactionSubcommand. Constants/static metadata: none. Fields/properties: none detected. Methods/overrides: GetSetup, GetParameters, GetData, GetSubcommandRequest. Dispatch cases: TransactionSubcommandName.TRANS_SET_NMPIPE_STATE, TransactionSubcommandName.TRANS_RAW_READ_NMPIPE, TransactionSubcommandName.TRANS_QUERY_NMPIPE_STATE, TransactionSubcommandName.TRANS_QUERY_NMPIPE_INFO, TransactionSubcommandName.TRANS_PEEK_NMPIPE, TransactionSubcommandName.TRANS_TRANSACT_NMPIPE, TransactionSubcommandName.TRANS_RAW_WRITE_NMPIPE, TransactionSubcommandName.TRANS_READ_NMPIPE, TransactionSubcommandName.TRANS_WRITE_NMPIPE, TransactionSubcommandName.TRANS_WAIT_NMPIPE, TransactionSubcommandName.TRANS_CALL_NMPIPE.
+- **Control flow:** A static dispatcher validates setup length or subcommand id and instantiates the concrete request parser, otherwise raising InvalidDataException. Subcommand serialization is split into setup, parameter, and data byte arrays consumed by the enclosing transaction command.
+- **State and persistence behavior:** State is held in public protocol fields until serialized; no durable storage or process-wide mutation is performed.
+- **Dependencies:** Usings: System, System.Collections.Generic, System.IO, Utilities. Local dependencies and referenced protocol types: TransactionSubcommand. Wire helpers observed: LittleEndianConverter.ToUInt16.
+- **Integration points:** Used inside SMB_COM_TRANSACTION named-pipe transactions and selected by TransactionSubcommand.GetSubcommandRequest.
+- **Risks:** Correctness depends on exact WordCount/setup length handling. Unicode alignment and null-termination rules are easy regression points. Large payloads must fit SMB1 16-bit count/offset fields unless explicitly split or handled with high-length fields.
+- **Test signals:** invalid setup or command values raising InvalidDataException, Unicode and OEM string alignment fixtures.
+- **Explicit failure paths:** InvalidDataException.

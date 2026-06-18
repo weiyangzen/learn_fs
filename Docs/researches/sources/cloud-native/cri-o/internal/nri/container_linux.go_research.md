@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/nri/container_linux.go
+
+Purpose: Linux conversion of CRI-O container Linux details to NRI `LinuxContainer`. The single function `linuxContainerToNRI` reads namespaces, devices, resources, OOM score, cgroups path, IO priority, scheduler, net devices, and RDT info from the `LinuxContainer` interface. State is not changed; returned pointers/slices reference provider data. Dependencies are containerd NRI adaptation types. Integration fills the Linux field in `containerToNRI` for plugin requests. Risks include nil `GetLinuxContainer()` results causing panics, pointer aliasing, and Linux-only fields being unavailable on other platforms. Test signals are absent here; plugin integration should validate conversion completeness.

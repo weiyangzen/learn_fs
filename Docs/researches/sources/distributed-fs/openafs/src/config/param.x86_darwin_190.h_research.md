@@ -1,0 +1,7 @@
+# sources/distributed-fs/openafs/src/config/param.x86_darwin_190.h
+
+This platform parameter header selects OpenAFS build behavior for x86/amd64 Darwin 19. It has separate kernel and `UKERNEL` userspace halves and defines the common Darwin lineage macros from `AFS_DARWIN70_ENV` through `AFS_DARWIN190_ENV`, 64-bit client and I/O behavior, `AFS_NAMEI_ENV`, syscall number 230, endian selection, and vnode/uio compatibility aliases.
+
+Important API surface is preprocessor state, not functions. Kernel builds map AFS names such as `afsio_iov`, `AFS_KALLOC`, `v_count`, `v_vfsp`, and `direct` onto Darwin kernel structures, enable `RXK_UPCALL_ENV`, `RXK_TIMEDSLEEP_ENV`, `AFS_USERSPACE_IP_ADDR`, and `AFS_SOCKPROXY_ENV`, and set `NEED_IOCTL32`. Userspace builds define `AFS_USERSPACE_ENV`/`AFS_USR_DARWIN*_ENV` and matching `SYS_NAME`/`SYS_NAME_ID` for ppc, i386, and amd64.
+
+There is no runtime control flow or persistence; state is compile-time ABI selection. Integration is broad: nearly every OpenAFS source that includes `afs/param.h` depends on these macros to select OS, pointer width, vnode, syscall, and network behavior. Risks are macro drift and architecture naming mistakes; the userspace i386 block includes `sys_x64_darwin_*` spellings where surrounding files use `sys_x86_darwin_*`, so consumers must be checked. Test signals are successful libafs and userspace builds on Darwin 19 for i386/amd64 paths, plus compile coverage for 32-bit ioctl compatibility and sockproxy/upcall features.

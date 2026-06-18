@@ -1,0 +1,15 @@
+## sources/cloud-native/stargz-snapshotter/fs/fs.go
+
+Purpose: implements the snapshotter `FileSystem` that resolves remote layer sources, verifies or skips layer verification according to labels/config, starts prefetch/background fetch, exposes the layer through go-fuse, tracks mounted layers, and manages per-layer metrics.
+
+Important APIs/types/functions: option functions customize source extraction, remote handlers, metadata store, metrics log level, overlay opaque mode, and extra decompressors. `NewFilesystem` applies defaults, creates a background task manager, layer resolver, metrics namespace/controller, and returns a `snapshot.FileSystem`. `filesystem.Mount` resolves sources and layers, pre-resolves neighboring layers, verifies TOC digest or skip policy, creates a root node, registers metrics, and starts a FUSE server. `Check` verifies layer connectivity and waits for prefetch. `check` refreshes broken blob connections from current labels. `Unmount` closes/evicts layer state and unmounts with force fallback. `prefetch` starts asynchronous prefetch/background fetch. `neighboringLayers` filters target layer out of manifest layers.
+
+Control flow: mount begins with prioritized-task gating to avoid background network contention. It obtains sources from labels, applies prefetch label override, resolves the target in a goroutine, pre-resolves neighboring layers in parallel, waits up to 30 seconds, enforces verification policy, builds FUSE node FS/server, then waits for mount. Prefetch and background fetch are launched when resolution succeeds. Check locates the registered layer, optionally refreshes connectivity if not fully fetched, and blocks on prefetch unless disabled.
+
+State and persistence: `filesystem.layer` maps mountpoints to active `layer.Layer` references under `layerMu`. Package-level `ns` and `metricsCtr` are singleton metric registration state guarded by `nsLock`. The resolver/cache state lives under the configured root and layer resolver.
+
+Dependencies and integration points: integrates containerd remote/source labels, OCI descriptors, `fs/layer`, `metadata`, `task`, go-fuse, Prometheus/docker metrics, and Linux unmount syscall. Verification uses `estargz.TOCJSONDigestAnnotation` and `config.TargetSkipVerifyLabel`.
+
+Risks: `Mount` starts `fs.prefetch` inside the resolver goroutine before the layer is registered and before verification completes; prefetch can run on unverified content unless the layer reader itself enforces verification state. The 30-second resolve timeout is hard-coded. `Check` treats prefetch wait errors as warnings and returns nil, which may allow container startup despite prefetch failure. `Unmount` holds `layerMu` while closing the layer, potentially blocking other mountpoint operations during cleanup. Metrics singletons mean configuration changes after first filesystem may not re-register common metrics.
+
+Test signals: `fs_test.go` covers `Check` success/failure with a breakable layer and refresh path. Mount/unmount/FUSE server behavior is not directly tested here and relies on integration tests elsewhere.

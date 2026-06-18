@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/rseq/check_optimized.c
+
+Purpose: checks that optimized rseq registration path can be used. It calls `__rseq_register_current_thread(true, false)` and exits success only if registration succeeds. State is the current thread’s rseq registration. Dependencies are `librseq`, kernel rseq syscall support, and an environment where registration is allowed. Integration is an extended build artifact that can be used by scripts or packaging checks. Risks are minimal diagnostics and conflict with libc-managed rseq. Test signals are exit zero for optimized registration success and nonzero otherwise.

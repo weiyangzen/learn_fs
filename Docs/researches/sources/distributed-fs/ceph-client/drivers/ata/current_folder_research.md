@@ -1,0 +1,137 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/ata
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 123
+- Recursive researched files: 142
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/ata/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/ata/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/ata/acard-ahci.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci.h`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_brcm.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_ceva.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_da850.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_dm816.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_dwc.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_imx.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_mtk.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_mvebu.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_octeon.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_platform.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_qoriq.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_seattle.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_st.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_sunxi.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_tegra.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ahci_xgene.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ata_generic.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/ata_piix.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libahci.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libahci_platform.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-acpi.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-core.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-eh.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-pata-timings.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-pmp.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-sata.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-scsi.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-sff.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-trace.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-transport.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-transport.h`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata-zpodd.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/libata.h`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_acpi.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ali.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_amd.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_arasan_cf.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_artop.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_atiixp.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_atp867x.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_buddha.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cmd640.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cmd64x.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cs5520.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cs5530.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cs5535.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cs5536.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_cypress.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_efar.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ep93xx.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_falcon.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ftide010.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_gayle.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_hpt366.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_hpt37x.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_hpt3x2n.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_hpt3x3.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_icside.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_imx.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_isapnp.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_it8213.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_it821x.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ixp4xx_cf.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_jmicron.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_legacy.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_macio.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_marvell.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_mpc52xx.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_mpiix.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_netcell.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ninja32.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ns87410.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_ns87415.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_octeon_cf.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_of_platform.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_oldpiix.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_opti.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_optidma.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_pcmcia.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_pdc2027x.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_pdc202xx_old.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_piccolo.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_platform.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_pxa.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_radisys.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_rb532_cf.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_rdc.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_rz1000.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_sc1200.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_sch.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_serverworks.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_sil680.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_sis.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_sl82c105.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_triflex.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pata_via.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/pdc_adma.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_dwc_460ex.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_fsl.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_gemini.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_gemini.h`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_highbank.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_inic162x.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_mv.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_nv.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_promise.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_promise.h`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_qstor.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_rcar.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_sil.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_sil24.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_sis.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_svw.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_sx4.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_uli.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_via.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sata_vsc.c`
+- `sources/distributed-fs/ceph-client/drivers/ata/sis.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

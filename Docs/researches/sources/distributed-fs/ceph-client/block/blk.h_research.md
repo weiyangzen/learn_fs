@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/block/blk.h
+
+Purpose: is the block layer's internal header for queue lifetime, bio splitting, merging, flushing, zoned hooks, disk events, partition helpers, integrity, debugfs locking, and request reference/timestamp helpers. It is not a standalone implementation but defines contracts shared by many block source files.
+
+Important APIs and types: declarations include flush queue allocation, queue freeze/unfreeze helpers, `submit_bio_noacct_nocheck()`, `bio_queue_enter()`, `blk_wait_io()`, bio split helpers, merge helpers, elevator hooks, partition sysfs handlers, timeout functions, disk event lifecycle, ioctl/uring entry points, block device open/close helpers, integrity functions, zoned hooks, and fault injection hooks. Important inline helpers include `blk_try_enter_queue()`, `biovec_phys_mergeable()`, `zone_device_pages_compatible()`, `rq_mergeable()`, `blk_queue_get_max_sectors()`, `bio_may_need_split()`, `__bio_split_to_limits()`, request refcount helpers, `blk_time_get_ns()`, and debugfs NOIO locks.
+
+Control flow and integration: most implementation files include this header to access internal state while keeping public `blkdev.h` smaller. Bio submission uses queue-enter helpers before splitting and issuing. Merge paths use request merge predicates and elevator callbacks. Zoned completion and request finishing call the inline zoned hooks. Debugfs registration uses NOIO wrappers to avoid reclaim recursion against frozen queues.
+
+State and persistence: the header defines no independent storage but operates on `request_queue`, `gendisk`, `bio`, `request`, block device, flush queue, and current task plug state. Timestamp caching in `blk_time_get_ns()` stores the current ktime in `current->plug` for a submission batch.
+
+Dependencies and risks: because it is a central internal ABI, signature drift breaks many block files. Merge helpers must respect hardware limits, P2PDMA pgmap compatibility, Xen constraints, integrity vectors, zoned append non-mergeability, and atomic write limits. Queue entry helpers must obey PM-only and freeze/drain state. Test broad block build configs, bio splitting by operation type, merge boundary cases, zoned enabled/disabled builds, lockdep around queue freeze, integrity enabled/disabled, Xen/KMSAN/P2PDMA cases, and debugfs registration under frozen queues.

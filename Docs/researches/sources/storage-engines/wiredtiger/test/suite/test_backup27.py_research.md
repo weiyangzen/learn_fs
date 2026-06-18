@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup27.py
+
+Purpose: verifies selective backup with history store contents clears history entries for tables excluded from partial restore while preserving history for restored tables.
+
+Important APIs are timestamped transactions, `conn.set_timestamp`, checkpoint, `take_selective_backup`, `wiredtiger_open(... backup_restore_target=...)`, read timestamp transactions, cursor search, and creating a missing table after restore. Control flow creates two tables, writes values at timestamps 1 and 5, advances stable timestamp to 10 and checkpoints to retain history store data, selectively backs up excluding one table file, restores only the included URI, validates older and newer timestamp reads for included table, asserts excluded table open fails, recreates the excluded table, then verifies no historical records are visible at timestamps 1 or 10. State behavior is history store filtering during partial recovery. Risks include timestamp visibility semantics and omitted file metadata. Test signals are timestamped value checks and WT_NOTFOUND on recreated excluded table history.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/store/records/MockStateStoreDriver.java
+
+Purpose: `MockStateStoreDriver` is an in-memory test implementation of `StateStoreBaseImpl` that can deliberately throw `IOException` on driver operations. It is used to test state-store and resolver resilience without external persistence.
+
+Important APIs and data structures: it tracks readiness with `initialized`, exposes `setGiveErrors(boolean)` to enable induced failures, and stores records in a static `VALUE_MAP` keyed first by `StateStoreUtils.getRecordName(recordClass)` and then by `BaseRecord.getPrimaryKey()`. Implemented operations include `initDriver()`, `initRecordStorage()`, `isDriverReady()`, `close()`, `get(Class<T>)`, `putAll(List<T>, allowUpdate, errorIfExists)`, `clearAll()`, `removeAll(Class<T>)`, and query-based `remove(Class<T>, Query<T>)`.
+
+Control flow and persistence behavior: every read/write/remove operation calls `checkErrors()` first. `get()` returns a snapshot list of values for the requested record family and a current timestamp. `putAll()` creates the record-family map if needed, overwrites only when the old record is absent or `allowUpdate` is true, and throws an `IOException` on duplicate records when `errorIfExists` is true. `remove()` iterates through values and removes records whose query matches.
+
+Dependencies and integration points: the driver relies on `StateStoreBaseImpl` for base driver behavior and `StateStoreOperationResult` for bulk write results. It is integrated by `TestRouterState.testStateStoreResilience()` through `RBFConfigKeys.FEDERATION_STORE_DRIVER_CLASS`, where induced read errors validate that cache refresh failure does not discard the previous resolver cache.
+
+Risks and test signals: because `VALUE_MAP` is static, tests must call `clearAll()` or `close()` to avoid cross-test contamination. The implementation returns a successful `StateStoreOperationResult` after successful `putAll`, but duplicate-with-error throws rather than returning failed keys, so it is a simple failure injector rather than a full conformance implementation. It signals cache-failure behavior more than production persistence fidelity.

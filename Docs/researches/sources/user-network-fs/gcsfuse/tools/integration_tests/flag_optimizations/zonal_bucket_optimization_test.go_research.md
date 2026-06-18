@@ -1,0 +1,9 @@
+# Research: sources/user-network-fs/gcsfuse/tools/integration_tests/flag_optimizations/zonal_bucket_optimization_test.go
+
+Purpose: validates zonal bucket optimizations for kernel parameters and read strategy precedence. It checks optimized FUSE kernel settings, kernel reader default behavior, and fallback to file cache or buffered reader when kernel reader is disabled.
+Important APIs/types/functions: constants for expected log messages; `KernelReaderParamsSuite` with `verifyKernelParam` and `TestKernelParamVerification`; `ReadStrategySuite` with `validateParallelReads` and `TestKernelReaderBehavior`; `createAndReadFile`; and tests for default, explicit override, dynamic mount, and read strategy cases.
+Control flow: kernel-param tests stat the mount to derive device major/minor, resolve `/sys` parameter paths via `kernelparams.PathForParam`, and compare values to optimized defaults or explicit overrides. Read strategy tests create/read a 10 MiB file, truncate logs first, then inspect log messages and parallel ReadFile overlap.
+State and persistence: state spans mounted files, gcsfuse logs, `/sys` FUSE connection parameters, and configured cache dirs under `/gcsfuse-tmp`. Test files are removed with cleanup callbacks.
+Dependencies and integration points: imports `cfg.DefaultMaxBackground`, `DefaultCongestionThreshold`, `kernelparams`, `unix.Stat`, setup helpers, and operations. Config entries are defined in `setup_test.go`.
+Risks and edge cases: log-string assertions are brittle against logging changes. `/sys` parameter availability depends on platform privileges. Dynamic mount intentionally expects optimized values not to apply.
+Test signals: correct kernel params, kernel reader initialization/parallel reads by default, and absence of kernel reader logs when explicitly disabled prove zonal optimization behavior.

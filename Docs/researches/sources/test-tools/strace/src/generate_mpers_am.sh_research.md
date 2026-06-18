@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/generate_mpers_am.sh
+
+Build helper script that generates Automake fragments for mpers personality-specific sources. It enumerates mpers inputs and emits make rules/variables used to build native and compat printer objects. Persistent output is generated makefile text. Dependencies are POSIX shell, repository layout, and mpers naming conventions. Risks are quoting/path issues, stale generated automake fragments, and missing new mpers files. Tests should run the script during maintainer regeneration, compare generated output, and build all supported personalities.

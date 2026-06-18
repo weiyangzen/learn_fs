@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mmc/mmc-card.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mmc/mmc-card.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mmc/mmc-card.yaml` defines the MMC, SD, SDHCI, or power-sequence binding titled `MMC Card / eMMC Generic`. This documents describes the devicetree bindings for a mmc-host controller child node describing a mmc-card / an eMMC. It is a Linux devicetree YAML schema used to validate hardware-description nodes before those nodes reach kernel drivers.
+
+## Important APIs, Types, and Functions
+The public ABI is the set of DTS properties and child-node shapes, not callable functions. `compatible` uses a single `const` with 1 token: `mmc-card`. Top-level properties are `compatible`, `reg`, `broken-hpi`. Required top-level properties are `compatible`, `reg`. Pattern properties are `^partitions(-boot[12]|-gp[14])?$`. Nested required-property signals include `compatible`, `reg`. The highest-risk API details are compatible fallback ordering, `reg` and interrupt resource order, clock/reset names, bus-width and timing flags, voltage regulator phandles, power-sequence links, and common MMC/SDHCI schema references.
+
+## Control Flow
+Control flow is declarative schema evaluation. During `dt_binding_check` or `dtbs_check`, dt-schema loads the YAML, resolves `$ref` dependencies, matches applicable compatible strings or reusable fragments, checks required properties, evaluates enum/const/items limits, applies no top-level conditionals, validates embedded examples, and enforces `additionalProperties` or `unevaluatedProperties`. At runtime the kernel consumes the compiled DTB: platform, MFD, MIPS, misc, or MMC drivers match `compatible`, request resources, parse phandles and cells, and create any children described by the node. The YAML itself has no executable branch logic.
+
+## State and Persistence Behavior
+The file stores no mutable state and creates no persistent data. Persistence is the devicetree ABI: compatible strings, property names, phandle layout, child-node names, and example nodes become contracts shipped in DTS/DTB artifacts. Runtime state is owned by kernel drivers after probe, including host-controller registration, card-detect state, power sequencing, regulator enablement, clock/tuning state, and runtime PM owned by MMC host drivers.
+
+## Dependencies and Integration Points
+Maintainers listed: Ulf Hansson <ulf.hansson@linaro.org>. Direct schema dependencies include `/schemas/types.yaml#/definitions/flag`. Integration points include the MMC core, SDHCI and DesignWare host drivers, GPIO card-detect/write-protect lines, regulators, clocks, resets, power sequencing, CQE/tuning, and board storage nodes. The binding also integrates with kernel driver `of_match_table` entries, in-tree DTS users, schema example extraction, and the common `make dt_binding_check` / `make dtbs_check` validation path.
+
+## Risks
+Primary risks are incompatible ABI changes to compatible fallback ordering, `reg` and interrupt resource order, clock/reset names, bus-width and timing flags, voltage regulator phandles, power-sequence links, and common MMC/SDHCI schema references, mismatches between documented compatibles and driver match tables, and resource ordering or cell-count changes that compile but break probe. This schema rejects unknown top-level properties with `additionalProperties: false`. Additional risk signals: pattern-property regexes can over-match or under-match child nodes; examples can drift from the schema and must stay validated.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/mmc/mmc-card.yaml` for targeted schema validation and `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/mmc/mmc-card.yaml` against representative board DTBs. The schema has 1 embedded example, so example validation is part of the signal. Useful regression checks are required-property failures, compatible-specific branches, unknown-property rejection, referenced common-schema resolution, example compilation, and a comparison between compatible strings here and the corresponding kernel driver match tables.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mmc/mmc-card.yaml -->

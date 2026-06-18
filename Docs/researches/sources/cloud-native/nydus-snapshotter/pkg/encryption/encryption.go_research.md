@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/nydus-snapshotter/pkg/encryption/encryption.go
+
+This file wraps containerd/imgcrypt and ocicrypt behavior to encrypt and decrypt Nydus bootstrap layers stored in a containerd content store. Internal helpers `encryptLayer`, `decryptLayer`, and `ingestReader` adapt `content.ReaderAt` data to ocicrypt readers, translate media types between Docker/OCI and encrypted media types, write transformed blobs, and return updated OCI descriptors.
+
+Public APIs are `EncryptNydusBootstrap` and `DeryptNydusBootstrap` (note the spelling). Encryption creates a crypto config from recipient strings, filters encryption annotations out of the old descriptor, writes changed content either with `content.WriteBlob` when digest is known or through `ingestReader` when digest is computed, then merges finalizer annotations into the descriptor. Decryption creates a decrypt config from key paths, supports `unwrapOnly`, maps encrypted media types back to plain media types, and persists decrypted content when needed.
+
+State is the content store and OCI descriptor graph; no local files are written directly. Dependencies include `ocicrypt`, containerd content APIs, image media types, digests, and OCI descriptors. Risks include unsupported media type failures, random refs when digest is initially unknown, annotation handling, the `unwrapOnly` path returning a wrapped error with nil underlying error, and lack of direct tests in this subset.

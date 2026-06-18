@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/smb/client/fscache.c
+
+Purpose: connects CIFS/SMB tree connections and inodes to the Linux fscache/netfs cache backend. It creates per-share fscache volumes, constructs per-inode cookies keyed by stable server identity, records coherency data, and releases or unuses those cookies as files and inodes close.
+
+Important APIs and functions: exported routines are `cifs_fscache_get_super_cookie`, `cifs_fscache_release_super_cookie`, `cifs_fscache_get_inode_cookie`, `cifs_fscache_unuse_inode_cookie`, and `cifs_fscache_release_inode_cookie`. Internal data and helpers include `struct cifs_fscache_inode_key` and `cifs_fscache_fill_volume_coherency`.
+
+Control flow: super-cookie acquisition is guarded by `tcon->fscache_lock` and `tcon->fscache_acquired` so a tree connection only attempts acquisition once. It validates the server address family, extracts and sanitizes the share name, builds a key of the form `cifs,<server-address>,<share>`, fills volume coherency from resource ID, creation time, and serial number, then calls `fscache_acquire_volume`. A busy key is treated as a collision and leaves the tcon without a volume while still returning success. Inode-cookie acquisition builds a packed key from CIFS unique ID, creation time, and file type, fills mtime/ctime coherency via the header helper, acquires a cookie under the tcon volume, and forces release callbacks on the mapping if a cookie exists. Unuse optionally sends updated coherency and size. Release relinquishes the cookie and clears `cifsi->netfs.cache`.
+
+State and persistence behavior: the cache backend persists data under the volume key and inode key. Runtime state lives in `tcon->fscache`, `tcon->fscache_acquired`, and `CIFS_I(inode)->netfs.cache`. Coherency metadata binds cached data to SMB volume identity and inode timestamps. The code intentionally does not retry once `fscache_acquired` is set unless the tcon is recreated.
+
+Dependencies and integration points: depends on fscache APIs, netfs inode cache storage, CIFS tcon/session/server addresses, share-name extraction, inode unique IDs/create times, and tracepoints for tcon reference diagnostics. It is enabled by the mount option parsed in `fs_context.c` and used by file open/close and inode lifecycle paths.
+
+Risks: the volume key must distinguish shares and server endpoints correctly; address formatting or share-name normalization changes can cause duplicate or missed cache volumes. Treating `-EBUSY` as a nonfatal collision avoids mount failure but silently disables caching for that tcon. Inode keys must match `cifs_find_inode()` comparison semantics or cached data may alias incorrectly. Coherency only records mtime/ctime at inode level, so server timestamp accuracy matters.
+
+Test signals: fscache-enabled mounts for IPv4 and IPv6 servers, duplicate mounts to the same share causing `-EBUSY`, share names with slash normalization, regular inode cookie acquisition/release, file close with and without update coherency, stale timestamp invalidation, tcon teardown, and behavior when fscache volume acquisition fails.

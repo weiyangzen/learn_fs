@@ -1,0 +1,7 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/include/asm/platform.h -->
+# sources/distributed-fs/ceph-client/arch/xtensa/include/asm/platform.h
+
+Purpose: declares platform hooks used by the Xtensa port during boot, setup, idle, clock calibration, and reset. Important APIs are `platform_init(bp_tag_t *)`, `platform_setup(char **)`, `platform_idle(void)`, `platform_calibrate_ccount(void)`, and noreturn `cpu_reset(void)`.
+
+Control flow is supplied by platform code or weak defaults in `kernel/platform.c`: early boot calls `platform_init` before MMU initialization, `setup_arch` calls `platform_setup`, idle calls `platform_idle`, optional ccount calibration calls `platform_calibrate_ccount`, and reset paths call `cpu_reset`. State is not stored in the header, but hooks consume boot parameter tags and may mutate global platform/device state, command line data, or clock state. Dependencies include `linux/types.h` and `asm/bootparam.h`. Integration points are bootloader tag parsing, arch setup, idle loop, time initialization, and machine restart. Risks are missing platform overrides causing no-op setup or fallback 10 MHz clock calibration, and reset implementations needing MMU/cache-safe transitions. Test signals include boot logs, idle behavior, calibrated `ccount_freq`, platform device availability, and reset/restart tests.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/arch/xtensa/include/asm/platform.h -->

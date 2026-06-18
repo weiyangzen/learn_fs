@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdgpu/amdgpu_reset.c
+
+Purpose: implements common reset orchestration for AMDGPU devices, including ASIC-specific reset-control initialization, reset handler dispatch, reset-domain lifetime/locking, reset descriptions, and a special XGMI hive reset-on-init flow.
+
+Important APIs and functions: `amdgpu_reset_init/fini()` dispatch to Aldebaran, Sienna Cichlid, or SMU 13.0.10 reset setup based on MP1 IP version. `amdgpu_reset_prepare_hwcontext()` and `amdgpu_reset_perform_reset()` select a reset handler from `adev->reset_cntl` and invoke its prepare/perform/restore hooks. `amdgpu_reset_do_xgmi_reset_on_init()` drives an init-time reset for a multi-device XGMI list using `xgmi_reset_on_init_handler`. `amdgpu_reset_create_reset_domain()` allocates a domain, initializes a single-threaded workqueue, refcount, reset atomics, and rwsem. `amdgpu_device_lock_reset_domain()` and unlock set `in_gpu_reset` and hold the rwsem write side. `amdgpu_reset_get_desc()` formats reset source descriptions; `amdgpu_reset_in_recovery()` checks init-level state.
+
+Control flow: XGMI reset-on-init preparation unregisters each GPU instance, suspends valid/hardware IP blocks in reverse order except display, marks hardware off, and backs up VCN firmware BO state. Reset execution locks each device reset control, records the active ASIC reset method, queues `xgmi_reset_work` on the default workqueue for all devices, flushes all work, collects `asic_reset_res`, then clears active reset and unlocks. Restore calls `amdgpu_device_reinit_after_reset()` and initializes KFD paths if needed. Generic reset dispatch requires a handler; missing handlers return `-EOPNOTSUPP`.
+
+State and persistence: reset state is in memory: `active_reset`, `reset_lock`, `in_gpu_reset`, `reset_res`, reset-domain refcount, reset workqueue, and each IP block's `status.hw`. Hardware state changes through suspend/reset/reinit hooks. No disk persistence.
+
+Dependencies and integration points: integrates with ASIC-specific reset modules (`aldebaran`, `sienna_cichlid`, `smu_v13_0_10`), IP block suspend/reinit, XGMI reset work, KFD initialization, VCN BO backup, reset-domain synchronization used by register access, and reset source reporting used by recovery/coredump paths.
+
+Risks: the XGMI path must coordinate multiple devices; partial queueing failures or one device returning reset error can leave some devices already reset. `amdgpu_reset_xgmi_reset_on_init_prep_hwctxt()` returns `r` after the loop even if no iteration initializes it on unusual input, although normal non-empty lists cover it. Handler hooks are assumed present once a handler is returned. Reset-domain lock ordering is critical because register access may take read locks and reset takes write locks.
+
+Test signals: multi-GPU XGMI reset-on-init, single-device rejection, unsupported ASIC fallback, reset-domain lockdep, GPU recovery logs, KFD reinit after reset, and `amdgpu_reset_get_desc()` strings for job/RAS/MES/HWS/user/userq sources.

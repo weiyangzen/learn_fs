@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/net/netconsole.c
+
+## Purpose
+This file implements `netconsole`, a crash-oriented kernel console that sends printk output over UDP using netpoll. It supports boot/module parameter targets, optional dynamic configfs targets, basic and extended console formats, per-target userdata/sysdata, automatic deactivation and resume on network-device events, and transmit error counters.
+
+## Important APIs, Types, and Functions
+`struct netconsole_target` is the key object. It holds list/configfs nodes, cached userdata and sysdata fields, a message counter, per-target stats, state (`STATE_DISABLED`, `STATE_ENABLED`, `STATE_DEACTIVATED`), formatting flags, a `struct netpoll`, a fixed send buffer, and resume work. Global state includes `target_list`, `target_cleanup_list`, `target_list_lock`, `target_cleanup_list_lock`, `dynamic_netconsole_mutex`, the workqueue, and two `struct console` instances (`netconsole` and `netconsole_ext`). Important functions include `alloc_and_init()`, `enabled_store()`, `netconsole_netdev_event()`, `netconsole_write()`, `send_ext_msg_udp()`, `netconsole_parser_cmdline()`, `alloc_param_target()`, `init_netconsole()`, and `cleanup_netconsole()`.
+
+## Control Flow
+Initialization parses semicolon-separated `netconsole=` targets, creates netpoll targets, registers a workqueue, netdevice notifier, configfs subsystem, and the needed console types. Console writes run under `target_list_lock` via the console device lock. `netconsole_write()` filters by `oops_only`, target format, enabled state, and running netdev, enters nbcon unsafe context, then sends either basic chunks or extended messages. Extended messages may prepend kernel release, append userdata and runtime sysdata, and fragment over `MAX_PRINT_CHUNK` with an `ncfrag` header. Dynamic enable through configfs validates the extended/release combination, registers the relevant console if needed, calls `netpoll_setup()`, and marks the target enabled. Dynamic disable marks the target disabled, moves it to the cleanup list under the spinlock, unregisters unused console types, and performs deferred `netpoll` cleanup under RTNL. Netdevice events update names, deactivate targets on unregister, disable them on join/release, and schedule resume work for matching reappearing devices.
+
+## State and Persistence
+State is in memory only, but configfs exposes mutable target parameters: enable state, format flags, device name, local/remote ports and IPs, local/remote MACs, transmit errors, userdata entries, and sysdata feature toggles. Enabled targets own active netpoll state. Deactivated targets remember enough identity to resume by device name or MAC. Userdata is cached as a formatted string and swapped under the target list spinlock so the write path can append it safely. Sysdata is generated per message for enabled features such as CPU, task name, release, and message id.
+
+## Dependencies and Integration Points
+The driver integrates with console/nbcon, netpoll, configfs, netdevice notifier chain, RTNL, workqueues, IPv4/IPv6 parsers, ethernet helpers, UTS release data, and u64 stats. The boot option parser accepts `[src-port]@[src-ip]/[dev-or-mac],[tgt-port]@<tgt-ip>/[tgt-mac]`, with `+` for extended mode and `r` for release prepending.
+
+## Risks and Edge Cases
+The write path must be IRQ/crash safe, so sleeping cleanup is deferred through a cleanup list. Lock ordering between RTNL, cleanup mutex, dynamic mutex, and target spinlock is critical. Dynamic configfs removal must cancel pending resume work and avoid racing deactivated targets. Extended fragmentation assumes an extended console header containing `;`; missing headers trigger warnings and drop. Userdata length is bounded, but many entries can still enlarge output and force fragmentation. Netdevice unregister moves targets to deactivated state so messages stop until a matching device returns; join/release disable instead to avoid auto-resuming enslaved devices. `oops_only` suppresses normal messages.
+
+## Test Signals
+Tests should cover boot parameter parsing for IPv4/IPv6, device name and MAC binding, dynamic configfs create/enable/disable/remove, basic versus extended console registration, release flag validation, userdata and sysdata updates, message fragmentation, transmit error counters, netdevice rename/unregister/register/join/release events, and cleanup during module exit. Crash-path confidence comes from verifying netpoll sends while normal networking locks may be unavailable.

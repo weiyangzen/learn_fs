@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/include/asic_reg/smuio/smuio_11_0_0_offset.h
+
+## Purpose
+`smuio_11_0_0_offset.h` defines SMUIO 11.0.0 register offsets and base-index selectors for AMDGPU. Compared with the smaller 10.0.2 table, it covers a broader SMUIO register map that includes SMU SVI telemetry, MCM config, two CKSVII2C controller instances, reset/power-management registers, ROM access/status windows, GPIO/pad/pinstrap controls, SMIO controls, and a separate power block containing IP discovery, TSC, FLR, scratch, display timer, and interrupt-handler registers.
+
+## Important APIs, Types, And Functions
+The header exports preprocessor constants under `_smuio_11_0_0_OFFSET_HEADER`. For the `smuio_smuio_SmuSmuioDec` block at base `0x5a000`, important macros include `mmSMUSVI0_TEL_PLANE0`, `mmSMUIO_MCM_CONFIG`, `mmCKSVII2C_*` and `mmCKSVII2C1_*` controller registers from `IC_CON` through component ID/version/type, `mmSMUIO_MP_RESET_INTR`, `mmSMUIO_SOC_HALT`, `mmSMUIO_PWRMGT`, the `mmROM_*` index/data/start/software command/status/data window, GPIO pad registers `mmSMU_GPIOPAD_*`, strap/select/interrupt registers such as `mmROM_CC_BIF_PINSTRAP`, `mmIO_SMUIO_PINSTRAP`, `mmSMUIO_PCC_*`, `mmSMUIO_GPIO_INT*_SELECT`, `mmSMU_GPIOPAD_MP_INT*_STAT`, and SMIO/SVI pad controls `mmSMIO_INDEX`, `mmS0_VID_SMIO_CNTL`, `mmS1_VID_SMIO_CNTL`, `mmOPEN_DRAIN_SELECT`, `mmSMIO_ENABLE`, and SCL/SDA enable registers. For `smuio_smuio_pwr_SmuSmuioDec` at base `0x5a800`, it defines `mmIP_DISCOVERY_VERSION`, `mmSOC_GAP_PWROK`, `mmGFX_GAP_PWROK`, `mmPWROK_REFCLK_GAP_CYCLES`, golden TSC registers, `mmPWR_VIRT_RESET_REQ`, scratch registers, display timer controls, and `mmPWR_IH_CONTROL`.
+
+## Control Flow
+The header has no executable flow. Runtime code uses the symbolic offsets with AMDGPU register access helpers and, where needed, a matching SMUIO 11.0.0 shift/mask header. Common access flows implied by the map include configuring CKSVII2C controllers, polling I2C status/interrupt/clear registers, indexing ROM data windows, managing GPIO pad direction/pull/interrupt controls, selecting SMIO signals, requesting virtual reset/FLR, programming display timers, and reading golden TSC or IP discovery values from the power block.
+
+## State And Persistence
+The file itself is stateless. It names stateful hardware registers: I2C controller configuration and FIFOs/status, reset and power-management controls, ROM command/data windows, GPIO pad configuration and interrupt state, pinstrap latches, SMIO open-drain/enable/SCL/SDA controls, TSC counters, scratch registers, FLR request registers, and display timer configuration. The hardware/firmware decides which fields are read-only, sticky, volatile, or reset by power transitions.
+
+## Dependencies And Integration Points
+This table integrates with SMUIO 11.0.0 ASIC support in amdgpu, register access macros that understand `BASE_IDX`, and companion mask headers. It is relevant to SMU/SMUIO initialization, IP discovery, ROM access, GPIO and pinstrap handling, SVI/SMIO voltage signaling, CKSVII2C operations, reset/FLR flows, display timer interrupts, and power-management synchronization through TSC/gap registers. It also depends on the generated register database staying consistent with silicon documentation for the 11.0.0 block.
+
+## Risks
+The principal risk is writing or reading the wrong hardware address due to an incorrect offset, stale generated table, or mixing SMUIO 11.0.0 offsets with another revision's masks. The CKSVII2C and ROM windows contain many sequential registers where off-by-one mistakes can be hard to diagnose. GPIO/pinstrap and SMIO controls can affect board-level behavior, voltage signaling, or interrupt routing. Reset and power registers can hang or destabilize the GPU if targeted incorrectly. Unlike the 10.0.2 headers in this subset, this file correctly defines its include guard symbol, so repeated inclusion is suppressed.
+
+## Test Signals
+Build coverage validates the macro table syntactically. Runtime signals include successful SMUIO 11.0.0 GPU initialization, correct IP discovery reads, usable ROM index/data access, expected GPIO/pinstrap values, working CKSVII2C transactions if exercised on the platform, valid SVI/SMIO behavior, clean MP reset/SoC halt handling, correct FLR request behavior, stable golden TSC reads, scratch register behavior, and display timer interrupt operation. Suspend/resume and GPU reset tests are especially useful because they exercise many of these stateful registers together.

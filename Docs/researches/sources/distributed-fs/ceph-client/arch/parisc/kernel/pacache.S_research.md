@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/arch/parisc/kernel/pacache.S
+
+Purpose: implements the low-level PA-RISC cache, TLB, page clear/copy, temporary-alias, and space-register-hashing routines used by the architecture memory-management layer. It is hot-path assembly with separate 32-bit and 64-bit loops, PA 1.x/2.0 alternatives, and QEMU-specific TLB behavior.
+
+Important entry points are `flush_tlb_all_local`, `flush_instruction_cache_local`, `flush_data_cache_local`, `clear_page_asm`, `copy_page_asm`, `copy_user_page_asm`, `clear_user_page_asm`, page/range flush and purge routines for data and instruction caches, `flush_kernel_icache_page`, and `disable_sr_hashing_asm`. These routines depend on `cache_info`, `dcache_stride`, `icache_stride`, `TMPALIAS_MAP_START`, PA-RISC space registers, PSW bits, and alternative patching conditions such as no split TLB/cache and running under QEMU.
+
+Control flow is almost entirely hardware sequencing: disable interrupts or switch to real mode where needed, walk cache/TLB geometry using base/stride/count/loop fields, issue `pitlbe`, `pdtlbe`, `fdce`, `fice`, `fdc`, `pdc`, or `fic`, then synchronize and restore state. User-page helpers create temporary local aliases by deriving virtual addresses from physical page numbers and relying on DTLB miss handlers to install translations. `disable_sr_hashing_asm` selects diagnostic-register sequences for PCXS, PCXL, and PA2.0 CPUs.
+
+State and persistence are CPU-local: TLB contents, cache lines, diagnostic bits, temporary translations, and PSW/space-register state. Integration points include cacheflush/tlbflush C wrappers, page allocator helpers, module exports in `parisc_ksyms.c`, runtime text patching in `patch.c`, and DMA sync paths in `pci-dma.c`.
+
+Risks include extremely timing- and register-sensitive real-mode transitions, stale aliases if purge/flush ordering changes, architecture-specific diagnostic words, and assumptions about maximum alias boundary and PA-RISC miss handlers. Test signals are boot stability on PA-RISC hardware and QEMU, successful page clear/copy tests, module loading, instruction-cache coherency after text patching, DMA coherency, and absence of TLB/cache corruption under SMP and strict RWX configurations.

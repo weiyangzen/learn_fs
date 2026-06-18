@@ -1,0 +1,26 @@
+# sources/distributed-fs/ceph-client/drivers/net/phy/realtek/realtek_main.c
+
+## Purpose
+`realtek_main.c` is the phylib driver collection for Realtek Ethernet PHYs, ranging from 10/100 RTL8201 parts through gigabit RTL8211 variants, multi-gigabit RTL822x/RTL8251/RTL8261 devices, RTL8224 cable-test-capable ports, internal NBASE-T PHYs, SFP dummy mode, and RTL9000A automotive Ethernet. It maps many PHY IDs and match predicates to `struct phy_driver` callbacks and hides Realtek-specific page, vendor-MMD, interrupt, WoL, LED, RGMII delay, SerDes, cable-test, and package-register behavior behind standard phylib/ethtool hooks.
+
+## Important APIs, Types, And Functions
+The private state is `struct rtl821x_priv`, carrying device-tree policy flags, an optional clock, and the saved RTL8211F interrupt-enable value. Page helpers are `rtl821x_read_page()`, `rtl821x_write_page()`, `rtl821x_read_ext_page()`, and `rtl821x_modify_ext_page()`. Probe/configuration functions include `rtl821x_probe()`, `rtl8211f_probe()`, `rtl8211e_config_init()`, `rtl8211f_config_init()`, `rtl822x_config_init()`, `rtl822xb_config_init()`, `rtl8224_config_init()`, and `rtl9000a_config_init()`.
+
+Important operational callbacks include the RTL8201/RTL821x/RTL8211F/RTL8221B/RTL9000A interrupt ack/config/handler functions, `rtl8211f_get_wol()` and `rtl8211f_set_wol()`, LED offload functions for RTL8211E/F, `rtlgen_read_status()` and `rtlgen_decode_physr()`, vendor-MMD shims `rtlgen_*_mmd()`, `rtl822x*_read_mmd()` and `rtl822x*_write_mmd()`, SerDes/in-band functions `rtl822x_set_serdes_option_mode()`, `rtl822x_config_inband()`, and `rtl822x_inband_caps()`, and RTL8224 cable-test helpers.
+
+## Control Flow
+Driver binding flows through `module_phy_driver(realtek_drvs)`. Probe allocates private state, enables an optional PHY clock, reads Realtek DT booleans, and for RTL8211F disables PME events and optionally registers the PHY IRQ as a wake source. Config init then writes model-specific registers: RTL8211E/F set RGMII delays, RTL8211F applies ALDPS/SSC/CLKOUT policy, RTL822x selects SerDes option mode, RTL8224 applies package pair order/polarity, and RTL8366RB enables power save.
+
+Status reads usually call a generic phylib status reader, then read `RTL_PHYSR` to recover actual speed, duplex, and master/slave state after downshift or NBASE-T negotiation. RTL822x additionally reads 2.5G/5G/10G advertisement and link-partner vendor registers, while Clause 45 paths combine generic C45 state with vendor C22-mapped registers for 1000Base-T and actual speed. Interrupt paths enable a model-specific mask, clear status by reading the interrupt status register, and call `phy_trigger_machine()` when enabled bits are observed. WoL writes the MAC address and magic-packet event bits into RTL8211F WoL pages and changes suspend interrupt routing to PME-only.
+
+## State And Persistence
+Persistent runtime state lives in `phydev`, page-selected PHY registers, optional `rtl821x_priv`, package registers for multiport RTL8224, and wakeup/clock state in the device model. The driver preserves board strap values unless a DT property or phylib interface mode requires overriding them. Suspend/resume paths coordinate power state with WoL and optional clocks, and several resume paths sleep 20 ms because internal Realtek PHYs are not immediately ready.
+
+## Dependencies And Integration Points
+The file depends on Linux phylib, ethtool netlink cable-test reporting, OF/device properties, wake IRQ helpers, optional clocks, LED netdev trigger hardware offload, and Realtek headers under `net/phy/realtek_phy.h` plus local `realtek.h`. Integration is almost entirely via `struct phy_driver` callbacks consumed by phylib, phylink in-band/rate-matching callbacks, ethtool WoL/cable-test/LED operations, and MDIO Clause 22/45 bus operations.
+
+## Risks And Edge Cases
+Many operations use undocumented magic register sequences, so regressions can be hardware- and revision-specific. Page switching must restore the previous page on all error paths; several lower-level RTL822x MMD accessors manually restore pages and can leave a wrong page if restore writes fail. RTL8211F ALDPS can stop RXC for long intervals and is wisely opt-in, but wrong DT usage can break MAC receive logic. WoL depends on `attached_dev->dev_addr`, valid IRQ wiring, and PME reset sequencing. `rtlgen_write_mmd()` appears suspicious for AN EEE advertisement because it passes `regnum` where the vendor register address is expected in one branch. Cable-test length conversion is vendor-derived and should be treated as approximate. RTL9000A `config_intr()` writes `GINMR` twice, which is harmless-looking but worth regression coverage.
+
+## Test Signals
+Useful signals include boot probe logs for each matched PHY ID, phylib link transitions across forced and autoneg modes, RGMII delay verification with each `phy-mode`, suspend/resume with and without WoL, wake-on-magic behavior, interrupt vs polling operation, LED hardware trigger get/set for all three LEDs, ethtool link-mode advertisement for 2.5G/5G/10G parts, SGMII/2500Base-X in-band mode changes, RTL8224 cable-test result reporting, and DT property validation for clock, ALDPS, SSC, pair order, and pair polarity.

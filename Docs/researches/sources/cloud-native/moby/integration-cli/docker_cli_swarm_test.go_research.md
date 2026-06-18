@@ -1,0 +1,9 @@
+## sources/cloud-native/moby/integration-cli/docker_cli_swarm_test.go
+
+Purpose: broad non-Windows integration coverage for swarm CLI and daemon behavior. It spans swarm init/update, external CAs, IPv6 joins, service/node/task filters, publish updates, overlay attachable networks, ingress lifecycle, remote plugin rejection, env/TTY/DNS/service-network updates, autolock and unlock-key rotation, manager/worker lock state, network/IPAM edge cases, node availability, readonly rootfs, stop signals, join/leave loops, and cluster event filtering.
+
+Important helpers include `setupRemoteGlobalNetworkPlugin`, `getNodeStatus`, `checkKeyIsEncrypted`, `checkSwarmLockedToUnlocked`, `checkSwarmUnlockedToLocked`, `waitForEvent`, and `getUnlockKey`. Tests heavily use `daemon.Daemon`, swarm API types, CLI helpers, `pollCheck`, `reducedCheck`, `net/http/httptest`, libnetwork plugin endpoints, netlink veth creation, PEM/certificate parsing, and swarmkit key encryption helpers.
+
+Control flow usually starts one or more daemons via `s.AddDaemon`, applies CLI operations, then polls swarm, task, node, network, or event state. Plugin tests create `/etc/docker/plugins/*.spec` and HTTP handlers. Autolock tests restart daemons to force locked/unlocked transitions and read `root/swarm/certificates/swarm-node.key`. Event tests bound queries by daemon time and filter scope/type.
+
+State includes raft/swarm specs, overlay networks, service specs, task containers, node membership, unlock keys, encrypted key files, plugin spec files, and event streams. Risks are high: timing-sensitive raft convergence, leader availability, debug-log matching for KEK rotation, host-global `/etc/docker/plugins` mutation, architecture skips, and event ordering. Test signals are CLI output/errors, swarm spec fields, task counts, network inspect data, node local state, encrypted PEM state, and event text containing expected IDs and attributes.

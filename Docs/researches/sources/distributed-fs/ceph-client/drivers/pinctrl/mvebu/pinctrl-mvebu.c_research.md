@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/pinctrl/mvebu/pinctrl-mvebu.c
+
+Purpose: this is the shared Marvell MVEBU pinctrl core used by the SoC table drivers in this directory. It turns `mvebu_pinctrl_soc_info` tables into Linux pinctrl groups, functions, pinconf callbacks, pinmux callbacks, DT maps, and GPIO ranges, and provides generic MMIO/regmap MPP field accessors.
+
+Important APIs, types, and functions: runtime structures are `struct mvebu_pinctrl`, `struct mvebu_pinctrl_group`, and `struct mvebu_pinctrl_function`. Hardware helpers are `mvebu_mmio_mpp_ctrl_get/set()` and `mvebu_regmap_mpp_ctrl_get/set()`. Lookup helpers find groups and settings by pin id, name, mux value, or GPIO capability. `mvebu_pinctrl_probe()` is the main registration path. `mvebu_pinctrl_simple_mmio_probe()` and `mvebu_pinctrl_simple_regmap_probe()` allocate control data and then call the main probe.
+
+Control flow: SoC drivers attach `mvebu_pinctrl_soc_info` as platform data. The core validates controls and modes, initializes each control's pin array, creates one group per named control or one group per pin for unnamed controls, attaches mode settings to groups, derives GPIO/GPI/GPO flags from setting names, builds unique functions and their group lists, registers `pinctrl_desc`, then registers GPIO ranges. DT map parsing reads `marvell,function` and `marvell,pins` and emits `PIN_MAP_TYPE_MUX_GROUP` entries. Setting a mux finds the named setting in the target group and writes the setting value through that group's control callback.
+
+State and persistence behavior: state is device-managed memory tied to the platform device. The core does not keep a shadow copy of mux registers; pinconf get reads hardware. Hardware state is persistent register state. There is no locking around register read/modify/write in the generic MMIO path, so serialization relies on pinctrl core usage and platform assumptions.
+
+Dependencies and integration points: dependencies include Linux pinctrl, pinmux, pinconf, GPIO range APIs, OF property parsing, platform devices, MMIO, regmap, and syscon. SoC-specific drivers supply controls, modes, variants, and optional custom GPIO request/direction callbacks.
+
+Risks and test signals: `mvebu_pinctrl_dt_node_to_map()` sets `*num_maps = nmaps` even when invalid pins/functions were skipped, which can leave partially initialized map entries. Function building assumes the number of unique functions is no greater than pin count. GPIO capability is inferred by exact names `gpio`, `gpi`, and `gpo`. Test with valid and invalid DT maps, variant-filtered settings, GPI-only/GPO-only direction requests, debugfs output, regmap error propagation, and concurrent users of adjacent MPP nibbles.

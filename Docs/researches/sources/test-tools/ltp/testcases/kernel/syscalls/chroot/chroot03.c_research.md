@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chroot/chroot03.c
+
+Purpose: negative `chroot()` errno coverage for overlong path, file-not-directory, missing directory, bad address, and symlink loop. Setup creates a regular file, obtains bad address, fills a long pathname, and creates a two-link directory-style symlink loop. Each testcase expects ENAMETOOLONG, ENOTDIR, ENOENT, EFAULT, or ELOOP. Important APIs are `chroot`, `SAFE_TOUCH`, `SAFE_SYMLINK`, `tst_get_bad_addr`, and LTP buffers. State is tmpdir fixtures and allocated long path. Dependencies are symlink support and pathname errno semantics. Risks are path length/loop resolution differences. Test signal is exact errno.

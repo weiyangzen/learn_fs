@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/compat-i915-headers/intel_mchbar_regs.h
+
+Purpose: forwards i915 MCHBAR register definitions into the Xe compatibility include tree. There are no local APIs beyond the include. Control flow and state are absent. Dependencies are `../../i915/intel_mchbar_regs.h`. Integration points are shared display memory/DRAM and bandwidth code that still uses i915 MCHBAR register names. Risks include relative path changes and use on platforms where Xe does not provide equivalent access plumbing. Test signals are build coverage of DRAM detection and display bandwidth initialization.

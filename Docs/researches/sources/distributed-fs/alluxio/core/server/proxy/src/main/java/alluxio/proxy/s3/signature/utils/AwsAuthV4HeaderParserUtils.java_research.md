@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/core/server/proxy/src/main/java/alluxio/proxy/s3/signature/utils/AwsAuthV4HeaderParserUtils.java
+
+Purpose: `AwsAuthV4HeaderParserUtils` parses AWS Signature V4 Authorization headers and produces a `SignatureInfo` for canonical request generation.
+
+Important functions are `parseSignature`, `parseSignedHeaders`, `encodeSignature`, `parseCredentials`, and `validateAlgorithm`. Control flow accepts only headers beginning with `AWS4`, locates the first space as the algorithm separator, splits the remaining fields into exactly three comma-separated parts, requires `AWS4-HMAC-SHA256`, parses `Credential=...` via `AwsCredential`, requires nonempty semicolon-tokenized signed headers, validates `Signature=` as nonempty hexadecimal, and returns a V4 `SignatureInfo` with payload signing enabled.
+
+State and persistence are absent. Dependencies include `AwsCredential`, `SignatureInfo`, Apache hex decoding/string utils, S3 exception types, and logging. Integration is the first parser attempted by `AwsSignatureProcessor`. Risks include strict field count/order, current-date validation inherited from `AwsCredential`, no validation that signed header names are lowercase/sorted, and accepting any header that starts with `AWS4` until later algorithm validation. Test signals in `TestAuthorizationV4HeaderParser` cover a current-date valid header and a malformed header missing signed headers.

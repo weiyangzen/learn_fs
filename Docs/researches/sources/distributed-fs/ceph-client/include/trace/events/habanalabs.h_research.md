@@ -1,0 +1,17 @@
+# sources/distributed-fs/ceph-client/include/trace/events/habanalabs.h
+
+Purpose: Habana Labs accelerator tracepoints for MMU mapping, DMA allocation/mapping, communications, and register access.
+
+Important APIs/types/functions: Declares trace-event macros/classes `class:habanalabs_comms_template`, `class:habanalabs_dma_alloc_template`, `class:habanalabs_dma_map_template`, `class:habanalabs_mmu_template`, `class:habanalabs_reg_access_template`, `event:habanalabs_comms_protocol_cmd`, `event:habanalabs_comms_send_cmd`, `event:habanalabs_comms_wait_status`, `event:habanalabs_comms_wait_status_done`, `event:habanalabs_dma_alloc`, `event:habanalabs_dma_free`, `event:habanalabs_dma_map_page`, `event:habanalabs_dma_unmap_page`, `event:habanalabs_elbi_read`, `event:habanalabs_elbi_write`, `event:habanalabs_mmu_map`, `event:habanalabs_mmu_unmap`, `event:habanalabs_rreg32`, `event:habanalabs_wreg32`. Defines or exports symbolic enums/helpers none. Representative payload fields include `addr:u32`, `caller:const char *`, `cpu_addr:u64`, `dir:int`, `dma_addr:u64`, `dname`, `flush_pte:u8`, `len:u32`, `op_str:char *`, `page_size:u32`, `phys_addr:u64`, `size:u32`, `val:u32`, `virt_addr:u64`.
+
+Control flow: As a trace-event header, control flow is compile-time macro expansion plus runtime calls from subsystem code into generated tracepoint stubs. Event classes share layouts for map/unmap, DMA alloc/free, DMA map/unmap, communications send/receive, and read/write register accesses. Each section is guarded by the usual trace header include pattern, defines `TRACE_SYSTEM`, and includes `trace/define_trace.h` outside the guard so the trace generator can instantiate definitions exactly once.
+
+State and persistence behavior: Trace entries snapshot device name, virtual/physical/DMA addresses, sizes, handles, opcodes, register offsets, masks, and values; device state persists in the driver. These headers do not implement durable storage; generated tracepoints copy selected values into per-CPU tracing buffers and rely on callers to pass objects that remain valid during `TP_fast_assign`.
+
+Dependencies: `#include <linux/tracepoint.h>`, `#include <trace/define_trace.h>` The file also depends on Linux tracepoint infrastructure macros such as `TRACE_EVENT`, `DECLARE_EVENT_CLASS`, `DEFINE_EVENT`, `TP_STRUCT__entry`, `TP_fast_assign`, and `TP_printk`.
+
+Integration points: Integrated by subsystem C files that include this header before tracepoint calls and by ftrace/perf/tracefs users that consume the generated event format files. For this Ceph-client source snapshot, these headers are broader Linux-kernel instrumentation dependencies rather than Ceph-specific client logic.
+
+Risks: Address-bearing traces may expose sensitive topology, and stale mappings or mismatched masks can hide IOMMU/register bugs. General trace-header risks include format-string ABI drift, enum/string drift, pointer lifetime mistakes in `TP_fast_assign`, high event volume, and sensitive address or payload data appearing in trace buffers.
+
+Test signals: Exercise MMU map/unmap, DMA buffer lifecycle, command communication, and register read/write paths under tracefs and compare with driver debug output. Also build with tracing enabled, inspect `/sys/kernel/tracing/events/habanalabs`-style event format output where applicable, and run subsystem tests with trace filters to confirm fields, symbolic decoders, and event ordering.

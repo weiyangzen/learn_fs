@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/ReaderStrategy.java
+
+Purpose: `ReaderStrategy` abstracts the destination of a block read so HDFS read paths can copy from `BlockReader` or cached `ByteBuffer` sources without caring whether the caller supplied a byte array or a `ByteBuffer`. The file contains the package-private interface plus `ByteArrayStrategy` and `ByteBufferStrategy`.
+
+Important APIs/types/functions: `ReaderStrategy.readFromBlock(BlockReader)`, `readFromBlock(BlockReader,int)`, `readFromBuffer(ByteBuffer)`, `readFromBuffer(ByteBuffer,int)`, `getReadBuffer()`, and `getTargetLength()` define the strategy contract. `ByteArrayStrategy` wraps a byte array, offset, and target length. `ByteBufferStrategy` wraps a user `ByteBuffer` and records the original remaining length as the target length. Both classes receive `ReadStatistics` and `DFSClient`, although this file does not use them directly; they preserve constructor compatibility with read code that may pass statistics context.
+
+Control flow: array reads call `BlockReader.read(byte[], offset, length)` and advance the mutable offset only for positive reads. Buffer reads duplicate the source buffer so the source position is not changed, then copy exactly the requested length for arrays. `ByteBufferStrategy.readFromBlock` duplicates the destination buffer, constrains the duplicate limit to the requested length, calls `BlockReader.read(ByteBuffer)`, and only advances the real destination position when bytes were read. `ByteBufferStrategy.readFromBuffer` bounds the copy by destination remaining, source remaining, and requested length.
+
+State and persistence behavior: state is in-memory only. The array strategy mutates its offset. The buffer strategy mutates the caller-supplied buffer position. There is no persistence, synchronization, or cleanup. Comments explicitly say behavior is not defined under concurrent use.
+
+Dependencies and integration points: callers include HDFS input stream and striped read code that need a common read target abstraction. It depends on `BlockReader`, `DFSClient`, `ReadStatistics`, `IOException`, and `ByteBuffer`.
+
+Risks: `ByteArrayStrategy.readFromBuffer(src, length)` assumes `length <= src.remaining()` and that the destination has enough room; invalid callers will get `BufferUnderflowException` or array bounds errors rather than checked `IOException`. `ByteBufferStrategy.readFromBlock` assumes `length <= readBuf.remaining()` when setting the duplicate limit. Tests should cover short reads, EOF negative returns, ByteBuffer position changes, source buffer immutability, and bounded-copy behavior.

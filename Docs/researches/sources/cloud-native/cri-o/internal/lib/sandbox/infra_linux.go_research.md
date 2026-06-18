@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/lib/sandbox/infra_linux.go
+
+Purpose: Linux implementation of pod shared-memory setup. The main API is `SetupShm`, which validates `shmSize`, creates `<podSandboxRunDir>/shm`, and mounts a `tmpfs` with noexec/nosuid/nodev, mode 1777, requested size, and SELinux mount label formatting. State is a host directory plus a mounted tmpfs that later sandbox code unmounts. Dependencies are `unix.Mount`, SELinux label formatting, and filesystem creation. Risks include requiring mount privileges, leaving a directory behind if mount fails, mount-label errors, and no cleanup in this function. Tests cover invalid sizes, empty label behavior through mount failure, and pre-existing directory errors.

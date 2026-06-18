@@ -1,0 +1,11 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/fs/TestTrash.java
+
+Purpose: large integration test suite for Hadoop trash behavior through `Trash`, `TrashPolicyDefault`, `FsShell`, local/test local filesystems, checkpointing, expunge, skipTrash, permissions, custom policies, and emptier threads.
+
+Important APIs/types/functions: `Trash`, `TrashPolicy`, `TrashPolicyDefault.Emptier`, `FsShell`, `FS_TRASH_INTERVAL_KEY`, `FS_TRASH_CHECKPOINT_INTERVAL_KEY`, `FS_TRASH_CLEAN_TRASHROOT_ENABLE_KEY`, `moveToTrash`, `checkpoint`, `getEmptier`, `getCurrentTrashDir`, `Path.mergePaths`, test `TestLFS`, custom `TestTrashPolicy`, `AuditableTrashPolicy`, and `AuditableCheckpoints`.
+
+Control flow/state/persistence: tests close all FS instances before each test and delete the temp trash root after each test. `trashShell` is the main scenario: toggles trash interval disabled/enabled, creates files/dirs, runs `-rm`, `-rmr`, `-expunge`, `-expunge -immediate`, validates current/checkpoint dirs, verifies deleting inside trash does not re-trash, blocks deletion of trash parent, tests `-skipTrash`, repeated deletion creates suffixed names, captures shell output suggesting `-skipTrash`, recognizes old checkpoint name formats, and immediate expunge removes all checkpoints/current. Other tests cover `-fs` expunge, non-default FS trash, pluggable policy selection, checkpoint interval normalization, moving empty dirs, trash restarts with a fake auditable policy, permission preservation, real emptier checkpoint/deletion timing, and cleanup of non-checkpoint directories under `.Trash` when enabled.
+
+Dependencies/integration points: integrates shell command behavior, local FS, custom filesystem registration, configuration keys, permissions, time/checkpoint formatting, `SubjectInheritingThread`, and user trash root layout.
+
+Risks/test signals: timing-sensitive emptier tests can be flaky under load, but they provide strong coverage of checkpoint lifecycle. The suite catches accidental permanent deletion, trash root recursion/deletion safety issues, skipTrash behavior, repeated-name collision handling, permission loss, custom policy instantiation, FS-specific expunge routing, interval misconfiguration, and thread leak risks.

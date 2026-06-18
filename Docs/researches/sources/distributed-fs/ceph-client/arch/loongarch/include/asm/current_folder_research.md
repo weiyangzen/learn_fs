@@ -1,0 +1,149 @@
+# Folder Research: sources/distributed-fs/ceph-client/arch/loongarch/include/asm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 135
+- Recursive researched files: 142
+- Direct child folders represented: 1
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/Kbuild`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/acenv.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/acpi.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/addrspace.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/alternative-asm.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/alternative.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/asm-extable.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/asm-offsets.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/asm-prototypes.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/asm.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/asmmacro.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/atomic-amo.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/atomic-llsc.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/atomic.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/barrier.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/bitops.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/bitrev.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/bootinfo.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/branch.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/bug.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cache.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cacheflush.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cacheops.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/checksum.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/clocksource.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cmpxchg.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cpu-features.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cpu-info.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cpu.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/cpufeature.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/crash_reserve.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/delay.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/dma.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/dmi.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/efi.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/elf.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/entry-common.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/exception.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/exec.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/extable.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/fixmap.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/fpregdef.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/fprobe.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/fpu.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/ftrace.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/futex.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/gpr-num.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/hardirq.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/highmem.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/hugetlb.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/hw_breakpoint.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/hw_irq.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/idle.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/image.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/inst.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/io.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/irq.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/irq_regs.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/irq_work.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/irqflags.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/jump_label.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kasan.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kdebug.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kexec.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kfence.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kgdb.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kprobes.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_csr.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_dmsintc.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_eiointc.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_host.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_ipi.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_mmu.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_para.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_pch_pic.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_types.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/kvm_vcpu.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/lbt.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/linkage.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/local.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/loongarch.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/loongson.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/mmu.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/mmu_context.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/module.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/module.lds.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/numa.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/orc_header.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/orc_lookup.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/orc_types.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/page.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/paravirt.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/pci.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/percpu.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/perf_event.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/pgalloc.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/pgtable-bits.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/pgtable.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/prefetch.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/processor.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/ptrace.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/qspinlock.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/regdef.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/seccomp.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/serial.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/set_memory.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/setup.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/sigframe.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/smp.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/sparsemem.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/spinlock.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/spinlock_types.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/stackframe.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/stackprotector.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/stacktrace.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/string.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/suspend.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/switch_to.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/syscall.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/thread_info.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/time.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/timex.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/tlb.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/tlbflush.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/topology.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/types.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/uaccess.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/unistd.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/unwind.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/unwind_hints.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/uprobes.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/vdso.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/vermagic.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/video.h`
+- `sources/distributed-fs/ceph-client/arch/loongarch/include/asm/vmalloc.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/ring-buffer/Makefile
+
+Purpose: builds the ring-buffer mmap selftest `map_test`. It sets `TEST_GEN_PROGS = map_test`, includes `../lib.mk`, and otherwise relies on default kselftest build rules. State is only the built binary in `$(OUTPUT)`. Dependencies are kernel headers for trace mmap metadata and a kernel with tracefs/ring-buffer mmap support. Integration is kselftest discovery and the adjacent `config` file. Risks are minimal; failures usually come from missing headers or tracefs support at runtime. Test signals are successful build and kselftest execution of `map_test`.

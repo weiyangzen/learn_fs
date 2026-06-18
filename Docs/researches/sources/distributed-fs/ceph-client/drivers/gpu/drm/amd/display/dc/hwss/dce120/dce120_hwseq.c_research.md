@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/display/dc/hwss/dce120/dce120_hwseq.c
+
+Purpose: DCE 12.0 hardware sequencer shim for Vega-era display. It inherits DCE110 sequencing, disables the older BIOS display power-gating path for bringup, provides DCHUB framebuffer/AGP initialization, exposes an xGMI detection helper, and reuses DCE100 surface DCC/tiling reset behavior.
+
+Important APIs, types, and functions: exported functions are `dce120_hw_sequencer_construct()` and `dce121_xgmi_enabled()`. Private `dce120_enable_display_power_gating()` is currently a disabled stub returning false, with the previous BIOS/PTE flow preserved under `#if 0`. `dce120_update_dchub()` programs `DCHUB_FB_LOCATION`, `DCHUB_AGP_BASE`, `DCHUB_AGP_BOT`, and `DCHUB_AGP_TOP` based on `struct dchub_init_data` framebuffer mode. `dce121_xgmi_enabled()` reads `MC_VM_XGMI_LFB_CNTL.PF_MAX_REGION`.
+
+Control flow: construction calls `dce110_hw_sequencer_construct(dc)`, then overrides `dc->hwseq->funcs.enable_display_power_gating`, `dc->hwss.update_dchub`, and `dc->hwss.clear_surface_dcc_and_tiling`. DCHUB update handles three modes: ZFB-only inverts FB base/top and programs AGP aperture, mixed ZFB/local leaves FB location to VBIOS and programs AGP aperture, and local-only clears AGP to an invalid/disabled range. It marks `dchub_initialzied` true and invalidates the consumed info.
+
+State and persistence: hardware state is held in DCHUB and MC VM registers. The DCHUB input state is consumed by toggling `dh_data->dchub_initialzied` and `dh_data->dchub_info_valid`. Power-gating state is intentionally not changed by the stub. No file or firmware persistence is introduced, though VBIOS-owned FB location is deliberately preserved for local and mixed modes.
+
+Dependencies and integration points: depends on DCE110 and DCE100 HWSS code, SOC15/Vega10 register headers, `reg_helper` macros, DCHUB init data, and memory-controller xGMI registers. It integrates with the common DC init path through `dc->hwss.update_dchub` and with any code that needs to know whether xGMI is active.
+
+Risks and test signals: the power-gating stub means callers expecting true pipe gating must tolerate false or skip the feature on DCE12. Incorrect DCHUB aperture programming can break zero-frame-buffer or mixed memory scanout. The misspelled `dchub_initialzied` field must match the existing structure. Test signals include DCE12 boot in local, ZFB-only, and mixed-ZFB configurations, display scanout after DCHUB init, xGMI-enabled platform detection, and ensuring no caller treats the disabled power-gating return as fatal.

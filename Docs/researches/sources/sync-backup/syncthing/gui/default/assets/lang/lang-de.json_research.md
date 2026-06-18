@@ -1,0 +1,15 @@
+# sources/sync-backup/syncthing/gui/default/assets/lang/lang-de.json
+
+Purpose: provides German translations for Syncthing's default AngularJS web GUI. It is a full static locale table loaded from `assets/lang/lang-de.json` when `de` is selected or negotiated and displayed as `German` in the language UI.
+
+Important APIs/types/functions: this JSON object implements the same translation dictionary contract as the other locale files. It contains 561 flattened leaves, matching `lang-en.json` coverage, including nested `theme.name` values and specialized strings for authentication, connection management, folder/device groups, block indexing, rate limits, sharing, and dialogs. Placeholder-bearing entries preserve Angular interpolation variables such as `{{foldertype}}`, `{{name}}`, `{{label}}`, `{{count}}`, `{{device}}`, `{{folder}}`, `{{folderlabel}}`, and `{{reintroducer}}`.
+
+Control flow: `app.js` configures the static translation loader and fallback language. `LocaleService.autoConfigLocale()` can select `de` from a query parameter, a saved `SYN_LANG`, or the browser locale list returned by `/rest/svc/lang`; `de` is advertised in `valid-langs.js`. Once loaded, Angular's translate directive/filter and `$translate.instant(...)` resolve GUI strings from this table. Because coverage matches English, fallback should rarely be exercised for current keys.
+
+State and persistence behavior: runtime state is limited to the selected language in `$translate`, optional localStorage persistence under `SYN_LANG`, and the root HTML `lang=de` attribute. The data file is produced from translation tooling; `script/weblatedl.go` downloads Weblate JSON for accepted languages, and `script/translate.go` can update source-key coverage from GUI templates, JavaScript, and theme directories.
+
+Dependencies and integration points: integrated with `valid-langs.js` (`de` available) and `prettyprint.js` (`German`). It depends on AngularJS, `pascalprecht.translate`, `ngSanitize`, Syncthing's locale negotiation endpoint, and the extraction/generation scripts. It also participates in theme display via the nested `theme.name` keys.
+
+Risks and edge cases: the main data risks are translation drift and interpolation breakage, but the inspected file has complete key parity with English and zero placeholder mismatches across 25 placeholder-bearing entries. Twelve values equal their English key; many are short technical words or labels where German UI may intentionally keep the term, but they are worth periodic review. German strings can be longer than English, so layout regressions are more plausible than lookup failures in compact buttons, tables, and modal headings.
+
+Test signals: `python3 -m json.tool` parses the file successfully. Structural checks found 558 top-level keys, 561 flattened leaves, nested `theme.name`, no empty values, exact key parity with `lang-en.json`, and no placeholder mismatches. Useful UI tests include selecting `?lang=de`, checking long settings labels for wrapping, exercising interpolation-heavy dialogs, and confirming no fallback/missing-translation warnings for current English keys.

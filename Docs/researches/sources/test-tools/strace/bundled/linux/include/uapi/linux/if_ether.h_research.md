@@ -1,0 +1,5 @@
+# sources/test-tools/strace/bundled/linux/include/uapi/linux/if_ether.h
+
+Purpose: defines Ethernet frame constants, MTU bounds, EtherType/protocol IDs, Linux internal pseudo-protocol IDs, and the packed Ethernet header struct. Important APIs/types/functions: `ETH_ALEN`, `ETH_HLEN`, `ETH_ZLEN`, `ETH_DATA_LEN`, `ETH_FRAME_LEN`, `ETH_MIN_MTU`, `ETH_MAX_MTU`, many `ETH_P_*` values, `ETH_P_802_3_MIN`, `__UAPI_DEF_ETHHDR`, and `struct ethhdr`.
+
+Control flow: packet sockets, network drivers, filters, and protocol decoders use `h_proto`/protocol values to classify frame payloads; no executable flow exists in the header. State/persistence behavior: no persistent state; constants define wire-format sizes and packet protocol identifiers. Dependencies/integration: includes `linux/types.h`; used by bonding, bridge, raw packet sockets, eBPF filters, and strace packet/protocol decoding. Risks/test signals: byte order for `h_proto`, unofficial/reserved protocol values, libc compatibility around `struct ethhdr`, and max/min MTU constants can drift. Tests should validate protocol-name decoding, packed struct layout, and use of host versus network byte order in syscall traces.

@@ -1,0 +1,13 @@
+# sources/test-tools/kdevops/Makefile
+
+Purpose: top-level orchestration Makefile for kdevops. It wires Kconfig-generated configuration into ansible inventory/vars, dependency checks, provisioning, workflow targets, Linux/test/archive helpers, cleanup, and user help.
+
+Important APIs/types/functions: project version variables produce `PROJECTRELEASE`; exported paths include `KCONFIG_DIR`, `KCONFIG_YAMLCFG`, `KDEVOPS_EXTRA_VARS`, `KDEVOPS_PLAYBOOKS_DIR`, `TOPDIR_PATH`, and `ANSIBLE_CONFIG`. Includes pull in `kconfig.Makefile`, `Makefile.subtrees`, refs, minimum deps, extra vars, ansible, provision, firstconfig, service setup, workflow, protocol, devconfig, Linux mirror/docker mirror, gen-hosts/nodes, tests, CI, archive, defconfig, and style makefiles. Key targets are `.config`, `$(ANSIBLE_CFG_FILE)`, `$(KDEVOPS_EXTRA_VARS)`, `playbooks/secret.yml`, `$(ANSIBLE_INVENTORY_FILE)`, `$(KDEVOPS_NODES)`, `contrib-graph`, `clean`, `version-check`, `mrproper`, `kconfig-help-menu`, `help`, `deps`, and `install`.
+
+Control flow: default `all` depends on `deps`. If `.config` is missing, a friendly error prints configuration options. With `.config`, verbosity settings can set `Q`/`NQ`. The Makefile accumulates `DEFAULT_DEPS` from config-dependent includes, ansible extra vars, ansible config, inventory, localhost setup work, and workflow/provision dependencies. File targets generate ansible config and hosts through local ansible-playbook runs using generated YAML. `mrproper` delegates cleanups and removes generated config, inventory, terraform state fragments, secrets, include/guestfs directories, and refs defaults.
+
+State/persistence behavior: writes and removes `.config`, `.config.old`, `.extra_vars_auto.yaml`, `extra_vars.yaml`, `.kdevops.depcheck`, `ansible.cfg`, `hosts`, generated node files, `playbooks/secret.yml`, extra addon destinations, `include`, `guestfs`, terraform generated files, and workflow-specific artifacts through included makefiles.
+
+Dependencies/integration: central integration point for kconfig, ansible playbooks, shell scripts, defconfigs, workflows, CI actions, and hypervisor/provider tooling. GitHub/GitLab CI call many targets defined here or in its includes.
+
+Risks/test signals: the Makefile is highly include-order sensitive; duplicated include of `scripts/devconfig.Makefile` may be harmless but deserves awareness. Many variables are derived from `.config`, so stale generated files can mislead if not cleaned. Test signals are `make defconfig-...`, `make deps`, `make mrproper`, GitHub config-tests file existence checks, and successful CI action target execution.

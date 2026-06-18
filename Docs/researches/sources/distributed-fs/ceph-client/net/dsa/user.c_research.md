@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/net/dsa/user.c
+
+Purpose: implements DSA user-facing network devices: creation/destruction, TX path, PHY/phylink setup, ethtool/DCB/netpoll/netdev operations, VLAN and MTU management, switchdev offloads, bridge/LAG/HSR upper handling, conduit migration, and notifier registration.
+
+Important APIs/types: work structs `dsa_switchdev_event_work` and `dsa_standalone_event_work` defer FDB/MDB programming. Exported/core functions include `dsa_user_mii_bus_init()`, `dsa_user_sync_ha()`, `dsa_user_unsync_ha()`, `dsa_user_host_uc_install()`, `dsa_user_host_uc_uninstall()`, `dsa_enqueue_skb()`, `dsa_user_manage_vlan_filtering()`, `dsa_user_change_mtu()`, `dsa_port_phylink_mac_change()`, `dsa_user_setup_tagger()`, `dsa_user_create()`, `dsa_user_destroy()`, `dsa_user_change_conduit()`, `dsa_user_dev_check()`, `dsa_user_register_notifier()`, and `dsa_user_unregister_notifier()`.
+
+Control flow: user netdev creation allocates `struct dsa_user_priv`, configures netdev/ethtool/DCB ops, inherits conduit MAC/features, sets tagger headroom/tailroom and xmit callback, creates phylink, normalizes MTU, registers the netdev, initializes DCB, and links it as a conduit upper. TX updates software stats, handles hardware timestamping, ensures writable head/tail, pads when needed, calls the selected tagger `xmit`, and queues the resulting skb to the conduit. Switchdev and netdevice notifiers translate bridge/VLAN/FDB/MDB/LAG events into DSA port operations, often via workqueue to avoid atomic-context hardware programming.
+
+State and persistence: per-user state is in `struct dsa_user_priv`: cached tagger xmit, GRO cells, `dp`, optional netpoll, and matchall TC entries. Per-port VLAN RX filtering state is in `dp->user_vlans`. Deferred work items are heap allocated and freed after execution. No on-disk persistence.
+
+Dependencies and integration: deeply integrated with DSA port/switch/conduit helpers, phylink/PHY/MDIO, switchdev, rtnetlink, bridge, LAG, HSR, tc flower/matchall, ethtool, DCB, netpoll, VLAN APIs, and DSA taggers through `cpu_dp->tag_ops`.
+
+Risks and test signals: high-risk areas include rollback paths in create/change_conduit/change_mtu/VLAN filtering, notifier ordering, address/VLAN refcount synchronization, bridge/LAG upper sanity checks, deferred FDB/MDB work after device changes, and tagger headroom/tailroom feature masking. Tests should cover user netdev lifecycle, open/close, MAC change, multicast/unicast sync, VLAN upper add/remove, VLAN-aware bridge conflicts, bridge/LAG/HSR join/leave, conduit LAG migration, MTU rollback, tc offload add/delete, ethtool/DCB callbacks, hwtstamp, suspend/resume, and notifier unregister.

@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/store/stats/timed_store.go
+
+This file implements `TimedStore`, a thread-safe time-ordered buffer of CPU samples. `CPUSample` stores timestamp, cumulative `UsageCoreNanoSeconds`, and calculated instantaneous `UsageNanoCores`. `NewTimedStore` configures retention age and max item count, with `-1` meaning no item limit.
+
+`Add` creates a new sample, calculates nanocores from the last sample if present, appends fast-path in timestamp order or inserts out of order using binary search, recalculates affected rates for out-of-order insertion, evicts samples older than `timestamp - age` using a strict-after search, and trims to the newest `maxItems`. `GetLatest`, `GetLatestUsageNanoCores`, and `Size` use read locks. `calculateUsageNanoCores` returns zero for zero/negative intervals or decreasing cumulative usage, otherwise scales the usage delta by elapsed nanoseconds to nanocores.
+
+State is entirely in-memory under an RW mutex and used by Linux `StatsCollector` per container/sandbox ID. Risks include out-of-order first rate initially using the previous last sample before recalculation, strict eviction excluding samples exactly at the cutoff, float conversion for large counters, and no persistence across restarts. Tests cover empty behavior, first/second sample rates, half-core math, max item and age eviction, concurrent access, and invalid delta/decreasing counter cases.

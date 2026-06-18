@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-rm-between-index-and-save -->
+# sources/sync-backup/bup/test/ext/test-rm-between-index-and-save
+
+Purpose: checks save behavior when files or directories disappear after indexing but before saving. Important APIs are `bup index`, `bup save`, `bup restore`, `ls`, and `diff`. Control flow has two scenarios: remove a file after indexing and save the parent tree; remove a directory after indexing and save the parent tree. It verifies the saved/restored tree reflects the actual filesystem at save time, not stale index entries. State is the bup index, mutable source tree, branch contents, and restore directory. Dependencies are WvTest, filesystem rename/delete semantics, and diff. Risks are stale index entries causing phantom restored paths, or save failures on missing indexed paths. Test signals are successful save/restore and directory listings/diffs that exclude removed entries.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-rm-between-index-and-save -->

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpio/gpio-mxc.c
+
+Purpose: implements GPIO and interrupt support for Freescale/NXP i.MX MXC GPIO controllers across older i.MX1/i.MX21/i.MX31 and newer i.MX35/i.MX7/i.MX8-family layouts, including runtime PM, syscore save/restore, and SCU pad wakeup configuration.
+
+Important APIs/types/functions: `struct mxc_gpio_hwdata` describes variant register offsets and IRQ encoding values. `struct mxc_gpio_port` stores MMIO base, clock, parent IRQs, IRQ domain, generic MMIO chip, wake/power state, saved registers, pad wake metadata, and variant hwdata. Key functions include `gpio_set_irq_type()`, `mxc_flip_edge()`, `mxc_gpio_irq_handler()`, MX2/MX3 chained handlers, `gpio_set_wake_irq()`, `mxc_gpio_init_gc()`, request/free PM wrappers, runtime suspend/resume, noirq suspend/resume, and syscore suspend/resume.
+
+Control flow: probe maps registers, discovers one or two parent IRQs, enables optional clock and runtime PM, disables/clears interrupts, selects shared MX2 or per-port MX3-style chained handler, initializes a generic chip over PSR/DR/GDIR, registers the gpiochip, creates a legacy 32-line IRQ domain and generic irq_chip, adds the port to the global list, and autosuspends. IRQ type programming supports rising, falling, both, level high, and level low. Hardware with EDGE_SEL can do both-edge directly; older hardware emulates both-edge by programming the opposite level based on current value and flipping after each interrupt.
+
+State and persistence behavior: generic chip shadows data/direction; `mxc_gpio_save_regs()` preserves ICR1/2, IMR, GDIR, EDGE_SEL, and DR only on variants marked `power_off`. Runtime suspend saves registers, disables the clock, and disconnects chained IRQ handlers; runtime resume reconnects handlers, enables the clock, and restores registers. Syscore ops walk all ports to save/restore around low-level system suspend. Wakeup pads are tracked in `wakeup_pads` and `pad_type[]`; noirq suspend programs SCU wake config for i.MX8 variants.
+
+Dependencies and integration points: depends on OF match data, optional clocks, runtime PM, syscore, `gpio-mmio`, generic IRQ chips, irq domains, pinctrl generic config for SCU wake-capable i.MX8, and legacy sysfs base preservation when GPIO sysfs is enabled.
+
+Risks: both-edge emulation on older hardware can race with line changes. Global `mxc_gpio_ports` is used for MX2 shared IRQ and syscore PM, so list management order matters. `gpio_set_irq_type()` forces the line to input after configuring IRQ type, which can surprise consumers that had it as output. Power-off save/restore reads EDGE_SEL unconditionally when `power_off` is true, relying on matching hwdata with a valid edge-select register.
+
+Test signals: probe for each compatible hwdata layout, one-parent and two-parent IRQ flows, direct versus emulated both-edge interrupts, request/free runtime PM refcounting, wake IRQ parent selection for high bank, i.MX8 SCU pad wake config including i.MX8QM falling-edge warning, runtime/syscore save/restore, and GPIO sysfs base alias behavior.

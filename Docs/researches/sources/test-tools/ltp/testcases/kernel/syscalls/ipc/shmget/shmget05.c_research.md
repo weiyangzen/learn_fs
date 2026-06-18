@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmget/shmget05.c
+
+Purpose: positive test for checkpoint/restore `shm_next_id`, the sysctl that requests the next shared-memory ID. Setup stores a key and current PID. Each run writes the PID to `PATH_KERN_SHM_NEXT_ID`, creates a segment, expects the returned shm ID equals that PID, asserts the sysctl resets to `-1`, removes the segment, and increments PID for a repeat. State is kernel shm next-ID configuration and one short-lived segment. Dependencies include root, `CONFIG_CHECKPOINT_RESTORE=y`, and writable `/proc/sys/kernel/ns_last_pid`-style IPC path exposed by LTP. Risks are ID collisions or concurrent IPC allocation. Test signals are returned ID equality and sysctl reset.

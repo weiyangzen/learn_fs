@@ -1,0 +1,21 @@
+<!-- BEGIN_FILE_RESEARCH: sources/test-tools/xfstests/tests/btrfs/301 -->
+# sources/test-tools/xfstests/tests/btrfs/301
+
+Final split target: `Docs/researches/sources/test-tools/xfstests/tests/btrfs/301_research.md`.
+
+Source read: 504 lines, SHA256 prefix `30ec1e3a79f98792`.
+
+Purpose: FS QA Test 301 Test common btrfs simple quotas scenarios involving sharing extents and removing them in various orders..
+
+Important APIs/types/functions: test tags `auto quick qgroup clone subvol prealloc snapshot remount`; common harness imports `. ./common/preamble`, `. ./common/reflink`; requirements/fixed gates `_require_scratch_reflink`, `_require_cp_reflink`, `_require_btrfs_command inspect-internal dump-tree`, `_require_xfs_io_command "falloc"`, `_require_scratch_enable_simple_quota`, `_require_no_compress`, `_fixed_by_kernel_commit 7b632596188e \`, `_fixed_by_kernel_commit de134cb54c3a \`, `_require_fio $fio_config`; helper functions `get_qgroup_usage()`, `get_subvol_usage()`, `count_subvol_owned_metadata()`, `check_qgroup_usage()`, `check_subvol_usage()`, `set_subvol_limit()`, `trigger_cleaner()`, `cycle_mount_check_subvol_usage()`, `do_write()`, `do_enospc_write()`, `do_falloc()`, `do_enospc_falloc()`, `enable_quota()`, `get_subvid()`, `get_snapid()`, `get_nestedid()`, `prepare()`, `prepare_snapshotted()`; key variables `subv=$SCRATCH_MNT/subv`, `nested=$SCRATCH_MNT/subv/nested`, `snap=$SCRATCH_MNT/snap`, `nr_fill=512`, `fill_sz=$((64 * 1024))`, `total_fill=$(($nr_fill * $fill_sz))`, `nodesize=$($BTRFS_UTIL_PROG inspect-internal dump-super $SCRATCH_DEV | \`, `blocksize=$($BTRFS_UTIL_PROG inspect-internal dump-super $SCRATCH_DEV |\`, `ext_sz=$((128 * 1024 * 1024))`, `limit_nr=8`.
+
+Control flow: The script defines reusable helpers first, then executes them from the bottom of the file. Defined helpers are `get_qgroup_usage()`, `get_subvol_usage()`, `count_subvol_owned_metadata()`, `check_qgroup_usage()`, `check_subvol_usage()`, `set_subvol_limit()`, `trigger_cleaner()`, `cycle_mount_check_subvol_usage()`, `do_write()`, `do_enospc_write()`, `do_falloc()`, `do_enospc_falloc()`, `enable_quota()`, `get_subvid()`, `get_snapid()`, `get_nestedid()`, `prepare()`, `prepare_snapshotted()`, `prepare_nested()`, `basic_accounting()`, `reservation_accounting()`, `snapshot_accounting()`, `delete_snapshot_src_ref()`, `delete_snapshot_ref()`. Representative operation sequence: L15: _require_scratch_reflink; L17: _require_btrfs_command inspect-internal dump-tree; L18: _require_xfs_io_command "falloc"; L19: _require_scratch_enable_simple_quota; L33: nodesize=$($BTRFS_UTIL_PROG inspect-internal dump-super $SCRATCH_DEV | \; L35: blocksize=$($BTRFS_UTIL_PROG inspect-internal dump-super $SCRATCH_DEV |\; L60: output=$($BTRFS_UTIL_PROG qgroup show --sync --raw $SCRATCH_MNT | \; L87: count=$($BTRFS_UTIL_PROG inspect-internal dump-tree $SCRATCH_DEV | \; L121: $BTRFS_UTIL_PROG qgroup limit $2 0/$1 $SCRATCH_MNT; L130: _scratch_remount commit=1; L134: cycle_mount_check_subvol_usage(); L136: _scratch_cycle_mount; L145: $XFS_IO_PROG -fc "pwrite -q 0 $sz" $file; L156: do_falloc(); L161: $XFS_IO_PROG -fc "falloc 0 $sz" $file; L164: do_enospc_falloc(); L169: do_falloc $file $sz; L179: $BTRFS_UTIL_PROG quota enable $arg $SCRATCH_MNT.
+
+State and persistence behavior: formats scratch or loop-backed filesystems; mounts and unmounts test filesystems; creates or manipulates btrfs subvolumes; persists snapshot roots and verifies their contents; changes quota/qgroup accounting state.
+
+Dependencies and integration points: Depends on xfstests common libraries, btrfs-progs and btrfs kernel feature gates, xfs_io workload commands. The file is integrated by the xfstests group list/build system and uses `$SCRATCH_DEV`, `$SCRATCH_MNT`, `$TEST_DIR`, `$seqres.full`, and filtered stdout as its contract with the harness.
+
+Risks: contains timing-sensitive waits; quota accounting regressions can be silent until unmount or rescan; is tied to specific kernel-regression behavior noted by fixed-by annotations.
+
+Test signals: byte-for-byte compare of copied or restored data; btrfs on-disk tree inspection; visible subtest labels include 0; basic accounting; reservation accounting; snapshot accounting; delete src ref first; delete snapshot ref first.
+<!-- END_FILE_RESEARCH: sources/test-tools/xfstests/tests/btrfs/301 -->

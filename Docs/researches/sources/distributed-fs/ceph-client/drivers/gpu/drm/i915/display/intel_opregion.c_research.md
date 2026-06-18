@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_opregion.c
+
+Purpose: implements the Intel ACPI OpRegion bridge: mapping firmware mailboxes, handling SWSCI BIOS callbacks, ASLE interrupt work, ACPI video notification filtering, VBT/EDID extraction, adapter/encoder power notifications, headless SKU detection, and debugfs exposure of raw OpRegion memory.
+
+Important types/functions: private packed mailbox structs model header, ACPI, SWSCI, ASLE, and ASLE extension layouts; `struct intel_opregion` stores mapped pointers, callback masks, VBT/RVDA pointers, work item, and ACPI notifier. Key APIs are `intel_opregion_setup()`, `intel_opregion_register()`, `intel_opregion_resume()/suspend()`, `intel_opregion_cleanup()`, `intel_opregion_notify_encoder()`, `intel_opregion_notify_adapter()`, `intel_opregion_get_edid()`, `intel_opregion_get_vbt()`, `intel_opregion_get_panel_type()`, and `intel_opregion_asle_intr()`.
+
+Control flow: setup reads PCI `ASLS`, maps the 8 KiB region, validates signature, assigns mailbox pointers from the header bitmask, disables ACPI hotplug notifications via `chpd`, initializes SWSCI callback masks, marks ASLE not ready, then searches for VBT first via RVDA and then mailbox #4. Register installs the ACPI notifier and resumes the region. Resume populates DIDL/CADL, marks ACPI/ASLE ready, queries DSM support, and sends adapter D0. Suspend notifies adapter power state, marks ASLE not ready, cancels ASLE work, and clears ACPI readiness.
+
+State and persistence: persistent driver state is `display->opregion`. Firmware-visible state includes `drdy`, `ardy`, `csts`, `chpd`, DIDL/CADL arrays, ASLE response bits, and current brightness `cblv`. RVDA and OpRegion mappings are held until cleanup. ASLE requests are processed asynchronously on `display->wq.unordered`.
+
+Dependencies/integration: uses PCI config, ACPI notifier, DMI quirks, debugfs, DRM EDID helpers, backlight ACPI setter, ACPI device IDs, BIOS VBT validation, and display connector iteration. Modeset setup calls `intel_opregion_notify_encoder()` after encoder sanitization.
+
+Risks/test signals: firmware mailboxes are platform-specific and often buggy. Watch SWSCI timeout/excessive delay paths, requested-vs-supported callback masks, DMI quirks for VBT/panel type, RVDA relative address handling, ASLE backlight lock coverage, notifier return values, and cleanup after failed setup. Tests should include ACPI-enabled and CONFIG_ACPI-off builds, invalid OpRegion signature, valid/invalid RVDA and mailbox VBTs, mailbox #5 EDID, suspend/resume readiness bits, ASLE backlight requests, and debugfs raw dump availability.

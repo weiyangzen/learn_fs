@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/rdma/ib_verbs.h
+
+Purpose: Central kernel RDMA verbs contract for InfiniBand, RoCE, iWARP, OPA, and related provider/core integrations. It defines the object model, capability bits, event/completion/work-request formats, provider operation table, and inline wrappers used by RDMA upper-layer protocols and low-level drivers.
+
+Important APIs/types/functions: Key exports include `union ib_gid`, `struct ib_gid_attr`, transport/network/link-layer enums, `struct ib_device_attr`, `struct ib_port_attr`, `struct ib_event`, `struct rdma_ah_attr`, `struct ib_wc`, `struct ib_send_wr`, `struct ib_recv_wr`, `struct ib_ucontext`, `ib_pd`, `ib_ah`, `ib_cq`, `ib_srq`, `ib_wq`, `ib_qp`, `ib_mr`, `ib_mw`, `ib_flow`, and `ib_device`. `struct ib_device_ops` is the main provider vtable for posting WRs, polling CQs, MAD processing, query/modify operations, GID/P_Key management, uverbs/mmap, PD/AH/SRQ/QP/CQ/MR/MW/XRCD/flow/WQ/DM/counter lifecycles, stats, iWARP CM, and subdevices. Public wrappers include device/client registration, PD/AH/SRQ/QP/CQ/MR helpers, DMA mapping helpers, multicast attach/detach, port capability predicates, QP transition validation, and address-handle setters/getters.
+
+Control flow: Most wrappers validate common state and dispatch through `ib_device->ops`. Fast paths are direct callback calls: `ib_post_send`, `ib_post_recv`, `ib_poll_cq`, and `ib_req_notify_cq`. QPs follow the IB state machine (`RESET`, `INIT`, `RTR`, `RTS`, `SQD`, `SQE`, `ERR`) with attribute-mask validation via `ib_modify_qp_is_ok`. DMA helpers branch between normal DMA API calls and virtual-DMA pointer marshalling when `dma_device` is absent.
+
+State and persistence behavior: All state is runtime kernel memory. `ib_device` owns registration refs, event handlers, client data, port caches, CQ pools, netdev mappings, resource tracking, and subdevice lists. PD/CQ/SRQ/QP/MR objects carry use counts, uobject links, provider-private embedding, and restrack entries. `ib_udata` documents ABI-compatible request/response size semantics but does not persist data.
+
+Dependencies and integration points: Depends on Linux device, DMA, netdevice, namespace, xarray, cgroup, uverbs, MAD/SA, cache/signature, and restrack facilities. Integrates with RDMA CM, iWARP CM, RDMA netlink, sysfs stats, RoCE GID management, IPoIB/RDMA netdevs, OPA addressing, and provider modules.
+
+Risks: Capability flags must match provider reality. QP state transitions and MR access flags are security-sensitive. `IB_PD_UNSAFE_GLOBAL_RKEY` is intentionally dangerous. DMA map/unmap and sync helpers must be paired correctly. User ABI expansion must preserve zero-padding/comp-mask rules. GID/P_Key/netdev/event lifetimes are refcount/RCU sensitive.
+
+Test signals: Build tests for provider vtable/uapi drift; runtime coverage for QP create/modify/destroy, CQ poll/notify races, MR access validation, DMA map/unmap including virtual DMA, RoCE GID add/delete, netdev association, multicast attach/detach, unregister with live objects, and uverbs input/output compatibility.

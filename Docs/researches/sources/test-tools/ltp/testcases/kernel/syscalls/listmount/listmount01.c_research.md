@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listmount/listmount01.c
+
+Purpose: verifies `listmount(LSMT_ROOT, ...)` recognizes the root mount in a fresh namespace. Setup unshares the mount namespace, chroots to LTP mountpoint, makes `/` private recursively, and uses `statx(...STATX_MNT_ID_UNIQUE)` to store the root mount ID. The run calls `listmount(LSMT_ROOT, 0, list, LISTSIZE, 0)` and expects exactly one result equal to `root_id`. State is a private mount namespace and chrooted root. Dependencies include kernel >= 6.8, mount device setup, `statx` unique mount IDs, and namespace support. Risks are chroot/namespace side effects isolated by LTP forking. Test signal is return count one and matching mount ID.

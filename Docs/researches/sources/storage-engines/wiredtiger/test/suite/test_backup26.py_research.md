@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup26.py
+
+Purpose: scalability and correctness test for selective backup partial recovery with many tables and reversed target lists. It uses 500 tables normally and 10000 in long-test mode.
+
+Important APIs are `SimpleDataSet.populate/check_cursor`, `take_selective_backup`, `wiredtiger_open(... backup_restore_target=...)`, time measurement, and scenario generation over percentage excluded and target-order reversal. Control flow creates many tables, splits them into removed and retained sets based on percentage, checkpoints, copies a selective backup excluding removed files, opens the backup with target URIs in normal or reverse order, asserts removed tables cannot be opened, and checks all retained tables. State behavior is partial restore metadata scaling and table/file schema correctness. Risks include a typo in scenario label only, high runtime in long mode, and large target list config strings. Test signals are expected open failures for removed URIs and dataset validation for retained URIs.

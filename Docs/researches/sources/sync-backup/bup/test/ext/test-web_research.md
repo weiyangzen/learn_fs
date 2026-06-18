@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-web -->
+# sources/sync-backup/bup/test/ext/test-web
+
+Purpose: smoke-tests `bup web` with Tornado and HTTP clients, including UTF-8 branch names and optional non-UTF-8 path handling. Important APIs are `bup web`, `curl`, `wait-for-server-start()`, `bup init`, `index`, `save`, and HTTP GETs against the web server. Control flow gates on `curl`, available port behavior, and importable Tornado, saves a branch with a non-ASCII name, starts the web server in the background, waits for readiness, fetches pages/files, and conditionally tests non-UTF-8 content. State is the temp repo, background server process, saved branch, and fetched output. Dependencies include Tornado, curl, free localhost port, process cleanup, and UTF-8 locale behavior. Risks are flaky server startup, port conflicts, encoding differences, and cleanup after failure. Test signals are successful HTTP responses and expected page/file content.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test-web -->

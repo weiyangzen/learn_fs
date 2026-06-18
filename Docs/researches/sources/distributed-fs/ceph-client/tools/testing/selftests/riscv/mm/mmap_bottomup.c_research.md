@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/mm/mmap_bottomup.c
+
+Purpose: verifies RISC-V uses bottom-up mmap layout when stack rlimit is unlimited. It contains one kselftest harness test `infinite_rlimit` that expects `memory_layout()` to return `BOTTOM_UP`. State is only two anonymous mappings created by the helper; no cleanup is needed before process exit. Integration is through `run_mmap.sh`, which sets `ulimit -s unlimited` before running this binary. Dependencies are kernel mmap layout policy and the helper header. Risks are running directly without changing stack limit, address-space randomization producing unexpected ordering, and no explicit `munmap`. Test signals are one harness pass/fail.

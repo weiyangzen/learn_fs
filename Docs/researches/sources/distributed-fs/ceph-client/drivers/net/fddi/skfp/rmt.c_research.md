@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/fddi/skfp/rmt.c
+
+Purpose: Implements SMT Ring Management (RMT), controlling MAC ring operational state, duplicate address handling, directed beacon/trace behavior, ring indications, and MAC availability flags.
+
+Important APIs/types/functions: Public functions are `rmt_init()` and `rmt()`. Internal helpers are `rmt_fsm()`, `start_rmt_timer0/1/2()`, `stop_rmt_timer0/1/2()`, `rmt_dup_actions()`, `rmt_reinsert_actions()`, `rmt_leave_actions()`, and `rmt_new_dup_actions()`. The FSM states are `RM0_ISOLATED`, `RM1_NON_OP`, `RM2_RING_OP`, `RM3_DETECT`, `RM4_NON_OP_DUP`, `RM5_RING_OP_DUP`, `RM6_DIRECTED`, and `RM7_TRACE`.
+
+Control flow: `rmt_init()` sets the initial isolated action state and clears duplicate/ring flags. `rmt()` repeatedly invokes `rmt_fsm()` until the state stabilizes, then reports state change. The FSM globally falls back to isolated if join/loop availability disappears. ISOLATED disables the MAC; NON_OP starts the non-operational timer and sends beacon; RING_OP exposes MAC unitdata availability and ring-up indication; DETECT polls claim/beacon state and waits for duplicate-address or stuck-beacon conditions; NON_OP_DUP announces/acts on duplicate address; RING_OP_DUP waits for duplicate test pass or ring down; DIRECTED sends directed beacons and can move to TRACE; TRACE queues ECM trace propagation.
+
+State and persistence behavior: Mutates `smc->mib.m[MAC0].fddiMACRMTState`, `fddiMACMA_UnitdataAvailable`, and RMT fields such as `dup_addr_test`, `da_flag`, `bn_flag`, `jm_flag`, `no_flag`, `loop_avail`, `sm_ma_avail`, and timer expiry flags. Uses three SMT timers stored in `smc->r`. Hardware state changes are made through `sm_ma_control()` modes such as offline, reset, beacon, and directed.
+
+Dependencies and integration points: Consumes events from `queue.c` and timers from the SMT timer package. Calls MAC hardware abstractions `sm_ma_control()`, `sm_mac_check_beacon_claim()`, and `sm_mac_get_tx_state()`. Reports ring status through `rmt_indication()`, `rmt_state_change()`, `smt_stat_counter()`, `RS_SET/RS_CLEAR`, and ECM events. Non-Supernet III builds call `restart_trt_for_dbcn()` to keep directed beaconing alive.
+
+Risks: Duplicate MAC behavior can either leave or reinsert depending on configuration; reinsertion is noted as non-conformant with the SMT spec. Timer interactions are subtle, especially D_MAX restart on transmit state change and stuck-beacon detection only when local station is beaconing. Incorrect ring-up/down transitions can expose MAC unitdata too early or fail to clear it. Directed beacon workarounds differ by chipset.
+
+Test signals: Join/loop loss should isolate; ring operational/non-operational transitions; D_MAX, non-op, stuck, announce, direct, and poll timer expirations; duplicate address failed/passed flows; configured leave versus reinsert behavior; directed beacon to trace; unitdata enable toggles via `RM_ENABLE_FLAG`; non-Supernet II directed-beacon restart path.

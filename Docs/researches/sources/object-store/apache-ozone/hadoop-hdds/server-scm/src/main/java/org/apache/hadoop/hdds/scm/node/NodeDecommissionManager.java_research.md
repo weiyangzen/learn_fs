@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/main/java/org/apache/hadoop/hdds/scm/node/NodeDecommissionManager.java
+
+Purpose: `NodeDecommissionManager` is the external control plane for starting, resuming, and stopping decommission and maintenance workflows. It resolves host strings to datanodes, validates capacity/redundancy preconditions, changes operational states, schedules the admin monitor, and owns decommission metrics.
+
+Important APIs and types: Key APIs are `decommissionNodes`, `startDecommission`, `recommissionNodes`, `recommission`, `startMaintenanceNodes`, `startMaintenance`, `continueAdminForNode`, `onBecomeLeader`, `getContainersPendingReplication`, and `stop`. `HostDefinition` parses `hostname` or `hostname:port`. Dependencies include `NodeManager`, `ContainerManager`, `ReplicationManager`, `SCMContext`, `DatanodeAdminMonitor`, `NodeDecommissionMetrics`, `DatanodeAdminError`, `ContainerInfo`, and `ECReplicationConfig`.
+
+Control flow: Construction configures hostname vs IP matching, monitor interval, maintenance redundancy knobs, creates the monitor and metrics, and schedules the monitor at a fixed rate. Bulk admin methods resolve host strings to datanodes, optionally run a fail-early redundancy check unless `force` is true, then call per-node start methods. Decommission transitions `IN_SERVICE` nodes to `DECOMMISSIONING`; maintenance transitions them to `ENTERING_MAINTENANCE` with optional expiry. Recommission queues non-`IN_SERVICE` nodes for monitor cancellation. Leader election calls `onBecomeLeader`, which re-adds any already-admin nodes to the monitor.
+
+State and persistence behavior: The manager owns a scheduled executor and in-memory metrics/monitor. Durable workflow state is the node operational state set through `NodeManager`; datanodes persist and report that state, allowing `continueAdminForNode` to resume after restart or leadership changes. No separate decommission DB is written here.
+
+Dependencies and integration points: It integrates CLI/admin requests, DNS resolution, node lookup by address, container placement safety checks, EC and non-EC replication constraints, HA leadership (`SCMContext.isLeader`), event-queue-driven monitor actions, and metrics registration.
+
+Risks: Host resolution can be ambiguous when multiple datanodes share a host; the code falls back to port matching or most recent heartbeat only when all ports match. Redundancy preflight uses cluster-level in-service healthy counts rather than full per-placement topology checks. The `validDns` construction in maintenance is redundant and easy to misread. Scheduled monitor startup happens in the constructor, so tests must stop it. Force bypasses safety checks and can allow under-replication.
+
+Test signals: Tests should cover host parsing and DNS/IP mode, multiple datanodes per host with port matching, ambiguity errors, decommission/maintenance force and non-force paths, EC maintenance minimum calculation, state transition validation, recommission cancellation, leader-only continuation, monitor scheduling, metrics unregister on stop, and pending-replication query forwarding.

@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/store/sandbox/sandbox.go
+
+This file defines the internal CRI sandbox object and concurrent sandbox store. `Sandbox` embeds immutable metadata, status storage, sandboxer name, optional network namespace handle, stop channel, cached CPU stats for the sandbox/pause container, and an endpoint used for task or streaming API connections. `Endpoint.IsValid` checks for a non-empty address.
+
+`NewSandbox` installs in-memory status storage and a stop channel, and marks the sandbox stopped immediately when initial state is `StateNotReady`. `Store` maintains sandboxes by full ID, a truncation index, a shared SELinux label store, and optional stats collector. `Add` rejects duplicates, reserves process labels, inserts the ID into the truncation index, stores the sandbox, and registers the ID with the stats collector. `Get` supports truncated ID lookup. `List` returns a snapshot slice. `UpdateContainerStats` replaces cached stats for an existing sandbox. `Delete` releases labels, removes the ID and map entry, and unregisters the stats collector.
+
+State is in-memory; sandbox status is not checkpointed by this package, while metadata persistence is handled elsewhere. Risks include returning value copies with embedded mutable pointers, label balancing, truncation ambiguity, stats cache replacement, and not-ready initial state affecting wait behavior. Tests cover add/get/list/delete, unknown state retrieval, truncated IDs, duplicate errors, stats updates, and not-found after deletion.

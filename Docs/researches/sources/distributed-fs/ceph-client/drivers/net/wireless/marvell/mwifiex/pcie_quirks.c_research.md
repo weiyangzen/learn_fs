@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/marvell/mwifiex/pcie_quirks.c
+
+Purpose: Provides platform-specific PCIe recovery quirks for mwifiex devices. It currently detects selected Microsoft Surface systems by DMI and enables a firmware reset workaround that power-cycles the Wi-Fi function and its upstream bridge through D3cold before returning them to D0.
+
+Important APIs and functions: `mwifiex_initialize_quirks()` scans `mwifiex_quirk_table` with `dmi_first_match()` and stores quirk bits in `card->quirks`. `mwifiex_pcie_reset_d3cold_quirk()` is called from PCI reset prepare when `QUIRK_FW_RST_D3COLD` is set. Internal helpers `mwifiex_pcie_set_power_d3cold()` and `mwifiex_pcie_set_power_d0()` save/restore PCI state, disable/re-enable the function, and transition PCI power state. The DMI table covers Surface Pro 4, Surface Pro 5 including LTE SKU, Surface Pro 6, Surface Book 1/2, and Surface Laptop 1/2.
+
+Control flow and state behavior: During probe, the quirk initializer sets `card->quirks` from DMI `driver_data` and logs the selected behavior. During reset prepare, `pcie.c` checks that bit before normal reinitialization. The reset quirk first puts the Wi-Fi function into D3cold, then also power-cycles the upstream bridge because some Surface systems report or handle bridge power state incorrectly. It then brings the bridge back to D0 before enabling/restoring the Wi-Fi function.
+
+Dependencies and integration points: Depends on Linux DMI and PCI power-management APIs plus `pcie_quirks.h` and `pcie.h` for `struct pcie_service_card`. Its only caller is the PCIe backend reset path; it complements `mwifiex_shutdown_sw()` and `mwifiex_reinit_sw()` rather than replacing them. The bridge handling uses `pci_upstream_bridge()`, so behavior depends on valid PCI topology.
+
+Risks and test signals: The quirk is intentionally platform-scoped because D3cold bridge cycling is intrusive. Adding systems requires exact DMI matches to avoid resetting unrelated hardware. `pci_upstream_bridge()` is assumed to return a usable bridge; defensive testing should include topology edge cases. Tests should verify DMI match/no-match logging, reset recovery on listed Surface devices, failure propagation from `pci_enable_device()`, preserved PCI config state after D0 restore, and non-Surface devices continuing through standard FLR reset.

@@ -1,0 +1,15 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/rustfs/crates/obs/src/telemetry/recorder.rs -->
+# sources/object-store/rustfs/crates/obs/src/telemetry/recorder.rs
+
+Purpose: Implements a `metrics::Recorder` that translates Rust `metrics` crate instruments into OpenTelemetry meter instruments while preserving labels, descriptions, units, and cached instrument handles.
+
+Important APIs/types/functions: `Recorder::builder(name)` returns `Builder`, whose `with_meter_provider`, `with_instrumentation_scope`, `build`, `install`, and `install_global` configure and optionally install the recorder. `Recorder::with_meter` wraps an existing OpenTelemetry `Meter`. `MetricMetadata` stores one-shot description/unit data from `describe_*`. `WrappedCounter`, `WrappedGauge`, and `WrappedHistogram` implement `CounterFn`, `GaugeFn`, and `HistogramFn`.
+
+Control flow: `describe_counter`, `describe_gauge`, and `describe_histogram` store metadata by `KeyName`. `register_counter/gauge/histogram` first consult type-specific `RwLock<HashMap<Key, _>>` caches. On a miss, the recorder builds an OpenTelemetry instrument using the metric name, removes matching metadata, converts labels to `KeyValue`s, wraps the instrument in the corresponding `metrics` handle, and inserts it into the cache with a second duplicate check under the write lock. Counter `absolute` emits a saturating delta from its tracked atomic value, gauges track the last f64 via atomic bits and CAS for increments/decrements, and histograms record one or many values.
+
+State/persistence behavior: All state is in memory: a shared OpenTelemetry meter, metadata map, and per-type caches. Metadata is consumed on first registration for a metric name, so later registrations with different labels do not reuse descriptions/units unless described again before registration. Caches are keyed by full `metrics::Key`, including labels, preventing repeated instrument allocation for the same label set.
+
+Dependencies/integration: Integrates `metrics` traits/types, OpenTelemetry `Meter`, `SdkMeterProvider`, `InstrumentationScope`, and RustFS `GlobalError`. The OTLP path in `otel.rs` uses this recorder so `metrics` macros flow into OpenTelemetry readers. Poisoned cache/metadata locks are logged with structured `tracing::error` fields and recovered by taking the inner guard.
+
+Risks/test signals: Metadata removal by plain metric name can cause only the first label variant to receive description/unit metadata. `Counter::absolute` cannot emit negative deltas, so lowering an absolute counter records zero rather than a reset. Gauge NaN or unusual f64 bit patterns are stored directly. The register path may build an instrument concurrently more than once before one wins insertion, although only one handle is cached. Tests cover standard usage with stdout exporter, cache reuse for each metric type, and concurrent counter registration inserting one cache entry; they do not assert exported metric payloads or metadata behavior.
+<!-- END_FILE_RESEARCH: sources/object-store/rustfs/crates/obs/src/telemetry/recorder.rs -->

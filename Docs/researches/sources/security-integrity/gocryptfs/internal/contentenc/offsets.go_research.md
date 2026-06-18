@@ -1,0 +1,10 @@
+<!-- BEGIN_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/contentenc/offsets.go -->
+# sources/security-integrity/gocryptfs/internal/contentenc/offsets.go
+
+- Purpose: Maps plaintext offsets, ciphertext offsets, block numbers, and logical file sizes for encrypted content blocks. It is the arithmetic layer that keeps header bytes and per-block authentication overhead out of the plaintext view.
+- Important APIs/types/functions: `func (be *ContentEnc) PlainOffToBlockNo(plainOffset uint64) uint64`, `func (be *ContentEnc) CipherOffToBlockNo(cipherOffset uint64) uint64`, `func (be *ContentEnc) BlockNoToCipherOff(blockNo uint64) uint64`, `func (be *ContentEnc) BlockNoToPlainOff(blockNo uint64) uint64`, `func (be *ContentEnc) CipherSizeToPlainSize(cipherSize uint64) uint64`, `func (be *ContentEnc) PlainSizeToCipherSize(plainSize uint64) uint64`, `func (be *ContentEnc) PlainOffToCipherOff(plainOff uint64) uint64`, `func (be *ContentEnc) ExplodePlainRange(offset uint64, length uint64) []IntraBlock`, `func (be *ContentEnc) ExplodeCipherRange(offset uint64, length uint64) []IntraBlock`, `func (be *ContentEnc) BlockOverhead() uint64`, `func MinUint64(x uint64, y uint64) uint64`.
+- Control flow and state: uses explicit locking/atomic state for concurrency-sensitive paths; transforms data through encryption/decryption boundaries; treats invalid internal invariants as fatal/panic conditions. Source size is 4868 bytes across 154 lines, read as part of this work item.
+- Dependencies and integration points: standard library: log; external/internal modules: github.com/rfjakob/gocryptfs/v2/internal/tlog. It integrates with the surrounding gocryptfs package through the source path `sources/security-integrity/gocryptfs/internal/contentenc/offsets.go` and the declarations listed above.
+- Risks and review notes: main risk is compatibility drift because nearby packages depend on these small constants/helpers.
+- Test signals: Nearby test signal: `sources/security-integrity/gocryptfs/internal/contentenc/offsets_test.go` covers related behavior.
+<!-- END_FILE_RESEARCH: sources/security-integrity/gocryptfs/internal/contentenc/offsets.go -->

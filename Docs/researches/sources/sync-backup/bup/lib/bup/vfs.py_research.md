@@ -1,0 +1,9 @@
+## sources/sync-backup/bup/lib/bup/vfs.py
+
+Purpose: exposes repository contents as a virtual filesystem shaped like `/BRANCH/latest/...`, `/BRANCH/SAVE-DATE/...`, and `/.tag/TAG/...`. It unifies Git objects, Bup metadata, split trees, chunked files, symlinks, tags, and revision lists behind path-oriented APIs.
+
+Important APIs and control flow: item types include `Item`, `Chunky`, `FakeLink`, `Root`, `Tags`, `RevList`, and `Commit`. `contents()` dispatches by item kind to `root_items()`, `revlist_items()`, `tags_items()`, or `tree_items()`. `resolve()` walks path segments, handles `.`/`..`, symlink following and loop limits, and delegates to remote repos when available. File reads use `_FileReader` and `_ChunkReader` to concatenate blob or chunk-tree data. Metadata helpers include `item_mode()`, `item_size()`, `augment_item_meta()`, `fill_in_metadata_if_dir()`, and `ensure_item_has_metadata()`. `join()` recursively emits blob data reachable from a ref.
+
+State and persistence: VFS itself persists nothing, but maintains a process cache for commit items, revlists, and path resolutions. Cache keys include repo identity, `want_meta`, follow mode, parent path, and requested path. It depends on Git object parsing, metadata encoding, stat mode constants, and Bup’s `.bupm`/`.bupd` conventions.
+
+Risks and integration: metadata may be a full `Metadata`, an int mode, or `LostMetadata`; callers must not mutate metadata in place. Repair mode changes missing/broken metadata behavior and coordinates tightly with `tree.py` and `rewrite.py`. Split-tree traversal, bupm entry counts, symlink fallback to blobs, and remote delegation are high-risk areas. Test signals are broad: `test-cat-file`, `test-empty-metadata`, `test-fuse`, `test-get-missing`, `test-get-repair-bupm`, `test-get-repair-symlinks`, `test-get-rewrite-missing`, `test-gc-removes-incomplete-trees`, and many save/restore tests outside this subset.

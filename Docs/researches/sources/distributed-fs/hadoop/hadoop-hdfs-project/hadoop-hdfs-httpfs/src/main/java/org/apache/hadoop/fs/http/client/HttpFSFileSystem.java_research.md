@@ -1,0 +1,15 @@
+## sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-httpfs/src/main/java/org/apache/hadoop/fs/http/client/HttpFSFileSystem.java
+
+Purpose: `HttpFSFileSystem` is the HttpFS client-side `FileSystem` implementation for `webhdfs` URIs, translating Hadoop filesystem operations into authenticated HttpFS/WebHDFS-style HTTP requests and JSON response parsing.
+
+Important APIs and types: it extends `FileSystem` and implements `DelegationTokenRenewer.Renewable`. Public surface includes core FS operations (`open`, `create`, `append`, `truncate`, `concat`, `rename`, `delete`, `listStatus`, `listStatusBatch`, `mkdirs`, `getFileStatus`, `getHomeDirectory`, `getTrashRoot`, metadata setters), ACLs, xattrs, storage policies, snapshots, erasure coding, block locations, delegation token methods, `hasPathCapability`, `getServerDefaults`, `access`, `getStatus`, and trash roots. The `Operation` enum maps each HttpFS op to GET/PUT/POST/DELETE.
+
+Control flow: `initialize()` records the scheme/authority URI, selects a `DelegationTokenAuthenticator` class, and builds `DelegationTokenAuthenticatedURL`. `getConnection()` qualifies paths, delegates URL construction to `HttpFSUtils`, runs connection creation as the current UGI, injects auth, sets the HTTP method, and enables output for POST/PUT. Most operations build parameter maps with `op`, call `getConnection()`, validate expected status via `HttpExceptionUtils`, and parse JSON through `HttpFSUtils` or `JsonUtilClient`. `create()` and `append()` first require a 307 redirect, then open the redirect target with `Content-Type: application/octet-stream` and validate final status on stream close.
+
+State and persistence: persistent external state is HDFS state mutated through the remote HttpFS server. Local state includes `authURL`, `authToken`, canonical `uri`, lazy `workingDir`, `realUser`, and inherited statistics. No local filesystem data is persisted. Returned output streams hold the redirect connection until close to validate server response.
+
+Dependencies and integration points: integrates Hadoop FS abstractions, UGI/SPNEGO/delegation-token auth, HttpFS URL layout, JSON-simple and Jackson parsing, HDFS `JsonUtilClient`, ACL/xattr/storage/snapshot/EC protocols, and HTTP status/error utilities.
+
+Risks: seek/positioned reads are unsupported in the nested input stream. Uploads depend on a two-step 307 redirect and a `Location` header. Several methods fall back to superclass behavior on IO errors (`getTrashRoot`, `getTrashRoots`), while most propagate. Token renew/cancel ignores the token parameter and `getRenewToken`/`setDelegationToken` are TODO stubs, limiting renewer integration.
+
+Test signals: covered indirectly by HttpFS/WebHDFS client tests for content length, OAuth, JSON conversion, xattrs, storage policies, snapshots, EC, and block locations. Important behavioral signals are exact op/method mapping, HTTP status validation, JSON field compatibility, upload content type, capability declarations, and fallback behavior for trash roots.

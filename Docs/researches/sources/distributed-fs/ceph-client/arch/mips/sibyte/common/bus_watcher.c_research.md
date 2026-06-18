@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/mips/sibyte/common/bus_watcher.c
+
+Purpose: SiByte bus-watcher interrupt handling and statistics. It aggregates bus, ECC, and memory/IO error counters and optionally exposes them through `/proc/bus_watcher`.
+
+Important APIs and control flow: `check_bus_watcher()` reads non-destructive status registers or falls back to last reaped values, then prints a summary. `sibyte_bw_int()` optionally freezes/dumps trace buffer data, destructively reads bus-error status, accumulates L2 and memory/IO error counters, clears hardware counters, and returns handled. `bw_proc_show()` formats cumulative stats and last signature. `sibyte_bus_watcher()` initializes stats, requests BAD_ECC/COR_ECC/IO_BUS IRQs with cleanup on failure, creates proc output, and optionally starts trace capture.
+
+State, persistence, and integration: state is global `bw_stats`, requested IRQs, optional proc entry, and hardware trace/counter registers. Dependencies include SoC-specific bus error status addresses, IRQ numbers, procfs, and cache error handlers calling `check_bus_watcher()`. Risks include comments noting missing locking, destructive reads, counter saturation, trace interference with profiling/JTAG, and partial IRQ registration failure paths. Test signals are registered IRQs, `/proc/bus_watcher` output, accumulated counters after injected ECC/bus errors, and trace dumps when enabled.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_baseconfig.py
+
+Purpose: tests `WiredTiger.basecfg` handling, specifically that invalid base configuration causes open failure unless `config_base=false` is supplied.
+
+Important APIs are `wiredtiger_open`, filesystem `os.mkdir`, `databaseCorrupted`, direct append to `WiredTiger.basecfg`, and `assertRaisesWithMessage`. Control flow creates a separate home `A`, opens it with `create`, marks it as corrupted for test harness expectations, appends invalid text `foo!` to the base config file, closes, then asserts reopening normally fails with an unknown configuration key. It finally opens with `create,config_base=false`, proving base config can be ignored. State behavior is direct persistent file mutation outside WiredTiger APIs. Dependencies are the test harness corruption marker and filesystem path layout. Risks include relying on file name and parser error text. Test signals are basecfg existence, expected open error, and successful open with `config_base=false`.

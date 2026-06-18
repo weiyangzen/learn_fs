@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/debug/round_tripper_release.go
+
+Purpose: release-build no-op implementation of `RoundTripper`. API: `RoundTripper(upstream http.RoundTripper) http.RoundTripper`, returning `upstream` unchanged. Control flow is deliberately empty. State and persistence are absent. Dependencies are only `net/http`. Integration point is the same call sites as debug builds, allowing instrumentation to be compiled out. Risks: build tags must select the intended file; release builds will not detect undrained bodies. Tests for debug behavior do not apply in release builds except compile-time API compatibility.

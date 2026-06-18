@@ -1,0 +1,5 @@
+# sources/test-tools/kdevops/playbooks/roles/bootlinux/tasks/install/packages.yml
+
+This task file installs prebuilt kernel packages from `bootlinux_artifacts_dir` onto target nodes. For non-Debian systems it finds RPMs on localhost, copies them to `/tmp`, filters out devel/header packages when building `kernel_packages`, and installs selected RPMs with `rpm -i --force`. For Debian systems it finds DEBs, copies them to `/tmp`, filters out headers, and installs selected packages with `dpkg -i`.
+
+Important APIs are delegated `find`, `copy`, `set_fact`, privileged `command`, and loops. Persistent state is uploaded package files in `/tmp` and installed kernel packages. Integration points are packaged workflow builders that populate artifacts and optionally `kernel.release`. Risks include `kernel_packages` accumulating across hosts/runs, installing only core packages while omitting headers/devel by substring, forced RPM install bypassing dependency management, and no failure when no artifacts are found. Test signals should include empty artifact directory failure expectations, RPM and DEB install dry runs, and kernel package selection validation.

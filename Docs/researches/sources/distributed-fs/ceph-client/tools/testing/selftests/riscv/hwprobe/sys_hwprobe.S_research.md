@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/hwprobe/sys_hwprobe.S
+
+Purpose: assembly syscall wrapper for `riscv_hwprobe`. It moves `__NR_riscv_hwprobe` into `a7`, executes `ecall`, and returns through the normal RISC-V calling convention. State is only CPU registers during the call. Integration is linked into hwprobe and vector helper tests so they can call the syscall even when libc lacks a wrapper. Dependencies are RISC-V syscall ABI, asm-generic syscall numbers, and toolchain assembly support. Risks are missing error normalization compared with libc wrappers and syscall number drift in old headers. Test signals are all hwprobe-based tests receiving expected kernel return codes.

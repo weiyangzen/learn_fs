@@ -1,0 +1,11 @@
+# sources/user-network-fs/samba/source3/winbindd/winbindd_pam_auth.c
+
+## sources/user-network-fs/samba/source3/winbindd/winbindd_pam_auth.c
+
+`winbindd_pam_auth.c` is the parent-process asynchronous wrapper for `WINBINDD_PAM_AUTH`, the plaintext PAM authentication command. It validates client request flags, canonicalizes the username, chooses the authentication domain, marshals a `wbint_PamAuth` request, sends it to the domain child, and formats the response for the winbind client.
+
+`winbindd_pam_auth_send()` first rejects incompatible extra-data flags via `check_request_flags()`. It normalizes mapped names with `normalize_name_unmap()`, canonicalizes into namespace/domain/user using `canonicalize_username()`, and resolves the child domain with `find_auth_domain(request->flags, namespace)`. It builds `wbint_AuthUserInfo` fields for client name, pid, flags, Kerberos ccache type, password, username, uid, and required membership SIDs parsed by `extra_data_to_sid_array()`. It then calls `dcerpc_wbint_PamAuth_r_send()` against `dom_child_handle(domain)`.
+
+The callback receives the wrapped RPC and child result. `winbindd_pam_auth_recv()` maps child validation into the legacy winbind response with `append_auth_data()`, copies `krb5ccname`, optionally adds trusted-domain data from Info3 text, stores memory credentials for cached-login single sign-on, and fakes password policy data for legacy `WBFLAG_PAM_GET_PWD_POLICY` callers by deriving min/max ages from validation timestamps.
+
+The file itself has no durable state, but it can trigger memory credential storage and trusted-domain discovery through helpers. Dependencies include generated winbind RPC client stubs, global event context, username normalization, domain routing, auth-data append helpers in `winbindd_pam.c`, and fixed response auth fields. Risks include cleartext password lifetime in allocated RPC structures, correct rejection of incompatible output flags, canonicalization mismatches, and preserving child NTSTATUS in `set_auth_errors()`. Test signals include plaintext auth success/failure, Kerberos ccache response, required group SID parsing, memory-creds storage, legacy password policy output, and mapped username handling.

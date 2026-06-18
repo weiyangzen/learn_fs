@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/alarm/alarm07.c
+
+Purpose: verifies a parent's scheduled `SIGALRM` is delivered to the parent, not a forked child. Setup installs a signal handler; run schedules one second, forks, both processes sleep three seconds, child expects counter zero, parent expects one. Important APIs are `alarm`, `SAFE_FORK`, signal handling, and LTP equality macros. State is per-process signal counter inherited as zero but updated independently. Dependencies are fork and signal semantics. Risks are timing under load; `.timeout=4` bounds the run. Test signal is parent count 1 and child count 0.

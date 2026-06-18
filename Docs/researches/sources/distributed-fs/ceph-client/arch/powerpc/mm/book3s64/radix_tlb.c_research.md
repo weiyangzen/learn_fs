@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/mm/book3s64/radix_tlb.c
+
+Purpose: implements radix MMU TLB, page-walk-cache, LPID, PID, and hypervisor partition invalidation for Book3S64. The file is the low-level bridge between generic Linux TLB APIs, KVM/pseries invalidation contracts, and Power ISA `tlbie`/`tlbiel` instructions.
+
+Important APIs and control flow: `radix__flush_tlb_mm()`, `radix__flush_all_mm()`, page/range variants, `radix__tlb_flush()`, LPID helpers, THP PMD/PUD flushes, and `do_h_rpt_invalidate_prt()` choose local `tlbiel`, global `tlbie`, multicast IPI, or `pseries_rpt_invalidate()` depending on SMP state, GTSE availability, coprocessor users, page size, and range size. The implementation wraps instruction forms with barriers, POWER9 erratum fixups, and debugfs-tunable single-page ceilings.
+
+State and dependencies: persistent state lives in `mm->context.id`, `mm_cpumask`, `active_cpus`, `copros`, per-CPU trim clocks, and debugfs thresholds. It depends on Power ISA features, pseries hypercalls, KVM HV, MMU page-size definitions, and MMU notifier secondary TLB hooks. Risks are ordering bugs, under-flushing coprocessor/nMMU translations, missing PWC invalidations after table frees, and regressions in lazy TLB shootdown trimming. Test signals include TLB stress, THP collapse/split, KVM H_RPT_INVALIDATE, pseries without GTSE, POWER9 erratum systems, and mmu notifier secondary TLB tests.

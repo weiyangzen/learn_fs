@@ -1,0 +1,15 @@
+# sources/object-store/minio/cmd/metacache-stream.go
+
+Purpose: This file defines the compressed metacache stream format and the reader/writer utilities used to serialize sorted `metaCacheEntry` values. It also implements block splitting metadata used when large listings are persisted as multiple `.s2` objects.
+
+Important APIs and types: `metacacheStreamVersion` is the stream version. `metacacheWriter` writes s2-compressed msgpack streams through `write`, `stream`, `Close`, and `Reset`. `metacacheReader` supports lazy initialization, `peek`, `next`, `nextEOF`, `forwardTo`, `readN`, `readAll`, `readFn`, `readNames`, `skip`, and `Close`. `metacacheBlockWriter` groups entry streams into `metacacheBlock` values, and `metacacheBlock` exposes `headerKV`, `pastPrefix`, and `endedPrefix`.
+
+Control flow: Writers lazily create an s2 writer and msgp writer, write a version byte, encode each entry as `true`, name, metadata bytes, then encode `false` on close. The streaming writer path uses a goroutine and channel to consume entries. Readers lazily read and validate version 1 or 2, keep one cached `current` entry for `peek`/`forwardTo`, convert truncated streams into `io.ErrUnexpectedEOF`, and provide fast name-only or prefix-limited scans. Block writing consumes entries from a channel, writes up to the channel capacity per block, finalizes each compressed block into a bytebuffer, and calls the supplied persistence callback.
+
+State and persistence behavior: The stream format is persisted as s2-compressed msgpack in metacache block objects. Reader state is intentionally stateful: once `err` is set, future reads return it, and `current` can hold a prefetched entry. Metadata buffers are recycled through MinIO pools when entries are reusable or empty. Block metadata persists only the block number, first name, last name, and EOS flag, which readers use to skip blocks and determine prefix completion.
+
+Dependencies and integration points: The file depends on `klauspost/compress/s2`, `tinylib/msgp`, MinIO buffer pools, bytebuffer pools, and `metaCacheEntry` helpers such as `isDir`, `isObject`, `isLatestDeletemarker`, `isObjectDir`, `isAllFreeVersions`, and `hasPrefix`. It is used by disk `WalkDir`, cache save/read paths, and raw quorum listing.
+
+Risks: The stream assumes entries are sorted; `forwardTo`, prefix short-circuiting, and block first/last metadata become incorrect if writers send unsorted entries. Reader methods are not interchangeable without understanding state consumption. `readN` skips only a byte when it detects a name outside the prefix after reading the name header, relying on the following metadata skip semantics, so format changes need care. Pool reuse makes ownership of metadata byte slices important. Version handling accepts only 1 and 2.
+
+Test signals: `metacache-stream_test.go` validates reading names, reading N entries, directory filtering, prefix searches, callback reads, channel reads, forward-to semantics, peek/next interaction, writer round-trip, and skip behavior using `testdata/metacache.s2`.

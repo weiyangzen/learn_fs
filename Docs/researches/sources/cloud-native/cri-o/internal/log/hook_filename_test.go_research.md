@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/hook_filename_test.go
+
+Purpose: unit coverage for the file-name log hook. It verifies `NewFilenameHook` returns a hook, `Levels` is debug-only, `Fire` succeeds against a JSON formatter, and the default `Formatter` renders `file:line`. State is a temporary logrus entry/logger. Dependencies include Ginkgo/Gomega, logrus, and CRI-O log package. Risks are limited coverage of actual caller discovery, formatter wrapping behavior under concurrent logging, skip-prefix behavior, and emitted fields in formatted output. Test signals catch basic construction/API regressions but not full integration with standard logger output.

@@ -1,0 +1,7 @@
+# sources/object-store/rustfs/crates/iam/src/cache.rs
+
+`cache.rs` implements IAM cache snapshots. `CacheState` groups policy docs, users, user policies, STS accounts/policies, groups, user-group memberships, and group policies as `Arc<CacheEntity<T>>`. `Cache` publishes whole `CacheState` snapshots through `ArcSwap` and serializes writers with a `Mutex<()>`. Readers load one `CacheSnapshot` and see a consistent immutable view.
+
+`with_write_lock` clones the current state, creates `LockedCache`, runs a mutation closure, and stores a new state only when dirty. `LockedCache::exec` suppresses stale writes when entity `load_time >= t`, clones the target entity, mutates it, and replaces only that map. Replacement methods update load time to `now_utc`; add/delete methods use caller timestamps. `build_user_group_memberships` derives reverse memberships from groups. `CacheInner::get_user` checks normal users then STS accounts; authorization methods currently warn and deny/return empty.
+
+State is process-memory only, backed by persistent IAM store elsewhere. Dependencies include `arc-swap`, policy types, `OffsetDateTime`, `GroupInfo`, `MappedPolicy`, and tracing. Risks include TODO authorization paths always denying, and per-entity load-time suppression blocking older independent key changes after a newer entity update. Tests cover concurrent add/update/delete and snapshot consistency across multi-map writes.

@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/platforms/chrp/setup.c
+
+Purpose: CHRP machine descriptor implementation. It classifies CHRP variants, initializes RTAS, interrupt controllers, fallback console behavior, RTC hooks, NVRAM late init, CPU info, and restart/power hooks.
+
+Important APIs and control flow: `chrp_probe` accepts flat DT `device_type = "chrp"`, sets DMA mode constants, power-off, and fallback console selection. `chrp_setup_arch` identifies Pegasos/IBM/Motorola/Briq models, initializes RTAS, installs RTAS progress/time hooks, enables Pegasos L2 cache, fixes LongTrail Super I/O IRQ routing, and maps Briq reset. `chrp_find_openpic` and `chrp_find_8259` configure MPIC and optional i8259 cascade; `chrp_init_IRQ` selects SMP ops only when an MPIC exists. `define_machine(chrp)` wires PCI discovery, RTC, IRQ, restart, and `/proc/cpuinfo` callbacks.
+
+State, dependencies, and risks: global state includes `_chrp_type`, `chrp_mpic`, Briq SPOR mapping, heartbeat timers, and `ppc_md` callbacks. Dependencies are OF model/properties, RTAS services, MPIC/i8259 domains, Hydra ADB NMI, and optional NVRAM. Risks include early-boot firmware assumptions, `request_region` without recovery, model-string dispatch, and Pegasos interrupt-tree workarounds. Test signals are successful CHRP boot, interrupt delivery from MPIC/i8259, RTAS time use where present, console fallback on Pegasos2, and CPU info output for LongTrail memory/cache data.

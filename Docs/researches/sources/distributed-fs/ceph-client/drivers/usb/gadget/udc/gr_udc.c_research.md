@@ -1,0 +1,33 @@
+# sources/distributed-fs/ceph-client/drivers/usb/gadget/udc/gr_udc.c
+
+## Purpose
+
+`gr_udc.c` implements the Aeroflex Gaisler GRUSBDC USB peripheral controller driver for GRLIB systems. It supports DMA-mode GRUSBDC cores with up to 16 IN and 16 OUT endpoints, registers as a platform UDC, maps gadget endpoint requests to GRUSBDC DMA descriptors, handles ep0 standard requests and setup delegation, tracks VBUS/reset/suspend/resume state, and supports optional split IN/OUT interrupt lines.
+
+## Important APIs, Types, and Functions
+
+Endpoint operations are `gr_ep_enable()`, `gr_ep_disable()`, `gr_alloc_request()`, `gr_free_request()`, `gr_queue_ext()`, `gr_dequeue()`, `gr_set_halt()`, `gr_set_wedge()`, `gr_fifo_status()`, and `gr_fifo_flush()` via `gr_ep_ops`. Gadget operations are `gr_get_frame()`, `gr_wakeup()`, `gr_pullup()`, `gr_udc_start()`, and `gr_udc_stop()` via `gr_ops`. Platform integration uses `gr_probe()`, `gr_remove()`, `gr_request_irq()`, `gr_match`, and `gr_driver`.
+
+Important internal paths include DMA descriptor allocation/freeing (`gr_alloc_dma_desc()`, `gr_free_dma_desc_chain()`), request completion (`gr_finish_request()`), DMA start/advance/abort (`gr_start_dma()`, `gr_dma_advance()`, `gr_abort_dma()`), descriptor construction (`gr_setup_out_desc_list()`, `gr_setup_in_desc_list()`), ep0 helpers (`gr_ep0_respond()`, `gr_set_address()`, `gr_device_request()`, `gr_interface_request()`, `gr_endpoint_request()`, `gr_ep0_setup()`, `gr_ep0out_requeue()`), state handlers (`gr_vbus_connected()`, `gr_vbus_disconnected()`, `gr_udc_usbreset()`, `gr_handle_state_changes()`), endpoint IRQ handlers (`gr_handle_in_ep()`, `gr_handle_out_ep()`), and threaded IRQ handlers (`gr_irq()`, `gr_irq_handler()`).
+
+## Control Flow
+
+Probe allocates `struct gr_udc` with devm memory, maps the platform MMIO resource, obtains the primary IRQ and optional separate IN/OUT IRQs, initializes the gadget object and lock, reads the status register to determine endpoint counts and verify DMA mode, creates a DMA pool for hardware descriptors, registers the gadget UDC, initializes endpoints, disables leftover interrupts/pullup, creates debugfs state, and requests threaded IRQs. `gr_udc_init()` initializes ep0 IN/OUT and all available endpoints, allocates ep0 request buffers, allocates per-endpoint coherent tail buffers, enables ep0 hardware, and sets the starting ep0 state to disconnect.
+
+Gadget bind calls `gr_udc_start()`, storing the gadget driver and enabling VBUS detection. VBUS-valid state turns on status, USB reset, VBUS, suspend, and endpoint interrupts plus pullup. USB reset clears address, sets ep0 setup state, updates gadget state and speed, nukes ep0 queues, unstops ep0 endpoints, and requeues the ep0 OUT setup request. Disconnect stops all endpoints, disables pullup/interrupts, reports gadget disconnect, and re-enables VBUS detection.
+
+Request queueing maps the buffer for DMA, builds an IN or OUT descriptor chain, sets request status and actual length, appends to the endpoint queue, and starts DMA if idle. IN descriptors are all enabled immediately and only the last descriptor requests packet-interrupt completion. OUT descriptors are enabled one at a time so the driver can detect short packets and setup packets; the last short segment may use a coherent bounce `tailbuf` because hardware cannot safely receive smaller-than-maxpacket OUT buffers directly. The threaded IRQ scans IN endpoints first, then OUT endpoints, then state changes. IN completion waits until the last descriptor is disabled and endpoint hardware buffers are empty. OUT completion accumulates descriptor lengths, handles setup-packet markers, queues ep0 status ZLP for OUT data stage, or enables the next descriptor and announces descriptor availability.
+
+Ep0 processing uses a permanently requeued OUT request for setup packets. `gr_ep0_setup()` validates the current ep0 state, decodes the setup packet, handles standard device/interface/endpoint requests where possible, delegates the rest to `driver->setup()`, stalls on negative status, updates gadget configured/addressed state on SET_CONFIGURATION/SET_ADDRESS, advances IDATA/ODATA to status states, and requeues ep0 OUT. Test mode is applied in the IN status completion callback.
+
+## State and Persistence Behavior
+
+State is volatile in `struct gr_udc`, endpoint structures, request structures, DMA descriptors, MMIO registers, and debugfs. `struct gr_udc` stores gadget binding, endpoint arrays, DMA pool, device pointer, ep0 requests, register mapping, IRQ numbers, added/irq flags, remote-wakeup and test-mode state, suspended-from state, endpoint counts, endpoint list, and spinlock. Each `struct gr_ep` stores endpoint metadata, register pointer, queue, DMA-start flag, stopped/wedged/callback flags, bytes-per-buffer, and coherent OUT tail buffer. Each `struct gr_request` stores descriptor-chain pointers, even/odd OUT tail accounting, and setup-packet indication. No durable storage is written.
+
+## Dependencies and Integration Points
+
+The driver depends on platform-device resources, Open Firmware match data, big-endian MMIO accessors, USB gadget APIs, DMA mapping and DMA pools, coherent DMA allocations, threaded IRQs, debugfs, and USB Chapter 9 request definitions. Device-tree properties `epobufsizes` and `epibufsizes` optionally set endpoint buffer-size limits; status-register fields also report endpoint counts and DMA/slave mode. It integrates with the gadget framework through `usb_add_gadget_udc()` and with PM-visible USB state through `usb_gadget_set_state()`.
+
+## Risks and Test Signals
+
+High-risk areas are DMA descriptor enable/ownership ordering, OUT bounce-buffer overflow handling, ep0 setup requeue ordering, suspend/resume callbacks under spinlock release/reacquire, multi-IRQ sharing, endpoint halt/wedge semantics, and cleanup of resources allocated after `usb_add_gadget_udc()`. Probe registers the gadget before `gr_udc_init()`, with a comment noting cleanup effects may need attention; this ordering is worth testing. Test signals include DMA-mode probe and rejection of slave-mode cores, endpoint-count discovery, optional separate IRQ lines, bind/unbind, VBUS connect/disconnect, USB reset, high/full speed changes, standard ep0 requests, SET_CONFIGURATION state transitions, remote wakeup and test mode, IN and OUT transfers across multiple descriptors, zero-length IN packets, odd-sized OUT tails and overflow, dequeue of active/nonactive requests, halt/wedge/clear-halt including from-host cases, suspend/resume callbacks, debugfs state dumps, and remove/error unwind after partial probe failure.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/bpf/bpftool/json_writer.h
+
+`json_writer.h` declares bpftool's opaque streaming JSON writer API. It exposes `typedef struct json_writer json_writer_t;` without revealing layout, so callers can create, use, and destroy writers while implementation state remains private to `json_writer.c`.
+
+The API groups into lifecycle (`jsonw_new()`, `jsonw_destroy()`), formatting (`jsonw_pretty()`, `jsonw_reset()`), property naming (`jsonw_name()`), values (`jsonw_string()`, `jsonw_bool()`, integer and floating writers, `jsonw_null()`, `jsonw_printf()`, `jsonw_vprintf_enquote()`), field shortcuts (`jsonw_string_field()`, `jsonw_uint_field()`, and related helpers), and collection delimiters (`jsonw_start_object()`, `jsonw_end_object()`, `jsonw_start_array()`, `jsonw_end_array()`). The `__printf` annotations allow compile-time checking of printf-style wrappers.
+
+This header is an integration point for most command modules: maps, links, netlink dumping, perf, disassembly, PID references, and `main.c` all use the same writer contract when `json_output` is enabled. It also defines `jsonw_err_handler_fn`, but this implementation does not currently expose a setter, so it is effectively reserved compatibility surface.
+
+There is no persistence or global state in the header itself; it defines the contract used by the global `json_wtr` in `main.c`. Dependencies include standard C bool/stdint/stdarg/stdio and Linux compiler attributes. Risks are API misuse rather than header behavior: mismatched start/end calls assert in the implementation, raw formatted JSON can bypass escaping, and callers must honor the writer lifetime. Test signals should compile modules with format-string warnings enabled, verify all declared functions have implementation or intentional conditional exclusion, and exercise representative bpftool JSON paths to catch contract drift.

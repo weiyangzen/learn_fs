@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/sound/soc/stm/stm32_spdifrx.c
+
+## Purpose
+`stm32_spdifrx.c` is an ASoC CPU DAI driver for the STM32H7 SPDIF receiver. It captures IEC60958 audio over DMA, synchronizes the hardware receiver to incoming S/PDIF activity, exposes input/channel-status controls, retrieves channel-status and user bits using a secondary DMA channel, and handles receiver error IRQs.
+
+## Important APIs, Types, And Functions
+`struct stm32_spdifrx_data` stores platform/MMIO/regmap state, a completion for channel-status retrieval, the kernel clock, capture DMA parameters, active substream, a separate control DMA channel and buffer, slave DMA config, spinlocks, cached CS/UB arrays, IRQ, and a receiver refcount. Key routines are `stm32_spdifrx_start_sync()`, `stm32_spdifrx_stop()`, `stm32_spdifrx_isr()`, `stm32_spdifrx_startup()`, `stm32_spdifrx_hw_params()`, `stm32_spdifrx_trigger()`, `stm32_spdifrx_shutdown()`, `stm32_spdifrx_get_ctrl_data()`, `stm32_spdifrx_dma_complete()`, `stm32_spdifrx_dai_probe()`, `stm32_spdifrx_probe()`, and PM suspend/resume helpers.
+
+## Control Flow
+Probe allocates state, maps registers, gets `kclk`, requests the IRQ, optionally resets the block, registers DMAengine PCM, registers the ASoC component/DAI, configures the `rx-ctrl` DMA channel for CSR reads, checks the hardware ID/version, and enables PM runtime. DAI probe sets the regular capture FIFO DMA address and registers IEC958/input/channel controls. PCM startup stores the active substream and enables `kclk`. `hw_params()` selects packed 16-bit or left-aligned 32-bit data format and forces 4-byte DMA bus width. Trigger start enables overrun IRQ and RX DMA, then calls `stm32_spdifrx_start_sync()`, which enables sync/error IRQs, increments a refcount, and starts synchronization if the receiver is idle. The ISR clears flags, enables full receive mode when sync completes, stops PCM on xrun-level errors, and disconnects the stream on frame/sync/timeout errors after attempting a retry if still in sync state. Stop decrements the shared refcount, disables receive/DMA/IRQs at zero, clears flags, and dummy-reads DR/CSR. Control reads start the control DMA, enable CSR DMA and sync, wait up to 100 ms for completion, copy CS/UB bytes, then stop sync and DMA.
+
+## State And Persistence
+Persistent state includes regmap-cached control registers, DMA channel configuration, the CS/UB arrays returned to ALSA controls, the active substream pointer, and the `refcount` shared between PCM capture and control-data retrieval. `lock` serializes enable/disable and refcount transitions; `irq_lock` protects substream stop races.
+
+## Dependencies And Integration Points
+The driver binds `st,stm32h7-spdifrx`, uses MMIO resources, the `kclk` clock, an IRQ, optional reset control, regular RX DMA plus an `rx-ctrl` DMA channel, regmap, DMAengine PCM, ASoC controls/DAI/component APIs, and ALSA IEC958 control conventions. Runtime consumers see a capture-only DAI supporting one or two channels, 8 kHz to 192 kHz, S16_LE and S32_LE.
+
+## Risks And Edge Cases
+Two local macros appear misspelled in this snapshot: `SPDIFRX_CR_INSEL_MASK` references `PDIFRX_CR_INSEL_SHIFT`, and `SPDIFRX_SR_WIDTH5_MASK` references `PDIFRX_SR_WIDTH5_SHIFT`; as written, those are compile-time failures if the macros are used by the preprocessor. `sync_state = FIELD_GET(...) && SPDIFRX_SPDIFEN_SYNC` is a boolean expression rather than an equality check, so any nonzero state is treated as sync for retry decisions. Control reads ignore the return from `stm32_spdifrx_get_ctrl_data()` in the get callbacks and can expose stale zeroed data after timeout. `reinit_completion()` is not called before each control DMA request, so repeated reads rely on completion state behavior that should be audited. Probe error cleanup calls `stm32_spdifrx_remove()` after partial initialization, so channel/buffer NULL/error states need to stay safe.
+
+## Test Signals
+Build this file with the target config to catch macro typos, probe with missing `kclk`, missing IRQ, missing `rx-ctrl` DMA, and reset errors, run S16_LE and S32_LE capture at standard rates, test absent S/PDIF signal and synchronization timeout, inject parity/overrun/frame/sync/timeout IRQs, verify refcount behavior when IEC958 controls are read during active capture, validate CS/UB extraction around start-of-block detection, and run suspend/resume with cached register sync.

@@ -1,0 +1,25 @@
+# sources/storage-engines/sqlite/ext/wasm/api/sqlite3-api-glue.c-pp.js
+
+## Purpose
+
+This initializer is the core glue layer between the wasm exports, generic wasm utilities, the struct binder, and the public `sqlite3.capi`, `sqlite3.wasm`, and `sqlite3.util` surfaces. It installs typed wrappers for exported C APIs, imports constants and struct layouts from wasm, adds pointer and string adapters, implements hand-written wrappers for APIs needing JS-specific behavior, and extends struct-bound types with method installation helpers.
+
+## Important APIs and control flow
+
+The initializer first installs `WhWasmUtilInstaller(wasm)` and defines `bindingSignatures` for three groups: `core` C APIs, `int64` APIs requiring BigInt support, and `wasmInternal` helpers exposed under `sqlite3.util`. The core signatures cover statement binding/stepping, columns, hooks, open/close, config/status, result/value APIs, VFS registration, URI helpers, and more. Optional blocks add progress, explain, authorizer, column-origin, SEE encryption, virtual table, preupdate, and session/changeset APIs when the wasm exports and BigInt support are present.
+
+It creates `sqlite3.StructBinder` from `Jaccwabyt`, then configures `wasm.xWrap` adapters. `string:flexible` accepts arrays and SQL-capable typed arrays; `string:static` allocates long-lived C strings for pointer subtype names; pointer aliases accept raw pointers and, for `sqlite3*` and `sqlite3_stmt*`, OO API `DB` and `Stmt` objects when available. `sqlite3_vfs*` can resolve VFS names via `sqlite3_vfs_find`. Result adapters alias typed pointers back to raw pointer values.
+
+The wrapper generation loop binds `bindingSignatures.core` into `capi`, internal helpers into `util`, and BigInt-sensitive APIs either into real wrappers or throwing stubs. It then imports SQLite constants and struct metadata via `sqlite3__wasm_enum_json`, populates `capi.SQLITE_*` values, builds `capi.sqlite3_js_rc_str()`, binds struct types, nests virtual table inner structs under `sqlite3_index_info`, and defines `capi.sqlite3_vtab_config`.
+
+Hand-written wrappers handle important semantic gaps. `util.sqlite3__wasm_db_error()` sets database error state from result codes or JS errors. `sqlite3_close_v2()` runs `__dbCleanupMap.cleanup()` before closing to uninstall auto-converted callbacks. Collation and scalar/window UDF wrappers enforce UTF-8, convert JS callbacks to wasm function pointers, translate exceptions into SQLite errors, and register cleanup metadata. `sqlite3_prepare_v2/v3()` support JS strings, SQLable typed arrays, arrays, and raw SQL pointers with tail handling. `sqlite3_bind_text/blob()` accept JS strings and typed arrays by allocating wasm memory and using `SQLITE_WASM_DEALLOC`. Text-return proxies preserve embedded NULs for `sqlite3_column_text()` and `sqlite3_value_text()`. `sqlite3_config()` exposes a bounded subset of config operations. Auto-extension wrappers install and later uninstall JS function pointers.
+
+Finally, it adds `installMethod()` and `installMethods()` to `StructBinder.StructType.prototype` for installing JS or wasm-pointer callbacks into struct function-pointer members, with disposal-time cleanup for installed proxies.
+
+## State, persistence, dependencies, and risks
+
+Most state is runtime binding state: C constants, struct constructors, wrapper functions, static string allocations, callback function-table entries, `__dbCleanupMap`, and auto-extension pointer sets. Persistent database state is affected indirectly through exposed C APIs, UDFs, collations, hooks, sessions, and VFS operations. Memory ownership is critical: static strings intentionally leak for application lifetime, bind wrappers pass allocated buffers to SQLite with `SQLITE_WASM_DEALLOC`, and callback wrappers must be uninstalled on close or reset where possible.
+
+Dependencies include wasm exports, Emscripten function tables, BigInt support, `WhWasmUtilInstaller`, `Jaccwabyt`, `sqlite3__wasm_enum_json`, SQLite compile options, and optional exported APIs. Risks include callback leaks when clients bypass `capi.sqlite3_close_v2()` and call raw wasm close exports, unsupported non-UTF-8 encodings, BigInt-disabled stubs in untested builds, allocator mismatch around serialize/deserialize APIs in custom builds, function-table behavior differences in Safari, and subtle typed-array/string conversion bugs. A concrete maintenance hazard is the `sqlite3_bind_text()` branch that references `pMem` in an `Array.isArray(pMem)` check even though the parameter is named `text`; tests should cover array input or the branch should be reviewed.
+
+Test signals should include wrapper availability matching exports, constant/struct import sanity, UDF/collation creation and cleanup on close, hook callback argument conversion, prepare tail handling for multi-statement SQL, typed-array SQL and bind inputs, embedded-NUL text reads, BigInt integer paths, auto-extension reset cleanup, VFS method installation disposal, and optional API gates for SEE, vtab, preupdate, and session builds.

@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/rdma/rxe_test_NETDEV_UNREGISTER.sh
+
+Purpose: validates that RXE cleans itself up when the underlying netdevice is unregistered. It creates TUN device `tun0`, assigns `1.1.1.1/24`, creates RXE link `rxe0`, checks UDP 4791 is listening, deletes the TUN device without deleting the RDMA link first, then verifies the RXE link and port are gone. State is host TUN/RDMA module state cleaned by trap. Dependencies are root, `rdma_rxe`, `ip tuntap`, `rdma link`, and `ss`. Integration targets the kernel NETDEV_UNREGISTER notifier path for RXE. Risks are fixed names, module unload races, and stdout suppression. Test signals are absence of `rdma link show rxe0` and no listening UDP 4791 after netdev deletion.

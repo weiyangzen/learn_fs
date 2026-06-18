@@ -1,0 +1,7 @@
+# Research: sources/distributed-fs/ceph-client/arch/alpha/boot/misc.c
+
+`misc.c` adapts old gzip inflate support for the Alpha compressed bootloader. Its only exported runtime service is `decompress_kernel`, used by `bootpz.c` to inflate the compressed kernel into a selected destination.
+
+Important state includes `inbuf`, `window`, `insize`, `inptr`, `outcnt`, `input_data`, `input_data_size`, `output_data`, `output_ptr`, `bytes_out`, and the minimal heap bounds `free_mem_ptr/free_mem_end_ptr`. It includes `../../../lib/inflate.c` directly, providing `gunzip`, CRC support, and decompressor allocation expectations. `fill_inbuf` provides the compressed buffer once and errors on exhaustion; `flush_window` copies the sliding window to output while updating CRC; `error` prints through SRM and loops forever.
+
+There is no filesystem persistence. The decompressor mutates global bootloader BSS and writes the final kernel image. Risks are fixed heap sizing, lack of recovery on bad gzip streams, output overflow if `KERNEL_SIZE` is wrong, and reliance on `malloc` behavior supplied by included inflate support. Useful test signals are Alpha defconfig or cross-build coverage, sparse/header dependency checks, and targeted boot-image build checks. Runtime validation normally requires Alpha SRM/QEMU or real hardware because many paths depend on PALcode, HWRPB data, chipset registers, or old ISA/PCI behavior.

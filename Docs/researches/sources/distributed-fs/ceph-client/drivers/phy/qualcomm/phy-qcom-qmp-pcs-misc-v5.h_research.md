@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-misc-v5.h
+
+This compact header exports the QMP V5 PCS_MISC clamp-enable offset, `QPHY_V5_PCS_MISC_CLAMP_ENABLE` at `0x0c`. It contains no functions, state, or control flow. Its integration point is any QMP V5 PHY driver that controls PCS_MISC clamp behavior by adding this macro to a mapped PCS_MISC base. Dependencies are limited to include guards and register naming conventions. The risk is narrow but hardware-visible: incorrect clamp-enable addressing could break isolation during power collapse or resume. Test signals include compilation of any V5 PCS_MISC user and suspend/resume or PHY power-cycle validation where clamp control is expected.

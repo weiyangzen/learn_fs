@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/platform/x86/amd/hfi/hfi.c
+
+Purpose: `hfi.c` implements AMD Hardware Feedback Interface support for heterogeneous AMD cores. It parses ACPI PCCT shared memory containing workload-class performance/efficiency rankings, maps rankings to per-CPU scheduler priority data, enables workload classification MSRs on online CPUs, and exposes ranking data in debugfs.
+
+Important APIs, types, and functions: `struct amd_shmem_info` models the PCCT shared-memory table. `struct amd_hfi_data` stores PCC/PCCT and debugfs state. `struct amd_hfi_cpuinfo` is per-CPU class data, including APIC ID, class count, IPCC scores, and `amd_hfi_classes`. Key functions include `amd_hfi_alloc_class_data()`, `amd_hfi_metadata_parser()`, `amd_hfi_fill_metadata()`, `amd_set_hfi_ipcc_score()`, `amd_hfi_online()`, `amd_hfi_offline()`, `update_hfi_ipcc_scores()`, debugfs `class_capabilities_show()`, and PM callbacks that toggle MSRs.
+
+Control flow: module init first rejects systems without ACPI and required AMD heterogeneous/workload-class CPU features, creates a simple platform device, then registers the platform driver. Probe validates ACPI match `AMDI0104`, allocates class arrays sized by CPUID leaf `0x80000027`, reads the first PCCT PCC subspace, maps and copies shared memory, validates `PCC_SIGNATURE` and table version 2, walks bitmaps to map APIC IDs to CPU indices, fills per-class performance/efficiency rankings, writes scheduler IPCC scores, registers CPU hotplug online/offline callbacks, schedules ITMT support enablement, and creates `arch_debugfs_dir/amd_hfi/class_capabilities`.
+
+State and persistence: HFI state is in devm allocations, one static platform device pointer, per-CPU `amd_hfi_cpuinfo`, a global mutex, and debugfs. Runtime MSR state is toggled for CPUs on hotplug, suspend, and resume. No persistent storage exists.
+
+Dependencies and integration points: dependencies include ACPI PCCT/PCC, x86 CPUID and MSR interfaces, CPU hotplug, scheduler ITMT/prio hooks, topology APIC IDs, debugfs, and platform device infrastructure. It is built only when scheduler multicore priority support exists.
+
+Risks: the parser assumes the first PCCT PCC subspace is the relevant HFI table and uses pointer arithmetic on firmware data; malformed tables can produce wrong rankings despite signature/version checks. Ranking index math depends on table layout and APIC enumeration. `cpuhp_setup_state()` return is not stored for removal, so full hotplug-state teardown is not visible in `amd_hfi_remove()`. Debugfs displays possible CPUs and assumes class arrays were allocated. Suspend/resume MSR writes can fail per CPU and abort the PM callback.
+
+Test signals: boot logs on systems with `X86_FEATURE_AMD_HTR_CORES` and `X86_FEATURE_AMD_WORKLOAD_CLASS`, debugfs class table contents, `sched_set_itmt_core_prio()` effects on CPU priorities, hotplug online/offline MSR write success, suspend/resume retaining workload classification, and rejection on invalid PCCT signature/version.

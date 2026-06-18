@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/log_test.go
+
+Purpose: verifies CRI-O logging helper functions honor log levels and context fields. It builds contexts with `log.ID{}` and `log.Name{}`, emits messages at multiple logrus levels, and checks buffer content for message/id/name or absence under stricter levels. State is the standard logrus logger redirected to an in-memory buffer per test. Dependencies include context, Ginkgo/Gomega, logrus, and CRI-O log package. Risks include global logger mutation across tests and no assertions for `Tracef`, `WithFields`, or `StartSpan`. Test signals protect basic field attachment, nil/empty context behavior, and logrus level filtering for debug/info/warn/error/fatal.

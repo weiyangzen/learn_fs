@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/drivers/s390/cio/device.c
+
+## Purpose
+This file implements the CCW device bus and the CSS driver for I/O subchannels. It discovers CCW devices, drives recognition/online/offline state transitions, binds `ccw_driver`s, handles I/O subchannel interrupts/events/path changes, manages orphaned devices, exposes CCW/sysfs attributes, and coordinates recovery after lost paths or disconnected devices.
+
+## Important APIs, Types, and Functions
+Exports include `io_subchannel_init()`, `ccw_device_set_online()`, `ccw_device_set_offline()`, `get_ccwdev_by_dev_id()`, `get_ccwdev_by_busid()`, `ccw_driver_register()`, `ccw_driver_unregister()`, `ccw_purge_blacklisted()`, `ccw_device_set_disconnected()`, `ccw_device_set_notoper()`, `ccw_device_sched_todo()`, and `ccw_device_siosl()`. Key internal flows include `io_subchannel_probe()`, `io_subchannel_recog()`, `io_subchannel_register()`, `io_subchannel_sch_event()`, `io_subchannel_chp_event()`, `io_subchannel_quiesce()`, `sch_get_action()`, `ccw_device_move_to_sch()`, `ccw_device_move_to_orph()`, and recovery timer/work functions. Sysfs attributes include CCW ids/modalias/online/CMB enable/availability and subchannel logging/vpm.
+
+## Control Flow
+`io_subchannel_init()` registers the `ccw` bus and the `io_subchannel` CSS driver. Probe initializes path masks and config, commits SCHIB settings, creates subchannel sysfs attributes, allocates I/O private DMA state, and schedules subchannel evaluation. Evaluation either attaches a new `ccw_device`, moves an orphan back to a real subchannel, unregisters stale devices/subchannels, triggers recognition, or verifies paths. Recognition runs asynchronously through the device state machine and schedules registration work when the device reaches offline state. Online/offline sysfs and exported APIs synchronize with the device FSM, call driver `set_online`/`set_offline`, and roll back on failures. CHPID events adjust OPM/LPM/path masks, terminate I/O on affected paths, trigger verification, or forward FCES path events to drivers.
+
+## State and Persistence
+State is volatile in `struct ccw_device`, `ccw_device_private`, parent `struct subchannel`, work items, timers, and wait queues. Online devices hold an extra device reference. Orphaned devices are moved under the CSS pseudo-subchannel while waiting for a matching subchannel to return. Recovery uses `recovery_timer`, `recovery_work`, `recovery_phase`, and escalating delays. No disk persistence exists; hardware subchannel/device state is re-read through SCHIB and device-recognition I/O.
+
+## Dependencies and Integration Points
+The file depends on the CCW device state-machine functions declared in `device.h` and implemented in sibling files, low-level CIO instruction wrappers, CSS bus callbacks, CHSC SIOSL, channel-path masks, blacklist handling, CMF, DMA/gen_pool helpers, Linux driver core, sysfs, timers/workqueues, and optional CCW console support. External CCW drivers integrate through `struct ccw_driver` probe/remove/shutdown/set_online/set_offline/path_event callbacks.
+
+## Risks and Test Signals
+Risk areas include complex lock ordering between `sch->lock`, device locks, and registration mutexes; async work references during unregister/move; races among CRW events, online/offline sysfs writes, recognition, and driver binding; handling devices that vanish, change devno, or lose all paths; CMF cleanup on remove/shutdown; and forced online from boxed state. Test signals include boot-time CCW discovery, driver modalias/probe matching, online/offline success and rollback, no-path/disconnected recovery, orphan move/reprobe, blacklist purge, CHPID vary/offline/online/FCES events, console subchannel path, `logging` sysfs SIOSL, CMF enable during remove, and CRW injection for subchannel changes.

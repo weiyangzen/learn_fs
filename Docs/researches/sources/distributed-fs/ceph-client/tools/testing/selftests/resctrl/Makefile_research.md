@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/resctrl/Makefile
+
+Purpose: builds the `resctrl_tests` kselftest binary from all C files in the directory. It sets hardened debug CFLAGS, imports kernel headers, records local headers, includes `../lib.mk`, adds `tools/include`, and makes the output binary depend on every `*.c`. State is build output in `$(OUTPUT)` only. Dependencies are x86 resctrl-capable headers and libc/perf/syscall APIs. Integration is the kselftest build/run harness and the adjacent `config` file. Risks are the wildcard all-C dependency causing full relinks for unrelated helper changes and architecture-specific source that is meaningful primarily on x86. Test signals are successful compilation and a runnable `resctrl_tests` binary.

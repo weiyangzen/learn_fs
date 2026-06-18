@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/soc/qcom/qcom,apr-services.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/soc/qcom/qcom,apr-services.yaml` defines `Qualcomm APR/GPR services shared parts`, a Qualcomm SoC inter-processor, power/resource-management, debug, or serial-engine binding. Common parts of a static service in Qualcomm APR/GPR (Asynchronous/Generic Packet Router). It is source-controlled ABI documentation and a dt-schema validation contract for board DTS/DTB data before Linux platform drivers consume that data.
+
+## Important APIs, Types, and Functions
+The public API is the Devicetree node shape, not callable functions. The schema uses `$id` `http://devicetree.org/schemas/soc/qcom/qcom,apr-services.yaml#` and meta-schema `http://devicetree.org/meta-schemas/core.yaml#`. `compatible` uses no explicit compatible schema with 0 tokens: no explicit compatible tokens. Top-level properties are `reg`, `qcom,protection-domain`. Top-level required properties are `reg`; nested required-property signals include `reg`. Pattern child-node APIs are none. Important resource/provider roles: `reg` describes MMIO or bus resource windows consumed during probe. Collected limit and enum signals include `minimum=1`, `maximum=13`.
+
+## Control Flow
+Control flow is declarative schema evaluation. `dt_binding_check` loads this YAML, resolves `$ref` dependencies, validates the meta-schema, checks required properties, evaluates const/enum/items limits, applies top-level composition or conditionals (none), validates examples, and enforces the closure policy. `dtbs_check` then applies the same contract to compiled board DTBs. At runtime the YAML does not execute; OF/platform code matches `compatible`, maps MMIO resources, resolves phandles, registers providers or children, and lets the matched subsystem driver own the hardware behavior.
+
+## State and Persistence Behavior
+This file owns no mutable runtime state and persists no data by itself. Its persistent behavior is ABI stability: compatible strings, property names, phandle cell counts, child-node names, register ordering, clock/reset names, and examples become long-lived DTS/DTB contracts. Runtime state belongs to the matched kernel drivers and hardware, including Qualcomm RPM/RPMh, SMD, SMEM, SMP2P, SMSM, APR, GLINK, AOSS, GENI/QUP, GSBI, DCC, EUD, WCNSS, power, clock, interconnect, and mailbox drivers; the schema only constrains how that stateful hardware is described.
+
+## Dependencies and Integration Points
+Maintainers: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>. Direct `$ref` dependencies are `/schemas/types.yaml#/definitions/string-array`. Integration points include Qualcomm RPM/RPMh, SMD, SMEM, SMP2P, SMSM, APR, GLINK, AOSS, GENI/QUP, GSBI, DCC, EUD, WCNSS, power, clock, interconnect, and mailbox drivers. Compatible scans found driver-side references in no direct driver-side compatible hit in drivers/; in-tree DTS/user references in no direct arch/ DTS compatible hit. The source has 53 lines and 0 embedded example blocks.
+
+## Risks
+Primary risks are DTS ABI drift around remoteproc/channel child nodes, mbox/interrupt semantics, shared-memory regions, RPM/RPMh resources, service IDs, clock/reset names, and compatible-specific branches; missing driver match-table updates when compatible strings change; register, interrupt, clock, reset, mailbox, memory-region, or power-domain ordering mismatches; and child-node regexes that admit malformed nodes or reject valid board descriptions. The closure profile allows additional top-level properties. Files with many compatible variants or conditionals need per-variant checks because one SoC fallback can validate while another silently loses required resources.
+
+## Test Signals
+Run `make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/soc/qcom/qcom,apr-services.yaml` for targeted schema validation and example compilation, then `make dtbs_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/soc/qcom/qcom,apr-services.yaml` on boards using these compatibles. High-value negative tests remove each required property, alter compatible fallback order, add an undeclared property when the schema is closed, break child-node names matched by `patternProperties`, and corrupt phandle cell counts. Runtime signals are successful probe of the matched SoC driver, expected provider registration, clean resource lookup, and no regressions in DTS users.

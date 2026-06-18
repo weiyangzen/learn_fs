@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/core/server/worker/src/main/java/alluxio/worker/block/BlockMasterSync.java
+
+Purpose: `BlockMasterSync` is the heartbeat executor that registers a block worker with the master and continuously sends worker block/capacity/metric updates while handling master commands.
+
+Important APIs are constructor, `heartbeat`, `close`, and private `registerWithMaster`/`handleMasterCommand`. Construction acquires a master client from the pool, creates `AsyncBlockRemover` and `BlockMasterSyncHelper`, acquires an optional registration lease, registers the full block store, and records last successful heartbeat time. Each heartbeat sends the worker's report and store metadata through the helper; failures update timeout logic and can fatal-exit outside test mode. Master commands trigger async free, re-registration with a new worker ID, no-op, decommission logging, or error logging.
+
+State and persistence include references to block worker, worker ID, worker address, master client/pool, async remover, helper, and last heartbeat timestamp. Dependencies include heartbeat executor, process utilities, configuration timeouts, `Command`, and sampling logger. Integration points are worker block service startup and periodic heartbeat scheduling. Risks include fatal process exit on registration lease or heartbeat timeout, best-effort async free semantics, re-registration changing worker ID, and retained master client until close. No direct tests in this subset.

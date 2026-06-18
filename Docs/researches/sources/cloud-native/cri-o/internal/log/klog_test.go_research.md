@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/log/klog_test.go
+
+Purpose: verifies klog shim output through the standard logrus logger. Tests initialize debug logging, call `InitKlogShim`, emit `klog.InfoS` messages with no keys, paired keys, and a missing value, then assert output contains the message, debug level, and expected formatted key/value text. State is the shared buffer/standard logger from suite setup and global klog logger configuration. Dependencies include Ginkgo/Gomega, logrus, klog, and CRI-O log package. Risks include global klog state affecting other tests and assertions relying on logrus text formatting. Test signals cover core bridge behavior and missing-value handling.

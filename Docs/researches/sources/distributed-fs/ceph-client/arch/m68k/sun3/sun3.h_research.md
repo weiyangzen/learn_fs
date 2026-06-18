@@ -1,0 +1,31 @@
+# sources/distributed-fs/ceph-client/arch/m68k/sun3/sun3.h
+
+## Purpose
+
+declares local interfaces for `sources/distributed-fs/ceph-client/arch/m68k/sun3` so nearby m68k
+machine or MMU files can share prototypes without exposing them globally
+
+## Important APIs, Types, and Functions
+
+Source read size: 22 lines, 483 bytes. Includes: `linux/linkage.h`. Declared functions: `sun3_init`.
+Types visible in this file: `rtc_time`.
+
+## Control Flow and Behavior
+
+the header provides board or subsystem function prototypes, forward declarations, and include guards
+consumed by adjacent C files
+
+## State and Persistence
+
+state is compile-time only, though the declared functions usually manipulate machine interrupt,
+timer, PROM, or MMU state
+
+## Dependencies and Integration Points
+
+integrates local machine files with arch/m68k setup, machdep callbacks, and low-level assembly entry
+points
+
+## Risks and Test Signals
+
+prototype drift causes build failures or wrong calling conventions; the platform defconfig build is
+the first signal

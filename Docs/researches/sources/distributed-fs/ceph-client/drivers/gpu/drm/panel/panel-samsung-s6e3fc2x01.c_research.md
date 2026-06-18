@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e3fc2x01.c
+
+Purpose: S6E3FC2X01 is a Samsung DDIC driver for the AMS641RW 1080x2340 panel. It handles three supplies, reset, multi-level test-key command sequences, fixed mode reporting, and a platform/raw DCS backlight.
+
+Important APIs, control flow, and state: probe bulk-gets `vddio`, `vci`, and `poc`, gets reset GPIO default low to preserve flicker-free state, configures four-lane RGB888 burst/non-continuous/LPM DSI, creates a backlight, adds the panel, and attaches. `prepare()` enables supplies, resets, and runs a long init sequence with level 1/2/3 keys, sleep-out, MIC/sync/window/ELVSS/brightness/power-save settings. `enable()` wraps display-on in level-1 key; `disable()` runs a detailed off sequence with display off, vendor B9/F4 writes, sleep in, and waits; `unprepare()` asserts reset and disables supplies. Backlight update clears LPM, writes large brightness, and restores LPM.
+
+Dependencies, integration, risks, and tests: dependencies are MIPI DSI multi-context DCS helpers, regulator bulk const get, backlight APIs, DRM fixed mode helper, and compatible `samsung,s6e3fc2x01-ams641rw`. Risks include many undocumented commands, error paths that can leave test keys enabled if later commands fail, mode-match `.data` not used, and LPM restoration missing on brightness write failure. Test signals include full prepare/enable/disable/unprepare sequencing, brightness writes, regulator rollback on init failure, and no flicker/regression from reset polarity.

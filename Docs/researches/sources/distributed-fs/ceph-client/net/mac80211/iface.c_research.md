@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/net/mac80211/iface.c
+
+## Purpose
+`iface.c` owns mac80211 virtual interface lifecycle and netdevice integration. It creates and removes `struct ieee80211_sub_if_data` instances, opens and stops netdev-backed and wireless-dev-only interfaces, switches interface types, handles monitor and AP VLAN special cases, manages per-interface workers and queues, updates multicast/filter/offload state, and coordinates teardown of keys, stations, channel contexts, MBSSID relationships, MLO links, and debugfs state.
+
+## Important APIs, Types, And Functions
+Important externally used functions include `ieee80211_do_open()`, `ieee80211_sdata_stop()`, `ieee80211_if_add()`, `ieee80211_if_remove()`, `ieee80211_remove_interfaces()`, `ieee80211_if_change_type()`, `ieee80211_recalc_txpower()`, `ieee80211_recalc_idle()`, `ieee80211_recalc_offload()`, `ieee80211_add_virtual_monitor()`, `ieee80211_del_virtual_monitor()`, `ieee80211_stop_mbssid()`, `ieee80211_vif_inc_num_mcast()`, `ieee80211_vif_dec_num_mcast()`, `ieee80211_vif_block_queues_csa()`, and `ieee80211_vif_unblock_queues_csa()`. The file defines netdevice ops for normal data interfaces, radiotap monitor interfaces, and 802.3 encapsulation-offload interfaces.
+
+## Control Flow
+Open starts in `ieee80211_open()`, validates addresses and concurrency, then calls `ieee80211_do_open()`. The first open starts the driver via `drv_start()`, turns on radio LEDs, configures monitor/offload state, adds the vif to the driver when appropriate, initializes default WMM/ERP state, increments filter counters, initializes hardware config on first interface, and marks `SDATA_STATE_RUNNING`. Stop flows through `ieee80211_stop()` and `ieee80211_do_stop()`: dependent AP VLANs and MBSSID partners are stopped first, scans/ROC/work items are cancelled, type-specific state machines are stopped, stations and keys are flushed, pending frames and TXQs are purged, driver interfaces are removed, idle/power/filter/offload state is recalculated, and hardware is stopped when the open count reaches zero.
+
+Interface addition allocates either a netdevice or wireless-dev-only object, assigns a permanent MAC address, initializes default link data, frag cache, tailroom work, queues, rate masks, type-specific unions, debugfs, TXQs, and cfg80211 registration. Type changes either tear down/reinitialize a down interface or, when running, stop queues, stop and teardown state, call `drv_change_interface()`, rebuild type state, reopen, and wake queues.
+
+## State And Persistence
+Persistent runtime state lives in `ieee80211_local` interface lists and counters, `sdata->state`, `sdata->vif`, `sdata->wdev`, per-type `sdata->u.*` unions, `sdata->key_list`, pending SKB queues, TXQs, monitor lists, AP VLAN lists, MBSSID `tx_bss_conf` links, and MLO link pointers initialized through `ieee80211_link_init()`. The interface list is protected by RTNL, the wiphy mutex, `iflist_mtx`, and RCU according to the file-level locking contract. Stop paths use `synchronize_rcu()` and `synchronize_net()` to let TX/RX/key users drain before freeing.
+
+## Dependencies And Integration Points
+The file integrates with cfg80211 netdevice and wireless-dev registration, driver ops (`add_interface`, `remove_interface`, `change_interface`, `update_vif_offload`, `net_fill_forward_path`, `net_setup_tc`), channel-context helpers, station management, scan/ROC, IBSS/managed/mesh/OCB/NAN state machines, key teardown, debugfs, LED triggers, WME/rate setup, TX/RX aggregation management, MBSSID and AP VLAN code, and MLO link handling from `link.c`.
+
+## Risks And Edge Cases
+Lifecycle ordering is delicate: stations must be flushed before `drv_remove_interface()` so later STA notifications do not reference a removed vif; keys require forced `synchronize_net()` on stop because RX/TX may still hold RCU references; AP VLANs borrow state from the parent AP and must avoid driver callbacks; monitor mode can use either real or virtual monitor interfaces; offload netdev ops can change at runtime; powered MAC address changes are allowed only when no carrier, STA, ROC, scan, or connection operation is active. MLO teardown warns if valid links remain at interface stop, and runtime type changes reject MLD vifs.
+
+## Test Signals
+Useful signals include cfg80211/mac80211 interface create/open/stop/delete tests across station, AP, AP VLAN, monitor, mesh, OCB, NAN, and P2P modes; syzkaller coverage of open/stop/type-change races; lockdep/RCU debug during netdev unregister; tests for monitor filter counters and virtual monitor creation; AP VLAN and MBSSID dependent shutdown tests; MAC-address change while powered; encapsulation-offload toggling with monitor presence and frag threshold; and hardware restart/unregister tests that verify queues, keys, stations, and work items are drained.

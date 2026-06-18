@@ -1,0 +1,3 @@
+# sources/cloud-native/cri-o/internal/memorystore/suite_test.go
+
+Purpose: Ginkgo suite setup for memorystore tests. It registers `TestMemoryStore`, initializes a CRI-O `TestFramework`, suppresses logrus output, and defines `beforeEach` to build a valid sandbox fixture through the sandbox builder. State includes package globals `t` and `testSandbox`. Dependencies include testing, time, Ginkgo/Gomega, logrus, CRI API types, hostport, sandbox builder, and test framework. Risks include shared globals and builder fixture verbosity masking store-specific failures. Test signals are indirect: every memorystore test starts with a valid `CreatedAt`-capable sandbox object.

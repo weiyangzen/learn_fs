@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/open/open09.c
+
+Purpose: verify access mode restrictions on fds returned by `open(2)`. Important APIs/types/functions: `SAFE_OPEN`, `O_RDONLY`, `O_WRONLY`, `read()`, `write()`, `TST_EXP_FAIL(..., EBADF)`, and `SAFE_CLOSE`. Control flow: setup creates a temp file; testcase 0 opens read-only and expects `write` to fail `EBADF`; testcase 1 opens write-only and expects `read` to fail `EBADF`. State/persistence: one temp file. Dependencies/integration: modern LTP `.tcnt = 2`. Risks: buffer content is irrelevant; the test checks descriptor access mode, not filesystem permissions. Test signals: pass confirms fd mode enforcement for read/write operations.

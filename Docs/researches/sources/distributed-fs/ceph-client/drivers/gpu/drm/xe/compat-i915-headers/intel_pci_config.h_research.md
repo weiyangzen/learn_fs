@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/compat-i915-headers/intel_pci_config.h
+
+Purpose: forwards i915 PCI config definitions for shared display code compiled in Xe. It contains no local state or functions. Control flow is include-only. Dependencies are the i915 PCI config header. Integration points include display probing, DRAM/bandwidth detection, and platform configuration reads that use i915 names. Risks are include-path drift and callers assuming i915 device-private structures. Test signals are compile coverage and platform probe tests that exercise PCI config reads through shared display code.

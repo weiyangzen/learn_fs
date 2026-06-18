@@ -1,0 +1,113 @@
+# Folder Research: sources/cloud-native/moby/integration-cli
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 99
+- Recursive researched files: 106
+- Direct child folders represented: 5
+
+## Direct Files
+
+- `sources/cloud-native/moby/integration-cli/benchmark_test.go`
+- `sources/cloud-native/moby/integration-cli/check_test.go`
+- `sources/cloud-native/moby/integration-cli/daemon_swarm_hack_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_attach_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_build_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_build_windows_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_containers_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_containers_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_containers_windows_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_exec_resize_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_exec_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_images_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_inspect_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_logs_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_network_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_stats_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_swarm_node_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_swarm_service_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_swarm_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_api_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_attach_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_attach_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_build_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_build_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_by_digest_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_commit_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_cp_from_container_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_cp_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_cp_to_container_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_cp_to_container_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_cp_utils_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_create_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_daemon_plugins_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_daemon_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_events_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_events_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_exec_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_exec_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_external_volume_driver_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_health_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_history_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_images_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_import_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_info_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_info_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_inspect_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_links_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_login_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_logout_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_logs_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_netmode_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_network_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_network_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_plugins_logdriver_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_plugins_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_port_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_proxy_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_prune_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_prune_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_ps_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_pull_local_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_pull_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_push_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_registry_user_agent_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_restart_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_rmi_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_run_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_run_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_save_load_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_save_load_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_search_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_service_create_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_service_health_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_service_logs_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_service_scale_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_sni_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_start_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_stats_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_swarm_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_swarm_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_top_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_update_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_update_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_userns_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_v2_only_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_cli_volume_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_hub_pull_suite_test.go`
+- `sources/cloud-native/moby/integration-cli/docker_utils_test.go`
+- `sources/cloud-native/moby/integration-cli/events_utils_test.go`
+- `sources/cloud-native/moby/integration-cli/fixtures_linux_daemon_test.go`
+- `sources/cloud-native/moby/integration-cli/requirements_test.go`
+- `sources/cloud-native/moby/integration-cli/requirements_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/requirements_windows_test.go`
+- `sources/cloud-native/moby/integration-cli/test_vars_test.go`
+- `sources/cloud-native/moby/integration-cli/test_vars_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/test_vars_windows_test.go`
+- `sources/cloud-native/moby/integration-cli/utils_test.go`
+- `sources/cloud-native/moby/integration-cli/utils_unix_test.go`
+- `sources/cloud-native/moby/integration-cli/utils_windows_test.go`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/rtc/rtc-stm32.c
+
+Purpose: full STM32 RTC platform driver covering multiple STM32, STM32H7, STM32MP1, and STM32MP25 register layouts. It provides calendar time, Alarm A, prescaler programming, backup-domain unlock, optional resource isolation checks, LSCO/alarm output pinmux, wake IRQ, and PM clock handling.
+
+Important APIs/types/functions: `struct stm32_rtc_data` describes register offsets, event bits, clear-event method, clock/DBP/RIF/pin capabilities. `struct stm32_rtc` stores mapped registers, syscfg DBP regmap, clocks, IRQ, and optional LSCO gate. `stm32_rtc_enter_init_mode()`, `stm32_rtc_exit_init_mode()`, and `stm32_rtc_wait_sync()` guard calendar writes and synchronization. Time and alarm ops convert BCD fields, with `stm32_rtc_valid_alrm()` limiting alarms to the current day-of-month through the same day next month. Pinmux actions program Alarm A output or register an LSCO clock. `stm32_rtc_init()` computes asynchronous/synchronous prescalers from `rtc_ck` and forces 24-hour mode.
+
+Control flow/state/persistence: probe maps MMIO, loads match data, optionally obtains backup-domain protection syscfg fields, enables pclk/rtc_ck, unlocks backup domain, checks RIF on MP25, initializes prescalers, sets wake IRQ, registers RTC, requests threaded alarm IRQ, cleans output configuration, registers/enables pinctrl, warns if calendar not initialized, and logs version. Remove disables alarm IRQ, clocks, LSCO, and DBP as needed.
+
+Dependencies/integration: OF compatibles `st,stm32-rtc`, `st,stm32h7-rtc`, `st,stm32mp1-rtc`, `st,stm32mp25-rtc`; syscon regmap for backup-domain protection; clock, pinctrl/pinmux, PM wakeirq, MMIO, RTC core, and RIF security registers.
+
+Risks/test signals: the driver mutates `rtc_time` during BCD conversion, depends on exact prescaler math, and has variant-specific event clearing (`ISR` write-0 vs `SCR` write-1). Alarm hardware lacks month/year matching. Test every compatible layout, DBP enable/disable, RIF denied access, non-32768 LSCO rejection, alarm range rejection, pending flag clearing, suspend/resume sync, prescaler warning path, and pinmux conflicts between calibration, tamp/alarm, and LSCO.

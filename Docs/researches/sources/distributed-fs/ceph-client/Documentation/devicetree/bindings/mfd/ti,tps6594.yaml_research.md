@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/mfd/ti,tps6594.yaml
+
+Purpose: Schema for TI TPS6594-family PMICs, including TPS6594-Q1, TPS6593-Q1, LP8764-Q1, TPS65224-Q1, and TPS652G1, with regulators, GPIOs, RTC/watchdog/ESM/PFSM features, and primary-PMIC synchronization role.
+
+Important schema surface and control flow: `compatible`, `reg`, and `interrupts` are required. Optional `ti,primary-pmic` marks the SPMI synchronization controller PMIC, `system-power-controller` enables power-off role, and GPIO provider fields expose PMIC GPIOs. Regulator children allow bucks `buck1-5`, combined rails `buck12`, `buck34`, `buck123`, `buck1234`, and `ldo1-4`; `allOf` disallows incompatible combined buck groupings, such as using `buck123` together with `buck34`. Pattern properties define per-buck and per-LDO input supply phandles.
+
+State, dependencies, and integration: DT state configures PMIC bus address or SPI chip select, IRQ, GPIOs, supply topology, combined buck topology, and system power/synchronization role for TPS6594-family MFD and regulator drivers. Dependencies include regulator, GPIO, interrupt, I2C/SPI bus, and TI PMIC driver support. Risks include invalid combined-buck descriptions, wrong primary PMIC designation in multi-PMIC systems, missing GPIO cells when `gpio-controller` is set, and compatible/rail mismatches across derivatives. Test signals are `dt_binding_check`, `allOf` buck-combination failures, runtime regulator and GPIO provider probe, and multi-PMIC power-state synchronization tests.

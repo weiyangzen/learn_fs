@@ -1,0 +1,19 @@
+# sources/control-plane/rook/pkg/operator/ceph/object/admin.go
+
+## Purpose
+`admin.go` centralizes object-store administration context and helpers. It builds RGW object contexts, creates Admin Ops API clients, runs `radosgw-admin` commands locally or through the command proxy, extracts JSON from noisy command output, commits multisite period changes idempotently, and retrieves or creates the RGW admin-ops user credentials.
+
+## Important APIs, Types, and Functions
+`Context` stores the operator context, cluster info, object store identity, endpoint, and multisite realm/zone metadata. `AdminOpsContext` embeds `Context` and adds TLS certs, admin keys, and `*admin.API`. `NewContext`, `NewMultisiteContext`, `GetAdminOpsEndpoint`, `UpdateEndpointForAdminOps`, and `NewMultisiteAdminOpsContext` initialize context and HTTP clients. `NewDebugHTTPClient` wraps an Admin Ops HTTP client and dumps requests/responses at trace level. `RunAdminCommandNoMultisiteWithTimeout` and `runAdminCommandWithTimeout` execute `radosgw-admin`. `CommitConfigChanges`, `periodWillChange`, and `toJsonPath` handle period diffing. `GetAdminOPSUserCredentials` handles external Secret lookup or local admin-ops user creation.
+
+## Control Flow, State, and Persistence
+Context creation reads the CephObjectStore advertise endpoint and multisite realm/zone values. Admin Ops client setup fetches or creates credentials, builds a TLS-capable HTTP client, and optionally wraps it for debug dumps. Command execution chooses Multus command-proxy execution when `clusterInfo.NetworkSpec.IsMultus()` is true; otherwise it finalizes Ceph command args and runs `radosgw-admin` from the operator. For Multus commands with `--infile=`, it copies the local file to the proxy container and schedules cleanup. JSON extraction strips surrounding log lines before unmarshalling. `CommitConfigChanges` runs `period get`, stages `period update`, diffs current versus staged JSON while ignoring always-changing period fields, and runs `period update --commit` only when meaningful differences remain. Persistent changes include RGW period commits and admin-ops user/credential creation; external credentials are persisted in a Kubernetes Secret outside this file.
+
+## Dependencies and Integration Points
+The file depends on go-ceph Admin Ops, Rook cluster/operator context, Ceph client command helpers, object-store multisite helpers, Kubernetes Secrets, TLS transport helpers, controller namespaced logging, `go-cmp`, and Kubernetes type metadata. It is used by bucket provisioning, account reconciliation, object-store reconcile paths, and bucket metadata/stat helpers.
+
+## Risks
+Debug HTTP dumps can expose credentials and response secrets when debug logging is enabled. `debugHTTPClient.Do()` closes the response body after dumping and returns the closed response, which is risky if callers expect to read it later. `extractJSON()` uses broad regular expressions and chooses the larger object/array match when both match, which can misidentify output containing multiple JSON values. `runAdminCommandWithTimeout()` uses exit-code heuristics for FIFO I/O retry and invalid flags; unknown exec errors are conservatively treated as FIFO candidates if exit code extraction fails. `GetAdminOPSUserCredentials()` dereferences `user.AccessKey` and `user.SecretKey` pointers without nil checks after user creation/get.
+
+## Test Signals
+`admin_test.go` covers JSON extraction for noisy object and array output, local versus Multus command execution selection, period commit/no-commit/error cases using real-world JSON samples, and Admin Ops endpoint selection for internal, external, TLS, and advertise endpoint configurations. Additional useful tests would cover debug HTTP client body reuse, `--infile` Multus copy/cleanup, FIFO retry branches, and nil credential pointers.

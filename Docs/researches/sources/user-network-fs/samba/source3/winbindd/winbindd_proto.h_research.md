@@ -1,0 +1,11 @@
+# sources/user-network-fs/samba/source3/winbindd/winbindd_proto.h
+
+## sources/user-network-fs/samba/source3/winbindd/winbindd_proto.h
+
+`winbindd_proto.h` is the hand-maintained/generated-style prototype hub for the source3 winbind daemon. It declares cross-file APIs for daemon lifecycle, cache access, connection management, child processes, idmap/locator children, command handlers, PAM/auth helpers, domain discovery, client management, name parsing, lookup async APIs, and many NSS/idmap request entry points.
+
+The header's important exported surfaces include cache functions (`wb_cache_*`, `wcache_*`, cache invalidation and TDC helpers), connection manager APIs (`cm_connect_sam/lsa/lsat/netlogon`, `invalidate_cm_connection`, trust credentials, current DC gencache), credential/ccache/memory-cred functions, child request/binding helpers, messaging handlers, idmap and locator child accessors, miscellaneous command handlers, NDR debug printers, PAM helpers (`check_request_flags`, `append_auth_data`, `extra_data_to_sid_array`, `_wbint_PamAuth*`, `winbind_dual_SamLogon`, PAC verify), domain list/routing APIs, username normalization/canonicalization, and tevent async send/recv pairs for lookups, UID/GID allocation, passwd/group queries, aliases, tokens, and group membership.
+
+There is no runtime state in the header, but it defines integration contracts among many stateful modules. Its dependencies are broad: Samba NTSTATUS, talloc, tevent, generated NDR types, `dom_sid`, auth/PAM structures, idmap types, messaging, and winbind internal structures. Including it incorrectly can expand rebuild coupling, but it centralizes declarations so C files can share internal APIs without local externs.
+
+Risks include prototype drift from implementation signatures, duplicate declarations visible in this snapshot for locator KDC env helpers, conditional type availability, and the large blast radius of changing shared structs or helper signatures. Test signals are build coverage across feature combinations (`HAVE_ADS`, Kerberos, LDAP), warnings-as-errors for mismatched prototypes, link coverage for all declared functions, and ABI-sensitive command behavior for public winbind request handlers.

@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_base02.py
+
+Purpose: spot-checks WiredTiger configuration parsing for normal config strings and JSON config strings on file and table URIs. It is tagged `config_api`.
+
+Important APIs are `json.dumps`, `session.create`, `session.drop`, and scenario generation for `file:` versus `table:`. Control flow builds combinations of size/page options and column declarations, including extra commas, quoted formats, named columns, and path-like column names, then creates and drops each object. A second test creates and drops JSON-formatted configs with columns, key/value formats, and column groups. State behavior is transient schema creation and cleanup; there is no data persistence validation. Dependencies are Python JSON formatting and WiredTiger config parser compatibility. Risks include broad parser acceptance without metadata verification and inherited `extra_config` allowing subclasses to extend behavior. Test signal is successful create/drop for every config combination.

@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resolved_ts/tests/integrations/mod.rs
+
+This module contains end-to-end resolved-ts tests over `test_raftstore` clusters. It validates normal operation without synthetic failpoint pauses. The tests use `TestSuite` helpers to start clusters, issue KV prewrite/commit/rollback requests, split and merge regions, ingest SST files, adjust online config, query region read progress, and isolate stores.
+
+`test_resolved_ts_basic` checks that a lock prevents advancement, split creates one region that advances and one that inherits the blocked timestamp, merge preserves the blocked timestamp, commit releases advancement, ingest SST advances tracked index, and 1PC updates tracked index without lock tracking. `test_dynamic_change_advance_ts_interval` confirms online config can slow advancement to a long interval and later wake the advance worker when restored. `test_change_log_memory_quota_exceeded` and `test_scan_log_memory_quota_exceeded` reduce quota to one byte and verify diagnosis reports zero resolved-ts for overloaded affected regions. `test_store_partitioned` isolates one store and asserts resolved-ts still advances quickly with available leadership.
+
+These tests are the main behavioral safety net for endpoint, observer, scanner, and resolver integration. Risks covered include region epoch changes, merge/split lock ranges, online config propagation, scan/change-log quota paths, and partial cluster partitions. They do not prove metric accuracy except indirectly through state and diagnosis callbacks.

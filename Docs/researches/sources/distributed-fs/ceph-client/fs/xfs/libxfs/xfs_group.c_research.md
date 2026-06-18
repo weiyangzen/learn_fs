@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/fs/xfs/libxfs/xfs_group.c
+
+Purpose: `xfs_group.c` implements generic group lifecycle and lookup helpers for allocation groups and realtime groups. It abstracts common reference management, xarray storage, mark iteration, and teardown so per-AG and rtgroup code can share online/offline behavior.
+
+Important functions: passive-reference helpers are `xfs_group_get`, `xfs_group_hold`, and `xfs_group_put`; active-reference helpers are `xfs_group_grab`, `xfs_group_next_range`, `xfs_group_grab_next_mark`, and `xfs_group_rele`. Lifecycle helpers are `xfs_group_insert`, `xfs_group_free`, and `xfs_group_get_by_fsb`.
+
+Control flow: lookups run under `rcu_read_lock` and load `mp->m_groups[type].xa`. Passive gets increment `xg_ref` if the group exists. Active grabs use `atomic_inc_not_zero` on `xg_active_ref`, so groups being offlined, shrunk, or freed are not returned for active operations. Iteration helpers release the previous active reference before moving to the next index or marked xarray entry. Insert initializes the common fields, optional kernel-only busy extent tracking, state lock, hooks, and defer drain, then sets an initial active reference owned by the mount and inserts into the xarray. Free erases the xarray entry, checks passive references, drains deferred intents, releases kernel-only state, calls an optional uninit callback, drops the mount active reference, checks active reference underflow/leftovers, and frees by RCU.
+
+State and persistence behavior: group objects are incore only. They mirror persistent AG or rtgroup geometry but do not write disk metadata. The mount's xarray is the authoritative incore index. `xg_ref` tracks passive users such as cached buffers, and `xg_active_ref` gates online access. Kernel-only fields track busy extents or zoned reset lists, health masks, intent drains, and repair hooks.
+
+Dependencies and integration points: the file depends on xarrays, RCU, atomics, XFS tracepoints, busy extent support, deferred intent drains, and mount group arrays. `xfs_group_get_by_fsb` depends on `xfs_fsb_to_gno` from `xfs_group.h`. Higher layers use active grabs while walking AG or rtgroup btrees, while buffer/cache code can hold passive references.
+
+Risks: reference symmetry is the primary risk. Missing `xfs_group_rele` on early exit leaks active refs and can block offlining; using passive refs for live state access can race shrink/offline; freeing with residual passive refs is treated as corruption. Mark iteration can skip a group that loses its active ref concurrently, so callers must tolerate NULL and retry/continue as appropriate. Insert failure cleanup must match kernel-only allocations.
+
+Test signals: concurrency tests should exercise mount/unmount, grow/shrink/offline, scrub walks, xarray mark iteration, and busy extent cleanup under parallel metadata work. Debug builds should catch refcount underflow, lingering active refs, and passive refs at free. Tracepoints provide useful sequencing evidence for get/put/grab/rele leaks.

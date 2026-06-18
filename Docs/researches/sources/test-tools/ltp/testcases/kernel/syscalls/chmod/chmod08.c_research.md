@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/chmod/chmod08.c
+
+Purpose: verifies `chmod()` on a symlink pathname affects the target file in the traditional followed-symlink path. `run` creates a regular file and symlink, stats through the symlink, calls `chmod(symlink, 01777)`, stats again, and checks the target mode changed to include requested bits. Important APIs are `SAFE_TOUCH`, `SAFE_SYMLINK`, `SAFE_STAT`, `chmod`, and `SAFE_UNLINK`. State is one file and symlink in tmpdir. Dependencies are symlink support and followed-path chmod behavior. Risks are modern symlink mode protections only apply to nofollow/procfd case tested separately. Test signal is target mode changed as expected.

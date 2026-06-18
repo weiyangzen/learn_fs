@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/amd/amdkfd/kfd_device_queue_manager.c
+
+`kfd_device_queue_manager.c` is the core KFD queue scheduler. It hides no-HWS, HWS, and MES scheduling behind `device_queue_manager_ops` and manages user/kernel queues, VMID/PASID programming, doorbell assignment, SDMA allocation, MQD lifecycle, runlists, MES queue submission, eviction/restore, debug queue suspension, CRIU checkpointing, and hung-queue recovery.
+
+Key functions include `device_queue_manager_init`, `create_queue_*`, `destroy_queue_*`, `update_queue`, `process_termination_*`, `evict_process_queues_*`, `restore_process_queues_*`, `suspend_queues`, `resume_queues`, `allocate_vmid`, `allocate_hqd`, `allocate_sdma_queue`, `allocate_doorbell`, `program_sh_mem_settings`, `add_queue_mes`, `remove_queue_mes`, `map_queues_cpsch`, `unmap_queues_cpsch`, and `execute_queues_cpsch`.
+
+No-HWS mode directly allocates VMIDs/HQD slots and loads MQDs in the current user mm. HWS mode registers process QPDs and sends packet-manager runlists. MES mode calls amdgpu MES add/remove/suspend/resume operations. State persists in DQM queue lists, per-QPD queue lists, active/total counters, SDMA bitmaps, VMID PASID map, fence memory, `active_runlist`, `sched_running`, `sched_halt`, and hang-detection buffers. Eviction uses `qpd->evicted` as a refcount and records duration.
+
+Dependencies are MQD managers, packet manager, kernel queues, debug support, amdgpu MES/reset/SDMA APIs, GPUVM page directories, CWSR, process queue manager, interrupts, CRIU, and debugfs. Risks include lock ordering under MMU notifier pressure, counter drift, runlist fence timeout, MES unrecoverable errors, restore-ID collisions, and debug suspend/destroy races. Test mixed compute/SDMA/XGMI queues, MES and non-MES scheduling, max queue counts, eviction under pressure, queue update transitions, CRIU restore IDs, bad-queue interrupt handling, HWS hang injection, and debug suspend/resume arrays.

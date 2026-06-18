@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/freescale/gianfar.h
+
+## Purpose
+`gianfar.h` is the shared hardware and driver-state contract for the Gianfar Ethernet driver. It describes register offsets and bit fields, descriptor formats, frame control blocks, RMON counters, queue/group/private structures, feature and errata flags, helper accessors, and prototypes shared between `gianfar.c` and `gianfar_ethtool.c`.
+
+## Important APIs, types, and functions
+Hardware-facing types include `struct gfar` for the memory-mapped register layout, `struct txbd8` and `struct rxbd8` for DMA descriptors, `struct txfcb` and `struct rxfcb` for transmit/receive frame control blocks, and `struct rmon_mib` plus `struct rmon_overflow` for hardware statistics. Driver state types include `struct gfar_private`, `struct gfar_priv_tx_q`, `struct gfar_priv_rx_q`, `struct gfar_rx_buff`, `struct gfar_priv_grp`, `struct gfar_irqinfo`, `struct gfar_extra_stats`, `struct ethtool_flow_spec_container`, `struct ethtool_rx_list`, `struct gfar_filer_entry`, and `struct filer_table`. Helper APIs include `gfar_has_errata()`, `gfar_read()`, `gfar_write()`, `gfar_write_filer()`, `gfar_read_filer()`, `gfar_write_isrg()`, `gfar_is_dma_stopped()`, `gfar_is_rx_dma_stopped()`, `gfar_wmb()`, `gfar_clear_txbd_status()`, `gfar_rxbd_unused()`, and `gfar_rxbd_dma_lastfree()`.
+
+## Control flow
+The header itself has no executable top-level flow, but its definitions drive the main driver flow. `struct gfar_private` anchors probe, open, data-path, ethtool, and PM code. Queue/group structures determine how `gfar_parse_group()` assigns queues to interrupt groups and how the NAPI pollers locate their TX/RX rings. Register constants are consumed by reset, MAC configuration, DMA start/stop, interrupt masking, checksum/VLAN/timestamp setup, filer programming, multicast hash programming, and WOL. The inline accessors provide the consistent big-endian MMIO and descriptor ordering used throughout the implementation.
+
+## State and persistence behavior
+The header defines volatile runtime state, not persistent storage. Persistent-within-lifetime fields include hardware capability flags, errata flags, current PHY link cache, pause settings, WOL settings, ring sizes, coalescing values, cached filer table entries, RX classification list entries, hash register mappings, queue stats, extra atomic stats, and RMON overflow counters. Descriptor rings and RX pages are allocated at device start and freed at stop. The `ftp_rqfpr` and `ftp_rqfcr` arrays are important in-memory persistence for restoring filer rules after WOL and for coordinating ethtool classifier updates.
+
+## Dependencies and integration points
+The header connects the driver to Linux netdevice, phylib, ethtool, workqueue, skb, spinlock, DMA, IRQ, and MMIO APIs. It assumes big-endian hardware register access through `ioread32be()` and `iowrite32be()`. It encodes the hardware ABI for eTSEC/TSEC register layout, queue control, interrupt bits, filer PIDs, RMON counters, TxBD/RxBD status bits, and FCB fields. It also publishes `startup_gfar()`, `stop_gfar()`, `gfar_mac_reset()`, `gfar_set_features()`, and `gfar_ethtool_ops` across the two C files.
+
+## Risks and edge cases
+Because this file defines hardware layouts and shared private structures, small changes have wide blast radius. `struct gfar` padding and offsets must remain aligned with hardware. Descriptor and FCB endianness must match DMA expectations. Ring sizes must stay powers of two because wrap masks use `size - 1`. `MAXGROUPS`, `MAX_TX_QS`, `MAX_RX_QS`, and default queue mapping constants constrain multi-queue behavior. `gfar_wmb()` intentionally uses weaker PowerPC ordering than `wmb()`, so replacing it can affect performance or correctness. The `struct gfar_extra_stats` size is used to derive exported stat counts, so changing member types or order affects ethtool output.
+
+## Test signals
+Any header change should trigger build coverage for PowerPC and non-PowerPC, PM and non-PM, netpoll and non-netpoll, single-queue and multi-queue configurations, and ethtool classifier support. Runtime signals include successful register dumps, correct ethtool statistics string counts, correct NAPI queue assignment, DMA halt detection, RX ring refill behavior, interrupt steering on multi-group devices, WOL filer restore, and stable TX/RX under checksum, VLAN, timestamp, and jumbo-frame workloads.

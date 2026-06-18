@@ -1,0 +1,15 @@
+# sources/control-plane/rook/pkg/operator/ceph/cluster/cleanup.go
+
+Purpose: implements host data cleanup for a deleting local `CephCluster` when its cleanup policy requests data-dir sanitization. It waits until Ceph daemon pods are gone, determines the nodes that hosted Ceph daemons, and starts one privileged cleanup Job per host to run `ceph clean host`.
+
+Important APIs and functions: `startClusterCleanUp` waits for daemon cleanup then calls `startCleanUpJobs`. `startCleanUpJobs` builds replaceable Kubernetes Jobs with cleanup labels and annotations. `cleanUpJobContainer` creates the privileged `host-cleanup` container and environment. `cleanUpJobTemplateSpec` builds pod volumes, security, service account, host networking, placement, and resources. `getCleanupPlacement` merges tolerations from global, cleanup, mon arbiter, mon, mgr, osd, and PVC device-set placement. `waitForCephDaemonCleanUp` polls until no daemon hosts remain or context is canceled. `getCephHosts` lists daemon pods by app label and maps Kubernetes node names to hostnames. `getCleanUpDetails` loads `ClusterInfo` and returns monitor secret and FSID.
+
+Control flow: deletion reconcile captures mon secret, cluster FSID, and host list before starting cleanup. The goroutine waits until daemon pods for mons, mgrs, OSDs, object stores, MDS, RBD, and mirrors are gone, then schedules Jobs pinned to the saved hostnames with a hostname node selector. Each Job uses `k8sutil.RunReplaceableJob`, so reruns can replace existing cleanup jobs.
+
+State and persistence behavior: creates batch Jobs named with truncated hostnames and labels including `rook-ceph-cleanup=true`. It mounts `DataDirHostPath`, `/dev`, and `/run/udev`; passes the namespace, monitor secret, FSID, sanitize method, data source, and iteration through env vars; defaults sanitize iteration to `1` by mutating the in-memory cluster spec when unset. It does not update `CephCluster` status itself.
+
+Dependencies and integration points: uses Rook API cleanup annotations, labels, resources, and priority class helpers; daemon app names from mon/mgr/osd/object/mds/rbd/mirror packages; host lookup and job helpers from `k8sutil`; and `opcontroller` for privileged security context, app labels, loop-device setting, and host-network enforcement.
+
+Risks: Jobs run privileged as UID 0 with host device access, so incorrect host selection or cleanup policy confirmation can destroy data. `getCephHosts` depends on app labels and node hostname lookup; missing labels or transient list errors block cleanup. Mutating `cluster.Spec.CleanupPolicy.SanitizeDisks.Iteration` inside container construction is surprising and could leak into later logic if the same object is reused. `waitForCephDaemonCleanUp` can wait indefinitely until the parent context is canceled.
+
+Test signals: `cleanup_test.go` validates key env values and toleration merging, but there is no direct test for polling, hostname discovery, replaceable Job creation, error paths, or sanitization environment completeness.

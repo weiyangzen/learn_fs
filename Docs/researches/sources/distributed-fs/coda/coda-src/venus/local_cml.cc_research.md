@@ -1,0 +1,11 @@
+# sources/distributed-fs/coda/coda-src/venus/local_cml.cc
+
+Purpose: implements local repair logic for CML entries: diagnosing whether a disconnected mutation can be reintegrated against current server state, replaying approved repair operations, formatting local operation messages, and exposing fid/version metadata.
+
+Important APIs and flow: `GetGlobalReplica` finds a consistent server replica for a replicated fid. `CheckRepair_GetObjects`, `CheckRepair_CheckAccess`, `CheckRepair_CheckVVConflict`, and `CheckRepair_CheckNameConflict` are shared validation steps. `cmlent::CheckRepair` switches by CML opcode, fetches local/global operands, verifies ACLs, checks semantic constraints, and sets mutation/repair codes such as overwrite or force-remove. `cmlent::DoRepair` replays the chosen operation using `Repair*` wrappers; stores copy local cache data to each replica then call `RepairStore`, while create/mkdir/symlink/link/remove/rmdir/rename call the corresponding disconnected repair wrappers with prepend semantics. `GetLocalOpMsg`, `GetVVandFids`, `GetAllFids`, `SetRepairFlag`, `SetTid`, `ContainLocalFid`, and `ClientModifyLog::HaveElements` provide diagnostics and metadata.
+
+State and persistence: CML entries carry opcodes, fids, stored version vectors, names, repair flags, expansion counts, and transaction ids. Mutations to repair flags and tids are RVM-protected. Repair replay relies on local/global fsobjs and may create new logged mutations with `prepend=1`.
+
+Dependencies and integration: depends on `FSDB`, `VDB`, replicated volumes, CML data structures, version-vector comparison, ACL checks, path recovery, repair wrappers in `local_fso.cc`, and local fake fid helpers.
+
+Risks and test signals: risks include fragile object lifetime in `GetGlobalReplica` after `FSDB->Put` then `Find`, several suspicious field references (`CML_Utimes_OP` uses `u.u_chown.Fid`; mkdir repair starts with `u.u_link.PFid`), mismatched global/local path formatting, partial multi-replica store repair, and repair replay that assumes split renames. Tests should cover every opcode in both check and repair phases, ACL failures, version conflicts, name conflicts, missing server targets, local fake fids, transaction-id grouping, and multi-server store failures.

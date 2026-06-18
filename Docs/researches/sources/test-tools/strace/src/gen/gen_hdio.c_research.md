@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/gen/gen_hdio.c
+
+Generated HDIO variable ioctl decoder included by `hdio.c` through `gen/generated.h`. It contains one leaf decoder per generated HDIO command, printing scalar pointers, arrays, strings, and xlat-backed values, then dispatches via generated `var_ioctl_HDIO`. State is only tracee memory and enter/exit phase. Dependencies are generated metadata, `<linux/hdreg.h>`, xlat tables like `hdio_ide_nice`/`hdio_busstates`, and generic array/string printers. Risks are editing generated code manually, stale generation against kernel headers, and unsupported compat HDIO behavior. Tests should regenerate from `maint/gen/defs/hdio.def`, compile, and trace representative HDIO get/set commands.

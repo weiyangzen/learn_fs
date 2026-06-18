@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/data/testing_test.go
+
+Purpose: validates and benchmarks `data/testing.go` snapshot fixture generation. APIs under test are `TestCreateSnapshot` and related constants. Control flow creates a repository, generates a snapshot at a fixed timestamp and depth, then verifies expected root tree ID and snapshot ID; benchmark repeatedly creates snapshots at fixed depth. State is the test repository containing generated blobs and snapshot metadata. Dependencies include repository test helpers, restic IDs, and data fixture APIs. Risks covered: deterministic test fixture stability, which many other tests rely on for golden IDs and tree traversal expectations. Missing signal: broader fake filesystem helper edge cases are only covered indirectly.

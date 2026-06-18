@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_assert06.py
+
+Purpose: validates timestamp usage assertions for ordered durable timestamps and write timestamp consistency. It skips diagnostic builds and runs row and variable-length column formats.
+
+Important APIs are `SimpleDataSet`, transaction timestamp methods (`prepare_transaction`, `timestamp_transaction`, commit/rollback), `session.alter(write_timestamp_usage=ordered)`, `assert=(write_timestamp=on)`, and subprocess stdout filtering. Control flow first writes mixed timestamp/no-timestamp histories, alters the object to ordered usage after moving oldest timestamp, then verifies a later untimestamped update fails. The second test creates with assertions enabled and checks per-key ordering, inconsistent timestamp use, commit timestamp placement before/mid/end of a transaction, prepared durable timestamps, and rollback after prepare. State is MVCC timestamp history and assertion metadata. Risks include exact diagnostic/non-diagnostic behavior and message matching. Test signals are expected `WiredTigerError` messages and preserved visible values after failed commits.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/pwm/core.c
+
+Purpose: implements the generic Linux PWM framework. It registers PWM chips, arbitrates PWM device requests, applies and reads PWM state, supports the newer waveform API, exposes sysfs and character-device userspace interfaces, provides optional GPIO emulation, and publishes debugfs state.
+
+Important APIs/types/functions: global `pwm_chips` and `pwm_lock` track registered chips. Public exports include `pwm_apply_might_sleep()`, `pwm_apply_atomic()`, `pwm_get_state_hw()`, `pwm_adjust_config()`, `pwm_get()`, `pwm_put()`, `devm_pwm_get()`, `devm_fwnode_pwm_get()`, `pwmchip_alloc()`, `devm_pwmchip_alloc()`, `__pwmchip_add()`, `pwmchip_remove()`, `pwm_add_table()`, and waveform helpers `pwm_round_waveform_might_sleep()`, `pwm_get_waveform_might_sleep()`, and `pwm_set_waveform_might_sleep()`. Internal `pwm_export` backs sysfs exported PWMs, and `pwm_cdev_data` backs PWM waveform ioctls.
+
+Control flow: chip drivers allocate a `pwm_chip`, fill `pwm_ops`, and call `pwmchip_add` or devm variants. Consumers resolve PWMs through Device Tree, ACPI firmware nodes, or static lookup tables, then request and apply states. The apply path validates state, locks the chip with either spinlock or mutex depending on `chip->atomic`, chooses waveform or legacy `.apply` callbacks, updates cached `pwm->state`, and optionally runs debug readback checks. Registration creates class devices, cdevs for waveform-capable chips, and optional gpiochips.
+
+State and persistence: runtime state lives in chip objects, per-PWM flags, cached requested state, labels, sysfs export objects, idr membership, static lookup lists, and optional suspend snapshots for exported sysfs PWMs. It persists only for the driver lifetime; hardware state may survive separately and is sampled on request when callbacks support it.
+
+Dependencies and integration: integrates with the device model, class/cdev infrastructure, OF and ACPI firmware parsing, module refcounts, runtime PM ordering through device links, debugfs, tracepoints, GPIO library when enabled, and UAPI `linux/pwm.h`.
+
+Risks and test signals: concurrency is central: global lookup locks, per-chip locks, requested/exported flags, and remove-time operational transitions must stay coherent. Waveform rounding semantics, legacy polarity conversion, sysfs suspend/resume, cdev ioctl validation, and module lifetime are regression-prone. Test signals include PWM selftests or consumer drivers, sysfs export/unexport, cdev request/free/set/get ioctls, DT/ACPI lookup including probe deferral, debugfs output, `CONFIG_PWM_DEBUG`, atomic-context users, and chip removal with active consumers.

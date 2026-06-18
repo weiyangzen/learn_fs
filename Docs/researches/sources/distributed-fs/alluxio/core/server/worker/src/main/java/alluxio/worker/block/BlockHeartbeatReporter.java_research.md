@@ -1,0 +1,7 @@
+# sources/distributed-fs/alluxio/core/server/worker/src/main/java/alluxio/worker/block/BlockHeartbeatReporter.java
+
+Purpose: `BlockHeartbeatReporter` records block-store deltas between worker heartbeats so the block master can be told about removed blocks, moved/added blocks, and lost storage.
+
+Important APIs are `generateReportAndClear`, `clear`, `mergeBack`, and overridden event callbacks for moves, removals, block loss, and storage loss. Control flow stores events under `mLock`. Moves remove the block from any added list and add it at the new location. Removals/loss remove the block from added lists and append to removed blocks if not already present. `generateReportAndClear` hands the current collections to `BlockHeartbeatReport` and clears the reporter. `mergeBack` restores a failed report while avoiding re-adding blocks already removed after the failed report was generated.
+
+State and persistence are in-memory lists/maps cleared on report generation; no disk persistence. Dependencies include block store locations, `BlockHeartbeatReport`, configuration, and Guava list helpers. Integration points include block-store event listeners and `BlockMasterSync` heartbeats. Risks include O(n) duplicate scans/removals for large deltas, report object sharing the same collection instances unless `BlockHeartbeatReport` copies defensively, and the unused `mWorkerRegisterToAllMasters` field indicating drift. Tests are not in this subset.

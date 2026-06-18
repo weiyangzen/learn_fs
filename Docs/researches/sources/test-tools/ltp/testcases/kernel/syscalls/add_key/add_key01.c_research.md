@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/add_key/add_key01.c
+
+Purpose: checks payload length limits for key types `keyring`, `user`, `logon`, and `big_key`. Setup probes whether `logon` and `big_key` are supported; each testcase calls `add_key` into `KEY_SPEC_THREAD_KEYRING` with a boundary payload length and expects success or `EINVAL`. Important APIs are `add_key`, keyring constants from `lapi/keyctl.h`, LTP allocated payload buffers, and root requirement for large payload limits. State is keys created in the thread keyring and large test buffers up to 1 MiB. Dependencies are kernel keyring support and available memory/quotas. Risks are unsupported key types and quota side effects; test signal is correct boundary acceptance/rejection.

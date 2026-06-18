@@ -1,0 +1,721 @@
+# subset-b-006870 research
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/pmtu.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/pmtu.sh
+
+## Purpose
+
+`pmtu.sh` is a large kselftest shell harness for route Path MTU discovery behavior. It validates cached PMTU exceptions, MTU propagation on link and tunnel changes, PMTU exception cleanup, route-cache list/flush behavior, route replacement cleanup, DSCP/ECN handling, multipath nexthop exceptions, and default/configured MTU behavior for VTI devices. The scenarios cover plain IPv4/IPv6 routing, VXLAN, GENEVE, FoU/GUE, IP-in-IP, VTI/VTI6, XFRM ESP and ESP-in-UDP, Linux bridge forwarding, and Open vSwitch forwarding.
+
+## Important APIs, Types, and Functions
+
+The script is built around `lib.sh` kselftest helpers such as `setup_ns`, `cleanup_all_ns`, `wait_local_port_listen`, `ksft_skip`, and command wrappers. Important helpers are `setup_namespaces`, `setup_routing`, `setup_routing_old`, `setup_routing_new`, `setup_policy_routing`, `setup_vxlan_or_geneve`, `setup_fou_or_gue`, `setup_ipvX_over_ipvY`, `setup_vti`, `setup_xfrm`, `setup_bridge`, `setup_ovs_bridge`, `setup_multipath`, `trace`, `cleanup`, `mtu`, `link_get_mtu`, `route_get_dst_pmtu_from_exception`, `check_pmtu_value`, `run_test`, and `run_test_nh`. External integration is through `ip`, `tc`, `ping`, `ping6`, `socat`, `tcpdump`, `taskset`, `nettest`, `ovs-vsctl`, and the local Open vSwitch datapath utility.
+
+## Control Flow
+
+The `tests` table maps test names to descriptions and whether the test is rerun with nexthop objects when `ip nexthop` is supported. Startup parses `-p`, `-t`, and `-v`, validates requested test names, cleans any previous topology, probes nexthop support, then iterates the table. Each test runs in a subshell with an EXIT trap so namespace, OVS, tcpdump, socat, and nettest state is cleaned even on failures. Common test patterns are: create namespaces and links, assign MTUs and routes, send oversized traffic with DF/PMTU discovery enabled, inspect `ip route get` or `ip route list cache`, mutate local or remote MTU, and compare the parsed `mtu` or `lock mtu` value with the expected result.
+
+## State and Persistence Behavior
+
+State is deliberately transient: network namespaces `NS_A`, `NS_B`, `NS_C`, `NS_R1`, `NS_R2`, veth pairs, bridges, tunnel devices, OVS datapaths, XFRM state/policy, route/nexthop objects, qdiscs, and route exception caches. The only durable artifacts are optional trace pcaps named from the current test/interface when tracing is enabled. Cleanup kills background captures and test daemons, removes namespaces, deletes leaked init-namespace veth/OVS devices, and removes temporary output files.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+The test requires root/CAP_NET_ADMIN, kernel support for namespaces, veth, IPv6, tunnels, xfrm, PMTU exception caching, and sometimes OVS, FoU/GUE, VTI, dummy, tcpdump, taskset, nettest, and socat. It integrates directly with kernel routing, tunnel PMTU accounting, fib nexthop objects, XFRM encapsulation, bridge/OVS forwarding, route-cache flushing, and device unregister paths. Risks include environmental skips, brittle exact MTU overhead calculations, timing in cleanup checks, stale init-namespace devices after interrupted OVS tests, and tool-version differences in `ip route` output parsing. Strong signals are `[ OK ]` lines from `run_test`, expected PMTU values such as `1400`, `1500`, tunnel-overhead-adjusted MTUs, absence of exceptions where expected, cache counts of 101 before flush and zero after flush, timely veth deletion, and successful reruns through nexthop-object routes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/pmtu.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/Makefile -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/Makefile
+
+## Purpose
+
+This Makefile registers the PPP networking selftests with kselftest. It declares the runnable PPP async and PPPoE shell tests and the support files that must be installed beside them.
+
+## Important APIs, Types, and Functions
+
+The important kselftest variables are `TEST_PROGS`, listing `ppp_async.sh` and `pppoe.sh`, and `TEST_FILES`, listing `ppp_common.sh` and `pppoe-server-options`. `top_srcdir` points to the kernel tree root relative to this directory, and `include ../../lib.mk` imports standard selftest build/install/run rules.
+
+## Control Flow
+
+There is no runtime logic in this file. During `make` or selftest installation, `lib.mk` consumes the variable assignments to stage scripts and support files. The trailing comments mark list boundaries and avoid accidental continuation into unrelated lines.
+
+## State and Persistence Behavior
+
+The file creates no state itself. Its persistence effect is in build products and installed test layouts generated by kselftest infrastructure.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+It depends on the parent selftests `lib.mk` and on the scripts it names being executable or installable. Integration is with the kselftest runner's `TEST_PROGS` and `TEST_FILES` conventions. The main risk is omitting support files such as `ppp_common.sh` or `pppoe-server-options`, which would make installed tests fail outside the source tree. Test signal is that the PPP test directory exposes exactly the two intended programs to the runner.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/Makefile -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/config -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/config
+
+## Purpose
+
+`config` documents the kernel options needed to run the PPP selftests. It is a kselftest fragment rather than executable code.
+
+## Important APIs, Types, and Functions
+
+The fragment requests IPv6, packet sockets, PPP core, async PPP, BSD/Deflate PPP compression, PPPoE, `CONFIG_PPPOE_HASH_BITS_4`, and veth. PPP and PPP-related protocols are requested as modules where supported.
+
+## Control Flow
+
+There is no control flow. Kselftest or kernel configuration tooling can merge these `CONFIG_*=y/m` requirements into a test kernel configuration.
+
+## State and Persistence Behavior
+
+The file persists desired kernel build-time feature state. It does not mutate runtime state.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+The scripts depend on these options to supply `ppp_async`, `pppoe`, packet sockets, IPv6, and veth namespaces. Integration is with kselftest config-fragment handling. Risks are module availability in no-module kernels and userspace tools existing while kernel support is absent. A useful signal is that `modprobe -q ppp_async` and `modprobe -q pppoe` succeed or are no-ops on a built-in kernel.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/config -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/ppp_async.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/ppp_async.sh
+
+## Purpose
+
+`ppp_async.sh` verifies PPP async operation over a virtual serial link. It starts a PPP server and client in separate network namespaces connected by two PTYs created by `socat`, then checks IP-level connectivity and throughput.
+
+## Important APIs, Types, and Functions
+
+The script sources `ppp_common.sh`, uses its `ppp_common_init` and `ppp_test_connectivity` helpers, creates `TTY_SERVER` and `TTY_CLIENT` under a temporary directory, loads `ppp_async`, starts `socat -d PTY,... PTY,...`, and runs `pppd` in `NS_SERVER` and `NS_CLIENT`. Cleanup calls `cleanup_all_ns`, kills `SOCAT_PID`, and removes the temporary PTY directory.
+
+## Control Flow
+
+Startup creates PTY symlink paths, installs an EXIT trap, initializes namespaces and tool checks, loads the PPP async module, starts `socat`, waits up to five seconds for the server PTY link, starts the server-side `pppd` with fixed local/remote IPv4 addresses, starts client-side `pppd` with `updetach`, then invokes the shared connectivity test. On success or failure it logs `PPP async` and exits with the shared kselftest status.
+
+## State and Persistence Behavior
+
+Runtime state is temporary network namespaces, PTY symlinks, the `socat` process, `pppd` processes, and kernel PPP devices such as `ppp0`. The EXIT trap removes namespaces and local temporary files.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root privileges, `socat`, `pppd`, `iperf3`, `ip`, `ping`, PPP async kernel support, and namespace support. It integrates with PPP line discipline setup through `pppd` and with kselftest status helpers from `lib.sh`. Risks are PTY creation timing, missing `pppd` plugins, module load failures, and hanging `pppd` sessions. Test signals are client namespace acquiring `192.168.200.2` on `ppp0`, successful pings to `192.168.200.1`, an `iperf3` client/server transfer, and `log_test "PPP async"`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/ppp_async.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/ppp_common.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/ppp_common.sh
+
+## Purpose
+
+`ppp_common.sh` provides shared setup and connectivity checks for PPP selftests. It avoids duplicating namespace creation, package checks, address checks, ping, and throughput validation between async PPP and PPPoE tests.
+
+## Important APIs, Types, and Functions
+
+The shared constants are `IP_SERVER=192.168.200.1` and `IP_CLIENT=192.168.200.2`. `ppp_common_init` requires `socat`, `pppd`, and `iperf3`, enforces root, and creates `NS_SERVER` and `NS_CLIENT` via `setup_ns`. `ppp_check_addr` queries IPv4 addresses on a device inside a namespace. `ppp_test_connectivity` waits for `ppp0` to receive the client address, pings the server address, starts an `iperf3` server in server namespace, waits for TCP port 5201, and runs a zero-copy-ish `iperf3 -Z` client transfer.
+
+## Control Flow
+
+Callers source this file, call `ppp_common_init`, create the PPP transport, start their server/client PPP daemons, then call `ppp_test_connectivity`. The helpers use `check_err` to aggregate failures into the common `RET`/`EXIT_STATUS` model from `lib.sh`.
+
+## State and Persistence Behavior
+
+The file stores only shell variables. Runtime state is created by callers and `setup_ns`: namespaces, PPP devices, an `iperf3` daemon, and network addresses. Namespace cleanup is caller-owned through an EXIT trap.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+It depends on `../lib.sh`, root privileges, userspace PPP tools, and common network utilities. Integration is with PPP scripts and kselftest status handling. Risks are assuming the PPP interface is named `ppp0`, hard-coded `iperf3` port 5201, and transient failures before `pppd` finishes address negotiation. Signals are successful `slowwait`, zero `ping` exit status, listening `iperf3` server, and successful client throughput.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/ppp_common.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/pppoe.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/pppoe.sh
+
+## Purpose
+
+`pppoe.sh` verifies PPP over Ethernet operation across a veth pair connecting server and client namespaces. It exercises kernel PPPoE support, userspace `pppoe-server`, the `pppd` PPPoE plugin, and the same IP connectivity path as the async PPP test.
+
+## Important APIs, Types, and Functions
+
+The script sources `ppp_common.sh`, uses `require_command pppoe-server`, `ppp_common_init`, `ppp_test_connectivity`, `modprobe -q pppoe`, and `find /usr/{lib,lib64,lib32}/pppd/ -name pppoe.so`. It creates `veth-server`/`veth-client`, runs `socat` as a `/dev/log` UNIX receiver for PPPoE logs, starts `pppoe-server` with `-I`, `-L`, `-R`, `-N`, `-q`, `-k`, `-O`, and `-g`, and starts client `pppd` with the PPPoE plugin and `nic-<ifname>`.
+
+## Control Flow
+
+After cleanup trap installation, the script checks for `pppoe-server`, initializes namespaces, loads the PPPoE module, and locates the `pppoe.so` plugin. Missing plugin is treated as a kselftest skip. It then creates and moves veth endpoints to the two namespaces, starts a syslog listener, starts the server, starts the client, runs shared connectivity, logs `PPPoE`, and dumps collected syslog payloads if the test failed.
+
+## State and Persistence Behavior
+
+Runtime state includes two namespaces, a veth pair, PPPoE discovery/session state, `pppd` and `pppoe-server` processes, a temporary syslog capture file, and `ppp0` addresses. Cleanup removes namespaces, kills `socat`, and deletes the temporary log file.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root, veth, PPPoE kernel support, `pppoe-server`, `pppd`, a usable `pppoe.so`, `socat`, `iperf3`, and the support file `pppoe-server-options`. Integration points are PPPoE discovery over Ethernet, PPP negotiation, and kselftest logging. Risks include distribution-specific PPP plugin paths, older `pppoe-server` versions ignoring `-g`, missing syslog socket behavior in namespaces, and timing around daemon startup. Signals are PPP address assignment, successful ping and `iperf3`, `log_test "PPPoE"`, and failure diagnostics from the captured PPPoE log.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/ppp/pppoe.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/proc_net_pktgen.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/proc_net_pktgen.c
+
+## Purpose
+
+`proc_net_pktgen.c` is a kselftest harness for the `/proc/net/pktgen` control ABI. It validates accepted and rejected write commands against the global controller, per-thread control file, and per-device pktgen file, focusing on parser behavior, command length handling, accepted aliases, and expected errno values.
+
+## Important APIs, Types, and Functions
+
+The file uses `kselftest_harness.h` fixtures. `FIXTURE_SETUP(proc_net_pktgen)` loads `pktgen`, opens `/proc/net/pktgen/pgctrl` and `/proc/net/pktgen/kpktgend_0`, writes `add_device lo@0`, then opens `/proc/net/pktgen/lo@0`. `FIXTURE_TEARDOWN` closes files and writes `rem_device_all`. Test cases write command strings such as `start`, `stop`, `reset`, `max_before_softirq`, packet-size commands, IMIX weights, debug, rate/ratep, UDP port ranges, clone/count/burst/node, xmit mode, flags, IPv4/IPv6 destination/source, MAC addresses, MPLS stacks, VLAN/SVLAN fields, TOS, traffic class, and skb priority.
+
+## Control Flow
+
+Each test writes one or more strings to the opened proc file and checks the return length or `-1` with a specific errno. The setup runs before every fixture test, so parser state starts with a fresh `lo@0` pktgen device. Negative tests iterate all prefix lengths of invalid command strings to verify incomplete and unknown commands fail. Positive tests check that both NUL-terminated and non-NUL command strings are accepted where intended.
+
+## State and Persistence Behavior
+
+State exists in the kernel pktgen module and procfs files. Each fixture registers `lo@0` and removes all devices in teardown, so test state should not persist beyond a case. Commands mutate pktgen device configuration, counters, and per-thread state but do not start durable packet generation beyond tested `start`/`stop` control writes.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies are `CONFIG_NET_PKTGEN` or a loadable `pktgen` module, `/proc/net/pktgen`, loopback registration, and optional XFRM/MPLS/VLAN parser support reflected by errno expectations. It integrates with the pktgen procfs ABI and command parser. Risks are exact errno drift (`EINVAL`, `E2BIG`, `EOPNOTSUPP`), module auto-load availability, pktgen command syntax changes, and fixture setup failing if `lo@0` is already registered by another process. Test signals are successful fixture setup/teardown and exact write lengths or errno for every command family.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/proc_net_pktgen.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_fanout.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_fanout.c
+
+## Purpose
+
+`psock_fanout.c` validates AF_PACKET `PACKET_FANOUT` control rules and datapath distribution. It checks illegal fanout creation/join combinations, unique group ID allocation, maximum-member handling, and packet distribution for HASH, HASH with rollover, load-balance, CPU, rollover, CBPF, EBPF, and unique-ID fanout modes.
+
+## Important APIs, Types, and Functions
+
+Important helpers are `loopback_set_up_down`, `sock_fanout_open`, `sock_fanout_set_cbpf`, `sock_fanout_set_ebpf`, `sock_fanout_getopts`, `sock_fanout_open_ring`, `sock_fanout_read_ring`, `test_unbound_fanout`, `test_control_single`, `test_control_group`, `test_control_group_max_num_members`, `test_unique_fanout_group_ids`, `test_datapath`, and `set_cpuaffinity`. It uses `PF_PACKET` raw sockets, `SOL_PACKET`/`PACKET_FANOUT`, `PACKET_FANOUT_DATA`, `PACKET_RX_RING`, `TPACKET_V2`, `mmap`, classic BPF, `bpf(BPF_PROG_LOAD)` socket filters, and helpers from `psock_lib.h`.
+
+## Control Flow
+
+Main first runs control-plane tests that expect specific fanout errors or successes, including link-down join behavior and unique ID behavior. It then uses `test_datapath` to create two packet sockets in one fanout group, attach optional CBPF/EBPF selectors, map RX rings, create two UDP socket pairs, send known payload counts, and verify that ring queue lengths match expected distributions. HASH mode may retry with different UDP ports to avoid hash collisions. CPU mode pins execution to CPU 0 and, if possible, CPU 1.
+
+## State and Persistence Behavior
+
+State is transient packet sockets, mapped rings, loaded BPF programs, UDP sockets, and temporary loopback up/down changes. BPF program FDs are closed after being attached through `PACKET_FANOUT_DATA`. All sockets and mappings are closed or unmapped before returning.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include AF_PACKET, packet fanout support, TPACKET rings, loopback, BPF syscall support for EBPF cases, CPU affinity, and enough privileges for raw packet sockets and interface flag toggling. Integration is with packet socket fanout group semantics and BPF fanout selectors. Risks include hash collisions exhausting retries, CPU affinity not allowing CPU 1, queue overflow assumptions, exact group-option behavior changing, and environmental capability failures. Signals are expected create/join failures, unique IDs distinct and joinable only correctly, expected ring counts printed as `count=..., expect=...`, and final `OK. All tests passed`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_fanout.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_lib.h -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_lib.h
+
+## Purpose
+
+`psock_lib.h` is a small shared helper library for packet-socket selftests. It provides common UDP traffic generation and a packet BPF filter that selects the synthetic UDP payloads used by fanout and TPACKET tests.
+
+## Important APIs, Types, and Functions
+
+The key constants are `DATA_LEN=100`, `DATA_CHAR='a'`, `DATA_CHAR_1='b'`, and `PORT_BASE=8000`. `pair_udp_setfilter` attaches a classic `SO_ATTACH_FILTER` program that accepts IPv4 UDP packets with minimum length 100 and payload byte at offset 80 equal to `a` or `b`. `pair_udp_open` creates two bound IPv4 UDP sockets on loopback and connects the sender to the receiver. `pair_udp_send_char`, `pair_udp_send`, and `pair_udp_close` send, receive, validate, and close the UDP pair.
+
+## Control Flow
+
+Callers attach the filter to packet sockets, open UDP pairs on selected ports, send a fixed number of payloads, and rely on the helper to synchronously read back from the receiving UDP socket so the traffic is fully delivered while packet sockets observe it. Any socket, bind, connect, send, receive, or data mismatch terminates the process.
+
+## State and Persistence Behavior
+
+State is limited to caller-owned socket FDs and attached classic BPF filters. The header uses `static __maybe_unused` helpers so each including C file gets private helper definitions and no external symbols.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include IPv4 loopback, UDP sockets, classic socket filters, and kselftest's `ARRAY_SIZE`/`__maybe_unused` definitions. Integration is with packet-socket tests that need deterministic payloads and packet filtering. Risks are hard-coded packet offsets that assume Ethernet/IP/UDP layout on loopback packet sockets, synchronous send/recv lacking EINTR/EAGAIN retry, and port conflicts around `PORT_BASE`. Signals are no helper aborts and payload `memcmp` success for every generated datagram.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_lib.h -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_snd.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_snd.c
+
+## Purpose
+
+`psock_snd.c` is a packet-socket send regression test. It hand-builds Ethernet, optional VLAN, IPv4, UDP, and optional virtio-net headers, sends them through AF_PACKET raw or datagram sockets, and verifies both packet-socket sniffing and UDP receive behavior.
+
+## Important APIs, Types, and Functions
+
+Global options are parsed into flags for bind mode, checksum offload, deliberately bad checksum offset, datagram mode, GSO, qdisc bypass, VLAN, virtio-net header, interface name, MTU, payload length, truncation length, and UDP port. Core helpers are `add_csum_hword`, `build_ip_csum`, `build_vnet_header`, `build_eth_header`, `build_ipv4_header`, `build_udp_header`, `build_packet`, `do_bind`, `do_send`, `do_tx`, `setup_rx`, `setup_sniffer`, `do_rx`, `parse_opts`, and `run_test`. It uses `PACKET_QDISC_BYPASS`, `PACKET_VNET_HDR`, `SO_RCVTIMEO`, and `psock_lib.h` filtering.
+
+## Control Flow
+
+Main parses options, configures loopback MTU, adds `172.17.0.1/24` to loopback, enables `accept_local`, then runs the test. `run_test` creates an INET UDP receiver and an AF_PACKET sniffer, sends the crafted packet through `do_tx`, optionally checks the sniffer frame when payload length and VLAN conditions match the shared BPF filter, and always verifies the UDP receiver got exactly the configured payload bytes. Error paths use `error(1, ...)` and therefore produce a failing process exit.
+
+## State and Persistence Behavior
+
+The program mutates the current network namespace by setting loopback MTU, adding an address, and enabling `net.ipv4.conf.lo.accept_local`. It creates only transient sockets and stack/static packet buffers. When invoked via `in_netns.sh`, those namespace mutations are disposable.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include AF_PACKET send support, packet datagram/raw modes, loopback address configuration privileges, virtio-net header support for offload tests, UDP GSO/checksum behavior, and the companion shell driver for negative cases. Integration points are packet socket transmit validation, qdisc bypass, VLAN length accounting, checksum offload bounds, GSO maximums, and UDP delivery into the IP stack. Risks are persistent loopback mutation if not run in a namespace, exact MTU/GSO boundary expectations, hard-coded IPv4 addresses, and the intentionally bad checksum-offset mode needing to fail. Signals are matching `tx:` and `rx:` lengths, successful sniffer validation when enabled, and final `OK`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_snd.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_snd.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_snd.sh
+
+## Purpose
+
+`psock_snd.sh` is the shell driver for `psock_snd`. It runs a focused regression suite over packet socket transmit modes, MTU boundaries, truncation behavior, VLAN handling, virtio-net headers, checksum offload, qdisc bypass, and UDP GSO.
+
+## Important APIs, Types, and Functions
+
+The script computes constants for MTU, IPv4 header length, UDP header length, virtio-net header length, Ethernet header length, MSS, maximum MTU, and maximum MSS. It invokes `./in_netns.sh ./psock_snd` with option combinations such as `-d`, `-b`, `-q`, `-V`, `-v`, `-c`, `-C`, `-l`, `-t`, and `-g`. Expected failures are expressed with shell negation `(! command)`.
+
+## Control Flow
+
+With `set -e`, the script runs positive functional checks first, then negative checksum-offset, MTU, and truncation checks, then GSO boundary checks. Each case prints a short label before invocation. Because all runs are wrapped in `in_netns.sh`, namespace-local loopback modifications by `psock_snd` do not leak.
+
+## State and Persistence Behavior
+
+The script itself stores only readonly calculations. Each `in_netns.sh` invocation creates isolated runtime state for the C helper's loopback address, sysctl, and sockets.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include `in_netns.sh`, the compiled `psock_snd` binary, namespace privileges, AF_PACKET support, and shell support for `set -e` plus negated subshell tests. Integration is with the selftests/net Makefile that builds `psock_snd`. Risks include negative tests passing unexpectedly, GSO boundary changes, and the commented VLAN-MTU case documenting an unsupported ARPHRD_ETHER path. Signals are completion of every positive and expected-negative case and final `OK. All tests passed`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_snd.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_tpacket.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_tpacket.c
+
+## Purpose
+
+`psock_tpacket.c` validates AF_PACKET memory-mapped ring behavior for `TPACKET_V1`, `TPACKET_V2`, and `TPACKET_V3`. It covers RX rings for all versions and TX rings for all versions, checking packet payload layout, ring ownership bits, block sequence numbers, block length accounting, and send/receive datapaths.
+
+## Important APIs, Types, and Functions
+
+Important types are `struct ring`, `struct block_desc`, and `union frame_map`. Key helpers include `pfsocket`, `create_payload`, `test_payload`, V1/V2 RX ownership helpers, TX ownership helpers, `walk_v1_v2_rx`, `walk_tx`, V3 block helpers (`__v3_test_block_seq_num`, `__v3_test_block_len`, `__v3_walk_block`, `__v3_flush_block`, `walk_v3_rx`), ring setup helpers (`__v1_v2_fill`, `__v3_fill`, `setup_ring`, `mmap_ring`, `bind_ring`, `unmap_ring`), `test_kernel_bit_width`, `test_user_bit_width`, and `test_tpacket`. It uses `PACKET_VERSION`, `PACKET_RX_RING`, `PACKET_TX_RING`, `PACKET_LOSS`, `mmap`, `poll`, and `psock_lib.h`.
+
+## Control Flow
+
+Main calls `test_tpacket` for V1 RX/TX, V2 RX/TX, and V3 RX/TX. Each test opens a packet socket at the requested version, sets up a large ring, maps it, binds to loopback with the shared BPF filter, walks the ring-specific datapath, unmaps, and closes. RX paths generate UDP traffic with `pair_udp_send` and consume packets until the expected loopback count is reached. TX paths fill mapped frames with synthetic Ethernet/IP packets, mark frames ready, kick transmission with `sendto`, and receive them through a filtered packet socket.
+
+## State and Persistence Behavior
+
+State is transient: packet sockets, mapped packet rings, UDP socket pairs, counters `total_packets`/`total_bytes`, and V3 block sequence tracking. No persistent system configuration is changed. V1 tests are skipped when user-space and kernel pointer widths differ because the V1 header ABI is width-sensitive.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include AF_PACKET ring support, loopback, `/proc/kallsyms` readability for bit-width detection, mapped memory availability, classic BPF filters, and raw socket privileges. Integration points are the TPACKET UAPI, ring ownership synchronization, block retirement, TX ring packet layout, and loopback packet observation. Risks are timing around `poll`, hard-coded packet counts, architecture width mismatch, and memory-lock/mmap constraints. Signals are correct packet counts, payload `ETH_P_IP` validation, V3 block sequence/length checks, per-test status output, and final `OK. All tests passed`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/psock_tpacket.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/Makefile -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/Makefile
+
+## Purpose
+
+The RDS Makefile registers the RDS TCP selftest and generates a build-location include file so installed tests can find the kernel source/build tree needed for configuration and coverage checks.
+
+## Important APIs, Types, and Functions
+
+The `all` target writes `include.sh` containing `mk_build_dir=<current directory>`. `TEST_PROGS` names `run.sh`. `TEST_FILES` installs `include.sh`, `settings`, and `test.py`. `EXTRA_CLEAN` removes `include.sh` and `/tmp/rds_logs`. `include ../../lib.mk` imports kselftest rules.
+
+## Control Flow
+
+On build, `all` creates the include file. On install/run, kselftest consumes `TEST_PROGS` and `TEST_FILES`. Cleanup rules remove generated include and default logs.
+
+## State and Persistence Behavior
+
+The only generated persistent file is `include.sh`, used by `run.sh` to locate the original build directory when tests are run from an installed tree.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+It depends on kselftest `lib.mk` and the RDS scripts. Integration is with installed selftest relocation and cleanup. The risk is stale `include.sh` pointing at a moved build tree, which makes `run.sh` skip or fail source/config discovery. Test signal is that `run.sh` is staged with `test.py`, `settings`, and a valid include file.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/Makefile -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/config -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/config
+
+## Purpose
+
+This kselftest config fragment lists the kernel features needed for the RDS TCP selftest.
+
+## Important APIs, Types, and Functions
+
+The fragment enables network namespaces, netem qdisc, RDS core, RDS TCP transport, and veth. These match the runtime topology and packet impairment features used by `test.py`.
+
+## Control Flow
+
+There is no executable flow. Kernel config tooling can merge the options into a test kernel configuration.
+
+## State and Persistence Behavior
+
+The file persists build-time configuration requirements only.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies are kernel support for `CONFIG_RDS`, `CONFIG_RDS_TCP`, `CONFIG_NET_NS`, `CONFIG_VETH`, and `CONFIG_NET_SCH_NETEM`. Integration is with kselftest config fragments and with `run.sh` validation. Risks include module-vs-built-in mismatches because `run.sh` also expects `CONFIG_MODULES` disabled for its coverage-oriented environment. Test signal is that `run.sh` configuration checks pass rather than skipping.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/config -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/config.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/config.sh
+
+## Purpose
+
+`config.sh` programmatically configures a kernel tree for the RDS selftest. It enables RDS TCP and required network features, disables modules, and optionally enables targeted GCOV instrumentation for RDS.
+
+## Important APIs, Types, and Functions
+
+The script uses `scripts/config` with optional `--file <config>` from `-c`. `-g` sets `GENERATE_GCOV_REPORT=1`. It disables `CONFIG_MODULES`, enables `CONFIG_RDS`, `CONFIG_RDS_TCP`, `CONFIG_NET_NS`, `CONFIG_VETH`, and `CONFIG_NET_SCH_NETEM`, and either enables `CONFIG_GCOV_KERNEL` plus `GCOV_PROFILE_RDS` while disabling `GCOV_PROFILE_ALL`, or disables all GCOV options.
+
+## Control Flow
+
+After `set -e -u -x`, it parses `-g` and `-c`, builds an optional `FLAGS` array, then applies configuration edits in a fixed sequence: no modules, RDS, optional coverage, namespaces/veth, and netem. Invalid options print usage and exit nonzero.
+
+## State and Persistence Behavior
+
+It mutates the target kernel `.config` or the file specified by `-c`. It unsets `KBUILD_OUTPUT`, so path resolution is tied to the current tree unless `--file` is supplied.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include running from a kernel source tree with `scripts/config`. Integration is with `run.sh`, whose `check_conf` and `check_gcov_conf` expect these exact settings. Risks are unsetting `KBUILD_OUTPUT` in out-of-tree builds, disabling modules as a broad build-policy change, and configuring GCOV without rebuilding. Signals are subsequent `run.sh` checks passing and optional coverage data appearing under debugfs GCOV after a rebuilt kernel.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/config.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/run.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/run.sh
+
+## Purpose
+
+`run.sh` is the RDS selftest runner. It validates environment and kernel configuration, runs the Python RDS traffic test under `strace`, captures logs and dmesg, and optionally collects RDS-specific GCOV coverage.
+
+## Important APIs, Types, and Functions
+
+Important helpers are `check_gcov_env`, `check_gcov_conf`, `check_conf_enabled`, `check_conf_disabled`, `check_conf`, and `check_env`. It sources `include.sh` when available to find `mk_build_dir`, sources `settings` for timeout, derives `ksrc_dir`, `.config`, and `net/rds`, and runs `strace -T -tt -o <trace> python3 test.py --timeout ... -d ... -l ... -c ... -u ...`. Coverage collection reads `*.gcda` from `/sys/kernel/debug/gcov` and invokes `gcovr`.
+
+## Control Flow
+
+The script parses log directory and netem percentages, validates required tools and Python version, checks kernel config and optional GCOV config, recreates the log and coverage directories, runs `test.py` with `set +e`, saves `dmesg`, conditionally exports coverage data and produces an HTML report, prints PASS/FAIL, and exits with the Python test's return code.
+
+## State and Persistence Behavior
+
+It writes logs under the selected log directory, defaulting to a directory beside the script, including `rds-strace.txt`, `dmesg.out`, pcaps produced by `test.py`, and optional `coverage/gcovr*` output. It may copy GCOV data from debugfs into the source/object tree paths expected by gcov tooling. It does not itself clean network namespaces; `test.py` owns test topology lifecycle poorly if interrupted.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include a configured kernel source tree, `strace`, `tcpdump`, Python 3.9 or newer, RDS/RDS_TCP, netem, veth, namespaces, disabled modules, optional `gcov`/`gcovr`, and debugfs GCOV for coverage. Integration points are RDS kernel config, RDS TCP transport, sysctl reset coverage, and kselftest skip code 4. Risks are version mismatch between gcc and gcov, absent source tree in installed environments, stale `include.sh`, missing `gcovr`, destructive log directory removal, and coverage collection requiring privileges. Signals are `PASS: Test completed successfully`, nonzero Python return generating `FAIL`, strace/dmesg artifacts, and optional coverage HTML.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/run.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/test.py -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/test.py
+
+## Purpose
+
+`test.py` performs the actual RDS TCP datapath stress test. It creates two network namespaces connected by veth, forces RDS to use TCP transport rather than loopback transport, sends 50,000 RDS messages in a pseudo-random bidirectional pattern, exercises RDS TCP sysctl reset paths, queries RDS info getsockopts, captures packets, and verifies received data by hash.
+
+## Important APIs, Types, and Functions
+
+The script imports Python `socket`, `select.epoll`, `ctypes`, `hashlib`, `subprocess`, `tempfile`, and `lib.py.utils.ip`. `netns_socket` forks, calls libc `setns`, creates an AF_RDS socket in the target namespace, and passes the FD back with `socket.send_fds`/`recv_fds`. It uses `socket.AF_RDS`, `SOCK_SEQPACKET`, `SOL_RDS`, RDS info option numbers `10000..10017`, `tcpdump`, `tc qdisc netem`, `sysctl net.rds.tcp.rds_tcp_rcvbuf`, and `rds_tcp_sndbuf`.
+
+## Control Flow
+
+Argument parsing sets log directory, timeout, packet loss/corruption/duplicate percentages. The script creates namespaces `net0`/`net1`, a veth pair, /32 addresses, routes, and a ping sanity check. It starts tcpdump in each namespace, installs netem qdiscs, arms an alarm timeout if requested, creates nonblocking RDS sockets inside namespaces, binds them to `10.0.0.1:10000` and `10.0.0.2:20000`, and registers epoll. The main loop sends until blocked, receives until caught up, and repeatedly updates RDS TCP buffer sysctls. After all packets, it probes RDS info getsockopts, stops tcpdump, moves pcaps into the log dir, and compares per-sender/receiver SHA256 streams.
+
+## State and Persistence Behavior
+
+State includes two namespaces, veth interfaces, addresses/routes, netem qdiscs, RDS sockets, tcpdump processes and temporary pcaps, send/receive hash dictionaries, epoll registration, and sysctl changes in the namespaces. The script writes pcaps to the log directory. It has no explicit `finally` cleanup for namespaces or qdiscs, so abnormal termination can leave namespace state behind.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root/CAP_NET_ADMIN, Python 3.9 FD-passing APIs, AF_RDS support, RDS TCP, `ip`, `ping`, `/usr/sbin/tcpdump`, `/usr/sbin/tc`, `/usr/sbin/sysctl`, and usable `/var/run/netns` namespace handles. Integration points are RDS TCP transport selection, RDS socket send/receive semantics, RDS info getsockopt ABI, netem loss/corrupt/duplicate behavior, and RDS TCP sysctl reset handling. Risks include no cleanup on exception, high packet count runtime, tcpdump path assumptions, ENOBUFS/ECONNRESET/EPIPE loops under heavy impairment, and treating only absent/mismatched hashes as fatal while most RDS info getsockopt errors are counted. Signals are `done 50000 50000`, per-flow `<sender>/<receiver>: ok`, packet captures, and final `Success`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rds/test.py -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_conflict.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_conflict.c
+
+## Purpose
+
+`reuseaddr_conflict.c` is a regression test for IPv4/IPv6 bind-bucket interaction with `SO_REUSEADDR`. It checks that creating an IPv6 wildcard socket does not reset or hide the conflict state for an already listening IPv4 socket on the same port.
+
+## Important APIs, Types, and Functions
+
+`open_port(int ipv6, int any)` creates either an AF_INET or AF_INET6 TCP socket, sets `IPV6_V6ONLY` for IPv6, sets `SO_REUSEADDR`, binds to either a specific IPv4 loopback address or wildcard, and listens when binding a specific address. `main` uses fixed `PORT=9999` and ordered open attempts to validate failures and successes.
+
+## Control Flow
+
+The test first opens and listens on `127.0.0.1:9999`. It then verifies that binding IPv4 `INADDR_ANY:9999` with reuseaddr fails. It opens IPv6 `in6addr_any:9999` with v6-only and expects success. While that IPv6 socket exists, it again expects IPv4 wildcard binding to fail. After closing the IPv6 socket, it expects IPv4 wildcard binding to still fail because the original IPv4 listener remains.
+
+## State and Persistence Behavior
+
+State is limited to TCP sockets on port 9999 in the current namespace. FDs are closed on normal process exit; there is no namespace setup inside the program.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include IPv4/IPv6 TCP, `SO_REUSEADDR`, `IPV6_V6ONLY`, and a free port 9999 in the test namespace. Integration is with inet bind bucket conflict logic. Risks are port conflicts when not run isolated, exact historical regression assumptions, and IPv6 disabled environments. Signals are expected failures for IPv4 wildcard bind attempts, successful IPv6 v6-only wildcard bind, and final `Success`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_conflict.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_ports_exhausted.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_ports_exhausted.c
+
+## Purpose
+
+`reuseaddr_ports_exhausted.c` validates TCP ephemeral-port reuse rules when the available local port range is exhausted. It checks which combinations of `SO_REUSEADDR`, `SO_REUSEPORT`, and effective UID may bind the only ephemeral port for future `connect()` use.
+
+## Important APIs, Types, and Functions
+
+The file uses `kselftest_harness.h`. `struct reuse_opts` holds two sockets' reuseaddr/reuseport settings. `unreusable_opts` encodes 12 combinations expected to reject the second bind; `reusable_opts` encodes four combinations where the first socket has reuseaddr and the second may be allowed depending on reuseport and euid. `bind_port` creates an AF_INET TCP socket, sets both socket options, and binds `127.0.0.1:0`. Tests are `reuseaddr_ports_exhausted_unreusable`, `reuseaddr_ports_exhausted_reusable_same_euid`, and `reuseaddr_ports_exhausted_reusable_different_euid`.
+
+## Control Flow
+
+Each test iterates option combinations, opens two sockets, and asserts whether the second bind should fail or succeed. The different-euid test temporarily switches to euid 10 and 20 around bind attempts, then returns to root. If both sockets bind, it verifies that listening on both is not allowed because only one UID can reserve the port for TCP_LISTEN.
+
+## State and Persistence Behavior
+
+State is transient socket FDs and temporary euid changes. The companion shell script constrains `ip_local_port_range` to a single port and enables `ip_autobind_reuse`, making port exhaustion deterministic. FDs are closed after each combination.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root for `seteuid` and namespace sysctl setup, TCP autobind behavior, and the shell wrapper's single-port namespace. Integration points are inet ephemeral port selection, bind conflict checks, reuseport same-euid policy, and listen-time reservation. Risks include running without the wrapper, euid values unavailable under some security policies, and exact reuse semantics changing. Signals are kselftest assertions for every matrix row and no harness failures.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_ports_exhausted.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_ports_exhausted.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_ports_exhausted.sh
+
+## Purpose
+
+This shell wrapper creates the deterministic namespace environment required by `reuseaddr_ports_exhausted`. It restricts the IPv4 ephemeral port range to one port and enables autobind reuse so the C harness exercises exhaustion paths.
+
+## Important APIs, Types, and Functions
+
+The script defines `NETNS`, `setup`, `cleanup`, and `do_test`. `setup` creates the namespace, brings loopback up, writes `net.ipv4.ip_local_port_range="32768 32768"`, and writes `net.ipv4.ip_autobind_reuse=1`. `do_test` runs `./reuseaddr_ports_exhausted` inside the namespace.
+
+## Control Flow
+
+With `set -e`, the script installs cleanup trap, runs setup, invokes the C test, and prints `tests done` only if it succeeds. Namespace deletion runs at exit.
+
+## State and Persistence Behavior
+
+The only persistent-while-running state is a temporary named netns and namespace-local sysctls. Cleanup deletes the namespace.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root/CAP_NET_ADMIN, `ip netns`, sysctl write access, and the compiled C binary. Integration is with TCP ephemeral-port sysctls and the C matrix. Risks include `mktemp -u` name collision, missing `ip_autobind_reuse` on older kernels, and cleanup failure if namespace deletion races. Signals are successful C harness completion and `tests done`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseaddr_ports_exhausted.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_addr_any.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_addr_any.c
+
+## Purpose
+
+`reuseport_addr_any.c` tests socket selection preference in `SO_REUSEPORT` groups. It verifies that sockets bound to a specific destination address receive traffic before sockets bound to wildcard addresses, across UDP, TCP, IPv4, IPv6, and IPv4-mapped IPv6.
+
+## Important APIs, Types, and Functions
+
+Key helpers are `build_rcv_fd`, `connect_and_send`, `receive_once`, `test`, `run_one_test`, and `test_proto`. Constants are `127.0.0.1`, `::1`, `::ffff:127.0.0.1`, and port `8888`. The program uses `SO_REUSEPORT`, `bind`, `listen`, `connect`, `send`, `epoll`, `accept`, and `recv`.
+
+## Control Flow
+
+For each protocol family case, `run_one_test` creates wildcard IPv4 and IPv6 sockets before and after a single address-specific socket, registers all sockets in epoll, sends one message to the target address, and checks that the ready FD is the specific-address socket. `test_proto` runs this for UDP IPv4, UDP IPv6, UDP mapped IPv4-to-IPv6, then repeats for TCP.
+
+## State and Persistence Behavior
+
+State is transient sockets on port 8888 in the current namespace and an epoll FD. The program closes all receiver sockets after each case. It does not create its own namespace; the shell wrapper runs it under `in_netns.sh`.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include IPv4/IPv6 loopback, `SO_REUSEPORT`, epoll, and TCP/UDP support. Integration points are reuseport lookup ordering and address-specific versus wildcard selection. Risks are port conflicts outside a namespace, IPv6 disabled, mapped IPv4 behavior varying with sysctls, and a three-millisecond epoll timeout making failures terse. Signals are each case printing `pass` and final `SUCCESS`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_addr_any.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_addr_any.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_addr_any.sh
+
+## Purpose
+
+This wrapper runs `reuseport_addr_any` in an isolated network namespace so its fixed port and loopback assumptions do not conflict with the host.
+
+## Important APIs, Types, and Functions
+
+It simply executes `./in_netns.sh ./reuseport_addr_any`.
+
+## Control Flow
+
+There is no branching. The wrapper's exit status is the exit status of `in_netns.sh` and the C test.
+
+## State and Persistence Behavior
+
+Namespace lifecycle is delegated to `in_netns.sh`. The wrapper stores no state.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include `in_netns.sh`, namespace privileges, and the compiled `reuseport_addr_any` binary. Integration is with the selftests/net harness. Risks are all in the delegated namespace wrapper or C binary. Signal is successful propagation of the C test's `SUCCESS` exit status.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_addr_any.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf.c
+
+## Purpose
+
+`reuseport_bpf.c` validates classic and extended BPF selectors attached to `SO_REUSEPORT` groups. It checks that incoming packets are dispatched to the socket index returned by the BPF program across IPv4, IPv6, IPv4-mapped IPv6, UDP, TCP with Fast Open, small and large UDP groups, filter replacement, and several invalid filter attachment cases.
+
+## Important APIs, Types, and Functions
+
+`struct test_params` describes address families, protocol, group size, receive port, and send-port base. Helpers include `new_any_sockaddr`, `new_loopback_sockaddr`, `attach_ebpf`, `attach_cbpf`, `build_recv_group`, `send_from`, `test_recv_order`, `test_reuseport_ebpf`, `test_reuseport_cbpf`, `test_extra_filter`, `test_filter_no_reuseport`, `test_filter_without_bind`, `enable_fastopen`, and `setup_netns`. It uses `SO_REUSEPORT`, `SO_ATTACH_REUSEPORT_EBPF`, `SO_ATTACH_REUSEPORT_CBPF`, `bpf(BPF_PROG_LOAD)`, socket-filter BPF instructions, `MSG_FASTOPEN`, `TCP_FASTOPEN`, epoll, `RLIMIT_MEMLOCK`, and `/proc/sys/net/ipv4/tcp_fastopen`.
+
+## Control Flow
+
+Main unshares a network namespace, brings loopback up, then runs grouped test blocks. For each normal BPF case, receivers are created with `SO_REUSEPORT`; the first socket gets a BPF program returning `first_word % mod`; senders bind incrementing source ports and send network-byte-order data; epoll identifies the receiving socket; and the expected socket is `sport % mod`. The test then reattaches a new filter with half the modulus and repeats. Edge cases check two filters in one group fail at bind with `EADDRINUSE`, reuseport filters on non-reuseport sockets fail with `EINVAL`, and filters can be attached before bind.
+
+## State and Persistence Behavior
+
+State is a private network namespace, loopback state, receiver groups, sender sockets, loaded BPF program FDs, temporarily raised `RLIMIT_MEMLOCK`, and possibly a modified TCP Fast Open sysctl in the namespace. Sockets and BPF FDs are closed; the memlock limit is restored by a destructor.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include namespace privileges, loopback, BPF syscall support, socket filter verifier support, TCP Fast Open sysctl access, epoll, IPv6, and mapped IPv4 behavior. Integration points are reuseport BPF attachment/replacement, TCP and UDP lookup paths, large UDP reuseport group lookup, and invalid attachment error paths. Risks include missing BPF permissions, memlock limit changes failing silently, Fast Open sysctl not writable, source-port collisions if not isolated, and exact errno assumptions. Signals are per-packet `Socket N: data` lines matching `sport % mod`, expected `EADDRINUSE`/`EINVAL` failures, and final `SUCCESS`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf_cpu.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf_cpu.c
+
+## Purpose
+
+`reuseport_bpf_cpu.c` verifies CPU-aware `SO_REUSEPORT` selection. It creates one receiver socket per online CPU, attaches a classic BPF program returning `SKF_AD_CPU`, sends loopback traffic while pinned to each CPU, and checks that the socket matching the sending CPU receives the packet.
+
+## Important APIs, Types, and Functions
+
+Important helpers are `build_rcv_group`, `attach_bpf`, `send_from_cpu`, `receive_on_cpu`, `test`, and `setup_netns`. It uses `SO_REUSEPORT`, `SO_ATTACH_REUSEPORT_CBPF`, classic BPF ancillary load `SKF_AD_OFF + SKF_AD_CPU`, `sched_setaffinity`, `sysconf(_SC_NPROCESSORS_ONLN)`, epoll, TCP/UDP sockets, and namespace unshare.
+
+## Control Flow
+
+Main creates a network namespace, counts online CPUs, allocates receiver FD storage, and runs `test` for IPv4 UDP, IPv6 UDP, IPv4 TCP, and IPv6 TCP. Each `test` creates the reuseport group, attaches BPF to the first socket, registers all receivers in epoll, then sends and receives in forward CPU order, reverse order, even CPUs, and odd CPUs. A mismatch between CPU ID and receiving socket index is fatal.
+
+## State and Persistence Behavior
+
+State is a private network namespace, loopback up state, receiver sockets on port 8888, epoll FD, current process CPU affinity, and transient sender sockets. Affinity changes persist for the process but the process exits after the test.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include enough privileges for network namespace setup, CPU affinity, IPv6, TCP/UDP loopback, and classic reuseport BPF support. Integration points are `skb->hash`/CPU ancillary exposure to CBPF and reuseport index selection. Risks include non-contiguous or disallowed CPU affinity masks, systems where loopback receive CPU does not equal sender CPU, large CPU counts causing many sockets, and fixed port conflicts if namespace setup fails. Signals are `send cpu X, receive socket X` for all permutations and final `SUCCESS`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf_cpu.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf_numa.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf_numa.c
+
+## Purpose
+
+`reuseport_bpf_numa.c` is the NUMA-node variant of the reuseport BPF selector test. It creates one socket per NUMA node and uses an EBPF socket-filter program calling `bpf_get_numa_node_id()` to select the receiver socket corresponding to the node on which traffic is sent.
+
+## Important APIs, Types, and Functions
+
+Important helpers are `build_rcv_group`, `attach_bpf`, `send_from_node`, `receive_on_node`, `test`, and `setup_netns`. It uses `SO_REUSEPORT`, `SO_ATTACH_REUSEPORT_EBPF`, `bpf(BPF_PROG_LOAD)`, helper `BPF_FUNC_get_numa_node_id`, libnuma APIs `numa_available`, `numa_max_node`, `numa_run_on_node`, and `numa_bitmask_isbitset`, plus epoll and TCP/UDP sockets.
+
+## Control Flow
+
+Main unshares a network namespace, skips via `ksft_exit_skip` if NUMA is unavailable, allocates one receiver slot per possible node, and tests IPv4 UDP, IPv6 UDP, IPv4 TCP, and IPv6 TCP. Each test attaches the EBPF program, registers receivers, iterates available nodes forward and backward, pins the process to the node for sending, and verifies that the receiving socket index equals the NUMA node ID.
+
+## State and Persistence Behavior
+
+State is a private netns, loopback up state, receiver sockets on port 8888, a loaded EBPF selector, epoll state, libnuma CPU placement of the current process, and transient sender sockets. All sockets and BPF FDs are closed normally.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include libnuma, NUMA-capable kernel/userspace, EBPF socket filter support, helper availability, namespace privileges, and TCP/UDP IPv4/IPv6 loopback. Integration points are `bpf_get_numa_node_id()` in socket filters and reuseport index selection. Risks include sparse node IDs requiring enough sockets for holes, loopback receive path not preserving node expectations, no NUMA API causing a skip, and BPF permission/memlock failures. Signals are `send node X, receive socket X` for available nodes and final `SUCCESS`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_bpf_numa.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_dualstack.c -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_dualstack.c
+
+## Purpose
+
+`reuseport_dualstack.c` tests dual-stack reuseport socket selection. It verifies that IPv4 traffic prefers AF_INET reuseport sockets over AF_INET6 wildcard sockets when both groups are bound to equivalent local addresses, including group creation order variations and large UDP groups.
+
+## Important APIs, Types, and Functions
+
+Helpers are `build_rcv_fd`, `send_from_v4`, `receive_once`, `test`, and `setup_netns`. The program uses `SO_REUSEPORT`, AF_INET/AF_INET6 sockets, UDP/TCP, `SO_DOMAIN` getsockopt, epoll, accept/recv, and network namespace unshare. Fixed port is `8888`.
+
+## Control Flow
+
+Main creates a private namespace and runs six cases: UDP IPv4 receivers before IPv6, UDP IPv6 before IPv4, large UDP IPv4 before IPv6, large UDP IPv6 before IPv4, TCP IPv4 before IPv6, and TCP IPv6 before IPv4. Each case creates both AF_INET and AF_INET6 reuseport receivers, sends one IPv4 loopback message, uses epoll to find the receiver, queries the receiver domain with `SO_DOMAIN`, and requires AF_INET.
+
+## State and Persistence Behavior
+
+State is a private netns, loopback state, receiver sockets, epoll FD, and short-lived sender sockets. All FDs are closed after each case.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include IPv4/IPv6 support, reuseport, epoll, TCP/UDP, and namespace privileges. Integration points are dual-stack socket lookup ordering and reuseport fast selection for large UDP groups. Risks include IPv6 disabled, port conflicts if namespace setup fails, and kernels changing v4-over-v6 wildcard precedence. Signals are no domain mismatch errors and final `SUCCESS`.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/reuseport_dualstack.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/route_hint.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/route_hint.sh
+
+## Purpose
+
+`route_hint.sh` verifies that directed broadcast routes use the destination hint mechanism efficiently. It sends a burst of crafted TCP packets to a subnet broadcast address and checks that the server's broadcast counter does not grow excessively.
+
+## Important APIs, Types, and Functions
+
+The script sources `lib.sh`, defines `setup`, `cleanup`, and `directed_bcast_hint_test`, and uses `setup_ns`, `ip link`, `ip addr`, `ethtool`, sysfs GRO/NAPI knobs, `mausezahn`, `lnstat -j`, `jq`, and `bc`. Addresses are `192.168.0.1`, `192.168.0.2`, and directed broadcast `192.168.0.255`.
+
+## Control Flow
+
+It verifies the presence of `mausezahn`, `jq`, and `bc`, installs cleanup trap, creates client/server namespaces with a veth pair, configures addresses, disables TSO on the client, enables/defer-tunes GRO on the server, then records `lnstat` `in_brd` before and after a single mausezahn command that emits a range of TCP source ports to the broadcast destination. If the counter delta is below 100, the test passes.
+
+## State and Persistence Behavior
+
+State is two temporary namespaces, a veth pair, interface offload settings, sysfs GRO/NAPI values in the server namespace, and namespace-local counters. Cleanup deletes the server-side veth and both namespaces.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root/CAP_NET_ADMIN, `mausezahn`, `jq`, `bc`, `lnstat`, `ethtool`, veth, GRO sysfs knobs, and namespace support. Integration points are route hints for directed broadcast, GRO/NAPI behavior, and `/proc/net/stat` style counters surfaced through `lnstat`. Risks include missing tooling, counter name/output changes, timing around `sleep 1`, and offload behavior differences. Signals are `[ OK ]` when `new_in_brd - orig_in_brd < 100`, otherwise `[FAIL]` with the observed delta.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/route_hint.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/route_localnet.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/route_localnet.sh
+
+## Purpose
+
+`route_localnet.sh` tests IPv4 loopback-address routing over a veth link when `route_localnet=1`. It specifically checks that ARP source-selection settings `arp_announce=2` and `arp_ignore=3` do not prevent pinging a peer loopback-range address over veth.
+
+## Important APIs, Types, and Functions
+
+The script defines `setup`, `cleanup`, `run_arp_announce_test`, `run_arp_ignore_test`, and `run_all_tests`. It uses `ip netns`, veth creation, `sysctl net.ipv4.conf.<dev>.route_localnet`, deletion/restoration of the local route for `127.0.0.0/8`, assignment of `127.25.3.4/24` and `127.25.3.14/24`, `ip route flush cache`, and `ping -I veth0`.
+
+## Control Flow
+
+Each subtest calls `setup`, writes one ARP sysctl on both ends, pings from the init namespace veth to the peer namespace's loopback-range address, prints `ok` or `failed`, and calls `cleanup`. `run_all_tests` executes both subtests sequentially.
+
+## State and Persistence Behavior
+
+The script mutates init namespace networking: it creates `veth0`, deletes the local route for `127.0.0.0/8`, assigns a 127/8 address to veth0, writes sysctls, flushes route cache, and then restores the local route in cleanup. It also creates and deletes a peer namespace. Cleanup is called per subtest but there is no global trap, so interruption can leave altered local route state.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root, veth, namespaces, IPv4 sysctls, and ping. Integration points are `route_localnet`, local table route handling, ARP announce/ignore policy, and route-cache behavior. Risks include host route mutation if not isolated, no exit-status aggregation despite printed failure, cleanup failing if setup partially fails, and missing trap on interrupt. Signals are printed `ok` for both ARP sysctl cases; the script itself does not force a nonzero exit on ping failure.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/route_localnet.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rps_default_mask.sh -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rps_default_mask.sh
+
+## Purpose
+
+`rps_default_mask.sh` verifies propagation rules for `net.core.rps_default_mask`. It checks that the sysctl affects newly created devices in the namespace where it is set, does not retroactively change existing devices, and defaults to zero in child namespaces.
+
+## Important APIs, Types, and Functions
+
+The script defines `setup`, `cleanup`, and `chk_rps`. It reads `/proc/sys/net/core/rps_default_mask`, creates temporary netns and veth devices, writes the sysctl in init and child namespaces, and reads `/sys/class/net/<dev>/queues/rx-0/rps_cpus`. It normalizes comma-separated CPU masks before integer comparison.
+
+## Control Flow
+
+The script skips unless more than two CPUs are available. It saves the initial mask, tests a zero default in a child namespace, restores, sets init namespace mask to 1 and later 3, verifies existing lo devices are unchanged, creates veth peers and verifies only the new init-namespace device inherits 3, recreates the child namespace, sets child mask to 1, creates another veth pair, and verifies inheritance is local to the child namespace. It exits with accumulated `ret`.
+
+## State and Persistence Behavior
+
+It mutates `/proc/sys/net/core/rps_default_mask` in the init namespace and child namespace, creates and deletes a temporary namespace and veth device, and reads sysfs RPS masks. The EXIT trap restores the initial init-namespace mask and deletes the namespace.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include root/CAP_NET_ADMIN, RPS sysctl support, veth, namespaces, and at least three CPUs. Integration points are RPS default mask inheritance and sysfs `rps_cpus` initialization. Risks include numeric comparison of large hex masks, CPU masks with commas, namespace cleanup already done before EXIT, and skip on small systems. Signals are `[ ok ]` lines for each `chk_rps` case and exit status zero.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rps_default_mask.sh -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rtnetlink.py -->
+# sources/distributed-fs/ceph-client/tools/testing/selftests/net/rtnetlink.py
+
+## Purpose
+
+`rtnetlink.py` is a focused Python kselftest for rtnetlink multicast-address dumping. It verifies that at least one interface reports the IPv4 all-hosts multicast address.
+
+## Important APIs, Types, and Functions
+
+The file imports `ksft_exit`, `ksft_run`, `ksft_ge`, and `RtnlAddrFamily` from `lib.py`, plus `socket`. `IPV4_ALL_HOSTS_MULTICAST` is the byte string `224.0.0.1`. `dump_mcaddr_check` calls `rtnl.getmulticast({"ifa-family": socket.AF_INET}, dump=True)`, filters returned entries whose `multicast` field equals the all-hosts address, and asserts the count is at least one. `main` constructs `RtnlAddrFamily`, runs the check, and exits through kselftest helpers.
+
+## Control Flow
+
+Execution is linear: create rtnetlink family wrapper, run one check under `ksft_run`, then report via `ksft_exit`. Failures are represented through kselftest assertion helpers rather than manual exceptions.
+
+## State and Persistence Behavior
+
+The test does not mutate system state. It opens netlink state through the helper object and inspects the current namespace's multicast address table.
+
+## Dependencies, Integration Points, Risks, and Test Signals
+
+Dependencies include the selftests Python rtnetlink library, rtnetlink multicast dump support, IPv4, and at least loopback or another interface with all-hosts multicast membership. Integration is with the netlink address-family dump ABI and the Python kselftest runner. Risks are minimal but include running in an unusual namespace with no IPv4 multicast membership or helper API schema changes. The signal is a passing `ksft_ge(len(all_host_multicasts), 1, ...)` assertion.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/testing/selftests/net/rtnetlink.py -->

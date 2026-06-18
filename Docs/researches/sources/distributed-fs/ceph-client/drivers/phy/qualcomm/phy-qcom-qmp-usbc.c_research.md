@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-usbc.c
+
+Purpose: Implements the Qualcomm QMP USB-C PHY provider for USB3-only and combined USB3/DisplayPort PHY instances. It binds SoC-specific init tables and register layouts for MSM8998, QCM2290, QCS615, SDM660, and SM6115 class PHYs, and exposes separate generic PHY objects for USB and DP when the hardware supports both.
+
+Important APIs/types/functions: Core types are `struct qmp_phy_cfg`, `struct qmp_usbc_offsets`, and `struct qmp_usbc`. Public integration is through `qmp_usbc_usb_phy_ops`, `qmp_usbc_dp_phy_ops`, `qmp_usbc_probe()`, `qmp_usbc_phy_xlate()`, and the OF match table. Major lifecycle helpers are `qmp_usbc_com_init()`, `qmp_usbc_usb_power_on()`, `qmp_usbc_dp_enable()`, `qmp_usbc_dp_power_on()`, `qmp_usbc_register_clocks()`, and `qmp_usbc_typec_switch_set()`.
+
+Control flow: Probe selects a config from OF, registers regulators, optional Type-C orientation switch, optional TCSR syscon controls, parses either legacy child-node resources or a flat MMIO resource, enables runtime PM, registers pipe and DP clocks, creates USB and optional DP PHYs, and registers an OF PHY provider. USB init gates out concurrent DP use, enables common regulators/resets/clocks, programs USB SerDes/TX/RX/PCS tables, selects Type-C lane orientation, starts PCS/SerDes, and polls `PHYSTATUS`. DP init gates out concurrent USB use, powers common resources, initializes AUX, stores DP configure options, programs link-rate-specific SerDes and TX tables, configures swing/pre-emphasis, and polls C-ready, frequency-done, PLL-lock, TSYNC, and PHY-ready status.
+
+State and persistence: Runtime state is in `struct qmp_usbc`: MMIO bases, clocks, reset/regulator arrays, TCSR registers, Type-C orientation, mode, DP options, AUX calibration index, and `usb_init_count`/`dp_init_count`. Register programming persists in PHY hardware until power-off, reset, runtime suspend, or Type-C repower. `phy_mutex` protects shared USB/DP resources and orientation changes.
+
+Dependencies and integration points: Depends on generic PHY, clock provider, regulator, reset, runtime PM, syscon/regmap, Type-C switch, and QMP register definition headers. It integrates with USB/DWC3 and display consumers through OF PHY phandles and exposes pipe/link/pixel clocks to GCC/DISPCC consumers.
+
+Risks: USB and DP are mutually exclusive in this implementation, so init-count imbalance or missing locking can strand the shared block. DP orientation handling has an explicit FIXME for lane remapping. Register tables are hardware-specific and failures usually surface as PHY-ready or PLL timeout. Runtime suspend disables clocks while autonomous wake detection and optional TCSR clamp state must remain coherent.
+
+Test signals: Build coverage for `qcom-qmp-usbc-phy`, OF probe on all compatible strings, USB SuperSpeed enumeration in both Type-C orientations, DP link training at 1.62/2.7/5.4 Gbps, Type-C orientation switch while USB is active, runtime suspend/resume wake, clock provider lookup, and timeout/error paths for missing regulators, resets, or pipe clock.

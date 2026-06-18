@@ -1,0 +1,13 @@
+# sources/distributed-fs/orangefs/src/io/flow/flowproto-bmi-cache/flowproto-bmi-cache-server.c
+
+Purpose: server-side flow protocol moving data between BMI network endpoints and a Trove-backed cache layer. It is an experimental/cache variant of BMI<->Trove transfer with request chunking and callback-driven BMI/cache progress.
+
+Important APIs/functions: exports `fp_bmi_cache_ops` named `flowproto_bmi_cache`. `fp_bmi_cache_initialize()` starts the BMI thread manager and obtains context. `fp_bmi_cache_post()` lazily initializes cache memory and Trove context, sets request bounds, builds per-request queue items with `bmi_cache_request_init()`, and starts progress checking. `bmi_cache_progress_check()` polls cache request completion and triggers `cache_write_callback_fn()` or `cache_read_callback_fn()`. BMI callbacks update totals, release cache requests, and advance more cache work. Cache helper functions post/read/test/done cache requests.
+
+Control flow: a flow is split into `fp_queue_item`s of at most `BUFFER_SIZE` and `MAX_REGIONS` by `PINT_process_request(PINT_SERVER)`. For BMI-to-cache, cache write requests reserve buffers, then BMI receive fills them, then cache resources are released. For cache-to-BMI, cache read supplies buffers and BMI send transmits them. Without cache callback support, BMI callbacks call blocking `bmi_cache_progress_check()` to drive the next cache item.
+
+State and persistence: protocol-global BMI context and lazily initialized cache/Trove context persist across flows. Each flow owns `fp_private_data` queues, mutex, total byte counters, and per-item cache/BMI callback state. Cache memory is allocated once in `fp_bmi_cache_post()` and not visibly freed in finalize.
+
+Dependencies/integration: depends on BMI thread manager, `trove_open_context`, `ncac-interface.h`, `PINT_process_request()`, quicklist, and flow descriptors. Build fragment adds this only to server sources.
+
+Risks: uses many `fprintf(stderr)` diagnostics and `assert()` for runtime error paths. Cache initialization uses destination Trove collection even for Trove-to-BMI where source may be the Trove endpoint. No `flowproto_cancel` entry is provided. There are questionable list mutations while iterating, potential leaks of cache space and queue items on errors, and blocking progress inside callbacks. `q_item->cache_req.buffer_type` is not clearly initialized before BMI list operations. Test signals should include both directions, immediate and asynchronous BMI/cache completions, zero-size files, cache init failure cleanup, backpressure with multiple chunks, callback race tests, and cancellation behavior if this protocol is enabled.

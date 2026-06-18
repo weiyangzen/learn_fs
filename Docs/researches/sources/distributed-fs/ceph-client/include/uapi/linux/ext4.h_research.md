@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/uapi/linux/ext4.h
+
+This UAPI header defines ext4-specific ioctl commands, structures, and flags for version fields, online resize, extent movement, delayed allocation flushing, extent-status cache inspection, checkpointing, filesystem UUID operations, shutdown, and tunable superblock parameters.
+
+Important exports include `EXT4_IOC_GETVERSION`, `SETVERSION`, `GETRSVSZ`, `SETRSVSZ`, `GROUP_EXTEND`, `GROUP_ADD`, `MIGRATE`, `ALLOC_DA_BLKS`, `MOVE_EXT`, `RESIZE_FS`, `SWAP_BOOT`, `PRECACHE_EXTENTS`, `CLEAR_ES_CACHE`, `GETSTATE`, `GET_ES_CACHE`, `CHECKPOINT`, `GETFSUUID`, `SETFSUUID`, `GET_TUNE_SB_PARAM`, `SET_TUNE_SB_PARAM`, and `EXT4_IOC_SHUTDOWN`, with 32-bit compat forms for older integer-sized commands. Key types are `struct fsuuid`, `struct move_extent`, `struct ext4_new_group_input`, and `struct ext4_tune_sb_params`; key flags include exposed inode state bits, checkpoint flags, shutdown flags, tune field masks, and `EXT4_FIEMAP_EXTENT_HOLE`.
+
+Control flow is ioctl dispatch from an fd on an ext4 filesystem into ext4-specific handlers. Some commands query state, some update persistent superblock or inode metadata, and others initiate heavyweight operations such as online resize, extent migration, journal checkpointing, or shutdown. Runtime state includes inode flags, extent status cache, journal state, superblock tunables, and online-resize metadata. Persistent behavior applies to UUIDs, superblock tunables, version fields, and resized filesystem layout.
+
+Dependencies include `linux/fiemap.h`, `linux/fs.h`, `linux/ioctl.h`, and `linux/types.h`. Integration points are e2fsprogs/chattr/lsattr/debug tooling, fscrypt ioctl number reservations, fiemap extent reporting, VFS ioctl routing, journal checkpoint logic, and block-layer discard/zeroout behavior during checkpoints.
+
+Risks include destructive or privileged operations, compat-ABI struct-size differences, reserved ioctl-number collisions with fscrypt, inconsistent behavior if commands run during mount shutdown, and persistent corruption if online resize or tune operations are mishandled. Test signals include ext4 ioctl xfstests, 32-bit compat tests, online resize tests, journal checkpoint/discard tests, move-extent correctness tests, UUID/tune persistence checks, and fiemap hole flag validation.

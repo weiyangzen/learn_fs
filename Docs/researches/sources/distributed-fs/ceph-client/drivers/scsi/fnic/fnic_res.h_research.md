@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/scsi/fnic/fnic_res.h
+
+Purpose: this header provides inline descriptor-construction helpers for fnic raw WQ, Ethernet WQ, copy-WQ FCPIO requests, and RQ posts. It is the lowest-level encoding layer between driver control flow and hardware/firmware queue descriptors.
+
+Important APIs: `fnic_queue_wq_desc()` encodes an FCoE raw work-queue descriptor with DMA address, frame length, FC EOF, VLAN insertion, CQ entry, SOP/EOP, and FCoE encapsulation enabled. `fnic_queue_wq_eth_desc()` emits a non-FCoE Ethernet descriptor. `fnic_queue_wq_copy_desc_icmnd_16()` builds an FCP SCSI command request with SGL/sense DMA addresses, CDB, LUN, target D_ID, max burst, and FC timeouts. `fnic_queue_wq_copy_desc_itmf()` builds task management requests for abort, terminate, and LUN reset. `fnic_queue_wq_copy_desc_flogi_reg()` and `fnic_queue_wq_copy_desc_fip_reg()` register FC/FIP login identity with firmware. `fnic_queue_wq_copy_desc_fw_reset()` issues firmware reset. `fnic_queue_wq_copy_desc_lunmap()` describes LUN map buffer requests. `fnic_queue_rq_desc()` posts a receive buffer.
+
+Control flow: higher-level code checks descriptor availability and locks queues before calling these helpers. Each helper obtains the next descriptor, fills protocol-specific fields, and posts the queue entry (`vnic_wq_post`, `vnic_wq_copy_post`, or `vnic_rq_post`). These helpers do not validate arguments, reserve descriptors, or handle DMA mapping; callers must do that first.
+
+State and persistence: descriptor contents become hardware-visible queue state after post. There is no standalone persistent state. Address fields are ORed with `VNIC_PADDR_TARGET`, multi-byte FC IDs use `hton24`, and SCSI CDB/LUN arrays are copied into firmware request formats.
+
+Dependencies and integration: this header depends on descriptor encoders from `wq_enet_desc.h`, `rq_enet_desc.h`, FCPIO definitions, and vNIC queue APIs. It is consumed by FCS transmit, RQ refill, SCSI command queueing, abort/reset paths, FLOGI registration, and firmware reset.
+
+Risks: because helpers are inline and trust callers, errors in CDB length, SGL count, DMA address lifetime, tag composition, or queue locking propagate directly to firmware-visible requests. `fnic_queue_wq_copy_desc_icmnd_16()` copies `cdb_len` bytes into a 16-byte CDB field, relying on host template `max_cmd_len` and caller behavior. Test signals include descriptor field validation via firmware traces, DMA mapping error paths, CDB length boundaries, abort/reset tag encoding, VLAN/FCoE encapsulation on raw WQ frames, and RQ replenishment under pressure.

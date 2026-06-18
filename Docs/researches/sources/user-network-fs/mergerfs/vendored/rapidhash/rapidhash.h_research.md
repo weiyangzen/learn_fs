@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/user-network-fs/mergerfs/vendored/rapidhash/rapidhash.h -->
+# sources/user-network-fs/mergerfs/vendored/rapidhash/rapidhash.h
+
+Purpose: Header-only vendored rapidhash V3 implementation, derived from wyhash, providing fast deterministic 64-bit non-cryptographic hashes for mergerfs. The header exposes full, Micro, and Nano variants so callers can trade larger-input throughput against instruction footprint.
+
+Important APIs, types, and functions: Public entry points are `rapidhash`, `rapidhash_withSeed`, `rapidhashMicro`, `rapidhashMicro_withSeed`, `rapidhashNano`, and `rapidhashNano_withSeed`. Internal helpers include `rapid_mum` for 64x64-to-128 multiplication, `rapid_mix` for xor-folded multiplication mixing, `rapid_read64` and `rapid_read32` for endian-normalized unaligned reads, and the `rapid_secret[8]` default secret table. Compile-time knobs include `RAPIDHASH_COMPACT` versus `RAPIDHASH_UNROLLED`, `RAPIDHASH_FAST` versus `RAPIDHASH_PROTECTED`, endianness macros, and inlining/noexcept/constexpr compatibility macros.
+
+Control flow: Each hash seeds itself by mixing the caller seed with two secrets, then chooses a length path. Inputs up to 16 bytes are folded from the first/last 4 or 8 bytes, or selected single bytes for 1-3 byte inputs. Longer inputs process repeated 112-byte, 80-byte, or 48-byte stripes for the full, Micro, and Nano variants respectively, mix remaining 16-byte chunks, fold the final 16 bytes with the length, and finish with one multiply plus a final `rapid_mix`. The full implementation can optionally unroll 224-byte loops when `RAPIDHASH_UNROLLED` is defined.
+
+State and persistence behavior: There is no mutable global state and no persistence. Hash output is determined only by input bytes, input length, seed, compile-time mode, platform integer behavior, and the secret table. `rapid_secret` is defined in the header as a constant object, so every translation unit can inline and optimize around it.
+
+Dependencies and integration points: Depends only on `<stdint.h>`, `<string.h>`, compiler 128-bit multiply support or MSVC intrinsics when available, and portable fallback multiplication otherwise. In mergerfs it is used by inode hashing in `src/fs_inode.cpp`, compact hash storage in `src/hashset.hpp`, and pseudo-random generation in `src/rnd.cpp`. `tests/tests.cpp` includes a regression that checks seeded wrappers preserve canonical internal output for many offsets, lengths, and seeds, and verifies Micro/Nano match the full variant within their intended small-size ranges.
+
+Risks: This is not a cryptographic hash; it should not be used for adversarial authentication or collision-resistant security decisions. Public functions do not validate `key`, so a null pointer is only safe for zero-length input. The internal `secret` pointer must address at least eight 64-bit words even though some comments still describe a smaller secret set. Build output can vary if incompatible macro combinations or endianness detection are wrong. HashSet callers that store only hashes accept the residual collision risk.
+
+Test signals: Run mergerfs tests that include `test_rapidhash_withSeed_preserves_default_output`. Additional useful signals are deterministic vectors for empty, 1-3 byte, 4-7 byte, 8-16 byte, and large buffers under both compact and unrolled modes, plus cross-endian vector checks if big-endian support matters.
+<!-- END_FILE_RESEARCH: sources/user-network-fs/mergerfs/vendored/rapidhash/rapidhash.h -->

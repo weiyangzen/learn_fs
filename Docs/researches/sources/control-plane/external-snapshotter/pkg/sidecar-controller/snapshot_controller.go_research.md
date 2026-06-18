@@ -1,0 +1,13 @@
+# sources/control-plane/external-snapshotter/pkg/sidecar-controller/snapshot_controller.go
+
+Purpose: implements the CSI snapshot sidecar's per-`VolumeSnapshotContent` reconciliation logic. It decides whether a content object should create a backend CSI snapshot, poll backend snapshot status, clear status after deletion, or remove the content finalizer so the API server can finish deletion.
+
+Important APIs/functions: `syncContent`, `createSnapshot`, `checkandUpdateContentStatus`, `createSnapshotWrapper`, `deleteCSISnapshotOperation`, `updateSnapshotContentStatus`, `clearVolumeContentStatus`, `GetCredentialsFromAnnotation`, `removeContentFinalizer`, `shouldDelete`, annotation helpers, `isCSIFinalError`, and `contentIsReady`. It uses `utils.PatchVolumeSnapshotContent` for JSON patches and a `Handler` wrapper for CSI `CreateSnapshot`, `DeleteSnapshot`, and status calls.
+
+Control flow: `syncContent` first handles deletion candidates. Delete policy `Delete` with an independent snapshot handle calls CSI `DeleteSnapshot`, clears snapshot-related status, then removes the bound-protection finalizer; `Retain` and group-member contents skip backend deletion and only remove the finalizer. Non-deleted dynamic independent contents with source volume handles and no status call `CreateSnapshot`. Ready contents avoid repeated CSI calls and only clear the in-progress annotation. Everything else checks status via CSI `ListSnapshots` or falls back to creation when appropriate.
+
+State and persistence: persistent state is stored in `VolumeSnapshotContent` status fields (`SnapshotHandle`, `ReadyToUse`, `CreationTime`, `RestoreSize`, `VolumeGroupSnapshotHandle`, `Error`), metadata finalizers, and the `AnnVolumeSnapshotBeingCreated` annotation. The controller also updates an in-memory cache through `storeContentUpdate` to suppress stale informer events.
+
+Dependencies and integration: integrates Kubernetes snapshot CRDs, core events, secrets, snapshot classes, JSON patch helpers, CSI handler calls, deletion-secret annotations, list-secret parameters, and group snapshot annotations. It relies on common-controller annotations such as `AnnVolumeSnapshotBeingDeleted` to authorize destructive cleanup.
+
+Risks and test signals: risks include retry storms on transient CSI/API errors, leaked backend snapshots if timeout annotations are mishandled, lossy status updates under conflicts, nil snapshot class handling, and group snapshot members accidentally routed through independent snapshot deletion. Tests in this subset cover cache ordering, deletion-policy branches, secret failures, group-member deletion skips, final-error classification indirectly through create behavior, and status/finalizer expectations.

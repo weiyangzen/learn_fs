@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/include/linux/fs/super.h
+
+Purpose: declares the inline VFS superblock helpers that higher-level filesystem code uses for freeze exclusion, read-only checks, encoding checks, and block-size/freeze operations. It is the small operational companion to `fs/super_types.h`, keeping common `struct super_block` state manipulation out of open-coded call sites.
+
+Important APIs and types: `sb_start_write()`, `sb_end_write()`, `sb_start_pagefault()`, `sb_end_pagefault()`, `sb_start_intwrite()`, and `sb_end_intwrite()` wrap the three freeze levels in `sb->s_writers.rw_sem`. `sb_start_write_trylock()` and `sb_start_intwrite_trylock()` expose nonblocking acquisition. `sb_write_started()`/`sb_write_not_started()` are lockdep-oriented assertions. `DEFINE_GUARD(super_write, ...)` enables scoped write protection. `sb_rdonly()`, `sb_is_blkdev_sb()`, `sb_encoding()`, `sb_same_encoding()`, `sb_has_encoding()`, `sb_set_blocksize()`, `sb_min_blocksize()`, `freeze_super()`, and `thaw_super()` are the public utility surface.
+
+Control flow: write paths call a start helper before dirtying pages/inodes or running metadata updates and call the matching end helper when complete. Freezing takes the inverse side of the percpu rwsems in increasing freeze levels, so callers must preserve documented lock ordering: normal writes are outermost to inode locks, pagefault protection sits near `mmap_lock`, and internal filesystem writes rank below pagefault protection.
+
+State and persistence: this header does not persist data directly, but it protects persistent filesystem mutations against freeze/thaw transitions. The unicode helpers read `s_encoding` and `s_encoding_flags`, returning no-op compatibility in non-unicode builds. Dependencies include percpu rwsems, lockdep, unicode maps, block device superblock state, and the `super_block` layout.
+
+Risks and test signals: the main risks are unbalanced start/end pairs, using the wrong freeze level, lock-order regressions with `s_umount`, and assuming lockdep helpers are definitive in non-lockdep builds. Tests should cover freeze while concurrent write/pagefault/internal writers run, trylock failure behavior on frozen filesystems, read-only remount checks, unicode casefold compatibility, and block-size setup error paths.

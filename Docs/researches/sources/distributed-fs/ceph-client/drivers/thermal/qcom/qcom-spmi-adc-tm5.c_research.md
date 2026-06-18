@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/thermal/qcom/qcom-spmi-adc-tm5.c
+
+Purpose: Qualcomm SPMI PMIC ADC thermal monitor driver for ADC_TM5, ADC_TM high-current, and ADC_TM5 gen2 peripherals. It binds PMIC ADC threshold channels to thermal zones, converts trip temperatures into ADC threshold codes, programs recurring measurements, and reports threshold IRQs.
+
+Important APIs/types/functions: `struct adc_tm5_data` abstracts generation-specific full-scale value, decimation/hw-settle tables, configure/disable/init/isr operations, and IRQ name. `struct adc_tm5_channel` stores DT channel number, ADC channel, calibration/prescale/timing, IIO channel, flags, and thermal zone. `struct adc_tm5_chip` stores regmap, base, channel array, global sampling settings, and gen2 mutex. `adc_tm5_get_temp()` reads processed IIO temperatures. `adc_tm5_configure()` programs gen1 channel blocks; `adc_tm5_gen2_configure()` serializes shared gen2 programming and performs conversion handshake. `adc_tm5_isr()` and `adc_tm5_gen2_isr()` decode low/high status and update affected zones.
+
+Control flow: probe obtains parent regmap and base address, gets IRQ, parses child channel DT nodes, initializes hardware for the selected generation, registers thermal zones for available channels, adds hwmon, and requests the threaded IRQ. Thermal `set_trips()` disables a channel when both bounds are unbounded or calls the generation-specific configure routine. High temperatures map to low voltage thresholds for thermistors; low temperatures map to high voltage thresholds.
+
+State/persistence: channel flags mirror programmed measurement and interrupt enables, especially for gen2 status handling. Hardware register blocks hold thresholds and conversion configuration. Dependencies: SPMI regmap, IIO channels, Qualcomm VADC scaling helpers, OF child nodes, thermal OF, hwmon.
+
+Risks: DT parsing must keep PMIC ADC and thermal monitor channel numbers consistent; gen2 shared register programming relies on mutex and handshake timeout; threshold polarity is easy to invert; unavailable thermal zones are skipped but channels remain parsed. Test signals include gen1/gen2 init, child DT validation, IIO read errors, trip-to-code conversion, low/high IRQ updates, gen2 status clear, and conversion handshake timeout.

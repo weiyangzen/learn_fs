@@ -1,0 +1,15 @@
+# Research: sources/distributed-fs/ceph-client/drivers/pmdomain/mediatek/mtk-pm-domains.c
+
+Purpose: generic MediaTek SCPSYS power-controller driver for modern SoCs, covering direct SPM-controlled MTCMOS domains and hardware-voter controlled domains.
+
+Important APIs, types, and functions: `struct scpsys_domain` wraps genpd, direct or HWV table data, clocks, subsystem clocks, optional supply, and parent `struct scpsys`. `scpsys_sram_enable/disable()`, `scpsys_bus_protect_set/clear/enable/disable()`, `scpsys_ctl_pwrseq_on/off()`, `scpsys_modem_pwrseq_on/off()`, `scpsys_power_on/off()`, and `scpsys_hwv_power_on/off()` implement control paths. `scpsys_add_one_domain()` parses DT child `reg`, supplies, clocks, flags, and genpd callbacks. Bus-protection regmaps are resolved by `scpsys_get_bus_protection()` or legacy lookup. The OF match table connects MT6735, MT6795, MT6893, MT8167, MT8173, MT8183, MT8186, MT8188, MT8189, MT8192, MT8195, MT8196 direct/HWV, and MT8365 data.
+
+Control flow: probe gets SoC data, allocates a flexible `scpsys`, obtains the parent syscon regmap, resolves bus-protection controllers, iterates available child nodes, adds domains recursively, adds parent-child genpd relationships, and publishes onecell provider. Direct power-on enables regulator/clocks, clears external buck isolation when needed, turns on SPM or modem sequence, releases bus protection in pre/post-subclock phases, enables subsystem clocks, enables SRAM, and handles strict bus-protection ordering. Direct power-off reverses bus protection, SRAM, buck isolation, clocks, and SPM bits. HWV power-on/off uses SET/CLR/DONE/EN status polling and IRQ-safe genpd flags.
+
+State and persistence behavior: no disk persistence. State is hardware register state, regulator/clock enable state, genpd status, bus-protect regmap state, and secure monitor infra power state. Domains marked `KEEP_DEFAULT_OFF` are initialized off; non-default-off domains are powered on during registration to sync hardware/software.
+
+Dependencies and integration points: depends on syscon/regmap, OF child domain nodes, optional `access-controllers`, legacy MediaTek infracfg/SMI phandles, regulators named `domain`, clocks with names split by `-` for subsystem clocks, ARM SMCCC for secure infra control, and many SoC table headers.
+
+Risks: clock parsing assumes all main clocks precede subsystem clocks by index after counting names with `-`; malformed DT can misassign clocks. Bus-protection block counts must match `access-controllers`. Some cleanup paths call direct `scpsys_power_off()` even for HWV domains via `scpsys_remove_one_domain()`, which is risky if used after HWV domain creation. Poll timeouts can leave partial power state. Recursive subdomain setup depends on DT nesting rather than static parent arrays.
+
+Test signals: compile across all included SoCs, boot each compatible with schema-valid DT, verify onecell domain count and names, run runtime PM for every consumer class, fault-inject missing access-controller/regulator/clock, and trace SPM/bus-protect polling in suspend/resume.

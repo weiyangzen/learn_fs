@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/perf/imc-pmu.c
+
+Purpose: implements In-Memory Collection perf PMUs for OPAL-provided PowerPC IMC domains: nest, core, thread, and trace. It registers PMUs from device-tree descriptors, allocates or references counter memory, starts/stops engines through OPAL calls, and presents free-running memory counters or trace samples through perf.
+
+Important APIs/types/functions: `init_imc_pmu`, `update_events_in_group`, `imc_mem_init`, `update_pmu_ops`, nest/core/thread/trace `*_event_init`, `imc_event_update`, `thread_imc_event_add/del`, `trace_imc_event_add/del/stop`, `dump_trace_imc_data`, `trace_imc_prepare_sample`, CPU hotplug callbacks, and cleanup helpers. Global state includes `nest_imc_cpumask`, `core_imc_cpumask`, per-CPU `thread_imc_mem`/`trace_imc_mem`, per-domain refcounts, and `imc_global_refc`.
+
+Control flow and state: device-tree parsing builds event sysfs attributes from event child nodes and optional scale/unit metadata. Nest PMUs use per-chip HOMER memory discovered in `pmu->mem_info`; core/thread/trace allocate per-core or per-CPU pages and initialize OPAL with physical addresses. Event init validates type, sample mode, CPU/target, offset bounds, and domain exclusivity. Start/add snapshots or enables counter posting via `SPRN_LDBAR`; stop/del computes deltas or emits trace samples. Hotplug migrates nest/core contexts to another CPU in the same node/core or stops counters when the last CPU leaves.
+
+State and persistence behavior: no disk persistence. Runtime state is long-lived allocated counter pages, OPAL engine initialization, per-node/per-core/per-domain reference counts, PMU registrations, dynamic event attributes, and LDBAR programming on each CPU. Counter values are free-running big-endian memory slots; perf event counts are derived from deltas against `prev_count`.
+
+Dependencies and integration points: depends on OPAL IMC calls, `asm/imc-pmu.h`, device-tree nodes with `events`, `events-prefix`, `reg`, `scale`, `unit`, CPU/node topology, perf core PMU callbacks, CPU hotplug, and PowerPC SPR access. Trace mode integrates with perf output buffers by constructing `PERF_RECORD_SAMPLE` records.
+
+Risks: global exclusion between core/thread/trace modes is enforced by a single refcount and can leak on init/add error paths; core and thread modes share core counter start/stop refcounts; memory cleanup only frees online CPU per-CPU pages; trace validation stops at the first invalid record; dynamic sysfs string allocation is not comprehensively unwound; comments note PMU unregister follow-up work in common cleanup.
+
+Test signals: build with OPAL IMC and boot on supported PowerNV hardware; verify device-tree-generated PMUs/events appear; run nest/core/thread counting with CPU hotplug; confirm trace sampling emits samples with sensible IP/misc fields; test mutual exclusion by attempting trace with active core/thread events; inspect OPAL failure logs and refcount behavior under interrupted perf sessions.

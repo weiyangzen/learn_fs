@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/mtd/nand/raw/nandsim.c
+
+Purpose: `nandsim.c` is the kernel raw NAND simulator. It registers a synthetic NAND chip, emulates NAND command/address/data state transitions, stores flash contents in sparse memory or a cache file, injects bad/weak/read-disturbed behavior, supports optional software BCH ECC, partitions, BBT modes, and wear reporting through debugfs.
+
+Important APIs, types, and functions: `struct nandsim` holds the simulated chip, controller, partitions, geometry, state machine, registers, storage backing, and debugfs node. `ops[]` describes accepted NAND operation state chains. `ns_exec_op()` bridges modern `nand_operation` instructions to the legacy state-machine callbacks. `ns_read_page()`, `ns_prog_page()`, and `ns_erase_sector()` implement storage behavior. `ns_init_module()` and `ns_cleanup_module()` own module lifetime.
+
+Control flow: module parameters define ID bytes, timing delays, bus width, partitions, BBT behavior, weak blocks/pages, random bitflips, grave pages, override size, cache file, and BCH strength. Init allocates `struct nandsim`, performs a minimal ID-readable setup, parses fault-injection lists, initializes a NAND controller with `.exec_op`, runs `nand_scan()`, optionally overrides geometry, initializes simulator geometry/storage, creates BBT, marks configured bad blocks, registers MTD partitions, and creates debugfs wear output. Runtime operations advance through command, address, data input/output, and action states; actions copy data to the internal buffer, program pages by NAND-style bitwise AND, erase sectors, or adjust offsets.
+
+State and persistence: simulator state includes current command/state, row/column/count/off registers, chip line levels, sparse allocated page contents or cache-file contents plus `pages_written` bits, weak/grave counters, wear counters, partitions, and optional random bitflip behavior. With `cache_file`, contents persist in the named file across module lifetimes; otherwise storage is memory-only.
+
+Dependencies and integration points: this module integrates with the raw NAND core, MTD partition registration, software Hamming/BCH ECC, debugfs, kernel file I/O, page cache helpers, module parameters, and BBT creation. It rejects cached sequential read commands in `check_only` because the internal state model cannot distinguish those flows.
+
+Risks: the state machine is strict and can enter failed-ready state on unexpected command/address/data ordering. Cache-file I/O is kernel-internal and uses pre-held page cache pages plus no-reclaim regions to avoid filesystem recursion. Fault injection and random bitflips make test results intentionally nondeterministic unless disabled. 16-bit mode is explicitly warned as not well tested.
+
+Test signals: load with several ID geometries, 8/16-bit bus modes, memory and cache-file backing, partition lists, BBT modes, badblocks, weakblocks, weakpages, gravepages, bitflips, BCH strengths, page read/program/erase/OOB/random-read flows, unsupported cached-read check, debugfs wear report contents, and full cleanup without leaked list/storage allocations.

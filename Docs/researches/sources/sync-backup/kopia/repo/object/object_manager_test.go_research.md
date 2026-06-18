@@ -1,0 +1,15 @@
+# sources/sync-backup/kopia/repo/object/object_manager_test.go
+
+Purpose: exercises the object package end to end with a fake content manager, covering object writing, reading, seeking, compression, indirect-object creation, concatenation, async writes, checkpointing, and error propagation. The file is a high-value behavioral spec for `Manager`, `objectWriter`, `Open`, `VerifyObject`, and object IDs.
+
+Important APIs/types/functions: `fakeContentManager` implements the content manager surface used by object manager tests: `GetContent`, `WriteContent`, `SupportsContentCompression`, `ContentInfo`, `Flush`, and `PrefetchContents`. `setupTest` builds a `Manager` with `format.ObjectFormat{Splitter:"FIXED-1M"}`. Helpers include `verifyFull`, `verifyIndirectBlock`, `indirectionLevel`, `mustWriteObject`, `makeMaybeCompressibleData`, and `verify`.
+
+Control flow: writer tests feed bytes into `om.NewWriter`, call `Result`, and compare stable object IDs. Compression tests toggle content-manager compression support using a `compressionIDs` map and assert whether compression is represented in content metadata or `Z` object IDs. Indirection tests replace the writer splitter with a small fixed splitter, write different lengths, load index objects, and verify expected blob counts and metadata-compressor headers. Read/seek tests write randomized data, reopen via `Open`, and perform random `Seek`/`Read` samples plus boundary seeks past EOF.
+
+State and persistence behavior: `fakeContentManager` persists content in an in-memory map keyed by deterministic content IDs from SHA-256. It optionally records compression header IDs. Tests validate that small direct objects may write one content, empty/direct cases write none or one, and larger content creates indirect index contents prefixed with metadata content prefix. Checkpoint tests prove buffered bytes are invisible until a splitter flush and that checkpoints are backed by valid content IDs.
+
+Dependencies/integration: depends on `gather`, `content`, `compression`, `format`, `splitter`, `blob`, and `testlogging/testutil`; it uses `errgroup` for the checkpoint/result race. It integrates with `LoadIndexObject`, `Open`, `VerifyObject`, `Manager.Concatenate`, and registered compressors.
+
+Risks: the async write path is race-sensitive, especially mutation of `indirectIndex` while `Result` or `Checkpoint` waits for writes. Compression behavior differs depending on content manager capabilities, so mismatches can change object ID formats. Concatenation can mix empty, direct, compressed, and indirect inputs and must preserve stream length. Error tests show failures may surface on `Write`, `Result`, or `Checkpoint` depending on sync/async flush timing.
+
+Test signals: broad positive coverage across deterministic hashes, custom splitters, direct/indirect reads, all supported compressors, random seeking, EOF behavior, and writer failures. The race test explicitly guards checkpoint validity during concurrent `Result`. It does not use real blob storage; repository-level tests cover that layer.

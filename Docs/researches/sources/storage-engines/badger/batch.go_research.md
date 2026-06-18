@@ -1,0 +1,7 @@
+# sources/storage-engines/badger/batch.go
+
+Purpose: implements `WriteBatch`, a high-throughput helper for batching many writes into Badger transactions.
+
+Important APIs and flow: `DB.NewWriteBatch` rejects managed mode, while `newWriteBatch` initializes a transaction and throttle. `SetMaxPendingTxns` replaces the throttle. `Set`, `SetEntry`, `Delete`, `SetEntryAt`, `DeleteAt`, `Write`, and `WriteList` feed entries into the current transaction. `handleEntry` commits and retries when `ErrTxnTooBig` occurs. `commit` checks stored errors and finished state, throttles pending commits, calls `txn.CommitWith`, creates a new transaction, and propagates callback errors through an atomic `err`. `Flush` commits remaining writes, discards the transaction, waits on the throttle, and returns accumulated errors. `Cancel` finishes pending work and discards without requiring flush.
+
+State and persistence: writes persist through Badger's normal request path; in-memory state tracks current transaction, pending commit throttle, errors, and finished flag. Dependencies include protobuf decoding, `z.Buffer`, `y.Throttle`, and transaction internals. Risks: callers must call `Flush` or `Cancel`, `SetEntryAt` requires managed mode, and post-finish calls return commit-after-finish errors. Test signals in `batch_test.go` cover high-volume writes, deletes, empty flushes, flush-after-finish, and managed error paths.

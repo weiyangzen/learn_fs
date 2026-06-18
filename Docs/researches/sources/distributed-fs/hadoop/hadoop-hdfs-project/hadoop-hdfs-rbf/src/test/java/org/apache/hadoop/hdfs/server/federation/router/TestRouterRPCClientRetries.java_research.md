@@ -1,0 +1,11 @@
+## sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs-rbf/src/test/java/org/apache/hadoop/hdfs/server/federation/router/TestRouterRPCClientRetries.java
+
+Purpose: integration tests for Router RPC client retry behavior and Namenode metrics caching under unavailable or slow subclusters. The suite uses a two-nameservice `StateStoreDFSCluster`, independent datanodes, short datanode report cache expiry, and reduced IPC retry settings to make retry counts deterministic.
+
+Important APIs and types include `RouterRpcClient` behavior via `ClientProtocol`, `FederationRPCMetrics`, `NamenodeBeanMetrics`, `MembershipNamenodeResolver`, `NamenodeStatusReport`, `FederationNamenodeContext`, `MiniDFSCluster`, `NameNode`, JSON parsing through `JSONObject`, and `GenericTestUtils.waitFor`. `registerInvalidNameReport()` replaces a valid resolver registration with an invalid report and reloads the resolver cache.
+
+Control flow: `setUp()` starts the cluster and captures one NameNode, one Router, the resolver, and Router client protocol. `testRetryWhenAllNameServiceDown()` shuts down the DFS cluster, registers an invalid report, calls `mkdirs`, expects a `RemoteException` about no available NameNodes for the first nameservice, and asserts exactly one proxy retry. `testRetryWhenOneNameServiceDown()` shuts down one NameNode, registers invalid state, renews a lease successfully through the remaining nameservice, and checks one retry. `testNamenodeMetricsSlow()` compares cached live-node JSON, waits for cache refreshes, then simulates slow NameNodes to verify partial and empty datanode reports.
+
+State and persistence behavior is resolver/cache driven. The tests deliberately mutate membership cache validity and Namenode metrics cache contents; no durable state-store assertions are made beyond resolver registration effects. Dependencies include federation metrics, NameNode simulation utilities, MiniDFS shutdown/restart behavior, IPC retry config, and JSON node counting.
+
+Risks covered include over-retrying dead nameservices, failing to continue when one nameservice is usable, stale metrics cache behavior, and slow subclusters blocking aggregate metrics. Test signals are retry counter equality, expected remote exception text, successful lease renewal, cached JSON changes, and datanode count assertions.

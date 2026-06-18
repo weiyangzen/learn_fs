@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/memory/samsung/exynos5422-dmc.c
+
+Purpose: Exynos5422 Dynamic Memory Controller driver providing devfreq-based DRAM/DMC voltage and frequency scaling. It calculates LPDDR3 timing registers from DT DDR timing data, switches memory clocks through a safe bypass path, and estimates load through devfreq-event counters or DREX performance-counter interrupts.
+
+Important APIs/types/functions: `struct exynos5_dmc` owns MMIO bases for two DREX channels, clock/regmap/regulator handles, OPP table, current rate/voltage, generated timing arrays, devfreq counters, IRQ timestamps, and governor load data. Core functions include `exynos5_init_freq_table()`, `of_get_dram_timings()`, `create_timings_aligned()`, `exynos5_dmc_target()`, `exynos5_dmc_change_freq_and_volt()`, `exynos5_dmc_get_status()`, `exynos5_performance_counters_init()`, `dmc_irq_thread()`, and `exynos5_dmc_probe()`.
+
+Control flow: probe maps both DREX resources, gets the clock syscon, loads OPPs, obtains `vdd`, initializes clocks and current voltage, generates timings, enables pause-on-clock-switching, and chooses IRQ mode only when both named IRQs and module parameter `irqmode=1` are present. Devfreq calls `exynos5_dmc_target()`, which chooses a recommended OPP, locks, raises voltage if needed, switches to the stable SPLL bypass parent, programs bypass timing bank 1, programs final timing bank 0, changes BPLL rate, switches back to BPLL, then lowers voltage if possible. Polling mode reads devfreq-event devices. IRQ mode estimates load from counter overflow intervals and calls `update_devfreq()`.
+
+State and persistence: persistent runtime state is in `exynos5_dmc`: current rate/voltage, timing arrays, counter handles, and last overflow timestamps. Hardware state spans DREX timing registers, clock muxes/PLLs, regulator voltage, performance-counter registers, and pause configuration. No disk persistence exists.
+
+Dependencies and integration: depends on clocks, regulators, PM OPP, devfreq simple ondemand, devfreq-event, syscon regmap, LPDDR3 parsing from `of_memory.h`, and DDR timing definitions. Device tree must provide DREX resources, `samsung,syscon-clk`, OPP table, `vdd`, clock names, `device-handle`, and optionally `devfreq-events` or DREX IRQs.
+
+Risks: frequency/voltage transition ordering is safety critical. `of_get_dram_timings()` allocates timing arrays sized by `TIMING_COUNT` even though indexed by `opp_count`; this assumes OPP count does not exceed the number of timing fields. `exynos5_dmc_align_bypass_dram_timings()` computes an index but always uses highest-frequency bypass timings. Several `clk_prepare_enable()` calls ignore return values. The global devfreq profile is mutated for initial frequency and polling interval, so multiple instances would share profile state.
+
+Test signals: probe with valid OPP and LPDDR3 DT data, verify generated timing registers per OPP, run devfreq transitions up and down under memory load, check regulator voltage ordering, test polling and `irqmode=1`, confirm counters reset/reenable, run suspend-like clock parent stress, and validate cleanup disables counters and BPLL clocks.

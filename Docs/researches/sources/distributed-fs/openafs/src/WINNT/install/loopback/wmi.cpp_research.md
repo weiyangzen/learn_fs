@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/install/loopback/wmi.cpp -->
+## sources/distributed-fs/openafs/src/WINNT/install/loopback/wmi.cpp
+
+Purpose: Configures the loopback adapter after installation: finds the adapter's WMI instance by GUID, sets static IP/mask, disables DNS registration, enables NetBIOS, adjusts network bindings/order, updates NetBIOS `MaxLana`, and edits `hosts`/`lmhosts`.
+
+Important APIs, types, and functions: `FindNetworkAdapterConfigurationInstanceByGUID` queries `Win32_NetworkAdapterConfiguration` and matches `SettingID`. `SetupStringAsSafeArray` builds single-element BSTR safe arrays for WMI method parameters. `IsXP` and `FixupXPDNSRegistrations` apply registry fixes for XP pre-SP2 DNS registration behavior. `WMIEnableStatic` connects to `root\\cimv2`, finds an adapter instance, calls `EnableStatic`, `SetDynamicDNSRegistration`, and `SetTcpipNetbios`. `LoopbackBindings` uses `INetCfg` to move binding paths to the end, enable TCP/IP/NetBIOS/NetBT/client bindings, and disable others. `SetIpAddress` wraps WMI setup and XP fixup. `AdjustMaxLana` ensures the NetBIOS `MaxLana` registry value is large enough. `UpdateHostsFile` creates or rewrites a file under `%SystemRoot%\\System32\\drivers\\etc`, removing existing entries for the adapter name and appending the new IP/name line.
+
+Control flow and state: WMI setup initializes COM, sets security/impersonation, connects to CIMV2, gets class and instance, builds method input instances, retries `EnableStatic` up to five times with sleeps, then applies DNS and NetBIOS settings. Binding setup obtains an `INetCfg` write lock, enumerates net adapters, matches the loopback GUID, iterates upper binding paths, moves each path to the end, and toggles enabled state by component id. Hosts update rewrites through a temp file and renames the old file to `.old` or a randomized backup.
+
+Persistence and dependencies: Persists WMI network configuration, NetCfg binding state, TCP/IP and NetBIOS registry values, and `hosts`/`lmhosts` file content. Depends on COM, WMI, NetCfg COM interfaces from DDK headers, SetupAPI GUIDs, Shell folder APIs, C runtime file I/O, registry APIs, and admin rights.
+
+Integration points: Called by `loopbackutils.cpp` during loopback install. Reporting uses `ReportMessage` from the loopback utility layer. The functions are exported with C linkage for use through `loopbackutils.h`.
+
+Risks: `UpdateHostsFile` has fragile path building: `tempPath` appends `szFilename` without inserting a slash after the etc directory copy. The condition `if (!MoveFileA( tempPath, etcPath ) != 0)` is confusing and likely wrong due to double negation. Host entry filtering appears inverted: it may keep lines when the name is found under common delimiter conditions. Several fixed 2048-byte buffers and `strcat`/`strcpy` operations can overflow. `FixupXPDNSRegistrations` does not check registry opens before using handles. `LoopbackBindings` may not call `CoUninitialize` despite initializing COM. `AdjustMaxLana` is declared and defined but not obviously called in this file's main flow. Broad binding changes can disrupt networking if the wrong adapter GUID is matched.
+
+Test signals: WMI instance matching by GUID, EnableStatic retry behavior, DNS/NetBIOS method return codes, binding enable/disable postconditions, hosts/lmhosts rewrite with existing names/comments/long lines, XP registry fix path, and COM/resource leak checks.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/install/loopback/wmi.cpp -->

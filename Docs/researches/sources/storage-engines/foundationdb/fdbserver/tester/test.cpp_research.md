@@ -1,0 +1,15 @@
+# sources/storage-engines/foundationdb/fdbserver/tester/test.cpp
+
+Purpose: Implements the top-level FoundationDB tester orchestrator: parses/generates test specs, recruits testers, runs workload phases, prepares/quiesces the database, runs consistency/audit checks, manages simulation policies, applies knob scopes, and records pass/fail counts.
+
+Important APIs/types/functions: Global `passCount`/`failCount`. `throwIfError` unwraps `ErrorOr` future vectors. `runWorkload` recruits tester workloads and drives setup/start/check/metrics. `changeConfiguration` runs `ChangeConfig`. `runTest` wraps one `TestSpec` with timeout, metrics, dump, consistency checks, audits, and clearing. `monitorServerDBInfo` tracks cluster controller DB info. `initializeSimConfig` updates simulation failure policies from database configuration. `disableConnectionFailuresAfter` schedules simulation failure-disable behavior. `runTests7` is the core suite orchestrator. `runTests8` recruits enough workers and delegates to `runTests7`. `runTests` is the public entry point. `testExpectedError` validates expected async failures.
+
+Control flow: `runTests` copies coroutine parameters, starts leader/interface monitors, builds a `TestSet` from mode/file/options, applies global knobs, then chooses urgent checker, local tester, or remote tester execution. `runTests8` waits for enough workers. `runTests7` derives suite-level needs, opens DB if needed, configures simulation agents and connection failures, optionally applies starting configuration, runs pre-test quiescence, then iterates specs with per-test knob protection and `runTest`. `runTest` runs workload phases, logs metrics, handles timeout as failure, performs optional dump/consistency scan/urgent check/regular check/audits, updates counts, and optionally clears data.
+
+State and persistence behavior: Mutates global pass/fail counters, simulation policy state, connection-failure settings, backup/DR agent choices, database configuration, custom shard config, consistency scan state, and potentially database contents. It may write HTML dump files and clears `normalKeys` after tests. Server DB info is maintained in an `AsyncVar`.
+
+Dependencies and integration points: Integrates Flow actors, cluster controller/worker interfaces, management APIs, data-distribution config, simulation validation, quiet database, consistency checker, maintenance helpers, parser, tester server, workload framework, and knob protection.
+
+Risks: Global pass/fail counters persist across invocations in-process. Many operations use hard timeouts; simulated slowness can produce false failures. Comments call out coroutine lifetime hazards, mitigated by copying parameters/state to function scope. Stop requests to workloads are best-effort. Consistency/audit checks can dominate runtime and introduce complex failure modes after workload success.
+
+Test signals: Primary traces include `TestRunning`, `TestSetupStart/Complete`, `TestComplete`, `TestCheckComplete`, `TestResults`, `TestProgress`, `TestsExpectedToPass`, timeout `ProcessEvents`, and audit/consistency traces. Final stdout prints counts passed/failed.

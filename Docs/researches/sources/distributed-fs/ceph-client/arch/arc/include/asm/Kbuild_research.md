@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/Kbuild
+
+Purpose: declares ARC generated and generic asm header fallbacks. Important APIs/types/functions: adds `syscall_table_32.h` to `syscall-y`; generic headers include `extable.h`, `kvm_para.h`, `mcs_spinlock.h`, `parport.h`, `user.h`, and `text-patching.h`. Control flow: kbuild header installation/generation only. State and persistence: generated include artifacts. Dependencies/integration: lets generic kernel code include standard asm interfaces not implemented specially by ARC. Risks: wrong generic fallback can hide missing architecture-specific behavior. Test signals: header install, syscall table generation, and full ARC builds.

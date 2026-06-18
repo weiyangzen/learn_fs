@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v6.h
+
+This header defines QMP V6 PCIe PCS offsets for EQ config, RXEQ evaluation, power-state config, endpoint refclk drive, oscillator-detect actions, and lane1 INSIG controls. It has no functions or persistence. The macros are consumed by V6 PCIe init tables, notably SM8550/SM8750 Gen3-style PCS_MISC programming and SAR2130P lane1 control. Dependencies are the QMP PCIe driver's selected PCS base and shared table writer. Risks include mixing this base V6 header with V6.20/V6.30 layouts; the same semantic register names may live at different offsets. Test signals are Gen3 link-up, lane1 endpoint behavior where used, and stable power-state transitions with no PHY init timeout.

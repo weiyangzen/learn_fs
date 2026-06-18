@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-lg-sw43408.c
+
+Purpose: This driver supports the LG SW43408 / LH546WF1-ED01 1080x2160 MIPI-DSI panel, including Display Stream Compression setup and an internal DSI brightness backlight. The panel is exposed as a fixed DSI mode and requires DSC parameters on the DSI device.
+
+Important APIs, types, and functions: `struct sw43408_panel` stores the panel, DSI link, bulk supplies, reset GPIO, and `drm_dsc_config`. `sw43408_prepare()` enables supplies, runs `sw43408_reset()`, and calls `sw43408_program()`. `sw43408_program()` writes panel setup commands, exits sleep, sets display on, temporarily clears `MIPI_DSI_MODE_LPM` to send the DSC PPS, packs PPS via `drm_dsc_pps_payload_pack()`, sends it with `mipi_dsi_picture_parameter_set_multi()`, restores LPM, and enables DSC compression mode with an offset selector. `sw43408_backlight_update_status()` sends 16-bit large display brightness over DSI. Probe initializes DSC version, slice dimensions, bpc/bpp, block prediction, assigns `dsi->dsc`, and attaches.
+
+Control flow: Probe sets DSI to four lanes RGB888 LPM-only initially, registers regulators/reset/backlight, marks `prepare_prev_first`, configures DSC, and attaches. Prepare bulk-enables `vddi` and `vpnl`, waits, performs a reset pulse pattern, and runs the full DSI program. Unprepare sends display-off and sleep-in, waits, asserts reset, and disables supplies.
+
+State and persistence: `ctx->dsc` persists for the lifetime of the DSI device and is referenced by `dsi->dsc`. The driver mutates `dsi->mode_flags` during programming to leave low-power mode while sending PPS, then restores it. Panel state includes DSC/PPS selection, compression mode, gamma/brightness registers, and sleep/display state. Backlight brightness is controlled by a registered platform backlight device.
+
+Dependencies and integration points: The driver depends on DRM DSC helpers, DRM MIPI-DSI helpers, regulator bulk APIs with load hints, GPIO, backlight registration, and `drm_connector_helper_get_modes_fixed()`. The DSI host and encoder must support DSC and PPS transmission. OF compatibles include legacy `lg,sw43408` and `lg,sw43408-lh546wf1-ed01`.
+
+Risks: The panel works only in DSC mode; missing or incompatible host DSC support will prevent usable scanout despite successful probe. Temporarily changing `mode_flags` around PPS transmission is sequencing-sensitive. Backlight registration is internal rather than `drm_panel_of_backlight()`, so board bindings must not expect an external backlight for this path. Unprepare returns regulator-disable error preferentially over accumulated DSI errors only through `ret ? : ctx.accum_err`, which is concise but can hide the second failure.
+
+Test signals: Verify the fixed 1080x2160 mode, DSC parameters on `dsi->dsc`, successful PPS/compression commands, display output without corruption, large-brightness DCS writes from backlight changes, regulator/reset sequencing, and suspend/resume. Host logs should show no DSI errors when switching LPM around PPS.

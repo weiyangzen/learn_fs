@@ -1,0 +1,13 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/greybus/greybus_protocols.h -->
+# sources/distributed-fs/ceph-client/include/linux/greybus/greybus_protocols.h
+
+Purpose: This large header is the Greybus protocol wire-format catalog. It defines operation headers, operation type numbers, status values, flags, constants, and packed request/response payload structs for control, APBridge, firmware, authentication, bootrom, power supply, HID, I2C, GPIO, PWM, SPI, SVC, raw, UART, loopback, SDIO, camera, lights, audio, and log protocols.
+
+Important APIs/types/functions: `struct gb_operation_msg_hdr` is the common little-endian message header: size, operation id, type, result, and zero padding. The high bit of type marks responses via `GB_MESSAGE_TYPE_RESPONSE` in `operation.h`. Protocol groups then define `GB_*_TYPE_*` operation IDs and packed payloads. Notable families include control manifest/PM/mode-switch messages, firmware download/management, CAP challenge/certificate/authentication, bootrom firmware fetching, power-supply property descriptors, HID report operations, I2C transfer arrays, GPIO line/IRQ operations, SPI transfer descriptions, SVC route/connection/power-mode/DME/pwrmon/module events, UART data/line state/credits, SDIO command/transfer/event payloads, camera stream configuration and metadata, lights channel configuration/events, audio topology/control/PCM/streaming payloads, and log send requests.
+
+Control flow, state, and persistence: This file has no executable code; it is the ABI contract consumed by Greybus protocol drivers and firmware peers. Operation code fills packed request structs, sends them through `gb_operation`, validates response result and payload size, then converts little-endian fields to host values. Flexible-array payloads carry variable-length data and must be sized from the message header.
+
+Dependencies/integration: It depends only on fixed Linux types but is central to all Greybus core and protocol drivers. Many constants intentionally mirror Linux subsystem concepts such as power_supply properties, SPI modes, SDIO capabilities, ALSA PCM/control/topology fields, and jack types.
+
+Risks and test signals: ABI drift is the primary risk: changing packing, field order, numeric values, or endian annotations breaks peers. Variable-length structs require strict bounds validation. Tests should include wire encode/decode golden vectors, short/oversized payload rejection, endian conversion, operation result handling, unsupported operation IDs, flexible-array length checks, and compatibility with older protocol versions/capabilities.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/include/linux/greybus/greybus_protocols.h -->

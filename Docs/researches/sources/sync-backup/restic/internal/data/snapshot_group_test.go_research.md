@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/data/snapshot_group_test.go
+
+Purpose: tests group-by option parsing for snapshot grouping. API under test is `SnapshotGroupByOptions.Set` and `String`. Control flow runs table cases for empty input, valid single/multiple group fields, and invalid tokens, then compares parsed booleans and rendered output. State is only the option struct. Dependencies are the data package and internal test helpers. Integration signal is CLI-facing: it protects accepted group names and user-visible string form. Risks covered are primarily input validation and canonical display. Missing signal: `GroupSnapshots` behavior with actual snapshots, JSON key stability, and order sensitivity of tags/paths are not directly tested in this file.

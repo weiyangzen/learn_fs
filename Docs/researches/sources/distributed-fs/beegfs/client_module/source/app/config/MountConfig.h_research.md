@@ -1,0 +1,6 @@
+# sources/distributed-fs/beegfs/client_module/source/app/config/MountConfig.h
+
+## Research
+`MountConfig.h` declares and defines the temporary mount-option container used before full client configuration exists. `struct MountConfig` stores optional string pointers, defined flags for integer options, parsed integer values, authentication/network toggles as strings, and the `grpid` mount flag. Inline lifecycle helpers zero-initialize, allocate with `os_kmalloc`, free all owned strings, and destroy with `kfree`.
+
+Control flow is intentionally simple: `MountConfig_init` makes unset fields distinguishable via zero/NULL, parser code sets corresponding fields and defined booleans, `Config.c` later copies only present values into its config map. State is not persistent and not shared after `Config` consumes it. Dependencies are `Common.h` for allocation and safe free macros and `linux/seq_file.h` for option display declarations. Risks are ownership discipline and semantic validation split across files: this header frees string booleans but does not interpret them, so `Config` must remain the authority. Test signals are leak-free mount parse/uninit cycles, correct NULL behavior for absent options, and no double-free when options are overwritten during parsing.

@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/drivers/mfd/wm8998-tables.c
+
+Purpose: this file provides WM8998-class data tables for the Arizona/Madera infrastructure. It is similar to the WM8997 table file but includes WM8998-specific patching, AOD wake configuration, additional audio interfaces/features, and distinct readable/volatile register coverage.
+
+Important APIs, types, and functions: `WM8998_NUM_AOD_ISR` and `WM8998_NUM_ISR` name interrupt bank counts. `wm8998_rev_a_patch[]` and `wm8998_patch()` register the Rev A patch. `wm8998_aod_irqs[]`/`wm8998_aod` define always-on IRQs including mic-detect clamp and GP5/jack edges, with `wake_base = ARIZONA_WAKE_CONTROL` and inverted wake bits. `wm8998_irqs[]`/`wm8998_irq` define the five-bank main interrupt chip. `wm8998_reg_default[]`, `wm8998_readable_register()`, `wm8998_volatile_register()`, and exported `wm8998_i2c_regmap` define regmap behavior.
+
+Control flow: patch registration is unconditional when `wm8998_patch()` is called. IRQ chips are data consumed by the parent MFD IRQ setup. The regmap config uses 32-bit big-endian register addresses, 16-bit big-endian values, `WM8998_MAX_REGISTER` of `0x31ff`, `REGCACHE_MAPLE`, the reset-default table, and access callbacks. Readable/default coverage includes wake/write-sequencer, clock/FLL, regulators/MICBIAS, accessory/mic clamp and mic-level detection, HPF, expanded output paths, DRE/EDRE, AIF1/2/3, SPDIF, SLIMbus, many mixer routes, ASRC/ISRC, GPIO/pads, IRQ/AOD, EQ/DRC/HPLPF, and ASRC status/rates.
+
+State and persistence: default table entries persist as regcache seed values for nonvolatile registers. Volatile registers include reset/revision, write sequencer controls, live haptics/sample-rate status, async status, mic/headphone detect, input/output and SLIMbus status, all main/secondary/raw IRQ statuses, IRQ pin state, AOD wake/IRQ state, `FX_CTRL2`, and ASRC status. The AOD chip also carries wake-enable state through wake-control register integration.
+
+Dependencies and integration points: depends on Arizona core/register headers and regmap-irq. It integrates with the common Arizona/Madera parent, codec, jack/mic-detect, haptics, DRE/EDRE, ASRC/ISRC, SPDIF, SLIMbus, GPIO, and interrupt subsystems.
+
+Risks and test signals: risks are table drift, patch values applied to the wrong revision, missing volatile entries for live status, and incomplete readable coverage for expanded WM8998 features. The SPI-style `write then read` concern does not apply here; access is via regmap I2C. Test signals include patch registration, regmap endian correctness, main/AOD IRQ delivery and wake behavior, readable access to AIF3/SPDIF/ASRC/DRE registers, and cache restore across suspend/resume.

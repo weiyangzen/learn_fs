@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/net/netfilter/nft_exthdr.c
+
+Purpose: implements nftables `exthdr` operations for extracting, testing, modifying, or stripping IPv6 extension headers, IPv4 options, TCP options, SCTP chunks, and optionally DCCP options.
+
+Important APIs/types/functions: `struct nft_exthdr` stores type, offset, length, operation, dreg/sreg, and flags. Eval variants include `nft_exthdr_ipv6_eval()`, `nft_exthdr_ipv4_eval()`, `nft_exthdr_tcp_eval()`, `nft_exthdr_tcp_set_eval()`, `nft_exthdr_tcp_strip_eval()`, `nft_exthdr_sctp_eval()`, and optional `nft_exthdr_dccp_eval()`. `nft_exthdr_select_ops()` dispatches by `NFTA_EXTHDR_OP`.
+
+Control flow: init validates register direction, bounded u8 offset/len, present flag, and protocol-specific constraints. IPv6 uses `ipv6_find_hdr()`. IPv4 copies options, compiles them with `__ip_options_compile()`, and supports SSRR/LSRR/RR/RA. TCP option read walks option lengths defensively; set ensures writable skb, supports 2/4 byte writes, avoids increasing MSS, and updates TCP checksum; strip replaces option bytes with NOP and adjusts checksum. SCTP walks padded chunks. DCCP only supports presence and logs a deprecation warning on selection.
+
+State/persistence: expression state is pure metadata; packet mutation occurs only for TCP set/strip. Dependencies include skb header access, checksum helpers, IP option parsing, TCP/SCTP/DCCP header formats, and nf_tables registers. Risks include malformed option lengths, skb linearization/writable failures, checksum drift, fragmentation handling, unsupported IPv4 option types, and DCCP removal. Test signals: present/value modes for each protocol, malformed zero-length TCP options, MSS non-increase rule, checksum validation after set/strip, fragmented packets breaking safely, SCTP padding, IPv6 extension lookup, and invalid op/register combinations.

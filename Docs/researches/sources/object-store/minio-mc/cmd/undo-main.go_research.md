@@ -1,0 +1,5 @@
+## sources/object-store/minio-mc/cmd/undo-main.go
+
+Purpose: implements `mc undo`, a versioned-bucket recovery command that removes the newest object versions or delete markers to reverse recent PUT/DELETE operations. Important surfaces include `undoCmd`, `undoFlags`, `undoMessage`, `parseUndoSyntax`, `undoURL`, `undoLastNOperations`, `checkIfBucketIsVersioned`, and `mainUndo`.
+
+Control flow validates one target, positive `--last`, `--recursive --force`, optional `--dry-run`, and an `--action` filter limited to single-object undo. `mainUndo` checks bucket versioning before `undoURL` lists versions with delete markers, groups by object path, filters Glacier entries, and calls `Client.Remove` with selected versions. State is remote S3 version metadata; local state is only output. Dependencies are mc `Client`, alias expansion, versioning APIs, `probe`, and color/json output. Risks include destructive deletes, action filtering relying on latest-version ordering, and dry-run still printing success-like messages. Test signal in this subset is indirect; functional coverage would need versioned bucket undo cases.

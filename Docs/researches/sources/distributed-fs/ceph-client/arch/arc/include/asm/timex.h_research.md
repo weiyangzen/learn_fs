@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/timex.h
+
+Minimal ARC timing definitions. It sets CLOCK_TICK_RATE to 80 MHz as a legacy placeholder, includes asm-generic/timex.h, and notes get_cycles() is not implemented with RTSC yet. Control flow is generic timekeeping code including this header for legacy constants. State is none. Dependencies are generic timex and actual clocksource/timer drivers probed elsewhere. Risks are consumers accidentally relying on CLOCK_TICK_RATE despite dynamic clocks, and lack of arch get_cycles optimization. Test signals are timer_probe(), clocksource registration, delay calibration, and warnings from code using CLOCK_TICK_RATE.

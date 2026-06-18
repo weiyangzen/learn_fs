@@ -1,0 +1,14 @@
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/dma/ioat/prep.c -->
+# sources/distributed-fs/ceph-client/drivers/dma/ioat/prep.c
+
+Purpose: prepares IOAT hardware descriptor chains for DMAEngine operations. It translates memcpy, interrupt, XOR, XOR validation, PQ generation, PQ validation, PQ-backed XOR, and PQ16 RAID operations into IOAT ring entries while holding producer ordering locks until descriptor submission.
+
+Important APIs and control flow: `ioat_dma_prep_memcpy_lock()` splits large copies by channel transfer cap, fills copy descriptors, marks the final descriptor for interrupt/fence/completion, and returns its DMAEngine descriptor. `__ioat_prep_xor_lock()` maps source indices into base or extension descriptors, adds a legacy null completion descriptor to order RAID completions, and supports validation result storage. `__ioat_prep_pq_lock()` fills P/Q descriptors, handles DMA_PREP_CONTINUE variants, optionally enables DWBES writeback status, and adds a null completion descriptor on older CB3.2 hardware. `__ioat_prep_pq16_lock()` allocates super-extended descriptors for 9-16 source PQ/PQ_VAL operations. Public wrappers validate channel-down state, clear validation result bits, normalize disabled P/Q destinations, and select PQ8 versus PQ16 paths. `ioat_prep_interrupt_lock()` emits a null interrupt descriptor.
+
+State and persistence behavior: descriptor state is written into the coherent ring allocated by `dma.c`; SED state is allocated from device DMA pools and later freed by cleanup. The channel `produce` count and `prep_lock` are managed by `ioat_check_space_lock()` and the submit callback, so callers receive a descriptor while the channel remains locked for in-order submission. Validation results persist through caller-provided `enum sum_check_flags` pointers until cleanup/error handling updates them.
+
+Dependencies and integration points: depends on `dma.c` ring helpers, hardware descriptor layouts from `hw.h`, DMAEngine flags and continuation helpers, scatter/generic mapping already performed by clients, and capability setup in `init.c`. Cleanup in `dma.c` must understand descriptor opcodes, extension descriptors, SED pointers, and DWBES result fields prepared here.
+
+Risks and test signals: risks include `BUG_ON()` for invalid source counts, leaked SED allocations if PQ16 preparation fails after reserving ring space, reliance on source-index lookup tables, CB3.2/CB3.3 completion-order workarounds, flag combinations that mutate destination arrays in place, and `MAX_SCF` limiting PQ-backed XOR wrappers. Test signals include memcpy transfer-size splitting, XOR with 2-8 sources, PQ with disabled P/Q and continuation, PQ16 with 9-16 sources, XOR_VAL/PQ_VAL result bits, interrupt descriptors invoking callbacks, and lockdep coverage for submit-unlock paths.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/dma/ioat/prep.c -->

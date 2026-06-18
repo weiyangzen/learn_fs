@@ -1,0 +1,15 @@
+# sources/test-tools/stress-ng/stress-misaligned.c
+
+Purpose: `stress-misaligned.c` stresses CPUs and memory subsystems with misaligned reads, writes, increments, atomics, non-temporal stores, and direct-store variants across 16-, 32-, 64-, and optionally 128-bit widths. It detects architectures that fault or hang on specific methods and disables those methods dynamically.
+
+Important APIs/types/functions: `stress_misaligned_method_info_t` stores method name, function pointer, disabled flag, and exercised flag. Method functions operate on a two-page buffer at offsets such as `+1`, `+63`, and `page_size - N` to cross alignment and page-boundary cases. Signal handlers `stress_misaligned_handler` and `stress_misaligned_timer_handler` use `siglongjmp` to recover from SIGBUS/SIGILL/SIGSEGV or timeout. `stress_misaligned_all` iterates all enabled methods, and `stress_misaligned_exercised` reports successful methods.
+
+Control flow: `stress_misaligned` reads the selected method, installs fault handlers, optionally installs a POSIX timer that sends SIGRTMIN after 0.8 seconds, maps a two-page buffer, applies mergeable/NUMA page advice, enables all methods, synchronizes, then runs the selected method in a loop. If a method faults or times out, the current method is disabled and the sigsetjmp return path logs a skip message. Successful method calls mark the method exercised and increment bogo operations. Cleanup stops/deletes the timer, restores signal defaults, prints exercised methods, frees NUMA masks, and unmaps the buffer.
+
+State and persistence behavior: all state is process-local static state plus the anonymous buffer. `current_method`, `handled_signum`, `use_timer`, and method disabled/exercised flags persist across the stressor call within the process and must be reset by `stress_misaligned_enable_all`. No filesystem state is created.
+
+Dependencies and integration points: the file depends on core arch, x86 assembly, CPU feature helpers, non-temporal store/direct-store helpers, NUMA `mbind` support, mmap/madvise, target clones, and stress-ng signal wrappers. It registers with `CLASS_CPU_CACHE | CLASS_MEMORY`, `VERIFY_ALWAYS`, and a method option; without siglongjmp it registers unimplemented.
+
+Risks: this code deliberately invokes undefined or hardware-specific misaligned behavior, so fault recovery and timer recovery are essential. Atomic operations are explicitly disabled on SH4 and older PPC/PPC64 compiler combinations due to known hazards. Non-temporal/direct-store methods must disable themselves when CPU feature checks fail. The timer is process-global static state and must be cleaned up to avoid later signal surprises.
+
+Test signals: run `stress-ng --misaligned 1 --misaligned-ops 1 --verify`, test `--misaligned-method all`, scalar methods, atomic methods on supported toolchains, and non-temporal/direct-store methods on x86 hardware. Expected output may include skipped methods on strict-alignment architectures; unexpected value read-back messages should fail verification.

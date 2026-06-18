@@ -1,0 +1,9 @@
+# sources/user-network-fs/samba/source4/dsdb/repl/drepl_out_helpers.c
+
+Purpose: core asynchronous outgoing DRS implementation. It connects and binds to remote DRSUAPI, sends `DsGetNCChanges`, converts and commits replicated objects, retries for schema/parent/target issues, and refreshes remote `repsTo` with `DsReplicaUpdateRefs`.
+
+Important APIs/functions: `dreplsrv_out_drsuapi_send/recv()` maintain cached DRSUAPI connections and `DsBind`; `dreplsrv_op_pull_source_send/recv()` drives a pull operation; `dreplsrv_op_pull_source_get_changes_trigger()` builds v10/v8/v5 requests with high-watermarks, UDV, PAS, exop, and flags; `dreplsrv_op_pull_source_apply_changes_trigger()` handles replies, schema cycles, object conversion, commit, retry, and update refs. Helpers build RODC/GC partial attribute sets and convert UDV formats.
+
+Control flow/state: the tevent chain is connect -> bind -> GetNCChanges -> parse compressed/uncompressed level 1/6 replies -> convert -> commit -> loop on `more_data` -> optional retry original op after schema sync -> optional `UpdateRefs` -> done. Successful normal pulls copy the new `repsFrom1` high-watermark/invocation data back into the source DSA; `drepl_out_pull.c` later persists status. Schema replication is buffered until all chunks arrive so a working schema can convert objects safely.
+
+Dependencies/integration: DCE/RPC, GENSEC session key, DRSUAPI NDR, SAMDB schema and replication conversion/commit code, partial replica rules, central queue, and loadparm credentials. Risks include protocol-version compatibility, large reply memory, schema mismatch retry complexity, ignoring `WERR_DS_DRA_BUSY` for `UpdateRefs`, and secret/RODC flag subtleties. Test signals: v10/v8/v5 negotiation, compressed replies, schema mismatch retry, missing-parent/target retries, full-sync behavior, RODC/GC PAS correctness, and `UpdateRefs` error handling.

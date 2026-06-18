@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/ipc/shmat/shmat02.c
+
+Purpose: negative `shmat()` errno test for invalid shmid, unaligned address without `SHM_RND`, and permission denial. Setup probes aligned/unaligned addresses, creates a shared-memory segment with read/write permissions, and resolves `nobody`. Cases run directly as root for `EINVAL` checks or in a forked `nobody` child for `EACCES`. Important APIs are `shmat`, `SAFE_SHMGET`, `SAFE_SETUID`, `TST_EXP_FAIL_PTR_VOID`, and `SAFE_FORK`. State is one segment and child UID transition. Dependencies are root privilege and a valid `nobody` account. Risks are environment-specific permission behavior if capabilities are retained unexpectedly; test signal is expected pointer failure and errno per row.

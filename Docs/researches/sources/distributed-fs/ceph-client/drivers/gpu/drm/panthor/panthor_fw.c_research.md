@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/panthor/panthor_fw.c
+
+`panthor_fw.c` manages Mali CSF firmware loading, MCU VM mapping, shared host/FW interfaces, MCU start/stop/halt, job IRQ handling, req/ack waits, CSG doorbells, watchdog pings, reset recovery, and unplug cleanup.
+
+Key private types describe firmware binary headers, entries, iterators, sections, interface arrays, and `struct panthor_fw`. Public APIs include `panthor_fw_init()`, `panthor_fw_unplug()`, `panthor_fw_pre_reset()`, `panthor_fw_post_reset()`, `panthor_fw_vm()`, global/CSG/CS interface getters, endpoint request helpers, global/CSG ack waits, doorbell ringing, and queue/suspend buffer allocation.
+
+Init requests the job IRQ, powers L2, creates the MCU VM, loads `arm/mali/arch<major>.<minor>/mali_csffw.bin`, activates the VM, starts the MCU, derives interface pointers from the shared section, initializes global timers/core masks/IRQ masks, rings the doorbell, and starts the watchdog. Firmware loading validates magic/version/size, parses entries, maps IFACE sections into kernel BOs at firmware VAs, copies initial data, maps shared sections, and DMA-syncs pages. Reset uses fast path only after clean MCU halt; slow reset reloads all sections.
+
+State persists in the MCU VM, section list and saved init data, shared-section CPU mapping, interface pointers, boot flag, waitqueue, IRQ state, and delayed watchdog. Dependencies are firmware loader, DMA API, arch timer/clk, GEM/MMU/GPU/HW/scheduler/device, registers, and IRQ macros. Risks are malformed firmware, interface version drift, req/ack locking on uncached mappings, watchdog/reset ordering, and timeout handling. Tests should cover missing/corrupt firmware, boot timeout, ping timeout reset, fast/slow reset, ack timeouts, and scheduler event delivery.

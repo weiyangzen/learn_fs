@@ -1,0 +1,14 @@
+
+# sources/distributed-fs/ceph-client/drivers/crypto/virtio/virtio_crypto_akcipher_algs.c
+
+Purpose: implements virtio crypto asymmetric RSA algorithms for the kernel akcipher API. It creates host-side virtio crypto sessions for RSA keys and queues RSA encrypt/decrypt requests to a virtio data queue.
+
+Important APIs, types, and functions: `struct virtio_crypto_akcipher_ctx` tracks selected virtio device, session validity, session id, and RSA key size. `virtio_crypto_alg_akcipher_init_session()` and `virtio_crypto_alg_akcipher_close_session()` issue control-queue create/destroy session commands. `virtio_crypto_rsa_set_key()` parses public/private RSA keys, discovers a device, selects raw or PKCS#1 padding parameters, and creates the session. `virtio_crypto_rsa_do_req()` builds data request headers, and `__virtio_crypto_akcipher_do_req()` copies sg input/output through temporary contiguous buffers and adds virtqueue sg entries. Registration functions maintain global `active_devs` counts.
+
+Control flow: setting a key parses RSA modulus to calculate `max_size`, gets a compatible virtio device if needed, closes a prior session on rekey, and sends a control request with key bytes. Encrypt/decrypt sets the opcode and transfers the request to queue 0's crypto engine. The engine callback allocates request data, builds virtio headers and sg arrays, kicks the data virtqueue, and returns asynchronously. Completion callback maps virtio status to Linux errors, copies output bytes back to the request dst sg, updates `dst_len`, frees temporary buffers and request data, and finalizes the akcipher request.
+
+State and persistence: state persists in `session_id` on the host backend and in the transform context while the key is active. Request state holds copied source/destination buffers, opcode, status byte, and allocated request header until completion. The global algorithm table stores active device counts to avoid duplicate registration.
+
+Dependencies and integration points: depends on `crypto_engine`, `crypto/internal/akcipher.h`, RSA parser helpers, MPI for modulus sizing, scatterlist copy helpers, virtio crypto UAPI structures, and device-manager functions for device selection/refcounting. It registers `rsa` and `pkcs1pad(rsa)` with priority 150.
+
+Risks and test signals: `virtio_crypto_rsa_exit_tfm()` calls `virtcrypto_dev_put(ctx->vcrypto)` without a visible NULL guard, so init/exit paths with no successful key should be checked. Contiguous buffer allocation scales with request size and may fail under memory pressure. PKCS#1 padded RSA forces SHA1 in session parameters because QEMU expects a hash setting, even though encrypt/decrypt do not use it. Test signals include RSA selftests for raw and pkcs1pad, public/private key parsing failure, rekey session replacement, invalid session status, short output length, request allocation failure, and unplug while sessions exist.

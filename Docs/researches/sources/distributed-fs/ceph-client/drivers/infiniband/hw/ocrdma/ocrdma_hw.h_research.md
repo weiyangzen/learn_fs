@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/infiniband/hw/ocrdma/ocrdma_hw.h
+
+Purpose: internal hardware interface header for OCRDMA. It exposes the mailbox, queue, key, CQ, QP, SRQ, address-vector, stats, and link/service-level functions implemented by `ocrdma_hw.c`, plus byte-order helpers and a doorbell-address helper used by other driver modules.
+
+Important APIs/types/functions: `ocrdma_cpu_to_le32()`, `ocrdma_le32_to_cpu()`, `ocrdma_copy_cpu_to_le32()`, and `ocrdma_copy_le32_to_cpu()` centralize 32-bit word conversion for firmware command and completion buffers, becoming no-ops or `memcpy()` on little-endian builds. `ocrdma_get_db_addr()` derives a user/kernel doorbell page address from PD ID and NIC doorbell page size. The prototypes cover hardware lifecycle, CQ doorbells, link speed/config queries, PD/lkey/MR allocation, CQ/QP/SRQ mailbox commands, address-vector allocation, QP flush and state handling, stats fetch, service-level initialization, PD pool allocation, and link-state dispatch.
+
+Control flow: this header defines the cross-module call graph boundary. Module add in `ocrdma_main.c` calls `ocrdma_init_hw()` before resource allocation and `ocrdma_cleanup_hw()` during removal. Verbs implementations call the mailbox create/modify/query/destroy helpers, poll/arm paths call `ocrdma_ring_cq_db()`, stats code calls `ocrdma_mbx_rdma_stats()`, and MAD/link code calls the link and PMA-related helpers.
+
+State and persistence: no standalone state is allocated here. It documents how external modules interact with persistent runtime state inside `struct ocrdma_dev`, `struct ocrdma_qp`, `struct ocrdma_cq`, `struct ocrdma_srq`, `struct ocrdma_pd`, and `struct ocrdma_hw_mr`. The byte-order helpers mutate buffers in place on big-endian systems, so callers must pass firmware-layout buffers whose length is a multiple of 32-bit words.
+
+Dependencies/integration: includes `ocrdma_sli.h`, so all command structure definitions and bit fields are visible to callers. It depends on core OCRDMA types declared elsewhere in the driver and bridges RDMA core types such as `enum ib_qp_state`, `struct ib_qp_attr`, `struct ib_qp_init_attr`, `struct ib_srq_attr`, and `struct ib_mad`.
+
+Risks and test signals: the header is a high-blast-radius contract; signature drift must be compiled against all OCRDMA objects. Test big-endian builds or static analysis for every conversion helper call, especially paths that convert strings or byte arrays as 32-bit words. Validate doorbell address calculations for PD IDs, DPP pages, and user mmap paths, and compile with SRQ-capable and non-SRQ ASIC code paths.

@@ -1,0 +1,114 @@
+# Folder Research: sources/distributed-fs/ceph-client/include/drm
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 100
+- Recursive researched files: 159
+- Direct child folders represented: 6
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/include/drm/Makefile`
+- `sources/distributed-fs/ceph-client/include/drm/amd_asic_type.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_accel.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_atomic.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_atomic_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_atomic_state_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_atomic_uapi.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_audio_component.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_auth.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_blend.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_bridge.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_bridge_connector.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_bridge_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_buddy.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_cache.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_client.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_client_event.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_color_mgmt.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_colorop.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_connector.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_crtc.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_crtc_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_damage_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_debugfs.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_debugfs_crc.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_device.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_drv.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_dumb_buffers.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_edid.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_eld.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_encoder.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_exec.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fb_dma_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fb_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fbdev_dma.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fbdev_shmem.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fbdev_ttm.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_file.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fixed.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_flip_work.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_format_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_fourcc.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_framebuffer.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem_atomic_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem_dma_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem_framebuffer_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem_shmem_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem_ttm_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gem_vram_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gpusvm.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_gpuvm.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_ioctl.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_kunit_helpers.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_lease.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_managed.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_mipi_dbi.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_mipi_dsi.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_mm.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_mode_config.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_mode_object.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_modes.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_modeset_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_modeset_helper_vtables.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_modeset_lock.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_module.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_of.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_pagemap.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_pagemap_util.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_panel.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_panic.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_pciids.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_plane.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_plane_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_prime.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_print.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_privacy_screen_consumer.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_privacy_screen_driver.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_privacy_screen_machine.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_probe_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_property.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_ras.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_ras_genl_family.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_rect.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_self_refresh_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_simple_kms_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_suballoc.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_syncobj.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_sysfs.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_util.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_utils.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_vblank.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_vblank_helper.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_vblank_work.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_vma_manager.h`
+- `sources/distributed-fs/ceph-client/include/drm/drm_writeback.h`
+- `sources/distributed-fs/ceph-client/include/drm/gpu_scheduler.h`
+- `sources/distributed-fs/ceph-client/include/drm/gud.h`
+- `sources/distributed-fs/ceph-client/include/drm/spsc_queue.h`
+- `sources/distributed-fs/ceph-client/include/drm/task_barrier.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

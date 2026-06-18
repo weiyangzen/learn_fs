@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_display_params.c
+
+Purpose: implements the i915 display module-parameter backing store, module parameter registration, debug dumping, and safe per-device copies of display parameters. It centralizes display-only knobs such as DMC/VBT firmware overrides, DC-state policy, power-well policy, DSB/DPT/SAGV/IPS feature toggles, backlight behavior, MST, FBC, PSR, Panel Replay, and DMC wakelock behavior.
+
+Important APIs, types, and functions: `intel_display_modparams` is the static `__read_mostly` default instance generated from `INTEL_DISPLAY_PARAMS_FOR_EACH()`. `intel_display_param_named()` and `_unsafe()` wrap `module_param_named*()` plus `MODULE_PARM_DESC()`. `intel_display_params_dump()` prints every parameter through a C11 `_Generic` dispatcher. `intel_display_params_copy()` copies defaults into a caller-owned `struct intel_display_params` and duplicates `char *` members with `kstrdup(..., GFP_ATOMIC)`. `intel_display_params_free()` frees only allocated string fields.
+
+Control flow: compile-time macro expansion creates the default struct initializer and each module parameter declaration. At driver instance setup, callers copy the global module state into display instance state; at debug or logging time, `intel_display_params_dump()` iterates the same parameter list and prints typed values. Cleanup calls the generated free loop to release duplicated string parameters.
+
+State and persistence: persistent kernel state is the global module-parameter object and any per-display copies. String parameters are intentionally duplicated so later per-device lifetime cleanup can free them without owning the global module parameter storage. Module parameter sysfs permissions are mostly read-only; runtime adjustment is expected through i915 debugfs when supported by the parameter's debugfs mode.
+
+Dependencies and integration points: depends on Linux `moduleparam`, slab allocation, `string_choices`, and DRM printer helpers. The header-provided parameter list is the single source of truth shared with debugfs and display instance initialization. The values feed many display subsystems, especially DMC loading, runtime PM/DC states, power wells, panel/backlight code, PSR/FBC/Panel Replay, and DisplayPort MST.
+
+Risks: because the list drives module params, defaults, dumping, copying, and freeing, adding a parameter with a type not covered by the `_Generic` helpers breaks build-time dispatch. `GFP_ATOMIC` duplication can fail, leaving a null string copy if memory is tight. Unsafe module params are read-only in sysfs by convention, but still affect early hardware policy and can put the driver into unsupported test modes.
+
+Test signals: build coverage catches unsupported parameter types and macro expansion mistakes. Runtime signals include `i915.<param>=...` dump output, sysfs module parameter presence/permissions, debugfs parameter behavior, and boot logs for bad firmware paths or invalid DC/power-well settings.

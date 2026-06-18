@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/munmap/Makefile
+
+Purpose: generic LTP build leaf for `munmap` syscall tests. Important APIs/types/functions: `top_srcdir`, `testcases.mk`, and `generic_leaf_target.mk`. Control flow: no local targets or flags; all test binaries are built through included rules. State/persistence: no runtime or build state beyond standard outputs. Dependencies/integration: integrates `munmap01`, `munmap03`, and `munmap04` into the syscall suite. Risks: test-specific runtime needs such as root and sysctl restoration live in C metadata, not the Makefile. Test signals: successful build means common rules are sufficient for these tests.

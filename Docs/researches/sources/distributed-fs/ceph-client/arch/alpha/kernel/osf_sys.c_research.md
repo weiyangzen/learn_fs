@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/alpha/kernel/osf_sys.c
+
+**Purpose:** Implements Alpha OSF/1 compatibility syscalls and ABI quirks. It translates OSF directory, stat, statfs, mount, uname/domain/sysinfo, property-list, signal-stack, floating-point control, timeval32/time, rusage/wait, memory mapping, priority, dual-return UID/GID/PID/pipe, and HAE interfaces to Linux internals.
+
+**Important APIs/types/functions:** Defines many `SYSCALL_DEFINE*` entry points: `osf_brk`, `osf_set_program_attributes`, `osf_getdirentries`, `osf_mmap`, stat/statfs variants, `osf_mount`, `osf_utsname`, `getpagesize`, `getdtablesize`, `osf_getdomainname`, `osf_proplist_syscall`, `osf_sigstack`, `osf_sysinfo`, `osf_getsysinfo`, `osf_setsysinfo`, `osf_gettimeofday`, `osf_settimeofday`, `osf_utimes`, `osf_select`, `osf_getrusage`, `osf_wait4`, `osf_usleep_thread`, `old_adjtimex`, `arch_get_unmapped_area`, `osf_getpriority`, `getxuid`, `getxgid`, `getxpid`, `alpha_pipe`, and `sethae`. ABI structs include `osf_dirent`, `osf_stat`, `osf_statfs`, `osf_statfs64`, `timeval32`, `itimerval32`, `rusage32`, and `timex32`.
+
+**Control flow:** Most syscalls copy OSF-shaped user structures, call a native Linux helper (`iterate_dir`, `vfs_stat`, `user_statfs`, `do_mount`, `ktime_get_real_ts64`, `core_sys_select`, `kernel_wait4`, `do_adjtimex`, etc.), then translate results back to OSF layout. `osf_getsysinfo` and `osf_setsysinfo` access Alpha thread IEEE FP control/status and unaligned-access control bits. `arch_get_unmapped_area()` first tries the caller hint as a lower bound, then `TASK_UNMAPPED_BASE`, then low memory to satisfy OSF loader expectations. Dual-return syscalls write the second result to `current_pt_regs()->r20`.
+
+**State and persistence behavior:** Mutates `current->mm` break/code fields, mount namespace state via `do_mount`, UTS/timekeeping via settimeofday, current thread IEEE/UAC state, alternate signal stack fields, process sleep state, and saved HAE in `pt_regs`. It persists only through normal kernel subsystem state changes requested by syscalls.
+
+**Dependencies and integration points:** Depends on VFS, mount, timekeeping, scheduler, signal, FPU/FPCR, HWRPB, usercopy, Alpha syscall return ABI, and syscall table wiring. It also defines Alpha `arch_get_unmapped_area()` used by mm.
+
+**Risks:** This is ABI compatibility code with many usercopy and 32-bit time truncation surfaces. OSF structures differ subtly from Linux; overflow, alignment, and partial-buffer behavior matter. Some interfaces are explicitly guessed or minimally implemented, such as property lists and mount translations. `osf_sigstack()` uses lossy stack-size assumptions.
+
+**Test signals:** Run OSF/1 compatibility binaries or targeted syscall tests for directory offsets, large inode overflow, statfs buffer truncation, UFS/CDFS/procfs mount translations, domain/sysinfo strings, FP control get/set/raise exception, timeval32 conversion, select timeout non-copyback, wait4 rusage32, `arch_get_unmapped_area()` hint behavior, dual-return register values, and `sethae`.

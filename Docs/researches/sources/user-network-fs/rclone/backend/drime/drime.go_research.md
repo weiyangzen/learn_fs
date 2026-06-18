@@ -1,0 +1,15 @@
+# sources/user-network-fs/rclone/backend/drime/drime.go
+
+Purpose: Implements the rclone backend for Drime cloud storage, including directory caching, listing, upload/download, delete, move/copy, quota, MIME metadata, and multipart chunked uploads.
+
+Important APIs, types, and functions: `Options`, `Fs`, and `Object` define backend state. Construction and configuration flow through `init`, `NewFs`, `checkUploadChunkSize`, `setUploadChunkSize`, and `setUploadCutoff`. Metadata/listing uses `dircache` plus `readMetaDataForPath`, `getItem`, `FindLeaf`, `CreateDir`, `listAll`, `itemToDirEntry`, and `List`. Mutations use `Put`, `PutUnchecked`, `Object.Update`, `deleteObject`, `purgeCheck`, `Rmdir`, `Purge`, `patch`, `rename`, `move`, `moveTo`, `Move`, `DirMove`, `copy`, `copyTo`, and `Copy`. Multipart upload is implemented by `OpenChunkWriter`, `drimeChunkWriter.WriteChunk`, `Close`, and `Abort`. Object methods expose `Open`, `Remove`, `ID`, `ParentID`, and `MimeType`.
+
+Control flow: `NewFs` parses config, validates chunk size, creates an authenticated REST client, installs an error handler, initializes `dircache`, and detects whether the root is a file. Listing resolves a directory ID, pages `/drive/file-entries`, decodes provider names, filters files/folders, and caches folder IDs. Uploads update existing objects or create unchecked objects; small files POST `/uploads`, while unknown or cutoff-exceeding sizes use rclone multipart orchestration. Multipart upload creates an upload, signs each part URL, PUTs chunks without bearer auth, completes the upload, then creates a Drime file entry. Moves and copies are server-side API operations with rename handling; directory moves poll children after rename to work around eventual consistency.
+
+State and persistence behavior: Persistent data lives in Drime. Runtime state includes access token headers, workspace/root options, dircache path-to-ID mappings, pacer retry state, object metadata, and active multipart state including upload ID, key, completed parts, and byte count. Updates delete the previous object only after the replacement upload succeeds.
+
+Dependencies and integration points: Uses rclone `fs`, `dircache`, `rest`, `pacer`, `multipart`, `chunksize`, `encoder`, and Drime API models. It advertises optional interfaces for purge, put stream, copy, move, dir move, cache flush, quota, chunk writer, object IDs, parent IDs, and MIME type.
+
+Risks: API behavior quirks are encoded directly, including POST plus `X-HTTP-Method-Override` for updates and eventual-consistency polling after directory rename. Hashes are unsupported despite the API exposing a hash field. `copy` assumes at least one returned entry. Upload replacement semantics can leave duplicates if delete fails after successful upload. Multipart memory and maximum stream size depend on chunk size and concurrency.
+
+Test signals: `drime_test.go` runs generic fstests against `TestDrime:` with chunked-upload configuration and exposes setters so fstests can vary chunk size/cutoff. There are no local mocks for error handling or multipart edge cases.

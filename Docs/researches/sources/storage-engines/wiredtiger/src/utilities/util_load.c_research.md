@@ -1,0 +1,15 @@
+## sources/storage-engines/wiredtiger/src/utilities/util_load.c
+
+Purpose: implements `wt load` for the classic WiredTiger dump format and dispatches JSON input to `util_load_json`. It reconstructs object metadata, optionally renames objects, applies command-line config overrides, creates objects, and inserts dumped key/value records.
+
+Important APIs/types/functions: `util_load` parses `-a`, `-f`, `-j`, `-n`, `-r`, and config URI/string pairs. Classic dump helpers are `load_dump`, `config_read`, `config_reorder`, `config_update`, `config_rename`, `config_exec`, `config_list_add`, `config_list_free`, `format`, and `insert`. Global flags track append, rename target, command config, JSON mode, and no-overwrite.
+
+Control flow: `util_load` redirects stdin if `-f` is supplied, rejects mutually exclusive append/no-overwrite, records extra config pairs, and either calls `util_load_json` or `load_dump`. `load_dump` reads and validates the three-line dump header plus paired metadata lines until `Data`, reorders table configs before dependent entries, applies rename/config updates, creates objects, opens a dump cursor with print/hex plus append/overwrite settings, validates append only for record-number keys, inserts alternating key/value lines, closes the cursor, and flushes the URI.
+
+State and persistence behavior: creates schema objects and inserts records into the database. `config_update` removes persisted fields that must not be reused (`filename`, `id`, checkpoint fields, `source`, version, etc.) before create, preventing loaded objects from colliding with original storage identity. Rename rewrites table/file/tiered/colgroup/index URI names. `util_flush` is called after successful cursor close to force loaded content durable enough for command completion.
+
+Dependencies and integration points: depends on `util_read_line` dump decoding, dump cursor insert modes, `__wt_config_merge`, schema create, cursor insert, JSON loader for `-j`, URI/config conventions emitted by `util_dump.c`, and `util_main.c` opening the connection with `create` for load commands.
+
+Risks: command-global static flags make the implementation single-shot per process. Config matching for command overrides uses prefix matching and then rejects zero or multiple matches; ambiguous prefixes can fail. Rename mutates URI strings in place while searching colon separators and must preserve suffixes. The loader rejects key/value format changes but other config overrides can still create incompatible schemas. Partial load can leave created objects and inserted records when later insert fails.
+
+Test signals: classic dump/load round trips for row and column stores, hex and print formats, append loads for record-number keys, no-overwrite duplicate failures, `-a`/`-n` mutual exclusion, rename of table with indices/colgroups, command config override matching and ambiguity errors, rejection of key/value format override, malformed dump headers, cursor close/flush failure propagation, and JSON dispatch.

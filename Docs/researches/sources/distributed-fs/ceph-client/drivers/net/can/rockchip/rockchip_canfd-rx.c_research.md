@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/net/can/rockchip/rockchip_canfd-rx.c
+
+Purpose: this file handles Rockchip CAN FD RX FIFO draining, CAN/CAN FD frame decoding, timestamp assignment, CAN RX offload queuing, and RX-side workarounds for RK3568 errata.
+
+Important APIs and functions: `rkcanfd_handle_rx_int()` is called from the core IRQ handler and drains frames while the RX FIFO count is nonzero. `rkcanfd_handle_rx_int_one()` reads one FIFO header and payload, filters self-received TX frames, allocates the right skb type, timestamps it, and queues it through CAN RX offload. `rkcanfd_rxstx_filter()` uses self-reception to detect normal TX completion and erratum 6 extended-frame corruption. Helper functions compare frame headers/data and convert `struct rkcanfd_fifo_header` into `struct canfd_frame` metadata.
+
+Control flow: for each received FIFO entry, the driver reads a separate 12-byte FIFO header followed by up to 64 bytes of data from `RKCANFD_REG_RX_FIFO_RDATA`. Erratum 5 is detected by the "empty header" signature where frameinfo, id, and timestamp are equal, in which case a counter is incremented and no skb is produced. Valid headers are decoded into CAN ID, EFF flag, RTR, FDF, BRS, and DLC/length. CAN FD frames are dropped when the interface is not in CAN FD mode. If TX is pending, self-received frames are compared with the echo skb at `tx_tail`: matching frames complete TX through `rkcanfd_handle_tx_done_one()`, and corrupted extended-as-standard frames update erratum stats and trigger `rkcanfd_xmit_retry()`.
+
+State and persistence: RX state is transient except for `priv->bec.rxerr`, ethtool erratum counters, TX tail updates for self-reception completion, and netdev stats. Hardware timestamps are converted later by the timestamp helper. There is no durable persistence.
+
+Dependencies and integration points: depends on `netdev_queues.h`, SocketCAN skb allocators, CAN RX offload timestamp queues, TX helper functions, timestamp helper, and the shared register definitions. It is tightly coupled to core's choice to enable `RKCANFD_REG_MODE_RXSTX_MODE`.
+
+Risks and test signals: wrong FIFO count hardware is expected, so handling must avoid consuming bogus frames. Erratum 6 retry logic assumes the pending echo skb exists and represents the next transmitted frame. Loopback mode intentionally allows self-received frames to continue to RX delivery. Tests should cover classical and FD RX, RTR behavior, disabled-FD drops, FIFO empty false positives, self-reception TX completion, corrupted EFF-to-SFF retransmit, loopback delivery, RX allocation failure, and CAN RX offload queue errors.

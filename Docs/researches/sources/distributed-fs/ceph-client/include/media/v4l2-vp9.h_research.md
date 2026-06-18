@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/media/v4l2-vp9.h
+
+Purpose: This header provides helper data structures and exported helper routines for stateless VP9 codec drivers using V4L2 controls. It captures VP9 frame probability context, symbol-count views reported by hardware, and operations that update or reset probability tables according to the VP9 specification.
+
+Important APIs, types, and functions: `struct v4l2_vp9_frame_mv_context` stores motion-vector probability tables. `struct v4l2_vp9_frame_context` stores transform, coefficient, skip, inter/intra, reference, mode, partition, and motion-vector probabilities. `struct v4l2_vp9_frame_symbol_counts` is a collection of pointers into hardware-produced count buffers for partitions, transform sizes, prediction modes, filters, motion vectors, coefficients, and end-of-block counts. Extern data includes key-frame Y and UV mode probabilities, key-frame partition probabilities, and `v4l2_vp9_default_probs`. Functions are `v4l2_vp9_fw_update_probs()`, `v4l2_vp9_reset_frame_ctx()`, `v4l2_vp9_adapt_coef_probs()`, `v4l2_vp9_adapt_noncoef_probs()`, and `v4l2_vp9_seg_feat_enabled()`.
+
+Control flow: Userspace parses VP9 frame and compressed-header controls and submits them to a stateless decoder. The driver chooses or resets one of the frame contexts with `v4l2_vp9_reset_frame_ctx()`, applies forward updates from compressed header deltas before decode, programs hardware, then after decode maps hardware symbol counts into `struct v4l2_vp9_frame_symbol_counts` and calls backward adaptation helpers to update coefficients and non-coefficients for future frames.
+
+State and persistence behavior: The header expects drivers to persist up to four VP9 frame contexts across frames in driver-private decode state. Symbol counts are transient and only valid after one decoded frame. No storage persists outside the driver; the helpers mutate caller-owned probability structs in place.
+
+Dependencies and integration points: It depends on `media/v4l2-ctrls.h` for VP9 decode control structures. It integrates with stateless mem2mem video decoders, V4L2 request API workflows, and hardware-specific count-buffer layouts through pointer indirection rather than fixed overlays.
+
+Risks: Count pointer arrays must match hardware layout and VP9 table dimensions exactly. Applying updates in the wrong order or using the wrong frame context index will cause decode drift. Reset semantics are frame-header dependent and easy to mishandle around key frames, intra frames, and context refresh. The pointer-heavy count structure carries normal kernel risks around invalid DMA buffer mappings and lifetime.
+
+Test signals: Decode conformance should include VP9 key frames, inter frames, segmentation, frame-context refresh/reset cases, high-precision motion vectors, coefficient adaptation, and hardware count layouts. Unit-style tests can validate default table reset, segmentation feature lookup, and probability update determinism against known VP9 bitstream traces.

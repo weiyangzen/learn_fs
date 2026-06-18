@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/md/bcache/extents.c
+
+Purpose: defines the key operation policies used by `btree_keys` for both interior B-tree pointers and leaf data extents. It handles sorting order, overlap repair, validation, stale-pointer rejection, dirty-sector accounting, text dumping, and extent merging.
+
+Important APIs/functions: exported ops tables `bch_btree_keys_ops` and `bch_extent_keys_ops` are consumed when `btree.c` initializes nodes by level. `bch_extent_to_text()` formats a bkey for logs/debugfs. `__bch_btree_ptr_invalid()` and `__bch_extent_invalid()` validate keys outside a `btree_keys` container. Internal callbacks include `bch_btree_ptr_bad()`, `bch_extent_sort_fixup()`, `bch_extent_insert_fixup()`, `bch_extent_bad()`, and `bch_extent_merge()`.
+
+Control flow: B-tree pointer keys sort by normal key comparison and must have size, pointers, no dirty bit, valid bucket bounds, non-stale pointers, metadata priority, and metadata GC marks. Leaf extents sort by start key and newer set order, then `bch_extent_sort_fixup()` trims or splits overlapping older extents during sort. Insert fixup walks overlapping keys, validates replace operations, splits existing extents when an insertion lands in the middle, trims overwritten ranges, updates dirty accounting, and may shorten a replace insert if only part of the expected key is found. Merge checks contiguous pointer offsets in the same bucket and combines checksum state where possible.
+
+State and persistence: no standalone state, but it mutates `struct bkey` contents inside B-tree nodes and updates dirty-sector counters with `bcache_dev_sectors_dirty_add()`. Pointer validation reads cache superblock bucket bounds, bucket generations, GC marks, bucket priorities, and dirty bits. Merge/trimming decisions directly shape what is persisted by later B-tree writes.
+
+Dependencies/integration: depends on `bcache.h`, `btree.h`, `debug.h`, `writeback.h`, bucket generation helpers, bset search/insert/fixup helpers, and cache-set error reporting. B-tree read, sort, GC, insert, debug dump, journal replay, and request lookups all use these policies.
+
+Risks: overlap repair is subtle and crash-sensitive because it decides which old cached data remains addressable. Replace validation protects cache-miss races; weakening it can overwrite fresh writes with stale backing data. Dirty accounting must match extent trimming or writeback state will drift. Test signals include overlapping writes, partial overwrite split of written and unwritten keys, checksum merge behavior, stale dirty pointer warnings, invalid bucket bounds, replace collision handling, and debug expensive checks for GC mark consistency.

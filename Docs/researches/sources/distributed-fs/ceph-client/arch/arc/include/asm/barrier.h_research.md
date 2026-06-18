@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/arc/include/asm/barrier.h
+
+Purpose: ARC memory-barrier definitions, especially for ARCv2 weakly ordered microarchitectural buffering. Important APIs/types/functions: supplies architecture barrier primitives before including `asm-generic/barrier.h`. Control flow: compile-time conditional definitions for ISA variants; generic wrappers fill standard Linux barrier API. State and persistence: orders memory and device operations but stores no data. Dependencies/integration: used by atomics, IO accessors, futexes, and synchronization code. Risks: under-barriering causes DMA/MMIO and SMP ordering bugs; over-barriering hurts performance. Test signals: memory-model litmus tests, driver DMA tests, futex/atomic stress, and ARCv2 SMP boot.

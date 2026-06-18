@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/perf/builtin-c2c.c
+
+Purpose: implements `perf c2c record` and `perf c2c report` for cache-to-cache and false-sharing analysis. Record builds a `perf record` invocation with memory load/store events and physical address sampling. Report reads perf.data, decodes memory-source records, aggregates cacheline statistics, and displays shared cacheline tables through stdio or TUI.
+
+Important APIs, types, and functions: `struct perf_c2c` holds global report state, node topology, mem2node mapping, display options, and output field strings. `struct c2c_hist_entry` extends `hist_entry` with c2c stats, CPU/node bitmaps, per-node stats, physical address tracking, and nested per-cacheline hists. `process_sample_event()` resolves samples, callchains, and memory info, decodes c2c stats, and populates top-level and nested histograms. Dimension functions define output columns, comparators, percentages, means, and node displays. `setup_nodes()`, `setup_coalesce()`, `build_cl_output()`, `setup_callchain()`, and `ui_quirks()` prepare report behavior. `perf_c2c__report()` owns session processing and display. `perf_c2c__record()` constructs record arguments. `cmd_c2c()` dispatches record/report prefixes.
+
+Control flow: report parses options, opens perf.data with ordered callbacks, defaults display to peer on arm64 and total HITM elsewhere, initializes coalescing and hists, maps NUMA nodes and physical addresses, processes events, builds output/sort fields, collapses and resorts hists, computes shared-cacheline summaries, and displays statistics plus tables. Record chooses supported PMU memory events, adds `-d`, `--phys-data`, `--sample-cpu`, optional privilege filters, and invokes `cmd_record()`.
+
+State and persistence: report state is in memory and derived from perf.data, symbols, topology, and memory maps. Record persists perf.data through `perf record`. Global flags such as `chk_double_cl`, `callchain_param`, `symbol_conf`, and `use_browser` are modified during execution.
+
+Dependencies and integration points: integrates with perf mem-events PMU support, sessions, hists, sorting, callchains, mem-info, mem2node, symbols, annotation, UI browsers, pager, and record command.
+
+Risks: topology assumptions can fail if NUMA data is missing or CPU-to-node mapping is inconsistent. Report has no pipe support. Many output dimensions are global mutable objects, so repeated runs in-process can inherit adjusted widths/headers. Physical address zero and missing sample CPU are tolerated but reduce attribution quality. Percentage printing can divide by zero in display stats for LLC misses. Record depends on PMU event availability.
+
+Test signals: record with `-e list`, default record, user/kernel filters, and unsupported PMUs. Report on known c2c perf.data with `--stdio`, TUI, `--stats`, `--display tot/lcl/rmt/peer`, `--coalesce`, `--double-cl`, `--no-source`, and callgraph options. Validate output fields, shared-line counts, node info levels, and no-pipe error path.

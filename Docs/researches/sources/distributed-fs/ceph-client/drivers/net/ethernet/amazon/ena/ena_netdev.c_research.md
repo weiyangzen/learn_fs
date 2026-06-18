@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/drivers/net/ethernet/amazon/ena/ena_netdev.c
+
+## Purpose
+`ena_netdev.c` is the core Linux PCI/netdev driver for Amazon ENA. It owns probe/remove, device initialization/reset/restore, queue allocation, MSI-X setup, NAPI polling, TX/RX data paths, watchdogs, AENQ event handlers, RSS defaults, host/debug attributes, suspend/resume, module registration, and integration with ethtool, XDP, PHC, devlink, and debugfs.
+
+## Important APIs, Types, And Functions
+The netdev ops are `ena_open()`, `ena_close()`, `ena_start_xmit()`, `ena_get_stats64()`, `ena_tx_timeout()`, `ena_change_mtu()`, `ena_xdp()`, and `ena_xdp_xmit()`. Exported helpers include `ena_xmit_common()`, `ena_unmap_tx_buff()`, `ena_init_io_rings()`, TX resource/queue range helpers, `ena_down()`, `ena_up()`, `ena_update_queue_params()`, `ena_update_queue_count()`, `ena_set_rx_copybreak()`, `ena_destroy_device()`, `ena_restore_device()`, `handle_invalid_req_id()`, `ena_unmask_interrupt()`, and `ena_update_ring_numa_node()`. Internal flows include RX allocation/refill, SKB construction, checksum/hash handling, queue creation with size backoff, MSI-X request/free, RSS initialization, watchdog timer service, and AENQ handlers.
+
+## Control Flow, State, And Persistence
+Probe enables PCI memory, maps BARs, allocates `ena_com_dev`, netdev, PHC, metrics, devlink, initializes ENA admin/device features, calculates queues and ring sizes, enables MSI-X/admin interrupts, initializes RSS, registers netdev/debugfs/devlink, and starts a timer. `ena_up()` sets IO interrupt metadata, creates NAPI, requests IRQs, creates TX/RX/XDP queues with memory backoff, refills RX, starts queues, sets DEV_UP, unmasks interrupts, and schedules NAPI. `ena_down()` clears DEV_UP, disables carrier/TX, disables NAPI, optionally resets hardware, destroys queues, frees IRQs, buffers, and resources. TX maps SKB data/frags, handles LLQ push headers, sets checksum/TSO metadata, calls `ena_xmit_common()`, manages queue stop/wake, and rings doorbells. RX polls completions, syncs DMA, optionally runs XDP, builds SKBs, handles checksums/hash, returns descriptors, refills buffers, and flushes redirects. Persistent driver state lives in `struct ena_adapter`, `ena_ring`, stats counters, flags, timers, workqueue reset task, RSS tables, host/debug buffers, and ENA admin/device state.
+
+## Dependencies And Integration
+The file depends on Linux PCI, netdevice, NAPI, DMA mapping, MSI-X, timers/workqueues, DIM, XDP, devlink, debugfs, PTP/PHC helpers, ENA admin/common APIs, and descriptor helpers. It uses AENQ link, keep-alive, and notification events to maintain link state, drop stats, and hardware hints.
+
+## Risks And Test Signals
+High-risk areas are cleanup symmetry across probe/open/reset/remove/suspend, invalid request ID handling, DMA map/unmap and RX page reuse, LLQ header copying, queue size backoff, XDP queue topology, NAPI/IRQ races, timer-triggered resets, and admin queue liveness. Test signals include probe/remove fault injection, traffic with TSO/checksum/RSS, MTU changes, ethtool ring/channel changes, XDP attach/detach/TX/redirect, suspend/resume, keep-alive timeout injection, missed TX completion detection, and memory-pressure RX refill behavior.

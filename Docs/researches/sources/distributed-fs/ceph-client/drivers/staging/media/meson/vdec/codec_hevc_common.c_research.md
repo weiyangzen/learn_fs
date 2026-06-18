@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/staging/media/meson/vdec/codec_hevc_common.c
+
+Purpose: this file contains shared helper code for HEVC-family hardware paths used by VP9 and likely HEVC codec implementations. It programs decode-head/FBC modes, allocates framebuffer-compression and MMU header buffers, builds hardware reference tables, and exports helpers for codec-specific setup.
+
+Important APIs and functions: `vdec_hevc_parser_cmd` is a 37-entry parser command program loaded by codecs such as VP9. `codec_hevc_setup_decode_head()` configures decompression/read mode, compressed body/header sizes, and MMU/FBC controls. `codec_hevc_setup_buffers()` coordinates optional FBC buffer allocation, optional MMU header/map allocation, and revision-specific reference table programming through either `codec_hevc_setup_buffers_gxbb()` or `codec_hevc_setup_buffers_gxl()`. `codec_hevc_free_fbc_buffers()`, `codec_hevc_free_mmu_headers()`, and `codec_hevc_fill_mmu_map()` provide cleanup and per-frame MMU page-map setup.
+
+Control flow: codec resume paths call `codec_hevc_setup_buffers()` after userspace has queued capture buffers. For GXBB, the helper writes `HEVCD_MPP_ANC2AXI_TBL_CMD_ADDR` entries and fills unused slots with the last buffer. For GXL and later, it writes packed physical addresses to `HEVCD_MPP_ANC2AXI_TBL_DATA`. For 10-bit/FBC/downsample use cases, it allocates hidden compressed buffers and/or MMU headers before programming the hardware tables. Per-frame code can then call `codec_hevc_fill_mmu_map()` to point the hardware MMU map at the selected output or hidden FBC buffer.
+
+State and persistence: state is held in `struct codec_hevc_common`, which stores arrays of hidden FBC buffers, MMU header buffers, and one MMU map. These allocations persist for the session/resolution until freed by codec stop/error paths. The helper writes persistent hardware reference-table and decompression registers that remain active for subsequent frame decoding.
+
+Dependencies and integration points: depends on V4L2 mem2mem destination buffer iteration, vb2 contiguous DMA addresses, AM21C size helpers from `vdec_helpers`, platform revision values, and HEVC register definitions. It is exported with GPL symbols for use by sibling codec files in the same driver.
+
+Risks: allocation loops index arrays by VB2 buffer index and assume indices are below `MAX_REF_PIC_NUM`; queue limits should maintain that invariant. Error handling must free both FBC and MMU allocations in all partial-failure cases. `codec_hevc_use_fbc()` currently returns true for all 10-bit content and has a TODO for 8-bit compressed buffers, so output-format behavior is intentionally incomplete. Physical-address shifting and table formats differ by revision, making revision tests important.
+
+Test signals: exercise GXBB versus GXL/G12A/SM1 buffer-table programming, 8-bit NV12, 10-bit downsample-to-NV12, MMU-enabled G12A/SM1 paths, allocation failures midway through buffer arrays, source-change reallocation, and cleanup idempotence.

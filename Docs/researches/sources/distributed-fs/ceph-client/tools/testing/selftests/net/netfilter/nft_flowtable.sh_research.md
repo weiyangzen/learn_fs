@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/tools/testing/selftests/net/netfilter/nft_flowtable.sh
+
+Purpose: extensive flowtable offload functional test for forwarding, NAT, PMTU, DSCP mangling, IPIP/IP6 tunnels, VLAN, bridge, and IPsec tunnel mode.
+
+Important APIs and tools: requires `nft`, `socat`, namespace helpers, flowtables with `flow add`, nft counters/marks/NAT, veth/bridge/VLAN/IPIP/IP6TNL/XFRM devices, PMTU sysctls, `cmp`, random file generation, and `nf_log_all_netns`.
+
+Control flow: builds originator ns1, responder ns2, and routers nsr1/nsr2 with deliberately mismatched MTUs. Router1 nft forward chain marks/offloads original TCP flows and counts routed original/reply packets; ns2 counts DSCP classes. Helpers generate input files, run bidirectional socat TCP transfers, compare outputs, inspect counters, and validate DSCP handling. Initial tests cover IPv4/IPv6 forwarding without PMTU, then IPv4 NAT with DNAT/masquerade, DSCP changes at netdev ingress/egress and forward hook, and PMTU-enabled offload where routed counters must stay below file size. `test_ipip()` reroutes through IPIP and IP6 tunnels, then VLAN-tagged tunnels. `test_bridge()` moves ingress under a bridge, then bridge plus VLAN, and retests NAT/offload. Final XFRM setup installs ESP tunnel state/policies and checks IPv4 and IPv6 transfers. With no arguments, the script recursively reruns itself once with random MTUs and file size.
+
+State and persistence: heavy temporary namespace topology, temp files, nft rules, routes, tunnels, XFRM state, and sysctl changes; cleanup kills namespace pids, removes temp files, and restores logging. Dependencies are broad kernel feature support and enough runtime. Risks include long runtime, recursive random rerun variability, exact counter threshold assumptions, and many skip/fail points. Test signals are transfer byte equality, nft counter checks, PASS/FAIL lines, and final `ret`.

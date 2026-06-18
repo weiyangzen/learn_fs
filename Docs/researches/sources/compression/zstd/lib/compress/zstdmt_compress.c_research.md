@@ -1,0 +1,40 @@
+# sources/compression/zstd/lib/compress/zstdmt_compress.c
+
+## Purpose
+Implements Zstandard's internal multi-threaded compression backend used by `ZSTD_compress.c` when `nbWorkers > 0`. It owns the worker-thread job graph, input round buffer, output buffer recycling, per-worker `ZSTD_CCtx` reuse, optional long-distance matching sequence generation, frame checksum aggregation, rsyncable job boundaries, and ordered flushing of independently compressed chunks into one valid zstd frame.
+
+## Important APIs, Types, And Functions
+The exported internal entry points are `ZSTDMT_createCCtx_advanced()`, `ZSTDMT_freeCCtx()`, `ZSTDMT_sizeof_CCtx()`, `ZSTDMT_initCStream_internal()`, `ZSTDMT_compressStream_generic()`, `ZSTDMT_nextInputSizeHint()`, `ZSTDMT_toFlushNow()`, `ZSTDMT_updateCParams_whileCompressing()`, and `ZSTDMT_getFrameProgression()`. They are declared in `zstdmt_compress.h` and called by the single public compression layer.
+
+Core state lives in `struct ZSTDMT_CCtx_s`: thread pool `factory`, circular job table `jobs`, `bufPool`, `cctxPool`, `seqPool`, active params, target job/prefix sizes, pending input buffer, `roundBuff`, `SerialState`, rsync rolling-hash state, job cursors, frame progress counters, dictionary handles, allocator, and ownership bit for user-provided thread pools. `ZSTDMT_jobDescription` is the per-job shared record protected by `job_mutex`/`job_cond`; it carries input/prefix ranges, output buffer, params, dictionary, frame flags, consumed/compressed byte counters, and checksum-finalization state.
+
+Major helpers include `ZSTDMT_createBufferPool()`/`ZSTDMT_getBuffer()`/`ZSTDMT_releaseBuffer()` for reusable buffers, `ZSTDMT_createCCtxPool()`/`ZSTDMT_getCCtx()`/`ZSTDMT_releaseCCtx()` for per-worker contexts, `ZSTDMT_serialState_reset()`/`ZSTDMT_serialState_genSequences()` for ordered LDM/checksum work, `ZSTDMT_compressionJob()` for worker execution, `ZSTDMT_createCompressionJob()` for job submission, `ZSTDMT_flushProduced()` for ordered output draining, and `ZSTDMT_tryGetInputRange()` for round-buffer reuse without overlapping active jobs or LDM windows.
+
+## Control Flow
+Creation validates worker count and custom allocator pairing, creates or adopts a `POOL_ctx`, rounds the job table size to a power of two, initializes pools, and initializes serial-state locks. `ZSTDMT_initCStream_internal()` resizes pools if `nbWorkers` changed, waits out unfinished prior jobs, clamps job size, computes overlap and target section sizes, allocates the round buffer, initializes dictionary or prefix state, and resets LDM/checksum serial state.
+
+`ZSTDMT_compressStream_generic()` is the streaming driver. It first rejects new `continue` input after frame end has started, obtains a free region from the round buffer, optionally scans for an rsync synchronization point, copies user input into `inBuff`, converts `end` to `flush` when unread input remains, creates a compression job when the buffer is full or a flush/end is requested, then calls `ZSTDMT_flushProduced()` to copy available compressed data into the caller's output buffer. If no input progress was made, flushing is allowed to block on the oldest job condition variable.
+
+Workers run `ZSTDMT_compressionJob()`. Each worker borrows a `ZSTD_CCtx`, output buffer, and optional raw sequence buffer, performs the serial LDM/checksum step in job ID order, initializes compression with either the first-job dictionary/CDict or a raw prefix, suppresses frame checksum and LDM inside chunk jobs, compresses the job in `4 * ZSTD_BLOCKSIZE_MAX` pieces, publishes partial compressed size and consumed progress under the job mutex, and finally releases borrowed resources and signals completion.
+
+Output ordering is enforced by `doneJobID`: `ZSTDMT_flushProduced()` only inspects the oldest unfinished job, waits only when requested, handles worker errors by draining all jobs and releasing resources, appends the frame checksum on the final non-first job after worker completion, copies bytes to `ZSTD_outBuffer`, recycles job output buffers, updates global consumed/produced counters, and advances `doneJobID`. `allJobsCompleted` is only set once all jobs are flushed and the frame-ended flag is consistent.
+
+## State And Persistence
+The context is long-lived and reusable. Pools retain allocated buffers and contexts between frames, so memory may remain held after a smaller subsequent compression. `roundBuff` also persists and grows as needed. Job slots are reused circularly via `jobIDMask`; mutex and condition objects stay attached to slots while job descriptions are zeroed between uses. Dictionary state is either an internal `cdictLocal`, a referenced external `cdict`, or a raw prefix range. No on-disk persistence exists; all state is heap memory owned by the MT context or an external thread pool.
+
+Thread-shared fields are deliberately narrow: worker-published `consumed` and `cSize` are guarded by each job mutex, serial LDM/checksum state is guarded by `SerialState` locks, and pools have their own mutexes. Input buffers are not recycled until overlap checks prove no active job or LDM window can still read them.
+
+## Dependencies And Integration Points
+This file depends on Zstd common allocation, threading, pool, memory, compression internals, LDM, rolling hash, frame checksum, CDict, and error macros. It is compiled meaningfully only when `ZSTD_MULTITHREAD` is available; otherwise `ZSTDMT_createCCtx_advanced()` returns `NULL`. The thread pool API provides `POOL_tryAdd()`, `POOL_resize()`, and optional externally supplied pools. The compressor integrates with public streaming through `ZSTD_compressStream2()`/`ZSTD_compress2()` paths rather than being public API itself.
+
+It also integrates with LDM through `ZSTD_ldm_adjustParameters()`, `ZSTD_ldm_generateSequences()`, and `ZSTD_referenceExternalSequences()`, with dictionaries through `ZSTD_createCDict_advanced()` and `ZSTD_compressBegin_advanced_internal()`, and with frame progress reporting through `ZSTD_frameProgression`.
+
+## Risks And Edge Cases
+The main correctness risks are concurrency ordering bugs, buffer lifetime overlap, and job-slot reuse. If `doneJobID`, `nextJobID`, or `jobReady` transitions are mishandled, jobs can be overwritten, output can be flushed out of order, or callers can observe stuck progress. Round-buffer reuse is especially sensitive when wrapping and copying the prefix to the beginning, because active job prefixes and LDM windows must not overlap the candidate range.
+
+Dictionary handling is split between a transient by-copy CDict early in initialization and a later by-reference/raw-prefix setup; changes here can introduce leaks, dangling dictionary references, or compression-ratio regressions. Frame checksum handling is also subtle: chunk jobs disable internal checksums and the main thread appends the combined checksum only when needed. Error paths must call `ZSTDMT_serialState_ensureFinished()` so later jobs do not wait forever for skipped serial work.
+
+Rsyncable boundaries can force a flush before the nominal target size; the constraints around `RSYNC_MIN_BLOCK_SIZE`, rolling hash initialization, and unfinished input must remain aligned with job-size limits. Memory sizing risks include `ZSTD_compressBound(targetSectionSize)`, LDM window slack, 32-bit job-size caps, and buffer-pool expansion freeing existing cached buffers.
+
+## Test Signals
+Useful tests include zstd streaming round trips with `nbWorkers` from 1 to `ZSTDMT_NBWORKERS_MAX`, very small and very large job sizes, repeated context reuse with changing worker counts, external and owned thread pools, raw prefixes, full dictionaries, CDicts, checksum on/off, LDM on/off, rsyncable mode, flush/end interleavings, tiny output buffers, and injected worker allocation failures. Thread sanitizer or stress tests should target `ZSTDMT_flushProduced()`, serial LDM ordering, context free while jobs are active, and round-buffer wraparound. Compression determinism and compatibility tests should compare single-threaded and multi-threaded decompression output for the same input/dictionary combinations.

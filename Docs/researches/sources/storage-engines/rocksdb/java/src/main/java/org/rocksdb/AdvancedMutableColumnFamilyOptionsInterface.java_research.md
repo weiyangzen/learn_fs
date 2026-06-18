@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/java/src/main/java/org/rocksdb/AdvancedMutableColumnFamilyOptionsInterface.java
+
+- **Purpose:** Contract for advanced column-family options that can be changed through mutable option flows and `RocksDB#setOptions(...)`.
+- **Important APIs/types/functions:** Declares setters/getters for write-buffer count, inplace-update locks, memtable bloom/mempurge/huge-page settings, arena block size, L0 slowdown/stop triggers, target file sizes, level-size multipliers, pending compaction limits, sequential-skip limits, merge limits, paranoid file checks, background IO stats, TTL, periodic compaction, integrated BlobDB settings, read-triggered compaction, blob readahead, blob starting level, and prepopulate blob cache.
+- **Control flow:** No executable code. The interface documents which options are dynamically changeable and which depend on other DB settings such as `maxOpenFiles == -1`.
+- **State and persistence behavior:** Implementations project values into native mutable CF options. Settings affect memtable memory, write stalls, compaction scheduling, file aging, blob-file creation/GC, and read-triggered compaction behavior.
+- **Dependencies:** References `CompressionType`, `PrepopulateBlobCache`, `MutableColumnFamilyOptionsInterface`, `MutableDBOptionsInterface`, `RocksDB`, and `ColumnFamilyHandle`.
+- **Integration points:** Implemented by `ColumnFamilyOptions` and mirrored by mutable-options builders used for live option updates.
+- **Risks:** Interface comments include duplicated javadoc terminators in a few spots, indicating doc drift risk. Several setters document 32-bit overflow exceptions that implementations must enforce in JNI. Blob options have dependencies on `enable_blob_files`/GC flags; setting dependent values alone has no effect.
+- **Test signals:** Live `RocksDB#setOptions` updates, string mutable-option builder parsing for blob and compression enums, 32-bit overflow guards, and round-trip getters for dynamically changed values.

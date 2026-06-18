@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/net/ipa/ipa_endpoint.c
+
+Purpose: implements IPA endpoint validation, register programming, enable/disable, suspend/resume, TX SKB submission, RX buffer replenishment, RX status parsing, and endpoint reset behavior. It is the main bridge between IPA endpoint configuration data and GSI channels.
+
+Important APIs/functions: `ipa_endpoint_init()` validates endpoint tables, builds `ipa->name_map`, `ipa->channel_map`, and endpoint state bitmaps, and records filtering/modem TX state. `ipa_endpoint_config()` reads `FLAVOR_0` to validate hardware endpoint availability and direction. `ipa_endpoint_setup()` programs all defined AP endpoints; `ipa_endpoint_enable_one()` starts a GSI channel and enables RX replenish/suspend interrupts; `ipa_endpoint_disable_one()`, `ipa_endpoint_suspend_one()`, and `ipa_endpoint_resume_one()` reverse those states. `ipa_endpoint_skb_tx()` converts a netdev SKB into a GSI transaction, optionally linearizing excessive fragments. `ipa_endpoint_trans_complete()` and `ipa_endpoint_trans_release()` are the GSI callbacks for RX/TX ownership cleanup.
+
+Control flow: initialization first checks mandatory endpoint roles and per-entry validity, then setup programs registers in `ipa_endpoint_program()`: checksum, NAT bypass, QMAP header insertion/extraction, DMA mode, aggregation/deaggregation, HOL blocking, resource group, sequencer, and status endpoint registers. TX submission allocates a GSI transaction, attaches the SKB/fragments, stores the SKB in `trans->data`, and commits with a doorbell depending on `netdev_xmit_more()`. RX enable starts replenishment; each replenish transaction owns a page. RX completion parses IPA status-prefixed aggregates when status is enabled, otherwise builds an SKB directly from the page.
+
+State/persistence: endpoint state lives in `ipa->defined`, `ipa->set_up`, `ipa->enabled`, `ipa->available`, per-endpoint `replenish_flags`, `replenish_count`, `netdev`, and `skb_frag_max`. Hardware state is persistent until explicit reset/programming and depends heavily on IPA version. Delayed replenish work retries transient allocation starvation.
+
+Dependencies/integration: depends on GSI transactions/channels, IPA register metadata, immediate command helpers, IPA interrupt TX_SUSPEND control, modem netdev RX delivery, power clock rate for HOL timers, table/filter validation, and RMNet/QMAP header formats.
+
+Risks: most risk is version-specific bitfield programming and ordering around aggregation reset/suspend. RX status parsing trusts hardware length/status layout enough that malformed status can drop or mis-account packets. Replenishment uses page ownership through `trans->data`; bugs here leak pages or double free. `ipa_endpoint_modem_exception_reset_all()` and modem pause flow are crash recovery critical.
+
+Test signals: probe/setup succeeds on supported IPA versions, netdev TX/RX counters move, RX replenish recovers after low memory, modem SSR resets routes/endpoints without wedging, suspend/resume preserves queues, and debug logs do not show invalid endpoint direction, active aggregation reset, or missing status endpoint errors.

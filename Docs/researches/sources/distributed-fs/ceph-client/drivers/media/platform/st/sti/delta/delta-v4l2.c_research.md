@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/st/sti/delta/delta-v4l2.c
+
+Purpose: implements the Delta V4L2 mem2mem platform driver, queue management, decoder registry, stream/frame negotiation, timestamp tracking, EOS handling, runtime PM, and module lifecycle.
+
+Important APIs and functions: platform entry points are `delta_probe` and `delta_remove`; file operations are `delta_open` and `delta_release`; IOCTL handlers cover formats, selection, decoder commands, events, and mem2mem buffers. Core helpers include `delta_open_decoder`, `delta_run_work`, `delta_job_ready`, AU/frame vb2 operations, `delta_get_free_frame`, `delta_recycle_default`, `delta_get_frameinfo_default`, `delta_get_sync`, and `delta_put_autosuspend`.
+
+Control flow: probe sets up clocks, runtime PM, rpmsg IPC, decoder registry, supported formats, V4L2 device, workqueue, and video node. Open creates a `delta_ctx`, initializes M2M queues, sets default MJPEG/NV12 parameters, and enables coprocessor clocks. Output `start_streaming` opens a decoder when the stream format is known, consumes the first source buffer as header data, decodes it to populate stream/frame info, and moves the instance to READY. Normal mem2mem work removes one AU, powers the hardware if the decoder does not self-manage PM, calls decoder `decode`, queues DTS unless the AU is discarded, drains all decoded frames from the decoder, marks source/capture buffers done, requeues free frames, and finishes the M2M job. Capture buffers are registered with the decoder during prepare and recycled when userspace requeues them. STOP decoder command drains pending frames and emits EOS through an empty `V4L2_BUF_FLAG_LAST` capture buffer plus an EOS event.
+
+State and persistence: `delta_dev` holds global V4L2/rpmsg/clock/workqueue state and decoder lists. `delta_ctx` holds state machine phase, selected decoder, streaminfo/frameinfo, AU/frame counters, DTS FIFO, frame array, error counters, abort flag, and codec private data. State is in-memory only and destroyed at release.
+
+Dependencies and integration points: depends on V4L2 mem2mem, videobuf2 DMA-contig, rpmsg IPC, runtime PM clocks (`delta`, `delta-st231`, `delta-flash-promip`), and codec backends such as `mjpegdec`.
+
+Risks: header decoding occurs in output start_streaming and returns buffers to QUEUED on failure, so userspace sequencing is strict. `delta_job_abort` only sets `aborting`; it does not cancel in-flight firmware work. Frame state transitions depend on userspace recycling capture buffers promptly, and EOS may be delayed until a free capture buffer arrives. The AU size estimate is MJPEG-oriented and may need revisiting if additional compressed formats are added.
+
+Test signals: V4L2 compliance for mem2mem decoder queues, header-first MJPEG streaming, resolution renegotiation after streaminfo discovery, EOS event/buffer behavior, capture-buffer starvation/recycling, rpmsg timeout/failure handling, runtime-PM autosuspend, and build coverage with MJPEG enabled.

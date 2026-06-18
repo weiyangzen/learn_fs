@@ -1,0 +1,18 @@
+# sources/object-store/rustfs/crates/e2e_test/src/replication_extension_test.rs
+
+## sources/object-store/rustfs/crates/e2e_test/src/replication_extension_test.rs
+
+Purpose: comprehensive e2e coverage for RustFS bucket replication and site replication admin extensions. It starts real single-node or dual-node `RustFSTestEnvironment` instances and validates remote target management, replication-check behavior, bucket object replication, site replication state propagation, IAM policy/user/group replication, and service-account replication.
+
+Important APIs and types: `signed_request` and `signed_request_with_session_token` create SigV4-signed reqwest calls to S3/admin APIs. `ReplicationResetStatusResponse` and `ReplicationResetStatusTarget` parse replication reset status. Helpers cover XML credential parsing (`extract_xml_tag`, `parse_assume_role_credentials`), remote target setup/list/remove, bucket replication XML generation, versioning enablement, admin user/group/policy calls, service-account creation/listing/account info, site replication add/info/edit/status/remove/state-edit/resync, polling waiters, and `build_replication_pair`.
+
+Control flow: tests create isolated RustFS environments, create buckets, enable versioning, add remote targets, install replication configs, mutate objects/admin state, and poll until remote state matches expectations. Validation tests reject missing versioning, missing replication configs, invalid buckets, same-deployment targets, invalid target URLs, missing ARN/update targets, list/remove misuse, and object-lock incompatibility. Functional tests cover replication-check success, target removal after replication deletion, fan-out to multiple targets, sequential multi-bucket replication, runtime target cache refresh through `BucketTargetSys::delete`, site resync start/cancel/restart and reset IDs, site edit/status peer state and ILM expiry replication flags, remove-all, fresh-versus-stale state edit timestamps, bucket versioning object replication, policy-backed user and group access on replicated sites, accountinfo policy round-trip for service accounts, multiple service-account propagation, and STS-session-created service accounts when `awscurl` is available.
+
+State and persistence: state is mostly temporary but real: RustFS processes, bucket metadata, versioning configs, replication targets, bucket replication XML, object data, site replication peer records, reset status, users, groups, policies, service accounts, and in-memory target cache. Pollers generally use 250 ms sleeps up to 40 attempts or 30-second object waits.
+
+Dependencies and integration points: `crate::common` process harness and HTTP helpers, AWS SDK S3, reqwest, `rustfs_madmin` admin models, `rustfs_signer`, S3 XML/JSON admin APIs, STS via optional `awscurl`, `BucketTargetSys`, Tokio timing, and `serial_test`.
+
+Risks: tests are integration-heavy, serial, and can be slow/flaky if background replication timing changes. Many assertions inspect response-body substrings, so error wording changes can fail tests. `extract_xml_tag` is intentionally simple and not a robust XML parser. Direct `BucketTargetSys::get().delete` reaches into global runtime cache and is appropriate only in tests. The STS service-account test silently skips when `awscurl` is absent, reducing coverage in minimal environments.
+
+Test signals: this file provides high-value end-to-end signal across replication validation, replication data plane, admin API behavior, peer-state convergence, stale update rejection, identity/policy propagation, and service-account hierarchy replication.
+<!-- END_FILE_RESEARCH: sources/object-store/rustfs/crates/e2e_test/src/replication_extension_test.rs -->

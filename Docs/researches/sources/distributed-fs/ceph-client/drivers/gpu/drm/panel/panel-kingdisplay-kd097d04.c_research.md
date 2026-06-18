@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-kingdisplay-kd097d04.c
+
+Purpose: This is a DRM MIPI-DSI panel driver for the Kingdisplay KD097D04 9.7-inch 1536x2048 panel. It provides fixed-mode reporting, panel power sequencing, a vendor-supplied generic-write initialization table, optional enable GPIO handling, and DSI registration under `kingdisplay,kd097d04`.
+
+Important APIs, types, and functions: `struct kingdisplay_panel` holds the `drm_panel`, `mipi_dsi_device`, power regulator, and optional enable GPIO. `struct kingdisplay_panel_cmd` stores two-byte generic register writes. `init_code[]` contains voltage, VCOM, gamma, GOA mux/timing, and GOE settings. `kingdisplay_panel_prepare()` enables `power`, waits, sets enable high, writes every init command via `mipi_dsi_generic_write()`, exits sleep, and turns display on. `kingdisplay_panel_disable()` sends display-off, and `kingdisplay_panel_unprepare()` sends sleep-in, waits 120 ms, lowers enable, and disables the regulator. `kingdisplay_panel_get_modes()` adds the fixed 1536x2048 mode and display metadata.
+
+Control flow: Probe fixes the DSI link to four lanes, RGB888, video burst, low-power commands, and no EoT packet. It then allocates/registers the panel, requests resources, and attaches to the DSI host. At prepare time, regulator and GPIO setup precede all generic writes. If any command or DCS sleep/display command fails, the error path lowers enable and disables the regulator. Normal shutdown expects `disable` to turn the display off before `unprepare` puts it in sleep and removes power.
+
+State and persistence: Software state is only the device resources and DSI drvdata; panel registers persist until sleep/power loss. The optional enable GPIO is allowed to be absent; `gpiod_set_value_cansleep()` tolerates NULL. The init table values become persistent panel analog/gamma/GOA state for the current power cycle.
+
+Dependencies and integration points: The file integrates with the DSI panel subsystem through `module_mipi_dsi_driver()`, DRM panel callbacks, `drm_panel_of_backlight()`, and the OF compatible. It depends on a `power` regulator and may use an `enable` GPIO and external backlight phandle. DSI command transfer uses generic writes for vendor table entries and DCS helpers for sleep/display state.
+
+Risks: The init table is not sourced from the public datasheet, so regressions are hard to reason about without hardware. `devm_gpiod_get_optional()` errors other than probe defer are downgraded to NULL after a debug message, so a misconfigured enable GPIO may silently turn into "no GPIO." The fixed mode has no explicit sync flags, so host-side interpretation relies on defaults. Removing the panel before a normal DRM disable path can leave only `drm_panel_remove()` cleanup, not a direct power-down.
+
+Test signals: Probe should attach without DSI errors and report one preferred 1536x2048 mode with 147x196 mm size and 8 bpc. Runtime validation should cover prepare/unprepare cycles, regulator disable on failed init write, optional versus present enable GPIO, backlight binding, and visible scanout with stable gamma/GOA output.

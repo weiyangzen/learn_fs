@@ -1,0 +1,9 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/ast/ast_dp.c
+
+Purpose: ASPEED DisplayPort output support for AST Gen7+ devices, covering DP MCU launch, EDID reads through indexed registers, link training, PHY sleep, mode-index programming, connector state, and encoder/connector initialization.
+
+Important functions are `ast_dp_launch`, `ast_astdp_read_edid_block`, `ast_astdp_is_connected`, `ast_dp_set_phy_sleep`, `ast_dp_link_training`, `ast_dp_set_enable`, encoder helper callbacks, connector helper callbacks, custom connector state reset/duplicate/destroy, and `ast_astdp_output_init`. `struct ast_astdp_connector_state` stores the hardware mode index.
+
+Control flow: launch waits for MCU firmware executing and marks EDID read done. Detection temporarily wakes PHY, checks HPD plus link-success bits, updates cached physical status/epoch, but returns logical connected for BMC compatibility. Mode check maps resolutions to ASTDP mode indexes. Mode set writes misc and video-format index registers. Enable wakes PHY, trains link, waits vrefresh, and enables DP video; disable turns video off and sleeps PHY. EDID reading serializes under `modeset_lock`, reads 4-byte chunks through mirrored registers, and suppresses extension blocks.
+
+State persists in DP PHY/video indexed registers, cached physical connector status, connector atomic mode index, and EDID-derived connector properties. Dependencies are DRM atomic/EDID helpers, VBIOS mode refresh indexes, AST indexed register helpers, and the global modeset lock. Risks include no EDID extensions, long retry sleeps on EDID, mode-index table ignoring refresh/flags FIXME, always-connected logical status, and link training failure only logged. Test signals are AST2600 DP hotplug, EDID/no-EDID mode lists, 1024x768 fallback, supported mode validation, DP enable/disable, and suspend/resume relaunch.

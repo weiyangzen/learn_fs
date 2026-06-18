@@ -1,0 +1,16 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/media/platform/mediatek
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 2
+- Recursive researched files: 123
+- Direct child folders represented: 5
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/media/platform/mediatek/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/media/platform/mediatek/Makefile`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

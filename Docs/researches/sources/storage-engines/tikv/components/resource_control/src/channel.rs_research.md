@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resource_control/src/channel.rs
+
+`channel.rs` wraps normal crossbeam channels and TiKV priority queues behind a common `Sender`/`Receiver` API. When no `ResourceController` is supplied, `bounded` and `unbounded` return vanilla crossbeam channels. When resource control is enabled, both functions currently use an unbounded priority queue; the bounded path has a TODO noting it is not actually bounded.
+
+`ResourceMetered` lets messages report resource consumption and return the dominant resource group name. `Sender::consume_msg_resource` calls that hook and records the last group in a `RefCell<String>`. Subsequent `send` and `try_send` ask `ResourceController::get_priority(last_msg_group, CommandPri::Normal)` and submit the message with that priority, optionally respecting a `low_bound` to preserve ordering for messages from one peer. Receivers expose only `recv` and `try_recv`.
+
+State is per-sender and volatile: cloned priority senders get their own empty `last_msg_group`, while the queue and controller are shared. Dependencies include `kvproto::CommandPri`, `tikv_util::mpsc::priority_queue`, and the crate's `ResourceController`. Risks include priority decisions based on the previous consumed message rather than the current message unless callers invoke `consume_msg_resource` in the right order, unbounded memory growth in resource-controlled `bounded`, and `RefCell` runtime borrow constraints. A benchmark test verifies resource consumption and message delivery through the priority path.

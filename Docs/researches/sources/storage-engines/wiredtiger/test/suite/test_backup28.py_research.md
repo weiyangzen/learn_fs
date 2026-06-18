@@ -1,0 +1,5 @@
+# sources/storage-engines/wiredtiger/test/suite/test_backup28.py
+
+Purpose: verifies partial backup restore target URI validation across file, simple table, column group, and index scenarios. Only table URIs are supported in `backup_restore_target`.
+
+Important APIs are `session.create` for tables, column groups, and indexes; `take_selective_backup`; `wiredtiger_open(... backup_restore_target=...)`; and message-based error assertions. Control flow creates a file or table with column group/index structures, checkpoints for table subobjects, takes a full backup, then opens partial restore with scenario target list. If the target list begins with `table:table0`, restore should succeed and the table cursor should open; otherwise restore should fail with a message saying partial backup restore only supports table formats. State behavior is metadata schema type validation during recovery. Risks include scenario labels swapping `table-cg`/`table-index` target types and exact error message regex. Test signals are successful cursor open for table target and expected `WiredTigerError` for file/index/colgroup targets.

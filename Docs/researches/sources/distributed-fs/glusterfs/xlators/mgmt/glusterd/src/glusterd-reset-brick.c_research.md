@@ -1,0 +1,15 @@
+# sources/distributed-fs/glusterfs/xlators/mgmt/glusterd/src/glusterd-reset-brick.c
+
+Purpose: Implements reset-brick prevalidation and commit handling. Reset-brick supports stopping a source brick for reset and committing the same brick path back after validation, reusing replace-brick mechanics for the final metadata/service update.
+
+Important APIs and functions: `glusterd_reset_brick_prevalidate()` validates reset-brick start/commit/commit-force requests and fills response brick metadata. `glusterd_op_reset_brick()` executes reset-brick start by stopping the brick, or commit by resolving destination brickinfo, updating port, stopping services, invoking `glusterd_op_perform_replace_brick()`, restarting services, notifying fetchspec, and storing volinfo.
+
+Control flow: Prevalidate first runs common brick prerequisites. `GF_RESET_OP_START` succeeds after those checks. Commit variants parse and validate destination brick info. If validation shows the destination is a new local brick, reset is rejected and the user is directed to replace-brick. If validation shows the same/occupied brick path, the source brick must already be stopped, and `force` may be required if a volume id xattr or uuid mismatch indicates existing brick content. Local destinations are path-created/validated with optional `ignore-partition`; remote destinations require friend, connected, and befriended peer state. The response dict receives mount dir and `brick_count`.
+
+State and persistence: Like replace-brick, reset uses `volinfo->rep_brick` to stage source/destination brickinfo. Start changes runtime brick process state by stopping glusterfs for the source brick. Commit may stop the source brick on the destination host path, stops glusterd-managed services, replaces brick metadata through `glusterd_op_perform_replace_brick()`, marks rebalance status reset due to reset-brick, restarts services, clears staged state, and stores updated volinfo.
+
+Dependencies and integration points: Shares headers and helpers with replace-brick: op-sm, geo-rep, store, utils, service management, volfile generation, messages, mgmt, peer lookup, brick validation/path helpers, destination brickinfo helpers, `rb_update_dstbrick_port()`, and `glusterd_op_perform_replace_brick()` from `glusterd-replace-brick.c`.
+
+Risks: Reset-brick intentionally rejects new destination bricks, so correctness depends on nuanced return values from `glusterd_new_brick_validate()`. The code path checking whether to stop the source on commit uses uuid comparison and logs "I AM THE DESTINATION HOST", making host-selection mistakes risky. As with replace-brick, partial failures after service stop or brick-list mutation can leave service/volume state needing recovery. Force and ignore-partition options can override safety checks and need targeted validation.
+
+Test signals: Reset-brick start stops the source brick; commit without prior stop is rejected; commit to a new brick suggests replace-brick; force commit with existing volume id xattr; local and remote destination peer validation; service restart failure; volinfo persistence; fetchspec notify; and rebalance status reset after commit.

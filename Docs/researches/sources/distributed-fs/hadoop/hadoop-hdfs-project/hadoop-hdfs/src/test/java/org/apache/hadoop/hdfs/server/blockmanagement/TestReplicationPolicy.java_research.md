@@ -1,0 +1,23 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/blockmanagement/TestReplicationPolicy.java
+
+## Purpose
+`TestReplicationPolicy` is the baseline block placement and low-redundancy test suite for replicated blocks. It runs against both `BlockPlacementPolicyDefault` and `BlockPlacementPolicyWithUpgradeDomain`, exercising target selection, rack locality, exclusions, stale-node avoidance, limited availability, low-redundancy priority iteration, replica deletion, storage policy handling, favored nodes, no-local-write flags, load exclusion, and configuration validation.
+
+## Important APIs, types, and functions
+The class extends `BaseReplicationPolicyTest`, overriding `getDatanodeDescriptors` to create six DataNodes across three racks and an extra storage on one DataNode. It uses `BlockPlacementPolicy.chooseTarget`, `BlockPlacementPolicyDefault.chooseReplicaToDelete`, `splitNodesWithRack`, `adjustSetsWithChosenReplica`, `chooseReplicasToDelete`, `useDelHint`, `isMovable`, `LowRedundancyBlocks`, `BlockManager`, `BlockInfoContiguous`, `StatefulBlockInfo`, `DFSUtil.getInvalidateWorkPctPerIteration`, and `DFSUtil.getReplWorkMultiplier`. Configuration and state helpers include `updateHeartbeatWithUsage`, `updateHeartbeatForExtraStorage`, `resetHeartbeatForStorages`, and stale-node timestamp manipulation through `DFSTestUtil.resetLastUpdatesWithOffset`.
+
+## Control flow
+The early `testChooseTarget*` methods drive the normal write path. They vary writer locality, excluded nodes, unavailable local storage, rack availability, non-cluster writers, and requests for more targets than available nodes. Assertions verify the standard placement pattern: prefer local if suitable, place a second replica on a different rack, place a third on the second replica's rack, and spread additional replicas without collapsing rack diversity. Multi-storage tests check that a DataNode can be rejected if all its storages are short on space, but accepted when at least one storage has enough remaining space.
+
+Stale-node tests manipulate last heartbeat times and the DatanodeManager stale count. They confirm stale nodes are avoided when at most half the cluster is stale, but are allowed again when avoiding them would create hotspots. Re-replication tests pass pre-existing chosen storages and verify target choice complements current placement. Low-redundancy tests insert `BlockInfo` entries into priority queues, choose bounded batches, and verify iterator progress after updates, stored-block additions, under-construction conversions, and replication factor changes.
+
+Replica deletion tests build replica sets across racks and storage types, then verify deletion preference by rack concentration, remaining space, storage type excess, delete hints, and storage policy changes. The striped deletion variant uses the striped placement policy to verify deterministic deletion order for EC-style candidates. Later tests cover favored nodes, `AddBlockFlag.NO_LOCAL_WRITE`, `excludeNodeByLoad`, COLD policy failures due to missing storage type, choose-attempt behavior with no stale nodes, and not-enough-space logging.
+
+## State and persistence behavior
+Most tests operate on in-memory descriptors, storage utilization, rack topology, and low-redundancy queues. A few instantiate MiniDFSCluster for priority scheduling. State under test includes per-storage remaining space, per-DataNode xceiver load, stale timestamps, selected/excluded target sets, low-redundancy cursor position, block collection mappings, under-construction state, storage policy excess types, and log/metric side effects. Persistent namespace storage is not the focus.
+
+## Dependencies and integration points
+This file is the main integration point for placement policy contracts consumed by BlockManager writes, re-replication, balancer moves, and storage policy transitions. It also depends on NameNode lock mocks, `BlockStoragePolicySuite`, storage type stats, log appenders, and MiniDFSCluster where background redundancy work is needed.
+
+## Risks and test signals
+The suite catches regressions in rack-aware placement, local-write preference, stale-node thresholds, warning logs for unsatisfied target counts, queue iteration skips, deletion choices that violate placement, and invalid configuration acceptance. Risks include parameterization across two policies where assertions must remain valid for both, and helper state leakage if storage heartbeats are not reset. Strong signals include exact target lengths, rack membership checks, chosen storage identity, queue bucket sizes, thrown exceptions for invalid config, and log messages such as `NO_REQUIRED_STORAGE_TYPE` and `NOT_ENOUGH_STORAGE_SPACE`.

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/fs/stream/stream03.c
+
+Purpose: validates `ftell()` after writes, rewind, relative seek, end seek, start seek, and reading to EOF. Setup copies random LTP data into a 30-byte buffer; `run` writes it to `ltp_file`, checks offsets 0, 30, 0, 10, 30, 0, and 30 after `fgets` drains the file. Important APIs are `SAFE_FOPEN`, `SAFE_FWRITE`, `SAFE_FTELL`, `SAFE_FSEEK`, `rewind`, and `fgets`. State is a temporary file and allocated buffers declared in `.bufs`. Dependencies are LTP random data and safe stdio wrappers. Risks are off-by-one expectations around append/update mode and null bytes in random data; test signal is exact offset matches through `TST_EXP_EQ_LI`.

@@ -1,0 +1,15 @@
+## sources/cloud-native/composefs-rs/crates/composefs-oci/src/image.rs
+
+Purpose: this module converts OCI layer tar entries into a composefs filesystem tree, including container overlay semantics such as whiteouts, hardlinks, symlinks, and deterministic OCI transformations.
+
+Important APIs: `process_entry` applies a single `TarEntry<ObjectID>` to a mutable `FileSystem<ObjectID>`. `create_filesystem` opens an OCI config splitstream, iterates its layer diff_ids in order, reads each layer splitstream, and builds the final filesystem. Internal tests include helpers for synthetic tar creation and assertions over dumpfile output.
+
+Control flow: `process_entry` treats entries with no filename as root metadata updates and requires them to be directories. Other entries become an `Inode`: directories allocate nested `Directory`, leaf content goes into the filesystem leaf table, and hardlinks resolve the target leaf ID from the current filesystem. It splits the destination path, interprets filenames beginning with `.wh.` as overlayfs whiteouts, clears directories for `.wh..wh..opq`, removes named entries for normal whiteouts, or merges the inode normally. `create_filesystem` opens config through `crate::open_config`, uses named refs from config splitstream to find layer verities, optionally validates layer checksums when config verity is not trusted, streams tar entries through `crate::tar::get_entry`, applies each entry, transforms the filesystem for OCI consistency, compacts orphan leaves, and debug-asserts fsck.
+
+State and persistence: this module primarily constructs in-memory `FileSystem` state from repository streams and object refs. It reads repository config/layer streams and external objects indirectly through splitstream parsing. It does not commit an EROFS image itself; callers later commit or inspect the filesystem.
+
+Dependencies and integration: depends on `composefs::tree` structures, `Repository`, fs-verity object IDs, `DigestWrite`/SHA-256 for optional layer checksum validation, OCI digest types, tar item types, and the skopeo tar layer content type. It is called by higher-level OCI EROFS generation and boot logic.
+
+Risks: whiteout semantics are easy to regress, especially exact `.wh..wh..opq` matching, root-directory behavior, hardlink target resolution, and replacement ordering. When `config_verity` is absent, validation is intentionally expensive because named refs are not trusted. The filesystem transformation step affects final image IDs; changes need compatibility scrutiny.
+
+Test signals: tests cover base image tar round-trip with directories, inline/external regular files, symlinks, hardlinks, replacement ordering, and entry counts. Many focused tests exercise file whiteouts, nonexistent whiteouts, directory whiteouts, root whiteouts, nested whiteouts, opaque directory clearing, recreate-after-whiteout, multiple and double whiteouts, unusual `.wh.` names, and clearing subdirectories. These are strong behavioral guards for overlay merging.

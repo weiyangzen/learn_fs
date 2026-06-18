@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/tiny/arcpgu.c
+
+Purpose: This is the DRM/KMS driver for the Synopsys ARC PGU display controller. It exposes one simple display pipe backed by GEM DMA framebuffers, programs ARC PGU MMIO timing and framebuffer registers, and either attaches to a bridge described in device tree or creates a virtual connector for simulation platforms.
+
+Important APIs, types, and functions: `struct arcpgu_drm_private` owns the embedded `drm_device`, MMIO base, pixel clock, `drm_simple_display_pipe`, and optional simulated connector. `arc_pgu_write()`/`arc_pgu_read()` wrap register access. `arc_pgu_supported_formats` accepts RGB565, XRGB8888, and ARGB8888, while `arc_pgu_set_pxl_fmt()` maps those formats to the controller's RGB565 versus XRGB8888 bit. `arc_pgu_mode_valid()` uses `clk_round_rate()` with a 0.5 percent tolerance. `arc_pgu_mode_set()` writes total, sync, active-area, polarity, stride, start, pixel format, and clock-rate state. Probe is split through `arcpgu_probe()`, `arcpgu_load()`, `drm_dev_register()`, and `drm_client_setup_with_fourcc()`.
+
+Control flow: The platform driver allocates a managed DRM device, resolves `pxlclk`, initializes mode config, maps the register resource, optionally binds reserved framebuffer memory, sets a 32-bit DMA mask, discovers a bridge through OF graph endpoint 0, or falls back to a virtual connector. Atomic enable programs mode registers, enables the clock, and sets the controller enable bit. Atomic update writes the DMA address of the current framebuffer into `ARCPGU_REG_BUF0_ADDR`; disable clears enable and disables the clock. Remove unregisters DRM and shuts down atomic state/polling.
+
+State and persistence: Persistent driver state is only in `arcpgu_drm_private`; hardware state lives in ARC PGU registers and the pixel clock. Reserved memory attachment persists through the device lifetime. The update path assumes scanout from DMA GEM object 0 and does not maintain a shadow copy.
+
+Dependencies and integration points: Depends on platform resources, OF graph/bridge lookup, common DRM atomic/simple-pipe helpers, GEM DMA helpers, fbdev DMA helpers, clock framework, DMA API, and optional debugfs. Integration is via `snps,arcpgu` OF compatible and a bridge endpoint when real output hardware exists.
+
+Risks: Clock validation is only as good as the clock provider's rounding behavior. `arc_pgu_set_pxl_fmt()` treats ARGB8888 like XRGB8888, so alpha is ignored. `mode_config.max_width`/`max_height` are 1920x1080 although the simulated connector advertises up to 8192x8192; mode validation relies on the overall DRM flow to reject out-of-config modes. Hardware register writes are mostly unchecked, and `ARCPGU_REG_STRIDE` is forced to zero.
+
+Test signals: Useful tests include device-tree bridge attach versus simulated connector fallback, RGB565 and XRGB8888 fbdev startup, pixel-clock rejection for unrepresentable modes, debugfs clock readout, suspend/remove atomic shutdown, and a KMS atomic update verifying `BUF0_ADDR` changes to the GEM DMA address.

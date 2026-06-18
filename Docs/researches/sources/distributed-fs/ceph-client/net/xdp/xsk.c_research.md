@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/net/xdp/xsk.c
+
+Purpose: implements PF_XDP sockets, including socket creation/release, bind to netdev queue and UMEM, ring setup/mmap, Rx redirect delivery, Tx wakeup/generic transmit, poll/sendmsg/recvmsg, netdevice teardown, and module/pernet registration.
+
+Important APIs/functions: exported driver helpers include `xsk_set/clear_rx_need_wakeup()`, `xsk_set/clear_tx_need_wakeup()`, `xsk_uses_need_wakeup()`, `xsk_get_pool_from_qid()`, `xsk_clear_pool_at_qid()`, `xsk_reg_pool_at_qid()`, `xsk_generic_rcv()`, `__xsk_map_redirect()`, `__xsk_map_flush()`, `xsk_tx_completed()`, `xsk_tx_release()`, `xsk_tx_peek_desc()`, and `xsk_tx_peek_release_desc_batch()`. Socket ops include bind, setsockopt, getsockopt, mmap, poll, sendmsg, recvmsg, and release.
+
+Control flow: userspace creates a raw PF_XDP socket, configures RX/TX/FILL/COMPLETION rings and UMEM, then binds to a device queue with own or shared UMEM. Bind creates/assigns a buffer pool, registers it at the queue, optionally enables driver zero-copy, records device/queue, and publishes `XSK_BOUND` with memory ordering. XDP redirect Rx validates binding and queue, then either zero-copy publishes descriptors or copies packets/fragments into UMEM-backed buffers and flushes ring updates. Tx send/poll wakes zero-copy drivers or generic-SKB transmit; generic transmit consumes TX descriptors, reserves completion entries, builds linear/fraged skb(s), handles metadata, direct-xmits, and completes/cancels descriptors.
+
+State and persistence: per-socket `xdp_sock` state includes readiness/bound state, rx/tx queues, temporary or pool-owned fill/completion queues, UMEM, pool, netdev, queue id, zero-copy/scatter-gather flags, map membership, pending multi-buffer skb, stats, and mutex. Per-net state tracks PF_XDP sockets in `net->xdp.list`.
+
+Dependencies and integration: integrates socket/proto registration, BPF XSKMAP redirects, netdevice queue pool slots and queue leases, NAPI busy poll, XDP buffer pool APIs, UMEM lifecycle, ring memory ordering, netdevice notifier cleanup, skb metadata/checksum/timestamp support, and CAP_NET_RAW.
+
+Risks and test signals: risks include bind-time lifetime/unwind, memory ordering for state/ring publication, shared UMEM ownership, queue lease handling, zero-copy fallback, multi-buffer TX overflow, completion-ring backpressure, and map deletion deadlock avoidance. Tests should cover AF_XDP selftests for copy/zero-copy/shared UMEM, invalid descriptors, need-wakeup, mmap offsets, device unregister, busy-poll, TX metadata, SG packets, queue leases, and concurrent map/socket release.

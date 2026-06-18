@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/futex.c
+
+Decoder for classic `futex_time32` and `futex_time64`. The shared `do_futex` prints `uaddr`, operation flags, and command-specific arguments for wait, wake, bitset, requeue, PI locks, wake-op bitfields, and fallback unknown forms, using the appropriate timespec printer. State is syscall arguments only. Dependencies are futex xlat tables, bitset/wake-op tables, and time32/time64 printers. Risks are op masking with private/realtime flags, complicated `FUTEX_WAKE_OP` bitfield formatting, time ABI differences, and new futex commands. Tests should cover each command family, private/realtime flags, wake-op encoding, unknown ops, and time32/time64 timeout rendering.

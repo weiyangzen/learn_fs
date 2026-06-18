@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/xe/compat-i915-headers/intel_step.h
+
+Purpose: maps the i915 stepping type name to Xe's stepping type by including `xe_step_types.h` and defining `intel_step` as `xe_step`. Control flow and runtime state are absent. Dependencies are Xe step type definitions. Integration points are shared display and workaround code that expects an `intel_step` symbol. Risks include macro substitution surprises, missing future i915 helper APIs, and semantic drift if i915 and Xe stepping models diverge. Test signals include build coverage for stepping-dependent display workarounds and platform stepping selection tests.

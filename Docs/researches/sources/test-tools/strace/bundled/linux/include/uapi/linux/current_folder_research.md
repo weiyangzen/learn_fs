@@ -1,0 +1,128 @@
+# Folder Research: sources/test-tools/strace/bundled/linux/include/uapi/linux
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 114
+- Recursive researched files: 130
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/audit.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/blkpg.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/blktrace_api.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/blkzoned.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/bsg.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/btrfs.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/btrfs_tree.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/cgroupstats.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/close_range.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/const.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/counter.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/cryptouser.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/dcbnl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/devlink.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/dm-ioctl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/dqblk_xfs.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/elf-em.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/ethtool.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/ethtool_netlink.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/ethtool_netlink_generated.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/eventpoll.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/falloc.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/fcntl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/fib_rules.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/fiemap.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/fs.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/fscrypt.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/futex.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/gen_stats.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/genetlink.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/gpio.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/hiddev.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_addr.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_addrlabel.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_alg.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_bonding.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_bridge.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_ether.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_link.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/if_xdp.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/in.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/in6.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/inet_diag.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/input-event-codes.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/input.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/io_uring.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/ioam6_genl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/ip_vs.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/kcmp.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/kexec.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/keyctl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/landlock.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/libc-compat.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/lirc.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/loop.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/lsm.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mctp.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/memfd.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mmtimer.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mount.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mpls.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mptcp.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mptcp_pm.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mqueue.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mroute.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/mroute6.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/neighbour.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/netconf.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/netdev.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/netlink.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/netlink_diag.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/nexthop.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/nfc.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/nl80211.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/nsfs.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/openat2.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/packet_diag.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/perf_event.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/pidfd.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/pkt_sched.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/prctl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/ptp_clock.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/qrtr.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/quota.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/rseq.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/rtnetlink.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/sched.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/seccomp.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/securebits.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/seg6_genl.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/smc_diag.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/sock_diag.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/socket.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/stat.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/stddef.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/taskstats.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/tcp.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/tcp_metrics.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/tee.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/thermal.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/tipc.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/tls.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/typelimits.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/types.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/udmabuf.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/unix_diag.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/userfaultfd.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/utsname.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/v4l2-common.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/v4l2-controls.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/version.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/videodev2.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/vm_sockets.h`
+- `sources/test-tools/strace/bundled/linux/include/uapi/linux/xattr.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

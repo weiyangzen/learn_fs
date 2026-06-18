@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/vfio/pci/virtio/main.c
+
+This file is the PCI driver wrapper for virtio VFIO PCI devices. It selects the right VFIO device ops based on VF capabilities, allocates the virtio-specific core device, registers it with VFIO PCI core, and wires reset notifications to migration and optional legacy I/O.
+
+Important functions are `virtiovf_pci_open_device()`, `virtiovf_pci_close_device()`, optional `virtiovf_pci_init_device()`, `virtiovf_pci_core_release_dev()`, `virtiovf_pci_probe()`, `virtiovf_pci_remove()`, and `virtiovf_pci_aer_reset_done()`. Three operation tables exist: generic virtio VFIO, live-migration, and transitional legacy-plus-migration. The PCI ID table supports Red Hat/Qumranet virtio-net and virtio-block VF override IDs.
+
+Probe control flow detects whether the PCI function is a VF, asks the optional legacy layer whether legacy I/O is supported, checks virtio admin device-parts support for migration, selects the matching `vfio_device_ops`, allocates `virtiovf_pci_core_device`, marks it migratable when applicable, stores drvdata, and registers with `vfio_pci_core_register_device()`. Open enables the core device, opens legacy I/O if present, opens migration, then finishes enablement. Close shuts down migration before core close. Remove unregisters and drops the VFIO device.
+
+State is mostly in the allocated `virtiovf_pci_core_device`; this file chooses which callbacks expose and mutate that state. The PCI driver is `driver_managed_dma`, relying on VFIO/iommufd ownership rather than normal DMA API setup.
+
+Dependencies include VFIO PCI core, virtio PCI admin helpers, optional legacy I/O, migration ops, PCI error handlers, and module PCI driver registration. Risks include selecting the wrong ops when both legacy and migration capabilities vary, leaving legacy resources initialized without matching release, open failure unwind after legacy setup, and reset notifications during active migration. Test signals include probe on PF versus VF, VF with migration only, VF with legacy plus migration, unsupported VF falling back to generic ops, open/close failure injection, remove after failed register, and AER reset-done callbacks.

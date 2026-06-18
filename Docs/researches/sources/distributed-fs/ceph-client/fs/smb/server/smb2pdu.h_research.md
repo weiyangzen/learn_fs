@@ -1,0 +1,28 @@
+# sources/distributed-fs/ceph-client/fs/smb/server/smb2pdu.h
+
+## Purpose
+`smb2pdu.h` defines ksmbd server-side SMB2/SMB3 PDU constants, response helper structures, query/set information payload structures, POSIX extension payloads, and the public function surface implemented by `smb2pdu.c` and consumed by the SMB server dispatcher, signing/encryption paths, and command validation code.
+
+## Important APIs, Types, and Functions
+The header defines create action values (`FILE_SUPERSEDED`, `FILE_OPENED`, `FILE_CREATED`, `FILE_OVERWRITTEN`), credit and I/O size limits (`SMB2_MAX_CREDITS`, SMB2/SMB3 default/min/max sizes), negotiate-context offset constants, session state bits and timeout, Apple create context tag `SMB2_CREATE_AAPL`, durable handle timeout, FSCTL flag `SMB2_0_IOCTL_IS_FSCTL`, file/FS information class response-size constants, directory query flags, compression constants, POSIX file type constants, and `FILE_MODE_INFO_MASK`.
+
+Wire-format structures include `struct preauth_integrity_info`, create-context payloads for allocation size, durable response, POSIX response, EA buffer, and SD buffer, ioctl response payloads for socket addresses, file object IDs, and sparse state, file information payloads such as access, alignment, alternate name, stream, standard, EA, allocation, disposition, position, mode, compression, attribute tag, EA entries, and POSIX directory/query records, plus `struct fs_type_info` for filesystem-name support mapping. These structures are packed where they are directly serialized on the wire.
+
+The function declarations expose dialect initializers, tunable setters for max read/write/trans/credits, request/response recognition helpers, response header and error helpers, session/tree validation, signing and encryption helpers, async work helpers, channel lookup, preauth hashing, transform-header handling, and every SMB2 command handler. The command-handler declarations form the server-side dispatch contract for negotiate, session setup, tree connect/disconnect, logoff, create/open, query/set info, query directory, close, echo, read/write, flush, cancel, lock, ioctl, oplock break, and notify.
+
+## Control Flow
+The header has no executable flow, but it organizes the protocol contract used by `smb2pdu.c`. A request dispatcher can use `get_smb2_cmd_val`, `init_smb2_rsp_hdr`, `smb2_allocate_rsp_buf`, `smb2_check_user_session`, `smb2_get_ksmbd_tcon`, `smb2_is_sign_req`, signing verification, and the command handlers to process a request. Response post-processing uses `smb2_set_rsp_credits`, SMB2/SMB3 signing helpers, SMB3 preauth hashing, and optional SMB3 encryption helpers before transport writeout.
+
+The wire structures mirror SMB2 create contexts, query-info buffers, query-directory entries, ioctl payloads, and POSIX extension records, so callers can cast validated request or response buffer regions to the appropriate packed type and then use little-endian conversion helpers in the implementation. Session state constants guide setup, validation, expiration, and reconnect handling.
+
+## State and Persistence
+The header itself does not persist state. It defines constants and structures that describe persistent or externally visible state carried over the SMB protocol: session validity, create action results, durable handle timeout, DOS/NT file metadata fields, EA records, POSIX inode metadata, security/create contexts, filesystem capacity/attribute response sizes, and transform/signing/encryption protocol surfaces. Runtime state such as `struct ksmbd_work`, `struct ksmbd_conn`, `struct ksmbd_session`, and channel entries is declared elsewhere and manipulated through the function prototypes here.
+
+## Dependencies and Integration Points
+The header depends on `ntlmssp.h` and `smbacl.h` for authentication/security descriptor types and on common SMB2 protocol definitions included transitively by the server sources. It is included by SMB server command dispatch, message validation, signing/encryption code, and supporting ksmbd modules that need the SMB2 command-handler API or PDU layouts. The POSIX extension definitions align with the Samba SMB3 POSIX extension specification referenced in the file comments, while negotiate and transform helpers align with SMB3.1.1 preauth, signing, and encryption requirements.
+
+## Risks
+Risks are mostly ABI and wire-format correctness. Packed structure sizes, flexible-array placement, context offsets, and response-size constants must match the SMB2/SMB3 specifications and `smb2pdu.c` sizing logic. Incorrect constants can cause buffer under-allocation, truncated responses, client interoperability failures, or parser confusion. Conditional `OFFSET_OF_NEG_CONTEXT` changes with Kerberos support must remain consistent with the actual negotiate response layout. Public prototypes must stay synchronized with implementations and dispatch table expectations. POSIX extension structures encode SID buffer assumptions and file-type bit positions that must remain compatible with clients.
+
+## Test Signals
+Compile coverage should catch prototype drift, but runtime signals are needed for layout correctness: negotiate responses with and without Kerberos support, SMB3.1.1 negotiate contexts, create contexts for allocation/durable/POSIX/EA/SD, all query-info classes whose sizes are defined here, directory enumeration classes including POSIX info, FS information classes, sparse/object-id/ioctl payloads, compression and attribute-tag info, and POSIX file type encoding for regular files, directories, symlinks, character/block devices, FIFOs, and sockets. Packet capture or smbtorture validation should confirm structure sizes, offsets, endian fields, and padding/alignment.

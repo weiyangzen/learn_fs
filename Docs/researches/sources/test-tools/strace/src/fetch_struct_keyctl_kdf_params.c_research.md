@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_keyctl_kdf_params.c
+
+Mpers helper that fetches `struct keyctl_kdf_params` for key-management decoders. It translates tracee pointers and lengths into `strace_keyctl_kdf_params`/native-compatible storage without owning the pointed buffers. Dependencies are `keyctl_kdf_params.h`, `MPERS_DEFS`, and tracee memory fetch helpers. Risks are pointer-size conversion, partial struct availability on older headers, and callers misinterpreting tracee pointers as local memory. Tests should exercise keyctl KDF operations in native and compat modes with good pointers, null optional fields, and bad pointers.

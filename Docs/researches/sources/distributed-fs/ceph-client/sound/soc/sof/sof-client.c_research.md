@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/soc/sof/sof-client.c
+
+Purpose: provides the SOF auxiliary-client framework used by optional debug, probe, and platform-specific client drivers. It creates auxiliary devices under the SOF core device, forwards IPC operations across IPC3/IPC4, dispatches firmware notifications, and exposes helper accessors to client modules.
+
+Important APIs/functions: `sof_register_clients()` registers built-in debug clients and delegates platform-specific client registration through `snd_sof_dsp_ops`. `sof_client_dev_register()`/`unregister()` allocate `sof_client_dev_entry`, initialize/add/delete auxiliary devices, copy optional platform data, and maintain `sdev->ipc_client_list`. `sof_client_ipc_tx_message()`, `sof_client_ipc_set_get_data()`, and `sof_client_ipc_rx_message()` adapt IPC3 header sizes and IPC4 message sizes. Accessors expose debugfs root, DMA device, firmware version/state, IPC type/max payload, DSP boot, and SOF core module refcounting. Event registration APIs add IPC RX and firmware-state callbacks and dispatchers iterate matching handlers.
+
+Control flow/state: auxiliary device lifetime is managed by `sof_client_auxdev_release()` after `auxiliary_device_uninit()`. Built-in debug clients are unwound in reverse order on registration failure. Client suspend/resume walks loaded auxiliary drivers under `ipc_client_mutex`. IPC notification dispatch derives message type from IPC3 global command bits or IPC4 notification type bits.
+
+Dependencies/integration: integrates with Linux auxiliary bus, SOF IPC internals, `ipc3-priv.h`, `ipc4-priv.h`, module refcounting, and SOF core state in `snd_sof_dev`. Exported symbols live in namespace `SND_SOC_SOF_CLIENT`.
+
+Risks/test signals: unregister functions for IPC and firmware-state handlers lock `ipc_client_mutex`, while registration/dispatch use `client_event_handler_mutex`; this split can cause race or list corruption risk. `sof_register_ipc_flood_test()` error unwind unregisters from the current failed index down to zero, which should be checked for off-by-one behavior against devices that were never added. Tests should cover auxiliary probe/remove, concurrent notification registration/removal, IPC3/IPC4 message forwarding, and SOF core module unload while a client stream is active.

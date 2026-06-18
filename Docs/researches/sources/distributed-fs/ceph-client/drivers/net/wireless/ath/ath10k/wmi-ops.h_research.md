@@ -1,0 +1,16 @@
+# sources/distributed-fs/ceph-client/drivers/net/wireless/ath/ath10k/wmi-ops.h
+
+## Purpose
+`wmi-ops.h` is the ath10k WMI abstraction layer. It defines the firmware-family-specific `struct wmi_ops` vtable and provides inline wrappers that validate operation availability, call TLV/main/10.x generators or parsers, and send generated command skbs with the command IDs from `ar->wmi.cmd`.
+
+## Important APIs, Types, and Functions
+The central type is `struct wmi_ops`. It groups receive dispatch (`rx`), service bitmap mapping, event pull/parsing callbacks, command skb generators, cleanup hooks, firmware statistics formatting, vdev subtype translation, and feature-specific command builders. Inline wrappers include receive and parser helpers such as `ath10k_wmi_rx()`, `ath10k_wmi_pull_scan()`, `ath10k_wmi_pull_mgmt_rx()`, `ath10k_wmi_pull_svc_rdy()`, `ath10k_wmi_pull_fw_stats()`, and `ath10k_wmi_pull_wow_event()`. Command wrappers cover pdev, scan, vdev, peer, power-save, WMM, beacon/probe templates, management TX, debug/pktlog, thermal, block-ack, WOW, TDLS, adaptive QCS, survey, echo, radar, spectral, GPIO, and per-peer-per-TID operations.
+
+## Control Flow, State, and Persistence
+Most wrappers follow the same pattern: check that the relevant `ar->wmi.ops` callback exists, generate or parse data, translate `ERR_PTR()` to a negative errno, then call `ath10k_wmi_cmd_send()` or `ath10k_wmi_cmd_send_nowait()` with the corresponding ID from `ar->wmi.cmd`. Pull wrappers return parsed common ath10k argument structures without owning persistent state. Send wrappers transfer command skb ownership to the WMI command path on success. A few wrappers have special behavior: management TX without firmware ACK support marks the original mac80211 skb ACKed immediately; beacon DMA uses the nowait send path and frees the command skb on failure; `ath10k_wmi_get_txbf_conf_scheme()` returns an unsupported enum when absent; and unsupported callbacks consistently return `-EOPNOTSUPP`.
+
+## Dependencies and Integration Points
+This header connects high-level ath10k MAC/core code to firmware-specific WMI implementations such as `wmi-tlv.c`. It depends on `struct ath10k`, `struct ath10k_wmi`, command maps, parameter maps, WMI argument structures, mac80211 skb metadata, and the common command send functions. It is the primary integration contract that lets shared code call the same `ath10k_wmi_*()` helpers regardless of whether the device uses TLV, mainline, or older WMI encodings.
+
+## Risks and Test Signals
+The main risks are incomplete vtable implementations, mismatched command IDs, and ownership mistakes when a generator succeeds but command send fails. Callers must tolerate `-EOPNOTSUPP` for firmware families that do not implement a feature. Some wrappers assume callbacks exist without a guard, notably `ath10k_wmi_vdev_wmm_conf()`, so attach-time ops completeness matters. `ath10k_wmi_gpio_output()` checks `gen_gpio_config` instead of `gen_gpio_output`, which is a review target because it can report support based on the wrong callback. Test signals include build coverage across all WMI variants, feature probes that exercise unsupported paths, command-send failure injection to verify skb ownership, management TX completion/cleanup tests, and static checks that every wrapper uses the correct command ID and vtable member.

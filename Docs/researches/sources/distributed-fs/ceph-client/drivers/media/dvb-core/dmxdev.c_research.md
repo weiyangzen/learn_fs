@@ -1,0 +1,22 @@
+# sources/distributed-fs/ceph-client/drivers/media/dvb-core/dmxdev.c
+
+## Purpose
+`dmxdev.c` implements the DVB demux and DVR character devices. It exposes demux filter ioctls/read/poll/mmap operations, DVR read/write/buffer ioctls, ringbuffer delivery, optional vb2 mmap delivery, and registration/release of `/dev/dvb/.../demux*` and `dvr*` devices around an underlying `struct dmx_demux`.
+
+## Important APIs, Types, and Functions
+Exports are `dvb_dmxdev_init()` and `dvb_dmxdev_release()`. File operations are `dvb_demux_fops` and `dvb_dvr_fops`. Important helpers include `dvb_dmxdev_buffer_write()`, `dvb_dmxdev_buffer_read()`, `dvb_dvr_open()`, `dvb_dvr_release()`, `dvb_dvr_read()`, `dvb_dvr_write()`, `dvb_dvr_set_buffer_size()`, `dvb_dmxdev_set_buffer_size()`, `dvb_dmxdev_section_callback()`, `dvb_dmxdev_ts_callback()`, `dvb_dmxdev_feed_start()`, `dvb_dmxdev_feed_stop()`, `dvb_dmxdev_filter_start()`, `dvb_dmxdev_filter_stop()`, `dvb_dmxdev_filter_set()`, `dvb_dmxdev_pes_filter_set()`, `dvb_dmxdev_add_pid()`, `dvb_dmxdev_remove_pid()`, `dvb_demux_do_ioctl()`, and `dvb_dvr_do_ioctl()`. Key state lives in `struct dmxdev`, `struct dmxdev_filter`, `struct dmxdev_feed`, `struct dvb_ringbuffer`, and optional `struct dvb_vb2_ctx`.
+
+## Control Flow
+Initialization opens the demux, allocates the filter array, initializes locks and free filter states, registers demux and DVR DVB devices, and initializes the DVR ringbuffer. Opening a demux device reserves a free filter, initializes its mutex, ringbuffer, vb2 context, timer, type, and state. Filter ioctls set section or PES parameters, optionally allocate PID feed list entries, and start filtering immediately if requested. Section start either reuses an active same-PID section feed or allocates a new one, installs filter values/masks/modes, starts filtering, and arms timeout. PES start allocates TS feeds for each PID and starts them. Callbacks copy section/TS data into either ringbuffers or vb2 buffers, record overflow/error status, update oneshot state, and wake readers. Reads drain ringbuffers, with section reads first reconstructing the 3-byte section header to know payload length. Stop/release tears down filtering, timers, feeds, PID lists, vb2 streaming, ringbuffer memory, and state.
+
+## State and Persistence
+State is runtime-only. `dmxdev->filter[]` tracks allocation and filter state (`FREE`, `ALLOCATED`, `SET`, `GO`, `DONE`, `TIMEDOUT`), filter type, section/PES parameters, PID feed lists, timers, and ringbuffer/vb2 contexts. `dmxdev->dvr_buffer` stores DVR ringbuffer data and errors. `dmxdev->may_do_mmap` gates mmap for compatible opens when `CONFIG_DVB_MMAP` is enabled. Device `users` counts and `exit` coordinate release with open file handles. Ringbuffers are vmalloc-backed and can be resized before active streaming/filtering.
+
+## Dependencies and Integration Points
+The file integrates with DVB core registration (`dvb_register_device`, `dvb_unregister_device`), demux feed APIs (`allocate_section_feed`, `allocate_ts_feed`, `start_filtering`, `stop_filtering`, `release_*_feed`, `write`, `get_stc`, `get_pes_pids`), `dvb_ringbuffer`, `dvb_usercopy`, waitqueues/poll, timers, and optional `dvb_vb2` mmap helpers. DVR write mode switches the demux frontend to `DMX_MEMORY_FE` and restores the original frontend on release.
+
+## Risks and Edge Cases
+Buffer overflow sets ringbuffer error and wakes readers; subsequent reads flush and return the error. Filter buffer size cannot change while the filter is running, but DVR buffer resize is protected by the device mutex/spinlock. Section feed sharing for same PID requires careful stop/restart so one filter does not kill another. The demux open comment notes a known locking limitation for vb2 blocking waits because only one mutex is passed to the vb2 context. DVR open access-mode logic differs for read, write, and duplex devices; unsupported RDWR mmap paths return `-EOPNOTSUPP` when mmap is disabled. Release waits for users to drain before unregistering; missed wakeups would hang teardown.
+
+## Test Signals
+Exercise demux `DMX_SET_FILTER`, `DMX_SET_PES_FILTER`, `DMX_START`, `DMX_STOP`, `DMX_ADD_PID`, `DMX_REMOVE_PID`, buffer resize, poll/read timeout, DVR read/write, frontend switching for memory feeds, and optional `DMX_REQBUFS`/`QBUF`/`DQBUF`/mmap paths. Runtime signals include correct error returns for invalid state, no ringbuffer overrun without `-EOVERFLOW`, timeout delivery as `-ETIMEDOUT`, clean release with active filters, correct wakeups on data/error/exit, and no leaked TS or section feeds.

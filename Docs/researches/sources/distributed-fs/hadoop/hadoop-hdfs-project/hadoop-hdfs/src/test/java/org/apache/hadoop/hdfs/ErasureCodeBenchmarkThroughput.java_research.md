@@ -1,0 +1,9 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/ErasureCodeBenchmarkThroughput.java
+
+`ErasureCodeBenchmarkThroughput` is a benchmark `Tool` for comparing replicated and erasure-coded HDFS client throughput. It supports `read`, `write`, `gen`, and `clean` operations, configurable data size, EC versus replication, concurrent clients, and stateful versus positional read mode.
+
+Key APIs are `run`, `setUpDir`, `benchmark`, `doBenchmark`, `cleanUp`, `getFilePath`, inner `CallableBase`, `WriteCallable`, and `ReadCallable`. Startup validates that the filesystem is a `DistributedFileSystem`, initializes a static 128 MB random buffer, parses command arguments, creates replica and EC directories, and sets or validates EC policy. Benchmarking submits one callable per client with `ExecutorCompletionService`, waits for all results, sums bytes, and prints aggregate MB/s. EC reads tune `HdfsClientConfigKeys.StripedRead.THREADPOOL_SIZE_KEY` to `numClients * dataUnits`.
+
+State persists in HDFS under `test.benchmark.data` or `/tmp/benchmark/data`, separated into `replica` and `ec` directories. `gen` files remain for later reads; `write` files use `.tmp` and `deleteOnExit`. EC directory policy is persistent metadata. Dependencies include `DistributedFileSystem`, `ErasureCodingPolicy`, `StripedFileTestUtil`, Hadoop `ToolRunner`, `StopWatch`, and Java concurrency classes.
+
+Risks include heap pressure from the static 128 MB buffer, possible divide-by-zero for sub-second workloads, no explicit executor shutdown, broad cleanup matching via substring, stale generated files causing zero-byte benchmark results, and reliance on delete-on-exit for temporary write cleanup. Signals include per-file timing logs, total throughput output, precondition checks for directory policy, and read-size validation.

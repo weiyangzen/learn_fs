@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/rtc/rtc-mpc5121.c
+
+Purpose: supports Freescale MPC5121 and MPC5200 memory-mapped RTC blocks. MPC5121 exposes a read-only uptime counter plus writable offset, while MPC5200 uses direct calendar registers; both share minute-resolution alarm handling.
+
+Important APIs/types/functions: `struct mpc5121_rtc_regs` maps the byte/word register layout, and `struct mpc5121_rtc_data` stores IRQs, register base, RTC device, and cached `rtc_wkalrm`. `mpc5121_rtc_update_smh()` updates second/minute/hour set registers using the hardware sequence required for alarms. Time callbacks split into `mpc5121_rtc_read_time()`/`set_time()` and `mpc5200_rtc_read_time()`/`set_time()`. Alarm and IRQ callbacks are shared: `mpc5121_rtc_read_alarm()`, `mpc5121_rtc_set_alarm()`, `mpc5121_rtc_alarm_irq_enable()`, `mpc5121_rtc_handler()`, and `mpc5121_rtc_handler_upd()`.
+
+Control flow: probe maps registers, marks the platform device wake-capable, parses two OF IRQs, requests alarm and update handlers, allocates the RTC, selects MPC5200 ops by default, then switches to MPC5121 ops and U32 range when compatible is `fsl,mpc5121-rtc`. MPC5121 reads Linux time as `actual_time + target_time`; set-time writes the offset into `target_time`. MPC5200 reads/writes calendar date fields directly. Alarm setup only programs hour and minute, sets mday/month/year to `-1` in the cached alarm, writes `alm_enable`, and reports pending from `alm_status`.
+
+State and persistence: MPC5121 persists the Linux-time offset in `target_time`, abusing a hibernation target register because `actual_time` is read-only. Alarm state partly persists in hardware hour/minute and enable/status bits and partly in the driver's cached `wkalarm`, which is lost across reprobe. Remove disables alarm and update interrupts and disposes OF IRQ mappings.
+
+Dependencies and integration: depends on OF compatible strings `fsl,mpc5121-rtc` and `fsl,mpc5200-rtc`, `irq_of_parse_and_map()`, big-endian MMIO helpers for 16/32-bit fields, and RTC feature flags for minute alarm resolution and lack of update interrupt support.
+
+Risks and test signals: probe does not explicitly reject zero IRQ mappings before requesting them. Cached alarm date fields can diverge from hardware and are not persistent. The MPC5121 offset model caps the usable range to U32 seconds despite the underlying hardware maximum. Test both compatibles, keep-alive battery/oscillator failure warning path, alarm IRQ ack/status clear, periodic/update IRQ handling, minute-resolution alarm semantics, remove cleanup, missing IRQs, 12-hour MPC5200 decoding, and wraparound near U32 limits.

@@ -1,0 +1,7 @@
+## sources/distributed-fs/ceph-client/drivers/gpu/drm/panel/panel-samsung-s6e88a0-ams452ef01.c
+
+Purpose: This is a simpler S6E88A0-based panel driver for Samsung AMS452EF01. It exposes a fixed 540x960 two-lane DSI video mode and sends a static default brightness/gamma/AOR/ELVSS initialization sequence, with no Linux backlight device.
+
+Important APIs, control flow, and state: probe allocates `struct s6e88a0_ams452ef01`, gets `vdd3`/`vci`, reset GPIO, configures two-lane RGB888 video burst DSI, adds the panel, and attaches. `prepare()` enables supplies, toggles reset high-low-high, and runs `on()`: enable level-2 commands, set pixel-clock divider polarity, exit sleep, wait 120 ms, write default gamma table to `0xca`, default AOR to `0xb2`, ELVSS to `0xb6`, power save off, gamma update `0xf7`, lock commands, and display on. `unprepare()` display-offs, waits, sleeps in, asserts reset low, and disables supplies. `get_modes()` duplicates the fixed 540x960 mode and physical size.
+
+Dependencies, integration, risks, and tests: dependencies are MIPI DSI multi-context helpers, regulator/GPIO APIs, and compatible `samsung,s6e88a0-ams452ef01`. Risks are no runtime backlight control, fixed gamma/brightness assumptions, reset polarity differences from AMS427AP24, and limited error handling after DSI init failure. Test signals include display-on after prepare, correct fixed mode, suspend/resume, regulator/reset sequencing, and acceptable default luminance.

@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/drivers/net/dsa/realtek/rtl8366-core.c
+
+Purpose: this file is a shared helper library for RTL8366-family Realtek DSA drivers. It implements VLAN member-configuration allocation, PVID programming, VLAN 4K enable/disable sequencing, VLAN add/delete DSA callbacks, and generic ethtool MIB statistic plumbing through chip-specific `realtek_ops`.
+
+Important APIs, types, and functions: exported helpers include `rtl8366_mc_is_used()`, `rtl8366_set_vlan()`, `rtl8366_set_pvid()`, `rtl8366_enable_vlan4k()`, `rtl8366_enable_vlan()`, `rtl8366_reset_vlan()`, `rtl8366_vlan_add()`, `rtl8366_vlan_del()`, `rtl8366_get_strings()`, `rtl8366_get_sset_count()`, and `rtl8366_get_ethtool_stats()`. The key internal routine is `rtl8366_obtain_mc()`, which finds, creates, or recycles a VLAN member configuration (`struct rtl8366_vlan_mc`) for a VID using the chip-specific 4K VLAN table.
+
+Control flow: VLAN addition validates the VID through `priv->ops->is_vlan_valid()`, enables VLAN 4K mode, builds member and untag bitmaps from the DSA port and bridge flags, updates the 4K VLAN table, obtains a member-config slot, commits updated member/untag/FID fields, and optionally programs the port PVID by setting the member-config index. VLAN deletion scans member-config slots for the VID, removes the port from member and untag masks, and clears the slot if no ports remain. Reset disables VLAN and VLAN 4K mode and clears all configured member slots.
+
+State and persistence: the helper updates `priv->vlan_enabled` and `priv->vlan4k_enabled` as software mirrors of hardware VLAN mode. Persistent forwarding state lives in chip-specific VLAN 4K and member-config hardware tables and per-port MC index registers accessed through `priv->ops`. Ettool stats are not cached here; the helper reads each chip-provided MIB counter on demand.
+
+Dependencies and integration points: this file depends on `struct realtek_priv`, `realtek_ops` VLAN methods, DSA switch callbacks, bridge VLAN flags, and the shared `rtl8366_vlan_mc`, `rtl8366_vlan_4k`, and `rtl8366_mib_counter` structures declared in Realtek common headers. It is consumed by RTL8366RB and similar drivers that supply hardware-specific VLAN and MIB backends.
+
+Risks: the member-config table is small and can become full; recycling only chooses entries not referenced by any port PVID. Deleting a VLAN only updates the member-config table, not the 4K table contents, so stale 4K state may persist until reused. `rtl8366_get_sset_count()` returns zero rather than `-EOPNOTSUPP` for unsupported sets, which differs from many ethtool implementations. VLAN 4K enablement is forced from `rtl8366_vlan_add()` because ordinary VLAN enablement alone is noted as inconclusive.
+
+Test signals: add/delete VLANs with tagged, untagged, and PVID flags; exhaust and recycle member-config entries; verify `priv->vlan_enabled`/`vlan4k_enabled` after enable/disable/reset; inspect per-port PVID MC indices; validate ethtool string/count/counter output through a concrete driver such as RTL8366RB; and test error propagation from chip-specific ops.

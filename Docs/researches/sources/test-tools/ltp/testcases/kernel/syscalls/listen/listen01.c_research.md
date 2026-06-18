@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/listen/listen01.c
+
+Purpose: negative `listen()` errno coverage for bad file descriptor, non-socket fd, and unsupported datagram socket. The old LTP harness table provides setup/cleanup hooks: one uses fd `400` for `EBADF`, one opens `/dev/null` for `ENOTSOCK`, and one creates a `PF_INET/SOCK_DGRAM` socket for `EOPNOTSUPP`. Each iteration calls `listen(s, backlog)` and compares both return value and errno. State is one descriptor per test case. Dependencies are networking/socket support and `/dev/null`. Risks are platform-specific errno for UDP listen, though Linux expects `EOPNOTSUPP`. Test signal is expected failure for each table row.

@@ -1,0 +1,15 @@
+# sources/cloud-native/soci-snapshotter/integration/util_test.go
+
+Purpose: broad integration-test harness for SOCI snapshotter tests. It builds Docker Compose environments, renders containerd and snapshotter configs, manages local test registries with TLS/basic auth, starts/restarts containerd and `soci-snapshotter-grpc`, fetches registry/content-store metadata, and provides image and config utility types.
+
+Important APIs/types/functions: config template helpers include `getContainerdConfigToml`, `getCRIContainerdConfigToml`, `getSnapshotterConfigToml`, and many `snapshotterConfigOpt` setters for metrics, pull modes, prefetch, content store, concurrency, CRI keychain, and decompression settings. Environment helpers include `newSnapshotterBaseShell`, `newShellWithRegistry`, `rebootContainerd`, `stopContainerd`, `addConfig`, and `removeDirContents`. Image/registry helpers include `imageInfo`, `registryConfig`, `dockerhub`, `mirror`, `copyImage`, `getImageIndex`, `getManifestDigest`, `getReferrers`, `FetchContentByDigest`, and `readLayerTarFiles`.
+
+Control flow: tests request a shell environment, optionally with a registry. The harness renders compose YAML, builds/starts containers, creates TLS certs and htpasswd files, installs trust anchors, writes config files into the container, starts containerd and snapshotter, waits for startup logs, then verifies a basic snapshotter prepare command. Registry helpers can mirror upstream images into the test registry, then content helpers resolve manifests and blobs for assertions.
+
+State and persistence: this file creates temporary host directories for registry certs/config, writes files into test containers, manipulates `/var/lib/containerd`, `/var/lib/soci-snapshotter-grpc`, `/run/containerd`, and snapshotter sockets, and starts long-running processes. It also creates temporary Docker networks and cleanup functions that remove compose services and kill snapshotter processes.
+
+Dependencies/integration points: depends heavily on Docker Compose wrappers, dockershell, `nerdctl`, `ctr`, `crictl`, `containerd`, `soci-snapshotter-grpc`, `trust`, `bcrypt`, TOML marshaling, OCI image-spec, containerd images/platforms, and project testutil helpers. Config templates account for both proxy-plugin and built-in snapshotter modes plus containerd 1.7 and 2.x CRI paths.
+
+Risks: shell-driven tests are sensitive to image availability, host architecture, CLI output, process cleanup, mounted tmpfs behavior, and timing. The self-signed certificate path and registry host naming must remain consistent. Cleanup functions must avoid leaving mounts, sockets, and child processes behind. Config defaults intentionally start from a partially populated config, so future default changes can alter test behavior.
+
+Test signals: although this is helper code, it is exercised by most integration tests. It has embedded assertions through `t.Fatal`, startup log monitoring, retry loops for registry login and snapshotter readiness, content digest parsing, overlay fallback metric parsing, and release of compose resources through returned cleanup functions.

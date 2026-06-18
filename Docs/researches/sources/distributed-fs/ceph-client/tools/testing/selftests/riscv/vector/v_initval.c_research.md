@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/vector/v_initval.c
+
+Purpose: parent-side test for initial vector register state, including exec behavior through `v_exec_initval_nolibc`. It uses vector capability helpers and launches the nolibc child to ensure vector registers/control state start in the expected initialized condition. State is parent/child process status and vector support detection. Dependencies are `v_helpers`, hwprobe, vector instructions, and the extended child binary in the same output directory. Risks include relative path assumptions, unsupported hardware skips, and exit-code-only diagnostics from the nolibc child. Test signals are kselftest pass/fail for vector initial values and child exit status.

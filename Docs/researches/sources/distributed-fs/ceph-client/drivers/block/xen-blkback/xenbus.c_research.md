@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/block/xen-blkback/xenbus.c
+
+Purpose: Xen block backend xenbus glue. It discovers a physical block device from XenStore hotplug data, opens it as a backend VBD, maps frontend rings and event channels, advertises block features, and drives Xenbus state transitions for virtual block devices.
+
+Important APIs/types/functions: `struct backend_info` ties a `xenbus_device`, `xen_blkif`, backend watch, device numbers, and mode string. `xen_blkif_alloc()`, `xen_blkif_alloc_rings()`, `xen_blkif_map()`, `xen_blkif_disconnect()`, and `xen_blkif_free()` manage backend interface lifetime. `xen_vbd_create()` opens the real block device through `bdev_file_open_by_dev()`. `xen_blkbk_probe()`, `backend_changed()`, `frontend_changed()`, `connect_ring()`, `read_per_ring_refs()`, and `connect()` form the Xenbus protocol path. Sysfs statistics are exposed with `VBD_SHOW_ALLRING`.
+
+Control flow: probe allocates backend state, publishes backend capabilities, registers a watch on `physical-device`, and enters `InitWait`. The backend watch reads `physical-device`, `mode`, optional cdrom type, and frontend handle, then creates the VBD and sysfs attributes. Frontend state changes trigger ring teardown, ring reference parsing, shared ring mapping, event-channel binding, and status update. Once rings and VBD are ready, `connect()` writes features, geometry, sector sizes, and switches to `Connected`; per-ring kthreads are started by `xen_update_blkif_status()`.
+
+State and persistence: state lives in XenStore, the open `bdev_file`, per-ring grant/page caches, pending request lists, irq bindings, and kthreads. Persistent grants are module-parameter controlled and negotiated per VBD. Disconnect waits for kthreads, refuses full teardown while inflight I/O remains, unmaps rings, frees caches, validates counters, and clears `nr_ring_pages`, `rings`, and `nr_rings`.
+
+Dependencies and integration: depends on Xenbus, grant tables, event channels, blkback common request handling, Linux block-device open/flush/cache APIs, sysfs, and kthreads. It integrates with blkback request execution through ring interrupts and `xen_blkif_schedule()` in the shared backend code.
+
+Risks: untrusted frontend input controls queue count, protocol, ring page order, event channels, and grant refs, so bounds checks are critical. `BUG_ON()` assertions during disconnect can panic if grant accounting is corrupted. Error paths in multi-queue ring setup rely on later `xen_blkif_disconnect()` cleanup. Reconnect paths must not leak old ring grants or pending request allocations. `xen_update_blkif_status()` starts multiple kthreads after changing Xenbus state; partial startup failure must stop already-started threads.
+
+Test signals: exercise XenStore hotplug missing/invalid `physical-device`, readonly vs writable mode, feature publication, single and multi-queue rings, ring-page-order limits, reconnect after frontend close/reopen, backend removal with inflight I/O, persistent grant enable/disable, discard/flush feature reporting, and sysfs statistic aggregation.

@@ -1,0 +1,11 @@
+# sources/user-network-fs/samba/source3/libsmb/libsmb_dir.c
+
+Purpose: implements directory and browse-oriented libsmbclient operations: workgroup/server/share enumeration, directory listing, readdir variants, directory creation/removal, chmod/utimes/unlink/rename, directory seek/tell, fstatdir placeholder, and change notification.
+
+Important APIs/types: private list helpers maintain `SMBCFILE.dir_list` of `struct smbc_dirent` and `dirplus_list` of `struct libsmb_file_info`. Main exported entry points include `SMBC_opendir_ctx`, `SMBC_closedir_ctx`, `SMBC_readdir_ctx`, `SMBC_readdirplus_ctx`, `SMBC_readdirplus2_ctx`, `SMBC_getdents_ctx`, `SMBC_mkdir_ctx`, `SMBC_rmdir_ctx`, `SMBC_telldir_ctx`, `SMBC_lseekdir_ctx`, `SMBC_chmod_ctx`, `SMBC_utimes_ctx`, `SMBC_unlink_ctx`, `SMBC_rename_ctx`, and `SMBC_notify_ctx`.
+
+Control flow: `SMBC_opendir_ctx()` parses the URL and chooses one of several modes. Empty server lists workgroups by querying master browsers. Server with no share resolves workgroup/server identity and lists servers or shares via srvsvc RPC with SMB1 fallback. Server+share resolves DFS paths and uses `cli_list()` to build file entries and plus metadata. Read calls consume cached lists; `readdir`, `getdents`, and `readdirplus` keep their cursors synchronized. Mutating APIs parse paths, get `SMBCSRV`, resolve DFS targets, call `cli_*`, and translate status to `errno`.
+
+State and dependencies: directory contents are snapshot-cached in the `SMBCFILE` object until closed. The file depends on name resolution, RPC srvsvc, SMB client listing and path resolution, tevent notification, stat helpers, and server/cache functions.
+
+Risks: browsing behavior is SMB1/NetBIOS-dependent in several paths and returns errors when only SMB2+ is available for old enumeration calls. `telldir` exposes an internal pointer as offset, valid only while the directory object/list lives. URL encoding affects returned `dirent` layout and buffer sizing. `rename` blocks cross-server/share/user and DFS target mismatch, then may unlink destination on `EEXIST`. Tests should cover root browse, share list RPC/fallback, file listing metadata, cursor sync between read APIs, ENOTDIR correction, rmdir non-empty mapping, rename overwrite, and notify timeout/change callbacks.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/include/dt-bindings/clock/qcom,camcc-sc7280.h
+
+Purpose: declares Qualcomm camera clock-controller binding IDs for `qcom,camcc-sc7280.h`. It exports 114 generated-style macros for PLL outputs, camera NOC/CCI/ICP/IPE/BPS/TFE/IFE/LRME/JPEG/MCLK clocks, reset lines, and camera power domains where present.
+
+Important APIs/types/functions: there are no C functions, structs, or inline helpers beyond preprocessor definitions. The public API is the macro set itself: 114 exported defines, numeric range 0..107, first numeric symbols `CAM_CC_PLL0`=0, `CAM_CC_PLL0_OUT_EVEN`=1, `CAM_CC_PLL0_OUT_ODD`=2, `CAM_CC_PLL1`=3, `CAM_CC_PLL1_OUT_EVEN`=4, and last numeric symbols `CAM_CC_IFE_0_GDSC`=1, `CAM_CC_IFE_1_GDSC`=2, `CAM_CC_IFE_2_GDSC`=3, `CAM_CC_IPE_0_GDSC`=4, `CAM_CC_TITAN_TOP_GDSC`=5. Dominant macro prefixes are `CAM`(114); common suffix categories are `CLK`(57), `SRC`(34), `EVEN`(6), `GDSC`(6), `ODD`(2), `AUX`(1), `AUX2`(1), `PLL0`(1). Source section markers include `CAM_CC clocks`, `CAM_CC power domains`.
+
+Control flow: this header has no runtime control flow. At build time it is included by DTS/DTSI, binding examples, or matching clock-controller provider code so integer macros replace literal clock specifier cells. At boot, the device-tree core passes those integers to the provider's `of_clk_hw_onecell_get`, reset-controller, or power-domain lookup path; the provider then indexes static tables or firmware calls that live outside this header.
+
+State and persistence: the file owns no mutable state and persists nothing. Its constants are persistent ABI once they are compiled into DTBs, kernel drivers, or out-of-tree device trees. That ABI character is the main state concern: old DTBs can continue to use these IDs against newer kernels, so additions should append or fill documented gaps without changing existing meanings.
+
+Dependencies and integration points: The IDs must stay synchronized with `drivers/clk/qcom/camcc-sc7280.c` or the nearest SoC-specific camera clock provider, and with camera DT nodes that use `clocks`/`resets`/`power-domains` specifiers.
+
+Risks: The primary risk is ABI drift: these integer constants are part of compiled DTB/kernel/provider contracts, so renumbering, reusing a value in the wrong domain, or moving a macro across domains can silently bind a consumer to the wrong clock, reset, or power domain. Header guard `_DT_BINDINGS_CLK_QCOM_CAM_CC_SC7280_H` should remain unique enough to avoid accidental include suppression. Qualcomm generated-style headers often contain multiple domains in one file: clock IDs, reset IDs ending in `BCR`/`RESET`/`ARES`, and GDSC IDs. Provider array order and `num_*` counts are the key review points.
+
+Test signals: Compile checks should include `dt_binding_check`, `dtbs_check`, and an SoC defconfig build that includes both DTS users and the matching clock provider. Runtime signals include successful provider probe, `clk_summary` showing expected names/rates, display/camera/GCC consumers acquiring all clocks, reset-controller operations succeeding, and GDSC domains toggling without `-ENOENT` or probe deferral loops.

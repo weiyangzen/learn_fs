@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/client_osi/osilog.c -->
+## sources/distributed-fs/openafs/src/WINNT/client_osi/osilog.c
+
+Purpose: Implements OSI circular in-memory logging, debug-output mirroring, remote fd iteration of log records, Windows Event Log forwarding, trace option discovery, and helper string preservation for log parameters.
+
+Important APIs, types, and functions: `osi_logSize` sets default entry count. `osi_LogCreate` initializes high-resolution timing, allocates an `osi_log_t`, registers a `log:<name>` fd type, and adds field format metadata. `osi_LogPanic` logs panic text to all enabled logs and disables them. `osi_LogReset`, `osi_LogFree`, `osi_LogEnable`, and `osi_LogDisable` manage logs. `osi_IntLogAdd` is the core append path; wrappers are `osi_LogAdd` and `osi_DebugAdd`. `osi_LogPrint` writes formatted records to a file handle. `osi_LogSaveString` and `osi_LogSaveStringW` store transient strings in a rotating string pool. `osi_LogFDCreate`, `osi_LogFDGetInfo`, and `osi_LogFDClose` implement remote iteration. `osi_InitTraceOption` reads `TraceOption` from the AFS client service registry key. `osi_LogEvent0` and `osi_LogEvent` emit information events when trace-to-event-log is enabled. `osi_HexifyString` returns a dotted lowercase hex representation of a byte string.
+
+Control flow and state: Creation links the log into `osi_allLogsp`, allocates an entry ring and string ring, initializes a critical section, and registers the log as an fd type. Appending takes the log critical section, advances `nused` and `first` as a circular buffer, records thread id, timestamp, format pointer, and up to five parameters, then optionally writes to the debugger. Remote fd creation snapshots `first` and `nused`; GetInfo formats each captured record into string fields and exposes thread id as an integer.
+
+Persistence and dependencies: The primary log is in memory only. `osi_LogPrint` persists to a caller-supplied handle, and event functions write to Windows Event Log source `TransarcAFSDaemon`. Trace configuration is read from `HKLM` via `AFSREG_CLT_SVC_PARAM_SUBKEY`. Dependencies include `strsafe.h`, `WINNT/afsreg.h`, high-resolution counter APIs, the fd registry, and thread wrappers.
+
+Integration points: Lock stats can log blocking events through `osi_SetStatLog`. `osi_panic` calls `osi_LogPanic`. Remote debug clients retrieve `log:<name>` collections. Windows service configuration controls event/debug-log tracing.
+
+Risks: `osi_LogFree` frees `namep` and `datap` but not `stringsp`, leaking the string pool. Registered `log:<name>` fd types are not unregistered on free. `osi_InitTraceOption` does not check `RegOpenKeyEx` before querying/closing and does not close the key. Format strings are stored by pointer, so callers must pass stable strings. `osi_HexifyString` allocates `len * 3` bytes, which is just enough for nonempty strings but allocates zero bytes for empty strings and leaves ownership to callers. High-resolution timestamp uses only `LowPart`, losing high bits.
+
+Test signals: Test ring wraparound, disabled/enabled behavior, debug output path, string saving/truncation for ANSI and wide strings, fd snapshot iteration, panic disabling, registry trace option reads, Event Log emission, and memory-leak checks around create/free.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/openafs/src/WINNT/client_osi/osilog.c -->

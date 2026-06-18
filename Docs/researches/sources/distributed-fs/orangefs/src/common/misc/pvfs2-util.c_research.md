@@ -1,0 +1,15 @@
+# sources/distributed-fs/orangefs/src/common/misc/pvfs2-util.c
+
+Purpose: Implements the POSIX OrangeFS public utility layer for mount-table parsing, default initialization, path-to-filesystem resolution, mount-entry lifecycle, credential generation/refresh, system-attribute copy/free, attrmask conversion, size formatting, and POSIX mode translation.
+
+Important APIs and functions: `PVFS_util_gen_mntent`, `PVFS_util_parse_pvfstab`, `PVFS_util_add_dynamic_mntent`, `PVFS_util_remove_internal_mntent`, `PVFS_util_get_mntent_copy`, `PVFS_util_resolve`, `PVFS_util_resolve_absolute`, `PVFS_util_init_defaults`, `PINT_release_pvfstab`, `PVFS_util_gen_credential`, `PVFS_util_refresh_credential`, `PVFS_util_copy_sys_attr`, `PVFS_util_free_mntent`, `PVFS_util_copy_mntent`, `PVFS_util_sys_to_object_attr_mask`, `PVFS_util_object_to_sys_attr_mask`, `PVFS_util_make_size_human_readable`, and `PVFS_util_translate_mode` form the main surface.
+
+Control flow: Tab parsing checks `PVFS2EP`, an explicit tabfile, `PVFS2TAB_FILE`, `/etc/fstab`, `/etc/pvfs2tab`, local `pvfs2tab`, then `/etc/mtab`; it caches parsed tabs in `s_stat_tab_array`. Mount entries split comma-separated config servers, validate common fs names, parse `flowproto`, `encoding`, `num_dfiles`, and `bmi_opts`, then remain locked behind `s_stat_tab_mutex`. Resolution uses `PVFS_path` state, direct prefix removal, then `PINT_realpath` fallback for symlinks/nonexistent basename creation cases. Security builds fork/exec `pvfs2-gencred`; non-security builds synthesize unsigned credentials from uid/gid/group list data.
+
+State and persistence: Static mount-table arrays, dynamic mount entries, cached umask, and the tab mutex are process-local. External inputs are environment variables, tab files, passwd/group databases, current cwd, and `pvfs2-gencred`. No durable writes happen here, but dynamic mount tables persist for process lifetime.
+
+Dependencies and integration points: Integrates with `PVFS_sys_initialize`, `PVFS_sys_fs_add`, `PVFS_sys_finalize`, path helpers, realpath, gossip, security credential helpers, request-protocol credential decode/copy, fstab/mntent platform APIs, and generated config macros.
+
+Risks: `PVFS2EP` parsing increments `pvfs_fs_name` into an allocated string, complicating freeing. Some allocation checks are wrong or incomplete, for example checking `dest_mntent` after allocating `dest_mntent->pvfs_config_servers`. Several error paths may leave partially cached state. `PVFS_util_resolve` frees `Ppath` directly in one path instead of `PVFS_free_path`. Environment/tab parsing uses substring option detection, fixed-size tab arrays, and global mutable state.
+
+Test signals: Parse all tabfile sources and options, malformed server strings, multiple config servers with mismatched fs names, dynamic add/remove/copy cycles, default fsid lookup, path resolution for existing paths, symlinks, relative paths, and creation of nonexistent basenames. Test credential generation in security and non-security builds, group-list fallback, attrmask conversions, sys-attr copy/free, umask caching, and human-readable sizes on 32/64-bit builds.

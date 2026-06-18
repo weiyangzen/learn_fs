@@ -1,0 +1,83 @@
+# Research: subset-b-001126
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-ipq8074.c -->
+## sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-ipq8074.c
+
+### Purpose
+`gcc-ipq8074.c` implements the Qualcomm Global Clock Controller provider for IPQ8074-class networking SoCs. It exposes the SoC's root PLLs, fixed-factor derived roots, RCG2 rate-changeable sources, muxes, dividers, branch gates, reset lines, and USB GDSC power domains to Linux clock, reset, and genpd consumers. The clock tree covers BLSP UART/I2C/SPI, PCIe 0/1, USB 0/1, SDCC/eMMC including ICE, PCNOC and system NOC, NSS/NSSNOC/UBI/PPE networking fabric clocks, uniphy/MDIO/CMN clocks, crypto, PRNG, QPIC, and three general-purpose clocks.
+
+### Important APIs, Types, And Functions
+The file is almost entirely static hardware description consumed by the common Qualcomm clock controller helpers. `struct clk_alpha_pll` and `struct clk_alpha_pll_postdiv` define `gpll0`, `gpll2`, `gpll4`, `gpll6`, `ubi32_pll`, and `nss_crypto_pll`, with `clk_alpha_pll_ops`, Huayra ops for UBI32, and read-only post-divider ops. `struct clk_fixed_factor` creates simple derived roots such as `gpll0_out_main_div2`, `gpll6_out_main_div2`, `pcnoc_clk_src`, `system_noc_clk_src`, `nss_noc_clk_src`, `nss_ppe_cdiv_clk_src`, and `gcc_xo_div4_clk_src`.
+
+`struct freq_tbl`, `struct freq_conf`, and `struct freq_multi_tbl` tables describe supported RCG rates. Important source clocks include BLSP QUP/UART sources, PCIe AXI/AUX/rchng sources, USB master/AUX/mock-UTMI sources, SDCC app and ICE sources, NOC sources, NSS CE/crypto/UBI/IMEM/PPE sources, Ethernet port RX/TX sources, crypto, and GP sources. `struct clk_rcg2` instances use `clk_rcg2_ops`, `clk_rcg2_floor_ops`, or `clk_rcg2_fm_ops`; the FM variant is used for port 5/6 multi-parent Ethernet rates. `struct clk_regmap_mux` selects PCIe and USB pipe parents supplied by PHYs, while `struct clk_regmap_div` provides NSS UBI and port RX/TX dividers.
+
+`struct clk_branch` entries are the exported gate clocks. They carry `halt_reg`, optional `halt_check` or `halt_bit`, enable register/mask, parent, and common branch ops. The large `gcc_ipq8074_clks[]` array maps every DT binding ID from `qcom,gcc-ipq8074.h` to the corresponding `struct clk_regmap`. `gcc_ipq8074_hws[]` exposes non-`clk_regmap` hardware clocks. `gcc_ipq8074_resets[]` maps reset IDs to register offsets and bits or bitmasks, including block resets, TBU resets, PCIe resets, NSS/UBI aggregate resets, uniphy soft resets, EDMA and PPE resets, and per-port resets. `usb0_gdsc` and `usb1_gdsc` are exported through `gcc_ipq8074_gdscs[]`.
+
+The only imperative driver function is `gcc_ipq8074_probe()`. It uses `qcom_cc_map()` to map the controller regmap from the platform device, applies a UBI32 Huayra PLL workaround with `regmap_update_bits()`, configures `ubi32_pll_main` and `nss_crypto_pll_main` through `clk_alpha_pll_configure()`, then calls `qcom_cc_really_probe()` to register clocks, resets, and GDSCs. `core_initcall(gcc_ipq8074_init)` registers the platform driver early, and `module_exit()` unregisters it.
+
+### Control Flow
+At boot, the platform bus matches `compatible = "qcom,gcc-ipq8074"` and invokes `gcc_ipq8074_probe()`. Probe maps the GCC register region according to `gcc_ipq8074_regmap_config`, whose 32-bit registers use stride 4 and cover up to `0x7fffc`. If mapping fails, the error propagates immediately. Otherwise the probe writes bit 26 at `0x2501c` as a software workaround for the UBI32 Huayra PLL, programs the static PLL configuration blocks for UBI32 and NSS crypto, and delegates registration to `qcom_cc_really_probe()`.
+
+After registration, consumers interact through the common clock framework. A consumer selecting a rate causes the relevant `clk_rcg2` ops to choose an entry from a frequency table, program parent selector/divider/MND fields at the `cmd_rcgr`, and then branch clocks gate or ungate leaves through their enable bits. Reset consumers call into the Qualcomm reset controller using the reset map. GDSC consumers can power USB0 or USB1 domains through the registered GDSC descriptors. There is no runtime loop or interrupt path in this file; the common frameworks perform later operations using these descriptors.
+
+### State And Persistence
+Persistent hardware state is the GCC register block: PLL configuration/enable state, RCG command registers, branch enable bits, halt status bits, divider/mux registers, reset bits, and USB GDSC power-control registers. Software state is static and immutable after compilation except for framework-owned enable counts and cached clock relationships outside this file. The driver does not allocate private per-device state beyond the regmap returned by `qcom_cc_map()`. It does not store data on disk, in firmware, or in NVRAM.
+
+Several clocks are intentionally marked critical so the common clock framework should not disable them accidentally. Examples include `gpll2_main`, `gpll4_main`, `gpll6_main`, `pcnoc_bfdcd_clk_src`, `gcc_sleep_clk_src`, `gcc_xo_clk_src`, and `system_noc_bfdcd_clk_src`. Branches with `BRANCH_HALT_DELAY` tolerate delayed or unreliable halt reporting for pipe and UBI clocks, while `BRANCH_HALT_VOTED` is used where enable bits are voted through shared registers such as crypto and PRNG. These choices are part of the persistent power/clock behavior even though the code itself is only static metadata.
+
+### Dependencies And Integration Points
+The driver depends on Linux platform/OF matching, the common clock framework, regmap, Qualcomm clock-controller helpers in `common.h`, `clk-regmap`, `clk-pll`, `clk-alpha-pll`, `clk-rcg`, `clk-branch`, `clk-regmap-divider`, `clk-regmap-mux`, `gdsc`, and `reset`. The DT binding header supplies all exported clock and reset IDs. Parent clocks arrive through firmware names such as `xo`, `sleep_clk`, PCIe pipe clocks, USB3 PHY pipe clocks, uniphy RX/TX clocks, and bias PLL clocks.
+
+Integration points include serial/I2C/SPI BLSP clients, PCIe host controllers and PHYs, USB controllers and PHYs, SDHCI/eMMC including inline crypto, NSS/PPE/EDMA networking blocks, Ethernet MAC/uniphy drivers, MDIO, crypto engine, PRNG, QPIC/NAND, reset-controller consumers, and genpd users of USB GDSCs. The driver is registered at `core_initcall` rather than as a late module path because many IPQ8074 platform devices need GCC clocks and resets early in boot.
+
+### Risks
+The main risk is descriptor accuracy: a wrong register offset, mux parent map value, reset bit, or binding-array index can silently route a consumer to the wrong hardware control. The file has many repeated port and peripheral patterns, so copy/paste errors are plausible, especially among NSS ports 1-6, uniphy port fanout, PCIe0/1, and USB0/1. Parent maps use hardware selector values that are not always dense; changing parent arrays without matching maps would break rate programming.
+
+PLL programming is sensitive because `gcc_ipq8074_probe()` actively changes UBI32 and NSS crypto PLL registers. The UBI32 workaround bit is an undocumented hardware-specific write; removing or moving it could affect NSS/UBI stability. Critical-clock markings are also risk-bearing: missing a critical flag can let the framework disable a fabric clock, while over-marking can hide power-management bugs. Resets with `.bitmask` entries toggle multiple bits together, so consumers must match the intended aggregate reset semantics.
+
+### Test Signals
+Useful build-time signals are successful compilation with the IPQ8074 DT binding IDs, no sparse or W=1 initializer warnings, and array indexes resolving inside `gcc_ipq8074_clks[]`, `gcc_ipq8074_resets[]`, and `gcc_ipq8074_gdscs[]`. Runtime test signals include successful probe of `qcom,gcc-ipq8074`, populated `/sys/kernel/debug/clk/clk_summary`, expected rates for BLSP UART/QUP, SDCC app/ICE, PCIe, USB, NSS, and Ethernet port clocks, and successful enable/disable of noncritical branch clocks.
+
+Hardware validation should exercise PCIe0/1 link training including pipe and rchng clocks, USB0/1 enumeration and GDSC power transitions, SD card/eMMC modes up to the highest advertised rates, NSS/PPE networking throughput over ports 1-6, uniphy rate changes for 25/125/156.25/312.5 MHz cases, crypto engine operation, PRNG and QPIC access, reset-controller assert/deassert for PCIe, USB, NSS, uniphy, EDMA, and PPE reset IDs, and suspend/resume behavior verifying critical NOC/XO/sleep clocks remain available.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-ipq8074.c -->
+
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-ipq9574.c -->
+## sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-ipq9574.c
+
+### Purpose
+`gcc-ipq9574.c` is the Qualcomm Global Clock Controller driver for IPQ9574. It describes and registers the root PLLs, RCG2 sources, dividers, muxes, branch gates, resets, and interconnect clock mappings needed by the IPQ9574 application, PCIe, USB, SDCC, BLSP, NSS/NSSNOC, WCSS/Q6, QDSS, QPIC, LPASS, ADSS, uniphy, and NOC fabrics. Compared with older IPQ GCC drivers, it also exposes clock-backed interconnect nodes so bandwidth votes can drive related GCC clocks.
+
+### Important APIs, Types, And Functions
+The file uses `struct clk_alpha_pll` and `struct clk_alpha_pll_postdiv` for `gpll0`, `gpll2`, `gpll4`, and the auxiliary `gpll0_out_aux`. PLLs use `CLK_ALPHA_PLL_TYPE_DEFAULT_EVO` for the main roots. `struct clk_parent_data` entries rely heavily on `.index` values matching the DT binding clock input order, including XO, sleep, bias PLL UBI/NSS clock, four PCIe Gen3 pipe clocks, and the USB3 pipe clock. Parent maps translate internal parent IDs to hardware selector values.
+
+`struct clk_rcg2` and frequency tables define programmable sources for APSS AHB/AXI, BLSP QUP and UART, crypto, PCIe master/slave/rchng/aux, USB AUX/master/mock-UTMI, SDCC app and ICE, PCNOC, system NOC, WCSS, QDSS, uniphy system, NSS timestamp, QPIC IO macro, Q6 AXI/AXIM2, NSSNOC-MEMNOC, LPASS, ADSS PWM, and GP clocks. `clk_rcg2_floor_ops` is used for SDCC app clock floor selection, while ordinary `clk_rcg2_ops` handles most sources. Fixed-factor hardware clocks create exposed dividers such as `gcc_xo_div4_clk_src`, QDSS timestamp dividers, QDSS DAP sync, and EUD AT.
+
+Branch gates are modeled with `struct clk_branch`, including voted branches for APSS, crypto, BLSP AHB, and PRNG. `struct clk_regmap_phy_mux` is used for PCIe0-3 pipe sources, each taking a single indexed PHY pipe parent, while a `struct clk_regmap_mux` handles the USB pipe source. `struct clk_regmap_div` provides the USB mock UTMI read-only divider. `gcc_ipq9574_clks[]` maps all clock binding IDs to `struct clk_regmap` objects, and `gcc_ipq9574_hws[]` exposes fixed-factor or non-regmap hardware clocks.
+
+`gcc_ipq9574_resets[]` maps DT reset IDs to block-reset registers and individual ARES bits for APSS, BLSP, crypto, DDR, NSS/NSSNOC, PCIe0-3, PCNOC, Q6/WCSS, QDSS, QPIC, USB, uniphy, and other blocks. `icc_ipq9574_hws[]` is a `struct qcom_icc_hws_data` table tying interconnect master/slave node pairs to GCC clock IDs. `gcc_ipq9574_desc` packages the regmap config, clock arrays, reset array, hardware clocks, ICC data, and `icc_first_node_id`. The probe function is intentionally small: `gcc_ipq9574_probe()` calls `qcom_cc_probe(pdev, &gcc_ipq9574_desc)`.
+
+### Control Flow
+The platform driver binds to `compatible = "qcom,ipq9574-gcc"` and runs at `core_initcall`. `qcom_cc_probe()` maps the GCC register region using the 32-bit, stride-4 `gcc_ipq9574_regmap_config`, registers the descriptor's clocks and resets, and handles the interconnect clock hardware data. Unlike IPQ8074, this driver does not perform explicit PLL configuration in its local probe; it delegates setup entirely to the common Qualcomm CC probe path and the static descriptors.
+
+After probe, clock consumers request clock handles by DT ID. Rate changes on RCG sources select from the static tables and program command registers, muxes select external PHY pipe parents where needed, branch gates enable hardware leaves, and reset consumers use the reset map. Interconnect consumers issue bandwidth votes against IPQ9574 interconnect nodes; the Qualcomm ICC clock integration can then enable or scale the corresponding clocks listed in `icc_ipq9574_hws[]`. The platform driver's `.sync_state = icc_sync_state` lets interconnect synchronization happen when device links have settled.
+
+### State And Persistence
+The persistent state is the GCC register block: PLL state inherited or managed by the common code, RCG command and MND fields, mux/divider registers, branch enable/halt status, reset bits, and the hardware state of interconnect-related clock gates. Software state is static descriptor data plus framework-owned runtime state; the file allocates no custom private structure and stores no data outside memory.
+
+Critical clocks include sleep source, APSS AHB/AXI branches, PCNOC and system NOC sources, QDSS/sysnoc and pcnoc AT clocks, XO branch, and XO-div4 branch. These flags preserve always-needed fabrics or debug/timebase paths. Many external parents are indexed rather than named, so the binding order is persistent ABI: changing the DT input order without changing `DT_*` indexes would change the meaning of parent selection.
+
+### Dependencies And Integration Points
+The driver depends on platform/OF probing, regmap, the common clock framework, Qualcomm `common.h`, RCG, branch, alpha PLL, regmap divider/mux/PHY mux helpers, reset helpers, and the interconnect provider/clock glue. It includes `dt-bindings/clock/qcom,ipq9574-gcc.h`, `dt-bindings/reset/qcom,ipq9574-gcc.h`, and `dt-bindings/interconnect/qcom,ipq9574.h`, so its array indexes are tied directly to those binding contracts.
+
+Integration points are broad: APSS bus clocks, BLSP UART/I2C/SPI, crypto, four PCIe controllers with master/slave/AHB/aux/pipe/rchng clocks and ANOC/SNOC interconnect clocks, USB0 controller/PHY/mock-UTMI/sleep clocks plus USB ICC clocks, SDCC/eMMC and ICE, PCNOC/SNOC/NSSNOC/MEMNOC fabrics, NSS configuration and timestamp clocks, WCSS/Q6 clocks and resets, QDSS trace/debug clocks, QPIC/NAND clocks, uniphy and CMN 12G PLL clocks, LPASS, ADSS PWM, PRNG, MDIO, and reset-controller clients.
+
+### Risks
+The highest risks are binding and descriptor mismatches. Parent data uses `.index` values such as `DT_PCIE30_PHY0_PIPE_CLK`; if the device tree supplies clock inputs in the wrong order, pipe and XO/sleep/bias parents resolve incorrectly. The `gcc_ipq9574_clks[]` and reset arrays are large and sparse, so a misplaced binding ID can expose the wrong register to a consumer. PCIe0-3 definitions are repetitive but not identical: master rates differ between one-lane and two-lane paths, so copy/paste mistakes can affect only one controller.
+
+Interconnect clock integration adds another failure mode: incorrect `icc_ipq9574_hws[]` mappings can make bandwidth votes enable the wrong GCC branch or leave a bus path unclocked. The driver has no local PLL reconfiguration sequence, so it relies on boot firmware or common CC behavior for initial PLL state. Critical flags and voted-branch halt policies must match hardware reality; otherwise power management may either disable required fabrics or keep clocks unnecessarily on. Reset entries for PCIe, NSSNOC, Q6/WCSS, and uniphy contain many adjacent bits, making off-by-one bit definitions especially costly.
+
+### Test Signals
+Build-time signals include clean compilation with IPQ9574 clock/reset/interconnect bindings and no initializer or sparse warnings around parent arrays, `gcc_ipq9574_clks[]`, `gcc_ipq9574_resets[]`, and ICC mappings. Runtime probe should register `qcom,ipq9574-gcc`, show all expected clocks in `clk_summary`, and expose reset-controller and interconnect providers without deferred-probe loops from missing XO, sleep, pipe, USB3, or bias PLL parents.
+
+Hardware tests should cover APSS bus stability, BLSP UART/I2C/SPI rates, crypto operation, PCIe0-3 link training and bandwidth votes for one-lane and two-lane paths, USB enumeration and pipe switching, SDCC high-speed and ICE rates, QPIC IO macro rates, WCSS/Q6 reset and bus clocks, NSS/NSSNOC traffic with ICC votes, QDSS trace/timestamp clocks, uniphy and CMN clocks, and suspend/resume retention of critical NOC/XO/debug clocks. Reset tests should assert/deassert PCIe per-controller ARES bits, USB resets, Q6/WCSS resets, NSSNOC resets, QPIC resets, and uniphy SYS/AHB/XPCS resets while confirming consumers recover.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/clk/qcom/gcc-ipq9574.c -->

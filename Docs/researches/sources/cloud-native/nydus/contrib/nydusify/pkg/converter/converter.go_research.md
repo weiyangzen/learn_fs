@@ -1,0 +1,11 @@
+# sources/cloud-native/nydus/contrib/nydusify/pkg/converter/converter.go
+
+Purpose: is the main image/model conversion entry point for `nydusify`.
+
+Important APIs and flow: `Opt` captures workdir, containerd path, source/target refs or archives, backend/chunkdict/cache/security settings, Nydus filesystem parameters, platform filtering, metrics, and push retry settings. `Convert` dispatches model-file and model-artifact sources to specialized flows; otherwise it creates a namespace, platform matcher, work/temp dirs, converter provider, retry settings, local archive modes, optional plain HTTP, and runs Harbor acceleration-service converter with the `nydus` driver config. `convertModelFile` and `convertModelArtifact` process model data through `modctl` and snapshotter external handlers, pack Nydus blobs with attributes, build a final bootstrap tar including backend config, build model config/layers, and push an OCI artifact manifest. `packWithAttributes` writes blob and external blob files named by digest. `packFinalBootstrap` reads backend config, extracts bootstrap from an external blob, and packs backend plus bootstrap entries into a final tar. `buildNydusImage`, `buildModelConfig`, `pushManifest`, `getSourceManifestSubject`, and `makeDesc` construct and push model artifact config/bootstrap/manifest descriptors.
+
+State and persistence: creates/removes workdirs and temp dirs, writes blob files, final bootstrap tar/gz, backend metadata/config/attributes, optional metric JSON, and pushes config/layer/manifest to remote registries or archives through providers.
+
+Dependencies and integration: integrates Harbor acceleration-service converter, local provider wrapper, snapshotter-converter pack/unpack, CloudNativeAI model-spec, modctl handlers, parser image structs, remote provider, platformutil, and OCI descriptors.
+
+Risks and test signals: workdir cleanup only occurs when the workdir did not exist initially. Push retry delay parsing requires a valid duration even for standard conversion. `packFinalBootstrap` has duplicated `defer bootstrap.Close()` and does not close `bootstrapTar` explicitly. Model artifact path depends on source subject resolution and correct Nydus artifact annotations.

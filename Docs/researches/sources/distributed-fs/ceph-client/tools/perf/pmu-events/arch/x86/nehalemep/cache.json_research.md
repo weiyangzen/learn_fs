@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/perf/pmu-events/arch/x86/nehalemep/cache.json
+
+Purpose: defines 324 Nehalem EP core cache, memory-retirement, and offcore cache-response events for perf. It covers L1D and L1I activity, lock cycles, L1 writebacks, L2 requests/transactions/lines, longest-latency cache references, memory instruction retirement latency thresholds, retired load data sources, uncore-retired load sources, offcore request pressure, and a large matrix of `OFFCORE_RESPONSE` request/response combinations.
+
+Important APIs/types/functions: static JSON event descriptors consumed by `jevents.py`. Common fields are `EventName`, `EventCode`, `UMask`, `Counter`, `SampleAfterValue`, and `BriefDescription`; many offcore rows also rely on the event generator's support for model-specific offcore encodings through `MSRIndex`/`MSRValue` when present in related memory files. Counter constraints vary from `0,1` for some L1 events to `0,1,2,3` for broader core PMU events, and several precise memory-retirement events constrain to counter `3`.
+
+Control flow: at build time perf converts the JSON into generated C event tables. At runtime perf resolves names such as `L2_RQSTS.LD_MISS`, `MEM_LOAD_RETIRED.LLC_MISS`, or `OFFCORE_RESPONSE.DEMAND_DATA_RD.LOCAL_DRAM`, programs event select/umask and any model-specific offcore response filter, and reads counts or samples. The file itself is declarative and has no executable flow.
+
+State and persistence: no mutable state in the file. Runtime state is in core PMU counters, PEBS sampling state for precise events, and offcore response MSR filters. Sample periods such as `2000000`, `200000`, `100000`, and smaller latency-threshold values become generated metadata but are not persisted by the source file.
+
+Dependencies and integration points: depends on Nehalem EP PMU definitions, perf JSON schema, and `jevents.py`. Integrates with memory analysis metrics, perf list/stat/record, and sibling Nehalem EP files for floating point, frontend, memory, and miscellaneous stalls. Cache rows are often paired with `nehalemep/memory.json` offcore DRAM filters to distinguish cache misses from local/remote memory service.
+
+Risks: the large `OFFCORE_RESPONSE` matrix is easy to edit inconsistently because many rows share event code `0xB7` and differ only by request/response filter semantics. Counter `3` constraints on latency and offcore events can create scheduling conflicts. Sample-after values vary by event frequency; using an overly large default on rare latency events can hide samples. MESI-state and demand/prefetch naming is precise, so broad aliases such as `.ANY` must be treated as masks rather than independent event families.
+
+Test signals: full JSON validation, generated-table diffs, perf PMU unit tests, and `perf list` alias inspection. Hardware smoke tests should include L1/L2 cache-hit workloads, LLC-miss memory streams, locked operations for lock events, and PEBS sampling for `MEM_INST_RETIRED.*` / `MEM_LOAD_RETIRED.*` precise events. Scheduling tests should verify constrained counter combinations fail or multiplex predictably.

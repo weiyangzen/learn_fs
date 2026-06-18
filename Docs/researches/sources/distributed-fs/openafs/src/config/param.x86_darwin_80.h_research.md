@@ -1,0 +1,7 @@
+# sources/distributed-fs/openafs/src/config/param.x86_darwin_80.h
+
+This header configures OpenAFS for Darwin 8 on ppc and i386. The kernel half defines `AFS_ENV`, `AFS_64BIT_CLIENT`, `AFS_64BIT_IOPS_ENV`, `AFS_VFSINCL_ENV`, Darwin 70/80 markers, `AFS_NAMEI_ENV`, syscall number 230, `DARWIN_REFBASE 3`, and RX listener/timed sleep behavior. The userspace half defines `AFS_USERSPACE_ENV`, `AFS_USR_DARWIN70_ENV`, `AFS_USR_DARWIN80_ENV`, `DARWIN_REFBASE 0`, and compatibility aliases for uio/vattr/directory handling.
+
+The file's API is compile-time constants and OS structure aliases. `SYS_NAME`/`SYS_NAME_ID` select either `ppc_darwin_80` or `x86_darwin_80`, and endian macros select big-endian ppc or little-endian x86. Kernel-only mappings provide `AFS_KALLOC`, `AFS_KFREE`, vnode and mount field aliases, and `BIND_8_COMPAT`.
+
+There is no runtime state. The persistent effect is ABI selection embedded into all compiled objects. Integration points are `afs_sysnames.h`, Darwin kernel headers through `KERNEL`, and all code paths guarded by `AFS_DARWIN80_ENV` or `AFS_USR_DARWIN80_ENV`. Main risks are fossilized OS assumptions, old 32-bit-only architecture handling, duplicated `AFS_UIOSYS` macros, and structure alias mismatch with newer headers. Test signals are successful Darwin 8 kernel module and userspace compiles and smoke tests for pioctl/syscall, RX listener, vnode cache, and directory operations.

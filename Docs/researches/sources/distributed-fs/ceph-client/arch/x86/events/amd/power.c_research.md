@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/x86/events/amd/power.c
+
+Purpose: registers the AMD family 15h Processor Power Reporting Mechanism as a perf PMU named `power`. It exposes a package power event, samples accumulated compute-unit power MSRs, converts deltas into perf counts in micro-Watts, and publishes sysfs format/event/cpumask attributes.
+
+Important APIs/types/functions: the PMU callbacks are `pmu_event_init()`, `pmu_event_add()`, `pmu_event_del()`, `pmu_event_start()`, `pmu_event_stop()`, and `pmu_event_read()`. `event_update()` is the core accounting routine. CPU hotplug handlers `power_cpu_init()` and `power_cpu_exit()` maintain one representative CPU per compute unit in `cpu_mask` and migrate perf contexts with `perf_pmu_migrate_context()`. Module lifecycle is `amd_power_pmu_init()` and `amd_power_pmu_exit()`. Sysfs exports include `cpumask`, `events/power-pkg`, `events/power-pkg.unit`, `events/power-pkg.scale`, and `format/event`.
+
+Control flow: module init first matches AMD family 0x15 and the `X86_FEATURE_ACC_POWER` feature, reads `cpu_pwr_sample_ratio` from CPUID `0x80000007`, and reads `max_cu_acc_power` from `MSR_F15H_CU_MAX_PWR_ACCUMULATOR`. It installs CPU hotplug state and registers the PMU. Event init accepts only this PMU type, rejects sampling (`sample_period`), and only supports config `0x01` for package power. Add initializes stopped/up-to-date state and optionally starts. Start snapshots `MSR_F15H_PTSC` and `MSR_F15H_CU_PWR_ACCUMULATOR`. Stop optionally calls `event_update()` before marking the software count current. Read also calls `event_update()`.
+
+State and persistence: global runtime state includes `cpu_pwr_sample_ratio`, `max_cu_acc_power`, the static `pmu_class`, and `cpu_mask`. Per-event state is stored in `event->hw.ptsc`, `event->hw.pwr_acc`, `event->hw.state`, and `event->count`. No state survives reboot or is written to disk.
+
+Dependencies and integration points: depends on perf PMU registration, CPU hotplug, topology sibling masks, AMD family 15h power MSRs (`MSR_F15H_CU_PWR_ACCUMULATOR`, `MSR_F15H_PTSC`, `MSR_F15H_CU_MAX_PWR_ACCUMULATOR`), CPUID, and `../perf_event.h` event attribute macros. The PMU is system-wide only through `perf_invalid_context` and sets `PERF_PMU_CAP_NO_EXCLUDE`.
+
+Risks: `event_update()` divides by PTSC delta; a zero or unexpectedly small time delta would be hazardous even though normal start/read sequencing should produce elapsed time. Accumulator wrap handling depends on `max_cu_acc_power`. Hotplug migration assumes topology sibling masks represent compute units correctly. The unit and scale expose micro-Watt accounting as milli-Watts to user space, so conversion errors affect user-visible power numbers.
+
+Test signals: verify `/sys/bus/event_source/devices/power/` appears only on supported AMD family 15h systems, `perf stat -a -e power/power-pkg/` produces plausible values, CPU online/offline migrates contexts within compute units, unsupported event configs and sampling requests return `-EINVAL`, and MSR read failure during init suppresses registration.

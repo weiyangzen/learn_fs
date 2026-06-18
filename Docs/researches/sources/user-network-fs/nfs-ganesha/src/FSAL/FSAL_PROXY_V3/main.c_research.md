@@ -1,0 +1,28 @@
+# sources/user-network-fs/nfs-ganesha/src/FSAL/FSAL_PROXY_V3/main.c
+
+## Purpose
+`FSAL_PROXY_V3/main.c` implements the Ganesha FSAL surface for a stateless NFSv3 proxy backend. It registers the PROXY_V3 module, parses global/export config, mounts a remote NFSv3 export via MOUNT v3, discovers service ports through portmapper, translates FSAL operations into NFSv3 RPCs, wraps remote file handles in FSAL object handles, and wires all supported object/export operations.
+
+## Important APIs, Types, And Functions
+The global `PROXY_V3` module advertises POSIX attributes, link/symlink support, NLM lock support, ACL allow, unique handles, and readdir-plus. Global config options include `maxread`, `maxwrite`, `num_sockets`, and `allow_lookup_optimization`; export config requires `Srv_Addr`. Accessors such as `proxyv3_sockaddr()`, `proxyv3_socklen()`, `proxyv3_nlm_port()`, `proxyv3_creds()`, and `proxyv3_readdir_preferred()` expose per-export RPC parameters to other files.
+
+Handle helpers include `proxyv3_alloc_handle()`, `proxyv3_handle_release()`, `proxyv3_handle_to_wire()`, `proxyv3_wire_to_host()`, `proxyv3_create_handle()`, and `proxyv3_handle_to_key()`. Operation implementations cover lookup/getattr/setattr/root/path lookup, create/open, symlink/link/readlink, mkdir/mknode/readdir, read/write/commit, unlink/rename, dynamic fsinfo, close/status/reopen, and state allocation. `proxyv3_fill_fsinfo()` updates static fsinfo from remote FSINFO. `proxyv3_create_export()` performs remote mount and final export setup. `proxy_v3_init()` registers the module and object ops.
+
+## Control Flow
+Module init registers `PROXY_V3`, assigns `init_config` and `create_export`, initializes default object ops, and overrides the operations that the proxy supports. Global config setup initializes the custom RPC pool and NLM subsystem. Export creation allocates a `proxyv3_export`, initializes export ops, parses `Srv_Addr`, attaches the export, derives socket length/name, discovers mountd/nfsd/nlm ports, performs a MOUNT NULL probe, mounts `CTX_FULLPATH(op_ctx)` to get the root `fh3`, optionally probes NLM with NULL, and calls FSINFO to clamp max read/write and preferred readdir count.
+
+Lookup uses either local optimization for `"."`/known `".."` or sends `LOOKUP3`. `proxyv3_lookup_path()` validates that the requested path begins with the export root, handles exact-root lookup through GETATTR on the root handle, and otherwise delegates a single lookup against `root_handle_obj`; the source notes full slash-splitting is still TODO. Create-like operations share `proxyv3_issue_createlike()`, which sends the RPC, requires both result handle and attributes despite NFSv3 optionality, converts parent weak-cache-consistency attributes, allocates the FSAL handle, and frees XDR output. I/O operations are synchronous wrappers around `READ3`, `WRITE3`, and `COMMIT3`, using the FSAL async callback interface only as an immediate completion callback.
+
+## State And Persistence
+The proxy stores remote NFSv3 file handles and fattr3 snapshots in `struct proxyv3_obj_handle`. Each handle owns a separately allocated `fh3.data.data_val` buffer. Optional parent pointers allow `".."` optimization but are not guaranteed for handles reconstructed from wire keys. The export stores the root handle bytes, discovered ports, preferred readdir size, and a cached root handle object. No remote state is persisted locally beyond process memory; the authoritative namespace/data lives on the backend NFSv3 server.
+
+The proxy is mostly stateless for opens and closes. It maps NFSv4-style open-by-handle to GETATTR, create-by-name to CREATE3, returns closed/null status for `status2`, and returns `ERR_FSAL_NOT_OPENED` for close paths so upper layers do not manage a real fd. Lock state is delegated to NLM in `nlm.c`.
+
+## Dependencies And Integration Points
+The file depends on generated NFSv3/MOUNT/NLM XDR types, `proxyv3_fsal_methods.h`, `rpc.c` for transport, `utils.c` for status/attribute translation, `nlm.c` for locks, Ganesha FSAL common/config/init APIs, op-context credentials and export paths, and MDCACHE/object-handle contracts. It integrates with the backend through portmapper, MOUNT v3, NFS v3, and NLM v4 over TCP using AUTH_UNIX credentials derived from `op_ctx`.
+
+## Risks
+`proxyv3_lookup_path()` only handles root or one path component after the export prefix; nested path lookup is marked TODO. Export creation error paths after `fsal_attach_export()` often `gsh_free(export)` without detaching the export or freeing export ops, so failed mount/NLM setup can leak or leave partial registration. Several operations access `result.*res_u.resok` weak-cache data even when status is not OK, which can be invalid for failed NFSv3 replies. READLINK and READ/WRITE paths do not call `xdr_free()` on success, so decoded allocations require audit. The proxy assumes single-iovec read/write and rejects multi-iovec requests. It also assumes backend returns handles/attributes for create-like and readdirplus operations, falling back for some readdir cases but failing create-like operations that omit optional results.
+
+## Test Signals
+Run against Linux knfsd and at least one non-Linux NFSv3 server. Cover mount success/failure, portmapper unavailable, NLM unavailable, root and nested lookup, create modes, missing post-op attrs/handles, readdirplus fallback to LOOKUP/GETATTR, symlink/hardlink/mknod, READ/WRITE/COMMIT including unstable writes, remove versus rmdir, rename WCC attrs, wire-to-host/create-handle round trips, and FSINFO clamping. Fault injection should force RPC transport failure, NFS error statuses, short backend replies, and export creation failures after attach.

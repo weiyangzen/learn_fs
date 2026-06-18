@@ -1,0 +1,9 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test_prune_older.py -->
+# sources/sync-backup/bup/test/ext/test_prune_older.py
+
+Purpose: generative pytest coverage for experimental `bup prune-older`. Important helpers are `create_older_random_saves()`, `expected_dispositions()`, `period_spec()`, `unique_period_specs()`, `period_spec_to_period_args()`, `utc_save_name()`, `check_prune_result()`, and `check_pretend_intent()`. APIs include `bup prune-older --unsafe`, `--keep-*-for`, `--wrt`, `--no-gc`, `--pretend`, Git commits/log/gc/reset, `period_as_secs()`, and `save_names_for_commit_utcs()`.
+
+Control flow seeds randomness from `BUP_TEST_SEED`, creates thousands of Git commits with random timestamps over a three-year window and deliberate duplicates, then compares bup prune decisions against an independent expected-disposition algorithm. It first verifies no keep arguments fail without mutation, then runs many no-GC cycles with `--pretend` output checks and actual prune checks, then runs more expensive GC cycles by restoring a clean repo copy for each spec. A second test validates argument errors for missing `--unsafe`, missing keep options, non-integer `--wrt`, invalid period strings, zero periods, and very large period values.
+
+State is a Git-backed bup repo in `work/.git`, the generated branch history, clean repo copies, random specs, and stderr/stdout intent logs. Dependencies include Git commit dating, localtime grouping, random seed control, and bup VFS save-name formatting. Risks are high runtime, randomness without seed capture, localtime/year/month/day boundary behavior, duplicate timestamp naming, and experimental command semantics. Test signals are exact branch commit timestamp lists after prune, exact pretend `+`/`-` intent lines, and expected validation diagnostics.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test_prune_older.py -->

@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/nice/nice04.c
+
+Purpose: verify an unprivileged user cannot increase process priority with a negative nice increment. Important APIs/types/functions: `SAFE_GETPWNAM("nobody")`, `SAFE_SETUID()`, `nice(-10)`, `EPERM`, and LTP `TEST()`. Control flow: setup switches from root to nobody; run calls `nice(-10)` and requires return `-1` with `EPERM`. State/persistence: effective process credentials are permanently dropped in the test process. Dependencies/integration: requires root to switch users and a `nobody` passwd entry. Risks: systems with unusual capabilities retained after setuid could alter result; typo in failure string is cosmetic. Test signals: pass means unprivileged priority improvement is denied.

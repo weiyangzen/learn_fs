@@ -1,0 +1,17 @@
+## sources/distributed-fs/eos/mgm/ofs/cmds/Touch.inc
+
+Purpose: creates or updates a namespace file entry without necessarily writing data. It supports normal layout-backed creation, no-layout metadata creation, truncation/size preset, external-file registration via hardlink/symlink/absorb, checksum stamping, quota updates, birth-time attributes, and FuseX notifications.
+
+Important APIs and types: `XrdMgmOfs::_touch`, `XrdMgmOfsFile::open`, `attr::checkDirOwner`, `IFileMD`, `IContainerMD`, `FsView`, `LayoutId`, checksum conversion utilities, xattr APIs (`lgetxattr`, `lsetxattr`), POSIX `stat/access/link/symlink/rename`, `IQuotaNode`, and FuseX broadcast helpers.
+
+Control flow: `_touch()` first checks write access, prefetches file metadata, optionally takes the namespace write lock, rejects paths that are directories, detects existing files, validates incompatible options (`absorb` with truncate/no-layout, linkpath without layout) and root-only external registration, then validates the external `linkpath` if supplied. If the file does not exist and `useLayout` is true, it releases the lock and opens the file through `XrdMgmOfsFile` with `SFS_O_CREAT` and `eos.bookingsize=0&eos.app=touch`, expecting a redirect-style successful booking. If `useLayout` is false, it applies `sys.owner.auth` sticky ownership behavior and creates file metadata directly.
+
+External registration behavior: for each nonzero non-tape location, it maps the fid to the local FST path. Absorb mode renames the provided external file into the FST tree. Non-absorb mode tries a hardlink and falls back to symlink on `EXDEV`. Successful hardlink registration stamps `user.eos.lfn` on the source path; checksum registration can stamp `user.eos.checksumtype` and `user.eos.checksum` on the link path and update the EOS file checksum.
+
+State and persistence behavior: sets owner/group, ctime, mtime, size, optional `sys.eos.btime`, external registration attributes (`sys.hardlink.path`, `sys.symlink.path`, `sys.absorbed.path`), checksum, and parent mtime. It persists file and parent container metadata, updates quota for direct no-layout creations, releases the lock, broadcasts FuseX metadata and parent refresh, and optionally triggers verify-stripe calls for registered locations.
+
+Dependencies and integration points: used by higher-level create/touch commands and proc flows. It depends on access checks, namespace services, layout/open machinery, filesystem view snapshots, xattr compatibility layer, checksum plugins, quota manager, and FuseX.
+
+Risks: external registration performs local filesystem operations from the MGM host and can leave partial state if metadata persistence fails after link/rename. `linkpath` root-only checks are essential because hardlink/symlink/absorb affects arbitrary local paths. The expected `SFS_REDIRECT` result from `open()` is a subtle success path. Error appending to `errmsg` assumes it is non-null in one checksum branch after a `linkpath` test.
+
+Test signals: existing file touch updates timestamps, directory path returns `EISDIR`, layout-backed creation path, no-layout direct creation and quota add, `sys.owner.auth` ownership rewrite, invalid option combinations, non-root external registration denial, hardlink registration and xattr stamping, symlink fallback on `EXDEV`, absorb rename, checksum parse/store, truncate vs preset size, birth-time attribute, FuseX broadcasts, and verify-stripe invocation.

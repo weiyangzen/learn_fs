@@ -1,0 +1,13 @@
+# sources/distributed-fs/glusterfs/xlators/performance/nl-cache/src/nl-cache-helper.c
+
+Purpose: implements the cache-state engine for `nl-cache`: per-directory positive and negative dentry lists, timer expiry, LRU pruning, memory accounting, lookup helpers, and statedump support.
+
+Important APIs, types, and functions: operates on `nlc_ctx_t` inode contexts containing `pe`, `ne`, state bits, `cache_time`, timer data, size, and ref counts. Main exported helpers are `nlc_local_init/wipe`, `nlc_set_dir_state`, `nlc_dir_add_ne`, `nlc_dir_add_pe`, `nlc_dir_remove_pe`, `nlc_is_negative_lookup`, `nlc_get_real_file_name`, `nlc_inode_clear_cache`, `nlc_lru_prune`, `nlc_clear_all_cache`, `nlc_update_child_down_time`, and `nlc_dump_inodectx`.
+
+Control flow: `nlc_inode_ctx_get_set` creates a directory ctx, starts a timer, links it into the global LRU, and accounts memory. Add/remove helpers update PE/NE lists under `nlc_ctx->lock`; deleting a positive entry also adds a negative entry. `nlc_is_negative_lookup` returns true when a matching NE exists or a directory has a full PE list that lacks the name. `nlc_get_real_file_name` performs case-insensitive PE lookup for `GF_XATTR_GET_REAL_FILENAME_KEY`. Timer callbacks mark `cache_time = 0`; the next access clears stale entries and restarts timer/LRU membership.
+
+State and persistence: all cache state is in memory, split between per-inode ctx, child inode ctx slot 1 for positive-entry backreferences, and `nlc_conf` global LRU/counters. `cache_time` is compared with `last_child_down`; timer expiry invalidates lazily to avoid locking deadlocks. Memory and inode references are tracked through atomics `current_cache_size` and `refd_inodes`.
+
+Dependencies and integration: uses Gluster inode ctx two-slot APIs, inode refs, timer-wheel (`gf_tw_*`), list primitives, statedump, atomics, and translator private config. It is tightly coupled to declarations in `nl-cache.h` and to fop decisions in `nl-cache.c`.
+
+Risks: many operations are O(n) list scans, so huge directories can be costly. The code intentionally updates `cache_time` outside the ctx lock in the timer callback, allowing brief false negatives. Hardlink handling and rename logic depend on correct inode/name availability. `__nlc_add_pe` calls `inode_ctx_get2(entry_ino, ...)` even when some call sites allow NULL `entry_ino`, which deserves focused null-path testing. Tests should cover duplicate negative lookups, create/unlink/rename/rmdir transitions, timer expiry, LRU pruning by size and inode count, child-down invalidation, get-real-filename case-insensitive lookup, and statedump lock failures.

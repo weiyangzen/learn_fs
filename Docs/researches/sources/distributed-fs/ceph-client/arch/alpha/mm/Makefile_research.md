@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/arch/alpha/mm/Makefile
+
+Purpose: kbuild file for Alpha memory-management objects. Important APIs/types/functions: sets `obj-y := init.o fault.o tlbflush.o`. Control flow: unconditional object inclusion for the architecture MM directory. State and persistence: no runtime state. Dependencies/integration: ensures page-table setup, page fault handling, and TLB migration flush helpers are linked into Alpha kernels. Risks: omitting one object breaks boot or fault handling; ordering is simple but all three are required. Test signals: Alpha architecture builds and link checks for MM symbols.

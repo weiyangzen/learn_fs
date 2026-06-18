@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/phy/motorola/phy-cpcap-usb.c
+
+Purpose: This driver manages the USB PHY function inside the Motorola CPCAP PMIC. It bridges PMIC register programming, IIO VBUS sensing, optional pinctrl/GPIO muxing, legacy `usb_phy` OTG notifications, and generic PHY provider registration so devices such as Droid 4 can switch between USB, host/dock, and debug UART modes.
+
+Important APIs/types/functions: Core state lives in `struct cpcap_phy_ddata`, including the CPCAP regmap, `usb_phy`, delayed detection work, optional pin states, mode GPIOs, VBUS IIO channel, regulator, and `active`/`vbus_provider`/`docked` flags. `struct cpcap_usb_ints_state` snapshots interrupt status bits. Key functions are `cpcap_usb_detect()`, `cpcap_phy_get_ints_state()`, `cpcap_usb_set_uart_mode()`, `cpcap_usb_set_usb_mode()`, `cpcap_usb_init_interrupts()`, `cpcap_usb_init_iio()`, probe, and remove.
+
+Control flow: Probe allocates state, gets the parent CPCAP regmap and `vusb` regulator, creates generic and legacy USB PHY objects, initializes optional pinctrl/GPIOs, validates the `vbus` IIO voltage channel, requests named PMIC IRQs, registers the legacy USB PHY, marks the driver active, and schedules detection. IRQ threads only schedule delayed work when active. The detect worker reads interrupt state and VBUS voltage, then decides between A-host with VBUS drive, docked A-host without VBUS drive, peripheral device mode, VBUS-off UART fallback, or continued dock/host maintenance. It notifies MUSB with `musb_mailbox()` and toggles `CPCAP_REG_USBC1/2/3` bits accordingly.
+
+State and persistence: Runtime state is in `ddata`, the delayed work queue, PMIC registers, MUSB OTG state, and regulator enablement. `vbus_provider` tracks whether this side is sourcing VBUS; `docked` distinguishes dock behavior from normal host cable behavior. Remove clears `active`, forces UART mode, sends `MUSB_VBUS_OFF`, unregisters the USB PHY, cancels work, and disables the regulator.
+
+Dependencies and integration points: The driver depends on platform-device probing, Motorola CPCAP MFD regmap constants, IIO for VBUS measurement, regulator framework, GPIO and pinctrl, generic PHY, legacy USB PHY, and MUSB mailbox integration. Device-tree compatibles are `motorola,cpcap-usb-phy` and `motorola,mapphone-cpcap-usb-phy`.
+
+Risks: Cable-state logic is timing and hardware sensitive; incorrect VBUS thresholds, lost IRQs, or failed mode GPIO/pinctrl transitions can leave USB lines in UART, dock, or host mode unexpectedly. `musb_mailbox()` failure is only debug logged, so downstream MUSB state can diverge. Optional GPIOs use `gpiod_set_value()` rather than the sleeping variant, so the GPIO provider must tolerate that path.
+
+Test signals: Probe success, regulator enablement, valid IIO VBUS readings, and named IRQ acquisition are first-line checks. Runtime validation should cover ID-ground host, dock, peripheral VBUS, cable removal, module unload, and fallback UART mode. Useful signals are MUSB role changes, VBUS enable bits in `CPCAP_REG_USBC3`, absence of repeated "error setting cable state", and successful enumeration in both host and gadget roles.

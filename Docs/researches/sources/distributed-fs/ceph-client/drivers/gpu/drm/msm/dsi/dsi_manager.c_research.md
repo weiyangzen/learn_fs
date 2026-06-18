@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/msm/dsi/dsi_manager.c
+
+Purpose: This file coordinates one or two DSI controllers as a DRM bridge-facing display output. It owns global DSI pairing state, bonded/synchronized DSI handling, PHY use-case sequencing, bridge power/mode callbacks, connector creation, and cross-host command synchronization.
+
+Important APIs and types: `struct msm_dsi_manager` stores `dsi[2]`, bonded flag, sync-needed flag, and master link id. `struct dsi_bridge` wraps `drm_bridge` with a DSI id. Public APIs include connector init, command xfer, command trigger, register/unregister, TPG enable, and bonded/master queries. Private helpers parse OF `qcom,dual-dsi-mode`, `qcom,master-dsi`, and `qcom,sync-dual-dsi`, register hosts in correct order, enable/disable PHYs, and power bridge hosts.
+
+Control flow: On manager register, a DSI instance is stored globally, OF pairing state is merged, and host registration is performed. Standalone mode sets PHY standalone and registers one host. Bonded mode waits for the other DSI, sets PLL master/slave use cases, registers slave host first, then master. DRM pre-enable on the master powers PHY/host(s), enables IRQs, then enables host(s). Post-disable disables hosts/IRQs, saves PHY PLL state, powers off host(s), and disables PHY when both sides are off. Mode set programs both hosts in bonded mode. Mode valid checks OPP availability for byte-clock rate then delegates DSC validation to host. Command transfer optionally prepares both hosts but only triggers when the synchronized master path runs.
+
+State and dependencies: State is global, not per DRM device, so only one two-DSI group is represented. It depends on DRM bridge connector helpers, PM OPP, MSM KMS, DSI host/PHY APIs, and OF properties.
+
+Risks and test signals: Risks include global state lifetime across unregister/reprobe, ordering assumptions that DSI1 is encoder master, bonded PHY enable rollback, synchronized command suppression on DSI0, missing external bridge on slave, and OPP mode validation edge cases. Test standalone DSI0/DSI1, bonded master/slave probe orders, sync-dual command writes, reads bypassing sync, panel prepare/unprepare command access, PHY PLL save/restore, and mode validation with/without OPP tables.

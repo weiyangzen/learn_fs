@@ -1,0 +1,13 @@
+# sources/distributed-fs/hadoop/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/ha/TestStandbyCheckpoints.java
+
+Purpose: broad integration coverage for standby checkpoint creation, upload, cancellation, multi-NameNode/observer distribution, image transfer failures, lock behavior, legacy OIV image handling, and checkpoint timing metrics.
+
+Important APIs and types: `StandbyCheckpointer`, `FSImage`, `JournalSet`, `NameNodeAdapterMockitoUtil`, `HATestUtil.waitForCheckpoint`, `FSImageTestUtil`, `TransferFsImageUpload` threads, `RemoteNameNodeInfo`, `DFS_NAMENODE_CHECKPOINT_*` keys, `DFS_IMAGE_TRANSFER_RATE_KEY`, `DFS_NAMENODE_CHECKPOINT_PARALLEL_UPLOAD_ENABLED_KEY`, `Canceler`, `LogVerificationAppender`, and `SlowCodec`.
+
+Control flow: setup starts a three-NN HA topology with low checkpoint thresholds, short edit tailing, compressed fsimage using `SlowCodec`, legacy OIV output directory, and NN0 active. Tests create edits, wait for standby catch-up/checkpoints, and assert fsimage txids on active, standby, and observer. They cover initializing new name dirs after checkpoint upload, simultaneous standby checkpointing, observer image upload, putImage before HTTP FSImage initialization, no-op repeated checkpoints at same txid, cancellation during local save and throttled upload, parallel upload thread count, expected `StandbyException` while checkpointing, JMX/read access while cp-lock is held, non-primary standby uploads, OIV save exceptions, last checkpoint time updates, and partial fsimage upload failure tolerance.
+
+State and persistence behavior: exercises local and shared edits, fsimage files in each NameNode storage directory, legacy OIV image artifacts, checkpoint txids, last checkpoint timestamps, and background transfer thread lifecycle. It also asserts standby should not purge shared edits.
+
+Dependencies and integration points: integrates HTTP image transfer, HA state transitions, observer state, edit log rolling/tailing, FSNamesystem locks, compression codecs, log capture, filesystem storage layout, and checkpoint cleanup.
+
+Risks and test signals: risks include missing checkpoint uploads, aborts during duplicate checkpoint receipt, leaked transfer threads, standby read/write lock deadlocks, corrupt image acceptance after canceled upload, failed observer sync, and bad behavior when only part of upload fanout fails. Signals include exact checkpoint txid waits, parallel-file identity checks, Mockito verification of no shared-log purge and save counts, thread inspection, log-message verification, lock queue assertions, and timestamp comparisons.

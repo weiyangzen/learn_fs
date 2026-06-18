@@ -1,0 +1,9 @@
+# sources/object-store/minio/cmd/notification.go
+
+This file implements MinIO peer notification and cluster fan-out for internal admin, IAM, bucket metadata, metrics, profile, service-control, rebalance, bandwidth, performance, and replication MRF operations. It is for peer-to-peer MinIO notifications, not external event targets.
+
+Core types are `NotificationSys`, `NotificationPeerErr`, and `NotificationGroup`. `NotificationSys` holds remote peer REST clients and an all-peer slice that includes a nil/self slot. `NotificationGroup` wraps bounded workers, retry count, and indexed peer errors; `Go` retries calls with jitter unless context is canceled and logs final failures with peer tags.
+
+The file follows repeated control-flow patterns: allocate result slices matching peers, launch bounded or unbounded goroutines over non-nil peer clients, call the matching `peerRESTClient` method, log peer errors, then append or merge local state where needed. IAM and policy methods fan out reload/delete calls. Profiling downloads remote profile data into a shared zip with a mutex and embeds local profile data. Storage/server info fills offline disk data on peer failure. Metrics methods open peer metric channels and merge them through `collectPeerMetrics`. Speed and network tests run remote and local work concurrently. Bucket deletion clears local caches before notifying peers. Replication MRF streams remote and local entries into a buffered channel.
+
+State is mostly live global state: peer REST clients, replication stats, bucket metadata systems, object layer, endpoints, transition state, bucket monitor, service freeze state, and replication pool. Persistence is indirect through remote operations and object-layer metadata. Risks include high fan-out cost on large clusters, partial failure semantics, nil-peer handling, closure correctness, and channel closure under cancellation. Test signal is mostly integration; this file itself has no direct unit tests.

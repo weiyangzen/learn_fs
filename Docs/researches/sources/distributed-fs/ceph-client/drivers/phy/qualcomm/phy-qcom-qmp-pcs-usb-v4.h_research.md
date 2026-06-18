@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcs-usb-v4.h
+
+This header defines QMP V4 USB3 PCS offsets. It covers power-state config, autonomous mode status/control, LFPS RX termination IRQ status/clear, LFPS timing and TX values, RX equalization training timing, receiver-detect delays, arc receiver detect timing, TX ones/zeros run length, ALFPS deglitch, signal-detect startup timer, and test control. It has no runtime code or state. USB QMP PHY drivers consume these macros in init sequences and low-power/autonomous-mode management. Risks include broken LFPS, receiver detect, or RXEQ timing if offsets are wrong. Test signals include USB3 connect/disconnect, U1/U2/U3 transitions, LFPS wake, RXEQ training, and test-mode coverage.

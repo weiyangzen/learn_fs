@@ -1,0 +1,15 @@
+# sources/object-store/apache-ozone/hadoop-hdds/server-scm/src/main/java/org/apache/hadoop/hdds/scm/security/RootCARotationManager.java
+
+Purpose: `RootCARotationManager` is the SCM background service that decides when the root CA is close enough to expiry to rotate, generates a new root CA, coordinates sub-CA rotation across HA peers, persists post-processing state, and removes expired certificates.
+
+Important APIs and types: It extends `StatefulService<CertInfoProto>` and implements SCM service callbacks. Key methods are `notifyStatusChanged`, `start`, `stop`, `isRunning`, `isRotationInProgress`, `isPostRotationInProgress`, `scheduleSubCaRotationPrepareTask`, `timeBefore2ExpiryGracePeriod`, and `shouldSkipRootCert`. Inner tasks are `MonitorTask`, `RotationTask`, `SubCARotationPrepareTask`, and `WaitSubCARotationPrepareAckTask`.
+
+Control flow: The service runs only when SCM is leader and not in safe mode. `MonitorTask` checks the current root certificate and schedules `RotationTask` at configured time-of-day, or immediately if delay would exceed certificate expiry. `RotationTask` creates a new root CA server and certificate, installs it into the security protocol server, sends replicated prepare, and schedules ack polling plus an ack timeout. Followers run `SubCARotationPrepareTask`, create new sub-CA keys/certs under progress directories, atomically move them into the next directory, and send prepare ack. `WaitSubCARotationPrepareAckTask` waits until ack count matches current Ratis peers, then sends commit and committed, persists the new root certificate to the cert store if needed, saves a stateful `CertInfoProto`, and enters post-processing.
+
+State and persistence behavior: Runtime booleans track running, processing, and post-processing. Durable state includes new root/sub-CA key directories, SCM storage config certificate serial IDs, valid certificate tables, and the `StatefulService` configuration used to preserve post-processing across restarts. `checkAndHandlePostProcessing` reads persisted `CertInfoProto` and either resumes the CSR-signing block window or deletes stale state.
+
+Dependencies and integration points: The manager ties together `SCMContext`, SCM service manager, `SCMCertificateClient`, `SequenceIdGenerator`, `HASecurityUtils`, `CertificateStore`, `SecurityProtocolServer`, Ratis handler proxy, and `RootCARotationMetrics`.
+
+Risks: The process has many shutdown-triggering IO and crypto steps. Leader changes cancel tasks and delete in-progress state, so interruption timing is important. Ack count uses current Ratis peers, which can differ from configured HA details during membership changes. Post-processing blocks CSR signing for the root cert polling interval and must be persisted correctly.
+
+Test signals: Strong tests cover leader/safe-mode status transitions, scheduling delay calculation, immediate rotation near expiry, sequence ID match with new certificate serial, follower sub-CA directory creation and movement, ack timeout cleanup, successful commit metrics, persisted post-processing recovery, skip behavior on Ratis replay, and expired certificate cleanup.

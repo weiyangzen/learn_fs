@@ -1,0 +1,7 @@
+# sources/storage-engines/tikv/components/resource_control/src/metrics.rs
+
+`metrics.rs` registers Prometheus metrics for resource-control behavior. It covers background quota limits, aggregate background resource consumption, background task wait duration, priority quota limits, per-priority CPU time and wait histograms, background utilization, two-phase scheduling throttles, per-group historical/current RU rates, per-group quota limits, and admission-control delayed/rejected request counters and delay histograms.
+
+All metrics are lazy static globals using Prometheus registration macros. Labels are intentionally bounded by resource type, priority, and resource group. `deregister_metrics(name)` removes per-resource-group label values for two-phase scheduling, quota, RU rates, and admission metrics, and also removes `"background"` admission labels. This supports cleanup when resource groups are deleted or refreshed.
+
+No persistent state is stored here; metric series live in process memory and the Prometheus registry. Integration points include resource group manager, quota workers, admission control, and limiter code that update these series. Risks include stale time series if deregistration is missed, mismatch between dynamic group names and monitoring retention, and global registry panics if duplicate metric names are introduced. There are no direct tests in this file; validation is indirect through components that update and remove metrics.

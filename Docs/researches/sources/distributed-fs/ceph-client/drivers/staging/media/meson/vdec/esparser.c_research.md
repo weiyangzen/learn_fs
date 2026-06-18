@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/staging/media/meson/vdec/esparser.c
+
+Purpose: this file implements the Elementary Stream Parser support for Meson VDEC. ESPARSER consumes queued OUTPUT bitstream buffers, optionally rewrites VP9 frame headers, pads and appends start-code search patterns, DMA-fetches data into the hardware VIFIFO, tracks source timestamps by VIFIFO offset, and provides an EOS write path.
+
+Important APIs and functions: `esparser_init()` requests the parser IRQ and reset control. `esparser_power_up()` resets and configures parser registers, search pattern/mask, VIFIFO start/end pointers, optional decoder-specific parser config, and parser IRQ enable. `esparser_queue_all_src()` is the workqueue handler scheduled by V4L2 m2m paths. `esparser_queue()` handles one source buffer: checks VIFIFO free space, applies VP9-specific backpressure, removes the source buffer from m2m, records timestamp/offset with `amvdec_add_ts()`, rewrites VP9 superframe headers through `vp9_update_header()`, pads with `esparser_pad_start_code()`, writes data through `esparser_write_data()`, and completes the source buffer. `esparser_queue_eos()` writes a codec-provided EOS sequence through a temporary coherent buffer.
+
+Control flow: parser IRQ `esparser_isr()` acknowledges `PARSER_INT_STATUS`, clears PFIFO pointers on start-code found, sets a global `search_done`, and wakes a waitqueue. `esparser_write_data()` programs parser fetch address and command, then waits up to 200 ms for that IRQ. `esparser_queue_all_src()` loops over source buffers until stop is requested or one buffer cannot be queued because VIFIFO/capture capacity is insufficient. VP9 additionally subtracts three buffers from available destination capacity to avoid reference starvation.
+
+State and persistence: global `search_done` and waitqueue serialize parser fetch completion. Per-session state includes `vififo_paddr`, `vififo_size`, `last_offset`, `wrap_count`, and atomic `esparser_queued_bufs`. Timestamp records persist in `sess->timestamps` until a decoded capture buffer matches by FIFO offset or FIFO order.
+
+Dependencies and integration points: depends on parser register offsets local to this file, `dos_regs.h`, `vdec_helpers`, V4L2 mem2mem iteration, vb2 DMA addresses and virtual mappings, and codec ops for `num_pending_bufs` and `conf_esparser`.
+
+Risks: `search_done` is global, so concurrent sessions would race, although `vdec.c` enforces a single active session. VP9 header rewriting modifies source buffers in place and requires spare plane capacity. Padding/start-code append can fail silently by returning only partial pad size, so parser behavior depends on source buffer size margins. Timeout/error paths mark source buffers error and remove timestamps, but parser fetch state must be cleared correctly to avoid later stalls.
+
+Test signals: parser IRQ timing, 200 ms timeout behavior, VIFIFO wrap offset accounting, timestamp matching, VP9 superframes with multiple frame sizes, too-small source buffers, EOS writes, stop while source buffers are queued, and VP9 capture-buffer backpressure.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/kselftest_harness.h
+
+Purpose: this header implements the C unit-test harness used by Linux kselftests. It gives tests a gtest-like API with `TEST`, `TEST_SIGNAL`, `FIXTURE`, `FIXTURE_SETUP`, `FIXTURE_TEARDOWN`, `FIXTURE_VARIANT`, `TEST_F`, timeout variants, `ASSERT_*`, `EXPECT_*`, `SKIP`, `TH_LOG`, `XFAIL_ADD`, and `TEST_HARNESS_MAIN`. It emits TAP/kselftest output via `kselftest.h` and bridges low-level kselftest result codes with structured per-test execution.
+
+Important APIs, types, and functions: public macros expand into static test functions, constructor-registered metadata objects, and fixture wrappers. Internal types include `__fixture_metadata`, `__fixture_variant_metadata`, `__test_metadata`, `__test_results`, and `__test_xfail`. Core helpers are `__register_fixture()`, `__register_fixture_variant()`, `__register_test()`, `__register_xfail()`, `__bail()`, `__wait_for_test()`, `test_harness_argv_check()`, `test_enabled()`, `__run_test()`, and `test_harness_run()`.
+
+Control flow: compile-time macros create constructor functions that build fixture/test/xfail lists. `test_harness_run()` validates CLI filters, counts enabled fixture-variant-test combinations, prints the plan, allocates shared result state with `mmap`, and invokes `__run_test()` for each enabled test. `__run_test()` forks an isolated child, resets ksft state, runs the registered wrapper, waits through a pidfd/poll timeout path, classifies normal exit/signals/expected-failure state, and prints the result. Fixture tests have an extra grandchild so setup/test/teardown isolation can support child teardown or parent teardown.
+
+State and persistence: state is process-local and mostly static. Constructor-linked lists persist for the test binary lifetime. Per-test metadata, fixture data, `no_teardown`, and result reasons may be `MAP_SHARED` so forked children can communicate result codes and skip reasons back to the parent. No durable files are written by the harness itself.
+
+Dependencies and integration points: depends on libc/POSIX process APIs, `pidfd_open`, `poll`, `waitpid`, `mmap`, signals, and `kselftest.h` result helpers. It integrates with kselftest runner semantics, TAP output, shell runners, and compiler constructor ordering.
+
+Risks: macro expansion is powerful but hard to debug, constructor ordering is toolchain-sensitive, and tests are explicitly not parallel within one process. The timeout path kills the child process group, so tests that modify process groups or fork further need care. Direct use of low-level `ksft_test_result_*()` inside harness tests is checked and can be treated as illegal unless encoded by exit code.
+
+Test signals: `-l`, filtering flags, timeout behavior, signal-expected tests, XFAIL/XPASS conversion, fixture setup failure, fixture teardown-in-parent, and `SKIP` reasons are the main observable signals. `harness-selftest.c` and `harness-selftest.sh` provide a golden-output regression check for this header.

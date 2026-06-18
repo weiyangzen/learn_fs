@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/st/sti/bdisp/bdisp-v4l2.c
+
+Purpose: implements the BDisp platform driver and V4L2 mem2mem interface. It exposes a `/dev/video*` M2M device for blit, scale, crop/compose, flip, and color conversion operations backed by the BDisp hardware helpers.
+
+Important APIs and functions: platform entry points are `bdisp_probe` and `bdisp_remove`; PM hooks are `bdisp_runtime_resume`, `bdisp_runtime_suspend`, `bdisp_suspend`, and `bdisp_resume`. File operations are `bdisp_open`, `bdisp_release`, `video_ioctl2`, mem2mem mmap and poll. IOCTL handlers cover querycap, enum/g/try/s format, g/s selection, streamon/off, buffer operations, and control events. Queue and job functions include `queue_init`, `bdisp_device_run`, `bdisp_job_finish`, `bdisp_job_abort`, `bdisp_start_streaming`, and IRQ handlers.
+
+Control flow: probe allocates `struct bdisp_dev`, maps registers, prepares the clock, installs a threaded IRQ, registers V4L2 and debugfs, enables runtime PM, allocates filter tables, and registers the mem2mem video device. Open allocates a per-file `bdisp_ctx`, node descriptors, V4L2 controls, default formats, and V4L2 M2M queues. Streaming requires both source and destination formats to have been set. When both queues have buffers, `bdisp_device_run` resolves contiguous DMA addresses, resets hardware, builds and submits nodes, queues a timeout work item, and marks the engine running. The hard IRQ validates/clears AQ1 last-node status and wakes the threaded handler, which finishes buffers or coordinates suspend. Timeout work resets the device and completes buffers with error.
+
+State and persistence: `bdisp_dev` owns global locks, clock, registers, workqueue, current M2M context, state bits, and debug data. Each `bdisp_ctx` stores source/destination `bdisp_frame`, flip controls, state flags, V4L2 file handle, and node DMA addresses. Runtime PM gates the clock around streaming; no persistent on-disk state exists.
+
+Dependencies and integration points: depends on V4L2 core, V4L2 controls/events, videobuf2 DMA-contig, V4L2 mem2mem, platform OF match `st,stih407-bdisp`, runtime PM, clocks, IRQs, and `bdisp-hw.c`/debugfs helpers.
+
+Risks: the selection setter aligns `out.height` with `frame->fmt->w_align` rather than `h_align`, which can be wrong for formats with different dimensions. The IRQ path and stop request path rely on state bits protected by a single spinlock and waitqueue; regressions can hang streamoff/suspend. The code accepts only single-plane vb2 buffers and computes multi-plane offsets manually, so stride and sizeimage mismatches are important. Hardware is reset for each job, which simplifies state but increases latency.
+
+Test signals: validate V4L2 compliance for M2M queues, format negotiation, selection flags, hflip/vflip controls, streamon requirements, PM suspend/resume during active jobs, forced IRQ timeout behavior, and real DMA output comparisons for supported formats. Kernel build with `CONFIG_VIDEO_STI_BDISP` and `COMPILE_TEST` catches API drift.

@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/memory/tegra/tegra124-emc.c
+
+Purpose: NVIDIA Tegra124/Tegra132 External Memory Controller driver. It loads RAM-code-specific EMC timing tables, registers clock-change callbacks used by the Tegra EMC clock, manages OPP-backed voltage/rate changes, exposes debugfs rate clamps, and provides an EMC/DRAM interconnect provider.
+
+Important APIs/types/functions: `struct emc_timing` stores one rate and all burst, calibration, mode, power, pad, ZCAL, and config values needed for a frequency switch. `struct tegra_emc` stores device, MC handle, MMIO, clock, DRAM type/width/count, timing table, last timing, debugfs state, ICC provider, requested min/max rates, and rate mutex. Key functions are `tegra124_emc_prepare_timing_change()`, `tegra124_emc_complete_timing_change()`, `tegra124_emc_load_timings_from_dt()`, `emc_request_rate()`, debugfs min/max setters, `emc_icc_set()`, `tegra124_emc_opp_table_init()`, and probe.
+
+Control flow: probe maps EMC registers, obtains the common MC through `nvidia,memory-controller`, selects a timing subnode by fuse RAM code, reads current DRAM state, registers EMC clock callbacks, gets the `emc` clock, initializes OPP supported-hardware filtering, initializes request clamps, optionally creates debugfs, and registers the EMC interconnect provider. Rate changes go through OPP and clock callbacks: prepare disables dynamic self-refresh/autocal as needed, programs burst registers and MC EMEM arbitration, queues clock-change commands and DRAM mode-register operations, then complete waits for clock-change completion, restores autocal/power/ZCAL/pad state, and caches the new timing.
+
+State and persistence: driver state includes timing table, last applied timing, DRAM geometry, debug clamp values, and per-source rate requests. Hardware state includes EMC timing registers, calibration, mode registers, self-refresh/power bits, MC EMEM timing registers, clock rate, and voltage state managed by OPP.
+
+Dependencies and integration: depends on Tegra clock callbacks (`tegra124_clk_set_emc_callbacks()`), common MC APIs, fuse RAM code, PM OPP, debugfs, interconnect framework, DT timing properties, and SoC speedo ID for OPP hardware selection.
+
+Risks: timing-change sequencing is highly hardware-specific; wrong ordering can corrupt memory. Missing timing data only logs an informational message but leaves fewer valid rates. `try_module_get(THIS_MODULE)` intentionally prevents unload. Interconnect initialization errors are returned through helper logging but the probe ignores the return value. Debugfs min/max and ICC requests share rate clamps, so out-of-range combinations return `-ERANGE`.
+
+Test signals: boot Tegra124/Tegra132 with timing tables for the active RAM code, verify OPP voltage initialization, change rates through clock/OPP, debugfs min/max, and ICC bandwidth requests, observe successful CLKCHANGE completion, validate MC EMEM timing writes, and stress memory traffic during repeated rate transitions.

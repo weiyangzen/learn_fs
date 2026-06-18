@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/capset/capset03.c
+
+Purpose: verifies `capset()` fails with `EPERM` when new inheritable capabilities are not a subset of old inheritable and old permitted without CAP_SETPCAP. Setup sets effective/permitted/inheritable to only CAP_KILL; run adds CAP_NET_RAW to inheritable and expects failure. Important APIs are raw `__NR_capset` and capability structs. State is process capability sets changed during setup. Dependencies are root. Risks are capability environment or CAP_SETPCAP presence altering semantics. Test signal is `EPERM` for the expanded inheritable set.

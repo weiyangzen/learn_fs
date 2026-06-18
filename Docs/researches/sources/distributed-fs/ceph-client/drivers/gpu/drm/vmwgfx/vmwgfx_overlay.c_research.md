@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/vmwgfx/vmwgfx_overlay.c
+
+Purpose: Implements the legacy VMware video overlay/Xv stream interface. It claims streams, pins stream buffers in VRAM or GMR, sends SVGA escape commands to set/flush video registers, pauses/resumes overlays during scanout buffer moves, and exposes stream control ioctls.
+
+Important APIs/types/functions: `struct vmw_stream` stores the active BO, claimed flag, paused flag, and saved stream arguments. `struct vmw_overlay` owns a mutex and a fixed stream array (`VMW_MAX_NUM_STREAMS` is 1). `vmw_overlay_send_put()` emits `SVGA_ESCAPE_VMWARE_VIDEO_SET_REGS` plus flush. `vmw_overlay_send_stop()` disables a stream. `vmw_overlay_update_stream()`, `vmw_overlay_stop()`, `vmw_overlay_pause_all()`, `vmw_overlay_resume_all()`, `vmw_overlay_ioctl()`, `vmw_overlay_claim()`, `vmw_overlay_unref()`, `vmw_overlay_init()`, and `vmw_overlay_close()` implement public behavior.
+
+Control flow: The ioctl validates overlay FIFO capabilities, resolves a user stream resource, locks the overlay mutex, then either stops the stream or looks up the BO and calls `vmw_overlay_update_stream()`. Updating stops old buffers if needed, pins the new buffer according to active display backend, emits the put command, references the BO, saves arguments, and clears paused state. Pause stops hardware and removes no-evict/pin pressure but retains the BO reference; resume replays saved arguments.
+
+State and persistence: Stream state persists in `dev_priv->overlay_priv`. Claimed streams are reserved until `vmw_overlay_unref()`. Active stream BO references persist until stop/unref/close. Saved arguments persist across pause/resume.
+
+Dependencies and integration points: Uses SVGA escape/video headers, vmwgfx BO pin helpers, FIFO command reservation, user BO/resource lookup, and KMS scanout paths that pause overlays around VRAM pressure. Risks include one-stream assumptions, command-reserve failure handling, BUG_ON on unexpected unpin failures, saved argument validity across mode changes, and capability mismatches. Test signals: claim/free ioctls, enable/disable stream, pause/resume during LDU/SOU mode changes, legacy vs screen-object buffer pin domains, and close with leaked active stream warnings.

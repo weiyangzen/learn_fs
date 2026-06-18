@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/bpf/test_bpftool_synctypes.py
+
+## Research
+
+This Python selftest verifies that bpftool's UAPI-derived type names, help text, RST documentation, and bash completion stay synchronized. It reads `tools/include/uapi/linux/bpf.h`, bpftool source files, bpftool documentation, and `bash-completion/bpftool`, then compares sets of map types, program attach types, cgroup attach types, command options, and common options. Environment variables such as `BPFTOOL_DIR`, `BPFTOOL_DOC_DIR`, `BPFTOOL_BASHCOMP_DIR`, and `INCLUDE_DIR` let the harness point at non-default build/source locations.
+
+Important code is organized around parsers and extractors. `BlockParser`, `ArrayParser`, and `InlineListParser` scan enum blocks, `const bool` arrays, RST inline lists, help strings, macro-expanded help fragments, and bash-completion variable blocks. `FileExtractor` provides shared operations including `get_enum()`, `get_types_from_array()`, and `make_enum_map()`. Specialized extractors know the exact files and block names for bpftool maps, programs, cgroups, generic commands, main options, man pages, substitutions, and bash completion.
+
+`main()` builds source truth from UAPI enums and bpftool arrays, normalizes deprecated cgroup storage map enum aliases to the names exposed by bpftool, and calls `verify()` for every expected pair. The only persistent state is process-local `retval`, which is set to `1` on any mismatch before `sys.exit(retval)`. Failures print the symmetric difference and the compared files, making the test signal a direct list of out-of-sync names. Risks are tight regex coupling to source/doc formatting, brittle block start/end markers, and manual normalization for enum aliases. Missing files or reordered formatting can fail before comparison, but that is useful because this test is intended to catch synchronization drift in bpftool's public interface.

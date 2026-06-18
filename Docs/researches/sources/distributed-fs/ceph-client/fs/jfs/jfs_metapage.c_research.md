@@ -1,0 +1,24 @@
+# sources/distributed-fs/ceph-client/fs/jfs/jfs_metapage.c
+
+## Purpose
+`jfs_metapage.c` implements JFS metadata-page caching, locking, writeback, read I/O, invalidation, migration, and integration with the journal log-sync list. A metapage is JFS's logical metadata unit layered on Linux folios, normally one `PSIZE` metadata block per folio on 4 KiB page systems but with anchor support for multiple metapages per larger folio.
+
+## Important APIs, types, and functions
+Public functions are `metapage_init()`, `metapage_exit()`, `__get_metapage()`, `grab_metapage()`, `force_metapage()`, `hold_metapage()`, `put_metapage()`, `release_metapage()`, and `__invalidate_metapages()`. The exported address-space operations are `jfs_metapage_aops` with `.read_folio`, `.writepages`, `.release_folio`, `.invalidate_folio`, `.dirty_folio`, and optional `.migrate_folio`. Important private helpers include `folio_to_mp()`, `insert_metapage()`, `remove_metapage()`, `inc_io()`, `dec_io()`, `drop_metapage()`, `metapage_get_blocks()`, `metapage_write_folio()`, `metapage_read_folio()`, `metapage_release_folio()`, and `remove_from_logsync()`.
+
+## Control flow
+`__get_metapage()` maps a logical block to a folio and offset, rejects metadata that crosses a page boundary, selects either the inode mapping or the aggregate direct-inode mapping for absolute reads, reads or grabs the folio, finds or allocates the `struct metapage`, verifies logical size, locks it, clears discard state for newly allocated pages, and returns it with the folio unlocked. Updates mark the metapage dirty and release it through `write_metapage()`/`flush_metapage()` in the header. `release_metapage()` unlocks the metapage, decrements the reference count, marks the folio dirty, optionally performs synchronous writeback for `META_sync`, removes stale log-sync entries, and drops unreferenced clean metapages.
+
+Read I/O is driven by `metapage_read_folio()`, which calls `metapage_get_blocks()` to translate logical to physical blocks through `xtLookup()` for mapped metadata inodes, builds BIOs, and ends the folio read in `last_read_complete()`. Writeback scans metapages inside a folio in `metapage_write_folio()`, skips clean pages, redirties pages blocked by `nohomeok` unless `META_forcewrite` is set, clears `META_dirty`, sets `META_io`, builds contiguous BIO segments, and completes through `last_write_complete()`, which clears `META_io` and removes committed pages from `log->synclist`.
+
+## State and persistence behavior
+Metapage state includes flags (`META_locked`, `META_dirty`, `META_sync`, `META_discard`, `META_forcewrite`, `META_io`), a reference count, data pointer, logical block index, folio pointer, owning superblock, logical size, and journal fields (`clsn`, `nohomeok`, `log`, `lsn`, `synclist`). `metapage_nohomeok()` pins the folio and delays home-location writeback while a transaction's after-image is not yet durable in the journal. `metapage_homeok()` releases that pin once commit/write ordering is safe. Persistent effects happen through metadata writeback to home blocks; journal ordering is coordinated by `lsn` and `log->synclist`.
+
+## Dependencies and integration points
+The file depends on Linux folios, address-space writeback, BIOs, mempools, slab caches, migration, block devices, and JFS helpers from `jfs_incore.h`, `jfs_superblock.h`, `jfs_filsys.h`, `jfs_txnmgr.h`, and `jfs_debug.h`. It integrates with transaction locking (`txLock()` marks pages no-home-ok), log sync (`remove_from_logsync()` updates `log->count` and `synclist`), extent lookup (`xtLookup()`), aggregate direct I/O (`direct_inode` mapping), and map invalidation macros in `jfs_metapage.h`.
+
+## Risks
+The code has subtle folio/private ownership rules, especially when `PAGE_SIZE > PSIZE` and a `meta_anchor` multiplexes several metapages. Incorrect `nohomeok` handling can write metadata home before its journal commit is durable, while missed `metapage_homeok()` can pin folios and block clean unmount. `metapage_write_folio()` must balance every `inc_io()` with `dec_io()` even on bad mappings or empty BIO dumps. Migration must refuse locked metapages and update `mp->data` offsets correctly. Invalidation marks dirty pages discarded rather than immediately freeing them, so later callers must not reuse discarded pages except via `new` allocation.
+
+## Test signals
+Test signals include metadata reads and writes for aggregate/direct and inode mappings, folio migration under memory pressure, large-page builds, synchronous metapage flush, forced writeback while `nohomeok` is set, log-sync list removal after writeback, invalidation of freed extents, injected mapping failures in `metapage_get_blocks()`, BIO read/write errors, and proc statistics for allocations, frees, and lock waits. Crash tests should verify that home metadata never advances ahead of committed journal records.

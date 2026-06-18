@@ -1,0 +1,13 @@
+## sources/distributed-fs/ceph-client/drivers/net/wireless/marvell/libertas/cfg.c
+
+Purpose: this file implements cfg80211 support for Libertas. It exposes wiphy capabilities, scans, connect/disconnect, key management, IBSS, interface mode changes, power management, regulatory handling, and allocation/registration/freeing of `wireless_dev`.
+
+Important APIs and functions: static 2.4 GHz channel/rate tables and `cipher_suites` describe hardware capability. TLV builders such as `lbs_add_ssid_tlv()`, `lbs_add_channel_list_tlv()`, `lbs_add_supported_rates_tlv()`, `lbs_add_common_rates_tlv()`, `lbs_add_auth_type_tlv()`, `lbs_add_wpa_tlv()`, and `lbs_add_wps_enrollee_tlv()` assemble Marvell command payloads. `lbs_cfg_scan()` starts delayed scan work; `lbs_ret_scan()` parses firmware scan responses and calls `cfg80211_inform_bss()`. `lbs_cfg_connect()`, `lbs_associate()`, `lbs_disconnect()`, and cfg80211 key callbacks map userspace requests to firmware commands. IBSS is handled by `lbs_join_ibss()`, `lbs_ibss_join_existing()`, `lbs_ibss_start_new()`, and `lbs_join_post()`. Registration is through `lbs_cfg_alloc()`, `lbs_cfg_register()`, `lbs_scan_deinit()`, and `lbs_cfg_free()`.
+
+Control flow: scans are chunked by `LBS_SCAN_BEFORE_NAP` to avoid staying off-channel too long, stop carrier/queue while scanning, submit `CMD_802_11_SCAN`, and reschedule until channels are exhausted. Connect optionally performs an internal scan, finds a BSS, clears old WEP state, configures WEP/WPA/RSN/authtype/radio, sends associate, and reports `cfg80211_connect_result()`. Disconnect sends deauthenticate and updates cfg80211/netif state. IBSS either joins a scanned BSS or starts a new one and fabricates IEs for cfg80211.
+
+State and persistence: it mutates `lbs_private` fields including `scan_req`, `scan_channel`, `internal_scan`, `assoc_bss`, WEP key cache, `mac_control`, `connect_status`, `country_code`, `psmode`, and wiphy registration state. State is in-memory; firmware holds mirrored keys, association, channel, RSN, and power-save settings.
+
+Dependencies and integration: depends on cfg80211, netdev queues/carrier, Libertas command helpers in `cmd.c`, host TLV definitions, mesh helpers, and `work_thread`. It is the main bridge between nl80211 userspace and firmware commands.
+
+Risks and tests: scan response parsing trusts firmware lengths after validation and must not overrun TLV data. Internal connect waits can time out without explicit scan failure propagation. Key index and WEP/TKIP handling are firmware-specific. Test signals include `iw scan`, WPA/WEP/open association, no-BSSID connect, disconnect events, IBSS join/start/leave, monitor/mesh restrictions, regulatory hints, and power-save enable/disable on interrupt versus polling devices.

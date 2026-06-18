@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/display/drm_bridge_connector.c
+
+Purpose: implements a generic DRM connector that terminates a chain of DRM bridges, delegating connector operations to the bridge closest to the connector that advertises each capability. It lets display controller drivers avoid writing connector glue for common bridge chains.
+
+Important APIs/types/functions: `struct drm_bridge_connector` embeds `drm_connector`, stores the encoder and retained references to bridges providing EDID, HPD, detect, modes, HDMI, HDMI audio, DP audio, and HDMI CEC functionality, plus per-connector HDMI funcs. `drm_bridge_connector_init()` is the exported allocator/initializer. It walks the encoder bridge chain, collects the furthest EDID/modes/HPD/detect providers, validates that at most one HDMI/audio/CEC provider exists and that mandatory bridge callbacks are present, records connector type from the last bridge, inherits DDC, panel orientation, interlace/ycbcr constraints, supported HDMI formats, max bpc, and HDCP support, then initializes either an HDMI connector or generic connector and optional HDMI/DP audio and CEC helpers.
+
+Control flow: detect delegates to the detect bridge when available, updates HDMI state and notifies all bridges; otherwise built-in panel-like connector types are assumed connected and other types unknown. HPD callbacks update connector status under mode-config mutex, notify every bridge's `hpd_notify`, and emit connector hotplug events. `get_modes()` prefers HDMI EDID already handled by HDMI detect, then EDID provider, then modes provider, else returns 0 for core fallback. HDMI infoframe and TMDS callbacks call through to the HDMI bridge. Audio callbacks dispatch to either HDMI or DP audio bridge. CEC callbacks dispatch to the selected HDMI CEC bridge.
+
+State and persistence: bridge references are held until DRM managed cleanup via `drm_bridge_connector_put_bridges()`. Connector properties include polling mode, HDMI state, content protection property when HDCP is supported, panel orientation, and optional audio/CEC registration state.
+
+Dependencies and integration points: depends on DRM bridge chain iteration, DRM connector helpers, atomic HDMI state helpers, EDID helpers, HDMI audio helper, HDMI CEC/notifier helpers, HDCP property helper, OF fwnode handling, and DRM managed allocation. Drivers use it after attaching bridge chains with `DRM_BRIDGE_ATTACH_NO_CONNECTOR`.
+
+Risks: bridge ops flags are treated as contracts; advertising HDMI/audio/CEC without required callbacks returns `-EINVAL`. Multiple providers for exclusive roles return `-EBUSY`. EDID/modes selection is "last provider wins" and deliberately resets earlier providers. The detect path invokes HDMI hotplug state updates only when a detect bridge exists. Incorrect bridge type on the last bridge prevents connector creation.
+
+Test signals: bridge chains with EDID, modes, detect, HPD, HDMI infoframes, audio, CEC notifier/adapter, panel orientation, HDCP, no-connector attach, hotplug notifications through every bridge, and invalid chains with duplicate providers or missing callbacks.

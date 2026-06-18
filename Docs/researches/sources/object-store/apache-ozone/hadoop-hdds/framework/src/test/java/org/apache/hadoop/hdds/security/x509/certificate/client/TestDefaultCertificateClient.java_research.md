@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-hdds/framework/src/test/java/org/apache/hadoop/hdds/security/x509/certificate/client/TestDefaultCertificateClient.java -->
+# sources/object-store/apache-ozone/hadoop-hdds/framework/src/test/java/org/apache/hadoop/hdds/security/x509/certificate/client/TestDefaultCertificateClient.java
+
+Purpose: exercises `DefaultCertificateClient` behavior through the concrete `DNCertificateClient`, covering key persistence, certificate storage/loading, signature generation/verification, certificate renewal, expiry grace calculation, and shutdown of background renewal resources.
+
+Important APIs/types/functions: `DNCertificateClient`, `DefaultCertificateClient`, `CertificateClient.InitResponse`, `KeyStorage`, `HDDSKeyGenerator`, `SecurityConfig`, `CertificateCodec`, `SCMSecurityProtocolClientSideTranslatorPB`, `CertificateSignRequest`, `SCMGetCertResponseProto`, `CAType`, `getPrivateKey`, `getPublicKey`, `storeCertificate`, `getCertificate`, `getAllCaCerts`, `getAllRootCaCerts`, `signData`, `verifySignature`, `renewAndStoreKeyAndCertificate`, and `close`.
+
+Control flow: `setUp` creates a temporary metadata directory, configures retry and metadata settings, mocks SCM security, initializes key storage and the DN certificate client, and generates a test certificate. Tests then mutate files under the configured key/certificate directories, reinstantiate clients to verify reload-on-init, mock SCM certificate-chain responses for renewal, and assert expected client results. The renewal test verifies that old keys/certificates are backed up, temporary new-key/new-cert directories are cleaned, and a second renewal tolerates stale temporary material.
+
+State and persistence behavior: the test suite is strongly filesystem-oriented. It deletes and rewrites private/public key files, writes regular certificates plus root/subordinate CA files, reads certificates by serial number, validates metadata directories and backup directories, and checks that the certificate renewer thread is removed after `close`. Certificate state is cached in the client but must be reconstructible from disk after re-instantiation.
+
+Dependencies and integration points: integrates with Hadoop/Ozone configuration keys, SCM security protocol protobufs, certificate codecs, key storage, generated JCA `KeyPair`/`X509Certificate` objects, Bouncy/JCA signature verification, `GenericTestUtils.LogCapturer`, Mockito, and Apache Commons IO cleanup helpers.
+
+Risks: tests depend on real filesystem cleanup and active thread enumeration, so leaks or slow renewal executor shutdown can be flaky. Generated certificates use test utilities with short validity windows; clock-sensitive expiry assertions require tolerances. The init failure checks depend on log text, which is useful but brittle if diagnostics are reworded.
+
+Test signals: asserts null/missing key behavior, successful persisted key reads, PEM certificate round trips, signature failure without a private key, valid and invalid signature verification, certificate map reloads, CA classification counts, `FAILURE` responses on mismatched key/cert material, expiry grace period clamping, renewal serial-number changes, backup cleanup, and renewer thread shutdown.
+<!-- END_FILE_RESEARCH: sources/object-store/apache-ozone/hadoop-hdds/framework/src/test/java/org/apache/hadoop/hdds/security/x509/certificate/client/TestDefaultCertificateClient.java -->

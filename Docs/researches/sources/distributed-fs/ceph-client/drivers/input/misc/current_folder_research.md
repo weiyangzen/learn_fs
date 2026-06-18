@@ -1,0 +1,111 @@
+# Folder Research: sources/distributed-fs/ceph-client/drivers/input/misc
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 97
+- Recursive researched files: 97
+- Direct child folders represented: 0
+
+## Direct Files
+
+- `sources/distributed-fs/ceph-client/drivers/input/misc/88pm80x_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/88pm860x_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/88pm886-onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/Kconfig`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/Makefile`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ab8500-ponkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ad714x-i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ad714x-spi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ad714x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ad714x.h`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/adxl34x-i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/adxl34x-spi.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/adxl34x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/adxl34x.h`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/apanel.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ariel-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/arizona-haptics.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/atc260x-onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ati_remote2.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/atlas_btns.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/atmel_captouch.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/aw86927.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/axp20x-pek.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/bma150.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cm109.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cma3000_d0x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cma3000_d0x.h`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cma3000_d0x_i2c.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cobalt_btns.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cpcap-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/cs40l50-vibra.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/da7280.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/da9052_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/da9055_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/da9063_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/drv260x.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/drv2665.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/drv2667.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/e3x0-button.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/gpio-beeper.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/gpio-vibra.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/gpio_decoder.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/hisi_powerkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/hp_sdc_rtc.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ibm-panel.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ideapad_slidebar.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/ims-pcu.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/iqs269a.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/iqs626a.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/iqs7222.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/keyspan_remote.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/kxtj9.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/m68kspkr.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/max7360-rotary.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/max77650-onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/max77693-haptic.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/max8925_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/max8997_haptic.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/mc13783-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/mma8450.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/nxp-bbnsm-pwrkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/palmas-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pcap_keys.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pcf8574_keypad.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pcspkr.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pf1550-onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pm8941-pwrkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pm8xxx-vibrator.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pmic8xxx-pwrkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/powermate.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pwm-beeper.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/pwm-vibra.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/qnap-mcu-input.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/rave-sp-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/rb532_button.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/regulator-haptic.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/retu-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/rk805-pwrkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/rotary_encoder.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/rt5120-pwrkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/sc27xx-vibra.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/sgi_btns.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/soc_button_array.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/sparcspkr.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/stpmic1_onkey.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/tps65218-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/tps65219-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/tps6594-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/twl4030-pwrbutton.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/twl4030-vibra.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/twl6040-vibra.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/uinput.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/wistron_btns.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/wm831x-on.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/xen-kbdfront.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/yealink.c`
+- `sources/distributed-fs/ceph-client/drivers/input/misc/yealink.h`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

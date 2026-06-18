@@ -1,0 +1,19 @@
+# sources/distributed-fs/ceph-client/sound/aoa/soundbus/i2sbus/core.c
+
+## Purpose
+This file is the macio/Open Firmware registration layer for the Apple Onboard Audio I2S soundbus provider. It discovers child `i2s-*` nodes under a macio device, fixes device-tree resource descriptions for known Apple layouts, maps I2S and DBDMA register banks, allocates DBDMA descriptor rings, requests bus/TX/RX IRQs, and registers each discovered I2S bus as a `soundbus_dev` for codec drivers.
+
+## Important APIs, Types, And Functions
+The module exports no direct symbol, but it wires the `macio_driver` named `soundbus-i2s` through `module_init()` and `module_exit()`. `i2sbus_probe()` creates one `i2sbus_control` for the macio device, scans child nodes compatible with `i2sbus` or `i2s-modem`, and calls `i2sbus_add_dev()`. `i2sbus_add_dev()` is the main constructor: it validates the node name, extracts `layout-id` or selected `device-id` values from a `sound` child, initializes `struct i2sbus_dev`, requests IRQs, claims resources, maps registers, allocates descriptor rings, registers with the control layer, and publishes the soundbus device. `i2sbus_release_dev()` is the paired device release path. `i2sbus_get_and_fixup_rsrc()` compensates for K2 layout 76/36 device-tree resource bugs. `i2sbus_bus_intr()` acknowledges I2S interface interrupts by reading and rewriting `intr_ctl`.
+
+## Control Flow
+Module load registers a macio driver matched by OF node name `i2s`. During probe, `i2sbus_control_init()` creates controller-wide state, then each suitable child node is offered to `i2sbus_add_dev()`. A bus is accepted only when it has a valid `i2s-?` name and either a layout/device identifier or the `force` module parameter. Successful construction moves through resource discovery, IRQ request, MMIO mapping, DBDMA ring allocation, control-layer enrollment, `soundbus_add_one()`, and finally cell/clock enablement. Removal walks `control->list` and unregisters each soundbus device; final resource cleanup happens from the device release callback after the soundbus core drops its reference. Suspend notifies attached codecs, waits for both PCM directions to stop, and resume reprograms the bus and notifies codecs.
+
+## State And Persistence
+Persistent runtime state is held in `struct i2sbus_dev`: OF/platform identity, resources, IRQ numbers, mapped register pointers, DBDMA command memory, locks, stream state, and power-management function handles from the control layer. The `force` parameter is read-only after module load. Hardware state is persistent across stream opens until prepare/reconfiguration; resume deliberately replays the PCM prepare path when codecs are attached.
+
+## Dependencies And Integration Points
+The file depends on macio, Open Firmware helpers, PCI DMA allocation, DBDMA definitions, AOA `soundbus.h`, and the local I2S PCM/control APIs in `i2sbus.h`. It integrates upward with the generic AOA soundbus using `soundbus_add_one()` and with codec modules through `attach_codec`/`detach_codec` callbacks. It integrates downward with Apple power-management/control functions via `i2sbus_control_*()` and hardware interrupts through `i2sbus_tx_intr()`/`i2sbus_rx_intr()` from `pcm.c`.
+
+## Risks And Test Signals
+Resource handling is fragile because Apple device trees are known to be inconsistent; layout 36/76 fixups and `reg` indexing should be tested on affected K2 systems. Probe failure paths manually unwind IRQs, rings, mappings, resources, OF references, and locks; leak and double-free tests should stress partial failures. IRQ mapping is not checked before `request_irq()`, so invalid IRQs are a hardware/DT risk. Test signals include successful creation of soundbus modalias devices, stable suspend/resume with active codecs, absence of resource leaks on failed probe/remove, and correct playback/capture IRQ dispatch after device registration.

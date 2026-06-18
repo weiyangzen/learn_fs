@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/netlink.h
+
+Purpose: Declares the kernel netlink socket API, skb control block layout, extended ack helpers, dump controls, multicast, tap, capability checks, and large skb allocation.
+
+Important APIs, types, and functions: Important exports include `NETLINK_CB`, `struct netlink_kernel_cfg`, `struct netlink_ext_ack`, extended-ack macros, kernel socket create/release, group changes, ack/unicast/broadcast APIs, notifier registration, dump callbacks/control, tap registration, and capability helpers. Detected source surface: 361 lines; includes `linux/capability.h`, `linux/export.h`, `linux/skbuff.h`, `net/scm.h`, `uapi/linux/netlink.h`; macros `NETLINK_CB`, `NETLINK_CREDS`, `NETLINK_CTX_SIZE`, `NETLINK_MAX_COOKIE_LEN`, `NETLINK_MAX_FMTMSG_LEN`, `NLMSG_DEFAULT_SIZE`, `NLMSG_GOODSIZE`, `NL_ASSERT_CTX_FITS`, `NL_CFG_F_NONROOT_RECV`, `NL_CFG_F_NONROOT_SEND`, `NL_REQ_ATTR_CHECK`, `NL_SET_BAD_ATTR`, `NL_SET_BAD_ATTR_POLICY`, `NL_SET_ERR_ATTR_MISS`, `NL_SET_ERR_MSG`, `NL_SET_ERR_MSG_ATTR`, `NL_SET_ERR_MSG_ATTR_FMT`, `NL_SET_ERR_MSG_ATTR_POL`, and 7 more; structs `list_head`, `module`, `net`, `net_device`, `netlink_callback`, `netlink_dump_control`, `netlink_ext_ack`, `netlink_kernel_cfg`, `netlink_notify`, `netlink_skb_parms`, `netlink_tap`, `nlattr`, `nlmsghdr`, `scm_creds`, `sk_buff`, `sock`, `user_namespace`; enums `netlink_skb_flags`; typedefs `int`; function-like declarations/helpers `__netlink_change_ngroups`, `__netlink_clear_multicast_users`, `__netlink_dump_start`, `__netlink_kernel_create`, `__netlink_ns_capable`, `__nlmsg_put`, `do_trace_netlink_extack`, `int`, `netlink_ack`, `netlink_add_tap`, `netlink_attachskb`, `netlink_broadcast`, `netlink_broadcast_filtered`, `netlink_capable`, `netlink_change_ngroups`, `netlink_detachskb`, `netlink_dump_start`, `netlink_has_listeners`, and 15 more.
+
+Control flow: Kernel subsystems create a netlink socket with input/bind hooks, receive skbs annotated through `NETLINK_CB`, validate attributes and privileges, reply with acks/extacks, and optionally run dump callbacks over multiple messages.
+
+State and persistence behavior: Netlink socket tables, multicast group membership, dump cursors, tap lists, and skb credentials are runtime state. Extended ack fields are per-request diagnostic state.
+
+Dependencies and integration points: Depends on capabilities, sk_buff, SCM credentials, UAPI netlink, net namespaces, and generic netlink/nfnetlink/rtnetlink users.
+
+Risks and test signals: Risks are privilege bypass, missing extack context, dump cursor races, unbounded message sizes, and listener group leaks. Test strict validation, malformed attrs, dump interruption/resume, multicast delivery, and user namespace capability checks.

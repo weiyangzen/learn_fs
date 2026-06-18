@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/get_personality.c
+
+Implements architecture/personality detection helper used to choose syscall tables and word sizes for tracees. It returns the active personality index from process state and platform-specific personality bits. State is not persisted here, but its result drives global `current_personality` decisions elsewhere. Dependencies include `get_personality.h`, platform macros, and process/personality APIs. Risks are wrong mapping on multi-ABI architectures such as x86_64/x32/i386 and stale personality after exec. Tests should trace native and compat binaries and verify syscall names/argument sizes match the detected personality.

@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+
+This file implements the T7xx DPMAIF uplink transmit ring. It converts SKBs from WWAN netdevs into hardware DRB descriptors, maps linear and paged SKB data for DMA, pushes descriptor counts to the device, and releases DMA mappings and SKBs after hardware advances the read index.
+
+Important functions are `t7xx_dpmaif_tx_send_skb`, `t7xx_dpmaif_tx_thread_init`, `t7xx_dpmaif_tx_thread_rel`, `t7xx_dpmaif_irq_tx_done`, `t7xx_dpmaif_txq_init`, `t7xx_dpmaif_txq_free`, `t7xx_dpmaif_tx_stop`, and `t7xx_dpmaif_tx_clear`. Internally, `t7xx_dpmaif_add_skb_to_ring` writes one message DRB plus one payload DRB per linear/frag segment; `t7xx_txq_burst_send_skb` batches up to `DPMAIF_SKB_TX_BURST_CNT`; `t7xx_do_tx_hw_push` updates the hardware DRB count; and `t7xx_dpmaif_tx_done` handles UL completion work.
+
+Control flow splits into two asynchronous lanes. Producers enqueue SKBs on `tx_skb_head` and wake `dpmaif_ctrl->tx_thread`; the thread resumes runtime PM, disables PCIe deep sleep, waits for the sleep lock, fills DRBs, and notifies hardware. Completion interrupts call `t7xx_dpmaif_irq_tx_done`, which schedules ordered work per TXQ to read the hardware read index, unmap payload buffers, free SKBs at the last descriptor, restore TX budget, clear done status, and unmask interrupts.
+
+State is ring-based and protected by `tx_lock`, atomics, and workqueue/kthread sequencing: `drb_wr_idx`, `drb_rd_idx`, `drb_release_rd_idx`, `tx_budget`, `tx_processing`, `que_started`, `drb_base`, and `drb_skb_base`. DMA coherent DRB memory is hardware-visible; the software sidecar records SKB ownership and mapping details. Dependencies include `t7xx_dpmaif_ul_*` register helpers, `t7xx_pci_disable_sleep`/`enable_sleep`, runtime PM, `sk_buff` fragment APIs, and the netdev callback `state_notify`.
+
+Risks include ring index corruption, budget underflow, DMA leak on partial mapping failure, unsupported `frag_list` payloads, sleeping/resource-lock races, descriptors left with continuation bits set, and queue-stop waiting only on `tx_processing`. Test signals should cover large fragmented SKBs, DMA mapping failure injection, TX queue full/wake notifications, completion interrupt storms, runtime suspend/resume during TX, modem exception cleanup, and stop/clear while work is pending.

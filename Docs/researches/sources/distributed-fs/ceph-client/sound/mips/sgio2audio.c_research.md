@@ -1,0 +1,11 @@
+# sources/distributed-fs/ceph-client/sound/mips/sgio2audio.c
+
+Purpose: Implements the ALSA platform driver for SGI O2 A/V board audio using the MACE audio interface and AD1843 codec. It exposes two playback PCM devices, one capture stream, AD1843-backed mixer controls, coherent MACE ring buffers, and per-channel IRQ handling.
+
+Important APIs/types/functions: Core structures are `struct snd_sgio2audio` and `struct snd_sgio2audio_chan`. Codec callbacks `read_ad1843_reg()` and `write_ad1843_reg()` connect `ad1843.c` to MACE registers. Mixer callbacks wrap AD1843 gain/source APIs. DMA movement is handled by `snd_sgio2audio_dma_pull_frag()`, `snd_sgio2audio_dma_push_frag()`, `snd_sgio2audio_dma_start()`, `snd_sgio2audio_dma_stop()`, and three ISR functions. Lifecycle functions include `snd_sgio2audio_create()`, `snd_sgio2audio_probe()`, and remove/free helpers.
+
+Control flow: Probe creates a card, verifies codec presence, allocates a contiguous MACE ring-buffer region, requests six channel/error IRQs, resets the audio interface, sets the ring base, initializes AD1843, creates PCM devices and mixer controls, and registers the card. PCM open assigns channel 1 or 2 for playback or channel 0 for capture. Prepare resets software positions and programs AD1843. Trigger starts/stops MACE DMA. DMA IRQs copy between MACE ring slots and vmalloc ALSA buffers, reporting period elapsed when enough frames moved.
+
+State and persistence: Persistent driver state includes the card pointer, AD1843 object, codec lock, three channel locks/positions/substreams, coherent ring base, and mixer state in codec registers. MACE hardware stores ring base, channel read/write pointers, depth, and control bits.
+
+Dependencies/integration: Depends on SGI IP32 MACE globals/IRQ numbers, ALSA PCM/control core, `ad1843.c`, coherent DMA allocation, and platform driver name `sgio2audio`. Risks include manual 64-bit ring packing/unpacking, count calculations assuming 32-byte multiples, ISR use of `chan->substream`, restart-on-error without surfacing xrun details, and failure cleanup that frees all IRQs even only some were requested. Test signals are successful codec-present probe, AD1843 mixer read/write, simultaneous DAC1/DAC2/capture operation, period interrupts, pointer monotonicity, and overflow/memory-error recovery.

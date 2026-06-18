@@ -1,0 +1,15 @@
+# sources/distributed-fs/ceph-client/arch/x86/kernel/cpu/mshyperv.c
+
+Purpose: detects and initializes Microsoft Hyper-V support on x86. It reads Hyper-V CPUID leaves, records feature/hint/isolation state, sets hypervisor-specific platform hooks, manages synthetic interrupt handlers and SynIC MSR access, configures clocks/APIC/SMP behavior, and installs crash/kexec/shutdown integration.
+
+Important APIs/types/functions: global exports include `hv_nested`, `ms_hyperv`, `hv_get_non_nested_msr()`, `hv_set_non_nested_msr()`, `hv_para_set_sint_proxy()`, `hv_para_get_synic_register()`, `hv_para_set_synic_register()`, `hv_get_msr()`, `hv_set_msr()`, handler setup/removal functions for mshv/vmbus/stimer0/kexec/crash, and `hv_get_hypervisor_version()`. Core init functions are `ms_hyperv_platform()`, `ms_hyperv_init_platform()`, `hv_reserve_irq_vectors()`, `hv_smp_prepare_cpus()`, `reduced_hw_init()`, `ms_hyperv_x2apic_available()`, and `ms_hyperv_msi_ext_dest_id()`.
+
+Control flow: detection first checks the hypervisor CPUID bit, verifies the `"Microsoft Hv"` signature and required hypercall/VP-index MSRs, then returns the Hyper-V CPUID base. Platform init fills `ms_hyperv` fields from CPUID leaves, identifies partition/isolation/nested features, adjusts TSC and APIC calibration hooks, enables SNP/TDX static branches and hypercall implementations, reserves vectors for root partitions, installs IDT system vectors for callback/reenlightenment/stimer, overrides SMP preparation where required, initializes Hyper-V clocks/MMU/VTL support, and marks TSC unstable for guests without invariant TSC.
+
+State and persistence: persistent runtime state is in `ms_hyperv`, `hv_nested`, callback function pointers, suspend reference-counter offset, and platform operation hooks. No filesystem persistence exists. Hyper-V MSRs, static calls, static branches, system vectors, and `machine_ops` are modified for the lifetime of the booted kernel.
+
+Dependencies and integration points: depends on Hyper-V CPUID leaves/MSRs, `asm/mshyperv.h`, paravisor/isolated VM helpers, APIC and IDT system vectors, clocksource Hyper-V timer code, kexec/crash/shutdown machine ops, SMP boot hooks, NUMA logical processor creation hypercalls, SEV-SNP/TDX confidential computing attributes, EFI reduced-hardware handling, and NMI infrastructure.
+
+Risks: feature-bit interpretation controls low-level boot paths; wrong isolation handling can select an invalid hypercall ABI or clocksource. SynIC MSR redirection must distinguish nested, non-nested, and paravisor cases. Handler pointers are global and not protected by per-registration lifetime beyond simple assignment. Reserved vectors are fatal if already used. Crash/kexec cleanup must disable Hyper-V state before the next kernel observes stale VP assist pages.
+
+Test signals: boot as normal Hyper-V guest, root partition, nested guest, SNP isolated guest, TDX guest, and VBS/paravisor guest; verify VMBus callback and stimer interrupts; kexec and crash dump paths; suspend/hibernate clock continuity; x2APIC/MSI destination behavior; invariant TSC exposure; SynIC nested MSR remapping; and unknown NMI behavior under Debug-VM.

@@ -1,0 +1,15 @@
+# sources/object-store/rustfs/crates/protocols/src/sftp/dir.rs
+
+Purpose: This module implements SFTP directory operations over S3: dot entries, paged listings, emptiness checks, bucket and subdirectory creation/removal, OPENDIR cursor setup, and READDIR cursor advancement.
+
+Important APIs and types: `dot_entries` creates `.` and `..` directory `File` entries. `SftpDriver` methods include `next_listing_page`, `validate_directory_empty`, `fetch_bucket_list`, `mkdir_bucket`, `mkdir_subdir_marker`, `rmdir_bucket`, `rmdir_subdir_marker`, `readdir_cursor`, `opendir_inner`, and `readdir_inner`. It uses `DirCursor`, `ListingContinuation`, and `HandleState` from SFTP state.
+
+Control flow: `opendir_inner` parses the path. Root opens a root cursor without backend calls. Non-root paths authorize `ListBucket`, check `HeadBucket`, normalize object prefixes with a trailing slash, and allocate a directory handle. `readdir_inner` temporarily removes the handle, inserts a pre-advance cursor copy before awaiting, calls `readdir_cursor`, reinserts updated state after success, and converts empty output to SFTP `Eof`. `readdir_cursor` emits dot entries once, then either fetches all buckets once for root or calls `next_listing_page` for object listings. `next_listing_page` reauthorizes each page, builds `ListObjectsV2` with delimiter and continuation token, converts `common_prefixes` to directory entries and `contents` to file entries, skips `__XLDIR__` markers, and advances continuation to `Next` or `Done`. `validate_directory_empty` lists at most one or two entries and rejects removal if any real child content or common prefixes exist.
+
+State and persistence behavior: Directory iteration state is held in per-session handles. Persistent effects occur through S3 `CreateBucket`, zero-byte directory marker `PutObject`, `DeleteBucket`, and marker `DeleteObject`. Subdirectories are represented with RustFS's encoded `__XLDIR__` marker convention. Root bucket listing is not paginated by S3, so the module truncates converted entries at a fixed cap.
+
+Dependencies and integration points: It depends on attribute conversion, path helpers, SFTP error mapping, S3 DTO builders, RustFS path marker encoding, storage backend runners, authorization, and russh_sftp protocol types. Handler trait wrappers delegate their OPENDIR, READDIR, MKDIR, and RMDIR bodies here.
+
+Risks: The pre-advance cursor tombstone is subtle but critical for cancellation safety; changing insertion order can lose or skip entries on cancelled READDIR. Emptiness checks must propagate list failures to avoid destructive fall-through. Root `ListBuckets` can still allocate the backend's whole bucket vector before truncation. Subdirectory emptiness relies on filtering the decoded marker key equal to the prefix.
+
+Test signals: Tests verify list errors block directory deletion, empty listings pass, cancelled READDIR leaves the cursor unadvanced for reissue, EOF after exhaustion emits no error-level event, and real backend failures do emit an error-level READDIR log.

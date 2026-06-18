@@ -1,0 +1,13 @@
+# sources/distributed-fs/seaweedfs/weed/s3api/auth_signature_v4.go
+
+Purpose: Implements AWS Signature Version 4 verification for header, presigned, streaming seed, STS session-token, and POST policy flows.
+
+Important APIs, types, and functions: `reqSignatureV4Verify` dispatches to `verifyV4Signature`. `v4AuthInfo`, `signValues`, and `credentialHeader` hold parsed auth state. Parsing helpers include `parseSignV4`, `extractV4AuthInfoFromHeader`, `extractV4AuthInfoFromQuery`, `parseCredentialHeader`, `parseSignedHeaderList`, and `parseSignature`. Verification helpers include `validateSTSSessionToken`, `calculateAndVerifySignature`, `extractSignedHeaders`, `verifySignedHeadersCoverage`, `extractHostHeader`, `buildPathWithForwardedPrefix`, `checkPresignedRequestExpiry`, `getCanonicalRequest`, `getStringToSign`, `getSigningKey`, `encodePath`, and `compareSignatureV4`.
+
+Control flow and state: Verification extracts auth info from header or query, validates STS session tokens when `X-Amz-Security-Token` is present or looks up static credentials otherwise, rejects expired credentials, optionally authorizes streaming seed requests, checks presigned expiration, extracts signed headers using `externalHost` or forwarded host data for `host`, rejects unsigned `x-amz-*` headers except safe protocol/payload-hash exemptions, canonicalizes query/path/headers/payload, and compares HMAC-SHA256 signatures. It retries verification with `X-Forwarded-Prefix`, original escaped path, and decoded path for compatibility.
+
+State and persistence behavior: Mostly stateless. It may read and reset request bodies for non-S3 services with missing payload hashes via `streamHashRequestBody` with a 10 MiB IAM body limit. STS validation constructs transient `Identity` and `Credential` values populated from session info, with principal-scoped accounts, policies, and claims.
+
+Dependencies and integration points: Called by IAM auth dispatch and streaming upload seed verification. Integrates with STS/IAM session validation, request route parsing, S3 action permission checks, AWS host canonicalization behavior, policy variable claims, and POST policy verification.
+
+Risks and test signals: High-risk areas are host canonicalization behind proxies, unsigned `x-amz-*` header injection on presigned URLs, clock-skew/expiry rules, body hashing limits for IAM/S3Tables services, session-token access-key mismatches, and S3 key path encoding. Tests cover S3Tables payload hashing, empty signed-header rejection, forwarded prefix/path behavior, host extraction including IPv6/default ports/external URL, STS authorization, and unsigned header rejection.

@@ -1,0 +1,3 @@
+# sources/object-store/apache-ozone/hadoop-ozone/common/dev-support/findbugsExcludeFile.xml
+
+Purpose: SpotBugs/FindBugs suppression list for the `ozone-common` module. It contains two `Match` rules: suppresses `URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD` for `org.apache.hadoop.ozone.TestOmUtils` and `DLS_DEAD_LOCAL_STORE` for `org.apache.hadoop.ozone.security.TestGDPRSymmetricKey`. There is no runtime control flow or persistence beyond static analysis configuration. Dependencies are the FindBugs filter XML schema and Maven/static-analysis plugin wiring. Integration point is build quality gates. Risk: overly broad or stale suppressions can hide real test-code issues or fail when class names move. Test signal is static analysis passing without these known false positives.

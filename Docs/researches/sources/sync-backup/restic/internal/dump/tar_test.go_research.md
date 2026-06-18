@@ -1,0 +1,3 @@
+## sources/sync-backup/restic/internal/dump/tar_test.go
+
+Purpose: verifies tar dump output against a source directory and edge cases. APIs exercised include shared `WriteTest`, `dumpTar`, and tar header behavior. Control flow creates a dump, reads tar entries back, compares files/directories/symlinks against the original test directory, and tests field-too-long behavior for tar metadata. State is in-memory tar bytes and temporary source repository. Dependencies include archive/tar, filesystem helpers, and dump common test harness. Risks covered: archive content fidelity, file data writes, directory/symlink representation, and tar header constraints. Missing signal: full ACL/xattr integration is partially dependent on platform/fixture availability and unit ACL tests.

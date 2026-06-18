@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/arch/powerpc/lib/crtsavres.S
+
+`crtsavres.S` supplies compiler helper routines for saving and restoring nonvolatile registers when `CONFIG_CC_OPTIMIZE_FOR_SIZE` makes GCC emit calls to shared save/restore thunks. It covers 32-bit and 64-bit PowerPC ABIs, plus optional Altivec vector register save/restore helpers. The Makefile also builds it for modules on newer non-BFD linker combinations where final vmlinux may synthesize save/restore sections but modules still need the object.
+
+The file is a table of fall-through labels. On 32-bit, `_savegpr_14` through `_savegpr_31` and aliases `_save32gpr_*` store GPRs relative to `r11`; `_restgpr_*` reload them; `_restgpr_*_x` also restores LR and stack pointer for epilogue helpers. On 64-bit, `_savegpr0_14` through `_savegpr0_31` store GPRs relative to `r1` and save LR in the ABI slot; restore helpers reload LR where needed. Altivec helpers save/restore `v20-v31` relative to `r0`.
+
+There is no persistent state; correctness is ABI layout. Dependencies are compiler code generation conventions, stack frame layout, and optional Altivec. Risks include wrong offsets for an ABI variant, missing symbol aliases expected by GCC, and building the file when linker-provided alternatives conflict. Test signals are successful optimized-for-size kernel/module links, module load tests, and objdump checks for helper references.

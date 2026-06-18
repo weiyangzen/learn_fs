@@ -1,0 +1,7 @@
+# sources/compression/zstd/contrib/diagnose_corruption/check_flipped_bits.c
+
+Purpose: standalone diagnostic tool that mutates a compressed input one bit/byte at a time and records whether the perturbed blob still decompresses, helping investigate corruption detection behavior and error-code distribution.
+
+Important APIs and control flow: `stuff_t` owns input, perturbed buffer, output buffer, optional dictionary data/DDict, DCtx, success count, and per-error counters. `readFile()` loads regular files. `readDict()` and `readDictByID()` create dictionaries, including directory lookup by `DICTID.zstd-dict`. `init_stuff()` parses `input [-d dict] [-D dir]`, loads buffers, creates dictionary/context, and initializes counters. `test_decompress()` resets the DCtx, selects cached or perturbation-requested dictionary, streams decompression with `ZSTD_decompressStream`, and counts `ZSTD_getErrorCode()` failures. `perturb_bits()` flips each bit; `perturb_bytes()` tries all byte values; `main()` first requires the original blob to fail, then runs both perturbation passes.
+
+State, dependencies, and risks: state is heap-owned and mostly freed by `free_stuff`, but early init failures can leak partial allocations. Dictionary-by-ID depends on frame headers and directory naming. It uses `%m`, POSIX stat, and asserts/exit-style failures, so it is diagnostic rather than robust library code. Test signals are manual: successful runs summarize decompression successes and error counts.

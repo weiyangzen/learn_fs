@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fadvise.c
+
+Decodes `fadvise64` and `fadvise64_64` variants. It prints fd, offset, length, and advisory mode through `xlat/advise.h`, with architecture-aware handling for split 64-bit arguments. State is limited to syscall arguments and personality word size. Dependencies are `<fcntl.h>`, `print_arg_lld`, and xlat advice tables. Risks are wrong low/high argument pairing on 32-bit ABIs and swapped `len`/`advice` positions for architecture variants. Tests should trace both syscall forms on native and compat personalities, including large offsets and unknown advice values.

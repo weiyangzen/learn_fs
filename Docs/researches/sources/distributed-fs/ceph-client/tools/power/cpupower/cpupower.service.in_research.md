@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/cpupower/cpupower.service.in -->
+# sources/distributed-fs/ceph-client/tools/power/cpupower/cpupower.service.in
+
+## Purpose
+Template for a systemd oneshot unit that applies cpupower configuration at boot. Install rules substitute `___CDIR___` with the config directory and `___LDIR___` with the libexec directory.
+
+## Important APIs, Types, And Functions
+Control flow is systemd-managed: skip in containers via `ConditionVirtualization=!container`, load optional environment file, execute the wrapper script once, and remain active after exit. State is systemd unit activation state and any CPU policy changes made by the wrapper. Dependencies are systemd, installed config file, installed libexec wrapper, and cpupower binary on PATH. Risks include path substitution errors, service reporting failed when one configured command fails, no automatic reapply after CPU hotplug, and container condition not covering all virtualized environments. Test signals are rendered unit inspection, `systemd-analyze verify`, and staged service execution with a temporary config.
+
+## Control Flow
+Control flow is systemd-managed: skip in containers via `ConditionVirtualization=!container`, load optional environment file, execute the wrapper script once, and remain active after exit. State is systemd unit activation state and any CPU policy changes made by the wrapper. Dependencies are systemd, installed config file, installed libexec wrapper, and cpupower binary on PATH. Risks include path substitution errors, service reporting failed when one configured command fails, no automatic reapply after CPU hotplug, and container condition not covering all virtualized environments. Test signals are rendered unit inspection, `systemd-analyze verify`, and staged service execution with a temporary config.
+
+## State And Persistence
+Control flow is systemd-managed: skip in containers via `ConditionVirtualization=!container`, load optional environment file, execute the wrapper script once, and remain active after exit. State is systemd unit activation state and any CPU policy changes made by the wrapper. Dependencies are systemd, installed config file, installed libexec wrapper, and cpupower binary on PATH. Risks include path substitution errors, service reporting failed when one configured command fails, no automatic reapply after CPU hotplug, and container condition not covering all virtualized environments. Test signals are rendered unit inspection, `systemd-analyze verify`, and staged service execution with a temporary config.
+
+## Dependencies And Integration Points
+Control flow is systemd-managed: skip in containers via `ConditionVirtualization=!container`, load optional environment file, execute the wrapper script once, and remain active after exit. State is systemd unit activation state and any CPU policy changes made by the wrapper. Dependencies are systemd, installed config file, installed libexec wrapper, and cpupower binary on PATH. Risks include path substitution errors, service reporting failed when one configured command fails, no automatic reapply after CPU hotplug, and container condition not covering all virtualized environments. Test signals are rendered unit inspection, `systemd-analyze verify`, and staged service execution with a temporary config.
+
+## Risks And Edge Cases
+Control flow is systemd-managed: skip in containers via `ConditionVirtualization=!container`, load optional environment file, execute the wrapper script once, and remain active after exit. State is systemd unit activation state and any CPU policy changes made by the wrapper. Dependencies are systemd, installed config file, installed libexec wrapper, and cpupower binary on PATH. Risks include path substitution errors, service reporting failed when one configured command fails, no automatic reapply after CPU hotplug, and container condition not covering all virtualized environments. Test signals are rendered unit inspection, `systemd-analyze verify`, and staged service execution with a temporary config.
+
+## Test Signals
+Control flow is systemd-managed: skip in containers via `ConditionVirtualization=!container`, load optional environment file, execute the wrapper script once, and remain active after exit. State is systemd unit activation state and any CPU policy changes made by the wrapper. Dependencies are systemd, installed config file, installed libexec wrapper, and cpupower binary on PATH. Risks include path substitution errors, service reporting failed when one configured command fails, no automatic reapply after CPU hotplug, and container condition not covering all virtualized environments. Test signals are rendered unit inspection, `systemd-analyze verify`, and staged service execution with a temporary config.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/tools/power/cpupower/cpupower.service.in -->

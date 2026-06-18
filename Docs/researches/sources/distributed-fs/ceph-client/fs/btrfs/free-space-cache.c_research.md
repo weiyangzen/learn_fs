@@ -1,0 +1,45 @@
+# sources/distributed-fs/ceph-client/fs/btrfs/free-space-cache.c
+
+## Purpose
+
+`sources/distributed-fs/ceph-client/fs/btrfs/free-space-cache.c` implements Btrfs' in-memory free-space cache for block groups, the legacy on-disk free-space cache v1 inode format, allocation/clustering helpers used by `find_free_extent()`, and discard/trim accounting for non-zoned block groups. It also contains the zoned block-group free-space accounting path, cache v1 activation cleanup, slab cache initialization, and sanity-test-only insertion/existence helpers. The file was read as a complete 4388-line implementation.
+
+## Important APIs, Types, and Functions
+
+Key exported entry points are `lookup_free_space_inode`, `create_free_space_inode`, `btrfs_remove_free_space_inode`, `btrfs_truncate_free_space_cache`, `load_free_space_cache`, `btrfs_wait_cache_io`, `btrfs_write_out_cache`, `btrfs_init_free_space_ctl`, `btrfs_add_free_space`, `btrfs_add_free_space_unused`, `btrfs_add_free_space_async_trimmed`, `btrfs_remove_free_space`, `btrfs_find_space_for_alloc`, `btrfs_find_space_cluster`, `btrfs_alloc_from_cluster`, `btrfs_return_cluster_to_free_space`, `btrfs_trim_block_group`, `btrfs_trim_block_group_extents`, `btrfs_trim_block_group_bitmaps`, `btrfs_trim_fully_remapped_block_group`, `btrfs_free_space_cache_v1_active`, `btrfs_set_free_space_cache_v1_active`, `btrfs_free_space_init`, and `btrfs_free_space_exit`.
+
+Important internal helpers include the `btrfs_io_ctl` cache-file page/CRC/generation helpers, `link_free_space` and `unlink_free_space`, `tree_search_offset`, `find_free_space`, bitmap mutators such as `bitmap_clear_bits`, `btrfs_bitmap_set_bits`, `search_bitmap`, `insert_into_bitmap`, `remove_from_bitmap`, extent/bitmap stealing helpers, cluster setup helpers, and trim helpers `trim_no_bitmap`, `trim_bitmaps`, `do_trimming`, `reset_trimming_bitmap`, and `end_trimming_bitmap`. The local `struct btrfs_trim_range` records ranges temporarily removed from the free-space rb-tree while a discard is in progress so cache writeout does not lose them.
+
+## Control Flow
+
+Free-space cache v1 load starts in `load_free_space_cache()`. It rejects non-written cache states, looks up the per-block-group cache inode through the tree root commit root, reads the free-space header, validates inode generation, page CRCs, and cache generation through `io_ctl_*`, loads entries into a temporary `btrfs_free_space_ctl`, then copies validated extents/bitmap regions into the real block-group control only if the byte count matches block-group accounting. Any mismatch clears the disk cache state so normal block-group caching rebuilds the information.
+
+Cache v1 writeout starts in `btrfs_write_out_cache()`, which looks up the cache inode and calls `__btrfs_write_out_cache()`. The write path locks cache-file pages, stores the transaction generation in page 0, writes extent entries from both the block-group free-space rb-tree and any active cluster, includes pinned extents from the current transaction, serializes bitmap pages after extent records, CRCs each page, dirties the cache inode pages, starts writeback, and later `btrfs_wait_cache_io()` flushes ordered IO and updates the free-space header with entry counts, bitmap counts, and generation. Failed IO invalidates cache pages, zeroes the inode generation, and moves the block group to `BTRFS_DC_ERROR`.
+
+The allocation path uses a dual index: `free_space_offset` ordered by offset and `free_space_bytes` cached by largest available entry. `btrfs_find_space_for_alloc()` calls `find_free_space()` to locate an extent or bitmap entry satisfying size, alignment, and empty-size requirements, removes the selected bytes, updates discardable statistics, and returns alignment gaps back to the free-space cache. Metadata/data clustering goes through `btrfs_find_space_cluster()` and then `btrfs_alloc_from_cluster()`, moving suitable extent or bitmap entries from the block-group cache into a `btrfs_free_cluster` rb-tree and allocating from that cluster until exhausted.
+
+Freeing paths add ranges through `__btrfs_add_free_space()`, optionally merge adjacent extents according to trim-state rules, decide whether to represent small/fragmented ranges as bitmaps, steal adjacent bitmap ranges back into extents when it improves allocation shape, update discard filters, and queue async discard work for untrimmed space. Removal paths split or consume extent entries, clear bitmap bits, free empty bitmap entries, and update the global free-space and discard counters.
+
+Trimming paths freeze the block group, remove candidate free ranges from the cache under `cache_writeout_mutex`, add the temporary range to `trimming_ranges`, issue `btrfs_discard_extent()`, and restore the region with `TRIMMED` or `UNTRIMMED` state depending on the result. `trim_no_bitmap()` handles extent entries and `trim_bitmaps()` handles bitmap entries with lossy bitmap trim-state tracking. Async discard trims one qualifying region per pass.
+
+Zoned block groups bypass the rb-tree/bitmap allocator. `__btrfs_add_free_space_zoned()` updates `ctl->free_space`, `alloc_offset`, `zone_unusable`, unused/reclaim lists, and reclaim thresholds according to zone capacity and allocation pointer rules.
+
+## State and Persistence Behavior
+
+The primary runtime state is `struct btrfs_free_space_ctl`: a spinlock-protected offset rb-tree, a cached bytes rb-tree, free byte/extent/bitmap counters, bitmap conversion thresholds, discardable byte/extent counters, the block-group start/unit, the owning block group, a cache writeout mutex, and `trimming_ranges`. Each `struct btrfs_free_space` represents either an extent (`bitmap == NULL`) or one bitmap page worth of sectors; it carries offset, bytes, cached max extent size, bitmap extent count, list linkage, and trim state.
+
+On-disk cache v1 state is stored in one hidden inode per block group plus a `BTRFS_FREE_SPACE_OBJECTID` header item in the tree root. The cache inode is NOCOW, NODATASUM, NOCOMPRESS, and PREALLOC; it persists serialized free-space entry records, bitmap pages, page CRCs in page 0, and a transaction generation. The superblock cache generation records whether v1 is active. `btrfs_set_free_space_cache_v1_active(false)` starts a transaction, marks cleanup, removes all cache inodes, commits, and clears the cleanup flag.
+
+Trim state is intentionally coarser for bitmaps than extents: adding untrimmed bytes to a trimmed bitmap marks the whole bitmap untrimmed, and async bitmap trimming can mark a whole bitmap trimmed once skipped fragments are below the async filter. This trades precision for reduced repeated discard work.
+
+## Dependencies and Integration Points
+
+The file integrates with extent-tree allocation, block-group lifecycle, transactions, root-tree items, inode truncation, page cache writeback, subpage extent mapping, file extent helpers, discard workqueues, relocation/remapping, and mount options. Direct includes include `extent-tree.h`, `fs.h`, `free-space-cache.h`, `transaction.h`, `disk-io.h`, `extent_io.h`, `space-info.h`, `block-group.h`, `discard.h`, `subpage.h`, `inode-item.h`, `accessors.h`, `file-item.h`, `file.h`, `super.h`, and `relocation.h`. It is called by block-group caching, allocation, free/pin/unpin, transaction commit, discard/trim ioctls, and mount/remount handling.
+
+## Risks and Edge Cases
+
+The cache v1 format is fragile: stale generation, CRC mismatch, duplicate entries, wrong free-space totals, or page truncation must force rebuild rather than trusting disk state. Writeout races with concurrent trimming are mitigated by `cache_writeout_mutex` and `trimming_ranges`; mistakes there can leak free space across remounts. Bitmap and extent entries can share offsets, so search and insertion ordering must preserve the faster extent-first behavior. Discard accounting depends on trim-state transitions and can overcount or undercount if bitmap extent deltas are wrong. Cluster movement removes entries from the main rb-tree but keeps global counters meaningful, making lock ordering between `ctl->tree_lock` and `cluster->lock` important. Zoned block groups have separate allocation-pointer semantics, so using generic rb-tree removal there would be wrong. Several corruption paths abort transactions or warn under `DEBUG_WARN`; tests need to exercise both normal and intentionally inconsistent states.
+
+## Test Signals
+
+Useful signals are Btrfs free-space-cache sanity tests under `CONFIG_BTRFS_FS_RUN_SANITY_TESTS`, allocation stress with fragmented free space, xfstests that mount with `space_cache=v1`, clear cache, remount after crash/powercut injection, and compare free-space totals with block-group accounting. Additional coverage should include CRC/generation mismatch rebuilds, duplicate cache entry rejection, cache writeout ENOSPC/error injection through `io_ctl_init`, concurrent discard/writeout, sync and async trim of extents and bitmaps, cluster allocation/return paths, zoned block-group free/unusable accounting, and remapped block-group trim completion.

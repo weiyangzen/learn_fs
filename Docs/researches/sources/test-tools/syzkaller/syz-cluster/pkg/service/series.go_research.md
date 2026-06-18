@@ -1,0 +1,7 @@
+## sources/test-tools/syzkaller/syz-cluster/pkg/service/series.go
+
+`SeriesService` maps external patch-series API objects to persistent Spanner rows plus blob-stored patch bodies. It exposes `UploadSeries`, `GetSeries`, `GetSessionSeries`, and `GetSessionSeriesShort`; the short variant omits patch body blob reads for report previews.
+
+`UploadSeries` builds a `db.Series` with UUID, metadata, subject tags truncated to 511 bytes, optional base-commit hint, and one `db.Patch` per API patch. Patch bodies are written to `blob.Storage` under `Series/<seriesID>/Patches/<seq>` before the repository insert callback returns patch rows. Duplicate series are converted to `UploadSeriesResp{Saved:false}` via `db.ErrSeriesExists`; other errors propagate. Reads fetch series rows, list patch rows, and optionally read each body URI back from blob storage.
+
+Persistent state spans Spanner series/patch rows and external blob storage, so partial blob writes may remain if the later insert fails. Dependencies are `cloud.google.com/go/spanner` null strings, syz-cluster API/db/blob/app packages, and UUID generation. Integration points include the series tracker upload path, session creation, triage, reporting, and controller APIs. Risk areas are orphaned blobs, byte-based tag truncation that may cut multibyte text, and body read latency for full series fetches. The comment notes service behavior is tested through controller-level tests.

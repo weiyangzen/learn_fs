@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/regulator/da9211-regulator.c
+
+Purpose: Implements the I2C regulator driver for DA9211/DA9212/DA9213/DA9223/DA9214/DA9224/DA9215/DA9225 devices, exposing one or two buck regulators depending on platform configuration and chip phase configuration.
+
+Important APIs, types, and functions: `struct da9211` stores device, paged regmap, parsed platform data, rdev array, regulator count, IRQ, and chip family ID. `da9211_regmap_range` and `da9211_regmap_config` model the paged register map. `da9211_buck_ops` implements mode get/set, standard regmap voltage/enable operations, and chip-dependent current limits. `DA9211_BUCK()` builds the two buck descriptors. DT parsing is handled by `da9211_parse_regulators_dt()`, initialization by `da9211_regulator_init()`, and fault handling by `da9211_irq_handler()`.
+
+Control flow: Probe creates the ranged regmap, reads `DA9211_REG_DEVICE_ID`, maps supported device IDs into `DA9211`, `DA9213`, or `DA9215` current-limit families, obtains platform data or parses the `regulators` DT child, records the I2C IRQ, and calls regulator initialization. Initialization reads `CONFIG_E`/`DA9211_SLAVE_SEL` to ensure requested one-buck or two-buck platform data matches hardware phase configuration. It then registers each regulator, handing optional enable GPIO descriptors to the regulator core, and unmasks the corresponding overcurrent event bit when IRQs are available. The threaded IRQ reads `EVENT_B`, notifies overcurrent on BUCKA and/or BUCKB, and clears handled bits.
+
+State and persistence: Hardware registers hold enable, voltage, mode, phase, event, and current-limit state. The driver keeps chip identity to choose current-limit tables and `num_regulator` for registered rails. GPIO descriptors are intentionally unhinged from devres when passed as regulator enable GPIOs so ownership transfers to the regulator core.
+
+Dependencies and integration points: It integrates with I2C, regmap range windows, regulator core/OF parsing, optional GPIO enables, chip DT bindings for regulator modes, and private DA9211 register definitions. OF compatibles map to I2C ID table entries, but runtime device ID validation reduces supported current-limit families to three silicon IDs.
+
+Risks and test signals: Test one-buck versus two-buck mismatch rejection, device ID rejection, per-chip current-limit table selection, BUCKA/BUCKB current selector nibble writes, GPIO enable descriptor transfer, no-IRQ warning path, and IRQ notification/clearing for each rail. Mode set lacks an explicit default error for invalid modes and writes zero for unrecognized values, so invalid-mode tests should confirm regulator core never passes unsupported modes or consider hardening.

@@ -1,0 +1,9 @@
+# sources/distributed-fs/ceph-client/drivers/clk/sunxi/clk-sun4i-tcon-ch1.c
+
+Implements the Allwinner sun4i TCON channel 1 clock as a custom CCF provider. The hardware uses one register to gate two serial clock paths, select one of four SCLK2 parents, and divide/halve the selected rate for LCD/TV timing.
+
+`struct tcon_ch1_clk` embeds `clk_hw`, a per-clock spinlock, and the mapped register. `tcon_ch1_ops` provides gate operations, parent mux operations, `determine_rate`, `recalc_rate`, and `set_rate`. `tcon_ch1_calc_divider()` searches divider `m` 1..15 and a 1x/2x half divider for the closest rate not above the request. `tcon_ch1_determine_rate()` evaluates every parent, records `best_parent_hw` and `best_parent_rate`, and writes the rounded request rate. `tcon_ch1_setup()` maps the DT resource, reads four parents and optional `clock-output-names`, allocates/registers the clock, and publishes it through `of_clk_add_provider()`.
+
+Persistent state is the hardware register contents and the registered clock provider. Register writes are protected by the instance spinlock. The driver has no remove path because it is installed by `CLK_OF_DECLARE()` during early boot. It depends on OF address mapping, `clk_register()`, parent names from DT, `CLK_SET_RATE_PARENT`, and the CCF `clk_hw` API. Consumers see a single OF clock provider for compatible `allwinner,sun4i-a10-tcon-ch1-clk`.
+
+Parent selection and divider bitfields are the main risk. `tcon_ch1_get_parent()` uses `reg &= reg >> TCON_CH1_SCLK2_MUX_MASK`, which looks suspicious because mux extraction normally masks with `TCON_CH1_SCLK2_MUX_MASK`; this is a high-value review/test target. Enable state returns any gate bit rather than requiring both, so mixed hardware state may appear enabled. Test signals include DT clock lookup, parent switching, display mode rate changes, register readback, and boot logs for mapping/provider failures.

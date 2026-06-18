@@ -1,0 +1,7 @@
+# sources/distributed-fs/ipfs-kubo/test/cli/agent_version_unicode_test.go
+
+Purpose: unit-style tests for `cmdutils.CleanAndTrim`, focused on peer agent/version string sanitization with Unicode. It ensures useful Unicode remains visible while dangerous invisible/control formatting characters are replaced and overly long strings are truncated.
+
+Important tests: `TestCleanAndTrimUnicode`, `TestCleanAndTrimIdempotent`, and `TestCleanAndTrimSecurity`. The table covers ASCII, Polish, Chinese, Arabic, emoji, combining marks, private-use characters, leading/trailing whitespace, zero-width characters, bidi overrides/isolates, controls, soft hyphen and other format characters, and 128-rune truncation. Idempotence applies the sanitizer twice and requires identical output. Security assertions ensure no zero-width spaces, bidi overrides, or ASCII control characters survive.
+
+Control flow is simple table-driven testing with `assert.Equal` and custom predicate checks. State is only in-memory strings. Dependencies are `cmdutils.CleanAndTrim`, `strings`, and testify assertions. Integration point is user-visible and network-visible agent version metadata, where misleading bidirectional or invisible characters are a security risk. Risks include rune-count truncation splitting grapheme clusters and tests intentionally preserving complex combining marks that may still render oddly. Test signal is precise for sanitization categories and stable across platforms.

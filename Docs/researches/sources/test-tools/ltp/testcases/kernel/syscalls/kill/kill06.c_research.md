@@ -1,0 +1,3 @@
+# sources/test-tools/ltp/testcases/kernel/syscalls/kill/kill06.c
+
+Purpose: basic functionality test for killing an entire process group with a negative PID. A child creates a new process group, forks five paused children, then calls `kill(-getpgrp(), SIGKILL)` to kill its group. The parent waits for a child and verifies the termination signal is `SIGKILL`. State is a process group with six processes. Dependencies are POSIX process groups, `SAFE_FORK`, and wait status macros. Risks are the parent waiting for any child and assuming the observed status is representative; however the group kill should terminate the group consistently. Test signal is `WTERMSIG(status) == SIGKILL`.

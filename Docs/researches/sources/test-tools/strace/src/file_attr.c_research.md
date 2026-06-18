@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/file_attr.c
+
+Decoder for `file_getattr` and `file_setattr` syscalls. It prints dirfd/path, fetches bounded `struct file_attr` data, decodes xflags, extent size, nextents for get, project id, COW extent size, extra nonzero bytes, size, and `AT_*`-style flags. State is syscall args and fetched tracee memory. Dependencies include `<linux/fcntl.h>`, `<linux/fs.h>`, `file_attr_flags`, `fs_xflags`, `get_pagesize`, and `print_nonzero_bytes`. Risks are user-supplied sizes below version 0, huge sizes, future struct extensions, and output-only fields for getters. Tests should cover get/set, invalid sizes, extension bytes, flags, bad pointers, and path variants.

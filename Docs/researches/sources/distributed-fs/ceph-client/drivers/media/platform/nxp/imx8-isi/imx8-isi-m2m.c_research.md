@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/platform/nxp/imx8-isi/imx8-isi-m2m.c
+
+## sources/distributed-fs/ceph-client/drivers/media/platform/nxp/imx8-isi/imx8-isi-m2m.c
+
+Purpose: Implements the i.MX8 ISI V4L2 memory-to-memory device, exposing a `/dev/video*` M2M node that reads one queued source buffer from memory, programs an ISI channel, writes a destination buffer, and completes the pair through the V4L2 mem2mem scheduler.
+
+Important APIs/types/functions: The private context is `struct mxc_isi_m2m_ctx`, with per-queue `format/info/sequence` state and control state for alpha/hflip/vflip. `mxc_isi_m2m_device_run()` programs channel input/output format and DMA addresses. `mxc_isi_m2m_frame_write_done()` completes src/dst buffers and finishes the job. VB2 queue operations share `mxc_isi_video_queue_setup()`, `mxc_isi_video_buffer_init()`, and `mxc_isi_video_buffer_prepare()` from the capture driver. Registration is through `mxc_isi_m2m_register()` and teardown through `mxc_isi_m2m_unregister()`.
+
+Control flow/state: Open allocates a context, initializes two VB2 queues through `v4l2_m2m_ctx_init()`, seeds default output/capture formats, and creates controls. Streaming preparation runtime-resumes the device, acquires pipe 0 on first use, gets the channel clock/resource reference, and optionally chains a neighbor channel when input width exceeds `MXC_ISI_MAX_WIDTH_UNCHAINED`. Each job disables the channel, reconfigures only when `m2m->last_ctx` changes, applies controls under the control handler lock, loads source and destination DMA addresses into ISI input and both ping-pong output slots, enables the channel, and starts memory read. Stop/unprepare drains queued buffers as errors, decrements usage and chained counts, releases the channel at last user, and runtime-suspends.
+
+Dependencies/integration: Integrates with V4L2 mem2mem, VB2 DMA-contig, media controller graph, runtime PM, ISI pipe/channel helpers, crossbar topology, and common ISI format tables. It manually adds media entities/interfaces so the M2M source entity links into the existing ISI crossbar and capture entity.
+
+Risks/test signals: Main risks are shared pipe serialization across multiple M2M contexts, incorrect `usage_count/chained_count` unwinding on stream setup failures, stale `last_ctx` after suspend/resume, and format propagation quirks where setting OUTPUT also updates CAPTURE. Test with multi-context streamon/streamoff, width crossing the chained threshold, format conversion vs bypass, alpha/flip controls during queued jobs, runtime/system suspend while streaming, and media graph validation.

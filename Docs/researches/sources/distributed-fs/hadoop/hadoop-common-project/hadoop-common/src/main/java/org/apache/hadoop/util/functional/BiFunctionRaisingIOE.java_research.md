@@ -1,0 +1,7 @@
+# sources/distributed-fs/hadoop/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/util/functional/BiFunctionRaisingIOE.java
+
+`BiFunctionRaisingIOE<T, U, R>` is a checked-IO equivalent of a two-argument Java function. Its single abstract method `apply(T, U)` returns `R` and may throw `IOException`, making it usable as a lambda target for Hadoop filesystem operations that naturally fail with checked IO errors.
+
+The default `unchecked(T, U)` method is the whole control-flow wrapper: it invokes `apply()`, returns the result on success, and converts any `IOException` into `UncheckedIOException`. Runtime exceptions are not caught and propagate as-is. The interface has no state, persistence, synchronization, or dependencies beyond Java `IOException` and `UncheckedIOException`.
+
+The integration point is package-wide: it lets APIs that need Java functional composition preserve IO-specific checked signatures until they cross into APIs such as streams, suppliers, or futures that only accept unchecked failures. It complements `FunctionRaisingIOE`, `CallableRaisingIOE`, and `FunctionalIO`. Risks are modest but important: once callers use `unchecked()`, downstream code must know to unwrap `UncheckedIOException` if it wants original IO types; API overloads between similar functional interfaces can become ambiguous for lambdas. Test coverage is mostly indirect through `TestFunctionalIO`, which validates the package wrapping/extraction pattern for checked IO lambdas.

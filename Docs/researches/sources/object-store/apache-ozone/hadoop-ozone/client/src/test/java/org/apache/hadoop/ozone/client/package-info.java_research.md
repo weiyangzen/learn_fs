@@ -1,0 +1,3 @@
+# sources/object-store/apache-ozone/hadoop-ozone/client/src/test/java/org/apache/hadoop/ozone/client/package-info.java
+
+Purpose: package documentation for Ozone client tests. It declares package `org.apache.hadoop.ozone.client` and describes the package as tests for Ozone client classes. There are no APIs, control flow, state, persistence, or runtime dependencies beyond Java package metadata and ASF license headers. Integration point is Javadoc/package discovery for test sources. Risks are minimal; drift would only affect generated documentation or package-level annotations if later added. Test signal is compile-time package validity.

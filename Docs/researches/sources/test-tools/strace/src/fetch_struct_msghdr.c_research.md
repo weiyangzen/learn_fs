@@ -1,0 +1,3 @@
+# sources/test-tools/strace/src/fetch_struct_msghdr.c
+
+Silent mpers fetcher for `struct msghdr`, used by socket and dumpio decoders. It returns fetched byte count or zero, copying compat pointer fields (`msg_name`, `msg_iov`, `msg_control`) into native pointer-sized slots when necessary. It has no persistent state. Dependencies are `msghdr.h`, `MPERS_DEFS`, and `umove`. Risks are pointer conversion, callers forgetting that failure prints nothing, and mismatched control/iov length widths. Tests should cover sendmsg/recvmsg native and compat traces, dumpio paths, null optional pointers, and invalid message headers.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/dma/ioat/dca.c
+
+Purpose: implements Direct Cache Access provider support for Intel I/OAT DMA devices. It verifies CPU/BIOS DCA enablement, discovers I/OAT DCA requester slots, registers a `dca_provider`, maps requester PCI IDs into hardware tables, and converts CPU APIC IDs into DCA tags using a BIOS-provided tag map.
+
+Important APIs, types, and functions: public functions are `system_has_dca_enabled()` and `ioat_dca_init()`. DCA provider operations are `ioat_dca_add_requester()`, `ioat_dca_remove_requester()`, `ioat_dca_get_tag()`, and `ioat_dca_dev_managed()`. State lives in `struct ioat_dca_priv`, which contains MMIO bases, requester count/capacity, tag map bytes, and flexible `ioat_dca_slot` entries containing requester PCI devices and requester IDs.
+
+Control flow: `system_has_dca_enabled()` checks the boot CPU DCA feature and CPUID leaf 9 BIOS-enable bit. `ioat_dca_init()` then reads the device DCA offset, counts global requester table slots until `IOAT_DCA_GREQID_LASTID`, allocates a provider with enough private slot storage, enables prefetch/memory-write DCA controls if BIOS left them off, reads the APIC-ID tag map, masks unsupported bits, rejects a known invalid default map with firmware taint, and registers the provider. Adding a requester requires a PCI device, finds a free slot, records the device and requester ID, and writes `IOAT_DCA_GREQID_VALID` into the global requester table. Removing a requester clears the hardware table slot and local bookkeeping. Tag calculation walks eight tag map entries and selects, inverts, or literals bits into the returned tag.
+
+State and persistence: provider state persists while the IOAT device is registered and is freed by `init.c` remove paths through `unregister_dca_provider()`/`free_dca_provider()`. Hardware requester table entries persist until removed or device reset. The tag map is snapshotted at provider initialization; later BIOS or firmware changes are not re-read.
+
+Dependencies and integration: depends on x86 CPUID/APIC ID helpers, PCI device IDs, Linux DCA core, IOAT register definitions, and IOAT probe/remove code in `init.c`. The Makefile always links this object into `ioatdma`, but initialization only happens if module/runtime DCA settings and hardware checks pass.
+
+Risks and test signals: risks include BIOS-disabled or misprogrammed DCA, non-PCI requesters, requester slot exhaustion, incorrect tag maps on CPU topology changes, and MMIO table offset assumptions. Test on DCA-capable x86 systems with BIOS DCA on/off, invalid tag map firmware, adding/removing multiple requester devices, slot exhaustion, CPU hotplug or APIC-ID variation, IOAT remove cleanup, and DMA clients that request DCA tags.

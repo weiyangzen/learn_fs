@@ -1,0 +1,7 @@
+# sources/distributed-fs/ceph-client/crypto/streebog_generic.c
+
+`streebog_generic.c` implements and registers the generic Streebog/GOST R 34.11-2012 hash functions for 256-bit and 512-bit digests. It carries the compression function, finalization logic, counters, and large precomputed transform tables.
+
+Important functions are `streebog_init()`, `streebog_update()`, `streebog_finup()`, `streebog_stage2()`, `streebog_stage3()`, `streebog_g()`, `streebog_round()`, `streebog_xlps()`, `streebog_xor()`, and `streebog_add512()`. It registers `"streebog256"`/`"streebog256-generic"` and `"streebog512"`/`"streebog512-generic"` as block-only shash algorithms.
+
+Init clears `struct streebog_state` and seeds 256-bit mode with `0x01` bytes. Update processes only full 64-byte blocks and returns leftover length for the shash block-only frontend. Stage2 compresses a block, increments `N` by 512 bits, and adds the block to `Sigma`. Stage3 pads the tail with a `1` byte, compresses the final block, updates counters, compresses `N` and `Sigma` under zero, and copies digest output. State is per descriptor plus shash-managed partial-block buffering; temporary finalization storage is wiped. Risks are endian/carry correctness, final padding boundaries, table integrity, and block-only frontend coupling. Test signals include RFC vectors, empty and boundary-length messages, HMAC Streebog, and `tcrypt` modes 53/54/115/116/327/328.

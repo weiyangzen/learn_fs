@@ -1,0 +1,3 @@
+# sources/distributed-fs/ceph-client/tools/testing/selftests/riscv/mm/Makefile
+
+Purpose: builds and runs RISC-V mmap layout tests. It creates generated files `mmap_default` and `mmap_bottomup`, registers `run_mmap.sh` as the test program, and includes `../../lib.mk`. State is the two small binaries and test script installation. Dependencies are kselftest harness, sys/mman, and shell `ulimit`. Risks include a target typo/dependency naming mismatch (`mmap_tests.h` versus local `mmap_test.h` in the explicit `$(OUTPUT)/mm` rule that is not the main generated-file path), and non-RISC-V execution not being meaningful. Test signals are successful build plus `run_mmap.sh` executing both layout binaries.

@@ -1,0 +1,15 @@
+## sources/distributed-fs/ceph-client/fs/smb/server/smbacl.c
+
+Purpose: translates between Windows security descriptors/ACLs and Linux ownership, mode bits, POSIX ACLs, and ksmbd's NTACL xattr format. It also handles DACL inheritance, SID comparison/mapping, access checks against stored Windows ACLs, and applying client `SET_INFO` security updates.
+
+Important APIs and functions: exported functions include `compare_sids`, `id_to_sid`, `parse_sec_desc`, `build_sec_desc`, `smb_acl_sec_desc_scratch_len`, `init_acl_state`, `free_acl_state`, `posix_state_to_acl`, `smb_inherit_flags`, `smb_inherit_dacl`, `smb_check_perm_dacl`, `set_info_sec`, and `ksmbd_init_domain`. Internal helpers map access masks to POSIX modes, emit ACEs for SIDs, parse bounded SIDs/DACLs, merge existing NTACL ACEs with POSIX ACL entries, and append inherited ACEs.
+
+Control flow: parsing starts at `parse_sec_desc`, validates owner/group/DACL offsets within the provided buffer, maps owner and group SIDs through the mount idmap, preserves selected descriptor control bits, and calls `parse_dacl`. DACL parsing bounds-checks each ACE, expands generic rights, detects NFS mode ACEs, owner/group/everyone ACEs, and named Unix user/group ACEs, then builds access/default POSIX ACLs. Building a descriptor allocates owner/group SIDs from `smb_fattr`, optionally copies and validates an existing NT DACL, and appends generated POSIX-derived ACEs. Security updates parse the descriptor, set inode uid/gid/mode/ACLs, and optionally store the Windows ACL in xattrs.
+
+State and persistence behavior: runtime conversion state lives in `struct smb_fattr` and `struct posix_acl_state`. Persistent effects are VFS owner/group/mode changes, POSIX ACL xattrs, and optional `security.NTACL` xattr writes through `ksmbd_vfs_set_sd_xattr`. `ksmbd_init_domain` stores the server domain SID in global `server_conf`.
+
+Dependencies and integration points: uses common SMB ACL definitions, VFS and xattr helpers, share configuration flags, POSIX ACL APIs, mount idmapping, Linux id conversion, and ksmbd global domain configuration. SMB2 create/set-info/query-info paths use this file for security descriptor handling and ACL-based access checks.
+
+Risks: this is directly exposed to untrusted descriptor buffers, so every offset, size, ACE count, and SID subauthority count must stay bounded. `compare_sids` returns equality once common subauthorities match, so callers depend on surrounding SID conventions. Inheritance allocates based on parent ACE count and copies owner/group offsets from the parent descriptor, making overflow and offset validation important. POSIX ACL and NTACL hashes can diverge after local filesystem changes, causing stored Windows ACLs to be rejected.
+
+Test signals: owner/group SID mapping on idmapped mounts, malformed descriptors with short offsets or oversized ACE counts, generic rights expansion, NFS mode ACE parsing, named user/group ACE conversion, default ACL inheritance on files and directories, `DACL_PROTECTED` and auto-inherited flags, `FILE_MAXIMAL_ACCESS`, guest/everyone access checks, and share configs with and without ACL xattr storage.

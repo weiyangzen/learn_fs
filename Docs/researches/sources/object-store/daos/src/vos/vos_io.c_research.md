@@ -1,0 +1,19 @@
+# sources/object-store/daos/src/vos/vos_io.c
+
+## Purpose
+`vos_io.c` implements VOS object fetch and update. It builds per-operation IO context, performs timestamp and ilog existence checks, reserves SCM/NVMe space, reads and writes single values and extents, handles deduplication and checksum metadata, publishes or cancels reservations through backend transactions, and exposes inline helper APIs used by rebuild, RDB, tests, and DAOS IO paths.
+
+## Important APIs and Functions
+Public entry points include `vos_fetch_begin`, `vos_fetch_end`, `vos_update_begin`, `vos_update_end`, `vos_obj_update_ex`, `vos_obj_update`, `vos_obj_fetch_ex`, `vos_obj_fetch`, `vos_obj_array_remove`, `vos_get_io_size`, `vos_ioh2desc`, `vos_iod_sgl_at`, checksum and recx-list accessors, `vos_set_io_csum`, `vos_dedup_verify_init`, and `vos_dedup_verify`. Internal pillars are `vos_ioc_create`, `dkey_fetch`, `akey_fetch`, `fetch_value`, `akey_fetch_single`, `akey_fetch_recx`, `dkey_update_begin`, `akey_update_begin`, `dkey_update`, `akey_update`, `update_value`, `akey_update_single`, `akey_update_recx`, reservation helpers, and aggregation markers.
+
+## Control Flow
+Fetch begins with target health check and IO context allocation, installs the DTX handle, records container read timestamps, holds the object visible at the requested epoch and uncertainty bound, checks object/dkey/akey ilogs, then fetches single-value btree records or evtree extents. Missing objects/keys can still add negative-read timestamps for conflict detection. Update begin validates duplicate akeys, allocates timestamp sets and BIO descriptors, holds space, optionally acquires evictable objects, and reserves all needed SCM/NVMe extents before data copy. Update end opens the backend transaction, commits CoS DTXs when needed, incarnates the object ilog, updates dkey and akey ilogs, writes values or extent entries, checks timestamp conflicts, records DTX object involvement, marks aggregation flags, publishes reservations, updates dedup entries, releases held space, and destroys the context.
+
+## State and Persistence
+Persistent changes include object incarnations, dkey/akey ilogs, single-value btree entries, evtree extent entries, checksum bytes, pool map versions, DTX ids, object `vo_max_write`, and VEA/umem allocations. `struct vos_io_context` is transient but owns reserved SCM actions, NVMe extents, BIO descriptors, dedup staging, timestamp sets, ilog parse state, held space counters, checksum lists, shadow recx state, and output recx lists. Dedup currently indexes SCM payloads by checksum in an in-memory pool hash and can replace a false-positive dedup hit with a fresh SCM allocation during verify.
+
+## Dependencies and Integration
+The file integrates VOS object/key tree helpers, generic dbtree and evtree APIs, BIO buffer and block allocator APIs, VEA reservations, checksum library, timestamp conflict sets, DTX lifecycle helpers, WAL/media health checks, and pool/container space accounting. The begin/end split lets upper layers perform RDMA or copy operations between reservation and commit. Aggregation optimization bits are updated through btree/evtree feature fields so later aggregation can find work.
+
+## Risks and Test Signals
+High-risk areas are begin/end error unwinding, reservation publishing versus cancellation, duplicate akey rejection, conditional update/insert semantics, uncertainty restarts, DTX in-progress loops, dedup verification false positives, csum-only versus recx-list fetch exclusivity, EC shadow fetch hole handling, gang single-value allocation, md-on-SSD evictable object lifetime, and target health failure after IO. Tests should cover size-only fetch, checksum fetch, recx-list fetch, fetch of holes and corrupt records, SV and EV update/punch/remove, SCM and NVMe media paths, dedup hit/miss/verify-fail, transaction abort cleanup, aggregation marking, and layout upgrade wrapper behavior.

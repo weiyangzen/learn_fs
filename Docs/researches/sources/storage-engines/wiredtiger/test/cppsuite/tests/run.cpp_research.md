@@ -1,0 +1,15 @@
+# sources/storage-engines/wiredtiger/test/cppsuite/tests/run.cpp
+
+Purpose: implements the main executable for the cppsuite test framework. It parses command-line options, reads framework configuration strings, lists available tests, and dispatches named tests such as `reverse_split`, `operations_test`, `cache_resize`, bounded cursor tests, background compaction, and benchmark tests.
+
+Important APIs, types, and functions: `parse_configuration_from_file` removes whitespace and comment lines before concatenating a config file into a single framework configuration string. `print_help` renders the CLI. `run_test` builds `test_harness::test_args` and dispatches by test name to concrete test classes included directly into this translation unit. `get_default_config_path` maps a test name to `configs/<test>_default.txt`. `main` uses `testutil_set_progname`, `logger::trace_level`, `connection_manager::instance().close()`, and the C++ harness classes included at the top of the file.
+
+Control flow: `main` scans arguments manually. `-C` appends additional WiredTiger open configuration, `-c` supplies a framework configuration string, `-f` reads configuration from a file, `-H` sets home, `-l` sets trace level, `--list` prints all known tests, and `-t` chooses a single test. With no `-t`, it iterates `all_tests`, loading either the shared config file, each test's default config, or the `-c` string, skips `api_instruction_count_benchmarks` because it requires elevated permissions, runs each test, closes the singleton connection manager between tests, and stops at the first error. With `-t`, it validates membership and runs only that test.
+
+State and persistence behavior: runtime state is mostly process-local CLI/config state plus logger verbosity. Each dispatched test owns its own WiredTiger home and workload state through the harness. When running all tests, explicit `connection_manager::close()` prevents singleton connection state from leaking between tests.
+
+Dependencies and integration points: this file is the cppsuite integration hub; it includes individual test implementation `.cpp` files directly and must keep `all_tests`, `--list`, and `run_test` dispatch in sync. It depends on `test_util.h` for program-name/error handling and on default config files under `configs/`.
+
+Risks: direct `.cpp` inclusion can hide ODR or dependency problems until this single target is built. The `-c`/`-f` error messages say `-C` in places where the conflicting option is framework config, which can confuse users. `parse_configuration_from_file` indexes `line[0]` before checking `line.empty()`, so an empty physical line can be undefined behavior after whitespace removal. Manual option parsing is flagged by the in-file FIXME.
+
+Test signals: `./run --list` should enumerate every dispatchable test; `./run -t <name>` should load the default config and run exactly one test; all-test mode should close and reopen cleanly between tests and skip only the privileged instruction-count benchmark.

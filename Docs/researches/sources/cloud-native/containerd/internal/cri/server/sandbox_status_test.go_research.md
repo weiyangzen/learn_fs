@@ -1,0 +1,7 @@
+# Research: sources/cloud-native/containerd/internal/cri/server/sandbox_status_test.go
+
+This test file verifies status conversion and updated-resource info merging for pod sandboxes. `TestPodSandboxStatus` constructs a sandbox metadata object with CRI metadata, labels, annotations, runtime handler, Linux namespace options, user namespace ID mappings, a primary IP, and additional IPv4/IPv6 addresses. It then checks `toCRISandboxStatus` maps internal ready and not-ready strings to the correct CRI enum and maps internal unknown to CRI `SANDBOX_NOTREADY`, since CRI has no unknown sandbox state.
+
+`TestSetUpdatedResources` exercises `setUpdatedResources` with existing JSON info, nil resources, invalid JSON, and nil info maps. It validates that sandbox status `Overhead` and `Resources` are overlaid into `podsandbox/types.SandboxInfo` while existing fields such as `Pid` are preserved. Invalid JSON must return an error, while nil maps are no-ops.
+
+The test signal is focused on pure conversion behavior rather than full `PodSandboxStatus` integration with a sandbox controller or core metadata store. Covered risks include accidental loss of namespace settings, additional IP formatting, unknown state mapping, resource updates not surfacing in verbose status, and JSON corruption handling. Gaps include controller `ErrNotFound` fallback, netns closed checks, created-time fallback from containerd's sandbox store, and host-network IP suppression.

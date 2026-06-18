@@ -1,0 +1,17 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/can/c_can/c_can_main.c -->
+## sources/distributed-fs/ceph-client/drivers/net/can/c_can/c_can_main.c
+
+Purpose: this file is the shared Bosch C_CAN/D_CAN SocketCAN core. It implements controller configuration, message object setup, TX/RX handling, NAPI polling, error-state reporting, runtime PM integration, RAM initialization control, netdevice operations, and exported allocation/registration helpers used by platform and PCI wrappers.
+
+Important APIs, types, and functions: central functions include `c_can_obj_update()`, `c_can_setup_tx_object()`, `c_can_read_msg_object()`, `c_can_setup_receive_object()`, `c_can_start_xmit()`, `c_can_set_bittiming()`, `c_can_configure_msg_objects()`, `c_can_chip_config()`, `c_can_start()`, `c_can_stop()`, `c_can_do_tx()`, `c_can_do_rx_poll()`, `c_can_handle_state_change()`, `c_can_handle_bus_err()`, `c_can_poll()`, `c_can_isr()`, `c_can_open()`, `c_can_close()`, `alloc_c_can_dev()`, `register_c_can_dev()`, and optional `c_can_power_down()`/`c_can_power_up()`.
+
+Control flow: wrappers call `alloc_c_can_dev()` to partition message objects into RX and TX halves, then register the netdev. Open runtime-resumes the device, initializes RAM, opens the CAN core, requests the shared IRQ, starts hardware, enables NAPI, enables interrupts, and starts the queue. Hardware interrupts disable controller IRQs and schedule NAPI. The poll path reads pending status, emits state-change and bus-error frames, drains RX message objects subject to quota, completes TX echo skbs, reenables IRQs if not bus-off, and finishes NAPI. TX setup writes IF registers, handles SFF/EFF/RTR frames and C_CAN direction changes, queues echo skb, and triggers or caches TX depending on ring position and controller type.
+
+State and persistence: state lives in `struct c_can_priv`: NAPI, message object ranges, RX mask, `sie_pending`, `last_status`, TX ring, `tx_dir`, register accessors, RAMINIT hooks, and controller type. Hardware state includes IF1/IF2 command windows, message object validity/control/data, bit timing, control/test/status registers, interrupt masks, and optional D_CAN power-down state. PM helpers reset RAM and runtime-PM usage around open/close and suspend/resume.
+
+Dependencies and integration points: the core depends on wrapper-provided MMIO callbacks and clock frequency, SocketCAN netdevice helpers, CAN error-frame helpers, NAPI, pinctrl active/sleep states, runtime PM, exported symbols for bus wrappers, and ethtool ops from `c_can_ethtool.c`.
+
+Risks: IF command operations poll only briefly; slow or wedged hardware logs "Updating object timed out". RX polling intentionally handles gaps in pending bits to avoid reordering/losing messages, and comments warn against removing defensive checks. C_CAN TX objects are priority-based, while D_CAN has cached transmission handling at ring wrap. State-change handling must avoid reenabling IRQs after bus-off. PM power-down/up is D_CAN-specific and waits for PDA transitions with timeouts.
+
+Test signals: validate 32-object and 64-object devices, SFF/EFF/RTR TX and RX, RX overflow error frames, NAPI quota behavior, interrupt disable/reenable, warning/passive/bus-off transitions and recovery notifications, berr-reporting on/off, loopback/listen-only modes, D_CAN software reset and power-down/up, runtime PM reference balance, and pinctrl state changes.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/drivers/net/can/c_can/c_can_main.c -->

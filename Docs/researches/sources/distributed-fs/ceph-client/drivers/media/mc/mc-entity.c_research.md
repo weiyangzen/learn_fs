@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/media/mc/mc-entity.c
+
+Purpose: core media graph implementation: graph object IDs/lists, entity pad initialization, graph walking, pipeline population/validation/start/stop, pad and interface link creation/removal, remote-pad helpers, and interface/ancillary link management.
+
+Important APIs/types/functions: exports include `media_entity_pads_init()`, `media_graph_walk_init/start/next/cleanup()`, `__media_pipeline_start()`, `media_pipeline_start()`, `__media_pipeline_stop()`, `media_pipeline_stop()`, `media_pipeline_alloc_start()`, pipeline iterators, `media_create_pad_link()`, `media_create_pad_links()`, `media_entity_remove_links()`, `__media_entity_setup_link()`, `media_entity_setup_link()`, `media_entity_find_link()`, remote-pad helpers, `media_get_pad_index()`, `media_entity_get_fwnode_pad()`, `media_devnode_create/remove()`, `media_create_intf_link()`, interface link removers, and `media_create_ancillary_link()`.
+
+Control flow: graph object creation assigns typed IDs and appends to media-device lists, bumping topology version. Simple graph walk follows enabled data links depth-first with an entity bitmap. Pipeline start builds a pad-level pipeline by traversing internal pad dependencies and enabled graph links, validates pad exclusivity, link validation callbacks, and must-connect pads, then marks each pad with the active pipeline and increments start count. Link setup rejects immutable/non-data flag changes, blocks non-dynamic changes while endpoints stream, calls media-device pre/post notifiers and entity link_setup callbacks, and mirrors flags to backlinks.
+
+State/persistence: all graph objects, link lists, pad pipeline pointers, topology version, and pipeline pad lists are in-memory. Pipeline objects can be caller-owned or allocated by `media_pipeline_alloc_start()` and freed on final stop.
+
+Dependencies/integration: depends on media-device graph lists/mutexes, media entity operations, fwnode endpoint parsing, bitmap helpers, and drivers that create pads/links and implement `link_validate`, `link_setup`, `has_pad_interdep`, or `get_fwnode_pad`.
+
+Risks/test signals: graph correctness depends on balanced link/backlink allocation and removal. Pipeline traversal has bounded stack growth and validates busy pads; mistakes can create stale `pad->pipe` pointers. Tests should cover pad flag validation, enabled/disabled link traversal, internal route callbacks, must-connect enforcement, link validation failure rollback, dynamic vs non-dynamic link changes while streaming, n:n pad link creation, unique remote-pad error cases, and topology version increments.

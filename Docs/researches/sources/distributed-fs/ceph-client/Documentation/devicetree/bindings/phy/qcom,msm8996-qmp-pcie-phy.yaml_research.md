@@ -1,0 +1,24 @@
+<!-- BEGIN_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/qcom,msm8996-qmp-pcie-phy.yaml -->
+# sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/qcom,msm8996-qmp-pcie-phy.yaml
+
+## Purpose
+`sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/qcom,msm8996-qmp-pcie-phy.yaml` is a Qualcomm QMP PCIe PHY binding for `Qualcomm QMP PHY controller (MSM8996 PCIe)`. It preserves the devicetree ABI for this hardware by constraining compatible matching, provider cells, required board resources, child nodes, and examples. Description signal: QMP PHY controller supports physical layer functionality for a number of controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB..
+
+## Important APIs, Types, And Functions
+The effective API is the schema contract. `compatible` is single `const` with values `qcom,msm8996-qmp-pcie-phy`. Top-level properties are `compatible`, `reg`, `#address-cells`, `#size-cells`, `ranges`, `clocks`, `clock-names`, `resets`, `reset-names`, `vdda-phy-supply`, `vdda-pll-supply`, `vddp-ref-clk-supply`. Required properties across the composed schema are `#address-cells`, `#clock-cells`, `#phy-cells`, `#size-cells`, `clock-names`, `clock-output-names`, `clocks`, `compatible`, `ranges`, `reg`, `reset-names`, `resets`, `vdda-phy-supply`, `vdda-pll-supply`. All discovered property names, including nested child-node contracts, include `#address-cells`, `#clock-cells`, `#phy-cells`, `#size-cells`, `clock-names`, `clock-output-names`, `clocks`, `compatible`, `ranges`, `reg`, `reset-names`, `resets`, `vdda-phy-supply`, `vdda-pll-supply`, `vddp-ref-clk-supply`. Important numeric/constant limits include `const=qcom,msm8996-qmp-pcie-phy`, `maxItems=3`, `const=aux`, `const=cfg_ahb`, `const=ref`, `const=phy`, `const=common`, `const=cfg`, `const=0`, `maxItems=1`.
+
+## Control Flow
+Control flow is declarative JSON-schema evaluation, not imperative code. `dt-doc-validate` and `dt_binding_check` load the YAML, resolve `$ref` links, apply `allOf`/`oneOf`/`if`/`then` composition, validate embedded examples, and `dtbs_check` later applies the same rules to compiled board DTS. Runtime behavior begins after the matching PHY driver probes: it maps registers, enables clocks and supplies, deasserts resets, registers a PHY provider, and lets host controllers acquire the PHY by phandle using the declared `#phy-cells` shape. pattern child nodes include `^phy@[0-9a-f]+$`
+
+## State And Persistence
+State is static firmware description rather than runtime persistence. regulator phandles persist the board power topology. Named resources such as `clocks`, `clock-names`, `resets`, `reset-names`, `vdda-phy-supply`, `vdda-pll-supply`, `vddp-ref-clk-supply` must stay stable because driver probe, suspend/resume, and board DTS validation depend on their order and names.
+
+## Dependencies And Integration Points
+Integrates with Linux generic PHY framework and the consuming USB, PCIe, UFS, SATA, HDMI, DP, DSI, Ethernet, or CAN controller drivers. Schema dependencies are none beyond the core/meta schema. Observed driver-side references include `sources/distributed-fs/ceph-client/drivers/phy/qualcomm/phy-qcom-qmp-pcie-msm8996.c`. Observed DTS references include `sources/distributed-fs/ceph-client/arch/arm64/boot/dts/qcom/msm8996.dtsi`. External providers/consumers are signaled through `clocks`, `clock-names`, `resets`, `reset-names`, `vdda-phy-supply`, `vdda-pll-supply`, `vddp-ref-clk-supply`.
+
+## Risks And Edge Cases
+strict property closure makes spelling and resource-name drift fail validation immediately ordered clock/reset names must match the driver data table and DTS examples missing or swapped regulator supplies can pass compile-time phandle syntax but break analog bring-up wrong register ranges can point the driver at the wrong PHY lane, PLL, or mux block Closure rule: top-level unknown properties are rejected by `additionalProperties: false`. Representative enum constraints: properties.#address-cells: 1, 2; properties.#size-cells: 1, 2; patternProperties.^phy@[0-9a-f]+$.properties.clock-names.items[0]: pipe0, pipe1, pipe2; patternProperties.^phy@[0-9a-f]+$.properties.reset-names.items[0]: lane0, lane1, lane2.
+
+## Test Signals
+`make dt_binding_check DT_SCHEMA_FILES=sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/qcom,msm8996-qmp-pcie-phy.yaml` should parse this YAML and validate 1 embedded example. `make dtbs_check` should validate board DTS nodes using the compatible strings and resource names from this schema. spot-check representative compatibles such as `qcom,msm8996-qmp-pcie-phy` against matching driver OF tables and DTS examples.
+<!-- END_FILE_RESEARCH: sources/distributed-fs/ceph-client/Documentation/devicetree/bindings/phy/qcom,msm8996-qmp-pcie-phy.yaml -->

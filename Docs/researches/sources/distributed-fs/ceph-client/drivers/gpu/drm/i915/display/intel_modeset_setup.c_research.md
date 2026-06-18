@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/gpu/drm/i915/display/intel_modeset_setup.c
+
+Purpose: reads current display hardware state at driver load/resume and reconciles it into DRM atomic state, then sanitizes unsafe BIOS or firmware-programmed modeset state. It handles CRTCs, planes, encoders, connectors, power domains, DPLL state, watermarks, CDCLK, DBUF bandwidth, CMTG, FBC, VGA disable, PCH sanitize, DMC/vblank bring-up, and early display workarounds.
+
+Important APIs/functions: `intel_modeset_setup_hw_state()` is the exported entry. Internal helpers include `intel_modeset_readout_hw_state()`, `intel_crtc_copy_hw_to_uapi_state()`, `intel_sanitize_encoder()`, `intel_sanitize_all_crtcs()`, `intel_crtc_disable_noatomic()`, `readout_plane_state()`, and `intel_modeset_update_connector_atomic_state()`. The noatomic disable path is split into begin/complete phases so joiner secondary pipes and port-sync slave/master pipes are disabled in a valid order.
+
+Control flow: setup takes `POWER_DOMAIN_INIT`, applies early WA bits and disables VGA, reads CRTC pipe configs, planes, encoders, DPLLs, connectors, and derived clocks/bandwidths. It then acquires encoder power domains, sanitizes PCH/CMTG/fifo underrun reporting/vblank/FBC/plane mapping/encoders/connectors/CRTCs/DPLLs/watermarks, checks for leaked CRTC power-domain puts, drops the init wakeref, and sanitizes power domains. CRTC sanitization disables active pipes with no active encoders or TC links requiring reset; encoder sanitization can manually call disable/post_disable hooks when connectors are active but the pipe is not.
+
+State and persistence: mutates live `drm_crtc_state`, `intel_crtc_state`, legacy connector encoder links, connector DPMS, `pmdemand` physical masks and port clocks, CRTC active/enabled flags, power domain references, and readout-derived inherited state. It intentionally marks states `inherited` so later commits fully recompute derived values.
+
+Dependencies/integration: relies on atomic helpers, display power, DPLL, DDI/TC, FBC, DMC, vblank, watermarks, CDCLK, BW/DBUF, opregion notifications, PCH display, PM demand, and platform WA helpers. It is the bridge from firmware/BIOS state into the driver's atomic model.
+
+Risks/test signals: fragile areas are noatomic disable ordering for joiner/port-sync, NULL atomic state passed to legacy encoder hooks, BIOS-bogus DPLL configs, TC HPD reset timing, connector reference balancing, and stale plane readout lacking full framebuffer state. Useful tests are boot/resume on systems with active BIOS displays, disconnected active Type-C ports, joiner/port-sync modes, LVDS/PCH encoders, DP MST avoidance, fifo underrun logs, WARNs from power-domain leakage, and state dumps after `setup_hw_state`.

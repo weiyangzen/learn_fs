@@ -1,0 +1,5 @@
+<!-- BEGIN_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test_ftp.py -->
+# sources/sync-backup/bup/test/ext/test_ftp.py
+
+Purpose: pytest coverage for the interactive `bup ftp` command language. Important helpers are `bup()`, `jl()` for joined lines, and `match_rx_grp()` for regex-group assertions. APIs include `bup ftp` commands such as `ls`, `pwd`, `cd`, `cat`, `get`, `mget`, symlink handling, and error reporting. Control flow sets deterministic Git author/committer identity, builds a saved repository with files, directories, and symlinks, invokes `bup ftp` with scripted command input, and checks stdout/stderr for listings, data output, prompt behavior, and failures. State is the temp bup repo, saved branch, working directory, and downloaded files. Dependencies include pytest tmpdir, bup subprocess helpers, timezone formatting, and regex assertions. Risks are prompt/output formatting drift, pattern matching in `mget`, symlink resolution behavior, and locale/timezone effects. Test signals are exact or regex-matched command transcripts and restored/downloaded file content.
+<!-- END_FILE_RESEARCH: sources/sync-backup/bup/test/ext/test_ftp.py -->

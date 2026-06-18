@@ -1,0 +1,29 @@
+# sources/distributed-fs/ceph-client/fs/lockd/clntproc.c
+
+## Purpose
+
+`sources/distributed-fs/ceph-client/fs/lockd/clntproc.c` implements client-side NLM lock RPC procedure flow for TEST, LOCK, UNLOCK, CANCEL, async calls, lockowner private state, reclaim requests, and NLM status-to-errno translation. The source was read as a complete 889-line file.
+
+## Important APIs, Types, and Functions
+
+Key exports are `nlmclnt_proc`, `nlm_alloc_call`, `nlmclnt_release_call`, `nlm_async_call`, `nlm_async_reply`, `nlmclnt_reclaim`, and `nlmclnt_next_cookie`. Important internal helpers include `nlmclnt_find_lockowner`, `nlmclnt_setlockargs`, `nlmclnt_call`, `nlmclnt_async_call`, `nlmclnt_test`, `nlmclnt_lock`, `nlmclnt_unlock`, `nlmclnt_cancel`, and `nlm_stat_to_errno`.
+
+## Control Flow
+
+`nlmclnt_proc` allocates a request, initializes lockowner private state, fills NLM lock arguments from the VFS `file_lock`, dispatches by fcntl command, and releases private state. Synchronous calls bind a host RPC client, handle transport errors, rebind UDP peers, wait through server grace periods, and return only when the wire call is complete or interrupted. LOCK first asks the local VFS with `FL_ACCESS`, monitors the peer via NSM, queues a blocking wait, sends the LOCK RPC, waits/polls for GRANTED when blocked, cancels interrupted blocking locks, and installs the resulting local lock only after checking the host did not reboot. UNLOCK removes local VFS state first, then sends async UNLOCK with retry/grace handling.
+
+## State and Persistence Behavior
+
+Request state is refcounted in `struct nlm_rqst`. Lockowner state maps VFS `fl_owner_t` to a host-local 32-bit pseudo-pid and is attached to file locks through `fl_ops`; granted locks are listed on the host. `nlm_cookie` is an atomic in-memory cookie counter. Callback data is owned by optional `nlmclnt_operations` hooks.
+
+## Dependencies and Integration Points
+
+This file is the bridge between VFS file locking, NFS credentials/file handles, SUNRPC tasks, NSM monitoring from `mon.c`, host binding/rebind from `host.c`, blocked wait handling from `clntlock.c`, tracepoints, and version-specific XDR procedure tables.
+
+## Risks and Edge Cases
+
+The path must keep local VFS lock state synchronized with remote NLM state during errors. Grace-period handling, interrupted blocking calls, lost callbacks, and server reboots are all high-risk. Async request refcounts must be balanced with RPC release callbacks. Status translation differs for NLMv4 extended errors.
+
+## Test Signals
+
+Tests should cover GETLK/SETLK/SETLKW/UNLCK flows, local VFS denial before RPC, denied holder reporting, blocking lock cancellation, async unlock retry/rebind, server grace periods, reboot during lock acquisition, NLMv4 error mappings, and tracepoint coverage.

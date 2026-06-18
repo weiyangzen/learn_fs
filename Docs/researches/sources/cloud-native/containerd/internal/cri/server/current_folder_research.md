@@ -1,0 +1,125 @@
+# Folder Research: sources/cloud-native/containerd/internal/cri/server
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 111
+- Recursive researched files: 157
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/cloud-native/containerd/internal/cri/server/blockio_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/blockio_stub.go`
+- `sources/cloud-native/containerd/internal/cri/server/cni_conf_syncer.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_attach.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_checkpoint.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_checkpoint_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_linux_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_other_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_create_windows_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_events.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_exec.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_execsync.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_execsync_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_image_mount.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_image_mount_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_image_mount_linux_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_image_mount_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_list.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_list_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_log_reopen.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_remove.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_remove_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_start.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_start_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_start_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_start_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_stats.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_stats_list.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_stats_list_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_status.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_status_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_status_linux_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_status_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_status_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_status_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_stop.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_stop_signal.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_stop_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_update_resources.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_update_resources_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_update_resources_linux_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_update_resources_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/container_update_resources_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/events.go`
+- `sources/cloud-native/containerd/internal/cri/server/helpers.go`
+- `sources/cloud-native/containerd/internal/cri/server/helpers_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/helpers_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/helpers_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/helpers_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/helpers_windows_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/list_metric_descriptors.go`
+- `sources/cloud-native/containerd/internal/cri/server/list_metric_descriptors_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/list_metric_descriptors_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/list_pod_sandbox_metrics.go`
+- `sources/cloud-native/containerd/internal/cri/server/list_pod_sandbox_metrics_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/list_pod_sandbox_metrics_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/metrics.go`
+- `sources/cloud-native/containerd/internal/cri/server/nri.go`
+- `sources/cloud-native/containerd/internal/cri/server/nri_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/nri_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/rdt.go`
+- `sources/cloud-native/containerd/internal/cri/server/rdt_stub.go`
+- `sources/cloud-native/containerd/internal/cri/server/restart.go`
+- `sources/cloud-native/containerd/internal/cri/server/runtime_config.go`
+- `sources/cloud-native/containerd/internal/cri/server/runtime_config_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/runtime_config_linux_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/runtime_config_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_list.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_list_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_portforward.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_portforward_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_portforward_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_portforward_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_remove.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_run.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_run_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_run_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_run_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_run_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_service.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stats.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stats_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stats_list.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stats_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stats_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stats_windows_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_status.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_status_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stop.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_stop_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_update_resources.go`
+- `sources/cloud-native/containerd/internal/cri/server/sandbox_update_resources_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/service.go`
+- `sources/cloud-native/containerd/internal/cri/server/service_linux.go`
+- `sources/cloud-native/containerd/internal/cri/server/service_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/service_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/service_windows.go`
+- `sources/cloud-native/containerd/internal/cri/server/stats_collector.go`
+- `sources/cloud-native/containerd/internal/cri/server/stats_collector_other.go`
+- `sources/cloud-native/containerd/internal/cri/server/status.go`
+- `sources/cloud-native/containerd/internal/cri/server/status_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/streaming.go`
+- `sources/cloud-native/containerd/internal/cri/server/test_config.go`
+- `sources/cloud-native/containerd/internal/cri/server/update_runtime_config.go`
+- `sources/cloud-native/containerd/internal/cri/server/update_runtime_config_test.go`
+- `sources/cloud-native/containerd/internal/cri/server/version.go`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/drivers/usb/chipidea/usbmisc_imx.c
+
+Purpose: implements the i.MX/NXP USB miscellaneous register driver used by ChipIdea i.MX glue code for non-core USB controls. It abstracts SoC-specific over-current polarity, power polarity, wakeup, HSIC, charger detection, pullup disconnect signaling, VBUS comparator, and power-lost recovery behind exported helper functions.
+
+Important APIs, types, and functions: `struct usbmisc_ops` is the SoC operation table, and `struct imx_usbmisc` stores mapped base/blkctl registers, lock, and selected ops. Exported entry points are `imx_usbmisc_init`, `imx_usbmisc_init_post`, `imx_usbmisc_hsic_set_connect`, `imx_usbmisc_charger_detection`, `imx_usbmisc_pullup`, `imx_usbmisc_suspend`, and `imx_usbmisc_resume`. Per-SoC init functions include `usbmisc_imx25_init`, `usbmisc_imx53_init`, `usbmisc_imx6q_init`, `usbmisc_imx6sx_init`, `usbmisc_imx7d_init`, `usbmisc_imx7ulp_init`, and S32G variants. Charger detection on i.MX7-style PHYs runs data-contact, primary, and secondary detection against PHY status bits.
+
+Control flow: platform probe maps register resources, optional block-control registers, selects ops from the OF match table, and stores driver data. Callers invoke exported helpers during host/device setup and PM. Init configures register fields according to `imx_usbmisc_data` board properties. Suspend disables optional VBUS comparator, enables wakeup, and turns HSIC clocks off; resume checks power loss, reinitializes if needed, disables wakeup, restores HSIC clocks, and reenables comparator.
+
+State and persistence: register state persists in SoC MMIO across runtime, and some code detects power loss by comparing reset values. In-memory state is minimal: mapped bases, ops pointer, and spinlock. Charger state is written into `data->usb_phy->chg_state` and `chg_type`.
+
+Dependencies and integration points: depends on platform devices, OF compatible matching, `ci_hdrc_imx.h` data, USB OTG/PHY definitions, and ChipIdea i.MX glue. It exports GPL symbols consumed by the controller glue rather than binding to USB interfaces directly.
+
+Risks: this file is hardware-sensitive. Risks include wrong register offsets per SoC/index, preserving or overriding bootloader polarity incorrectly, wakeup-source mismatch when external ID/VBUS is used, charger-detection timing bugs, power-lost false positives, and missing second resource for i.MX95 wakeup block control. Test signals include DT-compatible probe coverage for each ops table, suspend/resume with wakeup enabled and disabled, HSIC connect/clock sequencing, charger-type detection, over-current and power polarity validation, and role/device pullup disconnect behavior.

@@ -1,0 +1,20 @@
+# Folder Research: sources/cloud-native/containerd/core/runtime
+
+This folder summary is inferred from accepted per-file research outputs.
+
+- Direct researched files: 6
+- Recursive researched files: 39
+- Direct child folders represented: 3
+
+## Direct Files
+
+- `sources/cloud-native/containerd/core/runtime/events.go`
+- `sources/cloud-native/containerd/core/runtime/monitor.go`
+- `sources/cloud-native/containerd/core/runtime/nsmap.go`
+- `sources/cloud-native/containerd/core/runtime/runtime.go`
+- `sources/cloud-native/containerd/core/runtime/task.go`
+- `sources/cloud-native/containerd/core/runtime/typeurl.go`
+
+## Research Role
+
+This directory participates in subset B filesystem research through the listed source files.

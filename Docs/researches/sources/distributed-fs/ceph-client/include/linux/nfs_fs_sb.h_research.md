@@ -1,0 +1,13 @@
+# sources/distributed-fs/ceph-client/include/linux/nfs_fs_sb.h
+
+Purpose: Declares NFS client and server superblock state: transport clients, mount flags, timeouts, capabilities, NFSv4 session/state metadata, pNFS/localio data, migration state, and per-server counters.
+
+Important APIs, types, and functions: Key types are `struct nfs_client` and `struct nfs_server`, with many mount option flags, client state bits, SP4 machine-credential levels, automount inheritance flags, file-handle volatility flags, migration flags, and `NFS_CAP_*` capability bits. Detected source surface: 334 lines; includes `linux/atomic.h`, `linux/backing-dev.h`, `linux/idr.h`, `linux/list.h`, `linux/nfs_xdr.h`, `linux/nfslocalio.h`, `linux/refcount.h`, `linux/sunrpc/xprt.h`, `linux/wait.h`; macros `NFS4SERV_DELEGATION_EXPIRED`, `NFS_AUTOMOUNT_INHERIT_BSIZE`, `NFS_AUTOMOUNT_INHERIT_RSIZE`, `NFS_AUTOMOUNT_INHERIT_WSIZE`, `NFS_CAP_ACLS`, `NFS_CAP_ALLOCATE`, `NFS_CAP_ATOMIC_OPEN`, `NFS_CAP_ATOMIC_OPEN_V1`, `NFS_CAP_CASE_INSENSITIVE`, `NFS_CAP_CASE_PRESERVING`, `NFS_CAP_CLONE`, `NFS_CAP_COPY`, `NFS_CAP_COPY_NOTIFY`, `NFS_CAP_DEALLOCATE`, `NFS_CAP_DELEGTIME`, `NFS_CAP_DIR_DELEG`, `NFS_CAP_FS_LOCATIONS`, `NFS_CAP_HARDLINKS`, and 70 more; structs `delayed_work`, `fscache_volume`, `hlist_head`, `idmap`, `kobject`, `list_head`, `net`, `nfs41_impl_id`, `nfs41_server_owner`, `nfs41_server_scope`, `nfs4_minor_version_ops`, `nfs4_sequence_args`, `nfs4_sequence_res`, `nfs4_session`, `nfs4_slot_table`, `nfs_auth_info`, `nfs_client`, `nfs_fsid`, and 14 more; enums `nfs4_change_attr_type`; typedefs none; function-like declarations/helpers none.
+
+Control flow: Mount and clone paths allocate or reuse `nfs_client`, create `nfs_server`, negotiate fsinfo/capabilities, attach RPC clients and security, and later VFS operations consult these fields for protocol behavior and limits.
+
+State and persistence behavior: This is long-lived per-client/per-superblock state: RPC clients, owner/client IDs, lease time, session pointers, flags, mount options, read/write sizes, attr cache bounds, caps, delegations, layout types, localio UUID/client, migration status, and IO stats.
+
+Dependencies and integration points: Depends on lists, backing-dev, idr, wait queues, NFS XDR types, SUNRPC transports, localio, atomics, and refcounts. Used by NFS mount, namespace, client, pNFS, and state recovery code.
+
+Risks and test signals: Risks are mount option misinterpretation, refcount/lifetime bugs across cloned servers, capability mismatch after migration, and state recovery races. Test mount variants, trunking, failover/migration, pNFS, lease renewal, and unmount while RPCs are active.

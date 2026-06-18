@@ -1,0 +1,10 @@
+# Research: sources/storage-engines/rocksdb/utilities/transactions/lock/point/point_lock_validation_test_runner.h
+
+- **Purpose:** Reusable randomized validation runner for point lock manager correctness, used by both stress tests and the benchmark tool.
+- **Important APIs/types/functions:** Defines `LockTypeToTest`, `KeyStatus`, assertion/debug macros that work with or without GTest, and `PointLockValidationTestRunner`. Key methods are the constructor, `DecideLockType`, and `run`.
+- **Control flow:** `run` adds a mock CF, starts worker threads, and each thread repeatedly starts with a transaction, randomly selects keys and lock modes, handles upgrade/downgrade decisions, attempts locks, optionally sleeps, validates protected state, releases all held locks, and repeats until shutdown. The main thread checks progress once per second and joins workers.
+- **State and persistence behavior:** Uses in-memory vectors of counters, values, exclusive-status flags, shared-lock counts, per-thread progress counters, and aggregate acquisition/deadlock counters. A temporary TransactionDB supplies transaction objects, but validation state is local memory.
+- **Dependencies:** Depends on RocksDB DB/env/TransactionDB APIs, lock manager interface, common test helpers, pessimistic transaction APIs, and RocksDB random utilities.
+- **Integration points:** Shared by `point_lock_manager_stress_test.cc` and `point_lock_bench_tool.cc`, making stress and benchmark behavior consistent.
+- **Risks:** `shutdown_` is an atomic flag but some validation arrays are intentionally protected by the lock manager under test; failures indicate lock correctness bugs. Lock status validation is disabled when expiration/stealing is enabled because expired-lock stealing can invalidate simple local invariants. Progress assertions can be sensitive under heavy sanitizers or CPU starvation.
+- **Test signals:** Detects exclusive-lock mutual exclusion violations via atomic counter versus protected value, shared-lock stability violations by comparing observed values while holding shared locks, deadlock handling, per-thread progress, and final lock leaks.
